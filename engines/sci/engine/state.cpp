@@ -66,8 +66,9 @@ static const uint16 s_halfWidthSJISMap[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-EngineState::EngineState(SegManager *segMan)
-: _segMan(segMan),
+EngineState::EngineState(SegManager *segMan) :
+	_segMan(segMan),
+	_msgState(nullptr),
 	_dirseeker() {
 
 	reset(false);
@@ -400,6 +401,9 @@ SciCallOrigin EngineState::getCurrentCallOrigin() const {
 	Common::String curObjectName = _segMan->getObjectName(xs->sendp);
 	Common::String curMethodName;
 	const Script *localScript = _segMan->getScriptIfLoaded(xs->local_segment);
+	if (localScript == nullptr) {
+		error("current script not found at: %04x", xs->local_segment);
+	}
 	int curScriptNr = localScript->getScriptNumber();
 
 	Selector debugSelector = xs->debugSelector;
@@ -447,6 +451,25 @@ bool EngineState::callInStack(const reg_t object, const Selector selector) const
 	}
 
 	return false;
+}
+
+Common::String EngineState::getGameVersionFromGlobal() const {
+	// The version global was originally 28 but then became 27.
+	// When it was 28, 27 was a volume level, so differentiate by type.
+	reg_t versionRef = variables[VAR_GLOBAL][kGlobalVarVersionNew];
+	if (versionRef.isNumber()) {
+		versionRef = variables[VAR_GLOBAL][kGlobalVarVersionOld];
+	}
+#ifdef ENABLE_SCI32
+	// LSL7 and Phant2 store the version string as an object instead of a reference
+	if (_segMan->isObject(versionRef)) {
+		versionRef = readSelector(_segMan, versionRef, SELECTOR(data));
+	}
+#endif
+	if (versionRef.isPointer()) {
+		return _segMan->getString(versionRef);
+	}
+	return Common::String();
 }
 
 } // End of namespace Sci

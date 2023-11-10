@@ -922,12 +922,22 @@ Common::Error ScummEngine::init() {
 		}
 	}
 
-
 	ConfMan.registerDefault("original_gui", true);
 	if (ConfMan.hasKey("original_gui", _targetName)) {
 		_useOriginalGUI = ConfMan.getBool("original_gui");
 	}
-	_enableEnhancements = ConfMan.getBool("enable_enhancements");
+
+	// Register original bug fixes as defaults...
+	ConfMan.registerDefault("enhancements", kEnhGameBreakingBugFixes | kEnhGrp1);
+	if (!ConfMan.hasKey("enhancements", _targetName)) {
+		if (ConfMan.hasKey("enable_enhancements", _targetName) && ConfMan.getBool("enable_enhancements", _targetName)) {
+			// Was the "enable_enhancements" key previously set to true?
+			// Convert it to a full activation of the enhancement flags then!
+			ConfMan.setInt("enhancements", kEnhGameBreakingBugFixes | kEnhGrp1 | kEnhGrp2 | kEnhGrp3 | kEnhGrp4);
+		}
+	}
+
+	_activeEnhancements = (int32)ConfMan.getInt("enhancements");
 	_enableAudioOverride = ConfMan.getBool("audio_override");
 
 	// Add default file directories.
@@ -1326,6 +1336,17 @@ Common::Error ScummEngine::init() {
 }
 
 void ScummEngine::setupScumm(const Common::String &macResourceFile) {
+	// TODO: This may be the wrong place for it
+	// Enhancements used to be all or nothing, but now there are different
+	// types of them.
+	if (ConfMan.hasKey("enable_enhancements")) {
+		if (!ConfMan.hasKey("enhancements")) {
+			ConfMan.setInt("enhancements", ConfMan.getBool("enable_enhancements") ? kEnhGameBreakingBugFixes | kEnhGrp1 : 0);
+		}
+		ConfMan.removeKey("enable_enhancements", ConfMan.getActiveDomainName());
+		ConfMan.flushToDisk();
+	}
+
 	Common::String macInstrumentFile;
 	Common::String macFontFile;
 
@@ -1469,7 +1490,7 @@ void ScummEngine::setupScumm(const Common::String &macResourceFile) {
 	}
 
 	// Skip the sound pre-loading
-	if (_game.id == GID_SAMNMAX && _bootParam == 0 && _enableEnhancements) {
+	if (_game.id == GID_SAMNMAX && _bootParam == 0 && enhancementEnabled(kEnhUIUX)) {
 		_bootParam = -1;
 	}
 
@@ -2391,7 +2412,7 @@ Common::Error ScummEngine::go() {
 		// custom names for save states. We do this in order to avoid
 		// lag and/or lose keyboard inputs.
 
-		if (_enableEnhancements) {
+		if (enhancementEnabled(kEnhUIUX)) {
 			// INDY3:
 			if (_game.id == GID_INDY3 && _currentRoom == 14) {
 				delta = 3;

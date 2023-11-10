@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2023-11-05 09:45+0000\n"
-"PO-Revision-Date: 2023-10-26 08:41+0000\n"
+"POT-Creation-Date: 2023-11-08 10:46+0000\n"
+"PO-Revision-Date: 2023-11-07 13:41+0000\n"
 "Last-Translator: VAN-Gluon <van.gluonp@gmail.com>\n"
 "Language-Team: Japanese <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ja/>\n"
@@ -64,7 +64,7 @@ msgstr "上へ"
 #: gui/recorderdialog.cpp:73 gui/recorderdialog.cpp:212
 #: gui/remotebrowser.cpp:59 gui/saveload-dialog.cpp:64
 #: gui/saveload-dialog.cpp:455 gui/saveload-dialog.cpp:526
-#: gui/saveload-dialog.cpp:828 gui/saveload-dialog.cpp:1220
+#: gui/saveload-dialog.cpp:828 gui/saveload-dialog.cpp:1224
 #: gui/shaderbrowser-dialog.cpp:81 gui/themebrowser.cpp:54
 #: gui/unknown-game-dialog.cpp:53 base/main.cpp:603
 #: dists/android.strings.xml.cpp:43 engines/engine.cpp:747
@@ -279,7 +279,7 @@ msgstr "すでに別のストレージが使用されています。切断しま
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:360
 #: engines/kyra/gui/saveload_eob.cpp:598 engines/kyra/gui/saveload_eob.cpp:631
 #: engines/parallaction/metaengine.cpp:145
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:3855
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:3876
 #: engines/toon/toon.cpp:1531
 msgid "Yes"
 msgstr "はい"
@@ -292,7 +292,7 @@ msgstr "はい"
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:360
 #: engines/kyra/gui/saveload_eob.cpp:598 engines/kyra/gui/saveload_eob.cpp:631
 #: engines/parallaction/metaengine.cpp:151
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:3855
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:3876
 #: engines/toon/toon.cpp:1531
 msgid "No"
 msgstr "いいえ"
@@ -310,7 +310,7 @@ msgstr "JSONコードの内容が不正です。"
 #: gui/editgamedialog.cpp:353 gui/editrecorddialog.cpp:67
 #: gui/fluidsynth-dialog.cpp:153 gui/launcher.cpp:553 gui/launcher.cpp:557
 #: gui/massadd.cpp:90 gui/options.cpp:2331 gui/predictivedialog.cpp:69
-#: gui/saveload-dialog.cpp:1221 dists/android.strings.xml.cpp:32
+#: gui/saveload-dialog.cpp:1225 dists/android.strings.xml.cpp:32
 #: engines/engine.cpp:550 engines/engine.cpp:573
 #: backends/platform/wii/options.cpp:46 engines/agos/animation.cpp:577
 #: engines/agos/midi.cpp:320 engines/agos/midi.cpp:378
@@ -320,9 +320,9 @@ msgstr "JSONコードの内容が不正です。"
 #: engines/groovie/script.cpp:660 engines/mtropolis/mtropolis.cpp:115
 #: engines/mtropolis/mtropolis.cpp:125 engines/parallaction/saveload.cpp:270
 #: engines/saga/music.cpp:102 engines/sci/engine/kgraphics.cpp:75
-#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1214
-#: engines/scumm/scumm.cpp:1567 engines/scumm/scumm.cpp:2042
-#: engines/scumm/scumm.cpp:2058 engines/sky/compact.cpp:140
+#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1224
+#: engines/scumm/scumm.cpp:1588 engines/scumm/scumm.cpp:2063
+#: engines/scumm/scumm.cpp:2079 engines/sky/compact.cpp:140
 #: engines/sword1/animation.cpp:532 engines/sword1/animation.cpp:563
 #: engines/sword1/animation.cpp:571 engines/sword1/control.cpp:2797
 #: engines/sword1/logic.cpp:1732 engines/sword2/animation.cpp:426
@@ -891,7 +891,7 @@ msgstr "作用"
 #: engines/crab/input/input.cpp:95 engines/crab/input/input.cpp:145
 #: engines/dragons/metaengine.cpp:160 engines/griffon/metaengine.cpp:121
 #: engines/grim/grim.cpp:467 engines/grim/grim.cpp:548 engines/icb/icb.cpp:68
-#: engines/icb/icb.cpp:152 engines/scumm/metaengine.cpp:808
+#: engines/icb/icb.cpp:152 engines/scumm/metaengine.cpp:843
 #: engines/twine/metaengine.cpp:461 engines/twine/metaengine.cpp:528
 #: engines/wintermute/keymapper_tables.h:1290
 #: engines/wintermute/keymapper_tables.h:1373
@@ -905,7 +905,7 @@ msgstr "上"
 #: engines/crab/input/input.cpp:101 engines/crab/input/input.cpp:151
 #: engines/dragons/metaengine.cpp:166 engines/griffon/metaengine.cpp:127
 #: engines/grim/grim.cpp:472 engines/grim/grim.cpp:553 engines/icb/icb.cpp:73
-#: engines/icb/icb.cpp:157 engines/scumm/metaengine.cpp:775
+#: engines/icb/icb.cpp:157 engines/scumm/metaengine.cpp:810
 #: engines/twine/metaengine.cpp:468 engines/twine/metaengine.cpp:536
 #: engines/wintermute/keymapper_tables.h:1296
 #: engines/wintermute/keymapper_tables.h:1379
@@ -919,7 +919,7 @@ msgstr "下"
 #: engines/crab/input/input.cpp:107 engines/crab/input/input.cpp:157
 #: engines/dragons/metaengine.cpp:172 engines/griffon/metaengine.cpp:133
 #: engines/grim/grim.cpp:477 engines/grim/grim.cpp:558 engines/icb/icb.cpp:78
-#: engines/icb/icb.cpp:162 engines/scumm/metaengine.cpp:788
+#: engines/icb/icb.cpp:162 engines/scumm/metaengine.cpp:823
 #: engines/twine/metaengine.cpp:483 engines/twine/metaengine.cpp:551
 #: engines/wintermute/keymapper_tables.h:320
 #: engines/wintermute/keymapper_tables.h:1302
@@ -934,7 +934,7 @@ msgstr "左"
 #: engines/crab/input/input.cpp:113 engines/crab/input/input.cpp:163
 #: engines/dragons/metaengine.cpp:178 engines/griffon/metaengine.cpp:139
 #: engines/grim/grim.cpp:482 engines/grim/grim.cpp:563 engines/icb/icb.cpp:83
-#: engines/icb/icb.cpp:167 engines/scumm/metaengine.cpp:795
+#: engines/icb/icb.cpp:167 engines/scumm/metaengine.cpp:830
 #: engines/twine/metaengine.cpp:475 engines/twine/metaengine.cpp:544
 #: engines/wintermute/keymapper_tables.h:326
 #: engines/wintermute/keymapper_tables.h:1308
@@ -958,16 +958,12 @@ msgid "Go to end of line"
 msgstr "行の終端へ"
 
 #: gui/gui-manager.cpp:216
-#, fuzzy
-#| msgid "Go to end of line"
 msgid "Select to end of line"
-msgstr "行の終端へ"
+msgstr "行の終端を選択"
 
 #: gui/gui-manager.cpp:226
-#, fuzzy
-#| msgid "Go to start of line"
 msgid "Select to start of line"
-msgstr "行の先頭へ"
+msgstr "行の先頭を選択"
 
 #: gui/gui-manager.cpp:236
 msgid "Go to start of line"
@@ -2436,15 +2432,15 @@ msgstr "再生時間未記録"
 msgid "Do you really want to delete this saved game?"
 msgstr "セーブデータを削除してもよろしいですか？"
 
-#: gui/saveload-dialog.cpp:657 gui/saveload-dialog.cpp:1171
+#: gui/saveload-dialog.cpp:657 gui/saveload-dialog.cpp:1173
 msgid "Date: "
 msgstr "日付： "
 
-#: gui/saveload-dialog.cpp:661 gui/saveload-dialog.cpp:1177
+#: gui/saveload-dialog.cpp:661 gui/saveload-dialog.cpp:1179
 msgid "Time: "
 msgstr "時間： "
 
-#: gui/saveload-dialog.cpp:667 gui/saveload-dialog.cpp:1185
+#: gui/saveload-dialog.cpp:667 gui/saveload-dialog.cpp:1187
 msgid "Playtime: "
 msgstr "再生時間： "
 
@@ -2460,11 +2456,11 @@ msgstr "新セーブ"
 msgid "Create a new saved game"
 msgstr "新しいセーブデータを作成する"
 
-#: gui/saveload-dialog.cpp:1164
+#: gui/saveload-dialog.cpp:1166
 msgid "Name: "
 msgstr "名前： "
 
-#: gui/saveload-dialog.cpp:1240
+#: gui/saveload-dialog.cpp:1244
 #, c-format
 msgid "Enter a description for slot %d:"
 msgstr "セーブデータ%dの詳細を入力してください："
@@ -2502,7 +2498,7 @@ msgstr "レンダラー無効"
 msgid "Standard renderer"
 msgstr "標準レンダラー"
 
-#: gui/ThemeEngine.cpp:271 engines/scumm/dialogs.cpp:1016
+#: gui/ThemeEngine.cpp:271 engines/scumm/dialogs.cpp:1017
 msgid "Standard"
 msgstr "標準"
 
@@ -4110,7 +4106,7 @@ msgstr "ファイルは転送されませんでした!"
 msgid "Uploaded successfully!"
 msgstr "アップロードに成功しました!"
 
-#: backends/platform/3ds/options-dialog.cpp:44 engines/scumm/dialogs.cpp:283
+#: backends/platform/3ds/options-dialog.cpp:44 engines/scumm/dialogs.cpp:284
 msgid "~C~lose"
 msgstr "閉じる(~C~)"
 
@@ -4318,75 +4314,6 @@ msgid "Touch Controls"
 msgstr "タッチ操作"
 
 #: backends/platform/android/android.cpp:1033
-#, fuzzy
-#| msgid ""
-#| "## Touch control modes\n"
-#| "The touch control mode can be changed by tapping or clicking on the "
-#| "controller icon in the upper right corner\n"
-#| "### Direct mouse \n"
-#| "\n"
-#| "The touch controls are direct. The pointer jumps to where the finger "
-#| "touches the screen (default for menus).\n"
-#| "\n"
-#| "  ![Direct mouse mode](mouse.png \"Direct mouse mode\")\n"
-#| "\n"
-#| "### Touchpad emulation \n"
-#| "\n"
-#| "The touch controls are indirect, like on a laptop touchpad.\n"
-#| "\n"
-#| "  ![Touchpad mode](touchpad.png \"Touchpad mode\")\n"
-#| "\n"
-#| "### Gamepad emulation \n"
-#| "\n"
-#| "Fingers must be placed on lower left and right of the screen to emulate a "
-#| "directional pad and action buttons.\n"
-#| "\n"
-#| "  ![Gamepad mode](gamepad.png \"Gamepad mode\")\n"
-#| "\n"
-#| "To select the preferred touch mode for menus, 2D games, and 3D games, go "
-#| "to **Global Options > Backend > Choose the preferred touch mode**.\n"
-#| "\n"
-#| "## Touch actions \n"
-#| "\n"
-#| "### Two finger scroll \n"
-#| "\n"
-#| "To scroll, slide two fingers up or down the screen\n"
-#| "### Two finger tap\n"
-#| "\n"
-#| "To do a two finger tap, hold one finger down and then tap with a second "
-#| "finger.\n"
-#| "\n"
-#| "### Three finger tap\n"
-#| "\n"
-#| "To do a three finger tap, start with holding down one finger and "
-#| "progressively touch down the other two fingers, one at a time, while "
-#| "still holding down the previous fingers. Imagine you are impatiently "
-#| "tapping your fingers on a surface, but then slow down that movement so it "
-#| "is rhythmic, but not too slow.\n"
-#| "\n"
-#| "### Immersive Sticky fullscreen mode\n"
-#| "\n"
-#| "Swipe from the edge to reveal the system bars.  They remain semi-"
-#| "transparent and disappear after a few seconds unless you interact with "
-#| "them.\n"
-#| "\n"
-#| "### Global Main Menu\n"
-#| "\n"
-#| "To open the Global Main Menu, tap on the menu icon at the top right of "
-#| "the screen.\n"
-#| "\n"
-#| "  ![Menu icon](menu.png \"Menu icon\")\n"
-#| "\n"
-#| "## Virtual keyboard\n"
-#| "\n"
-#| "To open the virtual keyboard, long press on the controller icon at the "
-#| "top right of the screen, or tap on any editable text field. To hide the "
-#| "virtual keyboard, tap the controller icon again, or tap outside the text "
-#| "field.\n"
-#| "\n"
-#| "\n"
-#| "  ![Keybpard icon](keyboard.png \"Keyboard icon\")\n"
-#| "\n"
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -4461,20 +4388,20 @@ msgstr ""
 "タッチ操作はダイレクトです。指で触れた場所にポインターがジャンプします(デフォ"
 "ルト)。\n"
 "\n"
-"  ![Direct mouse mode](mouse.png \"Direct mouse mode\")\n"
+"  ![Direct mouse mode](mouse.png \"Direct mouse mode\"){w=10em}\n"
 "\n"
 "### タッチパッドエミュレーション\n"
 "\n"
 "タッチパッドのように間接的なタッチ操作になります。\n"
 "\n"
-"  ![Touchpad mode](touchpad.png \"Touchpad mode\")\n"
+"  ![Touchpad mode](touchpad.png \"Touchpad mode\"){w=10em}\n"
 "\n"
 "### ゲームパッドエミュレーション\n"
 "\n"
 "方向パッドとアクションボタンをエミュレーションするには、画面の左下/右下に指を"
 "置く必要があります。\n"
 "\n"
-"  ![Gamepad mode](gamepad.png \"Gamepad mode\")\n"
+"  ![Gamepad mode](gamepad.png \"Gamepad mode\"){w=10em}\n"
 "\n"
 "メニュー・2D・3Dの優先タッチモードを選択するには「グローバルオプション」＞"
 "「バックエンド」＞「優先タッチモードの選択」に進みます。\n"
@@ -4503,7 +4430,7 @@ msgstr ""
 "\n"
 "メニューを開くには、画面右上のメニューアイコンをタップします。\n"
 "\n"
-"  ![Menu icon](menu.png \"Menu icon\")\n"
+"  ![Menu icon](menu.png \"Menu icon\"){w=10em}\n"
 "\n"
 "## 仮想キーボード\n"
 "\n"
@@ -4512,7 +4439,7 @@ msgstr ""
 "外側をタップします。\n"
 "\n"
 "\n"
-"  ![Keybpard icon](keyboard.png \"Keyboard icon\")\n"
+"  ![Keybpard icon](keyboard.png \"Keyboard icon\"){w=10em}\n"
 "\n"
 
 #: backends/platform/android/android.cpp:1089
@@ -4522,42 +4449,6 @@ msgid "Adding Games"
 msgstr "ゲームを追加"
 
 #: backends/platform/android/android.cpp:1092
-#, fuzzy
-#| msgid ""
-#| "## Adding Games \n"
-#| "\n"
-#| "1. Select **Add Game...** from the launcher. \n"
-#| "\n"
-#| "2. Inside the ScummVM file browser, select **Go Up** until you reach the "
-#| "root folder which has the **<Add a new folder>** option. \n"
-#| "\n"
-#| "  ![ScummVM file browser root](browser-root.png \"ScummVM file browser "
-#| "root\")\n"
-#| "\n"
-#| "3. Double-tap **<Add a new folder>**. In your device's file browser, "
-#| "navigate to the folder containing all your game folders. For example, "
-#| "**SD Card > ScummVMgames**. \n"
-#| "\n"
-#| "4. Select **Use this folder**. \n"
-#| "\n"
-#| "  ![OS selectable folder](fs-folder.png \"OS selectable folder\")\n"
-#| "\n"
-#| "5. Select **ALLOW** to give ScummVM permission to access the folder. \n"
-#| "\n"
-#| "  ![OS access permission dialog](fs-permission.png \"OS access permission"
-#| "\")\n"
-#| "\n"
-#| "6. In the ScummVM file browser, double-tap to browse through your added "
-#| "folder. Add a game by selecting the sub-folder containing the game files, "
-#| "then tap **Choose**. \n"
-#| "\n"
-#| "  ![SAF folder added](browser-folder-in-list.png \"SAF folder added\")\n"
-#| "\n"
-#| "Step 2 and 3 are done only once. To add more games, repeat Steps 1 and "
-#| "6. \n"
-#| "\n"
-#| "See our [Android documentation](https://docs.scummvm.org/en/latest/"
-#| "other_platforms/android.html) for more information.\n"
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -4602,7 +4493,7 @@ msgstr ""
 "まで「上へ」を選択します。\n"
 "\n"
 "  ![ScummVM file browser root](browser-root.png \"ScummVM file browser root"
-"\")\n"
+"\"){w=70%}\n"
 "\n"
 "3. 「新規フォルダーを追加」をダブルタップします。デバイスのファイルブラウザー"
 "で、全てのゲームデータを含むフォルダーに移動します(例：「SD Card > "
@@ -4610,18 +4501,19 @@ msgstr ""
 "\n"
 "4. 「このフォルダーを使用する」を選択します。\n"
 "\n"
-"  ![OS selectable folder](fs-folder.png \"OS selectable folder\")\n"
+"  ![OS selectable folder](fs-folder.png \"OS selectable folder\"){w=70%}\n"
 "\n"
 "5. 「許可」を選択し、ScummVMにフォルダーへのアクセス許可を与えます。\n"
 "\n"
-"  ![OS access permission dialog](fs-permission.png \"OS access permission"
-"\")\n"
+"  ![OS access permission dialog](fs-permission.png \"OS access permission\")"
+"{w=70%}\n"
 "\n"
 "6. ScummVMファイルブラウザーで、ダブルタップして追加したフォルダーをブラウズ"
 "します。ゲームファイルを含むサブフォルダーを選択し「選択」をタップして追加し"
 "ます。\n"
 "\n"
-"  ![SAF folder added](browser-folder-in-list.png \"SAF folder added\")\n"
+"  ![SAF folder added](browser-folder-in-list.png \"SAF folder added\")"
+"{w=70%}\n"
 "\n"
 "2.と3.は一度だけ行います。さらにゲームを追加する場合、1.と6.を繰り返しま"
 "す。\n"
@@ -5027,11 +4919,11 @@ msgstr ""
 msgid "Click Mode"
 msgstr "クリックモード"
 
-#: backends/platform/sdl/sdl.cpp:1010
+#: backends/platform/sdl/sdl.cpp:1018
 msgid "Keyboard"
 msgstr "キーボード"
 
-#: backends/platform/sdl/sdl.cpp:1013
+#: backends/platform/sdl/sdl.cpp:1021
 msgid ""
 "## Keyboard shortcuts\n"
 "\n"
@@ -5062,23 +4954,23 @@ msgstr ""
 "| --------------|------------------\n"
 "| `Ctrl+F5` | グローバルメインメニューを表示\n"
 
-#: backends/platform/sdl/sdl.cpp:1025
+#: backends/platform/sdl/sdl.cpp:1033
 msgid "| `Cmd+q`    | Quit (macOS)\n"
 msgstr "| `Cmd+q`    | 終了(macOS)\n"
 
-#: backends/platform/sdl/sdl.cpp:1027
+#: backends/platform/sdl/sdl.cpp:1035
 msgid "| `Alt+F4`  | Quit (Windows)\n"
 msgstr "| `Alt+F4`  | 終了(Windows)\n"
 
-#: backends/platform/sdl/sdl.cpp:1029
+#: backends/platform/sdl/sdl.cpp:1037
 msgid "| `Ctrl+q`  | Quit (Linux/Unix)\n"
 msgstr "| `Ctrl+q`  | 終了(Linux/Unix)\n"
 
-#: backends/platform/sdl/sdl.cpp:1030
+#: backends/platform/sdl/sdl.cpp:1038
 msgid "| `Ctrl+z`  | Quit (other platforms)\n"
 msgstr "| `Ctrl+z`  | 終了(その他OS)\n"
 
-#: backends/platform/sdl/sdl.cpp:1033
+#: backends/platform/sdl/sdl.cpp:1041
 msgid ""
 "| `Ctrl+u`  | Mutes all sounds\n"
 "| `Ctrl+m`  | Toggles mouse capture\n"
@@ -5559,7 +5451,7 @@ msgid "Quick load or save game isn't supported in this location"
 msgstr ""
 "このロケーションでは、セーブまたはクイックロードはサポートされていません"
 
-#: engines/agos/saveload.cpp:161 engines/scumm/scumm.cpp:2854
+#: engines/agos/saveload.cpp:161 engines/scumm/scumm.cpp:2875
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -5570,7 +5462,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:196 engines/scumm/scumm.cpp:2841
+#: engines/agos/saveload.cpp:196 engines/scumm/scumm.cpp:2862
 #, c-format
 msgid ""
 "Failed to save game to file:\n"
@@ -5581,7 +5473,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:204 engines/scumm/scumm.cpp:2874
+#: engines/agos/saveload.cpp:204 engines/scumm/scumm.cpp:2895
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -5951,7 +5843,7 @@ msgstr "モードの切替"
 
 #. I18N: This keymap allows skipping video cutscenes
 #: engines/bladerunner/metaengine.cpp:229 engines/scumm/help.cpp:79
-#: engines/scumm/metaengine.cpp:834 engines/zvision/metaengine.cpp:284
+#: engines/scumm/metaengine.cpp:869 engines/zvision/metaengine.cpp:284
 msgid "Skip cutscene"
 msgstr "ムービーをスキップ"
 
@@ -6169,7 +6061,7 @@ msgstr "会話/作用"
 
 #. I18N: Combat command in Might & Magic 1
 #: engines/crab/input/input.cpp:125 engines/griffon/metaengine.cpp:145
-#: engines/mm/mm1/metaengine.cpp:65 engines/scumm/metaengine.cpp:821
+#: engines/mm/mm1/metaengine.cpp:65 engines/scumm/metaengine.cpp:856
 msgid "Attack"
 msgstr "攻撃"
 
@@ -7958,10 +7850,8 @@ msgid "Fast move modifier"
 msgstr "高速移動の修正"
 
 #: engines/nancy/input.cpp:217
-#, fuzzy
-#| msgid "Show/hide keyboard"
 msgid "Show/hide maze map"
-msgstr "キーボードを表示/非表示"
+msgstr "マップを表示/非表示"
 
 #: engines/nancy/metaengine.cpp:38
 msgid "Player Speech"
@@ -7992,6 +7882,35 @@ msgstr "オート移動"
 #: engines/nancy/metaengine.cpp:61
 msgid "Automatically rotate the viewport when the mouse reaches an edge."
 msgstr "マウスが端に達すると、自動で表示領域を回転させます。"
+
+#: engines/nancy/metaengine.cpp:71
+msgid "Fix softlocks"
+msgstr "詰みを修正"
+
+#: engines/nancy/metaengine.cpp:72
+msgid ""
+"Fix instances where missing something earlier in the game blocks you from "
+"progressing any further."
+msgstr "序盤で見落としがあった場合に、ゲームが進行しなくなる問題を修正します。"
+
+#: engines/nancy/metaengine.cpp:82
+msgid "Fix annoyances"
+msgstr "その他修正"
+
+#: engines/nancy/metaengine.cpp:83
+msgid "Fix various minor annoyances."
+msgstr "細かい不具合を修正します。"
+
+#: engines/nancy/metaengine.cpp:93
+msgid "Extend endgame timer"
+msgstr "最終タイマー延長"
+
+#: engines/nancy/metaengine.cpp:94
+msgid ""
+"Get a little more time before failing the final puzzle. This is an official "
+"patch by HeR Interactive."
+msgstr ""
+"最後のパズルで、少し時間を延長します。HeR Interactiveによる公式パッチです。"
 
 #: engines/neverhood/dialogs.cpp:52
 msgid "Skip the Hall of Records storyboard scenes"
@@ -8341,16 +8260,16 @@ msgstr ""
 "ポーカーロジックは外部のDLLにハードコーディングされており、未実装です。代わり"
 "に、対戦相手のアクションをランダムに選ぶダミーのロジックが存在します"
 
-#: engines/sci/engine/savegame.cpp:1467
+#: engines/sci/engine/savegame.cpp:1455
 msgid "The format of this saved game is obsolete, unable to load it"
 msgstr "セーブのフォーマットが古いため、ロードできません"
 
-#: engines/sci/engine/savegame.cpp:1469
+#: engines/sci/engine/savegame.cpp:1457
 #, c-format
 msgid "Savegame version is %d, maximum supported is %0d"
 msgstr "セーブのゲームバージョンは%dですが、サポートされているのは%0dまでです"
 
-#: engines/sci/engine/savegame.cpp:1481
+#: engines/sci/engine/savegame.cpp:1469
 msgid ""
 "This saved game was created with a different version of the game, unable to "
 "load it"
@@ -8447,7 +8366,7 @@ msgstr ""
 "- ダウンロード先 http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
 "GK2Subtitles.zip\n"
 
-#: engines/sci/sci.cpp:917
+#: engines/sci/sci.cpp:929
 msgid ""
 "Characters saved inside ScummVM are shown automatically. Character files "
 "saved in the original interpreter need to be put inside ScummVM's saved "
@@ -8529,7 +8448,7 @@ msgid "Your Name:"
 msgstr "ユーザー名："
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:3861
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:3882
 msgid "Host"
 msgstr "ホスト"
 
@@ -8539,7 +8458,7 @@ msgid "Querying games..."
 msgstr "ゲームに照会中..."
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:3861
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:3882
 msgid "Join"
 msgstr "参加"
 
@@ -8550,65 +8469,101 @@ msgid "Found %d available games."
 msgstr "利用可能な%dが見つかりました。"
 
 #. I18N: Previous page button
-#: engines/scumm/dialogs.cpp:280
+#: engines/scumm/dialogs.cpp:281
 msgid "~P~revious"
 msgstr "前(~P~)"
 
 #. I18N: Next page button
-#: engines/scumm/dialogs.cpp:282
+#: engines/scumm/dialogs.cpp:283
 msgid "~N~ext"
 msgstr "次(~N~)"
 
-#: engines/scumm/dialogs.cpp:955
+#: engines/scumm/dialogs.cpp:956
 msgid "Speech Only"
 msgstr "音声のみ"
 
-#: engines/scumm/dialogs.cpp:956
+#: engines/scumm/dialogs.cpp:957
 msgid "Speech and Subtitles"
 msgstr "音声と字幕"
 
-#: engines/scumm/dialogs.cpp:957
+#: engines/scumm/dialogs.cpp:958
 msgid "Subtitles Only"
 msgstr "字幕のみ"
 
-#: engines/scumm/dialogs.cpp:965
+#: engines/scumm/dialogs.cpp:966
 msgctxt "lowres"
 msgid "Speech & Subs"
 msgstr "喋り&字幕"
 
-#: engines/scumm/dialogs.cpp:1011
+#: engines/scumm/dialogs.cpp:1012
 msgid "Select a Proficiency Level."
 msgstr "習熟度を選択してください。"
 
-#: engines/scumm/dialogs.cpp:1013
+#: engines/scumm/dialogs.cpp:1014
 msgid "Refer to your Loom(TM) manual for help."
 msgstr "ヘルプについては、Loom(TM)のマニュアルを参照してください。"
 
-#: engines/scumm/dialogs.cpp:1017
+#: engines/scumm/dialogs.cpp:1018
 msgid "Practice"
 msgstr "練習"
 
-#: engines/scumm/dialogs.cpp:1018
+#: engines/scumm/dialogs.cpp:1019
 msgid "Expert"
 msgstr "エキスパート"
 
-#: engines/scumm/dialogs.cpp:1050 engines/scumm/metaengine.cpp:657
-msgid "Enable game-specific enhancements"
-msgstr "ゲーム固有の拡張機能を有効化"
-
-#: engines/scumm/dialogs.cpp:1050 engines/scumm/metaengine.cpp:658
-msgid ""
-"Allow ScummVM to make small enhancements to the game, usually based on other "
-"versions of the same game."
+#: engines/scumm/dialogs.cpp:1126
+msgid "Enhancements:"
 msgstr ""
-"Scumm VMがゲームに対し、他のバージョンに基づいた小さな拡張を行う事を許可しま"
-"す。"
 
-#: engines/scumm/dialogs.cpp:1055 engines/scumm/metaengine.cpp:675
+#: engines/scumm/dialogs.cpp:1131
+#, fuzzy
+#| msgid "Use original menus"
+msgid "Fix original bugs"
+msgstr "オリジナルのメニューを使用"
+
+#: engines/scumm/dialogs.cpp:1132
+msgid ""
+"Fixes bugs which were present in the original release, and noticeable "
+"graphical/audio glitches."
+msgstr ""
+
+#: engines/scumm/dialogs.cpp:1135
+msgid "Audio-visual improvements"
+msgstr ""
+
+#: engines/scumm/dialogs.cpp:1136
+msgid ""
+"Makes adjustments not related to bugs for certain audio and graphics "
+"elements (e.g. version consistency changes)."
+msgstr ""
+
+#: engines/scumm/dialogs.cpp:1139
+#, fuzzy
+#| msgid "Enable restored content"
+msgid "Restored content"
+msgstr "復元されたコンテンツを有効にする"
+
+#: engines/scumm/dialogs.cpp:1140
+msgid ""
+"Restores dialogs, graphics, and audio elements which were originally cut in "
+"the original release."
+msgstr ""
+
+#: engines/scumm/dialogs.cpp:1143
+msgid "Modern UI/UX adjustments"
+msgstr ""
+
+#: engines/scumm/dialogs.cpp:1144
+msgid ""
+"Activates some modern comforts; e.g it removes the fake sound loading screen "
+"in Sam&Max, and makes early save menus snappier."
+msgstr ""
+
+#: engines/scumm/dialogs.cpp:1168 engines/scumm/metaengine.cpp:700
 msgid "Enable the original GUI and Menu"
 msgstr "オリジナルGUIとメニューを有効化"
 
-#: engines/scumm/dialogs.cpp:1056
+#: engines/scumm/dialogs.cpp:1169
 msgid ""
 "Allow the game to use the in-engine graphical interface and the original "
 "save/load menu. Use it together with the \"Ask for confirmation on exit\" "
@@ -8617,11 +8572,11 @@ msgstr ""
 "エンジン内のGUIとオリジナルのセーブ/ロードメニューを使用可能にします。「終了"
 "時に確認」と併用すると、より完全な体験が可能です。"
 
-#: engines/scumm/dialogs.cpp:1078
+#: engines/scumm/dialogs.cpp:1280
 msgid "Overture Timing:"
 msgstr "Overtureのタイミング："
 
-#: engines/scumm/dialogs.cpp:1082
+#: engines/scumm/dialogs.cpp:1284
 msgid ""
 "When using replacement music, this adjusts the time when the Overture "
 "changes to the scene with the Lucasfilm and Loom logotypes."
@@ -8629,11 +8584,11 @@ msgstr ""
 "BGMを置き換える際、OvertureがLucasfilmとLoomのロゴに切り替わるタイミングを調"
 "整します。"
 
-#: engines/scumm/dialogs.cpp:1165
+#: engines/scumm/dialogs.cpp:1369
 msgid "Playback Adjust:"
 msgstr "再生アジャスト："
 
-#: engines/scumm/dialogs.cpp:1169
+#: engines/scumm/dialogs.cpp:1373
 msgid ""
 "When playing sound from the CD audio track, adjust the start position of the "
 "sound by this much. Use this if you often hear bits of the wrong sound."
@@ -8641,11 +8596,11 @@ msgstr ""
 "CDオーディオトラックを再生する際、開始位置を調整します。サウンドに問題がある"
 "場合に使用して下さい。"
 
-#: engines/scumm/dialogs.cpp:1248
+#: engines/scumm/dialogs.cpp:1453
 msgid "Intro Adjust:"
 msgstr "イントロ調整："
 
-#: engines/scumm/dialogs.cpp:1252
+#: engines/scumm/dialogs.cpp:1457
 msgid ""
 "When playing the intro track, play from this point in it. Use this if the "
 "music gets cut off prematurely, or if you are unhappy with the way the music "
@@ -8654,11 +8609,11 @@ msgstr ""
 "イントロトラックを、この位置から再生します。曲が途中で切れたり、同期が正しく"
 "ない場合に使用して下さい。"
 
-#: engines/scumm/dialogs.cpp:1261
+#: engines/scumm/dialogs.cpp:1466
 msgid "Outlook Adjust:"
 msgstr "アウトルック調整："
 
-#: engines/scumm/dialogs.cpp:1265
+#: engines/scumm/dialogs.cpp:1470
 msgid ""
 "The outlook music is part of the intro track. Adjust the position in the "
 "track at which it starts playing. Use this if the music is cut off, or if "
@@ -8667,25 +8622,25 @@ msgstr ""
 "アウトルックミュージックはイントロの一部です。トラック内での再生開始位置を調"
 "整します。曲が途切れたり、前の曲が聞こえる場合に使用して下さい。"
 
-#: engines/scumm/dialogs.cpp:1365 engines/scumm/metaengine.cpp:666
+#: engines/scumm/dialogs.cpp:1572 engines/scumm/metaengine.cpp:691
 msgid "Load modded audio"
 msgstr "改造オーディオをロード"
 
-#: engines/scumm/dialogs.cpp:1365 engines/scumm/metaengine.cpp:667
+#: engines/scumm/dialogs.cpp:1572 engines/scumm/metaengine.cpp:692
 msgid ""
 "Replace music, sound effects, and speech clips with modded audio files, if "
 "available."
 msgstr "可能なら、BGM・SE・スピーチクリップを改造ファイルに置き換えて下さい。"
 
-#: engines/scumm/dialogs.cpp:1367
+#: engines/scumm/dialogs.cpp:1574
 msgid "Multiplayer Server:"
 msgstr "マルチプレイサーバー："
 
-#: engines/scumm/dialogs.cpp:1373
+#: engines/scumm/dialogs.cpp:1580
 msgid "Online Server:"
 msgstr "オンラインサーバー："
 
-#: engines/scumm/dialogs.cpp:1374
+#: engines/scumm/dialogs.cpp:1581
 msgid ""
 "Address of the server to connect to for online play.  It must start with "
 "either \"https://\" or \"http://\" schemas."
@@ -8693,19 +8648,19 @@ msgstr ""
 "接続するサーバーのアドレスです。 \"https://\" または \"http://\"スキーマで始"
 "まる必要があります。"
 
-#: engines/scumm/dialogs.cpp:1376
+#: engines/scumm/dialogs.cpp:1583
 msgid "Enable online competitive mods"
 msgstr "オンライン対戦MODの有効化"
 
-#: engines/scumm/dialogs.cpp:1376
+#: engines/scumm/dialogs.cpp:1583
 msgid "Enables custom-made modifications intented for online competitive play."
 msgstr "オンライン対戦を想定したカスタムMODが利用可能です。"
 
-#: engines/scumm/dialogs.cpp:1380
+#: engines/scumm/dialogs.cpp:1587
 msgid "Enable connection to Multiplayer Server"
 msgstr "マルチプレイサーバーへの接続を許可"
 
-#: engines/scumm/dialogs.cpp:1380
+#: engines/scumm/dialogs.cpp:1587
 msgid ""
 "Toggles the connection to the server that allows hosting and joining online "
 "multiplayer games over the Internet."
@@ -8713,15 +8668,15 @@ msgstr ""
 "オンラインマルチプレイのホストおよび参加を可能とするサーバーへの接続を切り替"
 "えます。"
 
-#: engines/scumm/dialogs.cpp:1381
+#: engines/scumm/dialogs.cpp:1588
 msgid "Host games over LAN"
 msgstr "LANでゲームを開催"
 
-#: engines/scumm/dialogs.cpp:1381
+#: engines/scumm/dialogs.cpp:1588
 msgid "Allows the game sessions to be discovered over your local area network."
 msgstr "セッションをローカルネットワーク上で発見できるようにします。"
 
-#: engines/scumm/dialogs.cpp:1383
+#: engines/scumm/dialogs.cpp:1590
 msgid ""
 "Address of the server to connect to for hosting and joining online game "
 "sessions."
@@ -8983,10 +8938,8 @@ msgid "play C major on distaff"
 msgstr "糸巻き棒でコードCメジャーを演奏"
 
 #: engines/scumm/help.cpp:190
-#, fuzzy
-#| msgid "Show inventory"
 msgid "Shows the drafts inventory"
-msgstr "インベントリーを表示"
+msgstr "ドラフトインベントリーを表示"
 
 #: engines/scumm/help.cpp:196 engines/scumm/help.cpp:218
 msgid "puSh"
@@ -9254,7 +9207,7 @@ msgstr "音楽の音量： "
 msgid "Subtitle speed: "
 msgstr "字幕の速度： "
 
-#: engines/scumm/metaengine.cpp:362
+#: engines/scumm/metaengine.cpp:366
 msgid ""
 "The Lite version of Putt-Putt Saves the Zoo iOS is not supported to avoid "
 "piracy.\n"
@@ -9264,37 +9217,37 @@ msgstr ""
 "ん。\n"
 "製品版はiTunes Storeからご購入いただけます。"
 
-#: engines/scumm/metaengine.cpp:459
+#: engines/scumm/metaengine.cpp:463
 msgid "HE v71+ support is not compiled in"
 msgstr "HE v71+のサポートはコンパイルされていません"
 
-#: engines/scumm/metaengine.cpp:483
+#: engines/scumm/metaengine.cpp:487
 msgid "SCUMM v7-8 support is not compiled in"
 msgstr "SCUMM v7-8のサポートはコンパイルされていません"
 
-#: engines/scumm/metaengine.cpp:603
+#: engines/scumm/metaengine.cpp:628
 msgid "Show Object Line"
 msgstr "オブジェクトラインの表示"
 
-#: engines/scumm/metaengine.cpp:604
+#: engines/scumm/metaengine.cpp:629
 msgid "Show the names of objects at the bottom of the screen"
 msgstr "画面下にオブジェクト名を表示"
 
-#: engines/scumm/metaengine.cpp:612
+#: engines/scumm/metaengine.cpp:637
 msgid "Use NES Classic Palette"
 msgstr "NES Classicのパレットを使用する"
 
-#: engines/scumm/metaengine.cpp:613
+#: engines/scumm/metaengine.cpp:638
 msgid "Use a more neutral color palette that closely emulates the NES Classic"
 msgstr ""
 "NES Classicを厳密にエミュレートした、よりニュートラルなカラーパレットを使用す"
 "る"
 
-#: engines/scumm/metaengine.cpp:621
+#: engines/scumm/metaengine.cpp:646
 msgid "Trim FM-TOWNS games to 200 pixels height"
 msgstr "FM-TOWNSゲームを200ピクセルの高さにトリミングします"
 
-#: engines/scumm/metaengine.cpp:622
+#: engines/scumm/metaengine.cpp:647
 msgid ""
 "Cut the extra 40 pixels at the bottom of the screen, to make it standard 200 "
 "pixels height, allowing using 'aspect ratio correction'"
@@ -9302,11 +9255,11 @@ msgstr ""
 "画面下部の余分な40pxをカットし、「アスペクト比補正」を使って標準的な200pxの高"
 "さにします"
 
-#: engines/scumm/metaengine.cpp:630
+#: engines/scumm/metaengine.cpp:655
 msgid "Play simplified music"
 msgstr "簡易再生"
 
-#: engines/scumm/metaengine.cpp:631
+#: engines/scumm/metaengine.cpp:656
 msgid ""
 "This music was presumably intended for low-end Macs, and uses only one "
 "channel."
@@ -9314,25 +9267,25 @@ msgstr ""
 "この音楽はローエンドなMacでの再生を想定したと思われ、1チャンネルしか使いませ"
 "ん。"
 
-#: engines/scumm/metaengine.cpp:639
+#: engines/scumm/metaengine.cpp:664
 msgid "Enable smooth scrolling"
 msgstr "スムーズスクロールを有効化"
 
-#: engines/scumm/metaengine.cpp:640
+#: engines/scumm/metaengine.cpp:665
 msgid "(instead of the normal 8-pixels steps scrolling)"
 msgstr "(通常の8px単位でのスクロールの代わりに)"
 
-#: engines/scumm/metaengine.cpp:648
+#: engines/scumm/metaengine.cpp:673
 msgid "Allow semi-smooth scrolling"
 msgstr "セミスムーズスクロールを許可"
 
-#: engines/scumm/metaengine.cpp:649
+#: engines/scumm/metaengine.cpp:674
 msgid ""
 "Allow scrolling to be less smooth during the fast camera movement in the "
 "intro."
 msgstr "イントロの高速なカメラワークの際、スムーズさが過剰になるのを抑えます。"
 
-#: engines/scumm/metaengine.cpp:676
+#: engines/scumm/metaengine.cpp:701
 msgid ""
 "Allow the game to use the in-engine graphical interface and the original "
 "save/load menu. \t\tUse it together with the \"Ask for confirmation on exit"
@@ -9341,11 +9294,11 @@ msgstr ""
 "エンジン内のGUIとオリジナルのセーブ/ロードメニューを使用可能にします。\t"
 "\t「終了時に確認」と併用すると、より完全な体験が可能です。"
 
-#: engines/scumm/metaengine.cpp:685
+#: engines/scumm/metaengine.cpp:710
 msgid "Enable low latency audio mode"
 msgstr "低遅延オーディオを有効化"
 
-#: engines/scumm/metaengine.cpp:686
+#: engines/scumm/metaengine.cpp:711
 msgid ""
 "Allows the game to use low latency audio, at the cost of sound accuracy. \t"
 "\tIt is recommended to enable this feature only if you incur in audio "
@@ -9354,11 +9307,11 @@ msgstr ""
 "低遅延なオーディオを使用できますが、サウンドの再現性は落ちます。\t\t通常の"
 "ゲームプレイでレイテンシーに問題がある場合のみ有効にする事を推奨します。"
 
-#: engines/scumm/metaengine.cpp:695
+#: engines/scumm/metaengine.cpp:720
 msgid "Enable the \"A Pirate I Was Meant To Be\" song"
 msgstr "楽曲「A Pirate I Was Meant To Be」を有効化"
 
-#: engines/scumm/metaengine.cpp:696
+#: engines/scumm/metaengine.cpp:721
 msgid ""
 "Enable the song at the beginning of Part 3 of the game, \"A Pirate I Was "
 "Meant To Be\", \t\twhich was cut in international releases. Beware though: "
@@ -9367,28 +9320,28 @@ msgstr ""
 "海外版でカットされた、第3部冒頭の曲「A Pirate I Was Meant To Be」を有効化。た"
 "だし、字幕が完全に翻訳されていない場合がありますのでご了承ください。"
 
-#: engines/scumm/metaengine.cpp:769
+#: engines/scumm/metaengine.cpp:804
 msgid "Down Left"
 msgstr "左下"
 
-#: engines/scumm/metaengine.cpp:782
+#: engines/scumm/metaengine.cpp:817
 msgid "Down Right"
 msgstr "右下"
 
-#: engines/scumm/metaengine.cpp:802
+#: engines/scumm/metaengine.cpp:837
 msgid "Up Left"
 msgstr "左上"
 
-#: engines/scumm/metaengine.cpp:815
+#: engines/scumm/metaengine.cpp:850
 msgid "Up Right"
 msgstr "右上"
 
-#: engines/scumm/metaengine.cpp:827
+#: engines/scumm/metaengine.cpp:862
 msgid "Switch weapon"
 msgstr "武器を切り替え"
 
 #. I18N: Lets one skip the bike/car fight sequences in Full Throttle
-#: engines/scumm/metaengine.cpp:841
+#: engines/scumm/metaengine.cpp:876
 msgid "Win the bike fight cheat"
 msgstr "バイク戦闘を省略"
 
@@ -9404,16 +9357,16 @@ msgstr ""
 "アスペクト比の補正は、[エンジン]タブで解像度を320x200にトリミングすることで実"
 "現できます。"
 
-#: engines/scumm/scumm.cpp:1169
+#: engines/scumm/scumm.cpp:1179
 msgid "This game requires the 'Indy' Macintosh executable for its fonts."
 msgstr "このゲームのフォントにMacintoshの実行ファイル「Indy」が必要です。"
 
-#: engines/scumm/scumm.cpp:1193
+#: engines/scumm/scumm.cpp:1203
 msgid ""
 "This game requires the 'Loom' Macintosh executable for its music and fonts."
 msgstr "このゲームのBGM・フォントにMacintoshの実行ファイル「Loom」が必要です。"
 
-#: engines/scumm/scumm.cpp:1213
+#: engines/scumm/scumm.cpp:1223
 msgid ""
 "Could not find the 'Monkey Island' Macintosh executable to read the\n"
 "instruments from. Music will be disabled."
@@ -9422,7 +9375,7 @@ msgstr ""
 "ん。\n"
 "音楽は無効になります。"
 
-#: engines/scumm/scumm.cpp:1564
+#: engines/scumm/scumm.cpp:1585
 msgid ""
 "Audio files compressed with ScummVM Tools were detected; *.BUN/*.SOU\n"
 "compression is not supported anymore for this game, audio will be disabled.\n"
@@ -9432,7 +9385,7 @@ msgstr ""
 "このゲームではサポートされていないため、オーディオは無効になります。\n"
 "オリジナルのメディアから、圧縮せずにコピーしてください。"
 
-#: engines/scumm/scumm.cpp:2040
+#: engines/scumm/scumm.cpp:2061
 #, c-format
 msgid ""
 "Native MIDI support requires the Roland Upgrade from LucasArts,\n"
@@ -9441,7 +9394,7 @@ msgstr ""
 "ネイティブMIDIのサポートには、LucasArts提供のthe Roland Upgradeが必要です。\n"
 "しかし%sがありません。代わりにAdLibを使用します。"
 
-#: engines/scumm/scumm.cpp:2056
+#: engines/scumm/scumm.cpp:2077
 msgid ""
 "This particular version of Monkey Island 1 is known to miss some\n"
 "required resources for MT-32. Using AdLib instead."
@@ -9449,7 +9402,7 @@ msgstr ""
 "このMonkey Island 1の特定のバージョンは、MT-32に必要な\n"
 "リソースが欠落しています。AdLibを代用します。"
 
-#: engines/scumm/scumm.cpp:3750
+#: engines/scumm/scumm.cpp:3771
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -9459,7 +9412,7 @@ msgstr ""
 "ディレクトリーの「Maniac」フォルダー内にゲームファイルを配置し、ゲームが"
 "ScummVMに追加されていなければなりません。"
 
-#: engines/scumm/scumm.cpp:3861
+#: engines/scumm/scumm.cpp:3882
 msgid "Would you like to host or join a network play session?"
 msgstr "セッションを開催、または参加しますか?"
 
@@ -10981,6 +10934,16 @@ msgstr ""
 "LiberationSans、LiberationSerifが必要です。GNUFreeFontを使用する場合、"
 "FreeMono、FreeSans、FreeSerifが必要です。"
 
+#~ msgid "Enable game-specific enhancements"
+#~ msgstr "ゲーム固有の拡張機能を有効化"
+
+#~ msgid ""
+#~ "Allow ScummVM to make small enhancements to the game, usually based on "
+#~ "other versions of the same game."
+#~ msgstr ""
+#~ "Scumm VMがゲームに対し、他のバージョンに基づいた小さな拡張を行う事を許可し"
+#~ "ます。"
+
 #~ msgid "New Line"
 #~ msgstr "新しい線"
 
@@ -11246,9 +11209,6 @@ msgstr ""
 
 #~ msgid "Go to map screen"
 #~ msgstr "マップ画面へ"
-
-#~ msgid "Use original menus"
-#~ msgstr "オリジナルのメニューを使用"
 
 #~ msgid ""
 #~ "Use the original engine's main, save/load, and setup menus. ScummVM's "

@@ -550,7 +550,7 @@ public:
 	ResourceManager *_res = nullptr;
 	int _insideCreateResource = 0; // Counter for HE sound
 
-	bool _enableEnhancements = false;
+	int32 _activeEnhancements = kEnhGameBreakingBugFixes;
 	bool _useOriginalGUI = true;
 	bool _enableAudioOverride = false;
 	bool _enableCOMISong = false;
@@ -581,6 +581,7 @@ public:
 
 	void errorString(const char *buf_input, char *buf_output, int buf_output_size) override;
 	bool hasFeature(EngineFeature f) const override;
+	bool enhancementEnabled(int32 cls);
 	void syncSoundSettings() override;
 
 	Common::Error loadGameState(int slot) override;
