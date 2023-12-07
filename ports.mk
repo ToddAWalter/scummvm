@@ -15,7 +15,7 @@ install-data:
 	$(INSTALL) -d "$(DESTDIR)$(docdir)"
 	$(INSTALL) -c -m 644 $(DIST_FILES_DOCS) "$(DESTDIR)$(docdir)"
 	$(INSTALL) -d "$(DESTDIR)$(datadir)"
-	$(INSTALL) -c -m 644 $(DIST_FILES_THEMES) $(DIST_FILES_NETWORKING) $(DIST_FILES_VKEYBD) $(DIST_FILES_ENGINEDATA) "$(DESTDIR)$(datadir)/"
+	$(INSTALL) -c -m 644 $(DIST_FILES_THEMES) $(DIST_FILES_NETWORKING) $(DIST_FILES_VKEYBD) $(DIST_FILES_ENGINEDATA) $(DIST_FILES_ENGINEDATA_BIG)  $(DIST_FILES_SOUNDFONTS) "$(DESTDIR)$(datadir)/"
 	$(INSTALL) -d "$(DESTDIR)$(datarootdir)/applications"
 	$(INSTALL) -c -m 644 "$(srcdir)/dists/org.scummvm.scummvm.desktop" "$(DESTDIR)$(datarootdir)/applications/org.scummvm.scummvm.desktop"
 	$(INSTALL) -d "$(DESTDIR)$(datarootdir)/metainfo"
@@ -66,11 +66,17 @@ dist-generic: $(EXECUTABLE) $(PLUGINS)
 ifdef DIST_FILES_ENGINEDATA
 	cp $(DIST_FILES_ENGINEDATA) ./dist-generic/scummvm/data
 endif
+ifdef DIST_FILES_ENGINEDATA_BIG
+	cp $(DIST_FILES_ENGINEDATA_BIG) ./dist-generic/scummvm/data
+endif
 ifdef DIST_FILES_NETWORKING
 	cp $(DIST_FILES_NETWORKING) ./dist-generic/scummvm/data
 endif
 ifdef DIST_FILES_VKEYBD
 	cp $(DIST_FILES_VKEYBD) ./dist-generic/scummvm/data
+endif
+ifdef DIST_FILES_SOUNDFONTS
+	cp $(DIST_FILES_SOUNDFONTS) ./dist-generic/scummvm/data
 endif
 ifdef DIST_FILES_SHADERS
 	mkdir -p ./dist-generic/scummvm/data/shaders
@@ -154,8 +160,14 @@ endif
 ifdef DIST_FILES_ENGINEDATA
 	cp $(DIST_FILES_ENGINEDATA) $(bundle_name)/Contents/Resources/
 endif
+ifdef DIST_FILES_ENGINEDATA_BIG
+	cp $(DIST_FILES_ENGINEDATA_BIG) $(bundle_name)/Contents/Resources/
+endif
 ifdef DIST_FILES_VKEYBD
 	cp $(DIST_FILES_VKEYBD) $(bundle_name)/Contents/Resources/
+endif
+ifdef DIST_FILES_SOUNDFONTS
+	cp $(DIST_FILES_SOUNDFONTS) $(bundle_name)/Contents/Resources/
 endif
 ifneq ($(DIST_FILES_SHADERS),)
 	mkdir -p $(bundle_name)/Contents/Resources/shaders
@@ -285,8 +297,14 @@ endif
 ifdef DIST_FILES_ENGINEDATA
 	cp $(DIST_FILES_ENGINEDATA) $(bundle_name)/
 endif
+ifdef DIST_FILES_ENGINEDATA_BIG
+	cp $(DIST_FILES_ENGINEDATA_BIG) $(bundle_name)/
+endif
 ifdef DIST_FILES_VKEYBD
 	cp $(DIST_FILES_VKEYBD) $(bundle_name)/
+endif
+ifdef DIST_FILES_SOUNDFONTS
+	cp $(DIST_FILES_SOUNDFONTS) $(bundle_name)/
 endif
 ifneq ($(DIST_FILES_SHADERS),)
 	cp $(DIST_FILES_SHADERS) $(bundle_name)/
@@ -316,6 +334,7 @@ endif
 	cp $(srcdir)/dists/ios7/Images.xcassets/LaunchImage.launchimage/ScummVM-splash-1242x2208.png $(bundle_name)/LaunchImage-800-Portrait-736h@3x.png
 	cp $(srcdir)/dists/ios7/Images.xcassets/LaunchImage.launchimage/ScummVM-splash-2208x1242.png $(bundle_name)/LaunchImage-800-Landscape-736h@3x.png
 	cp $(srcdir)/dists/ios7/Images.xcassets/LaunchImage.launchimage/ScummVM-splash-750x1334.png $(bundle_name)/LaunchImage-800-667h@2x.png
+	cp $(srcdir)/dists/ios7/Assets.car $(bundle_name)/Assets.car
 	codesign -s - --deep --force $(bundle_name)
 
 tvosbundle: scummvm-static-ios
@@ -375,8 +394,14 @@ endif
 ifdef DIST_FILES_ENGINEDATA
 	cp $(DIST_FILES_ENGINEDATA) $(bundle_name)/
 endif
+ifdef DIST_FILES_ENGINEDATA_BIG
+	cp $(DIST_FILES_ENGINEDATA_BIG) $(bundle_name)/
+endif
 ifdef DIST_FILES_VKEYBD
 	cp $(DIST_FILES_VKEYBD) $(bundle_name)/
+endif
+ifdef DIST_FILES_SOUNDFONTS
+	cp $(DIST_FILES_SOUNDFONTS) $(bundle_name)/
 endif
 ifneq ($(DIST_FILES_SHADERS),)
 	cp $(DIST_FILES_SHADERS) $(bundle_name)/

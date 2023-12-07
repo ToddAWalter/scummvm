@@ -67,6 +67,7 @@ static const CGAPaletteEntry rawCGAPaletteByArea[] {
 	{21, (byte *)kDarkCGAPaletteRedGreen},
 	{22, (byte *)kDarkCGAPalettePinkBlue},
 	{23, (byte *)kDarkCGAPaletteRedGreen},
+	{24, (byte *)kDarkCGAPalettePinkBlue},
 	{25, (byte *)kDarkCGAPalettePinkBlue},
 	{27, (byte *)kDarkCGAPaletteRedGreen},
 	{28, (byte *)kDarkCGAPalettePinkBlue},
@@ -132,7 +133,7 @@ void DarkEngine::loadAssetsDOSDemo() {
 	_indicators.push_back(loadBundledImage("dark_jet_indicator"));
 
 	for (auto &it : _indicators)
-		it->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
+		it->convertToInPlace(_gfx->_texturePixelFormat);
 }
 
 void DarkEngine::loadAssetsDOSFullGame() {
@@ -168,7 +169,7 @@ void DarkEngine::loadAssetsDOSFullGame() {
 		_indicators.push_back(loadBundledImage("dark_jet_indicator"));
 
 		for (auto &it : _indicators)
-			it->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
+			it->convertToInPlace(_gfx->_texturePixelFormat);
 
 	} else if (_renderMode == Common::kRenderCGA) {
 		file.open("SCN1C.DAT");

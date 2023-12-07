@@ -25,11 +25,11 @@
 #include "common/random.h"
 #include "common/timer.h"
 #include "graphics/cursorman.h"
+#include "image/neo.h"
+#include "image/scr.h"
 
 #include "freescape/freescape.h"
 #include "freescape/language/8bitDetokeniser.h"
-#include "freescape/neo.h"
-#include "freescape/scr.h"
 #include "freescape/objects/sensor.h"
 
 namespace Freescape {
@@ -285,6 +285,7 @@ void FreescapeEngine::takeDamageFromSensor() {
 }
 
 void FreescapeEngine::drawBackground() {
+	_gfx->clear(0, 0, 0, true);
 	_gfx->setViewport(_fullscreenViewArea);
 	_gfx->drawBackground(_currentArea->_usualBackgroundColor);
 	_gfx->setViewport(_viewArea);
@@ -326,7 +327,11 @@ void FreescapeEngine::drawFrame() {
 
 	if (_shootingFrames > 0) {
 		_gfx->setViewport(_fullscreenViewArea);
-		_gfx->renderPlayerShoot(0, _crossairPosition, _viewArea);
+		if (isDriller() || isDark())
+			_gfx->renderPlayerShootRay(0, _crossairPosition, _viewArea);
+		else
+			_gfx->renderPlayerShootBall(0, _crossairPosition, _shootingFrames, _viewArea);
+
 		_gfx->setViewport(_viewArea);
 		_shootingFrames--;
 	}
@@ -446,9 +451,7 @@ void FreescapeEngine::processInput() {
 			case Common::KEYCODE_ESCAPE:
 				drawFrame();
 				_savedScreen = _gfx->getScreenshot();
-				_gfx->setViewport(_fullscreenViewArea);
 				openMainMenuDialog();
-				_gfx->setViewport(_viewArea);
 				_gfx->computeScreenViewport();
 				_savedScreen->free();
 				delete _savedScreen;
@@ -741,7 +744,7 @@ void FreescapeEngine::drawStringInSurface(const Common::String &str, int x, int 
 	int sizeX = 8;
 	int sizeY = isCastle() ? 8 : 6;
 	int sep = isCastle() ? 9 : 8;
-	int additional = isCastle() ? 0 : 1;
+	int additional = isCastle() || isEclipse() ? 0 : 1;
 
 	if (isDOS() || isSpectrum() || isCPC() || isC64()) {
 		for (uint32 c = 0; c < ustr.size(); c++) {
@@ -873,7 +876,7 @@ void FreescapeEngine::clearTemporalMessages() {
 
 byte *FreescapeEngine::getPaletteFromNeoImage(Common::SeekableReadStream *stream, int offset) {
 	stream->seek(offset);
-	NeoDecoder decoder;
+	Image::NeoDecoder decoder;
 	decoder.loadStream(*stream);
 	byte *palette = (byte *)malloc(16 * 3 * sizeof(byte));
 	memcpy(palette, decoder.getPalette(), 16 * 3 * sizeof(byte));
@@ -882,16 +885,17 @@ byte *FreescapeEngine::getPaletteFromNeoImage(Common::SeekableReadStream *stream
 
 Graphics::ManagedSurface *FreescapeEngine::loadAndConvertNeoImage(Common::SeekableReadStream *stream, int offset, byte *palette) {
 	stream->seek(offset);
-	NeoDecoder decoder(palette);
+	Image::NeoDecoder decoder(palette);
 	decoder.loadStream(*stream);
 	Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
 	surface->copyFrom(*decoder.getSurface());
-	surface->convertToInPlace(_gfx->_currentPixelFormat, decoder.getPalette());
+	surface->convertToInPlace(_gfx->_currentPixelFormat, decoder.getPalette(),
+		decoder.getPaletteStartIndex(), decoder.getPaletteColorCount());
 	return surface;
 }
 
 Graphics::ManagedSurface *FreescapeEngine::loadAndCenterScrImage(Common::SeekableReadStream *stream) {
-	ScrDecoder decoder;
+	Image::ScrDecoder decoder;
 	decoder.loadStream(*stream);
 	Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
 	const Graphics::Surface *decoded = decoder.getSurface();

@@ -84,6 +84,7 @@ enum {
 	kDebugSound			= 1 << 19,
 	kDebugConsole		= 1 << 20,
 	kDebugXObj			= 1 << 21,
+	kDebugLingoThe		= 1 << 22,
 };
 
 enum {
@@ -169,7 +170,7 @@ public:
 	Lingo *getLingo() const { return _lingo; }
 	Window *getStage() const { return _stage; }
 	Window *getCurrentWindow() const { return _currentWindow; }
-	void setCurrentWindow(Window *window) { _currentWindow = window; };
+	void setCurrentWindow(Window *window);
 	Window *getCursorWindow() const { return _cursorWindow; }
 	void setCursorWindow(Window *window) { _cursorWindow = window; }
 	Movie *getCurrentMovie() const;
@@ -206,6 +207,8 @@ public:
 	void draw();
 
 	Graphics::MacDrawPixPtr getInkDrawPixel();
+	uint32 getColorBlack();
+	uint32 getColorWhite();
 
 	void loadKeyCodes();
 	void setMachineType(int machineType);

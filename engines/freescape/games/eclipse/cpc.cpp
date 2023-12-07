@@ -54,6 +54,8 @@ void EclipseEngine::loadAssetsCPCDemo() {
 		error("Failed to open TEPROG.BIN");
 
 	loadFonts(&file, 0x63ce);
+	loadMessagesFixedSize(&file, 0x362, 16, 23);
+	loadMessagesFixedSize(&file, 0x570b, 264, 5);
 	load8bitBinary(&file, 0x65c6, 16);
 	for (auto &it : _areaMap) {
 		it._value->_name = "  NOW TRAINING  ";
@@ -61,13 +63,15 @@ void EclipseEngine::loadAssetsCPCDemo() {
 		for (int16 id = 183; id < 207; id++)
 			it._value->addObjectFromArea(id, _areaMap[255]);
 	}
+	loadColorPalette();
+	swapPalette(1);
 	//_indicators.push_back(loadBundledImage("dark_fallen_indicator"));
 	//_indicators.push_back(loadBundledImage("dark_crouch_indicator"));
 	//_indicators.push_back(loadBundledImage("dark_walk_indicator"));
 	//_indicators.push_back(loadBundledImage("dark_jet_indicator"));
 
 	//for (auto &it : _indicators)
-	//	it->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
+	//	it->convertToInPlace(_gfx->_texturePixelFormat);
 }
 
 void EclipseEngine::drawCPCUI(Graphics::Surface *surface) {

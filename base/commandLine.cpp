@@ -328,6 +328,10 @@ void registerDefaults() {
 
 	ConfMan.registerDefault("enable_unsupported_game_warning", true);
 
+#ifdef USE_FLUIDSYNTH
+	ConfMan.registerDefault("soundfont", "Roland_SC-55.sf2");
+#endif
+
 	// Game specific
 	ConfMan.registerDefault("path", "");
 	ConfMan.registerDefault("platform", Common::kPlatformDOS);
@@ -390,7 +394,7 @@ void registerDefaults() {
 	// their appropriate values.
 	ConfMan.registerDefault("fluidsynth_chorus_activate", true);
 	ConfMan.registerDefault("fluidsynth_chorus_nr", 3);
-	ConfMan.registerDefault("fluidsynth_chorus_level", 100);
+	ConfMan.registerDefault("fluidsynth_chorus_level", 200);
 	ConfMan.registerDefault("fluidsynth_chorus_speed", 30);
 	ConfMan.registerDefault("fluidsynth_chorus_depth", 80);
 	ConfMan.registerDefault("fluidsynth_chorus_waveform", "sine");
@@ -398,7 +402,7 @@ void registerDefaults() {
 	ConfMan.registerDefault("fluidsynth_reverb_activate", true);
 	ConfMan.registerDefault("fluidsynth_reverb_roomsize", 20);
 	ConfMan.registerDefault("fluidsynth_reverb_damping", 0);
-	ConfMan.registerDefault("fluidsynth_reverb_width", 1);
+	ConfMan.registerDefault("fluidsynth_reverb_width", 5);
 	ConfMan.registerDefault("fluidsynth_reverb_level", 90);
 
 	ConfMan.registerDefault("fluidsynth_misc_interpolation", "4th");
@@ -2132,6 +2136,7 @@ bool processSettings(Common::String &command, Common::StringMap &settings, Commo
 
 	ADD_DEFAULT_PATH("themepath", "gui/themes/")
 	ADD_DEFAULT_PATH("extrapath", "dists/engine-data/")
+	ADD_DEFAULT_PATH("soundfontpath", "dists/soundfonts/")
 #endif
 
 	return false;

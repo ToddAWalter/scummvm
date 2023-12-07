@@ -98,7 +98,7 @@ uint MacTextLine::getChunkNum(int *col) {
 		}
 	}
 
-	if (i == chunks.size()) {
+	if (i && i == chunks.size()) {
 		i--;	// touch the last chunk
 		pos = chunks[i].text.size();
 	}
@@ -301,6 +301,14 @@ void MacText::setMaxWidth(int maxWidth) {
 	if (maxWidth < 0) {
 		warning("trying to set maxWidth to %d", maxWidth);
 		return;
+	}
+
+	for (uint i = 0; i < _canvas._text.size(); i++) {
+		if (_canvas._text[i].table) {
+			// TODO
+			debug(0, "MacText::setMaxWidth(): Skipping resize for MacText with tables");
+			return;
+		}
 	}
 
 	// keep the cursor pos
@@ -1756,7 +1764,7 @@ void MacText::setText(const Common::U32String &str) {
 //////////////////
 // Text editing
 void MacText::insertChar(byte c, int *row, int *col) {
-	if (_canvas._text.empty()) {
+	if (_canvas._text.empty() || _canvas._text[*row].chunks.empty()) {
 		appendTextDefault(Common::String(c));
 		(*col)++;
 

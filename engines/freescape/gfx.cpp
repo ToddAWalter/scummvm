@@ -175,7 +175,7 @@ void Renderer::setColorMap(ColorMap *colorMap_) {
 		for (int i = 0; i < 15; i++) {
 			byte *entry = (*_colorMap)[i];
 			for (int j = 0; j < 128; j++)
-				_stipples[i][j] = entry[(j / 16) % 4];
+				_stipples[i][j] = entry[(j / 4) % 4];
 		}
 	} else if (_renderMode == Common::kRenderCPC) {
 		fillColorPairArray();
@@ -489,7 +489,7 @@ Graphics::Surface *Renderer::convertImageFormatIfNecessary(Graphics::ManagedSurf
 	surface->copyFrom(msurface->rawSurface());
 	byte *palette = (byte *)malloc(sizeof(byte) * 16 * 3);
 	msurface->grabPalette(palette, 0, 16); // Maximum should be 16 colours
-	surface->convertToInPlace(_texturePixelFormat, palette);
+	surface->convertToInPlace(_texturePixelFormat, palette, 0, 16);
 	free(palette);
 	return surface;
 }

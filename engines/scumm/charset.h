@@ -112,6 +112,7 @@ public:
 	virtual int getCharWidth(uint16 chr) const = 0;
 
 	virtual void setColor(byte color) { _color = color; translateColor(); }
+	virtual byte getColor() { return _color; }
 
 	void saveLoadWithSerializer(Common::Serializer &ser);
 };
@@ -159,7 +160,7 @@ protected:
 	virtual bool prepareDraw(uint16 chr);
 
 	int _width, _height, _origWidth, _origHeight;
-	const int _cjkSpacing;
+	int _cjkSpacing;
 	int _offsX, _offsY;
 	const byte *_charPtr;
 
@@ -284,16 +285,13 @@ public:
 
 class CharsetRendererMac : public CharsetRendererCommon {
 protected:
-	const Graphics::Font *_macFonts[2];
-	bool _useRealCharWidth;
+	const Graphics::Font *_font;
 	bool _useCorrectFontSpacing;
 	bool _pad;
 	int _lastTop;
 
 	int getDrawWidthIntern(uint16 chr) const;
-
 	void printCharInternal(int chr, int color, bool shadow, int x, int y);
-	void printCharToTextBox(int chr, int color, int x, int y);
 
 	byte getTextColor();
 	byte getTextShadowColor();
@@ -310,7 +308,6 @@ public:
 	int getFontHeight() const override;
 	int getCharWidth(uint16 chr) const override;
 	void printChar(int chr, bool ignoreCharsetMask) override;
-	void drawChar(int chr, Graphics::Surface &s, int x, int y) override;
 	void setColor(byte color) override;
 };
 

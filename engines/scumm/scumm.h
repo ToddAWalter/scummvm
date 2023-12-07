@@ -91,7 +91,7 @@ class BaseScummFile;
 class CharsetRenderer;
 class IMuse;
 class IMuseDigital;
-class MacIndy3Gui;
+class MacGui;
 class MusicEngine;
 class Player_Towns;
 class ScummEngine;
@@ -519,9 +519,12 @@ extern const char *const insaneKeymapId;
 class ScummEngine : public Engine, public Common::Serializable {
 	friend class ScummDebugger;
 	friend class CharsetRenderer;
+	friend class CharsetRendererClassic;
 	friend class CharsetRendererTownsClassic;
 	friend class ResourceManager;
+	friend class MacGui;
 	friend class MacIndy3Gui;
+	friend class MacLoomGui;
 
 public:
 	/* Put often used variables at the top.
@@ -555,6 +558,7 @@ public:
 	bool _enableAudioOverride = false;
 	bool _enableCOMISong = false;
 	bool _isAmigaPALSystem = false;
+	bool _quitFromScriptCmd = false;
 
 	Common::Keymap *_insaneKeymap;
 
@@ -660,6 +664,9 @@ public:
 	void pauseGame();
 	void restart();
 	bool isUsingOriginalGUI();
+	bool isMessageBannerActive(); // For Indy4 Jap character shadows
+
+	bool _isIndy4Jap = false;
 
 protected:
 	Dialog *_pauseDialog = nullptr;
@@ -776,6 +783,7 @@ protected:
 	void showMainMenu();
 	virtual void setUpMainMenuControls();
 	void setUpMainMenuControlsSegaCD();
+	void setUpMainMenuControlsIndy4Jap();
 	void drawMainMenuControls();
 	void drawMainMenuControlsSegaCD();
 	void updateMainMenuControls();
@@ -890,6 +898,8 @@ protected:
 	byte _leftBtnPressed = 0, _rightBtnPressed = 0;
 
 	int _mouseWheelFlag = 0; // For original save/load dialog only
+
+	bool _setupIsComplete = false;
 
 	/**
 	 * Last time runInputScript was run (measured in terms of OSystem::getMillis()).
@@ -1267,6 +1277,18 @@ public:
 	int _screenStartStrip = 0, _screenEndStrip = 0;
 	int _screenTop = 0;
 
+	// For Mac versions of 320x200 games:
+	// these versions rendered at 640x480 without any aspect ratio correction;
+	// in order to correctly display the games as they should be, we perform some
+	// offset corrections within the various rendering pipelines.
+	//
+	// The only reason I've made _useMacScreenCorrectHeight toggleable is because
+	// maybe someday the screen correction can be activated or deactivated from the
+	// ScummVM GUI; but currently I'm not taking that responsibility, after all the
+	// work done on ensuring that old savegames translate correctly to the new setting... :-P
+	bool _useMacScreenCorrectHeight = true;
+	int _screenDrawOffset = 0;
+
 	Common::RenderMode _renderMode;
 	uint8 _bytesPerPixel = 1;
 	Graphics::PixelFormat _outputPixelFormat;
@@ -1394,12 +1416,9 @@ protected:
 
 	void mac_markScreenAsDirty(int x, int y, int w, int h);
 	void mac_drawStripToScreen(VirtScreen *vs, int top, int x, int y, int width, int height);
-	void mac_drawLoomPracticeMode();
-	void mac_createIndy3TextBox(Actor *a);
 	void mac_drawIndy3TextBox();
 	void mac_undrawIndy3TextBox();
 	void mac_undrawIndy3CreditsText();
-	void mac_drawBorder(int x, int y, int w, int h, byte color);
 	Common::KeyState mac_showOldStyleBannerAndPause(const char *msg, int32 waitTime);
 
 	const byte *postProcessDOSGraphics(VirtScreen *vs, int &pitch, int &x, int &y, int &width, int &height) const;
@@ -1568,8 +1587,7 @@ public:
 
 	Graphics::MacFontManager *_macFontManager = nullptr;
 	Graphics::Surface *_macScreen = nullptr;
-	Graphics::Surface *_macIndy3TextBox = nullptr;
-	MacIndy3Gui *_macIndy3Gui = nullptr;
+	MacGui *_macGui = nullptr;
 
 protected:
 	byte _charsetColor = 0;
@@ -1623,7 +1641,7 @@ public:
 	bool _useMultiFont = false;
 	int _numLoadedFont = 0;
 	int _2byteShadow = 0;
-	bool _segaForce2ByteCharHeight = false;
+	bool _force2ByteCharHeight = false;
 
 	int _2byteHeight = 0;
 	int _2byteWidth = 0;

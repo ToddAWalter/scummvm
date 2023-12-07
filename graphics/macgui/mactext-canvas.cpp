@@ -36,6 +36,16 @@ namespace Graphics {
 #define DN(...)  ;
 #endif
 
+MacTextCanvas::~MacTextCanvas() {
+	delete _surface;
+	delete _shadowSurface;
+
+	for (auto &t : _text) {
+		delete t.table;
+		delete t.tableSurface;
+	}
+}
+
 // Adds the given string to the end of the last line/chunk
 // while observing the _canvas._maxWidth and keeping this chunk's
 // formatting
@@ -218,6 +228,9 @@ const Common::U32String::value_type *MacTextCanvas::splitString(const Common::U3
 
 	if (curLine == -1 || curLine >= (int)_text.size())
 		curLine = _text.size() - 1;
+
+	if (_text[curLine].chunks.empty())
+		_text[curLine].chunks.push_back(_defaultFormatting);
 
 	int curChunk = _text[curLine].chunks.size() - 1;
 	MacFontRun chunk = _text[curLine].chunks[curChunk];
@@ -1191,6 +1204,12 @@ void MacTextCanvas::setMaxWidth(int maxWidth, MacFontRun &defaultFormatting) {
 
 	for (uint i = 0; i < _text.size(); i++) {
 		row = i;
+
+		if (_text[i].table) {
+			processTable(i, maxWidth);
+			continue;
+		}
+
 		reshuffleParagraph(&row, &col, _defaultFormatting);
 
 		while (i < _text.size() - 1 && !_text[i].paragraphEnd)
@@ -1360,7 +1379,8 @@ void MacTextCanvas::debugPrint(const char *prefix) {
 	for (uint i = 0; i < _text.size(); i++) {
 		if (prefix)
 			DN(8, "%s: ", prefix);
-		DN(8, "%2d, %c fi: %d, i: %d ", i, _text[i].paragraphEnd ? '$' : '.', _text[i].firstLineIndent, _text[i].indent);
+		DN(8, "%2d, %c %c fi: %d, i: %d ", i, _text[i].paragraphEnd ? '$' : '.', _text[i].table ? 'T' : ' ',
+					_text[i].firstLineIndent, _text[i].indent);
 
 		for (uint j = 0; j < _text[i].chunks.size(); j++)
 			_text[i].chunks[j].debugPrint();

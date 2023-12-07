@@ -40,7 +40,7 @@ const PlainGameDescriptor GLULXE_GAME_LIST[] = {
 	{ "acg",                "Adventurer's Consumer Guide" },
 	{ "acmj",               "The Making of ACMJ Game" },
 	{ "adventdoor",         "Advent Door" },
-	{ "adv350_glulx",       "Adventure" },
+	{ "adv350_glulx",       "Adventure, 350 Point Colossal Cave" },
 	{ "adventmirror",       "Advent Mirror" },
 	{ "adventura",          "Adventura" },
 	{ "ailihphilia",        "Ailihphilia" },
@@ -1176,7 +1176,7 @@ const PlainGameDescriptor GLULXE_GAME_LIST[] = {
 	{ "pc21_grooverland",   "Grooverland" },                                                            //    1st Place
 	{ "pc21_foreignsoil",   "Foreign Soil" },                                                           //    2nd Place
 	{ "pc21_blackknife",    "Black Knife Dungeon" },                                                    //    3rd Place
-	{ "pc21_timemachi21",   "The Time Machine" },                                                       //    6th Place
+	{ "pc21_timemachi21",   "The Time Machine (by Bill Maya)" },                                        //    6th Place
 	{ "pc21_returnstars",   "Return to the Stars" },                                                    //   11th Place
 	{ "pc21_daddybirthday", "Daddy's Birthday" },                                                       //   15th Place
 	{ "pc21_gameon",        "Loud House ’Game On’" },                                                   //   16th Place

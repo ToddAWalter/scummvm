@@ -22,6 +22,7 @@
 #include "common/file.h"
 
 #include "freescape/freescape.h"
+#include "freescape/games/driller/driller.h"
 #include "freescape/language/8bitDetokeniser.h"
 
 namespace Freescape {
@@ -352,8 +353,8 @@ void DrillerEngine::loadAssetsDOSFullGame() {
 	_indicators.push_back(loadBundledImage("driller_tank_indicator"));
 	_indicators.push_back(loadBundledImage("driller_ship_indicator"));
 
-	_indicators[0]->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
-	_indicators[1]->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
+	_indicators[0]->convertToInPlace(_gfx->_texturePixelFormat);
+	_indicators[1]->convertToInPlace(_gfx->_texturePixelFormat);
 }
 
 void DrillerEngine::loadAssetsDOSDemo() {
@@ -389,8 +390,8 @@ void DrillerEngine::loadAssetsDOSDemo() {
 	_indicators.push_back(loadBundledImage("driller_tank_indicator"));
 	_indicators.push_back(loadBundledImage("driller_ship_indicator"));
 
-	_indicators[0]->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
-	_indicators[1]->convertToInPlace(_gfx->_texturePixelFormat, nullptr);
+	_indicators[0]->convertToInPlace(_gfx->_texturePixelFormat);
+	_indicators[1]->convertToInPlace(_gfx->_texturePixelFormat);
 }
 
 void DrillerEngine::drawDOSUI(Graphics::Surface *surface) {

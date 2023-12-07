@@ -165,11 +165,11 @@ static struct XLibProto {
 	int version;
 } xlibs[] = {
 	{ AiffXObj::fileNames,				AiffXObj::open,				AiffXObj::close,			kXObj,					400 },	// D4
-	{ AppleCDXObj::fileNames,			AppleCDXObj::open,			AppleCDXObj::close,			kXObj,					400 },	// D4
+	{ AppleCDXObj::fileNames,			AppleCDXObj::open,			AppleCDXObj::close,			kXObj,					300 },	// D3
 	{ AskUser::fileNames,				AskUser::open,				AskUser::close,				kXObj,					400 },	// D4
 	{ BarakeObj::fileNames,				BarakeObj::open,			BarakeObj::close,			kXObj,					400 },	// D4
 	{ BatQT::fileNames,					BatQT::open,				BatQT::close,				kXObj,					400 },	// D4
-	{ BlitPict::fileNames,				BlitPict::open,				BlitPict::close,			kXObj,					400 },	// D4
+	{ BlitPictXObj::fileNames,			BlitPictXObj::open,			BlitPictXObj::close,		kXObj,					400 },	// D4
 	{ CDROMXObj::fileNames,				CDROMXObj::open,			CDROMXObj::close,			kXObj,					200 },	// D2
 	{ ColorXObj::fileNames,				ColorXObj::open,			ColorXObj::close,			kXObj,					400 },	// D4
 	{ ConsumerXObj::fileNames,			ConsumerXObj::open,			ConsumerXObj::close,		kXObj,					400 },	// D4
@@ -668,28 +668,35 @@ void LM::m_forget(int nargs) {
 	Window *me = static_cast<Window *>(g_lingo->_state->me.u.obj);
 	FArray *windowList = g_lingo->_windowList.u.farr;
 
-	uint i;
-	for (i = 0; i < windowList->arr.size(); i++) {
+	int windowIndex = -1;
+	for (int i = 0; i < (int)windowList->arr.size(); i++) {
 		if (windowList->arr[i].type != OBJECT || windowList->arr[i].u.obj->getObjType() != kWindowObj)
 			continue;
 
 		Window *window = static_cast<Window *>(windowList->arr[i].u.obj);
-		if (window == me)
+		if (window == me) {
+			windowIndex = i;
 			break;
+		}
 	}
 
-	if (i < windowList->arr.size())
-		windowList->arr.remove_at(i);
+	if (windowIndex == -1) {
+		warning("m_forget: me object %s not found in window list", g_lingo->_state->me.asString().c_str());
+		return;
+	}
+
+	if (windowIndex < (int)windowList->arr.size())
+		windowList->arr.remove_at(windowIndex);
 
 	// remove me from global vars
 	for (auto &it : g_lingo->_globalvars) {
 		if (it._value.type != OBJECT || it._value.u.obj->getObjType() != kWindowObj)
 			continue;
 
-		Window *window = static_cast<Window *>(windowList->arr[i].u.obj);
-		if (window == me)
+		if (it._value.u.obj == me)
 			g_lingo->_globalvars[it._key] = 0;
 	}
+
 }
 
 void LM::m_open(int nargs) {

@@ -657,13 +657,13 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 				"\n"
 				"  1. From the Launcher, go to **Game Options > Paths**."
 				" Select **Game Path** or **Extra Path**, as appropriate. \n"
-				"  2. Inside the ScummVM file browser, select **Go Up** until you reach the root folder"
+				"  2. Inside the ScummVM file browser, select **Go Up** until you reach the root folder "
 				"which has the **<Add a new folder>** option.\n"
-				"  3. Double-tap **<Add a new folder>**. In your device's file browser, navigate to the folder"
+				"  3. Double-tap **<Add a new folder>**. In your device's file browser, navigate to the folder "
 				"containing all your game folders. For example, **SD Card > ScummVMgames** \n"
 				"  4. Select **Use this folder**. \n"
 				"  5. Select **Allow** to give ScummVM permission to access the folder. \n"
-				"  6. In the ScummVM file browser, double-tap to browse through your added folder."
+				"  6. In the ScummVM file browser, double-tap to browse through your added folder. "
 				"Select the folder containing the game's files, then tap **Choose**. \n"
 				"\n"
 				"Repeat steps 1 and 6 for each game."
@@ -682,13 +682,13 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 				"To add a game:\n"
 				"\n"
 				"  1. Select **Add Game...** from the launcher. \n"
-				"  2. Inside the ScummVM file browser, select **Go Up** until you reach the root folder"
+				"  2. Inside the ScummVM file browser, select **Go Up** until you reach the root folder "
 				"which has the **<Add a new folder>** option.\n"
-				"  3. Double-tap **<Add a new folder>**. In your device's file browser, navigate to the folder"
+				"  3. Double-tap **<Add a new folder>**. In your device's file browser, navigate to the folder "
 				"containing all your game folders. For example, **SD Card > ScummVMgames** \n"
 				"  4. Select **Use this folder**. \n"
 				"  5. Select **Allow** to give ScummVM permission to access the folder. \n"
-				"  6. In the ScummVM file browser, double-tap to browse through your added folder."
+				"  6. In the ScummVM file browser, double-tap to browse through your added folder. "
 				"Select the sub-folder containing the game's files, then tap **Choose**."
 				"\n"
 				"Repeat steps 1 and 6 for each game."
@@ -713,6 +713,38 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 #if 0
 	GUI::dumpAllDialogs();
 #endif
+
+// Print out CPU extension info
+// Separate block to keep the stack clean
+	{
+		Common::String extensionSupportString[3] = { "not supported", "disabled", "enabled" };
+
+		byte sse2Support = 0;
+		byte avx2Support = 0;
+		byte neonSupport = 0;
+
+#ifdef SCUMMVM_SSE2
+		++sse2Support;
+		if (g_system->hasFeature(OSystem::kFeatureCpuSSE2))
+			++sse2Support;
+#endif
+#ifdef SCUMMVM_AVX2
+		++avx2Support;
+		if (g_system->hasFeature(OSystem::kFeatureCpuAVX2))
+			++avx2Support;
+#endif
+#ifdef SCUMMVM_NEON
+		++neonSupport;
+		if (g_system->hasFeature(OSystem::kFeatureCpuNEON))
+			++neonSupport;
+#endif
+
+		printf("CPU extensions:\n");
+		printf("SSE2(%s) AVX2(%s) NEON(%s)\n",
+			extensionSupportString[sse2Support].c_str(),
+			extensionSupportString[avx2Support].c_str(),
+			extensionSupportString[neonSupport].c_str());
+	}
 
 	// Unless a game was specified, show the launcher dialog
 	if (nullptr == ConfMan.getActiveDomain())

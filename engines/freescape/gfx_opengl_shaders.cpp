@@ -165,7 +165,7 @@ void OpenGLShaderRenderer::positionCamera(const Math::Vector3d &pos, const Math:
 void OpenGLShaderRenderer::renderSensorShoot(byte color, const Math::Vector3d sensor, const Math::Vector3d target, const Common::Rect viewArea) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-	glColor3ub(255, 255, 255);
+	useColor(255, 255, 255);
 
 	glLineWidth(20);
 	copyToVertexArray(0, sensor);
@@ -175,9 +175,7 @@ void OpenGLShaderRenderer::renderSensorShoot(byte color, const Math::Vector3d se
 	glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), _verts, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
-	glVertexPointer(3, GL_FLOAT, 0, _verts);
 	glDrawArrays(GL_LINES, 0, 2);
-	glDisableClientState(GL_VERTEX_ARRAY);
 	glLineWidth(1);
 
 	glDisable(GL_BLEND);
@@ -189,7 +187,9 @@ float remap(float f, float s) {
 	return 2. * f / s - 1;
 }
 
-void OpenGLShaderRenderer::renderPlayerShoot(byte color, const Common::Point position, const Common::Rect viewArea) {
+void OpenGLShaderRenderer::renderPlayerShootBall(byte color, const Common::Point position, int frame, const Common::Rect viewArea) {}
+
+void OpenGLShaderRenderer::renderPlayerShootRay(byte color, const Common::Point position, const Common::Rect viewArea) {
 	uint8 r, g, b;
 
 	Math::Matrix4 identity;
@@ -260,7 +260,7 @@ void OpenGLShaderRenderer::renderCrossair(const Common::Point crossairPosition) 
 
 	useColor(255, 255, 255);
 
-	glLineWidth(8); // It will not work in every OpenGL implementation since the
+	glLineWidth(MAX(2, g_system->getWidth() / 192)); // It will not work in every OpenGL implementation since the
 					 // spec doesn't require support for line widths other than 1
 
 	copyToVertexArray(0, Math::Vector3d(remap(crossairPosition.x - 3, _screenW), remap(_screenH - crossairPosition.y, _screenH), 0));

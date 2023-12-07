@@ -53,6 +53,8 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 		initDOS();
 	else if (isCPC())
 		initCPC();
+	else if (isSpectrum())
+		initZX();
 
 	_playerHeightNumber = 1;
 	_playerHeights.push_back(16);
@@ -64,12 +66,14 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_stepUpDistance = 32;
 
 	const char **messagePtr = rawMessagesTable;
-	debugC(1, kFreescapeDebugParser, "String table:");
-	while (*messagePtr) {
-		Common::String message(*messagePtr);
-		_messagesList.push_back(message);
-		debugC(1, kFreescapeDebugParser, "%s", message.c_str());
-		messagePtr++;
+	if (isDOS()) {
+		debugC(1, kFreescapeDebugParser, "String table:");
+		while (*messagePtr) {
+			Common::String message(*messagePtr);
+			_messagesList.push_back(message);
+			debugC(1, kFreescapeDebugParser, "%s", message.c_str());
+			messagePtr++;
+		}
 	}
 
 	_playerStepIndex = 2;
@@ -108,6 +112,38 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 	_currentArea->_usualBackgroundColor = isCPC() ? 1 : 0;
 
 	resetInput();
+}
+
+void EclipseEngine::borderScreen() {
+	if (_border) {
+		drawBorder();
+		if (isDemo() && isCPC()) {
+			drawFullscreenMessageAndWait(_messagesList[23]);
+			drawFullscreenMessageAndWait(_messagesList[24]);
+			drawFullscreenMessageAndWait(_messagesList[25]);
+		} else if (isDemo() && isSpectrum()) {
+			if (_variant & GF_ZX_DEMO_MICROHOBBY) {
+				drawFullscreenMessageAndWait(_messagesList[23]);
+			} else if (_variant & GF_ZX_DEMO_CRASH) {
+				drawFullscreenMessageAndWait(_messagesList[9]);
+				drawFullscreenMessageAndWait(_messagesList[10]);
+				drawFullscreenMessageAndWait(_messagesList[11]);
+			}
+		} else {
+			FreescapeEngine::borderScreen();
+		}
+	}
+}
+
+void EclipseEngine::executePrint(FCLInstruction &instruction) {
+	uint16 index = instruction._source - 1;
+	debugC(1, kFreescapeDebugCode, "Printing message %d", index);
+	if (index > 127) {
+		index = _messagesList.size() - (index - 254) - 2;
+		drawFullscreenMessageAndWait(_messagesList[index]);
+		return;
+	}
+	insertTemporaryMessage(_messagesList[index], _countdown - 2);
 }
 
 Common::Error EclipseEngine::saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave) {

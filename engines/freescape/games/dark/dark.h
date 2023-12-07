@@ -32,6 +32,11 @@ enum {
 	kDarkEndingECDsDestroyed = 2,
 };
 
+struct ECD {
+	uint16 _area;
+	int _id;
+};
+
 class DarkEngine : public FreescapeEngine {
 public:
 	DarkEngine(OSystem *syst, const ADGameDescription *gd);
@@ -79,8 +84,6 @@ public:
 
 
 	void drawInfoMenu() override;
-	void drawFullscreenMessageAndWait(Common::String message);
-	void drawFullscreenMessage(Common::String message, uint32 front, Graphics::Surface *surface);
 
 	Common::Error saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave = false) override;
 	Common::Error loadGameStreamExtended(Common::SeekableReadStream *stream) override;

@@ -271,7 +271,12 @@ void FilmLoopCastMember::loadFilmLoopDataD4(Common::SeekableReadStreamEndian &st
 				Sprite sprite(nullptr);
 				sprite._movie = g_director->getCurrentMovie();
 				if (newFrame.sprites.contains(channel)) {
-					sprite = newFrame.sprites.getVal(channel);
+					// In some cases, particularly in Total Distortion, there could be sprites of type kInactiveSprite.
+					// We need to skip processing them to avoid issues.
+					
+					if (newFrame.sprites.getVal(channel)._spriteType == kBitmapSprite) {
+						sprite = newFrame.sprites.getVal(channel);
+					}
 				}
 
 				sprite._puppet = 1;
@@ -365,19 +370,24 @@ void FilmLoopCastMember::load() {
 			warning("FilmLoopCastMember::load(): Film loop not found");
 		}
 	} else if (_cast->_version >= kFileVer400 && _cast->_version < kFileVer500) {
-		if (_children.size() == 1) {
-			uint16 filmLoopId = _children[0].index;
-			uint32 tag = _children[0].tag;
-			Common::SeekableReadStreamEndian *loop = _cast->getResource(tag, filmLoopId);
-			if (loop) {
-				debugC(2, kDebugLoading, "****** Loading '%s' id: %d, %d bytes", tag2str(tag), filmLoopId, (int)loop->size());
-				loadFilmLoopDataD4(*loop);
-				delete loop;
-			} else {
-				warning("FilmLoopCastMember::load(): Film loop not found");
+		Common::SeekableReadStreamEndian *loop = nullptr;
+		uint16 filmLoopId = 0;
+		uint32 tag = 0;
+		for (auto &it : _children) {
+			if (it.tag == MKTAG('S', 'C', 'V', 'W')) {
+				filmLoopId = it.index;
+				tag = it.tag;
+				loop = _cast->getResource(tag, filmLoopId);
+				break;
 			}
+		}
+
+		if (loop) {
+			debugC(2, kDebugLoading, "****** Loading '%s' id: %d, %d bytes", tag2str(tag), filmLoopId, (int)loop->size());
+			loadFilmLoopDataD4(*loop);
+			delete loop;
 		} else {
-			warning("FilmLoopCastMember::load(): Expected 1 child for film loop cast, got %d", _children.size());
+			warning("FilmLoopCastMember::load(): No SCVW resource found in %d children", _children.size());
 		}
 	} else {
 		warning("STUB: FilmLoopCastMember::load(): Film loops not yet supported for version %d", _cast->_version);

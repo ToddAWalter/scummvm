@@ -572,10 +572,10 @@ void LB::b_value(int nargs) {
 	}
 	Common::String code = "return " + expr;
 	// Compile the code to an anonymous function and call it
-	ScriptContext *sc = g_lingo->_compiler->compileAnonymous(code);
+	ScriptContext *sc = g_lingo->_compiler->compileAnonymous(code, kLPPTrimGarbage);
 	if (!sc) {
-		warning("b_value(): Failed to parse expression \"%s\", returning 0", expr.c_str());
-		g_lingo->push(Datum(0));
+		warning("b_value(): Failed to parse expression \"%s\", returning void", expr.c_str());
+		g_lingo->pushVoid();
 		return;
 	}
 	Symbol sym = sc->_eventHandlers[kEventGeneric];
@@ -1222,7 +1222,7 @@ void LB::b_getNthFileNameInFolder(int nargs) {
 			break;
 	}
 
-	Datum r;
+	Datum r("");
 	Common::Array<Common::String> fileNameList;
 
 	// First, mix in any files injected from the quirks
@@ -2541,8 +2541,18 @@ void LB::b_puppetSound(int nargs) {
 		} else {
 			// Two-argument puppetSound is undocumented in D4.
 			// It is however documented in the D5 Lingo dictionary.
-			CastMemberID castMember = g_lingo->pop().asMemberID();
-			int channel = g_lingo->pop().asInt();
+			Datum arg2 = g_lingo->pop();
+			Datum arg1 = g_lingo->pop();
+			int channel = 1;
+			CastMemberID castMember;
+			if (arg1.type == STRING) {
+				// Apparently if the first argument is a string, it will be evaluated as per the 1-arg case
+				castMember = arg1.asMemberID(kCastSound);
+			} else {
+				// FIXME: Figure out how to deal with multilib in D5+
+				castMember = arg2.asMemberID(kCastSound);
+				channel = arg1.asInt();
+			}
 			sound->setPuppetSound(castMember, channel);
 
 			// The D4 two-arg variant of puppetSound plays
@@ -3294,6 +3304,8 @@ void LB::b_scummvmassertequal(int nargs) {
 	int result;
 
 	if (d1.type == ARRAY && d2.type == ARRAY) {
+		result = LC::eqData(d1, d2).u.i;
+	} else if (d1.type == PARRAY && d2.type == PARRAY) {
 		result = LC::eqData(d1, d2).u.i;
 	} else {
 		result = (d1 == d2);

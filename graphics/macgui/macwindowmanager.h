@@ -24,6 +24,7 @@
 
 #include "common/hashmap.h"
 #include "common/list.h"
+#include "common/mutex.h"
 #include "common/stack.h"
 #include "common/events.h"
 
@@ -90,6 +91,7 @@ enum {
 	kWMModeWin95				= (1 << 10),
 	kWMModeForceMacFontsInWin95 = (1 << 11), // Enforce Mac font for languages which don't have glyphs in ms_sans_serif.ttf
 	kWMModeNoCursorOverride     = (1 << 12),
+	kWMModeForceMacBorder       = (1 << 13),
 };
 
 }
@@ -433,6 +435,7 @@ public:
 	Common::Rect _screenDims;
 
 private:
+	Common::Mutex _mutex;
 	Common::List<BaseMacWindow *> _windowStack;
 	Common::HashMap<uint, BaseMacWindow *> _windows;
 

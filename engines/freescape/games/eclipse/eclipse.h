@@ -21,20 +21,32 @@
 
 namespace Freescape {
 
+enum EclipseReleaseFlags {
+	GF_ZX_DEMO_CRASH = (1 << 0),
+	GF_ZX_DEMO_MICROHOBBY = (1 << 1),
+};
+
 class EclipseEngine : public FreescapeEngine {
 public:
 	EclipseEngine(OSystem *syst, const ADGameDescription *gd);
 
 	void gotoArea(uint16 areaID, int entranceID) override;
 
+	void borderScreen() override;
+
 	void loadAssetsDOSFullGame() override;
 
 	void initDOS();
 	void initCPC();
+	void initZX();
 	void loadAssetsCPCDemo() override;
+	void loadAssetsZXDemo() override;
+	void executePrint(FCLInstruction &instruction) override;
 
 	void drawDOSUI(Graphics::Surface *surface) override;
 	void drawCPCUI(Graphics::Surface *surface) override;
+	void drawZXUI(Graphics::Surface *surface) override;
+
 
 	Common::Error saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave = false) override;
 	Common::Error loadGameStreamExtended(Common::SeekableReadStream *stream) override;

@@ -122,7 +122,6 @@ struct dbgChannelDesc {
 
 const char *const insaneKeymapId = "scumm-insane";
 
-
 ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	: Engine(syst),
 	  _game(dr.game),
@@ -355,6 +354,10 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	} else if (_game.platform == Common::kPlatformNES) {
 		_screenWidth = 256;
 		_screenHeight = 240;
+	} else if (_useMacScreenCorrectHeight && _game.platform == Common::kPlatformMacintosh && _game.version == 3) {
+		_screenWidth = 320;
+		_screenHeight = 240;
+		_screenDrawOffset = 20;
 	} else {
 		_screenWidth = 320;
 		_screenHeight = 200;
@@ -398,6 +401,10 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	assert(!_mainMenuDialog);
 	_mainMenuDialog = new ScummMenuDialog(this);
 #endif
+
+	_isIndy4Jap = _game.id == GID_INDY4 &&
+				  (_game.platform == Common::kPlatformMacintosh || _game.platform == Common::kPlatformDOS) &&
+				  _language == Common::JA_JPN;
 }
 
 
@@ -472,12 +479,7 @@ ScummEngine::~ScummEngine() {
 		delete _macScreen;
 	}
 
-	if (_macIndy3TextBox) {
-		_macIndy3TextBox->free();
-		delete _macIndy3TextBox;
-	}
-
-	delete _macIndy3Gui;
+	delete _macGui;
 
 #ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
 	delete _townsScreen;
@@ -1165,11 +1167,9 @@ Common::Error ScummEngine::init() {
 
 					_textSurfaceMultiplier = 2;
 					_macScreen = new Graphics::Surface();
-					_macScreen->create(640, 400, Graphics::PixelFormat::createFormatCLUT8());
+					_macScreen->create(640, _useMacScreenCorrectHeight ? 480 : 400, Graphics::PixelFormat::createFormatCLUT8());
 
-					_macIndy3TextBox = new Graphics::Surface();
-					_macIndy3TextBox->create(448, 47, Graphics::PixelFormat::createFormatCLUT8());
-					_macIndy3Gui = new MacIndy3Gui(_system, this);
+					_macGui = new MacIndy3Gui(this, macResourceFile);
 					break;
 				}
 			}
@@ -1193,7 +1193,8 @@ Common::Error ScummEngine::init() {
 
 					_textSurfaceMultiplier = 2;
 					_macScreen = new Graphics::Surface();
-					_macScreen->create(640, 400, Graphics::PixelFormat::createFormatCLUT8());
+					_macScreen->create(640, _useMacScreenCorrectHeight ? 480 : 400, Graphics::PixelFormat::createFormatCLUT8());
+					_macGui = new MacLoomGui(this, macResourceFile);
 					break;
 				}
 			}
@@ -1226,9 +1227,11 @@ Common::Error ScummEngine::init() {
 			}
 		}
 
-		if (!_macScreen && _renderMode == Common::kRenderMacintoshBW) {
+		if (!_macScreen && _renderMode == Common::kRenderMacintoshBW)
 			_renderMode = Common::kRenderDefault;
-		}
+
+		if (_macGui)
+			_macGui->initialize();
 	}
 
 	// Initialize backend
@@ -1329,6 +1332,8 @@ Common::Error ScummEngine::init() {
 	// some don't, so let's preventively set a default one.
 	if (!ConfMan.hasKey("talkspeed", _targetName))
 		setTalkSpeed(_defaultTextSpeed);
+
+	_setupIsComplete = true;
 
 	syncSoundSettings();
 
@@ -1697,9 +1702,9 @@ void ScummEngine::resetScumm() {
 		_macScreen->fillRect(Common::Rect(_macScreen->w, _macScreen->h), 0);
 	}
 
-	if (_macIndy3Gui) {
-		_macIndy3TextBox->fillRect(Common::Rect(_macIndy3TextBox->w, _macIndy3TextBox->h), 0);
-		_macIndy3Gui->reset();
+	if (_macGui) {
+		_macGui->clearTextArea();
+		_macGui->reset();
 	}
 
 	if (_game.version == 0) {
@@ -2259,6 +2264,9 @@ void ScummEngine::setupMusic(int midi, const Common::String &macInstrumentFile) 
 }
 
 void ScummEngine::syncSoundSettings() {
+	if (!_setupIsComplete)
+		return;
+
 	if (isUsingOriginalGUI() && _game.version > 6) {
 		int guiTextStatus = 0;
 		if (ConfMan.getBool("speech_mute")) {
@@ -2442,13 +2450,19 @@ Common::Error ScummEngine::go() {
 		waitForTimer(delta * 4);
 
 		// Run the main loop
-		scummLoop(delta);
+		if (!isPaused()) {
+			scummLoop(delta);
 
-		if (_macIndy3Gui)
-			_macIndy3Gui->update(delta);
+			// The Mac GUI is updated after the engine has had a
+			// chance to update the screen. That way, it can draw
+			// things over the regular graphics, if needed.
 
-		if (_game.heversion >= 60) {
-			((SoundHE *)_sound)->feedMixer();
+			if (_macGui)
+				_macGui->update(delta);
+
+			if (_game.heversion >= 60) {
+				((SoundHE *)_sound)->feedMixer();
+			}
 		}
 
 		if (shouldQuit()) {
@@ -2484,6 +2498,9 @@ void ScummEngine::waitForTimer(int quarterFrames) {
 		uint32 screenUpdateTimerStart = _system->getMillis();
 		towns_updateGfx();
 #endif
+
+		if (_macGui)
+			_macGui->updateWindowManager();
 
 		_system->updateScreen();
 		cur = _system->getMillis();
@@ -3272,12 +3289,9 @@ void ScummEngine_v3::scummLoop_handleSaveLoad() {
 				// as terminateSaveMenuScript() will be gracefully handling that)
 				//
 				// Fixes bug #3362: MANIACNES: Music Doesn't Start On Load Game
-				if (_game.platform == Common::kPlatformNES) {
-					runScript(5, 0, 0, nullptr);
-					if (VAR(224))
-						_sound->startSound(VAR(224));
-				}
-
+				runScript(5, 0, 0, nullptr);
+				if (VAR(224))
+					_sound->startSound(VAR(224));
 			} else if (_game.platform != Common::kPlatformMacintosh) {
 				// MM and ZAK (v1/2)
 				int saveLoadRoom = 50;
@@ -3680,6 +3694,10 @@ bool ScummEngine::isUsingOriginalGUI() {
 		return false;
 
 	return _useOriginalGUI;
+}
+
+bool ScummEngine::isMessageBannerActive() {
+	return _messageBannerActive;
 }
 
 void ScummEngine::runBootscript() {

@@ -29,6 +29,7 @@
 #include "scumm/charset.h"
 #include "scumm/dialogs.h"
 #include "scumm/file.h"
+#include "scumm/gfx_mac.h"
 #include "scumm/imuse_digi/dimuse_engine.h"
 #ifdef ENABLE_HE
 #include "scumm/he/intern_he.h"
@@ -573,24 +574,7 @@ bool ScummEngine::newLine() {
 	} else if (!(_game.platform == Common::kPlatformFMTowns) && _string[0].height) {
 		_nextTop += _string[0].height;
 	} else {
-		if (_game.platform == Common::kPlatformSegaCD && _useCJKMode) {
-			// The JAP Sega CD version of Monkey Island 1 doesn't just calculate
-			// the font height, but instead relies on the actual string height.
-			// If the string contains at least a 2 byte character, then we signal it with
-			// a flag, so that getFontHeight() can yield the correct result.
-			for (int i = 0; _charsetBuffer[i]; i++) {
-				// Handle the special 0xFAFD character, which actually is a 0x20 space char.
-				if (_charsetBuffer[i] == 0xFD && _charsetBuffer[i + 1] == 0xFA) {
-					i++;
-					continue;
-				}
-
-				if (is2ByteCharacter(_language, _charsetBuffer[i])) {
-					_segaForce2ByteCharHeight = true;
-					break;
-				}
-			}
-
+		if ((_game.platform == Common::kPlatformSegaCD || _isIndy4Jap) && _useCJKMode) {
 			_nextTop += _charset->getFontHeight();
 		} else {
 			bool useCJK = _useCJKMode;
@@ -605,8 +589,6 @@ bool ScummEngine::newLine() {
 		// FIXME: is this really needed?
 		_charset->_disableOffsX = true;
 	}
-
-	_segaForce2ByteCharHeight = false;
 
 	return true;
 }
@@ -850,6 +832,8 @@ void ScummEngine::CHARSET_1() {
 	if (!_haveMsg)
 		return;
 
+	_force2ByteCharHeight = false;
+
 	if (_game.version >= 4 && _game.version <= 6) {
 		// Do nothing while the camera is moving
 		if ((camera._dest.x / 8) != (camera._cur.x / 8) || camera._cur.x != camera._last.x)
@@ -864,7 +848,7 @@ void ScummEngine::CHARSET_1() {
 		int s;
 
 		_string[0].xpos = a->getPos().x - _virtscr[kMainVirtScreen].xstart;
-		_string[0].ypos = a->getPos().y - a->getElevation() - _screenTop;
+		_string[0].ypos = a->getPos().y - a->getElevation() - _screenTop - _screenDrawOffset;
 
 		if (_game.version <= 5) {
 			if (VAR(VAR_V5_TALK_STRING_Y) < 0) {
@@ -898,7 +882,7 @@ void ScummEngine::CHARSET_1() {
 			_string[0].xpos = _screenWidth - 80;
 	}
 
-	_charset->_top = _string[0].ypos + _screenTop;
+	_charset->_top = _string[0].ypos + _screenTop + _screenDrawOffset;
 	_charset->_startLeft = _charset->_left = _string[0].xpos;
 	_charset->_right = _string[0].right;
 	_charset->_center = _string[0].center;
@@ -1124,7 +1108,7 @@ void ScummEngine::CHARSET_1() {
 	if (_isRTL)
 		fakeBidiString(_charsetBuffer + _charsetBufPos, true, sizeof(_charsetBuffer) - _charsetBufPos);
 
-	bool createTextBox = (_macIndy3Gui != nullptr);
+	bool createTextBox = (_macGui && _game.id == GID_INDY3);
 	bool drawTextBox = false;
 
 	while (handleNextCharsetCode(a, &c)) {
@@ -1157,7 +1141,7 @@ void ScummEngine::CHARSET_1() {
 
 		if (createTextBox) {
 			if (!_keepText)
-				mac_createIndy3TextBox(a);
+				_macGui->initTextAreaForActor(a, _charset->getColor());
 			createTextBox = false;
 			drawTextBox = true;
 		}
@@ -1167,6 +1151,19 @@ void ScummEngine::CHARSET_1() {
 				byte *buffer = _charsetBuffer + _charsetBufPos;
 				c += *buffer++ * 256; //LE
 				_charsetBufPos = buffer - _charsetBuffer;
+
+				// The JAP Sega CD version of Monkey Island 1 doesn't just calculate
+				// the font height, but instead relies on the actual string height.
+				// If the string contains at least a 2 byte character, then we signal it with
+				// a flag, so that getFontHeight() can yield the correct result.
+				// It has been verified on the disasm for Indy4 Japanese DOS/V and Mac that
+				// this is the correct behavior for the latter game as well.
+				// Monkey Island 1 seems to have an exception for the 0xFAFD character, which
+				// is a space character with a two byte character height and width, but those
+				// dimensions apparently are never used, and the 0x20 character is used instead.
+				if (_game.platform != Common::kPlatformSegaCD || c != 0xFAFD) {
+					_force2ByteCharHeight = true;
+				}
 			}
 		}
 		if (_game.version <= 3) {
@@ -1189,9 +1186,6 @@ void ScummEngine::CHARSET_1() {
 		_nextLeft = _charset->_left;
 		_nextTop = _charset->_top;
 
-		if (drawTextBox)
-			mac_drawIndy3TextBox();
-
 		if (_game.version <= 2) {
 			_talkDelay += _defaultTextSpeed;
 			VAR(VAR_CHARCOUNT)++;
@@ -1199,6 +1193,9 @@ void ScummEngine::CHARSET_1() {
 			_talkDelay += (int)VAR(VAR_CHARINC);
 		}
 	}
+
+	if (drawTextBox)
+		mac_drawIndy3TextBox();
 
 #ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
 	if (_game.platform == Common::kPlatformFMTowns && (c == 0 || c == 2 || c == 3))
@@ -1223,7 +1220,7 @@ void ScummEngine::drawString(int a, const byte *msg) {
 	if (_isRTL)
 		fakeBidiString(buf, false, sizeof(buf));
 
-	_charset->_top = _string[a].ypos + _screenTop;
+	_charset->_top = _string[a].ypos + _screenTop + _screenDrawOffset;
 	_charset->_startLeft = _charset->_left = _string[a].xpos;
 	_charset->_right = _string[a].right;
 	_charset->_center = _string[a].center;
@@ -1236,7 +1233,9 @@ void ScummEngine::drawString(int a, const byte *msg) {
 
 	fontHeight = _charset->getFontHeight();
 
-	if (_game.version >= 4) {
+	// Disabled in HE games starting from Freddi1 because
+	// of issues when writing a savegame name containing spaces...
+	if (_game.version >= 4 && _game.heversion < 70) {
 		// trim from the right
 		byte *tmp = buf;
 		space = nullptr;
@@ -1362,6 +1361,12 @@ void ScummEngine::drawString(int a, const byte *msg) {
 		_nextLeft = _charset->_left;
 		_nextTop = _charset->_top;
 	}
+
+	// From disasm: this is used to let a yellow bar appear
+	// in the bottom of the screen during dialog choices which
+	// are longer than the screen width.
+	if (_isIndy4Jap)
+		_scummVars[78] = _charset->_left;
 
 	_string[a].xpos = _charset->_str.right;
 
@@ -1495,8 +1500,7 @@ int ScummEngine::convertMessageToString(const byte *msg, byte *dst, int dstSize)
 			}
 		} else {
 			if ((chr != '@') || (_game.version >= 7 && is2ByteCharacter(_language, lastChr)) ||
-				(_game.id == GID_LOOM && _game.platform == Common::kPlatformPCEngine && _language == Common::JA_JPN) ||
-				(_game.platform == Common::kPlatformFMTowns && _language == Common::JA_JPN && checkSJISCode(lastChr))) {
+				(_language == Common::JA_JPN && checkSJISCode(lastChr))) {
 				*dst++ = chr;
 			}
 			lastChr = chr;

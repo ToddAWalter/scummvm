@@ -171,6 +171,7 @@ void ConfigManager::addDomain(const String &domainName, const ConfigManager::Dom
 
 
 bool ConfigManager::loadFromStream(SeekableReadStream &stream) {
+	static const byte UTF8_BOM[] = {0xEF, 0xBB, 0xBF};
 	String domainName;
 	String comment;
 	Domain domain;
@@ -196,6 +197,11 @@ bool ConfigManager::loadFromStream(SeekableReadStream &stream) {
 
 		// Read a line
 		String line = stream.readLine();
+
+		// Skip UTF-8 byte-order mark if added by a text editor.
+		if (lineno == 1 && memcmp(line.c_str(), UTF8_BOM, 3) == 0) {
+			line.erase(0, 3);
+		}
 
 		if (line.size() == 0) {
 			// Do nothing
@@ -474,6 +480,10 @@ bool ConfigManager::hasKey(const String &key, const String &domName) const {
 	if (!domain)
 		return false;
 	return domain->contains(key);
+}
+
+bool ConfigManager::hasDefault(const String &key) const {
+	return _defaultsDomain.contains(key);
 }
 
 void ConfigManager::removeKey(const String &key, const String &domName) {

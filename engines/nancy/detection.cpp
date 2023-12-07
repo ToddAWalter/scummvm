@@ -55,6 +55,7 @@ static const PlainGameDescriptor nancyGames[] = {
 };
 
 #define NANCY2_GUIOPTIONS GUIO4(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH, GAMEOPTION_FIX_SOFTLOCKS, GAMEOPTION_NANCY2_TIMER)
+#define NANCY5_GUIOPTIONS GUIO3(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH, GAMEOPTION_FIX_SOFTLOCKS)
 
 static const Nancy::NancyGameDescription gameDescriptions[] = {
 
@@ -115,7 +116,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "fa4293d728a1b31407961cd82e86a015", 7784516),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			NANCY2_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy2
@@ -126,7 +127,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "c19f4a1193b58939ab1a7e314e9a550e", 7756789),
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			NANCY2_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy2
@@ -143,7 +144,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			NANCY2_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy2
@@ -154,7 +155,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "ee5f8832226567c3610556497c451b09", 16256355),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_PLG_BYTE_IN_BSUM,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_PLG_BYTE_IN_BSUM,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy3
@@ -165,7 +166,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "6b379f9d8edfb2d439062122e08f785c", 16161115),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy3
@@ -182,12 +183,11 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy3
 	},
-	/* Temporarily disabled; needs ciftree.dat
 	{ // MD5 by waltervn
 		{
 			"nancy3", nullptr,
@@ -195,6 +195,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 				{ "data1.hdr", 0, "44906f3d2242f73f16feb8eb6a5161cb", 207327 },
 				{ "data1.cab", 0, "e258cc871e5de5ae004d03c4e31431c7", 1555916 },
 				{ "data2.cab", 0, "364dfd25677026da505f1fa6edd5571f", 137373135 },
+				{ "is:data1.cab:ciftree.dat", 0, "A:ee5f8832226567c3610556497c451b09", 16256355 },
 				AD_LISTEND
 			},
 			Common::EN_ANY,
@@ -203,14 +204,14 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy3
-	},*/
+	},
 	{ // MD5 by fracturehill
 		{
 			"nancy3", nullptr,
 			AD_ENTRY1s("ciftree.dat", "6b379f9d8edfb2d439062122e08f785c", 16161148),
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy3
@@ -227,7 +228,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy3
@@ -238,7 +239,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "e9d45f7db453b0d8f37d202fc979537c", 8742289),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
@@ -249,7 +250,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "3ad55cd8f9a3b010a19de44ff4ce7edf", 8786300),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
@@ -266,7 +267,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
@@ -283,12 +284,11 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
 	},
-	/* Temporarily disabled: needs ciftree.dat
 	{ // MD5 by eriktorbjorn
 		{
 			"nancy4", nullptr,
@@ -296,22 +296,23 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 				{ "data1.hdr", 0, "9febd79adc61148088b464140a124172", 263445 },
 				{ "data1.cab", 0, "af5e06e381473fdc3ff6f7cac5619e32", 1569396 },
 				{ "data2.cab", 0, "ed0ca7ba3cc315f705e48fe604d53523", 140562769 },
+				{ "is:data1.cab:ciftree.dat", 0, "A:3ad55cd8f9a3b010a19de44ff4ce7edf", 8786300 },
 				AD_LISTEND
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
-	},*/
+	},
 	{ // MD5 by fracturehill
 		{
 			"nancy4", nullptr,
 			AD_ENTRY1s("ciftree.dat", "a1090497f5fefce17494804bd1d624e1", 9991442),
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+			ADGF_TESTING | ADGF_DROPPLATFORM,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
@@ -329,7 +330,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
 			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
 		},
 		Nancy::kGameTypeNancy4
@@ -340,8 +341,8 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "21fa81f322595c3100d8d58d100852d5", 8187692),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
-			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
+			ADGF_TESTING | ADGF_DROPPLATFORM,
+			NANCY5_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy5
 	},
@@ -357,8 +358,8 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
-			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			NANCY5_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy5
 	},
@@ -374,8 +375,8 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
-			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			NANCY5_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy5
 	},
@@ -391,8 +392,8 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::EN_ANY,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
-			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			NANCY5_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy5
 	},*/
@@ -402,8 +403,8 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			AD_ENTRY1s("ciftree.dat", "8645fad8c3fb8c0ee13e7a0a75902782", 9714463),
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM,
-			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
+			ADGF_TESTING | ADGF_DROPPLATFORM,
+			NANCY5_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy5
 	},
@@ -420,8 +421,8 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			},
 			Common::RU_RUS,
 			Common::kPlatformWindows,
-			ADGF_UNSTABLE | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
-			GUIO2(GAMEOPTION_PLAYER_SPEECH, GAMEOPTION_CHARACTER_SPEECH)
+			ADGF_TESTING | ADGF_DROPPLATFORM | Nancy::GF_COMPRESSED,
+			NANCY5_GUIOPTIONS
 		},
 		Nancy::kGameTypeNancy5
 	},
@@ -436,7 +437,6 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 		},
 		Nancy::kGameTypeNancy6
 	},
-	/* Temporarily disabled; needs ciftree.dat
 	{ // MD5 by eriktorbjorn
 		{
 			"nancy6", nullptr,
@@ -444,6 +444,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 				{ "data1.hdr", 0, "6a45cdf632301ae1b55fd7474bec3650", 298551 },
 				{ "data1.cab", 0, "399b83b188bfc05077d81cc1eadd456c", 4470086 },
 				{ "data2.cab", 0, "30ca94b596f6b5971a22c111b24d6764", 206382511 },
+				{ "is:data1.cab:ciftree.dat", 0, "A:a97b848651fdcf38f5cad7092d98e4a1", 28888006 },
 				AD_LISTEND
 			},
 			Common::EN_ANY,
@@ -452,7 +453,7 @@ static const Nancy::NancyGameDescription gameDescriptions[] = {
 			GUIO1(GAMEOPTION_AUTO_MOVE)
 		},
 		Nancy::kGameTypeNancy6
-	},*/
+	},
 	{ // MD5 by fracturehill
 		{
 			"nancy6", nullptr,
