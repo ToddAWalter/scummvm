@@ -22,8 +22,8 @@
 #include "graphics/font.h"
 #include "scumm/charset.h"
 #include "scumm/file.h"
-#include "scumm/gfx_mac.h"
 #include "scumm/scumm.h"
+#include "scumm/macgui/macgui.h"
 #include "scumm/nut_renderer.h"
 #include "scumm/util.h"
 #include "scumm/he/intern_he.h"
@@ -1603,7 +1603,7 @@ void CharsetRendererPCE::setDrawCharIntern(uint16 chr) {
 }
 #endif
 
-CharsetRendererMac::CharsetRendererMac(ScummEngine *vm, const Common::String &fontFile)
+CharsetRendererMac::CharsetRendererMac(ScummEngine *vm, const Common::Path &fontFile)
 	 : CharsetRendererCommon(vm) {
 
 	// The original Macintosh interpreter didn't use the correct spacing

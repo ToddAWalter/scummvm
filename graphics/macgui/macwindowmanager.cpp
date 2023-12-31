@@ -211,7 +211,8 @@ MacWindowManager::MacWindowManager(uint32 mode, MacPatterns *patterns, Common::L
 	for (int i = 0; i < ARRAYSIZE(fillPatterns); i++)
 		_builtinPatterns.push_back(fillPatterns[i]);
 
-	g_system->getPaletteManager()->setPalette(palette, 0, ARRAYSIZE(palette) / 3);
+	if (g_system->getScreenFormat().isCLUT8())
+		g_system->getPaletteManager()->setPalette(palette, 0, ARRAYSIZE(palette) / 3);
 
 	_paletteSize = ARRAYSIZE(palette) / 3;
 	if (_paletteSize) {
@@ -1057,8 +1058,18 @@ bool MacWindowManager::processEvent(Common::Event &event) {
 	}
 
 	// Menu gets events first for shortcuts and menu bar
-	if (_menu && _menu->processEvent(event))
+	if (_menu && _menu->processEvent(event)) {
+		if (_mode & kWMModalMenuMode) {
+			_menu->draw(_screen);
+			_menu->eventLoop();
+
+			// Do not do full refresh as we took care of restoring
+			// the screen. WM is not even aware we were drawing.
+			setFullRefresh(false);
+		}
+
 		return true;
+	}
 
 	if (_activeWindow != -1) {
 		if ((_windows[_activeWindow]->isEditable() && _windows[_activeWindow]->getType() == kWindowWindow &&

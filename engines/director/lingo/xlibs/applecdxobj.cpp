@@ -106,6 +106,7 @@ const char *AppleCDXObj::fileNames[] = {
 
 static MethodProto xlibMethods[] = {
 	{ "new",					AppleCDXObj::m_new,			0,	0,	300 },	// D3
+	{ "dispose",				AppleCDXObj::m_dispose,			0,	0,	300 },	// D3
 	{ "Service",				AppleCDXObj::m_service,		0,	0,	300 },	// D4
 	{ "Still",				AppleCDXObj::m_still,		0,	0,	300 },	// D3
 	{ "ReadStatus",				AppleCDXObj::m_readStatus,	0,	0,	300 },	// D3
@@ -143,22 +144,21 @@ AppleCDXObject::AppleCDXObject(ObjectType ObjectType) :Object<AppleCDXObject>("A
 	_objType = ObjectType;
 	_inpoint = 0;
 	_outpoint = 0;
-	_cue = nullptr;
 
 	Common::File cuefile;
 	if (cuefile.open("disc.cue")) {
 		Common::String cuestring = cuefile.readString(0, cuefile.size());
 
-		_cue = new Common::CueSheet(cuestring.c_str());
+		_cue = Common::SharedPtr<Common::CueSheet>(new Common::CueSheet(cuestring.c_str()));
 	}
-}
-
-AppleCDXObject::~AppleCDXObject() {
-	delete _cue;
 }
 
 void AppleCDXObj::m_new(int nargs) {
 	g_lingo->push(g_lingo->_state->me);
+}
+
+void AppleCDXObj::m_dispose(int nargs) {
+	g_director->_system->getAudioCDManager()->stop();
 }
 
 void AppleCDXObj::m_still(int nargs) {

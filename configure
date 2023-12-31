@@ -3732,7 +3732,7 @@ if test -n "$_host"; then
 				append_var DEFINES  "-DNDEBUG"
 				#append_var DEFINES  "-DDISABLE_TEXT_CONSOLE"
 				append_var CXXFLAGS "-I$($_host_alias-gcc -print-sysroot)/opt/mintlib-dlmalloc/include"
-				append_var LDFLAGS  "-L$($_host_alias-gcc -print-sysroot)/opt/mintlib-dlmalloc/lib/m68020-60"
+				append_var LDFLAGS  "-L$($_host_alias-gcc -print-sysroot)/opt/mintlib-dlmalloc/lib/$($_host_alias-gcc $LDFLAGS -print-multi-directory)"
 			fi
 
 			_seq_midi=no
@@ -3988,6 +3988,9 @@ if test -n "$_host"; then
 			_backend="wii"
 			_build_scalers=no
 			_build_aspect=no
+			_tinygl=no
+			_nuked_opl=no
+			_mt32emu=no
 			_vkeybd=yes
 			_port_mk="backends/platform/wii/wii.mk"
 			add_line_to_config_mk 'GAMECUBE = 0'
