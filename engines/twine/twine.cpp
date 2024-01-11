@@ -23,8 +23,6 @@
 #include "common/config-manager.h"
 #include "common/debug.h"
 #include "common/error.h"
-#include "common/events.h"
-#include "common/keyboard.h"
 #include "common/savefile.h"
 #include "common/scummsys.h"
 #include "common/str.h"
@@ -38,10 +36,8 @@
 #include "graphics/font.h"
 #include "graphics/fontman.h"
 #include "graphics/managed_surface.h"
-#include "graphics/palette.h"
 #include "graphics/pixelformat.h"
 #include "graphics/surface.h"
-#include "gui/debugger.h"
 #include "twine/audio/music.h"
 #include "twine/audio/sound.h"
 #include "twine/debugger/console.h"
@@ -123,6 +119,21 @@ void TwineScreen::update() {
 		return;
 	}
 	_lastFrame = _engine->_frameCounter;
+
+	if (_engine->_redraw->_flagMCGA) {
+		markAllDirty();
+		Graphics::ManagedSurface zoomWorkVideoBuffer(_engine->_workVideoBuffer);
+		const int maxW = zoomWorkVideoBuffer.w;
+		const int maxH = zoomWorkVideoBuffer.h;
+		const int left = CLIP<int>(_engine->_redraw->_sceneryViewX - maxW / 4, 0, maxW / 2);
+		const int top = CLIP<int>(_engine->_redraw->_sceneryViewY - maxH / 4, 0, maxH / 2);
+		const Common::Rect srcRect(left, top, left + maxW / 2, top + maxH / 2);
+		const Common::Rect& destRect = zoomWorkVideoBuffer.getBounds();
+		zoomWorkVideoBuffer.blitFrom(*this, srcRect, destRect);
+		blitFrom(zoomWorkVideoBuffer);
+		// TODO: we need to redraw everything
+		_engine->_redraw->_firstTime = true;
+	}
 	Super::update();
 }
 
@@ -606,12 +617,21 @@ void TwinEEngine::playIntro() {
 	}
 }
 
-void TwinEEngine::initSceneryView() {
-	_redraw->_inSceneryView = true;
+void TwinEEngine::extInitMcga() {
+	_redraw->_flagMCGA = true;
 }
 
-void TwinEEngine::exitSceneryView() {
-	_redraw->_inSceneryView = false;
+void TwinEEngine::extInitSvga() {
+	_redraw->_flagMCGA = false;
+}
+
+void TwinEEngine::testRestoreModeSVGA(bool redraw) {
+	if (_redraw->_flagMCGA) {
+		extInitSvga();
+		if (redraw) {
+			_redraw->redrawEngineActions(redraw);
+		}
+	}
 }
 
 void TwinEEngine::initAll() {
@@ -625,7 +645,7 @@ void TwinEEngine::initAll() {
 
 	_resources->initResources();
 
-	exitSceneryView();
+	extInitSvga();
 
 	_screens->clearScreen();
 
@@ -700,7 +720,7 @@ void TwinEEngine::processBonusList() {
 
 void TwinEEngine::processInventoryAction() {
 	ScopedEngineFreeze scoped(this);
-	exitSceneryView();
+	extInitSvga();
 	_menu->processInventoryMenu();
 
 	switch (_loopInventoryItem) {
@@ -801,7 +821,7 @@ int32 TwinEEngine::toSeconds(int x) const {
 
 void TwinEEngine::processOptionsMenu() {
 	ScopedEngineFreeze scoped(this);
-	exitSceneryView();
+	extInitSvga();
 	_sound->pauseSamples();
 	_menu->inGameOptionsMenu();
 	_scene->playSceneMusic();
@@ -848,7 +868,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 		// Process give up menu - Press ESC
 		if (_input->toggleAbortAction() && _scene->_sceneHero->_lifePoint > 0 && _scene->_sceneHero->_body != -1 && !_scene->_sceneHero->_staticFlags.bIsHidden) {
 			ScopedEngineFreeze scopedFreeze(this);
-			exitSceneryView();
+			extInitSvga();
 			const int giveUp = _menu->giveupMenu();
 			if (giveUp == kQuitEngine) {
 				return false;
@@ -899,6 +919,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 				_actor->_heroBehaviour = HeroBehaviourType::kDiscrete;
 			}
 			ScopedEngineFreeze scopedFreeze(this);
+			testRestoreModeSVGA(true);
 			_menu->processBehaviourMenu(behaviourMenu);
 			_redraw->redrawEngineActions(true);
 		}
@@ -926,6 +947,8 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 
 		// Draw holomap
 		if (_input->toggleActionIfActive(TwinEActionType::OpenHolomap) && _gameState->hasItem(InventoryItems::kiHolomap) && !_gameState->inventoryDisabled()) {
+			ScopedEngineFreeze freeze(this);
+			testRestoreModeSVGA(true);
 			_holomap->holoMap();
 			_screens->_fadePalette = true;
 			_redraw->redrawEngineActions(true);
@@ -936,9 +959,8 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 			ScopedEngineFreeze scopedFreeze(this, true);
 			const char *PauseString = "Pause";
 			_text->setFontColor(COLOR_WHITE);
-			if (_redraw->_inSceneryView) {
+			if (_redraw->_flagMCGA) {
 				_text->drawText(_redraw->_sceneryViewX + 5, _redraw->_sceneryViewY, PauseString);
-				_redraw->zoomScreenScale();
 			} else {
 				const int width = _text->getTextSize(PauseString);
 				const int bottom = height() - _text->lineHeight;
@@ -953,6 +975,16 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 				}
 			} while (!_input->toggleActionIfActive(TwinEActionType::Pause));
 			_redraw->redrawEngineActions(true);
+		}
+
+		if (_input->toggleActionIfActive(TwinEActionType::SceneryZoom)) {
+			_redraw->_flagMCGA ^= true;
+			if (_redraw->_flagMCGA) {
+				extInitMcga();
+			} else {
+				extInitSvga();
+				_redraw->_firstTime = true;
+			}
 		}
 	}
 
