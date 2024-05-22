@@ -833,6 +833,9 @@ int Lingo::getAlignedType(const Datum &d1, const Datum &d2, bool equality) {
 		opType = FLOAT;
 	} else if ((d1Type == STRING && d2Type == INT) || (d1Type == INT && d2Type == STRING)) {
 		opType = STRING;
+	} else if ((d1Type == SYMBOL && d2Type != SYMBOL) || (d2Type == SYMBOL && d1Type != SYMBOL)) {
+		// some fun undefined behaviour: adding anything to a symbol returns an int.
+		opType = INT;
 	} else if (d1Type == d2Type) {
 		opType = d1Type;
 	}
@@ -1040,6 +1043,11 @@ int Datum::asInt() const {
 		} else {
 			res = (int)u.f;
 		}
+		break;
+	case SYMBOL:
+		// Undefined behaviour, but relied on by bad game code that e.g. adds things to symbols.
+		// Return a 32-bit number that's sort of related.
+		res = (int)((uint64)u.s & 0xffffffffL);
 		break;
 	default:
 		warning("Incorrect operation asInt() for type: %s", type2str());
@@ -1348,6 +1356,7 @@ int Datum::equalTo(Datum &d, bool ignoreCase) const {
 	case PICTUREREF:
 		return 0; // Original always returns 0 on picture reference comparison
 	default:
+		debugC(1, kDebugLingoExec, "Datum::equalTo(): Invalid equality check between types %s and %s", type2str(), d.type2str());
 		break;
 	}
 	return 0;
@@ -1424,7 +1433,7 @@ uint32 Datum::compareTo(Datum &d) const {
 			return kCompareGreater;
 		}
 	} else {
-		warning("Invalid comparison between types %s and %s", type2str(), d.type2str());
+		warning("Datum::compareTo(): Invalid comparison between types %s and %s", type2str(), d.type2str());
 		return kCompareError;
 	}
 }
@@ -1862,6 +1871,31 @@ CastMemberID Lingo::resolveCastMember(const Datum &memberID, const Datum &castLi
 void Lingo::exposeXObject(const char *name, Datum obj) {
 	_globalvars[name] = obj;
 	_globalvars[name].ignoreGlobal = true;
+}
+
+void Lingo::addBreakpoint(Breakpoint &bp) {
+	bp.id = _bpNextId;
+	_breakpoints.push_back(bp);
+	_bpNextId++;
+}
+
+bool Lingo::delBreakpoint(int id) {
+	for (auto it = _breakpoints.begin(); it != _breakpoints.end(); ++it) {
+		if (it->id == id) {
+			it = _breakpoints.erase(it);
+			return true;
+		}
+	}
+	return false;
+}
+
+Breakpoint *Lingo::getBreakpoint(int id) {
+	for (auto &it : _breakpoints) {
+		if (it.id == id) {
+			return &it;
+		}
+	}
+	return nullptr;
 }
 
 PictureReference::~PictureReference() {

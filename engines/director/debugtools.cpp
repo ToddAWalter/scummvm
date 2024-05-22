@@ -31,6 +31,13 @@
 #include "director/director.h"
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
+#include "director/lingo/lingodec/ast.h"
+#include "director/lingo/lingodec/codewritervisitor.h"
+#include "director/lingo/lingodec/context.h"
+#include "director/lingo/lingodec/handler.h"
+#include "director/lingo/lingodec/names.h"
+#include "director/lingo/lingodec/resolver.h"
+#include "director/lingo/lingodec/script.h"
 #include "director/cast.h"
 #include "director/castmember/bitmap.h"
 #include "director/castmember/castmember.h"
@@ -38,6 +45,7 @@
 #include "director/castmember/script.h"
 #include "director/channel.h"
 #include "director/debugtools.h"
+#include "director/debugger.h"
 #include "director/frame.h"
 #include "director/movie.h"
 #include "director/picture.h"
@@ -53,10 +61,10 @@ typedef struct ImGuiImage {
 	int16 height;
 } ImGuiImage;
 
-typedef struct ImGuiScriptCode {
-	uint pc;
-	Common::String code;
-} ImGuiScriptCode;
+typedef struct ImGuiScriptCodeLine {
+	uint32 pc;
+	Common::String codeLine;
+} ImGuiScriptCodeLine;
 
 typedef struct ImGuiScript {
 	bool score = false;
@@ -65,15 +73,32 @@ typedef struct ImGuiScript {
 	Common::String handlerId;
 	Common::String handlerName;
 	Common::String moviePath;
-	Common::Array<ImGuiScriptCode> code;
+
+	bool isMethod = false;
+	bool isGenericEvent = false;
+	Common::StringArray argumentNames;
+	Common::StringArray propertyNames;
+	Common::StringArray globalNames;
+	Common::SharedPtr<LingoDec::HandlerNode> root;
 
 	bool operator==(const ImGuiScript &c) const {
-		return moviePath == c.moviePath && score == c.score && id == c.id && type == c.type && handlerId == c.handlerId;
+		return moviePath == c.moviePath && score == c.score && id == c.id && handlerId == c.handlerId;
 	}
 	bool operator!=(const ImGuiScript &c) const {
 		return !(*this == c);
 	}
 } ImGuiScript;
+
+typedef struct ImGuiWindows {
+	bool controlPanel = true;
+	bool callStack = false;
+	bool vars = false;
+	bool channels = false;
+	bool cast = false;
+	bool funcList = false;
+	bool score = false;
+	bool bpList = false;
+} ImGuiWindows;
 
 typedef struct ImGuiState {
 	struct {
@@ -87,30 +112,475 @@ typedef struct ImGuiState {
 		ImGuiScript _script;
 		ImGuiTextFilter _nameFilter;
 		bool _showScript = false;
+		bool _showByteCode = false;
 	} _functions;
-	bool _showControlPanel = true;
-	bool _showCallStack = false;
-	bool _showVars = false;
-	bool _showChannels = false;
-	bool _showCast = false;
-	bool _showFuncList = false;
+
+	ImGuiWindows _w;
+	ImGuiWindows _savedW;
+	bool _wasHidden = false;
+
 	Common::List<CastMemberID> _scriptCasts;
-	Common::HashMap<Common::String, bool, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _breakpoints;
 	Common::HashMap<Common::String, bool, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _variables;
 	int _prevFrame = -1;
+	struct {
+		int frame = -1;
+		int channel = -1;
+	} _selectedScoreCast;
+
+	int _scoreMode = 0;
+
+	ImFont *_tinyFont = nullptr;
 } ImGuiState;
 
 ImGuiState *_state = nullptr;
 
+const LingoDec::Handler *getHandler(CastMemberID id, const Common::String &handlerId) {
+	Director::Movie *movie = g_director->getCurrentMovie();
+	const Director::Cast *cast = movie->getCast(id);
+	if (!cast->_lingodec)
+		return nullptr;
+
+	Common::SharedPtr<LingoDec::Node> node;
+	for (auto it : cast->_lingodec->scripts) {
+		for (const LingoDec::Handler &h : it.second->handlers) {
+			if (h.name != handlerId)
+				continue;
+			return &h;
+		}
+	}
+	return nullptr;
+}
+
+ImGuiScript toImGuiScript(CastMemberID id, const Common::String &handlerId) {
+	ImGuiScript result;
+	result.id = id;
+	result.handlerId = handlerId;
+
+	const LingoDec::Handler *handler = getHandler(id, handlerId);
+	if (!handler)
+		return result;
+
+	result.root = handler->ast.root;
+	result.isGenericEvent = handler->isGenericEvent;
+	result.argumentNames = handler->argumentNames;
+	result.propertyNames = handler->script->propertyNames;
+	result.globalNames = handler->globalNames;
+
+	LingoDec::Script *script = handler->script;
+	if (!script)
+		return result;
+
+	result.isMethod = script->isFactory();
+	return result;
+}
+
+static void setScriptToDisplay(const ImGuiScript &script);
+
+static Director::Breakpoint *getBreakpoint(const Common::String &handlerName, int pc) {
+	auto &bps = g_lingo->getBreakpoints();
+	for (uint i = 0; i < bps.size(); i++) {
+		if (bps[i].type == kBreakpointFunction && bps[i].funcName == handlerName && (int)bps[i].funcOffset == pc) {
+			return &bps[i];
+		}
+	}
+	return nullptr;
+}
+
+class RenderScriptVisitor : public LingoDec::NodeVisitor {
+public:
+	explicit RenderScriptVisitor(ImGuiScript &script, bool showByteCode) : _script(script), _showByteCode(showByteCode) {}
+
+	virtual void visit(const LingoDec::HandlerNode &node) override {
+		_handler = node.handler;
+
+		if (_showByteCode) {
+			byteCode(node);
+			return;
+		}
+
+		if (_script.isGenericEvent) {
+			node.block->accept(*this);
+			return;
+		}
+
+		bool isMethod = _script.isMethod;
+		{
+			Common::String code;
+			if (isMethod) {
+				code += "method ";
+			} else {
+				code += "on ";
+			}
+			code += _script.handlerName;
+
+			if (!_script.argumentNames.empty()) {
+				code += " ";
+				for (size_t i = 0; i < _script.argumentNames.size(); i++) {
+					if (i > 0)
+						code += ", ";
+					code += _script.argumentNames[i];
+				}
+			}
+			write(node._startOffset, code);
+		}
+
+		if (isMethod && _script.propertyNames.size() > 0 && node.handler == &node.handler->script->handlers[0]) {
+			write(node._startOffset, "instance");
+			ImGui::SameLine();
+			for (size_t i = 0; i < _script.propertyNames.size(); i++) {
+				if (i > 0)
+					ImGui::Text(", ");
+				ImGui::SameLine();
+				ImGui::TextColored((ImVec4)ImColor(var_color), "%s", node.handler->script->propertyNames[i].c_str());
+				ImGui::SameLine();
+			}
+			ImGui::NewLine();
+		}
+
+		if (!_script.globalNames.empty()) {
+			write(node._startOffset, "global ");
+			ImGui::SameLine();
+			for (size_t i = 0; i < _script.globalNames.size(); i++) {
+				if (i > 0)
+					ImGui::Text(", ");
+				ImGui::SameLine();
+				ImGui::TextColored((ImVec4)ImColor(var_color), "%s", node.handler->globalNames[i].c_str());
+				ImGui::SameLine();
+			}
+			ImGui::NewLine();
+		}
+
+		node.block->accept(*this);
+
+		if (!isMethod) {
+			write(node.block->_endOffset, "end");
+		}
+	}
+
+	virtual void visit(const LingoDec::LiteralNode &node) override {
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		node.accept(code);
+		ImGui::TextColored(literal_color, "%s", code._str.c_str());
+		ImGui::SameLine();
+	}
+
+	virtual void visit(const LingoDec::ObjCallV4Node &node) override {
+		if (node.isStatement) {
+			renderLine(node._startOffset);
+			renderIndentation();
+		}
+
+		node.obj->accept(*this);
+		ImGui::SameLine();
+		ImGui::Text("(");
+		ImGui::SameLine();
+		node.argList->accept(*this);
+		ImGui::SameLine();
+		ImGui::Text(")");
+		if (!node.isStatement) {
+			ImGui::SameLine();
+		}
+	}
+
+	virtual void visit(const LingoDec::CallNode &node) override {
+		int32 obj = 0;
+		for (uint i = 0; i < _handler->bytecodeArray.size(); i++) {
+			if (node._startOffset == _handler->bytecodeArray[i].pos) {
+				obj = _handler->bytecodeArray[i].obj;
+				break;
+			}
+		}
+
+		// new line only if it's a statement
+		if (node.isStatement) {
+			renderLine(node._startOffset);
+			renderIndentation();
+		}
+
+		const ImVec4 color = (ImVec4)ImColor(g_lingo->_builtinCmds.contains(node.name) ? builtin_color : call_color);
+		ImGui::TextColored(color, "%s", node.name.c_str());
+		if (!g_lingo->_builtinCmds.contains(node.name) && ImGui::IsItemHovered() && ImGui::BeginTooltip()) {
+			ImGui::Text("Go to definition");
+			ImGui::EndTooltip();
+		}
+		if (!g_lingo->_builtinCmds.contains(node.name) && ImGui::IsItemClicked()) {
+			ImGuiScript script = toImGuiScript(CastMemberID(obj, _script.id.castLib), node.name);
+			script.moviePath = _script.moviePath;
+			script.handlerName = node.name;
+			setScriptToDisplay(script);
+		}
+		ImGui::SameLine();
+
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		if (node.noParens()) {
+			node.argList->accept(code);
+		} else {
+			code.write("(");
+			node.argList->accept(code);
+			code.write(")");
+		}
+
+		ImGui::Text("%s", code._str.c_str());
+		if (!node.isStatement) {
+			ImGui::SameLine();
+		}
+	}
+
+	virtual void visit(const LingoDec::BlockNode &node) override {
+		_indent++;
+		for (const auto &child : node.children) {
+			child->accept(*this);
+		}
+		_indent--;
+	}
+
+	virtual void visit(const LingoDec::RepeatWhileStmtNode &node) override {
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		code.write("repeat while ");
+		node.condition->accept(code);
+		write(node._startOffset, code._str);
+
+		node.block->accept(*this);
+
+		write(node._endOffset, "end repeat");
+	}
+
+	virtual void visit(const LingoDec::RepeatWithInStmtNode &node) override {
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		code.write("repeat with ");
+		code.write(node.varName);
+		code.write(" in ");
+		node.list->accept(code);
+		write(node._startOffset, code._str);
+		node.block->accept(*this);
+		write(node._endOffset, "end repeat");
+	}
+
+	virtual void visit(const LingoDec::RepeatWithToStmtNode &node) override {
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		code.write("repeat with ");
+		code.write(node.varName);
+		code.write(" = ");
+		node.start->accept(code);
+		if (node.up) {
+			code.write(" to ");
+		} else {
+			code.write(" down to ");
+		}
+		node.end->accept(code);
+		write(node._startOffset, code._str);
+		node.block->accept(*this);
+		write(node._endOffset, "end repeat");
+	}
+
+	virtual void visit(const LingoDec::IfStmtNode &node) override {
+		{
+			renderLine(node._startOffset);
+			renderIndentation();
+			ImGui::Text("if ");
+			ImGui::SameLine();
+			node.condition->accept(*this);
+			ImGui::SameLine();
+			ImGui::Text(" then");
+		}
+		node.block1->accept(*this);
+		if (node.hasElse) {
+			write(node.block2->_startOffset, "else");
+			node.block2->accept(*this);
+		}
+		write(node._endOffset, "end if");
+	}
+
+	virtual void visit(const LingoDec::TellStmtNode &node) override {
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		code.write("tell ");
+		node.window->accept(*this);
+		write(node._startOffset, code._str);
+		node.block->accept(*this);
+		write(node._endOffset, "end tell");
+	}
+
+	virtual void defaultVisit(const LingoDec::Node &node) override {
+		LingoDec::CodeWriterVisitor code(_dot, false);
+		node.accept(code);
+		if (node.isStatement) {
+			renderLine(node._startOffset);
+			renderIndentation();
+		}
+		ImGui::Text("%s", code._str.c_str());
+	}
+
+private:
+	void byteCode(const LingoDec::HandlerNode &node) const {
+		LingoDec::Handler *handler = node.handler;
+		bool isMethod = handler->script->isFactory();
+
+		if (!handler->isGenericEvent) {
+			Common::String code;
+			if (isMethod) {
+				code += "method ";
+			} else {
+				code += "on ";
+			}
+			code += handler->name;
+			if (handler->argumentNames.size() > 0) {
+				code += " ";
+				for (size_t i = 0; i < handler->argumentNames.size(); i++) {
+					if (i > 0)
+						code += ", ";
+					code += handler->argumentNames[i];
+				}
+			}
+			writeByteCode(0, code);
+		}
+		for (uint i = 0; i < handler->bytecodeArray.size(); i++) {
+			LingoDec::CodeWriterVisitor code(_dot, true);
+			code.indent();
+			auto &bytecode = handler->bytecodeArray[i];
+			code.write(LingoDec::StandardNames::getOpcodeName(bytecode.opID));
+			switch (bytecode.opcode) {
+			case LingoDec::kOpJmp:
+			case LingoDec::kOpJmpIfZ:
+				code.write(" ");
+				code.write(posToString(bytecode.pos + bytecode.obj));
+				break;
+			case LingoDec::kOpEndRepeat:
+				code.write(" ");
+				code.write(posToString(bytecode.pos - bytecode.obj));
+				break;
+			case LingoDec::kOpPushFloat32:
+				code.write(" ");
+				code.write(Common::String::format("%g", (*(const float *)(&bytecode.obj))));
+				break;
+			default:
+				if (bytecode.opID > 0x40) {
+					code.write(" ");
+					code.write(Common::String::format("%d", bytecode.obj));
+				}
+				break;
+			}
+			if (bytecode.translation) {
+				code.write(" ...");
+				while (code.lineWidth() < 49) {
+					code.write(".");
+				}
+				code.write(" ");
+				if (bytecode.translation->isExpression) {
+					code.write("<");
+				}
+				bytecode.translation->accept(code);
+				if (bytecode.translation->isExpression) {
+					code.write(">");
+				}
+			}
+			writeByteCode(bytecode.pos, code._str);
+		}
+		if (!handler->isGenericEvent) {
+			if (!isMethod) {
+				writeByteCode(node._endOffset, "end");
+			}
+		}
+	}
+
+	void write(uint32 offset, const Common::String &code) const {
+		renderLine(offset);
+		renderIndentation();
+		ImGui::Text("%s", code.c_str());
+	}
+
+	void writeByteCode(uint32 offset, const Common::String &code) const {
+		renderLine(offset);
+		Common::String s;
+		for (int i = 0; i < _indent; i++) {
+			s += "  ";
+		}
+		ImGui::Text("%s", (s + code).c_str());
+	}
+
+	void renderLine(uint pc) const {
+		ImDrawList *dl = ImGui::GetWindowDrawList();
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		const ImVec2 mid(pos.x + 7, pos.y + 7);
+
+		ImU32 color = bp_color_disabled;
+
+		Director::Breakpoint *bp = getBreakpoint(_script.handlerName, pc);
+		if (bp)
+			color = bp_color_enabled;
+
+		ImGui::InvisibleButton("Line", ImVec2(16, ImGui::GetFontSize()));
+		if (ImGui::IsItemClicked(0)) {
+			if (color == bp_color_enabled) {
+				g_lingo->delBreakpoint(bp->id);
+				color = bp_color_disabled;
+			} else {
+				Director::Breakpoint newBp;
+				newBp.type = kBreakpointFunction;
+				newBp.funcName = _script.handlerName;
+				newBp.funcOffset = pc;
+				g_lingo->addBreakpoint(newBp);
+				color = bp_color_enabled;
+			}
+		}
+
+		if (color == bp_color_disabled && ImGui::IsItemHovered()) {
+			color = bp_color_hover;
+		}
+
+		if (!bp || bp->enabled)
+			dl->AddCircleFilled(mid, 4.0f, color);
+		else
+			dl->AddCircle(mid, 4.0f, line_color);
+		dl->AddLine(ImVec2(pos.x + 16.0f, pos.y), ImVec2(pos.x + 16.0f, pos.y + 17), line_color);
+
+		ImGui::SetItemTooltip("Click to add a breakpoint");
+
+		ImGui::SameLine();
+		ImGui::Text("[%5d] ", pc);
+		ImGui::SameLine();
+	}
+
+	void renderIndentation(int indent) const {
+		for (int i = 0; i < indent; i++) {
+			ImGui::Text("  ");
+			ImGui::SameLine();
+		}
+	}
+
+	void renderIndentation() const {
+		renderIndentation(_indent);
+	}
+
+	Common::String posToString(int32 pos) const {
+		return Common::String::format("[%3d]", pos);
+	}
+
+private:
+	ImGuiScript &_script;
+	bool _showByteCode = false;
+	bool _dot = false;
+	int _indent = 0;
+	LingoDec::Handler *_handler = nullptr;
+
+	const ImU32 bp_color_disabled = ImGui::GetColorU32(ImVec4(0.9f, 0.08f, 0.0f, 0.0f));
+	const ImU32 bp_color_enabled = ImGui::GetColorU32(ImVec4(0.9f, 0.08f, 0.0f, 1.0f));
+	const ImU32 bp_color_hover = ImGui::GetColorU32(ImVec4(0.42f, 0.17f, 0.13f, 1.0f));
+	const ImU32 line_color = ImGui::GetColorU32(ImVec4(0.44f, 0.44f, 0.44f, 1.0f));
+	const ImVec4 call_color = ImVec4(0.44f, 0.44f, 0.88f, 1.0f);
+	const ImVec4 builtin_color = ImColor(IM_COL32_WHITE);
+	const ImVec4 var_color = ImColor(IM_COL32_WHITE);
+	const ImVec4 literal_color = ImColor(IM_COL32_WHITE);
+};
+
 static void showControlPanel() {
-	if (!_state->_showControlPanel)
+	if (!_state->_w.controlPanel)
 		return;
 
 	ImVec2 vp(ImGui::GetMainViewport()->Size);
 	ImGui::SetNextWindowPos(ImVec2(vp.x - 220.0f, 20.0f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(200, 80), ImGuiCond_FirstUseEver);
 
-	if (ImGui::Begin("Control Panel", &_state->_showControlPanel)) {
+	if (ImGui::Begin("Control Panel", &_state->_w.controlPanel)) {
 		Score *score = g_director->getCurrentMovie()->getScore();
 		ImDrawList *dl = ImGui::GetWindowDrawList();
 
@@ -296,13 +766,13 @@ static void showControlPanel() {
 }
 
 static void showCallStack() {
-	if (!_state->_showCallStack)
+	if (!_state->_w.callStack)
 		return;
 
 	Director::Lingo *lingo = g_director->getLingo();
 	ImGui::SetNextWindowPos(ImVec2(20, 160), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(120, 120), ImGuiCond_FirstUseEver);
-	if (ImGui::Begin("CallStack", &_state->_showCallStack)) {
+	if (ImGui::Begin("CallStack", &_state->_w.callStack)) {
 		ImGui::Text("%s", lingo->formatCallStack(lingo->_state->pc).c_str());
 	}
 	ImGui::End();
@@ -350,20 +820,20 @@ static const char *toString(ScriptType scriptType) {
 static const char *toIcon(CastType castType) {
 	static const char *castTypes[] = {
 		"",       // Empty
-		"\ue075", // Bitmap
-		"\ue062", // FilmLoop
-		"\ue0e1", // Text
-		"\ue055", // Palette
-		"\ue075", // Picture
-		"\ue0f1", // Sound
-		"\ue0cb", // Button
-		"\ue058", // Shape
-		"\ue0ee", // Movie
-		"\ue062", // DigitalVideo
-		"\ue0bc", // Script
-		"",       // RTE
-		"",       // ???
-		""};      // Transition"
+		"\uf79e", // Bitmap			// backround_dot_large
+		"\ue8da", // FilmLoop		// theaters
+		"\uf6f1", // Text			// match_case
+		"\ue40a", // Palette		// palette
+		"\uefa2", // Picture		// imagesmode
+		"\ue050", // Sound			// volume_up
+		"\uf4ab", // Button			// slab_serif
+		"\ue602", // Shape			// shapes
+		"\ue02c", // Movie			// movie
+		"\uf49a", // DigitalVideo	// animated_images
+		"\uf0c8", // Script			// forms_apps_script
+		"\uf4f1", // RTE			// brand_family
+		"?",      // ???
+		"\uf50c"};// Transition		// transition_fade
 	if (castType < 0 || castType > kCastTransition)
 		return "";
 	return castTypes[(int)castType];
@@ -452,24 +922,24 @@ static Common::String getDisplayName(CastMember *castMember) {
 }
 
 static void showCast() {
-	if (!_state->_showCast)
+	if (!_state->_w.cast)
 		return;
 
 	ImGui::SetNextWindowPos(ImVec2(20, 160), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(520, 240), ImGuiCond_FirstUseEver);
 
-	if (ImGui::Begin("Cast", &_state->_showCast)) {
+	if (ImGui::Begin("Cast", &_state->_w.cast)) {
 		// display a toolbar with: grid/list/filters buttons + name filter
-		if (ImGui::Button("\ue07e")) {
+		if (ImGui::Button("\ue896")) {	// list
 			_state->_cast._listView = true;
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("\ue06e")) {
+		if (ImGui::Button("\ue9b0")) {	// grid_view
 			_state->_cast._listView = false;
 		}
 		ImGui::SameLine();
 
-		if (ImGui::Button("\ue063")) {
+		if (ImGui::Button("\uef4f")) {	// filter_alt
 			ImGui::OpenPopup("filters_popup");
 		}
 		ImGui::SameLine();
@@ -549,7 +1019,7 @@ static void showCast() {
 			columns = columns < 1 ? 1 : columns;
 			if (ImGui::BeginTable("Cast", columns)) {
 				for (auto it : *movie->getCasts()) {
-					Cast *cast = it._value;
+					const Cast *cast = it._value;
 					if (!cast->_loadedCast)
 						continue;
 
@@ -625,7 +1095,7 @@ static void displayVariable(Common::String &name) {
 
 	ImDrawList *dl = ImGui::GetWindowDrawList();
 	ImVec2 pos = ImGui::GetCursorScreenPos();
-	ImVec2 eyeSize = ImGui::CalcTextSize("\ue05b ");
+	ImVec2 eyeSize = ImGui::CalcTextSize("\ue8f4 ");	// visibility
 	ImVec2 textSize = ImGui::CalcTextSize(name.c_str());
 
 	ImGui::InvisibleButton("Line", ImVec2(textSize.x + eyeSize.x, textSize.y));
@@ -643,18 +1113,18 @@ static void displayVariable(Common::String &name) {
 		color = disp_color_hover;
 	}
 
-	dl->AddText(pos, color, "\ue05b ");
+	dl->AddText(pos, color, "\ue8f4 ");	// visibility
 	dl->AddText(ImVec2(pos.x + eyeSize.x, pos.y), var_color, name.c_str());
 }
 
 static void showVars() {
-	if (!_state->_showVars)
+	if (!_state->_w.vars)
 		return;
 
 	Director::Lingo *lingo = g_director->getLingo();
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(300, 250), ImGuiCond_FirstUseEver);
-	if (ImGui::Begin("Vars", &_state->_showVars)) {
+	if (ImGui::Begin("Vars", &_state->_w.vars)) {
 		Common::Array<Common::String> keyBuffer;
 		const ImVec4 head_color = ImVec4(0.9f, 0.08f, 0.0f, 1.0f);
 
@@ -725,13 +1195,13 @@ static void addScriptCastToDisplay(CastMemberID &id) {
 	_state->_scriptCasts.push_back(id);
 }
 
-static void setScriptToDisplay(ImGuiScript &script) {
+static void setScriptToDisplay(const ImGuiScript &script) {
 	_state->_functions._script = script;
 	_state->_functions._showScript = true;
 }
 
 static void showChannels() {
-	if (!_state->_showChannels)
+	if (!_state->_w.channels)
 		return;
 
 	ImVec2 pos(40, 40);
@@ -740,7 +1210,7 @@ static void showChannels() {
 	ImVec2 windowSize = ImGui::GetMainViewport()->Size - pos - pos;
 	ImGui::SetNextWindowSize(windowSize, ImGuiCond_FirstUseEver);
 
-	if (ImGui::Begin("Channels", &_state->_showChannels)) {
+	if (ImGui::Begin("Channels", &_state->_w.channels)) {
 		Score *score = g_director->getCurrentMovie()->getScore();
 		Frame &frame = *score->_currentFrame;
 
@@ -797,6 +1267,7 @@ static void showChannels() {
 				ImGui::TableNextColumn();
 
 				if (sprite._castId.member) {
+					Common::Point position = channel.getPosition();
 					ImGui::Text("%s", sprite._castId.asString().c_str());
 					ImGui::TableNextColumn();
 					ImGui::Checkbox("", &channel._visible);
@@ -811,7 +1282,7 @@ static void showChannels() {
 					ImGui::TableNextColumn();
 					ImGui::Text("%d", sprite._thickness);
 					ImGui::TableNextColumn();
-					ImGui::Text("%dx%d@%d,%d", channel._width, channel._height, channel._currentPoint.x, channel._currentPoint.y);
+					ImGui::Text("%dx%d@%d,%d", channel.getWidth(), channel.getHeight(), position.x, position.y);
 					ImGui::TableNextColumn();
 					ImGui::Text("%d (%s)", sprite._spriteType, spriteType2str(sprite._spriteType));
 					ImGui::TableNextColumn();
@@ -889,16 +1360,21 @@ static void renderCastScript(Symbol &sym) {
 
 		color = bp_color_disabled;
 
-		if (_state->_breakpoints.contains(bpName))
+		Director::Breakpoint *bp = getBreakpoint(handlerName, pc);
+		if (bp)
 			color = bp_color_enabled;
 
 		ImGui::InvisibleButton("Line", ImVec2(16, ImGui::GetFontSize()));
 		if (ImGui::IsItemClicked(0)) {
-			if (color == bp_color_enabled) {
-				_state->_breakpoints.erase(bpName);
+			if (bp) {
+				g_lingo->delBreakpoint(bp->id);
 				color = bp_color_disabled;
 			} else {
-				_state->_breakpoints[bpName] = true;
+				Director::Breakpoint newBp;
+				newBp.type = kBreakpointFunction;
+				newBp.funcName = handlerName;
+				newBp.funcOffset = pc;
+				g_lingo->addBreakpoint(newBp);
 				color = bp_color_enabled;
 			}
 		}
@@ -919,48 +1395,11 @@ static void renderCastScript(Symbol &sym) {
 	}
 }
 
-static void renderScript(ImGuiScript &script) {
-	ImDrawList *dl = ImGui::GetWindowDrawList();
+static void renderScript(ImGuiScript &script, bool showByteCode) {
+	if (!script.root) return;
 
-	const ImU32 bp_color_disabled = ImGui::GetColorU32(ImVec4(0.9f, 0.08f, 0.0f, 0.0f));
-	const ImU32 bp_color_enabled = ImGui::GetColorU32(ImVec4(0.9f, 0.08f, 0.0f, 1.0f));
-	const ImU32 bp_color_hover = ImGui::GetColorU32(ImVec4(0.42f, 0.17f, 0.13f, 1.0f));
-	const ImU32 line_color = ImGui::GetColorU32(ImVec4(0.44f, 0.44f, 0.44f, 1.0f));
-	ImU32 color;
-
-	for (const auto& line : script.code) {
-		ImVec2 pos = ImGui::GetCursorScreenPos();
-		const ImVec2 mid(pos.x + 7, pos.y + 7);
-		Common::String bpName = Common::String::format("%s-%d", script.handlerId.c_str(), line.pc);
-
-		color = bp_color_disabled;
-
-		if (_state->_breakpoints.contains(bpName))
-			color = bp_color_enabled;
-
-		ImGui::InvisibleButton("Line", ImVec2(16, ImGui::GetFontSize()));
-		if (ImGui::IsItemClicked(0)) {
-			if (color == bp_color_enabled) {
-				_state->_breakpoints.erase(bpName);
-				color = bp_color_disabled;
-			} else {
-				_state->_breakpoints[bpName] = true;
-				color = bp_color_enabled;
-			}
-		}
-
-		if (color == bp_color_disabled && ImGui::IsItemHovered()) {
-			color = bp_color_hover;
-		}
-
-		dl->AddCircleFilled(mid, 4.0f, color);
-		dl->AddLine(ImVec2(pos.x + 16.0f, pos.y), ImVec2(pos.x + 16.0f, pos.y + 17), line_color);
-
-		ImGui::SetItemTooltip("Click to add a breakpoint");
-
-		ImGui::SameLine();
-		ImGui::Text("[%5d] %s", line.pc, line.code.c_str());
-	}
+	RenderScriptVisitor visitor(script, showByteCode);
+	script.root->accept(visitor);
 }
 
 static bool showScriptCast(CastMemberID &id) {
@@ -1019,17 +1458,21 @@ static void displayScripts() {
 	ImGui::SetNextWindowSize(ImVec2(240, 240), ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("Script", &_state->_functions._showScript)) {
+		if (ImGui::Button("\uf569")) { // Lingo		// package_2
+			_state->_functions._showByteCode = false;
+		}
+		ImGui::SetItemTooltip("Lingo");
+		ImGui::SameLine();
+		if (ImGui::Button("\uf500")) { // Bytecode	// stacks
+			_state->_functions._showByteCode = true;
+		}
+		ImGui::SetItemTooltip("Bytecode");
+		ImGui::Separator();
+
 		ImGui::Text("%s", _state->_functions._script.handlerName.c_str());
-		renderScript(_state->_functions._script);
+		renderScript(_state->_functions._script, _state->_functions._showByteCode);
 	}
 	ImGui::End();
-}
-
-static void getScriptCode(ImGuiScript& script, Symbol &sym) {
-	uint pc = 0;
-	while (pc < sym.u.defn->size()) {
-		script.code.push_back({pc, g_lingo->decodeInstruction(sym.u.defn, pc, &pc)});
-	}
 }
 
 static Common::String getHandlerName(Symbol &sym) {
@@ -1043,12 +1486,12 @@ static Common::String getHandlerName(Symbol &sym) {
 }
 
 static void showFuncList() {
-	if (!_state->_showFuncList)
+	if (!_state->_w.funcList)
 		return;
 
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(480, 240), ImGuiCond_FirstUseEver);
-	if (ImGui::Begin("Functions", &_state->_showFuncList)) {
+	if (ImGui::Begin("Functions", &_state->_w.funcList)) {
 		Lingo *lingo = g_director->getLingo();
 		Movie *movie = g_director->getCurrentMovie();
 		ScriptContext *csc = lingo->_state->context;
@@ -1075,14 +1518,7 @@ static void showFuncList() {
 					ImGui::TableNextRow();
 					ImGui::TableNextColumn();
 					if (ImGui::Selectable(function.c_str())) {
-						ImGuiScript script;
-						script.moviePath = movie->getArchive()->getPathName().toString();
-						script.score = true;
-						script.type = csc->_scriptType;
-						script.handlerId = functionHandler._key;
-						script.handlerName = getHandlerName(functionHandler._value);
-						getScriptCode(script, functionHandler._value);
-						setScriptToDisplay(script);
+						// TODO:
 					}
 					ImGui::TableNextColumn();
 					ImGui::Text("%s", movie->getArchive()->getPathName().toString().c_str());
@@ -1090,11 +1526,10 @@ static void showFuncList() {
 					ImGui::Text("-");
 					ImGui::TableNextColumn();
 					ImGui::Text("%s", scriptType.c_str());
-
 				}
 			}
 
-			for (auto cast : *movie->getCasts()) {
+			for (auto &cast : *movie->getCasts()) {
 				for (int i = 0; i <= kMaxScriptType; i++) {
 					if (cast._value->_lingoArchive->scriptContexts[i].empty())
 						continue;
@@ -1114,13 +1549,9 @@ static void showFuncList() {
 							ImGui::TableNextColumn();
 							if (ImGui::Selectable(function.c_str())) {
 								CastMemberID memberID(scriptContext._key, cast._key);
-								ImGuiScript script;
+								ImGuiScript script = toImGuiScript(memberID, functionHandler._key);
 								script.moviePath = movie->getArchive()->getPathName().toString();
-								script.id = memberID;
-								script.type = (ScriptType)i;
-								script.handlerId = functionHandler._key;
 								script.handlerName = getHandlerName(functionHandler._value);
-								getScriptCode(script, functionHandler._value);
 								setScriptToDisplay(script);
 							}
 							ImGui::TableNextColumn();
@@ -1129,7 +1560,6 @@ static void showFuncList() {
 							ImGui::Text("%d", cast._key);
 							ImGui::TableNextColumn();
 							ImGui::Text("%s", scriptType.c_str());
-
 						}
 					}
 				}
@@ -1156,13 +1586,9 @@ static void showFuncList() {
 							ImGui::TableNextColumn();
 							if (ImGui::Selectable(function.c_str())) {
 								CastMemberID memberID(scriptContext._key, SHARED_CAST_LIB);
-								ImGuiScript script;
+								ImGuiScript script = toImGuiScript(memberID, functionHandler._key);
 								script.moviePath = movie->getArchive()->getPathName().toString();
-								script.id = memberID;
-								script.type = (ScriptType)i;
-								script.handlerId = functionHandler._key;
 								script.handlerName = getHandlerName(functionHandler._value);
-								getScriptCode(script, functionHandler._value);
 								setScriptToDisplay(script);
 							}
 							ImGui::TableNextColumn();
@@ -1182,6 +1608,532 @@ static void showFuncList() {
 	ImGui::End();
 }
 
+// Make the UI compact because there are so many fields
+static void PushStyleCompact() {
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
+}
+
+static void PopStyleCompact() {
+    ImGui::PopStyleVar(2);
+}
+
+static void showBreakpointList() {
+	if (!_state->_w.bpList)
+		return;
+
+	const ImU32 bp_color_disabled = ImGui::GetColorU32(ImVec4(0.9f, 0.08f, 0.0f, 0.0f));
+	const ImU32 bp_color_enabled = ImGui::GetColorU32(ImVec4(0.9f, 0.08f, 0.0f, 1.0f));
+	const ImU32 bp_color_hover = ImGui::GetColorU32(ImVec4(0.42f, 0.17f, 0.13f, 1.0f));
+	const ImU32 line_color = ImGui::GetColorU32(ImVec4(0.44f, 0.44f, 0.44f, 1.0f));
+
+	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(480, 240), ImGuiCond_FirstUseEver);
+	if (ImGui::Begin("Breakpoints", &_state->_w.bpList)) {
+		auto &bps = g_lingo->getBreakpoints();
+		if (ImGui::BeginTable("BreakpointsTable", 5, ImGuiTableFlags_SizingFixedFit)) {
+			for (uint i = 0; i < 5; i++)
+				ImGui::TableSetupColumn(NULL, i == 2 ? ImGuiTableColumnFlags_WidthStretch : ImGuiTableColumnFlags_NoHeaderWidth);
+
+			for (uint i = 0; i < bps.size(); i++) {
+				if(bps[i].type != kBreakpointFunction) continue;
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				ImDrawList *dl = ImGui::GetWindowDrawList();
+				ImVec2 pos = ImGui::GetCursorScreenPos();
+				const ImVec2 mid(pos.x + 7, pos.y + 7);
+
+				ImU32 color = bps[i].enabled ? bp_color_enabled : bp_color_disabled;
+				ImGui::InvisibleButton("Line", ImVec2(16, ImGui::GetFontSize()));
+				if (ImGui::IsItemClicked(0)) {
+					if (bps[i].enabled) {
+						bps[i].enabled = false;
+						color = bp_color_disabled;
+					} else {
+						bps[i].enabled = true;
+						color = bp_color_enabled;
+					}
+				}
+
+				if (!bps[i].enabled && ImGui::IsItemHovered()) {
+					color = bp_color_hover;
+				}
+
+				if (bps[i].enabled)
+					dl->AddCircleFilled(mid, 4.0f, color);
+				else
+					dl->AddCircle(mid, 4.0f, line_color);
+
+				// enabled column
+				ImGui::TableNextColumn();
+				PushStyleCompact();
+				ImGui::PushID(i);
+				ImGui::Checkbox("", &bps[i].enabled);
+				PopStyleCompact();
+
+				// description
+				ImGui::TableNextColumn();
+				Common::String desc;
+				if (bps[i].scriptId)
+					desc = Common::String::format("%d: %s", bps[i].scriptId, bps[i].funcName.c_str());
+				else
+					desc = bps[i].funcName;
+				ImGui::Text("%s", desc.c_str());
+
+				// remove bp
+				ImGui::TableNextColumn();
+				pos = ImGui::GetCursorScreenPos();
+				const bool del = ImGui::InvisibleButton("DelBp", ImVec2(16, ImGui::GetFontSize()));
+				const bool hovered = ImGui::IsItemHovered();
+				const float fontSize = ImGui::GetFontSize();
+				const float cross_extent = ImGui::GetFontSize() * 0.5f * 0.7071f - 1.0f;
+				const ImU32 cross_col = ImGui::GetColorU32(ImGuiCol_Text);
+				const ImVec2 center = pos + ImVec2(0.5f + fontSize * 0.5f, 1.0f + fontSize * 0.5f);
+				if (hovered)
+        			dl->AddCircleFilled(center, MAX(2.0f, fontSize * 0.5f + 1.0f), ImGui::GetColorU32(ImGuiCol_ButtonActive));
+				dl->AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1.0f);
+				dl->AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
+
+				// offset
+				ImGui::TableNextColumn();
+				ImGui::Text("%d", bps[i].funcOffset);
+				ImGui::PopID();
+
+				if(del) {
+					g_lingo->delBreakpoint(bps[i].id);
+					break;
+				}
+			}
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+}
+
+enum { kModeMember, kModeBehavior, kModeLocation, kModeInk, kModeBlend, kModeExtended,
+		kChTempo, kChPalette, kChTransition, kChSound1, kChSound2, kChScript };
+const char *modes[] = { "Member", "Behavior", "Location", "Ink", "Blend", "Extended" };
+const char *modes2[] = {
+	"\ue425", "Tempo",		// timer
+	"\ue40a", "Palette",	// palette
+	"\uf50c", "Transition",	// transition_fade
+	"\ue0501","Sound 1",	// volume_up
+	"\ue0502","Sound 2",	// volume_up
+	"\uf0c8", "Script",		// forms_apps_script
+};
+
+static void displayScoreChannel(int ch, int mode, int modeSel) {
+	Score *score = g_director->getCurrentMovie()->getScore();
+	const uint numFrames = score->_scoreCache.size();
+
+	const uint currentFrameNum = score->getCurrentFrameNum();
+	const ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.7f, 0.7f, 0.0f, 0.65f));
+
+	ImGui::TableNextRow();
+
+	ImGui::PushFont(_state->_tinyFont);
+
+	if (modeSel == kModeExtended && mode == kModeExtended)
+		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
+
+	{
+		ImGui::TableNextColumn();
+
+		float indentSize = 17.0;
+
+		if (mode < kChTempo && modeSel == kModeExtended)
+			indentSize = 10.0;
+
+		if (modeSel == kModeExtended && mode == kModeExtended)
+			indentSize = 0.1;
+
+		ImGui::Indent(indentSize);
+
+		if (mode >= kChTempo) {
+			ImGui::PushFont(ImGui::GetIO().FontDefault);
+
+			ImGui::Text(modes2[(mode - kChTempo) * 2]);
+			ImGui::SetItemTooltip(modes2[(mode - kChTempo) * 2 + 1]);
+
+			ImGui::PopFont();
+		} else if (modeSel != kModeExtended || mode == kModeExtended) {
+			ImGui::Text("%3d", ch);
+		} else {
+			ImGui::Text(modes[mode]);
+		}
+
+		ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImGuiCol_TableHeaderBg));
+
+		ImGui::Unindent(indentSize);
+	}
+
+	for (int f = 0; f < (int)numFrames; f++) {
+		Frame &frame = *score->_scoreCache[f];
+		Sprite &sprite = *frame._sprites[ch];
+
+		if (f == (int)currentFrameNum)
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
+
+		ImGui::TableNextColumn();
+
+		if (f == _state->_selectedScoreCast.frame && ch == _state->_selectedScoreCast.channel && mode <= kModeExtended)
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(0.7f, 0.7f, 0.7f, 0.3f)));
+
+		switch (mode) {
+		case kModeMember:
+			if (sprite._castId.member)
+				ImGui::Selectable(Common::String::format("%d", sprite._castId.member).c_str());
+			else if (sprite.isQDShape())
+				ImGui::Selectable("Q");
+			else
+				ImGui::Selectable("  ");
+			break;
+
+		case kModeInk:
+			ImGui::Selectable(Common::String::format("%s", inkType2str(sprite._ink)).c_str());
+			break;
+
+		case kModeLocation:
+			ImGui::Selectable(Common::String::format("%d, %d", sprite._startPoint.x, sprite._startPoint.y).c_str());
+			break;
+
+		case kModeBlend:
+			ImGui::Selectable(Common::String::format("%d", sprite._blendAmount).c_str());
+			break;
+
+		case kModeBehavior:
+			if (sprite._scriptId.member) {
+				ImGui::TextColored(ImVec4(0.5f, 0.5f, 1.0f, 1.0f), "%s", sprite._scriptId.asString().c_str());
+
+				if (ImGui::IsItemClicked(0))
+					addScriptCastToDisplay(sprite._scriptId);
+			} else {
+				ImGui::Selectable("  ");
+			}
+			break;
+
+		case kChTempo:
+			if (frame._mainChannels.tempo)
+				ImGui::Text(Common::String::format("%d", frame._mainChannels.tempo).c_str());
+			break;
+
+		case kChPalette:
+			if (frame._mainChannels.palette.paletteId.member)
+				ImGui::Text(frame._mainChannels.palette.paletteId.asString().c_str());
+			break;
+
+		case kChTransition:
+			if (frame._mainChannels.transType)
+				ImGui::Text(Common::String::format("%d", frame._mainChannels.transType).c_str());
+			break;
+
+		case kChSound1:
+			if (frame._mainChannels.sound1.member)
+				ImGui::Text(Common::String::format("%d", frame._mainChannels.sound1.member).c_str());
+			break;
+
+		case kChSound2:
+			if (frame._mainChannels.sound2.member)
+				ImGui::Text(Common::String::format("%d", frame._mainChannels.sound2.member).c_str());
+			break;
+
+		case kChScript:
+			if (frame._mainChannels.actionId.member)
+				ImGui::Text(Common::String::format("%d", frame._mainChannels.actionId.member).c_str());
+			break;
+
+		case kModeExtended: // Render empty row
+		default:
+			ImGui::Selectable("  ");
+		}
+
+		if (ImGui::IsItemClicked(0)) {
+			_state->_selectedScoreCast.frame = f;
+			_state->_selectedScoreCast.channel = ch;
+		}
+	}
+
+	ImGui::PopFont();
+}
+
+static void showScore() {
+	if (!_state->_w.score)
+		return;
+
+	ImVec2 pos(40, 40);
+	ImGui::SetNextWindowPos(pos, ImGuiCond_FirstUseEver);
+
+	ImVec2 windowSize = ImGui::GetMainViewport()->Size - pos - pos;
+	ImGui::SetNextWindowSize(windowSize, ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Score", &_state->_w.score)) {
+		Score *score = g_director->getCurrentMovie()->getScore();
+		uint numFrames = score->_scoreCache.size();
+		Cast *cast = g_director->getCurrentMovie()->getCast();
+
+		if (!numFrames) {
+			ImGui::Text("No frames");
+			ImGui::End();
+
+			return;
+		}
+
+		if (_state->_selectedScoreCast.frame >= (int)numFrames)
+			_state->_selectedScoreCast.frame = 0;
+
+		if (!numFrames || _state->_selectedScoreCast.channel >= (int)score->_scoreCache[0]->_sprites.size())
+			_state->_selectedScoreCast.channel = 0;
+
+		{ // Render sprite details
+			Sprite *sprite = nullptr;
+			CastMember *castMember = nullptr;
+			bool shape = false;
+
+			if (_state->_selectedScoreCast.frame != -1)
+				sprite = score->_scoreCache[_state->_selectedScoreCast.frame]->_sprites[_state->_selectedScoreCast.channel];
+
+			if (sprite) {
+				castMember = cast->getCastMember(sprite->_castId.member, true);
+
+				shape = sprite->isQDShape();
+			}
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Image", ImVec2(200.0f, 70.0f));
+
+			if (castMember || shape) {
+				ImGuiImage imgID;
+
+				if (castMember)
+					imgID = getImageID(castMember);
+
+				if (castMember && imgID.id) {
+					Common::String name(getDisplayName(castMember));
+					showImage(imgID, name.c_str(), 32.f);
+				} else {
+					ImGui::InvisibleButton("##canvas", ImVec2(32.f, 32.f));
+				}
+				ImGui::SameLine();
+				ImGui::Text("%s", sprite->_castId.asString().c_str());
+				ImGui::Text("%s", spriteType2str(sprite->_spriteType));
+			}
+
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+			ImGui::BeginChild("Details", ImVec2(500.0f, 70.0f));
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Ink", ImVec2(150.0f, 20.0f));
+
+			if (castMember || shape) {
+				ImGui::Text("%s", inkType2str(sprite->_ink)); ImGui::SameLine(70);
+				ImGui::SetItemTooltip("Ink");
+				ImGui::Text("|"); ImGui::SameLine();
+				ImGui::Text("%d", sprite->_blendAmount); ImGui::SameLine();
+				ImGui::SetItemTooltip("Blend");
+			}
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Range", ImVec2(100.0f, 20.0f));
+
+			if (castMember || shape) {
+				ImGui::Text("\uf816"); ImGui::SameLine();	// line_start_circle
+				ImGui::Text("  ?"); ImGui::SameLine(50);
+				ImGui::SetItemTooltip("Start Frame");
+				ImGui::Text("\uf819"); ImGui::SameLine();	// line_end_square
+				ImGui::Text("  ?"); ImGui::SameLine();
+				ImGui::SetItemTooltip("End Frame");
+			}
+
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Flags", ImVec2(200.0f, 20.0f));
+
+			if (castMember || shape) {
+				ImGui::Checkbox("\ue897", &sprite->_enabled); ImGui::SameLine();	// lock
+				ImGui::SetItemTooltip("enabled");
+				ImGui::Checkbox("\ue745", &sprite->_editable); ImGui::SameLine();	// edit_note
+				ImGui::SetItemTooltip("editable");
+				ImGui::Checkbox("\uf712", &sprite->_moveable); ImGui::SameLine();	// move_selection_right
+				ImGui::SetItemTooltip("moveable");
+				ImGui::Checkbox("\uea14", &sprite->_trails);						// dynamic_feed
+				ImGui::SetItemTooltip("trails");
+			}
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Colors", ImVec2(150.0f, 50.0f));
+
+			if (castMember || shape) {
+				ImVec4 fg = convertColor(sprite->_foreColor);
+
+				ImGui::ColorButton("foreColor", fg); ImGui::SameLine();
+				ImGui::Text("#%02x%02x%02x", (int)(fg.x * 255), (int)(fg.y * 255), (int)(fg.z * 255));
+				ImGui::SetItemTooltip("Foreground Color");
+				ImVec4 bg = convertColor(sprite->_backColor);
+				ImGui::ColorButton("backColor", bg); ImGui::SameLine();
+				ImGui::Text("#%02x%02x%02x", (int)(bg.x * 255), (int)(bg.y * 255), (int)(bg.z * 255)); ImGui::SameLine();
+				ImGui::SetItemTooltip("Background Color");
+			}
+
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Coordinates", ImVec2(150.0f, 50.0f));
+
+			if (castMember || shape) {
+				ImGui::Text("X:"); ImGui::SameLine();
+				ImGui::Text("%d", sprite->_startPoint.x); ImGui::SameLine(75);
+				ImGui::SetItemTooltip("Reg Point Horizontal");
+				ImGui::Text("W:"); ImGui::SameLine();
+				ImGui::Text("%d", sprite->getWidth());
+				ImGui::SetItemTooltip("Width");
+
+				ImGui::Text("Y:"); ImGui::SameLine();
+				ImGui::Text("%d", sprite->_startPoint.y); ImGui::SameLine(75);
+				ImGui::SetItemTooltip("Reg Point Vertical");
+				ImGui::Text("H:"); ImGui::SameLine();
+				ImGui::Text("%d", sprite->getHeight()); ImGui::SameLine();
+				ImGui::SetItemTooltip("Height");
+			}
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+			ImGui::BeginChild("Bbox", ImVec2(150.0f, 50.0f));
+
+			if (castMember || shape) {
+				const Common::Rect &box = sprite->getBbox(true);
+
+				ImGui::Text("l:"); ImGui::SameLine();
+				ImGui::Text("%d", box.left); ImGui::SameLine(75);
+				ImGui::SetItemTooltip("Left");
+				ImGui::Text("r:"); ImGui::SameLine();
+				ImGui::Text("%d", box.right);
+				ImGui::SetItemTooltip("Right");
+
+				ImGui::Text("t:"); ImGui::SameLine();
+				ImGui::Text("%d", box.top); ImGui::SameLine(75);
+				ImGui::SetItemTooltip("Top");
+				ImGui::Text("b:"); ImGui::SameLine();
+				ImGui::Text("%d", box.bottom);
+				ImGui::SetItemTooltip("Bottom");
+			}
+			ImGui::PopStyleColor();
+			ImGui::EndChild();
+
+			ImGui::EndChild();
+		}
+
+		uint numChannels = score->_scoreCache[0]->_sprites.size();
+		uint tableColumns = MAX(numFrames + 5, 25U); // Set minimal table width to 25
+
+		ImGuiTableFlags addonFlags = _state->_scoreMode == kModeExtended ? 0 : ImGuiTableFlags_RowBg;
+
+		if (ImGui::BeginTable("Score", tableColumns + 1,
+					ImGuiTableFlags_Borders | ImGuiTableFlags_HighlightHoveredColumn |
+					ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | addonFlags)) {
+			ImGuiTableFlags flags = ImGuiTableColumnFlags_WidthFixed;
+
+			ImGui::TableSetupScrollFreeze(1, 2);
+
+			ImGui::PushFont(_state->_tinyFont);
+
+			ImGui::TableSetupColumn("##", flags);
+			for (uint i = 0; i < tableColumns; i++)
+				ImGui::TableSetupColumn(((i + 1) % 5 ? " " : Common::String::format("%-2d", i + 1).c_str()), flags);
+
+			ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+			ImGui::TableNextRow(0);
+
+			ImGui::TableSetColumnIndex(0);
+			ImGui::PushID(0);
+
+			ImGui::SetNextItemWidth(50);
+
+			const char *selMode = modes[_state->_scoreMode];
+
+			if (ImGui::BeginCombo("##", selMode)) {
+				for (int n = 0; n < ARRAYSIZE(modes); n++) {
+					const bool selected = (_state->_scoreMode == n);
+					if (ImGui::Selectable(modes[n], selected))
+						_state->_scoreMode = n;
+
+					if (selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+
+				ImGui::TableHeader("##");
+			}
+			ImGui::PopID();
+
+			for (uint i = 0; i < tableColumns; i++) {
+				ImGui::TableSetColumnIndex(i + 1);
+				const char *column_name = ImGui::TableGetColumnName(i + 1);
+
+				ImGui::SetNextItemWidth(20);
+				ImGui::TableHeader(column_name);
+			}
+
+			ImGui::PopFont();
+
+			{
+				displayScoreChannel(0, kChTempo, 0);
+				displayScoreChannel(0, kChPalette, 0);
+				displayScoreChannel(0, kChTransition, 0);
+				displayScoreChannel(0, kChSound1, 0);
+				displayScoreChannel(0, kChSound2, 0);
+				displayScoreChannel(0, kChScript, 0);
+			}
+			ImGui::TableNextRow();
+
+			int mode = _state->_scoreMode;
+
+			for (int ch = 0; ch < (int)numChannels - 1; ch++) {
+				if (mode == kModeExtended) // This will render empty row
+					displayScoreChannel(ch + 1, kModeExtended, _state->_scoreMode);
+
+				if (mode == kModeMember || mode == kModeExtended)
+					displayScoreChannel(ch + 1, kModeMember, _state->_scoreMode);
+
+				if (mode == kModeBehavior || mode == kModeExtended)
+					displayScoreChannel(ch + 1, kModeBehavior, _state->_scoreMode);
+
+				if (mode == kModeInk || mode == kModeExtended)
+					displayScoreChannel(ch + 1, kModeInk, _state->_scoreMode);
+
+				if (mode == kModeBlend || mode == kModeExtended)
+					displayScoreChannel(ch + 1, kModeBlend, _state->_scoreMode);
+
+				if (mode == kModeLocation || mode == kModeExtended)
+					displayScoreChannel(ch + 1, kModeLocation, _state->_scoreMode);
+			}
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+}
+
 void onImGuiInit() {
 	ImGuiIO &io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
@@ -1191,12 +2143,14 @@ void onImGuiInit() {
 	icons_config.PixelSnapH = false;
 	icons_config.OversampleH = 3;
 	icons_config.OversampleV = 3;
-	icons_config.GlyphOffset = {0, 3};
+	icons_config.GlyphOffset = {0, 4};
 
 	static const ImWchar icons_ranges[] = {0xE000, 0xF8FF, 0};
-	ImGui::addTTFFontFromArchive("OpenFontIcons.ttf", 13.f, &icons_config, icons_ranges);
+	ImGui::addTTFFontFromArchive("MaterialSymbolsSharp.ttf", 16.f, &icons_config, icons_ranges);
 
 	_state = new ImGuiState();
+
+	_state->_tinyFont = ImGui::addTTFFontFromArchive("FreeSans.ttf", 10.0f, nullptr, nullptr);
 }
 
 void onImGuiRender() {
@@ -1213,12 +2167,40 @@ void onImGuiRender() {
 
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("View")) {
-			ImGui::MenuItem("Control Panel", NULL, &_state->_showControlPanel);
-			ImGui::MenuItem("CallStack", NULL, &_state->_showCallStack);
-			ImGui::MenuItem("Vars", NULL, &_state->_showVars);
-			ImGui::MenuItem("Channels", NULL, &_state->_showChannels);
-			ImGui::MenuItem("Cast", NULL, &_state->_showCast);
-			ImGui::MenuItem("Functions", NULL, &_state->_showFuncList);
+			ImGui::SeparatorText("Windows");
+
+			if (ImGui::MenuItem("View All")) {
+				if (_state->_wasHidden)
+					_state->_w = _state->_savedW;
+
+				_state->_wasHidden = false;
+			}
+
+			if (ImGui::MenuItem("Hide All")) {
+				if (!_state->_wasHidden) {
+					_state->_savedW = _state->_w;
+
+					memset((void *)&_state->_w, 0, sizeof(_state->_w));
+				}
+
+				_state->_wasHidden = true;
+			}
+
+			ImGui::MenuItem("Control Panel", NULL, &_state->_w.controlPanel);
+			ImGui::MenuItem("Score", NULL, &_state->_w.score);
+			ImGui::MenuItem("Functions", NULL, &_state->_w.funcList);
+			ImGui::MenuItem("Cast", NULL, &_state->_w.cast);
+			ImGui::MenuItem("Channels", NULL, &_state->_w.channels);
+			ImGui::MenuItem("CallStack", NULL, &_state->_w.callStack);
+			ImGui::MenuItem("Breakpoints", NULL, &_state->_w.bpList);
+			ImGui::MenuItem("Vars", NULL, &_state->_w.vars);
+
+			ImGui::SeparatorText("Misc");
+			if (ImGui::MenuItem("Save state")) {
+			}
+			if (ImGui::MenuItem("Load state")) {
+			}
+
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
@@ -1233,9 +2215,14 @@ void onImGuiRender() {
 	showChannels();
 	showCast();
 	showFuncList();
+	showScore();
+	showBreakpointList();
 }
 
 void onImGuiCleanup() {
+	if (_state)
+		delete _state->_tinyFont;
+
 	delete _state;
 	_state = nullptr;
 }

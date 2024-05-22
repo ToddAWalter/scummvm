@@ -67,8 +67,9 @@ void CBagRestartDialog::onInitDialog() {
 
 	CBofDialog::onInitDialog();
 
-	assert(_pBackdrop != nullptr);
-
+	if (_pBackdrop == nullptr)
+		fatalError(ERR_UNKNOWN, "Unexpected null value found in _paBackdrop");
+	
 	// Save off the current game's palette
 	_pSavePalette = CBofApp::getApp()->getPalette();
 
@@ -77,19 +78,15 @@ void CBagRestartDialog::onInitDialog() {
 	CBofApp::getApp()->setPalette(pPal);
 
 	// Paint the SaveList Box onto the background
-	if (_pBackdrop != nullptr) {
-		pPal = _pBackdrop->getPalette();
-		CBofBitmap cBmp(buildSysDir("RESTDBOX.BMP"), pPal);
-		cBmp.paint(_pBackdrop, 181, 182);
-	}
+	pPal = _pBackdrop->getPalette();
+	CBofBitmap cBmp(buildSysDir("RESTDBOX.BMP"), pPal);
+	cBmp.paint(_pBackdrop, 181, 182);
 
 	// Build all our buttons
 	for (int i = 0; i < NUM_RESTART_BTNS; i++) {
 		assert(_pButtons[i] == nullptr);
 
 		_pButtons[i] = new CBofBmpButton;
-		if (_pButtons[i] == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofBmpButton");
 
 		CBofBitmap *pUp = loadBitmap(buildSysDir(g_stRestartButtons[i]._pszUp), pPal);
 		CBofBitmap *pDown = loadBitmap(buildSysDir(g_stRestartButtons[i]._pszDown), pPal);
@@ -150,7 +147,7 @@ void CBagRestartDialog::onKeyHit(uint32 lKey, uint32 nRepCount) {
 				char szBuf[256];
 				Common::strcpy_s(szBuf, LOADING_BMP);
 				CBofString cStr(szBuf, 256);
-				MACROREPLACE(cStr);
+				fixPathName(cStr);
 
 				CBofRect cRect;
 				cRect.left = (640 - 180) / 2;
@@ -211,7 +208,7 @@ void CBagRestartDialog::onBofButton(CBofObject *pObject, int nFlags) {
 				char szBuf[256];
 				Common::strcpy_s(szBuf, LOADING_BMP);
 				CBofString cStr(szBuf, 256);
-				MACROREPLACE(cStr);
+				fixPathName(cStr);
 
 				CBofRect cRect;
 				cRect.left = (640 - 180) / 2;

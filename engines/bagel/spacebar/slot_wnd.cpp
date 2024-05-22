@@ -119,7 +119,9 @@ SBarSlotWnd::SBarSlotWnd() : CBagStorageDevWnd() {
 	_pWinSound = nullptr;
 	_pSlotSound = nullptr;
 	_pLoseBmp = nullptr;
-
+	_pBkgSnd = nullptr;
+	_bLose = false;
+	
 	CBagStorageDevWnd::setHelpFilename(BuildSlotDir("SLOT.TXT"));
 
 	// Call this thing a closeup so that time won't go
@@ -132,10 +134,10 @@ void SBarSlotWnd::onPaint(CBofRect *pRect) {
 	assert(isValidObject(this));
 
 	if (!errorOccurred()) {
-		CBofBitmap *pBackBmp;
+		CBofBitmap *pBackBmp = getBackdrop();
 
 		//Paint the storage device
-		if ((pBackBmp = getBackdrop()) != nullptr) {
+		if (pBackBmp != nullptr) {
 			assert(getWorkBmp() != nullptr);
 
 			// Erase everything from the background
@@ -170,13 +172,10 @@ void SBarSlotWnd::onMainLoop() {
 }
 
 ErrorCode  SBarSlotWnd::attach() {
-	_bPaused = false;
 	_bLose = false;
 	_bFixBet = false;
 
 	_pSlotSound = new CBofSound(this, BuildSlotDir(SLOT_AUDIO), SOUND_MIX, 1);
-	if (_pSlotSound == nullptr)
-		fatalError(ERR_MEMORY, "Unable to allocate a CBofSound");
 
 	if (CBagStorageDevWnd::attach() == ERR_NONE) {
 		// Must have a valid backdrop by now
@@ -189,23 +188,18 @@ ErrorCode  SBarSlotWnd::attach() {
 		for (int i = 0; i < NUM_SLOTBUTT; i++) {
 
 			_pSlotButs[i] = new CBofBmpButton;
-			if (_pSlotButs[i] != nullptr) {
-				CBofBitmap *pUp = loadBitmap(BuildSlotDir(g_stButtons[i]._pszUp), pPal);
-				CBofBitmap *pDown = loadBitmap(BuildSlotDir(g_stButtons[i]._pszDown), pPal);
-				CBofBitmap *pFocus = loadBitmap(BuildSlotDir(g_stButtons[i]._pszFocus), pPal);
-				CBofBitmap *pDis = loadBitmap(BuildSlotDir(g_stButtons[i]._pszDisabled), pPal);
+			CBofBitmap *pUp = loadBitmap(BuildSlotDir(g_stButtons[i]._pszUp), pPal);
+			CBofBitmap *pDown = loadBitmap(BuildSlotDir(g_stButtons[i]._pszDown), pPal);
+			CBofBitmap *pFocus = loadBitmap(BuildSlotDir(g_stButtons[i]._pszFocus), pPal);
+			CBofBitmap *pDis = loadBitmap(BuildSlotDir(g_stButtons[i]._pszDisabled), pPal);
 
-				_pSlotButs[i]->loadBitmaps(pUp, pDown, pFocus, pDis);
-				_pSlotButs[i]->create(g_stButtons[i]._pszName, g_stButtons[i]._nLeft, g_stButtons[i]._nTop, g_stButtons[i]._nWidth, g_stButtons[i]._nHeight, this, g_stButtons[i]._nID);
-				_pSlotButs[i]->show();
-			}
+			_pSlotButs[i]->loadBitmaps(pUp, pDown, pFocus, pDis);
+			_pSlotButs[i]->create(g_stButtons[i]._pszName, g_stButtons[i]._nLeft, g_stButtons[i]._nTop, g_stButtons[i]._nWidth, g_stButtons[i]._nHeight, this, g_stButtons[i]._nID);
+			_pSlotButs[i]->show();
 		}
 
 		if (_pLoseBmp == nullptr) {
 			_pLoseBmp = new CBofBitmap(BuildSlotDir("BGNV.BMP"), pPal);
-			if (_pLoseBmp == nullptr) {
-				fatalError(ERR_MEMORY, "Unable to allocate a CBofBitmap");
-			}
 		}
 
 		// Hide the GO, LOSE Button until a bet is made
@@ -232,8 +226,6 @@ ErrorCode  SBarSlotWnd::attach() {
 
 		// Setup the Credit text fields
 		_pCredText = new CBofText;
-		if (_pCredText == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofText");
 
 		CBofRect cRect(CreditRect.left, CreditRect.top, CreditRect.right, CreditRect.bottom);
 		_pCredText->setupText(&cRect, JUSTIFY_RIGHT, FORMAT_CENTER_RIGHT);
@@ -248,8 +240,6 @@ ErrorCode  SBarSlotWnd::attach() {
 		assert(_pBetText == nullptr);
 
 		_pBetText = new CBofText;
-		if (_pBetText == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofText");
 
 		cRect.setRect(BetRect.left, BetRect.top, BetRect.right, BetRect.bottom);
 		_pBetText->setupText(&cRect, JUSTIFY_RIGHT, FORMAT_CENTER_RIGHT);
@@ -264,8 +254,6 @@ ErrorCode  SBarSlotWnd::attach() {
 		assert(_pOddsText == nullptr);
 
 		_pOddsText = new CBofText;
-		if (_pOddsText == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofText");
 
 		cRect.setRect(OddRect.left, OddRect.top, OddRect.right, OddRect.bottom);
 		_pOddsText->setupText(&cRect, JUSTIFY_RIGHT, FORMAT_CENTER_RIGHT);
@@ -280,9 +268,6 @@ ErrorCode  SBarSlotWnd::attach() {
 	}
 
 	_pBkgSnd = new CBofSound(this, BuildSlotDir(CASINO_AUDIO), SOUND_MIX, 99999);
-	if (_pBkgSnd == nullptr)
-		fatalError(ERR_MEMORY, "Unable to allocate a CBofSound");
-
 	_pBkgSnd->play();
 
 	CBofCursor::show();
@@ -303,18 +288,14 @@ ErrorCode SBarSlotWnd::detach() {
 	if (pVar)
 		pVar->setValue(_nCredit);
 
-	if (_pBkgSnd->isPlaying()) {
+	if (_pBkgSnd != nullptr && _pBkgSnd->isPlaying())
 		_pBkgSnd->stop();
-	}
-	if (_pBkgSnd != nullptr) {
-		delete _pBkgSnd;
-		_pBkgSnd = nullptr;
-	}
 
-	if (_pLoseBmp != nullptr) {
-		delete _pLoseBmp;
-		_pLoseBmp = nullptr;
-	}
+	delete _pBkgSnd;
+	_pBkgSnd = nullptr;
+
+	delete _pLoseBmp;
+	_pLoseBmp = nullptr;
 
 	// Destroy all buttons
 	for (int i = 0; i < NUM_SLOTBUTT; i++) {
@@ -523,9 +504,6 @@ void SBarSlotWnd::calcOutcome() {
 	if (_nPayOff1 > 0) {
 		// Play winning audio
 		_pWinSound = new CBofSound(this, BuildSlotDir(WIN_AUDIO), SOUND_MIX, 1);
-		if (_pWinSound == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofSound");
-
 		_pWinSound->play();
 
 		// Calc new credit
@@ -859,11 +837,8 @@ void SBarSlotWnd::onBofButton(CBofObject *pObject, int nState) {
 		CBagel *pApp = CBagel::getBagApp();
 		if (pApp != nullptr) {
 			CBagMasterWin *pWin = pApp->getMasterWnd();
-			if (pWin != nullptr) {
-				_bPaused = true;
+			if (pWin != nullptr)
 				pWin->onHelp(BuildSlotDir("SLOT.TXT"));
-				_bPaused = false;
-			}
 		}
 		}
 		break;
@@ -884,7 +859,7 @@ const char *BuildSlotDir(const char *pszFile) {
 	Common::sprintf_s(szBuf, "%s%s%s", BGCB_DIR, PATH_DELIMETER, pszFile);
 
 	CBofString sSlotDir(szBuf, MAX_DIRPATH);
-	MACROREPLACE(sSlotDir);
+	fixPathName(sSlotDir);
 
 	return &szBuf[0];
 }

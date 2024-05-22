@@ -95,10 +95,14 @@ ErrorCode CBagRestoreDialog::attach() {
 	// Save off the current game's palette
 	_pSavePalette = CBofApp::getApp()->getPalette();
 
-	// Insert ours
-	CBofPalette *pPal = _pBackdrop->getPalette();
-	CBofApp::getApp()->setPalette(pPal);
+	CBofPalette *pPal = nullptr;
 
+	// Insert ours
+	if (_pBackdrop != nullptr) {
+		pPal = _pBackdrop->getPalette();
+		CBofApp::getApp()->setPalette(pPal);
+	}
+	
 	// Paint the SaveList Box onto the background
 	if (_pBackdrop != nullptr) {
 		CBofBitmap cBmp(buildSysDir("SAVELIST.BMP"), pPal);
@@ -114,8 +118,6 @@ ErrorCode CBagRestoreDialog::attach() {
 		assert(_pButtons[i] == nullptr);
 
 		_pButtons[i] = new CBofBmpButton;
-		if (_pButtons[i] == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofBmpButton");
 
 		CBofBitmap *pUp = loadBitmap(buildSysDir(g_stButtons[i]._pszUp), pPal);
 		CBofBitmap *pDown = loadBitmap(buildSysDir(g_stButtons[i]._pszDown), pPal);
@@ -145,15 +147,13 @@ ErrorCode CBagRestoreDialog::attach() {
 	}
 
 	// The list box must not be currently allocated
-	assert(_pListBox == nullptr);
+	if (_pListBox == nullptr)
+		fatalError(ERR_UNKNOWN, "Unexpected null value found in _pListBox");
 
 	// Create a list box for the user to choose the slot to save into
 	CBofRect cRect(LIST_X, LIST_Y, LIST_X + LIST_DX - 1, LIST_Y + LIST_DY - 1);
 
 	_pListBox = new CBofListBox();
-	if (_pListBox == nullptr)
-		fatalError(ERR_MEMORY, "Unable to allocate a CBofListBox");
-
 	_pListBox->create("SaveGameList", &cRect, this);
 	_pListBox->setPointSize(LIST_FONT_SIZE);
 	_pListBox->setItemHeight(LIST_TEXT_DY);
@@ -193,8 +193,6 @@ ErrorCode CBagRestoreDialog::attach() {
 		assert(_pText == nullptr);
 
 		_pText = new CBofText;
-		if (_pText == nullptr)
-			fatalError(ERR_MEMORY, "Could not allocate a CBofText for the Restore Dialog");
 
 		cRect.setRect(170, 405, 470, 435);
 		_pText->setupText(&cRect, JUSTIFY_LEFT, FORMAT_CENTER_LEFT);
@@ -202,7 +200,7 @@ ErrorCode CBagRestoreDialog::attach() {
 		_pText->setWeight(TEXT_BOLD);
 
 		// Set initial selected item
-		if (_pListBox != nullptr && _nSelectedItem != -1) {
+		if (_nSelectedItem != -1) {
 			_pText->setText(_pListBox->getText(_nSelectedItem));
 		} else {
 			_pText->setText("");

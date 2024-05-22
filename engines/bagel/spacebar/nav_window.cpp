@@ -263,10 +263,8 @@ ErrorCode CNavWindow::attach() {
 	_pOldPal = CBofApp::getApp()->getPalette();
 	_pPal = _pBackdrop->getPalette()->copyPalette();
 	CBofApp::getApp()->setPalette(_pPal);
-	_pCurLoc = new CBofSprite;
-	if (_pCurLoc == nullptr)
-		fatalError(ERR_MEMORY, "Unable to allocate a CBofSprite");
 
+	_pCurLoc = new CBofSprite;
 	_pCurLoc->loadSprite(makeDir(CUR_LOC), 2);
 	_pCurLoc->setMaskColor(MASK_COLOR);
 	_pCurLoc->setZOrder(SPRITE_TOPMOST);
@@ -277,8 +275,6 @@ ErrorCode CNavWindow::attach() {
 	// Build all our buttons
 	for (i = 0; i < 2; i++) {
 		_pButtons[i] = new CBofBmpButton;
-		if (_pButtons[i] == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofBmpButton");
 
 		CBofBitmap *pUp = loadBitmap(makeDir(g_navButtons[i]._pszUp), _pPal);
 		CBofBitmap *pDown = loadBitmap(makeDir(g_navButtons[i]._pszDown), _pPal);
@@ -1305,6 +1301,7 @@ void CNavWindow::calcFuel(double hf) {
 
 		// WORKAROUND: _pBackdrop shares it's palette with _pCurLoc,
 		// so as the backdrop is changed, don't free the palette
+		assert(_pBackdrop != nullptr);
 		_pBackdrop->setIsOwnPalette(false);
 		bool isDone = (_level == 3);
 
@@ -1317,8 +1314,7 @@ void CNavWindow::calcFuel(double hf) {
 		if (_level == 2) {
 			pause();
 			CBofString sNebDir(NEBSIM4_BMP);
-			MACROREPLACE(sNebDir);
-			assert(_pBackdrop != nullptr);
+			fixPathName(sNebDir);
 			_bmptwo = new CBofBitmap(sNebDir.getBuffer(), _pPal);
 			setBackground(_bmptwo);
 			_cargo = 125 + 10 + 17 + 8 + 99 + 24;
@@ -1335,7 +1331,7 @@ void CNavWindow::calcFuel(double hf) {
 		if (_level == 1) {
 			pause();
 			CBofString sNebDir(NEBSIM3_BMP);
-			MACROREPLACE(sNebDir);
+			fixPathName(sNebDir);
 			assert(_pBackdrop != nullptr);
 			_bmptwo = new CBofBitmap(sNebDir.getBuffer(), _pPal);
 			setBackground(_bmptwo);
@@ -1353,7 +1349,7 @@ void CNavWindow::calcFuel(double hf) {
 		if (_level == 0) {
 			pause();
 			CBofString sNebDir(NEBSIM2_BMP);
-			MACROREPLACE(sNebDir);
+			fixPathName(sNebDir);
 			assert(_pBackdrop != nullptr);
 			_bmptwo = new CBofBitmap(sNebDir.getBuffer(), _pPal);
 			setBackground(_bmptwo);

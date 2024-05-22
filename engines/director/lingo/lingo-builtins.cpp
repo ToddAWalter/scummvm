@@ -260,16 +260,16 @@ void Lingo::initBuiltIns(BuiltinProto protos[]) {
 		case CBLTIN:
 			_builtinCmds[blt->name] = sym;
 			break;
-		case FBLTIN:
 		case FBLTIN_LIST:
+			_builtinListHandlers[blt->name] = sym; // fall-through
+		case FBLTIN:
 			_builtinFuncs[blt->name] = sym;
-			_builtinListHandlers[blt->name] = sym;
 			break;
-		case HBLTIN:
 		case HBLTIN_LIST:
+			_builtinListHandlers[blt->name] = sym; // fall-through
+		case HBLTIN:
 			_builtinCmds[blt->name] = sym;
 			_builtinFuncs[blt->name] = sym;
-			_builtinListHandlers[blt->name] = sym;
 			break;
 		case KBLTIN:
 			_builtinConsts[blt->name] = sym;
@@ -682,6 +682,8 @@ void LB::b_count(int nargs) {
 
 	switch (list.type) {
 	case ARRAY:
+	case RECT:
+	case POINT:
 		result.u.i = list.u.farr->arr.size();
 		break;
 	case PARRAY:
@@ -719,7 +721,6 @@ void LB::b_deleteAt(int nargs) {
 void LB::b_deleteOne(int nargs) {
 	Datum val = g_lingo->pop();
 	Datum list = g_lingo->pop();
-	TYPECHECK3(val, INT, FLOAT, SYMBOL);
 	TYPECHECK2(list, ARRAY, PARRAY);
 
 	switch (list.type) {
@@ -919,7 +920,7 @@ void LB::b_getPos(int nargs) {
 	switch (list.type) {
 	case ARRAY: {
 		Datum d(0);
-		int index = LC::compareArrays(LC::eqData, list, val, true).u.i;
+		int index = LC::compareArrays(LC::eqDataStrict, list, val, true).u.i;
 		if (index > 0) {
 			d.u.i = index;
 		}
@@ -928,7 +929,7 @@ void LB::b_getPos(int nargs) {
 	}
 	case PARRAY: {
 		Datum d(0);
-		int index = LC::compareArrays(LC::eqData, list, val, true, true).u.i;
+		int index = LC::compareArrays(LC::eqDataStrict, list, val, true, true).u.i;
 		if (index > 0) {
 			d.u.i = index;
 		}
@@ -946,16 +947,21 @@ void LB::b_getProp(int nargs) {
 
 	switch (list.type) {
 	case ARRAY:
-		g_lingo->push(list);
-		g_lingo->push(prop);
-		b_getPos(nargs);
+		if (g_director->getVersion() < 500) {
+			// D4 allows getProp to be called on ARRAYs
+			g_lingo->push(list);
+			g_lingo->push(prop);
+			b_getAt(nargs);
+		} else {
+			g_lingo->lingoError("BUILDBOT: b_getProp: Attempted to call on an ARRAY");
+		}
 		break;
 	case PARRAY: {
 		int index = LC::compareArrays(LC::eqData, list, prop, true).u.i;
 		if (index > 0) {
 			g_lingo->push(list.u.parr->arr[index - 1].v);
 		} else {
-			error("b_getProp: Property %s not found", prop.asString().c_str());
+			g_lingo->lingoError("BUILDBOT: b_getProp: Property %s not found", prop.asString().c_str());
 		}
 		break;
 	}
@@ -2967,8 +2973,8 @@ void LB::b_updateStage(int nargs) {
 // Point
 ///////////////////
 void LB::b_point(int nargs) {
-	Datum y(g_lingo->pop().asFloat());
-	Datum x(g_lingo->pop().asFloat());
+	Datum y(g_lingo->pop().asInt());
+	Datum x(g_lingo->pop().asInt());
 	Datum d;
 
 	d.u.farr = new FArray;
@@ -3368,7 +3374,7 @@ void LB::b_script(int nargs) {
 			if (!script)
 				script = g_director->getCurrentMovie()->getScriptContext(kParentScript, memberID);
 		} else {
-			g_director->getCurrentMovie()->getScriptContext(kCastScript, memberID);
+			script = g_director->getCurrentMovie()->getScriptContext(kCastScript, memberID);
 		}
 
 		if (script) {

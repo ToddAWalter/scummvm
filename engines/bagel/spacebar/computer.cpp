@@ -95,6 +95,8 @@ SBarComputer::SBarComputer() : CBagStorageDevWnd(),
 	setCloseup(true);
 }
 SBarComputer::~SBarComputer() {
+	delete _pDrinkBox;
+	delete _pIngBox;
 }
 
 void SBarComputer::onMainLoop() {
@@ -131,16 +133,16 @@ void  SBarComputer::onPaint(CBofRect *pRect) {
 ErrorCode SBarComputer::attach() {
 	logInfo("Attaching SBarComputer...");
 
-	ErrorCode rc = CBagStorageDevWnd::attach();
-	if (rc == ERR_NONE) {
+	ErrorCode errorCode = CBagStorageDevWnd::attach();
+	if (errorCode == ERR_NONE) {
 		g_waitOKFl = false;
 
 		_pDrinkList = new CBofList<SBarCompItem>;
 		_pIngList = new CBofList<SBarCompItem>;
 
-		rc = readDrnkFile();
-		if (rc == ERR_NONE)
-			rc = readIngFile();
+		errorCode = readDrnkFile();
+		if (errorCode == ERR_NONE)
+			errorCode = readIngFile();
 
 		// Create the list box that display the lists
 		createDrinksListBox();
@@ -153,8 +155,6 @@ ErrorCode SBarComputer::attach() {
 		// Build all our buttons
 		for (int i = 0; i < NUM_COMPBUTT; i++) {
 			_pButtons[i] = new CBofBmpButton;
-			if (_pButtons[i] == nullptr)
-				fatalError(ERR_MEMORY, "unable to allocate new CBofBmpButton");
 
 			CBofBitmap *pUp = loadBitmap(BuildBarcDir(g_stButtons[i]._pszUp), pPal);
 			CBofBitmap *pDown = loadBitmap(BuildBarcDir(g_stButtons[i]._pszDown), pPal);
@@ -182,7 +182,7 @@ ErrorCode SBarComputer::attach() {
 
 	CBagCursor::showSystemCursor();
 
-	return rc;
+	return errorCode;
 }
 
 ErrorCode SBarComputer::detach() {
@@ -226,7 +226,7 @@ ErrorCode SBarComputer::detach() {
 
 ErrorCode SBarComputer::readDrnkFile() {
 	CBofString DrinkString(DRINK_FILE);
-	MACROREPLACE(DrinkString);
+	fixPathName(DrinkString);
 
 	// Open the text files
 	CBofFile fpDrinkFile(DrinkString);
@@ -251,9 +251,6 @@ ErrorCode SBarComputer::readDrnkFile() {
 	char *pPosInBuff = _pDrinkBuff;
 	while (pPosInBuff < _pDrinkBuff + fpDrinkFile.getLength()) {
 		SBarCompItem *pCompItem = new SBarCompItem();
-		if (!pCompItem)
-			fatalError(ERR_MEMORY, "Couldn't allocate a new SBarCompItem");
-
 		pCompItem->_pList = nullptr;
 		pCompItem->_pDrink = nullptr;
 
@@ -300,7 +297,7 @@ ErrorCode SBarComputer::readDrnkFile() {
 
 ErrorCode SBarComputer::readIngFile() {
 	CBofString IngString(INGRD_FILE);
-	MACROREPLACE(IngString);
+	fixPathName(IngString);
 
 	// Open the text files
 	CBofFile fpIngFile(IngString);
@@ -323,9 +320,6 @@ ErrorCode SBarComputer::readIngFile() {
 	char *pPosInBuff = _pIngBuff;
 	while (pPosInBuff < _pIngBuff + fpIngFile.getLength()) {
 		SBarCompItem *pCompItem = new SBarCompItem();
-		if (!pCompItem)
-			fatalError(ERR_MEMORY, "Couldn't allocate a new SBarCompItem");
-
 		pCompItem->_pList = nullptr;
 		pCompItem->_pDrink = nullptr;
 
@@ -364,7 +358,6 @@ ErrorCode SBarComputer::readIngFile() {
 void SBarComputer::createTextBox(CBofString &newText) {
 	if (_pTBox == nullptr) {
 		_pTBox = new CBofTextBox(getBackdrop(), &_compDisplay, newText);
-		assert(_pTBox != nullptr);
 		_pTBox->setTextAttribs(12, TEXT_NORMAL, RGB(0, 0, 0));
 	} else {
 		eraseBackdrop();
@@ -380,21 +373,16 @@ void SBarComputer::createTextBox(CBofString &newText) {
 }
 
 void SBarComputer::deleteTextBox() {
-	if (_pTBox) {
-		delete _pTBox;
-		_pTBox = nullptr;
-	}
+	delete _pTBox;
+	_pTBox = nullptr;
 }
 
 void SBarComputer::deleteListBox() {
-	if (_pDrinkBox) {
-		delete _pDrinkBox;
-		_pDrinkBox = nullptr;
-	}
-	if (_pIngBox) {
-		delete _pIngBox;
-		_pIngBox = nullptr;
-	}
+	delete _pDrinkBox;
+	_pDrinkBox = nullptr;
+
+	delete _pIngBox;
+	_pIngBox = nullptr;
 }
 
 ErrorCode SBarComputer::createDrinksListBox() {
@@ -404,12 +392,9 @@ ErrorCode SBarComputer::createDrinksListBox() {
 		return errorCode;
 	
 	// We need to create one
-
 	_pDrinkBox = new CBofListBox();
-	if (_pDrinkBox == nullptr)
-		fatalError(ERR_MEMORY, "Couldn't allocate a new CBofListBox");
-
 	errorCode = _pDrinkBox->create("ListBox", &_compDisplay, this);
+
 	if (errorCode != ERR_NONE) {
 		return errorCode;
 	}
@@ -441,10 +426,8 @@ ErrorCode SBarComputer::createIngListBox() {
 
 	// We need to create one
 	_pIngBox = new CBofListBox();
-	if (_pIngBox == nullptr)
-		fatalError(ERR_MEMORY, "Couldn't allocate a new CBofListBox");
-
 	errorCode = _pIngBox->create("ListBox", &_compDisplay, this);
+
 	if (errorCode != ERR_NONE) {
 		return errorCode;
 	}
@@ -529,8 +512,10 @@ void SBarComputer::setOff() {
 
 		_nDrinkSelect = -1;
 
-		_pDrinkBox->hide();
-		_pIngBox->hide();
+		if (_pDrinkBox != nullptr)
+			_pDrinkBox->hide();
+		if (_pIngBox != nullptr)
+			_pIngBox->hide();
 
 		deleteTextBox();
 
@@ -799,8 +784,6 @@ void SBarComputer::onBofButton(CBofObject *pObject, int nState) {
 		setIng();
 		break;
 	case LISTD:
-		setList();
-		break;
 	case LISTI:
 		setList();
 		break;

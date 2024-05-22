@@ -35,8 +35,8 @@
 #endif
 
 #ifdef USE_IMGUI
-#include "backends/imgui/backends/imgui_impl_sdl2_scummvm.h"
-#include "backends/imgui/backends/imgui_impl_opengl3_scummvm.h"
+#include "backends/imgui/backends/imgui_impl_sdl2.h"
+#include "backends/imgui/backends/imgui_impl_opengl3.h"
 #endif
 
 OpenGLSdlGraphicsManager::OpenGLSdlGraphicsManager(SdlEventSource *eventSource, SdlWindow *window)
@@ -58,7 +58,7 @@ OpenGLSdlGraphicsManager::OpenGLSdlGraphicsManager(SdlEventSource *eventSource, 
 
 	// Set up proper SDL OpenGL context creation.
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-	// Context version 1.4 is choosen arbitrarily based on what most shader
+	// Context version 1.4 is chosen arbitrarily based on what most shader
 	// extensions were written against.
 	enum {
 		DEFAULT_GL_MAJOR = 1,
@@ -467,7 +467,7 @@ void OpenGLSdlGraphicsManager::refreshScreen() {
 #if defined(USE_IMGUI) && SDL_VERSION_ATLEAST(2, 0, 0)
 	if (_callbacks.render) {
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame(_window->getSDLWindow());
+		ImGui_ImplSDL2_NewFrame();
 
 		ImGui::NewFrame();
 		_callbacks.render();

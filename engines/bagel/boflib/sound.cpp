@@ -643,14 +643,11 @@ bool BofPlaySound(const char *pszSoundFile, uint32 nFlags, int iQSlot) {
 		CBofSound::stopWaveSounds();
 
 		CBofSound *pSound = new CBofSound(pWnd, pszSoundFile, (uint16)nFlags);
-		if (pSound != nullptr) {
-			if ((nFlags & SOUND_QUEUE) == SOUND_QUEUE) {
-				pSound->setQSlot(iQSlot);
-			}
-
-			bSuccess = pSound->play();
+		if ((nFlags & SOUND_QUEUE) == SOUND_QUEUE) {
+			pSound->setQSlot(iQSlot);
 		}
 
+		bSuccess = pSound->play();
 	} else {
 		bSuccess = true;
 		CBofSound::stopWaveSounds();
@@ -683,19 +680,17 @@ bool BofPlaySoundEx(const char *pszSoundFile, uint32 nFlags, int iQSlot, bool bW
 		CBofSound::audioTask();
 
 		CBofSound *pSound = new CBofSound(pWnd, pszSoundFile, (uint16)nFlags);
-		if (pSound != nullptr) {
-			if ((nFlags & SOUND_QUEUE) == SOUND_QUEUE) {
-				pSound->setQSlot(iQSlot);
-			}
+		if ((nFlags & SOUND_QUEUE) == SOUND_QUEUE) {
+			pSound->setQSlot(iQSlot);
+		}
 
-			bSuccess = pSound->play();
+		bSuccess = pSound->play();
 
-			if (bWait) {
-				while (pSound->isPlaying()) {
-					CBofSound::audioTask();
-				}
-				delete pSound;
+		if (bWait) {
+			while (pSound->isPlaying()) {
+				CBofSound::audioTask();
 			}
+			delete pSound;
 		}
 	}
 
@@ -823,24 +818,19 @@ void CBofSound::audioTask() {
 						pSound->stop();
 					}
 
-				} else {
-
+				} else if (pSound->_bInQueue && !pSound->_bStarted) {
 					// If this is a Queued sound, and has not already started
-					if (pSound->_bInQueue && !pSound->_bStarted) {
-						// And it is time to play
-						if ((CBofSound *)_cQueue[pSound->_iQSlot]->getQItem() == pSound) {
-							pSound->playWAV();
-						}
+					// And it is time to play
+					if ((CBofSound *)_cQueue[pSound->_iQSlot]->getQItem() == pSound) {
+						pSound->playWAV();
 					}
 				}
 
-			} else if (pSound->_wFlags & SOUND_MIDI) {
-				if (pSound->_bPlaying) {
-					// And, Is it done?
-					if (!g_engine->_midi->isPlaying()) {
-						// Kill it
-						pSound->stop();
-					}
+			} else if ((pSound->_wFlags & SOUND_MIDI) && pSound->_bPlaying) {
+				// And, Is it done?
+				if (!g_engine->_midi->isPlaying()) {
+					// Kill it
+					pSound->stop();
 				}
 			}
 		}
@@ -889,7 +879,7 @@ ErrorCode CBofSound::flushQueue(int nSlot) {
 	assert(nSlot >= 0 && nSlot < NUM_QUEUES);
 
 	// Assume no error
-	ErrorCode errCode = ERR_NONE;
+	ErrorCode errorCode = ERR_NONE;
 
 	// Remove all queued sounds
 	_cQueue[nSlot]->flush();
@@ -910,7 +900,7 @@ ErrorCode CBofSound::flushQueue(int nSlot) {
 		pSound = pNextSound;
 	}
 
-	return errCode;
+	return errorCode;
 }
 
 void CBofSound::setQVol(int nSlot, int nVol) {

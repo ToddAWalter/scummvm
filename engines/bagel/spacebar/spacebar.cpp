@@ -90,9 +90,6 @@ ErrorCode SpaceBarEngine::initialize() {
 
 		_masterWin = new CSBarMasterWin();
 		
-		if (_masterWin == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate the main SpaceBar Window");
-
 		// This is the primary game window
 		setMainWindow(_masterWin);
 
@@ -100,9 +97,6 @@ ErrorCode SpaceBarEngine::initialize() {
 		InitializeSoundSystem(1, 22050, 8);
 
 		pBmp = new CBofBitmap(_masterWin->width(), _masterWin->height(), _pPalette);
-		if (pBmp == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofBitmap");
-
 		pBmp->fillRect(nullptr, COLOR_BLACK);
 
 		_masterWin->show();
@@ -139,16 +133,13 @@ ErrorCode SpaceBarEngine::initialize() {
 				bRestart = true;
 
 				// Hide that dialog
-				if (pBmp != nullptr) {
-					pBmp->paint(_masterWin, 0, 0);
-				}
+				pBmp->paint(_masterWin, 0, 0);
 				break;
 
 			case QUIT_BTN:
 				// Hide that dialog
-				if (pBmp != nullptr) {
-					pBmp->paint(_masterWin, 0, 0);
-				}
+				pBmp->paint(_masterWin, 0, 0);
+
 				_masterWin->close();
 				_masterWin = nullptr;
 				break;
@@ -162,38 +153,32 @@ ErrorCode SpaceBarEngine::initialize() {
 			// Play intro movies, logo screens, etc...
 			if (bShowLogo) {
 				CBofString cString(SMK_LOGO1);
-				MACROREPLACE(cString);
+				fixPathName(cString);
 
 				// Play the movie only if it exists
 				if (fileExists(cString.getBuffer())) {
 					bofPlayMovie(_masterWin, cString.getBuffer());
-					if (pBmp != nullptr) {
-						pBmp->paint(_masterWin, 0, 0);
-					}
+					pBmp->paint(_masterWin, 0, 0);
 				}
 				if (shouldQuit())
 					goto exit;
 
 				cString = SMK_LOGO2;
-				MACROREPLACE(cString);
+				fixPathName(cString);
 				if (fileExists(cString.getBuffer())) {
 					bofPlayMovie(_masterWin, cString.getBuffer());
-					if (pBmp != nullptr) {
-						pBmp->paint(_masterWin, 0, 0);
-					}
+					pBmp->paint(_masterWin, 0, 0);
 				}
 				if (shouldQuit())
 					goto exit;
 
 				// Use hi-res movie if user has a fast machine
 				cString = (getMachineSpeed() < 100) ? SMK_LOGO3EX : SMK_LOGO3;
-				MACROREPLACE(cString);
+				fixPathName(cString);
 
 				if (fileExists(cString.getBuffer())) {
 					bofPlayMovie(_masterWin, cString.getBuffer());
-					if (pBmp != nullptr) {
-						pBmp->paint(_masterWin, 0, 0);
-					}
+					pBmp->paint(_masterWin, 0, 0);
 				}
 			}
 			if (shouldQuit())

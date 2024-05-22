@@ -80,6 +80,7 @@ Score::Score(Movie *movie) {
 	_waitForClick = false;
 	_waitForClickCursor = false;
 	_activeFade = false;
+	_exitFrameCalled = false;
 	_playState = kPlayNotStarted;
 
 	_numChannelsDisplayed = 0;
@@ -99,6 +100,9 @@ Score::~Score() {
 			delete it;
 
 	delete _labels;
+
+	for (auto &it : _scoreCache)
+		delete it;
 
 	if (_framesStream)
 		delete _framesStream;
@@ -533,9 +537,10 @@ void Score::update() {
 		// When Lingo::func_goto* is called, _nextFrame is set
 		// and _skipFrameAdvance is set to true.
 		// exitFrame is not called in this case.
-		if (!_vm->_skipFrameAdvance) {
+		if (!_vm->_skipFrameAdvance && !_exitFrameCalled) {
 			// Exit the current frame. This can include scopeless ScoreScripts.
 			_movie->processEvent(kEventExitFrame);
+			_exitFrameCalled = true;
 		}
 	}
 
@@ -626,8 +631,11 @@ void Score::update() {
 
 	// then call the enterFrame hook (if one exists)
 	count = _window->frozenLingoStateCount();
-	if (!_vm->_playbackPaused && _vm->getVersion() >= 400) {
-		_movie->processEvent(kEventEnterFrame);
+	if (!_vm->_playbackPaused) {
+		_exitFrameCalled = false;
+		if (_vm->getVersion() >= 400) {
+			_movie->processEvent(kEventEnterFrame);
+		}
 	}
 	if (_window->frozenLingoStateCount() > count)
 		return;
@@ -1595,14 +1603,17 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 
 	// Calculate number of frames and their positions
 	// numOfFrames in the header is often incorrect
-	for (_numFrames = 1; loadFrame(_numFrames, false); _numFrames++) { }
+	for (_numFrames = 1; loadFrame(_numFrames, false); _numFrames++) {
+		if (debugChannelSet(-1, kDebugImGui)) {
+			_scoreCache.push_back(new Frame(*_currentFrame));
+		}
+	}
 
 	debugC(1, kDebugLoading, "Score::loadFrames(): Calculated, total number of frames %d!", _numFrames);
 
 	_currentFrame->reset();
 
 	loadFrame(1, true);
-
 
 	debugC(1, kDebugLoading, "Score::loadFrames(): Number of frames: %d, framesStreamSize: %d", _numFrames, _framesStreamSize);
 }
@@ -1855,11 +1866,12 @@ Common::String Score::formatChannelInfo() {
 	for (int i = 0; i < frame._numChannels; i++) {
 		Channel &channel = *_channels[i + 1];
 		Sprite &sprite = *channel._sprite;
+		Common::Point position = channel.getPosition();
 		if (sprite._castId.member) {
 			result += Common::String::format("CH: %-3d castId: %s, visible: %d, [inkData: 0x%02x [ink: %d, trails: %d, stretch: %d, line: %d], %dx%d@%d,%d type: %d (%s) fg: %d bg: %d], script: %s, colorcode: 0x%x, blendAmount: 0x%x, unk3: 0x%x, constraint: %d, puppet: %d, moveable: %d, movieRate: %f, movieTime: %d (%f)\n",
 				i + 1, sprite._castId.asString().c_str(), channel._visible, sprite._inkData,
-				sprite._ink, sprite._trails, sprite._stretch, sprite._thickness, channel._width, channel._height,
-				channel._currentPoint.x, channel._currentPoint.y,
+				sprite._ink, sprite._trails, sprite._stretch, sprite._thickness,
+				channel.getWidth(), channel.getHeight(), position.x, position.y,
 				sprite._spriteType, spriteType2str(sprite._spriteType), sprite._foreColor, sprite._backColor,
 				sprite._scriptId.asString().c_str(), sprite._colorcode, sprite._blendAmount, sprite._unk3,
 				channel._constraint, sprite._puppet, sprite._moveable, channel._movieRate, channel._movieTime, (float)(channel._movieTime/60.0f));

@@ -26,6 +26,7 @@
 #include "common/punycode.h"
 #include "common/str-array.h"
 #include "common/tokenizer.h"
+#include "common/xpfloat.h"
 #include "common/compression/deflate.h"
 
 #include "director/types.h"
@@ -1651,3 +1652,15 @@ void DirectorEngine::delayMillis(uint32 delay) {
 }
 
 } // End of namespace Director
+
+double readAppleFloat80(void *ptr_) {
+	// Floats in an "80 bit IEEE Standard 754 floating
+	// point number (Standard Apple Numeric Environment [SANE] data type
+	// Extended).
+	byte *ptr = (byte *)ptr_;
+
+	uint16 signAndExponent = READ_BE_UINT16(&ptr[0]);
+	uint64 mantissa = READ_BE_UINT64(&ptr[2]);
+
+	return Common::XPFloat(signAndExponent, mantissa).toDouble(Common::XPFloat::kSemanticsSANE);
+}

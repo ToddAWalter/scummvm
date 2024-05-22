@@ -97,13 +97,18 @@ CBagSaveDialog::CBagSaveDialog() {
 ErrorCode CBagSaveDialog::attach() {
 	assert(isValidObject(this));
 
+	g_engine->enableKeymapper(false);
+
 	// Save off the current game's palette
 	_pSavePalette = CBofApp::getApp()->getPalette();
 
+	CBofPalette *pPal = nullptr;
 	// Insert ours
-	CBofPalette *pPal = _pBackdrop->getPalette();
-	CBofApp::getApp()->setPalette(pPal);
-
+	if (_pBackdrop != nullptr) {
+		pPal = _pBackdrop->getPalette();
+		CBofApp::getApp()->setPalette(pPal);
+	}
+	
 	// Paint the SaveList Box onto the background
 	if (_pBackdrop != nullptr) {
 		CBofBitmap cBmp(buildSysDir("SAVELIST.BMP"), pPal);
@@ -119,8 +124,6 @@ ErrorCode CBagSaveDialog::attach() {
 		assert(_pButtons[i] == nullptr);
 
 		_pButtons[i] = new CBofBmpButton;
-		if (_pButtons[i] == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a CBofBmpButton");
 
 		CBofBitmap *pUp = loadBitmap(buildSysDir(g_stButtons[i]._up), pPal);
 		CBofBitmap *pDown = loadBitmap(buildSysDir(g_stButtons[i]._down), pPal);
@@ -136,10 +139,8 @@ ErrorCode CBagSaveDialog::attach() {
 	assert(_pEditText == nullptr);
 
 	_pEditText = new CBofEditText("", EDIT_X, EDIT_Y, EDIT_DX, EDIT_DY, this);
-	if (_pEditText != nullptr) {
-		_pEditText->setText("");
-		_pEditText->show();
-	}
+	_pEditText->setText("");
+	_pEditText->show();
 
 	// Get a list of saves, and filter out the autosave entry if present
 	// (we don't show the autosave slot in the original UI)
@@ -156,8 +157,6 @@ ErrorCode CBagSaveDialog::attach() {
 
 	// Create a list box for the user to choose the slot to save into
 	_pListBox = new CBofListBox();
-	if (_pListBox == nullptr)
-		fatalError(ERR_MEMORY, "Unable to allocate a CBofListBox");
 
 	CBofRect cRect(LIST_X, LIST_Y, LIST_X + LIST_DX - 1, LIST_Y + LIST_DY - 1);
 
@@ -202,13 +201,10 @@ ErrorCode CBagSaveDialog::attach() {
 			_pEditText->setFocus();
 		}
 
-		if (_pListBox != nullptr) {
-			_pListBox->setSelectedItem(_nSelectedItem, false);
+		_pListBox->setSelectedItem(_nSelectedItem, false);
 
-			if (_nSelectedItem >= 9) {
-
-				_pListBox->scrollTo(_nSelectedItem - 8);
-			}
+		if (_nSelectedItem >= 9) {
+			_pListBox->scrollTo(_nSelectedItem - 8);
 		}
 	} else if (_pButtons[0] != nullptr) {
 		_pButtons[0]->setState(BUTTON_DISABLED);
@@ -221,6 +217,8 @@ ErrorCode CBagSaveDialog::attach() {
 
 ErrorCode CBagSaveDialog::detach() {
 	assert(isValidObject(this));
+
+	g_engine->enableKeymapper(true);
 
 	CBagCursor::hideSystemCursor();
 
