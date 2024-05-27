@@ -439,10 +439,8 @@ ErrorCode CNavWindow::detach() {
 
 	// Destroy all buttons
 	for (int i = 0; i < 2; i++) {
-		if (_pButtons[i] != nullptr) {
-			delete _pButtons[i];
-			_pButtons[i] = nullptr;
-		}
+		delete _pButtons[i];
+		_pButtons[i] = nullptr;
 	}
 
 	// Close sprite lib
@@ -1332,7 +1330,6 @@ void CNavWindow::calcFuel(double hf) {
 			pause();
 			CBofString sNebDir(NEBSIM3_BMP);
 			fixPathName(sNebDir);
-			assert(_pBackdrop != nullptr);
 			_bmptwo = new CBofBitmap(sNebDir.getBuffer(), _pPal);
 			setBackground(_bmptwo);
 			_cargo = 100 + 75 + 28 + 45 + 14;

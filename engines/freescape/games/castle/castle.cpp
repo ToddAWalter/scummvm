@@ -35,15 +35,16 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	_playerHeight = _playerHeights[_playerHeightNumber];
 
 	_playerSteps.clear();
-	_playerSteps.push_back(1);
-	_playerSteps.push_back(10);
-	_playerSteps.push_back(25);
+	_playerSteps.push_back(15);
+	_playerSteps.push_back(30);
+	_playerSteps.push_back(120);
 	_playerStepIndex = 2;
 
 	_playerWidth = 8;
 	_playerDepth = 8;
 	_stepUpDistance = 32;
 	_maxFallingDistance = 8192;
+	_maxShield = 24;
 	_option = nullptr;
 }
 
@@ -164,7 +165,7 @@ void CastleEngine::initGameState() {
 	_playerHeightNumber = 1;
 	_playerHeight = _playerHeights[_playerHeightNumber];
 
-	_gameStateVars[k8bitVariableShield] = 1;
+	_gameStateVars[k8bitVariableShield] = 16;
 	_gameStateVars[k8bitVariableEnergy] = 1;
 	_countdown = INT_MAX;
 }
@@ -192,7 +193,7 @@ void CastleEngine::pressedKey(const int keycode) {
 		if (_playerHeightNumber == 0)
 			rise();
 		// TODO: raising can fail if there is no room, so the action should fail
-		_playerStepIndex = 1;
+		_playerStepIndex = 2;
 		insertTemporaryMessage(_messagesList[15], _countdown - 2);
 	} else if (keycode == Common::KEYCODE_w) {
 		if (_playerHeightNumber == 0)
@@ -216,7 +217,7 @@ void CastleEngine::executePrint(FCLInstruction &instruction) {
 	_currentAreaMessages.clear();
 	if (index > 129) {
 		index = index - 129;
-		if (index < _riddleList.size())
+		if (index < _riddleList.size() / 6)
 			drawFullscreenRiddleAndWait(index);
 		else
 			debugC(1, kFreescapeDebugCode, "Riddle index %d out of bounds", index);
@@ -359,21 +360,23 @@ void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics
 
 	uint32 noColor = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0x00, 0x00, 0x00);
 	uint32 black = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0x00, 0x00);
+	uint32 grey = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x60, 0x60, 0x60);
 	uint32 frame = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0xA7, 0xA7, 0xA7);
 
 	surface->fillRect(_fullscreenViewArea, noColor);
 	surface->fillRect(_viewArea, black);
 
+	surface->fillRect(Common::Rect(47, 47, 271, 147), grey);
 	surface->frameRect(Common::Rect(47, 47, 271, 147), frame);
 	surface->frameRect(Common::Rect(53, 53, 266, 141), frame);
 
-	surface->fillRect(Common::Rect(54, 54, 266, 139), back);
+	surface->fillRect(Common::Rect(54, 54, 265, 140), back);
 	int x = 0;
 	int y = 0;
 	int numberOfLines = 6;
 
 	if (isDOS()) {
-		x = 58;
+		x = 60;
 		y = 66;
 	} else if (isSpectrum() || isCPC()) {
 		x = 60;
@@ -385,6 +388,37 @@ void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics
 		y = y + 12;
 	}
 	drawFullscreenSurface(surface);
+}
+
+void CastleEngine::drawEnergyMeter(Graphics::Surface *surface) {
+	uint32 back = 0;
+	uint32 black = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0x00, 0x00);
+	Common::Rect weightRect;
+	Common::Rect barRect;
+	Common::Rect backRect;
+
+	if (isDOS()) {
+		back = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0xA7, 0x00, 0x00);
+		barRect = Common::Rect(45, 164, 110, 166);
+		weightRect = Common::Rect(57, 158, 59, 172);
+		backRect = Common::Rect(45, 157, 112, 173);
+		if (_gameStateVars[k8bitVariableShield] > 16)
+			weightRect.translate(3, 0);
+	}
+	surface->fillRect(backRect, black);
+	surface->fillRect(barRect, back);
+
+	for (int i = 0; i < _gameStateVars[k8bitVariableShield] / 4; i++) {
+		surface->fillRect(weightRect, back);
+		weightRect.translate(-3, 0);
+	}
+
+	uint8 remainder = 3 - _gameStateVars[k8bitVariableShield] % 4;
+	if (remainder < 3) {
+		weightRect.translate(0, remainder / 2);
+		weightRect.setHeight(weightRect.height() - remainder);
+		surface->fillRect(weightRect, back);
+	}
 }
 
 void CastleEngine::addGhosts() {

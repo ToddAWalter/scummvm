@@ -19,31 +19,46 @@
  *
  */
 
-#ifndef MTROPOLIS_CORE_H
-#define MTROPOLIS_CORE_H
+#ifndef COMMON_LOG_H
+#define COMMON_LOG_H
 
 #include "common/scummsys.h"
 
-#ifndef INT32_MIN
-#define INT32_MIN (-((int32)(0x7fffffff)) - 1)
+namespace LogMessageType {
+/**
+ * Enumeration for log message types.
+ * @ingroup common_system
+ *
+ */
+enum Type {
+	kInfo,    /**< Info logs. */
+	kError,   /**< Error logs. */
+	kWarning, /**< Warning logs. */
+	kDebug    /**< Debug logs. */
+};
+
+} // End of namespace LogMessageType
+
+namespace Common {
+
+/**
+ * A callback that is invoked by debug, warning and error methods.
+ *
+ * A typical example would be a function that shows a debug
+ * console and displays the given message in it.
+ */
+typedef void (*LogWatcher)(LogMessageType::Type type, int level, uint32 debugChannels, const char *message);
+
+/**
+ * Set the watcher used by debug, error and warning methods.
+ */
+void setLogWatcher(LogWatcher f);
+
+/**
+ * Get the watcher used by debug, error and warning methods.
+ */
+LogWatcher getLogWatcher();
+
+} // namespace Common
+
 #endif
-
-namespace MTropolis {
-
-struct IInterfaceBase {
-	virtual ~IInterfaceBase();
-};
-
-enum RuntimeVersion {
-	kRuntimeVersion100,
-
-	kRuntimeVersion110,
-	kRuntimeVersion111,
-	kRuntimeVersion112,
-
-	kRuntimeVersion200,
-};
-
-} // End of namespace MTropolis
-
-#endif /* MTROPOLIS_CORE_H */

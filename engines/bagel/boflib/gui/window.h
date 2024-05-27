@@ -36,8 +36,10 @@
 #include "bagel/boflib/llist.h"
 #include "bagel/boflib/gfx/bitmap.h"
 #include "bagel/boflib/gfx/palette.h"
+#include "bagel/boflib/gfx/text.h"
 
 namespace Bagel {
+class CBofString;
 
 #define MAX_TITLE 64
 #define USE_DEFAULT -1
@@ -144,17 +146,19 @@ public:
 	 * @param y         New upper left corner Y position
 	 * @param bRepaint  true if should update the window
 	 */
-	void move(const int x, const int y, bool bRepaint = false);
+	void move(int x, int y, bool bRepaint = false);
 
 	/**
 	 * Resizes current window to specified area
-	 * @param pRect     New area for window
-	 * @parambRepaint   Optional repaint after resize
+	 * @param pRect      New area for window
+	 * @param bRepaint   Optional repaint after resize
 	 */
 	void reSize(CBofRect *pRect, bool bRepaint = false);
 
-	void close() {
+	virtual ErrorCode close() {
 		onClose();
+
+		return ERR_NONE;
 	}
 
 	/**
@@ -190,26 +194,11 @@ public:
 	void killMyTimers();
 
 	/**
-	 * Determines if specified window is a child to current window
-	 * @param pWin      Window to check
-	 * @return          true if pWnd is a child of current window, false if not
-	 */
-	bool isChildOf(CBofWindow *pWin);
-
-	/**
-	 * Determines if specified window is a parent to current window
-	 * @param pWin      Window to check
-	 * @return          true if pWnd is a parent of current window, false if not
-	 */
-	bool isParentOf(CBofWindow *pWin);
-
-	/**
 	 * Returns the parent window element, if any
 	*/
 	CBofWindow *getParent() const {
 		return _parent;
 	}
-	CBofWindow *getAnscestor();
 
 	/**
 	 * Causes all parent windows to have valid paint regions
@@ -246,7 +235,6 @@ public:
 	}
 
 	void screenToClient(CBofPoint *pPoint);
-	void clientToScreen(CBofPoint *pPoint);
 
 	/**
 	 * Selects and Realizes specified palette into current DC
@@ -274,11 +262,11 @@ public:
 		_pBackdrop = nullptr;
 	}
 
-	CBofBitmap *getBackdrop() {
+	CBofBitmap *getBackdrop() const {
 		return _pBackdrop;
 	}
 
-	bool hasBackdrop() {
+	bool hasBackdrop() const {
 		return _pBackdrop != nullptr;
 	}
 
@@ -289,36 +277,37 @@ public:
 
 	/**
 	 * Updates the specified section of the background bitmap
-	 * @param pRect     Area of bitmap to update on screen
-	 * @return          Error return code
+	 * @param pRect               Area of bitmap to update on screen
+	 * @param nTransparentColor   Color index used for transparency (-1 = none)
+	 * @return                    Error return code
 	 */
 	ErrorCode paintBackdrop(CBofRect *pRect = nullptr, int nTransparentColor = -1);
 
 	void setControlID(uint32 nID) {
 		_nID = nID;
 	}
-	uint32 getControlID() {
+	uint32 getControlID() const {
 		return _nID;
 	}
 
 	void setBkColor(RGBCOLOR cColor) {
 		_cBkColor = cColor;
 	}
-	RGBCOLOR getBkColor() {
+	RGBCOLOR getBkColor() const {
 		return _cBkColor;
 	}
 
 	void setFgColor(RGBCOLOR cColor) {
 		_cFgColor = cColor;
 	}
-	RGBCOLOR getFgColor() {
+	RGBCOLOR getFgColor() const {
 		return _cFgColor;
 	}
 
 	void setPrevMouseDown(CBofPoint p) {
 		_cPrevMouseDown = p;
 	}
-	CBofPoint getPrevMouseDown() {
+	CBofPoint getPrevMouseDown() const {
 		return _cPrevMouseDown;
 	}
 
@@ -417,6 +406,9 @@ public:
 	virtual void onKeyHit(uint32 lKey, uint32 lRepCount);
 	void fillWindow(byte iColor);
 	void fillRect(CBofRect *pRect, byte iColor);
+
+	ErrorCode paintBeveledText(CBofRect *rect, const CBofString &string, int size, int weight, RGBCOLOR color, int justify, uint32 format);
+
 
 protected:
 	CBofWindow *_parent = nullptr;	// Pointer to parent window

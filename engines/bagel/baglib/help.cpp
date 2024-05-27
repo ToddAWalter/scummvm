@@ -121,9 +121,7 @@ ErrorCode CBagHelp::attach() {
 	CBofFile file(_textFile, CBF_BINARY | CBF_READONLY);
 
 	uint32 size = file.getLength();
-	char *buffer = (char *)bofCAlloc(size + 1, 1);
-	if (buffer == nullptr)
-		fatalError(ERR_MEMORY, "Unable to allocate %d bytes to read %s.", size, _textFile.getBuffer());
+	char *buffer = (char *)bofCleanAlloc(size + 1);
 
 	file.read(buffer, size);
 

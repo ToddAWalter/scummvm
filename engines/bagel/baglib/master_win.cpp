@@ -372,12 +372,8 @@ ErrorCode CBagMasterWin::loadFile(const CBofString &wldName, const CBofString &s
 
 			// Only allocate the object list when we really need it...
 			if (_objList == nullptr) {
-				_objList = (StObj *)bofAlloc(MAX_OBJS * sizeof(StObj));
-				if (_objList == nullptr)
-					fatalError(ERR_MEMORY, "Could not allocate Object list");
-
-				// Init to zero (we might not use all slots)
-				memset(_objList, 0, MAX_OBJS * sizeof(StObj));
+				// Allocate a buffer filled with 0s
+				_objList = (StObj *)bofCleanAlloc(MAX_OBJS * sizeof(StObj));
 			}
 
 			_storageDeviceList->saveObjList(_objList, MAX_OBJS); // xxx
@@ -426,18 +422,16 @@ ErrorCode CBagMasterWin::loadFile(const CBofString &wldName, const CBofString &s
 		// is pre-loaded
 		int length = fileLength(wldFileName);
 		char *fileBuf = (char *)bofAlloc(length);
-		if (fileBuf != nullptr) {
-			CBagIfstream fpInput(fileBuf, length);
+		CBagIfstream fpInput(fileBuf, length);
 
-			CBofFile file;
-			file.open(wldFileName);
-			file.read(fileBuf, length);
-			file.close();
+		CBofFile file;
+		file.open(wldFileName);
+		file.read(fileBuf, length);
+		file.close();
 
-			loadFileFromStream(fpInput, startWldName);
+		loadFileFromStream(fpInput, startWldName);
 
-			bofFree(fileBuf);
-		}
+		bofFree(fileBuf);
 
 		// Possibly need to switch CDs
 		CBagel *bagApp = CBagel::getBagApp();
@@ -570,55 +564,53 @@ ErrorCode CBagMasterWin::loadGlobalVars(const CBofString &wldName) {
 		// is pre-loaded
 		int length = fileLength(wldFileName);
 		char *buffer = (char *)bofAlloc(length);
-		if (buffer != nullptr) {
-			CBagIfstream fpInput(buffer, length);
+		CBagIfstream fpInput(buffer, length);
 
-			CBofFile file;
-			file.open(wldFileName);
-			file.read(buffer, length);
-			file.close();
+		CBofFile file;
+		file.open(wldFileName);
+		file.read(buffer, length);
+		file.close();
 
-			while (!fpInput.eof()) {
-				fpInput.eatWhite();
+		while (!fpInput.eof()) {
+			fpInput.eatWhite();
 
-				if (!fpInput.eatWhite()) {
-					break;
-				}
-
-				KEYWORDS keyword;
-				getKeywordFromStream(fpInput, keyword);
-
-				switch (keyword) {
-				case VARIABLE: {
-					CBagVar *var = new CBagVar;
-					fpInput.eatWhite();
-					var->setInfo(fpInput);
-					var->setGlobal();
-					break;
-				}
-
-				case REMARK: {
-					char dummyStr[256];
-					fpInput.getCh(dummyStr, 255);
-					break;
-				}
-
-				case STORAGEDEV:
-				case START_WLD:
-				case SYSSCREEN:
-				case DISKID:
-				case DISKAUDIO:
-				case SHAREDPAL:
-				case PDASTATE:
-				default: {
-					parseAlertBox(fpInput, "Syntax Error:  Unexpected Type in Global Var Wld:", __FILE__, __LINE__);
-					break;
-				}
-				}
+			if (!fpInput.eatWhite()) {
+				break;
 			}
 
-			bofFree(buffer);
+			KEYWORDS keyword;
+			getKeywordFromStream(fpInput, keyword);
+
+			switch (keyword) {
+			case VARIABLE: {
+				CBagVar *var = new CBagVar;
+				fpInput.eatWhite();
+				var->setInfo(fpInput);
+				var->setGlobal();
+				break;
+			}
+
+			case REMARK: {
+				char dummyStr[256];
+				fpInput.getCh(dummyStr, 255);
+				break;
+			}
+
+			case STORAGEDEV:
+			case START_WLD:
+			case SYSSCREEN:
+			case DISKID:
+			case DISKAUDIO:
+			case SHAREDPAL:
+			case PDASTATE:
+			default: {
+				parseAlertBox(fpInput, "Syntax Error:  Unexpected Type in Global Var Wld:", __FILE__, __LINE__);
+				break;
+			}
+			}
 		}
+
+		bofFree(buffer);
 	}
 
 	return _errCode;
@@ -1517,9 +1509,6 @@ bool CBagMasterWin::showSaveDialog(CBofWindow *win, bool bSaveBkg) {
 		CBofSound::pauseSounds();
 		StBagelSave *saveBuf = (StBagelSave *)bofAlloc(sizeof(StBagelSave));
 
-		if (saveBuf == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate the Save Game Buffer");
-
 		fillSaveBuffer(saveBuf);
 		CBagSaveDialog saveDialog;
 		saveDialog.setSaveGameBuffer((byte *)saveBuf, sizeof(StBagelSave));
@@ -1633,12 +1622,8 @@ void CBagMasterWin::doRestore(StBagelSave *saveBuf) {
 		if (sdevManager != nullptr) {
 			// Restore any extra obj list info (for .WLD swapping)
 			if (_objList == nullptr) {
-				_objList = (StObj *)bofAlloc(MAX_OBJS * sizeof(StObj));
-				if (_objList == nullptr)
-					fatalError(ERR_MEMORY, "Unable to allocate a array of %d StObj", MAX_OBJS);
-
-				// Init to nullptr (might not use all slots)
-				memset(_objList, 0, MAX_OBJS * sizeof(StObj));
+				// Allocate a buffer filled with 0s
+				_objList = (StObj *)bofCleanAlloc(MAX_OBJS * sizeof(StObj));
 			}
 
 			memcpy(getObjList(), &saveBuf->_stObjListEx[0], sizeof(StObj) * MAX_OBJS);
@@ -1934,61 +1919,6 @@ void CBagMasterWin::forcePaintScreen() {
 	}
 }
 
-ErrorCode paintBeveledText(CBofWindow *win, CBofRect *rect, const CBofString &cString, const int size, const int weight, const RGBCOLOR color, int justify, uint32 format, int font) {
-	assert(win != nullptr);
-	assert(rect != nullptr);
-
-	CBofBitmap bmp(rect->width(), rect->height(), nullptr, false);
-
-	// Assume no error
-	ErrorCode errorCode = ERR_NONE;
-
-	CBofRect r = bmp.getRect();
-	CBofPalette *palette = nullptr;
-	CBofApp *app = CBofApp::getApp();
-	if (app != nullptr) {
-		palette = app->getPalette();
-	}
-
-	if (palette != nullptr) {
-		bmp.fillRect(nullptr, palette->getNearestIndex(RGB(92, 92, 92)));
-
-		bmp.drawRect(&r, palette->getNearestIndex(RGB(0, 0, 0)));
-	} else {
-		bmp.fillRect(nullptr, COLOR_BLACK);
-	}
-
-	byte c1 = 3;
-	byte c2 = 9;
-	CBofRect cBevel = r;
-
-	int left = cBevel.left;
-	int top = cBevel.top;
-	int right = cBevel.right;
-	int bottom = cBevel.bottom;
-
-	r.left += 6;
-	r.top += 3;
-	r.right -= 5;
-	r.bottom -= 5;
-
-	for (int i = 1; i <= 3; i++) {
-		bmp.line(left + i, bottom - i, right - i, bottom - i, c1);
-		bmp.line(right - i, bottom - i, right - i, top + i - 1, c1);
-	}
-
-	for (int i = 1; i <= 3; i++) {
-		bmp.line(left + i, bottom - i, left + i, top + i - 1, c2);
-		bmp.line(left + i, top + i - 1, right - i, top + i - 1, c2);
-	}
-
-	paintText(&bmp, &r, cString, size, weight, color, justify, format, font);
-
-	bmp.paint(win, rect);
-
-	return errorCode;
-}
-
 ErrorCode waitForInput() {
 	EventLoop eventLoop;
 
@@ -1998,10 +1928,11 @@ ErrorCode waitForInput() {
 	return ERR_NONE;
 }
 
-void CBagMasterWin::close() {
+ErrorCode CBagMasterWin::close() {
 	assert(isValidObject(this));
 
 	g_allowPaintFl = false;
+	return ERR_NONE;
 }
 
 void CBagMasterWin::restoreActiveMessages(CBagStorageDevManager *sdevManager) {

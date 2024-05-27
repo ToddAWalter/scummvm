@@ -110,10 +110,8 @@ ErrorCode CBofDataFile::releaseFile() {
 	close();
 
 	// Free header buffer
-	if (_pHeader != nullptr) {
-		delete[] _pHeader;
-		_pHeader = nullptr;
-	}
+	delete[] _pHeader;
+	_pHeader = nullptr;
 
 	return _errCode;
 }
@@ -130,10 +128,8 @@ ErrorCode CBofDataFile::create() {
 		}
 
 		// Re-initialize
-		if (_pHeader != nullptr) {
-			delete[] _pHeader;
-			_pHeader = nullptr;
-		}
+		delete[] _pHeader;
+		_pHeader = nullptr;
 
 		_stream = nullptr;
 		_lHeaderLength = 0;
@@ -145,9 +141,7 @@ ErrorCode CBofDataFile::create() {
 		// Create the file
 		if (CBofFile::create(_szFileName, _lFlags) == ERR_NONE) {
 			// Write empty header info
-			if (write(stHeaderInfo) == ERR_NONE) {
-
-			} else {
+			if (write(stHeaderInfo) != ERR_NONE) {
 				_errCode = ERR_FWRITE;
 			}
 
@@ -490,8 +484,6 @@ ErrorCode CBofDataFile::writeRecord(int32 lRecNum, void *pBuf, int32 lSize, bool
 
 			// Allocate a buffer big enough for one chunk
 			byte *pTmpBuf = (byte *)bofAlloc(lChunkSize);
-			if (pTmpBuf == nullptr)
-				fatalError(ERR_MEMORY, "Unable to allocate %ld bytes to expand record size in writeRecord()", lBufLength);
 
 			// While there is data to move
 			while (lBufLength > 0) {
@@ -550,8 +542,6 @@ ErrorCode CBofDataFile::writeRecord(int32 lRecNum, void *pBuf, int32 lSize, bool
 
 					// Allocate a buffer that could hold the largest record
 					byte *pTmpBuf = (byte *)bofAlloc(bufferSize);
-					if (pTmpBuf == nullptr)
-						fatalError(ERR_MEMORY, "unable to allocate a buffer of %d bytes", bufferSize);
 
 					for (int i = (int)lRecNum + 1; i < (int)_lNumRecs - 1; i++) {
 						_errCode = readRecord(i, pTmpBuf);
@@ -594,8 +584,6 @@ ErrorCode CBofDataFile::verifyRecord(int32 lRecNum) {
 
 		// Allocate space to hold this record
 		void *pBuf = bofAlloc((int)getRecSize(lRecNum));
-		if (pBuf == nullptr)
-			fatalError(ERR_MEMORY, "Unable to allocate a buffer of %ld bytes", getRecSize(lRecNum));
 
 		_errCode = readRecord(lRecNum, pBuf);
 		bofFree(pBuf);

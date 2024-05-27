@@ -101,6 +101,7 @@ void CastleEngine::loadAssetsDOSFullGame() {
 
 		loadFonts(kFreescapeCastleFont, 59);
 		loadMessagesVariableSize(stream, 0x11, 164);
+		loadRiddles(stream, 0xaae, 11);
 		delete stream;
 
 		stream = decryptFile("CMEDF");
@@ -211,6 +212,8 @@ void CastleEngine::drawDOSUI(Graphics::Surface *surface) {
 		_temporaryMessageDeadlines.push_back(deadline);
 	} else
 		drawStringInSurface(_currentArea->_name, 97, 182, front, back, surface);
+
+	drawEnergyMeter(surface);
 }
 
 } // End of namespace Freescape

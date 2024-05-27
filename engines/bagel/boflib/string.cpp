@@ -103,11 +103,8 @@ void CBofString::allocBuffer(int nLen) {
 
 	// Don't do anything about zero length allocations
 	if (nLen > 0) {
-		_pszData = (char *)bofAlloc(nLen + 1);
-		if (_pszData != nullptr) {
-			// Set the entire buffer to nullptr
-			memset(_pszData, '\0', nLen + 1);
-		}
+		// Allocate a buffer filled with 0s
+		_pszData = (char *)bofCleanAlloc(nLen + 1);
 	}
 
 	_nLength = 0;
@@ -140,18 +137,14 @@ void CBofString::copy(const char *pszBuf) {
 
 	_nLength = 0;
 	if (pszBuf != nullptr) {
-		int n;
-		n = strlen(pszBuf);
+		int n = strlen(pszBuf);
 
 		if (NORMALIZEBUFFERSIZE() <= n) {
 			allocBuffer(n + 1);
 		}
 
 		Common::strcpy_s(_pszData, n + 1, pszBuf);
-
-		if (_pszData != nullptr) {
-			_nLength = (uint16)strlen(_pszData);
-		}
+		_nLength = (uint16)strlen(_pszData);
 	}
 }
 
@@ -263,14 +256,11 @@ void CBofString::concatInPlace(int nSrcLen, const char *lpszSrcData) {
 			else
 				lpszOldData = new char[_nLength + nSrcLen + 1];
 
-			if (lpszOldData != nullptr) {
-				memcpy(lpszOldData, _pszData, (_nLength + 1) * sizeof(char));
+			memcpy(lpszOldData, _pszData, (_nLength + 1) * sizeof(char));
+			concatCopy(_nLength, lpszOldData, nSrcLen, lpszSrcData, _nLength + nAllocAmount);
 
-				concatCopy(_nLength, lpszOldData, nSrcLen, lpszSrcData, _nLength + nAllocAmount);
-
-				if (lpszOldData != szLocalBuff)
-					delete[] lpszOldData;
-			}
+			if (lpszOldData != szLocalBuff)
+				delete[] lpszOldData;
 		}
 	} else {
 
@@ -575,22 +565,21 @@ void CBofString::growTo(int nNewSize) {
 		// Otherwise, we must keep track of whats in the buffer
 		// Create a temp buffer to save string
 		char *p = (char *)bofAlloc(_nLength + 2);
-		if (p != nullptr) {
-			// Save copy of string
-			Common::strcpy_s(p, MAX_STRING, _pszData);
 
-			// Make the new buffer
-			allocBuffer(nNewSize);
+		// Save copy of string
+		Common::strcpy_s(p, MAX_STRING, _pszData);
 
-			// Copy saved string back
-			strncpy(_pszData, p, nNewSize - 1);
+		// Make the new buffer
+		allocBuffer(nNewSize);
 
-			// Get it's new length
-			_nLength = (uint16)strlen(_pszData);
+		// Copy saved string back
+		strncpy(_pszData, p, nNewSize - 1);
 
-			// Don't need temp buffer anymore
-			bofFree(p);
-		}
+		// Get it's new length
+		_nLength = (uint16)strlen(_pszData);
+
+		// Don't need temp buffer anymore
+		bofFree(p);
 	}
 }
 

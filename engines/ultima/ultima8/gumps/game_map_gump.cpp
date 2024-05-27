@@ -239,9 +239,12 @@ bool GameMapGump::GetLocationOfItem(uint16 itemid, int32 &gx, int32 &gy,
 									int32 lerp_factor) {
 	Item *item = getItem(itemid);
 
-	if (!item) return false;
+	if (!item)
+		return false;
 
-	while (item->getParentAsContainer()) item = item->getParentAsContainer();
+	Container *root = item->getRootContainer();
+	if (root)
+		item = root;
 
 	int32 ix, iy, iz;
 
@@ -319,18 +322,20 @@ void GameMapGump::onMouseClick(int button, int32 mx, int32 my) {
 		break;
 	}
 	case Mouse::BUTTON_MIDDLE: {
-		uint16 objID = TraceObjId(mx, my);
+		ParentToGump(mx, my);
+
+		int32 coords[3];
+		uint16 objID = TraceCoordinates(mx, my, coords);
 		Item *item = getItem(objID);
 		if (item) {
-			int32 xv, yv, zv;
-			item->getLocation(xv, yv, zv);
 			debugC(kDebugObject, "%s", item->dumpInfo().c_str());
 
 			if (Ultima8Engine::get_instance()->isAvatarInStasis()) {
 				debugC(kDebugObject, "Can't move: avatarInStasis");
 			} else {
 				Actor *avatarControlled = getControlledActor();
-				PathfinderProcess *pfp = new PathfinderProcess(avatarControlled, xv, yv, zv);
+				PathfinderProcess *pfp = new PathfinderProcess(avatarControlled, coords[0], coords[1], coords[2]);
+				Kernel::get_instance()->killProcesses(avatarControlled->getObjId(), PathfinderProcess::PATHFINDER_PROC_TYPE, true);
 				Kernel::get_instance()->addProcess(pfp);
 			}
 		}

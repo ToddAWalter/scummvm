@@ -66,7 +66,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	CBofDialog(const char *pszFileName, CBofWindow *pParent, const uint32 nID = 0, const uint32 lFlags = BOFDLG_DEFAULT);
+	CBofDialog(const char *pszFileName, CBofWindow *pParent, uint32 nID = 0, uint32 lFlags = BOFDLG_DEFAULT);
 
 	/**
 	 * Destructor
@@ -94,7 +94,7 @@ public:
 	 * @param nControlID	Control Id
 	 * @return				Error return code
 	 */
-	ErrorCode create(const char *pszName, CBofRect *pRect = nullptr, CBofWindow *pParent = nullptr, uint32 nControlID = 0);
+	virtual ErrorCode create(const char *pszName, CBofRect *pRect = nullptr, CBofWindow *pParent = nullptr, uint32 nControlID = 0);
 
 	/**
 	 * Set the dialog flags
