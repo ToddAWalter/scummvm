@@ -907,6 +907,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "braingames",			"Brain Games" },
 	{ "chemicus2",			"Chemicus 2: Die versunkene Stadt" },
 	{ "cklasse",			"Mercedes-Benz C-Class Information Booth" },
+	{ "diehexenakademie",	"Die Hexenakademie" },
 	{ "dieveteranen",		"Die Veteranen: So nutzlos wie eine Fuge von Bach" },
 	{ "dudenmeyer",			"Duden/Meyer Multimedia sampler" },
 	{ "flaschenfahrrad",	"Das Verkehrs-Lernspiel: Fred und das Flaschenfahrrad" },
@@ -2053,6 +2054,12 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACDEMO1_l("henachoco03", "Trial Version", "ITA Choco", "f5277c53bacd27936158dd3867e587e2", 1123538, Common::JA_JPN, 311),
 	// Original filename is ﾑｽﾞｶｼｲﾎﾝｦﾖﾑﾄﾈﾑｸﾅﾙ
 	MACGAME1_l("henachoco03", "", "xn--oj7cxalkre7cjz1d2agc0e8b1cm", "f5277c53bacd27936158dd3867e587e2", 1579812, Common::JA_JPN, 311),
+	// Itachoco Taizen 3 has two versions of every game, "old versions"
+	// that are the original floppy versions and a new release.
+	// In the case of Difficult Book Game, the "old" and "new" versions
+	// are actually the same version - and are distinct builds from
+	// the original floppy release.
+	MACGAME1t_l("henachoco03", "Itachoco Taizen 3 rerelease", "difficultbook", "4596143ccc08cd87af658f29d56b3caa", 1582095, Common::JA_JPN, 311),
 
 	MACGAME1_l("henachoco04", "", "bentoben", "f5277c53bacd27936158dd3867e587e2", 2413669, Common::JA_JPN, 311),
 
@@ -2208,8 +2215,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	// Same desktop behaviour as Rodem
 	MACGAME1f_l("henachoco05r", "", "Rodemutti", "e3d07b046864d6c22116ac2754aaf5cb", 290398, Common::JA_JPN, 402, GF_DESKTOP|GF_640x480),
+	// These "earlier" and "later" patched versions come from the developer
 	MACGAME1f_l("henachoco05r", "Patched version (earlier)", "rodemcchi", "307566cc2c1ed8b144187a098a2b1291", 4095826, Common::JA_JPN, 402, GF_DESKTOP|GF_640x480),
 	MACGAME1f_l("henachoco05r", "Patched version (later)", "rodem-tti", "e6165016b17961ac8616568301842c51", 4095754, Common::JA_JPN, 402, GF_DESKTOP|GF_640x480),
+	// From a 2000-dated game disc containing a prepatched game
+	MACGAME1f_l("henachoco05r", "Patched version (later)", "rodem-tti", "8aaf8baa98598362ab0accbbc8aae457", 292698, Common::JA_JPN, 402, GF_DESKTOP|GF_640x480),
 
 	// German release is D5
 	MACGAME1("majestic", "", "Majestic", "01be45e7241194dad07938e7059b88e3", 483518, 400),
@@ -3869,6 +3879,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1_l("digby", "", "Start Digby's Adventures", "a8e65a2268226bd59f12ebdc58a221f3", 481482, Common::ZH_CHN, 404),
 	WINGAME1_l("digby", "", "DIGBY.EXE", "adc126fbc4387e5d8e84dcd5abd33653", 684269, Common::ZH_CHN, 400),
 
+	MACGAME1_l("diehexenakademie", "", "Hexen", "tr:5c56c32ab21e85b20845584c4a2c0965", 482610, Common::DE_DEU, 404),
+	WINGAME1_l("diehexenakademie", "", "HEXEN.EXE", "t:5f44d2c1e58d0044081134c0dd045139", 741106, Common::DE_DEU, 404),
+
 	MACGAME1_l("dieveteranen", "", "Die Veteranen", "a33b948ad52edc74a4439e176a3ba8bf", 1929826, Common::DE_DEU, 403),
 	WINGAME1_l("dieveteranen", "", "VETERANS.EXE", "t:a00b43e9262390ecf5028e057e6e0633", 692689, Common::DE_DEU, 400),
 
@@ -4290,8 +4303,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 									"DemoMain.dxr", "d16606eadccdb21f654f4b4264fc996a", 2711628, 404),
 
 	MACGAME1_l("henachoco04r", "", "RamenSpecial", "3731a1d809be07929da1f5d691ee3c97", 290398, Common::JA_JPN, 402),
+	MACGAME1_l("henachoco04r", "Itachoco Taizen 3 rerelease", "RamenSP", "588adb5d26bb829b4daaddf88233ec0d", 294997, Common::JA_JPN, 402),
 
 	MACGAME1_l("henachoco06", "", "musimusichikin", "3731a1d809be07929da1f5d691ee3c97", 290398, Common::JA_JPN, 402),
+	MACGAME1_l("henachoco06", "Itachoco Taizen 3 - old version", "musichicken", "3731a1d809be07929da1f5d691ee3c97", 290398, Common::JA_JPN, 402),
+	MACGAME1_l("henachoco06", "Itachoco Taizen 3 rerelease", "musichicken", "fbca63b4ef07be87302bdf295328d31f", 295241, Common::JA_JPN, 402),
 
 	// Original filenames are '第１話' through '第５話'
 	MACGAME1_l("henachoco07", "Episode 1", "xn--jwzs62ach2g", "3731a1d809be07929da1f5d691ee3c97", 290398, Common::JA_JPN, 402),
@@ -4311,6 +4327,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1t_l("henachoco08", "Itachoco Taizen 2 rerelease", "yatai-desu-", "7790a354ddbcb7bc8b4e1b1e8433053b", 290434, Common::JA_JPN, 402),
 
 	MACGAME1_l("henachoco09", "", "nisemizi", "3731a1d809be07929da1f5d691ee3c97", 290398, Common::JA_JPN, 402),
+	MACGAME1_l("henachoco09", "Itachoco Taizen 3 rerelease", "nisemizi", "941bf4119a8d8caa4450c9dbbd5786b3", 294981, Common::JA_JPN, 402),
 
 	MACGAME1_l("henachoco11", "", "surowest", "3731a1d809be07929da1f5d691ee3c97", 290398, Common::JA_JPN, 402),
 	MACGAME1t_l("henachoco11", "Henachoco Taizen 2 rerelease", "suropuro", "096d73233cf4896a4bfc4c65651b35c3", 290434, Common::JA_JPN, 402),

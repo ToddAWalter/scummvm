@@ -62,6 +62,7 @@ MODULE_OBJS = \
 	lingo/xlibs/aiff.o \
 	lingo/xlibs/applecdxobj.o \
 	lingo/xlibs/askuser.o \
+	lingo/xlibs/backdrop.o \
 	lingo/xlibs/barakeobj.o \
 	lingo/xlibs/batqt.o \
 	lingo/xlibs/blitpict.o \
@@ -157,12 +158,20 @@ MODULE_OBJS = \
 
 ifdef USE_IMGUI
 MODULE_OBJS += \
-	debugtools.o \
+	debugger/debugtools.o \
+	debugger/dt-cast.o \
+	debugger/dt-controlpanel.o \
+	debugger/dt-lists.o \
+	debugger/dt-logger.o \
+	debugger/dt-score.o \
+	debugger/dt-script-d2.o \
+	debugger/dt-script-d4.o \
+	debugger/dt-scripts.o
 
 endif
 
 # HACK: Skip this when including the file for detection objects.
-ifeq "$(USE_RULES)" "1"
+ifeq "$(LOAD_RULES_MK)" "1"
 director-grammar:
 	`brew --prefix flex`/bin/flex engines/director/lingo/lingo-lex.l
 	`brew --prefix bison`/bin/bison -dv engines/director/lingo/lingo-gr.y

@@ -362,6 +362,9 @@ void LingoArchive::patchCode(const Common::U32String &code, ScriptType type, uin
 			it._value.ctx = scriptContexts[type][id];
 			scriptContexts[type][id]->_functionHandlers[it._key] = it._value;
 			functionHandlers[it._key] = it._value;
+			if (g_lingo->_eventHandlerTypeIds.contains(it._key)) {
+				scriptContexts[type][id]->_eventHandlers[g_lingo->_eventHandlerTypeIds[it._key]] = it._value;
+			}
 		}
 		sc->_functionHandlers.clear();
 		delete sc;
@@ -614,6 +617,19 @@ bool Lingo::execute() {
 	uint localCounter = 0;
 
 	while (!_abort && !_freezeState && _state->script && (*_state->script)[_state->pc] != STOP) {
+		if ((_exec._state == kPause) || (_exec._shouldPause && _exec._shouldPause())) {
+			// if execution is in pause -> poll event + update screen
+			_exec._state = kPause;
+			Common::EventManager *eventMan = g_system->getEventManager();
+			while (_exec._state == kPause && !eventMan->shouldQuit() && (!g_engine || !eventMan->shouldReturnToLauncher())) {
+				Common::Event event;
+				while (eventMan->pollEvent(event)) {
+				}
+				g_system->delayMillis(10);
+				g_system->updateScreen();
+			}
+		}
+
 		if (_globalCounter > 1000 && debugChannelSet(-1, kDebugFewFramesOnly)) {
 			warning("Lingo::execute(): Stopping due to debug few frames only");
 			_vm->getCurrentMovie()->getScore()->_playState = kPlayStopped;

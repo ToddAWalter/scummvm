@@ -150,11 +150,11 @@ public:
 	 */
 	ErrorCode getOption(const char *section, const char *option, bool *boolValue, int defaultValue);
 
-	void setAppName(const char *newAppName) {
+	void setAppName(const char *newAppName) override {
 		Common::strcpy_s(_szAppName, newAppName);
 	}
 
-	CBagMasterWin *getMasterWnd() {
+	CBagMasterWin *getMasterWnd() const {
 		return (CBagMasterWin *)_pMainWnd;
 	}
 

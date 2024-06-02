@@ -40,7 +40,7 @@ public:
 	CBagStorageDevBmp(CBofWindow *pParent = nullptr, const CBofRect &xRect = CBofRect(), bool bTrans = true);
 	virtual ~CBagStorageDevBmp();
 
-	CBofBitmap *getWorkBmp() {
+	CBofBitmap *getWorkBmp() const {
 		return _pWorkBmp;
 	}
 	ErrorCode setWorkBmp();
@@ -49,7 +49,7 @@ public:
 	CBofRect getRect() override {
 		return CBagStorageDev::getRect();
 	}
-	void setRect(const CBofRect &xRect) {
+	void setRect(const CBofRect &xRect) override {
 		CBagStorageDev::setRect(xRect);
 	}
 	CBofPoint getPosition() override {
@@ -59,17 +59,12 @@ public:
 		CBagStorageDev::setPosition(pos);
 	}
 
-	bool getTransparent() {
+	bool getTransparent() const {
 		return _bTrans;
 	}
-	void setTransparent(bool bTrans = true) {
+	void setTransparent(bool bTrans = true) override {
 		_bTrans = bTrans;
 	}
-
-	/**
-	 * Return a scaled point from the screen to the bitmap
-	 */
-	CBofPoint getScaledPt(CBofPoint xPoint);
 
 	ErrorCode setBackground(CBofBitmap *pBmp) override;
 	CBofBitmap *getBackground() override {

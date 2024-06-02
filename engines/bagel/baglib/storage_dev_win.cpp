@@ -275,9 +275,6 @@ CBofPoint CBagStorageDev::arrangeFloater(CBofPoint nPos, CBagObject *pObj) {
 	CBofPoint NextPos = nPos;
 
 	if (getBackground() != nullptr) {
-
-		int nPageNum = 0;
-
 		int     nBackWidth = getBackground()->width();
 		int     nBackHeight = getBackground()->height();
 		int     nObjWidth = pObj->getRect().width();
@@ -292,7 +289,7 @@ CBofPoint CBagStorageDev::arrangeFloater(CBofPoint nPos, CBagObject *pObj) {
 
 		// Always round this figure up...
 
-		nPageNum = ((NextPos.y + nObjHeight) / nBackHeight);
+		int nPageNum = ((NextPos.y + nObjHeight) / nBackHeight);
 		if (((NextPos.y + nObjHeight) % nBackHeight) != 0) {
 			nPageNum++;
 		}
@@ -924,10 +921,6 @@ CBagObject *CBagStorageDev::getObject(const CBofPoint &xPoint, bool bActiveOnly)
 		}
 	}
 	return nullptr;
-}
-
-
-void CBagStorageDev::handleError(ErrorCode errCode) {
 }
 
 

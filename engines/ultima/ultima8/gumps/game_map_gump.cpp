@@ -34,12 +34,9 @@
 #include "ultima/ultima8/ultima8.h"
 #include "ultima/ultima8/world/get_object.h"
 #include "ultima/ultima8/world/actors/avatar_mover_process.h"
+#include "ultima/ultima8/world/actors/pathfinder_process.h"
 #include "ultima/ultima8/world/missile_tracker.h"
 #include "ultima/ultima8/world/split_item_process.h"
-
-#include "ultima/ultima8/world/actors/pathfinder_process.h"
-
-// map dumping
 
 namespace Ultima {
 namespace Ultima8 {
@@ -146,7 +143,7 @@ void GameMapGump::PaintThis(RenderSurface *surf, int32 lerp_factor, bool scaled)
 					// HACK: unless EXT_TRANSPARENT is also set.
 					// (Used for hiding the avatar when drawing a full area map)
 
-					if (item->getObjId() == 1) {
+					if (item->getObjId() == kMainActorId) {
 						if (item->hasExtFlags(Item::EXT_TRANSPARENT))
 							continue;
 
@@ -423,7 +420,7 @@ bool GameMapGump::DraggingItem(Item *item, int mx, int my) {
 		return false;
 
 	MainActor *avatar = getMainActor();
-	if (trace == 1) { // dropping on self
+	if (trace == kMainActorId) { // dropping on self
 		ObjId bp = avatar->getEquip(ShapeInfo::SE_BACKPACK);
 		Container *backpack = getContainer(bp);
 		return  backpack->CanAddItem(item, true);
@@ -524,10 +521,9 @@ void GameMapGump::DropItem(Item *item, int mx, int my) {
 			// try to combine items
 			if (canReach && targetitem && item->canMergeWith(targetitem)) {
 				uint16 newquant = targetitem->getQuality() + item->getQuality();
-				// easter egg as in original: items stack to max quantity of 666
-				if (newquant > 666) {
-					item->setQuality(newquant - 666);
-					targetitem->setQuality(666);
+				if (newquant > Item::MAX_QUANTITY) {
+					item->setQuality(newquant - Item::MAX_QUANTITY);
+					targetitem->setQuality(Item::MAX_QUANTITY);
 					// maybe this isn't needed? original doesn't do it here..
 					targetitem->callUsecodeEvent_combine();
 				} else {
@@ -541,7 +537,7 @@ void GameMapGump::DropItem(Item *item, int mx, int my) {
 		}
 	}
 
-	if (trace == 1) { // dropping on self
+	if (trace == kMainActorId) { // dropping on self
 		ObjId bp = avatar->getEquip(ShapeInfo::SE_BACKPACK);
 		Container *backpack = getContainer(bp);
 		if (backpack && item->moveToContainer(backpack)) {
