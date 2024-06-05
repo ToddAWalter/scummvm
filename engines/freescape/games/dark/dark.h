@@ -37,6 +37,12 @@ struct ECD {
 	int _id;
 };
 
+enum DarkFontSize {
+	kDarkFontSmall,
+	kDarkFontMedium,
+	kDarkFontBig,
+};
+
 class DarkEngine : public FreescapeEngine {
 public:
 	DarkEngine(OSystem *syst, const ADGameDescription *gd);
@@ -87,7 +93,11 @@ public:
 	void drawCPCUI(Graphics::Surface *surface) override;
 	void drawAmigaAtariSTUI(Graphics::Surface *surface) override;
 
+	Common::BitArray _fontBig;
+	Common::BitArray _fontMedium;
+	Common::BitArray _fontSmall;
 
+	void drawString(const DarkFontSize size, const Common::String &str, int x, int y, uint32 primaryColor, uint32 secondaryColor, uint32 backColor, Graphics::Surface *surface);
 	void drawInfoMenu() override;
 
 	Common::Error saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave = false) override;
