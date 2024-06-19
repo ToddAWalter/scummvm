@@ -65,6 +65,7 @@ MODULE_OBJS = \
 	lingo/xlibs/backdrop.o \
 	lingo/xlibs/barakeobj.o \
 	lingo/xlibs/batqt.o \
+	lingo/xlibs/bimxobj.o \
 	lingo/xlibs/blitpict.o \
 	lingo/xlibs/cdromxobj.o \
 	lingo/xlibs/closebleedwindowxcmd.o \
@@ -96,10 +97,12 @@ MODULE_OBJS = \
 	lingo/xlibs/findwin.o \
 	lingo/xlibs/flushxobj.o \
 	lingo/xlibs/fplayxobj.o \
+	lingo/xlibs/genutils.o \
 	lingo/xlibs/getscreenrectsxfcn.o \
 	lingo/xlibs/getscreensizexfcn.o \
 	lingo/xlibs/gpid.o \
 	lingo/xlibs/hitmap.o \
+	lingo/xlibs/inixobj.o \
 	lingo/xlibs/instobj.o \
 	lingo/xlibs/iscd.o \
 	lingo/xlibs/ispippin.o \

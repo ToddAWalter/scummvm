@@ -9,6 +9,7 @@ MODULE_OBJS := \
 	games/castle/castle.o \
 	games/castle/amiga.o \
 	games/castle/dos.o \
+	games/castle/zx.o \
 	games/dark/amiga.o \
 	games/dark/atari.o \
 	games/dark/cpc.o \
@@ -22,6 +23,7 @@ MODULE_OBJS := \
 	games/driller/dos.o \
 	games/driller/driller.o \
 	games/driller/zx.o \
+	games/eclipse/atari.o \
 	games/eclipse/dos.o \
 	games/eclipse/eclipse.o \
 	games/eclipse/cpc.o \

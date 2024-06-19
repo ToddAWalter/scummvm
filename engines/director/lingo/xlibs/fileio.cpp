@@ -23,6 +23,7 @@
  *
  * USED IN:
  * Standard Director Xtra
+ * Karma: Curse of the 12 Caves
  *
  *************************************/
 
@@ -134,10 +135,11 @@ delete object me -- deletes the open file
 namespace Director {
 
 const char *FileIO::xlibName = "FileIO";
-const char *FileIO::fileNames[] = {
-	"FileIO",
-	"shFILEIO", // TD loads this up using openXLib("@:shFILEIO.DLL")
-	nullptr
+const XlibFileDesc FileIO::fileNames[] = {
+	{ "FileIO",		nullptr },
+	{ "shFILEIO",	nullptr }, // TD loads this up using openXLib("@:shFILEIO.DLL")
+	{ "FILE",		nullptr },
+	{ nullptr,		nullptr },
 };
 
 static MethodProto xlibMethods[] = {
@@ -224,7 +226,7 @@ FileIOError FileObject::open(const Common::String &origpath, const Common::Strin
 
 	if (option.hasPrefix("?")) {
 		option = option.substr(1);
-		path = getFileNameFromModal(option.equalsIgnoreCase("write"), origpath, "txt");
+		path = getFileNameFromModal(option.equalsIgnoreCase("write"), origpath, Common::String(), "txt");
 		if (path.empty()) {
 			return kErrorFileNotFound;
 		}
@@ -374,11 +376,13 @@ void FileIO::m_closeFile(int nargs) {
 XOBJSTUB(FileIO::m_createFile, 0)
 
 void FileIO::m_displayOpen(int nargs) {
-	g_lingo->push(getFileNameFromModal(false, Common::String(), "txt"));
+	g_lingo->push(getFileNameFromModal(false, Common::String(), Common::String(), "txt"));
 }
 
 void FileIO::m_displaySave(int nargs) {
-	g_lingo->push(getFileNameFromModal(true, Common::String(), "txt"));
+	Datum defaultFileName = g_lingo->pop();
+	Datum title = g_lingo->pop();
+	g_lingo->push(getFileNameFromModal(true, Common::String(), title.asString(), "txt"));
 }
 
 XOBJSTUB(FileIO::m_setFilterMask, 0)

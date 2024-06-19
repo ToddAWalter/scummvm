@@ -375,6 +375,12 @@ void Lingo::freezeState() {
 	switchStateFromWindow();
 }
 
+void Lingo::freezePlayState() {
+	Window *window = _vm->getCurrentWindow();
+	window->freezeLingoPlayState();
+	switchStateFromWindow();
+}
+
 void LC::c_constpush() {
 	Common::String name(g_lingo->readString());
 
@@ -1565,7 +1571,7 @@ void LC::call(const Common::String &name, int nargs, bool allowRetVal) {
 			}
 			funcSym = target->getMethod(name);
 			if (funcSym.type != VOIDSYM) {
-				g_lingo->_stack[g_lingo->_stack.size() - nargs] = funcSym.target; // Set first arg to target
+				g_lingo->_stack[g_lingo->_stack.size() - nargs] = target; // Set first arg to target
 				call(funcSym, nargs, allowRetVal);
 				return;
 			}
@@ -1893,8 +1899,11 @@ void LC::c_hilite() {
 }
 
 void LC::c_fieldref() {
-	Datum d = g_lingo->pop();
-	Datum res = d.asMemberID();
+	Datum castLib;
+	if (g_director->getVersion() >= 500)
+		castLib = g_lingo->pop();
+	Datum member = g_lingo->pop();
+	Datum res = member.asMemberID(kCastTypeAny, castLib.asInt());
 	res.type = FIELDREF;
 	g_lingo->push(res);
 }

@@ -69,7 +69,7 @@ public:
 };
 
 // Filter function function prototype.
-typedef bool (*FilterFunction)(const uint16 nFilterId, CBofBitmap *, CBofRect *);
+typedef bool (*FilterFunction)(uint16 nFilterId, CBofBitmap *, CBofRect *);
 
 /**
  * CBagPanWindow is a window that contains a slide bitmap object.  It has specialize
@@ -346,7 +346,7 @@ public:
 	virtual CBagObject *onNewThingObject(const CBofString &sInit);
 
 	// Call to arrange floating object, override to customize layout
-	virtual CBofPoint arrangeFloater(CBofPoint nPos, CBagObject *pObj);
+	virtual CBofPoint arrangeFloater(CBofPoint &nPos, CBagObject *pObj);
 
 	// Set and Get the number of pages required to display all floating objects
 	int getNumFloatPages() const {

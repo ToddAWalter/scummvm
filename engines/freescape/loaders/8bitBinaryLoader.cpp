@@ -22,6 +22,9 @@
 // Based on Phantasma code by Thomas Harte (2013),
 // available at https://github.com/TomHarte/Phantasma/ (MIT)
 
+#include "common/memstream.h"
+#include "common/file.h"
+
 #include "freescape/freescape.h"
 #include "freescape/language/8bitDetokeniser.h"
 #include "freescape/objects/connections.h"
@@ -83,7 +86,7 @@ Common::Array<uint16> FreescapeEngine::readArray(Common::SeekableReadStream *fil
 }
 
 Group *FreescapeEngine::load8bitGroup(Common::SeekableReadStream *file, byte rawFlagsAndType) {
-	if (isDark())
+	if (isDark() || isEclipse())
 		return load8bitGroupV1(file, rawFlagsAndType);
 	else
 		return load8bitGroupV2(file, rawFlagsAndType);
@@ -422,10 +425,17 @@ Object *FreescapeEngine::load8bitObject(Common::SeekableReadStream *file) {
 	case kEntranceType: {
 		debugC(1, kFreescapeDebugParser, "rotation: %f %f %f", v.x(), v.y(), v.z());
 		if (byteSizeOfObject > 0) {
-			// TODO: there is something here
-			debugC(1, kFreescapeDebugParser, "Warning: extra %d bytes in entrance", byteSizeOfObject);
-			while (byteSizeOfObject--) {
-				debugC(1, kFreescapeDebugParser, "b: %x", readField(file, 8));
+			if (!isCastle()) {
+				debugC(1, kFreescapeDebugParser, "Warning: extra %d bytes in entrance", byteSizeOfObject);
+				while (byteSizeOfObject--)
+					debugC(1, kFreescapeDebugParser, "b: %x", readField(file, 8));
+			} else {
+				FCLInstructionVector instructions;
+				Common::String conditionSource;
+				Common::Array<uint16> conditionArray = readArray(file, byteSizeOfObject);
+				conditionSource = detokenise8bitCondition(conditionArray, instructions, isAmiga() || isAtariST());
+				debugC(1, kFreescapeDebugParser, "Entrance condition:");
+				debugC(1, kFreescapeDebugParser, "%s", conditionSource.c_str());
 			}
 			byteSizeOfObject = 0;
 		}
@@ -527,22 +537,29 @@ Area *FreescapeEngine::load8bitArea(Common::SeekableReadStream *file, uint16 nco
 	if (groundColor == 0)
 		groundColor = 255;
 
-	uint8 usualBackgroundColor = readField(file, 8);
-	uint8 underFireBackgroundColor = readField(file, 8);
-	uint8 paperColor = readField(file, 8);
-	uint8 inkColor = readField(file, 8);
+	uint8 usualBackgroundColor = 0;
+	uint8 underFireBackgroundColor = 0;
+	uint8 paperColor = 0;
+	uint8 inkColor = 0;
+
+	if (!(isCastle() && isSpectrum())) {
+		usualBackgroundColor = readField(file, 8);
+		underFireBackgroundColor = readField(file, 8);
+		paperColor = readField(file, 8);
+		inkColor = readField(file, 8);
+	} else {
+		uint8 attribute = readField(file, 8);
+		debugC(1, kFreescapeDebugParser, "Attribute: %x", attribute);
+		paperColor = attribute > 4;
+		inkColor = attribute & 0xf;
+		skyColor = 0;
+	}
+
 	debugC(1, kFreescapeDebugParser, "Colors usual background: %d", usualBackgroundColor);
 	debugC(1, kFreescapeDebugParser, "Colors under fire background: %d", underFireBackgroundColor);
 	debugC(1, kFreescapeDebugParser, "Color Paper: %d", paperColor);
 	debugC(1, kFreescapeDebugParser, "Color Ink: %d", inkColor);
-
 	debugC(1, kFreescapeDebugParser, "Additional colors: %d %d", skyColor, groundColor);
-	// CPC
-	// groundColor = file->readByte() & 15;
-	// skyColor = file->readByte() & 15;
-	// debugC(1, kFreescapeDebugParser, "Colors: %d %d", skyColor, groundColor);
-
-	// Graphics::PixelBuffer *palette = getPalette(areaNumber, ci1, ci2, skyColor, groundColor, ncolors);
 
 	debugC(1, kFreescapeDebugParser, "Area %d", areaNumber);
 	debugC(1, kFreescapeDebugParser, "Flags: %d Objects: %d", areaFlags, numberOfObjects);
@@ -556,14 +573,19 @@ Area *FreescapeEngine::load8bitArea(Common::SeekableReadStream *file, uint16 nco
 	// Castle specific
 	uint8 extraColor[4] = {};
 	if (isEclipse()) {
-		byte idx = file->readByte();
+		byte idx = readField(file, 8);
 		name = idx < 8 ? eclipseRoomName[idx] : eclipseRoomName[8];
-		name = name + "-" + char(file->readByte()) + " ";
+		name = name + "-" + char(readField(file, 8)) + " ";
 
 		int i = 0;
 		while (i < 3) {
-			name = name + char(file->readByte());
+			name = name + char(readField(file, 8));
 			i++;
+		}
+
+		if (isAmiga() || isAtariST()) {
+			groundColor = skyColor;
+			skyColor = 0;
 		}
 	} else if (isDriller() || isDark()) {
 		if (isDriller()) {
@@ -585,12 +607,17 @@ Area *FreescapeEngine::load8bitArea(Common::SeekableReadStream *file, uint16 nco
 		byte idx = readField(file, 8);
 		if (isAmiga())
 			name = _messagesList[idx + 51];
+		if (isSpectrum())
+			name = areaNumber == 255 ? "GLOBAL" : _messagesList[idx + 16];
 		else
 			name = _messagesList[idx + 41];
-		extraColor[0] = readField(file, 8);
-		extraColor[1] = readField(file, 8);
-		extraColor[2] = readField(file, 8);
-		extraColor[3] = readField(file, 8);
+
+		if (isDOS()) {
+			extraColor[0] = readField(file, 8);
+			extraColor[1] = readField(file, 8);
+			extraColor[2] = readField(file, 8);
+			extraColor[3] = readField(file, 8);
+		}
 
 		if (isAmiga()) {
 			// TODO
@@ -635,8 +662,9 @@ Area *FreescapeEngine::load8bitArea(Common::SeekableReadStream *file, uint16 nco
 
 	int64 endLastObject = file->pos();
 	debugC(1, kFreescapeDebugParser, "Last position %lx", endLastObject);
-	if (isDark() && (isAmiga() || isAtariST()))
-		assert(endLastObject <= static_cast<int64>(base + cPtr));
+	debugC(1, kFreescapeDebugParser, "endLastObject is supposed to be %x", base + cPtr);
+	if ((isDark() || isEclipse()) && (isAmiga() || isAtariST()))
+		assert(endLastObject <= static_cast<int64>(base + cPtr) + 4);
 	else
 		assert(endLastObject == static_cast<int64>(base + cPtr) || areaNumber == 192);
 	file->seek(base + cPtr);
@@ -702,17 +730,29 @@ void FreescapeEngine::load8bitBinary(Common::SeekableReadStream *file, int offse
 	debugC(1, kFreescapeDebugParser, "Start area: %d", startArea);
 	uint8 startEntrance = readField(file, 8);
 	debugC(1, kFreescapeDebugParser, "Entrace area: %d", startEntrance);
-	readField(file, 8); // Unknown
 
-	uint8 initialEnergy1 = readField(file, 8);
-	uint8 initialShield1 = readField(file, 8);
-	uint8 initialEnergy2 = readField(file, 8);
-	uint8 initialShield2 = readField(file, 8);
+	uint8 initialEnergy1 = 0;
+	uint8 initialShield1 = 0;
+	uint8 initialEnergy2 = 0;
+	uint8 initialShield2 = 0;
+
+	if (isCastle() && isSpectrum()) {
+		initialShield1 = readField(file, 8);
+	} else {
+		readField(file, 8); // Unknown
+
+		initialEnergy1 = readField(file, 8);
+		initialShield1 = readField(file, 8);
+		initialEnergy2 = readField(file, 8);
+		initialShield2 = readField(file, 8);
+	}
 
 	debugC(1, kFreescapeDebugParser, "Initial levels of energy: %d and shield: %d", initialEnergy1, initialShield1);
 	debugC(1, kFreescapeDebugParser, "Initial levels of energy: %d and shield: %d", initialEnergy2, initialShield2);
 
-	if (isAmiga() || isAtariST())
+	if (isCastle() && isSpectrum())
+		file->seek(offset + 0x6);
+	else if (isAmiga() || isAtariST())
 		file->seek(offset + 0x14);
 	else
 		file->seek(offset + 0xa);
@@ -740,7 +780,9 @@ void FreescapeEngine::load8bitBinary(Common::SeekableReadStream *file, int offse
 		_colorMap.push_back(entry - 3);
 	}
 
-	if (isAmiga() || isAtariST())
+	if (isCastle() && isSpectrum())
+		file->seek(offset + 0x42);
+	else if (isAmiga() || isAtariST())
 		file->seek(offset + 0x8c);
 	else
 		file->seek(offset + 0x46);
@@ -813,11 +855,12 @@ void FreescapeEngine::load8bitBinary(Common::SeekableReadStream *file, int offse
 	else if (isEclipse())
 		_initialCountdown = 7200; // 02:00:00
 
-	if (isAmiga() || isAtariST())
+	if (isCastle() && isSpectrum())
+		file->seek(offset + 0x4f);
+	else if (isAmiga() || isAtariST())
 		file->seek(offset + 0x190);
 	else
 		file->seek(offset + 0xc8);
-	// file->seek(offset + 0x4f); //CPC
 
 	debugC(1, kFreescapeDebugParser, "areas index at: %lx", long(file->pos()));
 	uint16 *fileOffsetForArea = new uint16[numberOfAreas];
@@ -959,6 +1002,94 @@ void FreescapeEngine::loadGlobalObjects(Common::SeekableReadStream *file, int of
 	}
 
 	_areaMap[255] = new Area(255, 0, globalObjectsByID, nullptr);
+}
+
+void FreescapeEngine::parseAmigaAtariHeader(Common::SeekableReadStream *stream) {
+	stream->seek(0x22);
+	int size = stream->readUint16BE();
+	debugC(1, kFreescapeDebugParser, "Header table size %d", size);
+	for (int i = 0; i < size; i++) {
+		debugC(1, kFreescapeDebugParser, "Location: %x ", stream->readUint32BE());
+		Common::String filename;
+		while (char c = stream->readByte())
+			filename += c;
+
+		for (int j = filename.size() + 1; j < 16; j++)
+			stream->readByte();
+
+		debugC(1, kFreescapeDebugParser, "Filename: %s", filename.c_str());
+	}
+}
+
+Common::SeekableReadStream *FreescapeEngine::decryptFileAmigaAtari(const Common::Path &packed, const Common::Path &unpacker, uint32 unpackArrayOffset) {
+	Common::File file;
+	file.open(packed);
+	if (!file.isOpen())
+		error("Failed to open %s", packed.toString().c_str());
+
+	int size = file.size();
+	size -= size % 4;
+	byte *encryptedBuffer = (byte *)malloc(size);
+	file.read(encryptedBuffer, size);
+	file.close();
+
+	uint32 d7 = 0;
+	uint32 d6 = 0;
+	byte *a6 = encryptedBuffer;
+	byte *a5 = encryptedBuffer + size - 1;
+
+	while (a6 <= a5) {
+		uint64 d0 = (a6[0] << 24) | (a6[1] << 16) | (a6[2] << 8) | a6[3];
+		d0 = d0 + d6;
+		d0 = uint32(d0);
+		d0 = ((d0 << 3) & 0xFFFFFFFF) | ((d0 >> 29) & 0xFFFFFFFF);
+		d0 ^= 0x71049763;
+		d0 -= d7;
+		d0 = ((d0 << 16) & 0xFFFF0000) | ((d0 >> 16) & 0xFFFF);
+
+		a6[0] = byte((d0 >> 24) & 0xFF);
+		//debug("%c", a6[0]);
+		a6[1] = byte((d0 >> 16) & 0xFF);
+		//debug("%c", a6[1]);
+		a6[2] = byte((d0 >> 8) & 0xFF);
+		//debug("%c", a6[2]);
+		a6[3] = byte(d0 & 0xFF);
+		//debug("%c", a6[3]);
+
+		d6 += 5;
+		d6 = ((d6 >> 3) & 0xFFFFFFFF) | ((d6 << 29) & 0xFFFFFFFF);
+		d6 ^= 0x04000000;
+		d7 += 4;
+		a6 += 4;
+	}
+
+	file.open(unpacker);
+	if (!file.isOpen())
+		error("Failed to open %s", unpacker.toString().c_str());
+
+	int originalSize = size;
+	size = file.size();
+	byte *unpackArray = (byte *)malloc(size);
+	file.read(unpackArray, size);
+	file.close();
+
+	byte *unpackArrayPtr = unpackArray + unpackArrayOffset;
+	uint32 i = 2 * 1024;
+	do {
+		uint8 ptr0 = unpackArrayPtr[2 * i];
+		//debug("%x -> %x", unpackArrayOffset + 2 * i, ptr0);
+		uint8 ptr1 = unpackArrayPtr[2 * i + 1];
+		//debug("%x -> %x", unpackArrayOffset + 2 * i + 1, ptr1);
+		uint8 val0 = unpackArrayPtr[2 * (i - 1)];
+		uint8 val1 = unpackArrayPtr[2 * (i - 1) + 1];
+
+		encryptedBuffer[2 * (ptr1 + 256 * ptr0)] = val0;
+		encryptedBuffer[2 * (ptr1 + 256 * ptr0) + 1] = val1;
+
+		i = i - 2;
+	} while (i > 0);
+
+	return (new Common::MemoryReadStream(encryptedBuffer, originalSize));
 }
 
 

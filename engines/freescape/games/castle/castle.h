@@ -32,8 +32,15 @@ public:
 	void loadAssetsDOSFullGame() override;
 	void loadAssetsDOSDemo() override;
 	void loadAssetsAmigaDemo() override;
+	void loadAssetsZXFullGame() override;
+	void titleScreen() override;
+	void selectCharacterScreen();
+	void drawOption();
+
+	void initZX();
 
 	void drawDOSUI(Graphics::Surface *surface) override;
+	void drawZXUI(Graphics::Surface *surface) override;
 	void drawEnergyMeter(Graphics::Surface *surface);
 	void pressedKey(const int keycode) override;
 	void checkSensors() override;
@@ -51,6 +58,7 @@ private:
 	void drawFullscreenRiddleAndWait(uint16 riddle);
 	void drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics::Surface *surface);
 	void addGhosts();
+	Texture *_optionTexture;
 };
 
 extern byte kFreescapeCastleFont[];

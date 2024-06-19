@@ -1436,17 +1436,25 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformWindows, ADGF_DROPPLATFORM, GUIO_HOYLE5 },
 
+	// Hoyle School House Math - Windows
+	// This appears on "Sierra's School House Math" CD
+	{"hoyle5school", "", {
+		{"resmap.000", 0, "ed75b87fd5b69097e3a09dd39de7e2fe", 3697},
+		{"ressci.000", 0, "cbfe69aa4b9e23ddbf640301709a65eb", 2478642},
+		AD_LISTEND},
+		Common::EN_ANY, Common::kPlatformWindows, ADGF_DROPPLATFORM, GUIO_HOYLE5 },
+
 	// Hoyle Solitaire (CD version) - Windows
+	// resource.aud is excluded because it is an empty file (zero bytes)
 	{"hoyle5solitaire", "CD", {
-		{"resource.aud", 0, "d41d8cd98f00b204e9800998ecf8427e", 0},
 		{"ressci.000", 0, "fa4eeb24b1fbf6f33739995360554485", 11628203},
 		{"resmap.000", 0, "3f63df73a49800f080775d2a9ad0e949", 3079},
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformWindows, ADGF_DROPPLATFORM, GUIO_HOYLE5 },
 
 	// Hoyle Solitaire (Hard Drive version) - Windows
+	// resource.aud is excluded because it is an empty file (zero bytes)
 	{"hoyle5solitaire", "Hard Drive", {
-		{"resource.aud", 0, "d41d8cd98f00b204e9800998ecf8427e", 0},
 		{"ressci.000", 0, "da180c67d54d4208c84a48fcd8709671", 8582335},
 		{"resmap.000", 0, "e2feb47ab16f9e22a9b6a8580d1da3f0", 3055},
 		AD_LISTEND},

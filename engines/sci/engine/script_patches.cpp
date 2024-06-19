@@ -2463,9 +2463,30 @@ static const uint16 hoyle4PatchEuchreHandsOff[] = {
 	PATCH_END
 };
 
+// In Hearts, a utility function returns the hand of a given player, but
+//  the function uses an uninitialized temp instead of the parameter.
+//
+// We fix this by using the parameter. This bug also appears in Hoyle5.
+//
+// Applies to: All versions
+// Responsible method: The first (and only) local proc in script 300
+static const uint16 hoyle4SignatureHeartsStrategy[] = {
+	0x8d, 0x00,                        // lst 00  [ temp0, uninitialized ]
+	0x81, SIG_MAGICDWORD, 0x75,        // lag 75  [ theHands ]
+	0x4a, 0x06,                        // send 06 [ theHands at: temp0 ] 
+	0x48,                              // ret
+	SIG_END
+};
+
+static const uint16 hoyle4PatchHeartsStrategy[] = {
+	0x8f, 0x01,                        // lsp 01 [ param1, the player (0-3) ] 
+	PATCH_END
+};
+
 //          script, description,                                      signature                         patch
 static const SciScriptPatcherEntry hoyle4Signatures[] = {
 	{  true,   100, "crazy eights sound",                          1, hoyle4SignatureCrazyEightsSound,  hoyle4PatchCrazyEightsSound },
+	{  true,   300, "hearts strategy",                             1, hoyle4SignatureHeartsStrategy,    hoyle4PatchHeartsStrategy },
 	{  true,   400, "gin undercut sound",                          1, hoyle4SignatureGinUndercutSound,  hoyle4PatchGinUndercutSound },
 	{  true,   733, "bridge arithmetic against object",            1, hoyle4SignatureBridgeArithmetic,  hoyle4PatchBridgeArithmetic },
 	{  true,   800, "euchre handsoff",                             1, hoyle4SignatureEuchreHandsOff,    hoyle4PatchEuchreHandsOff },
@@ -2510,7 +2531,7 @@ static const uint16 hoyle5SetScaleSignature[] = {
 	SIG_MAGICDWORD,
 	0x38, SIG_SELECTOR16(setScale), // pushi setScale ($14b)
 	0x38, SIG_UINT16(0x05),         // pushi 5
-	0x51, 0x2c,                     // class Scaler
+	0x51,                           // class Scaler
 	SIG_END
 };
 
@@ -2540,90 +2561,128 @@ static const uint16 hoyle5PatchSetScale[] = {
 // - Poker (script 1100)
 // - Backgammon (script 1300)
 static const uint16 hoyle5SignatureHearts[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0xdc, 0x03,      // lofsa chooseHearts
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x03dc),   // lofsa chooseHearts
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5SignatureGinRummy[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0xbc, 0x02,      // lofsa chooseGinRummy
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x02bc),   // lofsa chooseGinRummy
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5SignatureCribbage[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0x4c, 0x03,      // lofsa chooseCribbage
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x034c),   // lofsa chooseCribbage
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5SignatureKlondike[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0xfc, 0x04,      // lofsa chooseKlondike
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x04fc),   // lofsa chooseKlondike
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5SignatureBridge[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0x6c, 0x04,      // lofsa chooseBridge
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x046c),   // lofsa chooseBridge
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5SignaturePoker[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0x8c, 0x05,      // lofsa choosePoker
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x058c),   // lofsa choosePoker
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5SignatureBackgammon[] = {
+	0x38, SIG_SELECTOR16(init), // pushi init
+	0x76,                       // push0
+	SIG_ADDTOOFFSET(+4),
 	SIG_MAGICDWORD,
-	0x38, 0x8e, 0x00,      // pushi 008e
-	0x76,                  // push0
-	0x38, 0xf0, 0x02,      // pushi 02f0
-	0x76,                  // push0
-	0x72, 0xac, 0x06,      // lofsa chooseBackgammon
-	0x4a, 0x08, 0x00,      // send  0008
+	0x72, SIG_UINT16(0x06ac),   // lofsa chooseBackgammon
+	0x4a, SIG_UINT16(0x0008),   // send 08
 	SIG_END
 };
 
 static const uint16 hoyle5PatchDisableGame[] = {
-	0x35, 0x00,                      // ldi 00
-	0x35, 0x00,                      // ldi 00
-	0x35, 0x00,                      // ldi 00
-	0x35, 0x00,                      // ldi 00
-	0x35, 0x00,                      // ldi 00
-	0x35, 0x00,                      // ldi 00
-	0x35, 0x00,                      // ldi 00
+	0x33, 0x0c,                 // jmp 0c
+	PATCH_END
+};
+
+// Hoyle School House Math is similar to the Children's Collection and Bridge
+//  versions above, where the individual card games were launched externally
+//  by passing a config file to the interpreter. The menus for this game are
+//  present, although they are still using Hoyle4 graphics, but they are missing
+//  some scripts and resources. We work around this with three patches:
+//
+// 1. Skip the broken Sierra logo (room 900) and go to the intro (room 2)
+// 2. Disable the broken buttons on the main menu
+// 3. Disable Euchre and Bridge buttons, because those games aren't present
+static const uint16 hoyle5SignatureSierraLogo[] = {
+	SIG_MAGICDWORD,
+	0x38, SIG_SELECTOR16(newRoom),     // pushi newRoom
+	0x78,                              // push1
+	0x38, SIG_UINT16(0x0384),          // pushi 0384 [ room 900: sierra ]
+	SIG_END
+};
+
+static const uint16 hoyle5PatchSierraLogo[] = {
+	PATCH_ADDTOOFFSET(+4),
+	0x38, PATCH_UINT16(0x0002),       // pushi 0002 [ room 2: intro ]
+	PATCH_END
+};
+
+static const uint16 hoyle5SignatureMainMenuButtons[] = {
+	0x38, SIG_SELECTOR16(init),        // pushi init
+	SIG_ADDTOOFFSET(+33),
+	SIG_MAGICDWORD,
+	0x72, SIG_UINT16(0x050e),          // lofsa information
+	0x4a, SIG_UINT16(0x0008),          // send 08
+	SIG_END
+};
+
+static const uint16 hoyle5PatchMainMenuButtons[] = {
+	0x32, PATCH_UINT16(0x0027),        // jmp 0027 [ skip button init ]
+	PATCH_END
+};
+
+static const uint16 hoyle5SignatureEuchreBridge[] = {
+	0x38, SIG_SELECTOR16(init),        // pushi init
+	SIG_ADDTOOFFSET(+19),
+	SIG_MAGICDWORD,
+	0x72, SIG_UINT16(0x037a),          // lofsa chooseBridge
+	0x4a, SIG_UINT16(0x0008),          // send 08
+	SIG_END
+};
+
+static const uint16 hoyle5PatchEuchreBridge[] = {
+	0x32, PATCH_UINT16(0x0019),        // jmp 0019 [ skip button init ]
 	PATCH_END
 };
 
@@ -2690,11 +2749,32 @@ static const uint16 hoyle5PatchSolitaireInit[] = {
 	PATCH_END
 };
 
+// In Hearts, a utility function returns the hand of a given player, but
+//  the function uses an uninitialized temp instead of the parameter.
+//
+// We fix this by using the parameter. This bug also appears in Hoyle4.
+//
+// Applies to: All versions
+// Responsible method: The first (and only) local proc in script 300
+static const uint16 hoyle5SignatureHeartsStrategy[] = {
+	0x8d, 0x00,                        // lst 00  [ temp0, uninitialized ]
+	0x81, SIG_MAGICDWORD, 0x75,        // lag 75  [ theHands ]
+	0x4a, SIG_UINT16(0x0006),          // send 06 [ theHands at: temp0 ] 
+	0x48,                              // ret
+	SIG_END
+};
+
+static const uint16 hoyle5PatchHeartsStrategy[] = {
+	0x8f, 0x01,                        // lsp 01 [ param1, the player (0-3) ] 
+	PATCH_END
+};
+
 //          script, description,                                      signature                         patch
 static const SciScriptPatcherEntry hoyle5Signatures[] = {
 	{  true,     3, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
 	{  true,    23, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
 	{  true,   200, "fix setScale calls",                         11, hoyle5SetScaleSignature,          hoyle5PatchSetScale },
+	{  true,   300, "hearts strategy",                             1, hoyle5SignatureHeartsStrategy,    hoyle5PatchHeartsStrategy },
 	{  true,   500, "remove kGetTime spin",                        1, hoyle5SignatureSpinLoop,          hoyle5PatchSpinLoop },
 	{  true,  6001, "fix solitaire init",                          1, hoyle5SignatureSolitaireInit,     hoyle5PatchSolitaireInit },
 	{  true,  6002, "fix solitaire init",                          1, hoyle5SignatureSolitaireInit,     hoyle5PatchSolitaireInit },
@@ -2713,6 +2793,9 @@ static const SciScriptPatcherEntry hoyle5Signatures[] = {
 	{ false,   975, "disable Poker",                               1, hoyle5SignaturePoker,             hoyle5PatchDisableGame },
 	{ false,   975, "disable Hearts",                              1, hoyle5SignatureHearts,            hoyle5PatchDisableGame },
 	{ false,   975, "disable Backgammon",                          1, hoyle5SignatureBackgammon,        hoyle5PatchDisableGame },
+	{ false,     0, "disable sierra logo",                         1, hoyle5SignatureSierraLogo,        hoyle5PatchSierraLogo },
+	{ false,     2, "disable main menu buttons",                   1, hoyle5SignatureMainMenuButtons,   hoyle5PatchMainMenuButtons },
+	{ false,   975, "disable Euchre and Bridge",                   1, hoyle5SignatureEuchreBridge,      hoyle5PatchEuchreBridge},
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -7787,7 +7870,7 @@ static const SciScriptPatcherEntry lighthouseSignatures[] = {
 #endif
 
 // ===========================================================================
-// When Robin hands out the scroll to Marion and then types his name using the
+// When Robin hands out the scroll to Marian and then types his name using the
 // hand code, the German version's script contains a typo (likely a copy/paste
 // error), and the local procedure that shows each letter is called twice. The
 // The procedure expects a letter arg and returns no value, so the first call
@@ -9195,7 +9278,7 @@ static const uint16 larry6HiresSetScaleSignature[] = {
 	SIG_MAGICDWORD,
 	0x38, SIG_SELECTOR16(setScale), // pushi setScale ($14b)
 	0x38, SIG_UINT16(0x0005),       // pushi 5
-	0x51, 0x2c,                     // class Scaler
+	0x51,                           // class Scaler
 	SIG_END
 };
 
@@ -25887,7 +25970,12 @@ void ScriptPatcher::processScript(uint16 scriptNr, SciSpan<byte> scriptData) {
 				}
 				break;
 			case GID_HOYLE5:
-				if (!g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 700))) {
+				if (g_sci->getResMan()->testResource(ResourceId(kResourceTypeView, 21))) {
+					// Hoyle school house math
+					enablePatch(signatureTable, "disable sierra logo");
+					enablePatch(signatureTable, "disable main menu buttons");
+					enablePatch(signatureTable, "disable Euchre and Bridge");
+				} else if (!g_sci->getResMan()->testResource(ResourceId(kResourceTypeScript, 700))) {
 					// Hoyle 5 children's collection
 					enablePatch(signatureTable, "disable Gin Rummy");
 					enablePatch(signatureTable, "disable Cribbage");

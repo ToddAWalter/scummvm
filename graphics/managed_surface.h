@@ -88,6 +88,13 @@ protected:
 	/**
 	 * Inner method for blitting.
 	 */
+	void simpleBlitFromInner(const Surface &src, const Common::Rect &srcRect,
+		const Common::Point &destPos, const Palette *srcPalette,
+		bool transparentColorSet, uint transparentColor);
+
+	/**
+	 * Inner method for blitting.
+	 */
 	void blitFromInner(const Surface &src, const Common::Rect &srcRect,
 		const Common::Rect &destRect, const Palette *srcPalette);
 
@@ -305,6 +312,38 @@ public:
 	const Common::Rect getBounds() const {
 		return Common::Rect(0, 0, this->w, this->h);
 	}
+
+	/**
+	 * Copy another surface into this one.
+	 */
+	void simpleBlitFrom(const Surface &src, const Palette *srcPalette = nullptr);
+
+	/**
+	 * Copy another surface into this one at a given destination position.
+	 */
+	void simpleBlitFrom(const Surface &src, const Common::Point &destPos, const Palette *srcPalette = nullptr);
+
+	/**
+	 * Copy another surface into this one at a given destination position.
+	 */
+	void simpleBlitFrom(const Surface &src, const Common::Rect &srcRect,
+		const Common::Point &destPos, const Palette *srcPalette = nullptr);
+
+	/**
+	 * Copy another surface into this one.
+	 */
+	void simpleBlitFrom(const ManagedSurface &src);
+
+	/**
+	 * Copy another surface into this one at a given destination position.
+	 */
+	void simpleBlitFrom(const ManagedSurface &src, const Common::Point &destPos);
+
+	/**
+	 * Copy another surface into this one at a given destination position.
+	 */
+	void simpleBlitFrom(const ManagedSurface &src, const Common::Rect &srcRect,
+		const Common::Point &destPos);
 
 	/**
 	 * Copy another surface into this one.
@@ -672,6 +711,13 @@ public:
 	void frameRect(const Common::Rect &r, uint32 color) {
 		_innerSurface.frameRect(r, color);
 		addDirtyRect(r);
+	}
+
+	/**
+	 * Checks if the given surface contains alpha transparency
+	 */
+	AlphaType detectAlpha() const {
+		return _innerSurface.detectAlpha();
 	}
 
 	/**

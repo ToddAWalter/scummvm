@@ -34,6 +34,8 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 		initCPC();
 	else if (isSpectrum())
 		initZX();
+	else if (isAmiga() || isAtariST())
+		initAmigaAtari();
 
 	_playerHeightNumber = 1;
 	_playerHeights.push_back(32);
@@ -92,7 +94,8 @@ void EclipseEngine::loadAssets() {
 	_fallenMessage = _messagesList[3];
 	_crushedMessage = _messagesList[2];
 	_areaMap[1]->addFloor();
-	_areaMap[51]->addFloor();
+	if (!isDemo())
+		_areaMap[51]->addFloor();
 }
 
 bool EclipseEngine::checkIfGameEnded() {
@@ -197,6 +200,8 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 	_gfx->_keyColor = 0;
 	swapPalette(areaID);
 	_currentArea->_usualBackgroundColor = isCPC() ? 1 : 0;
+	if (isAmiga() || isAtariST())
+		_currentArea->_skyColor = 15;
 
 	resetInput();
 }
@@ -220,6 +225,9 @@ void EclipseEngine::drawBackground() {
 		if (isSpectrum() || isCPC()) {
 			color1 = 2;
 			color2 = 10;
+		} else if (isAmiga() || isAtariST()) {
+			color1 = 8;
+			color2 = 14;
 		}
 
 		_gfx->drawEclipse(color1, color2, progress);

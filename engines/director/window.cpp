@@ -49,6 +49,7 @@ Window::Window(int id, bool scrollable, bool resizable, bool editable, Graphics:
 	_puppetTransition = nullptr;
 	_soundManager = new DirectorSound(this);
 	_lingoState = new LingoState;
+	_lingoPlayState = nullptr;
 
 	_currentMovie = nullptr;
 	_mainArchive = nullptr;
@@ -68,6 +69,8 @@ Window::Window(int id, bool scrollable, bool resizable, bool editable, Graphics:
 
 Window::~Window() {
 	delete _lingoState;
+	if (_lingoPlayState)
+		delete _lingoPlayState;
 	delete _soundManager;
 	delete _currentMovie;
 	for (uint i = 0; i < _frozenLingoStates.size(); i++)
@@ -113,7 +116,7 @@ void Window::invertChannel(Channel *channel, const Common::Rect &destRect) {
 
 		for (int i = 0; i < srcRect.height(); i++) {
 			uint32 *src = (uint32 *)_composeSurface->getBasePtr(srcRect.left, srcRect.top + i);
-			const uint32 *msk = mask ? (const uint32 *)mask->getBasePtr(xoff, yoff + i) : nullptr;
+			const byte *msk = mask ? (const byte *)mask->getBasePtr(xoff, yoff + i) : nullptr;
 
 			for (int j = 0; j < srcRect.width(); j++, src++)
 				if (!mask || (msk && (*msk++)))
@@ -420,6 +423,8 @@ void Window::loadNewSharedCast(Cast *previousSharedCast) {
 		g_director->_allOpenResFiles.remove(previousSharedCastPath);
 		delete previousSharedCast->_castArchive;
 		delete previousSharedCast;
+	} else {
+		debug(0, "@@   No previous shared cast");
 	}
 
 	// Load the new sharedCast
@@ -485,7 +490,9 @@ bool Window::loadNextMovie() {
 	debug(0, "@@@@   Switching to movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName()).c_str(), _currentPath.c_str());
 	debug(0, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
+	g_director->setCurrentWindow(this);
 	loadNewSharedCast(previousSharedCast);
+
 	return true;
 }
 
@@ -632,19 +639,55 @@ void Window::thawLingoState() {
 	_frozenLingoStates.pop_back();
 }
 
-// Check how many times previous enterFrame is called recursively, D4 will only process recursive enterFrame handlers to a depth of 2.
-// Therefore look into frozen lingo states and count previous pending enterFrame calls
-// eg. in a movie, frame 1 has an enterFrame handler that calls go(2), frame 2 has an enterFrame handler that calls go(3), now after
-// each frame is processed and it encounters a frame jump instruction (like go, open), it freezes the lingo state and then processes
-// the next frame. How do we know number of times enterFrame is called? Simple look into frozen lingo states for enterFrame calls.
-int Window::recursiveEnterFrameCount() {
-	int count = 0;
+void Window::freezeLingoPlayState() {
+	if (_lingoPlayState) {
+		warning("FIXME: Just clobbered the play state");
+		delete _lingoPlayState;
+	}
+	_lingoPlayState = _lingoState;
+	_lingoState = new LingoState;
+	debugC(kDebugLingoExec, 3, "Freezing Lingo play state");
+}
 
-	for (int i = _frozenLingoStates.size() - 1; i >= 0; i--) {
+bool Window::thawLingoPlayState() {
+	if (!_lingoPlayState) {
+		warning("Tried to thaw when there's no frozen play state, ignoring");
+		return false;
+	}
+	if (!_lingoState->callstack.empty()) {
+		warning("Can't thaw a Lingo state in mid-execution, ignoring");
+		return false;
+	}
+	delete _lingoState;
+	debugC(kDebugLingoExec, 3, "Thawing Lingo play state");
+	_lingoState = _lingoPlayState;
+	_lingoPlayState = nullptr;
+	return true;
+}
+
+
+// Check how many times enterFrame/stepMovie have been called recursively.
+// When Lingo encounters a go() call, it freezes the execution state and starts
+// processing the next frame. In the case of enterFrame/stepMovie, it is possible
+// to keep recursing without reaching a point where the frozen contexts are finished.
+// D4 and higher will only process recursive handlers to a depth of 2.
+// e.g. in a movie:
+// - frame 1 has an enterFrame handler that calls go(2)
+// - frame 2 has an enterFrame handler that calls go(3)
+// - frame 3 has an enterFrame handler that calls go(4)
+// The third enterFrame handler will be eaten and not called.
+// We can count the number of frozen states which started from enterFrame/stepMovie.
+uint32 Window::frozenLingoRecursionCount() {
+	uint32 count = 0;
+
+	for (int i = (int)_frozenLingoStates.size() - 1; i >= 0; i--) {
 		LingoState *state = _frozenLingoStates[i];
-		CFrame *frame = state->callstack.back();
-		if (frame->sp.name->equalsIgnoreCase("enterFrame")) {
+		CFrame *frame = state->callstack.front();
+		if (frame->sp.name->equalsIgnoreCase("enterFrame") ||
+				frame->sp.name->equalsIgnoreCase("stepMovie")) {
 			count++;
+		} else {
+			break;
 		}
 	}
 

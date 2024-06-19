@@ -29,6 +29,9 @@
 namespace Freescape {
 
 CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEngine(syst, gd) {
+	if (isSpectrum())
+		initZX();
+
 	_playerHeightNumber = 1;
 	_playerHeights.push_back(16);
 	_playerHeights.push_back(48);
@@ -46,6 +49,7 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	_maxFallingDistance = 8192;
 	_maxShield = 24;
 	_option = nullptr;
+	_optionTexture = nullptr;
 }
 
 CastleEngine::~CastleEngine() {
@@ -151,10 +155,12 @@ void CastleEngine::gotoArea(uint16 areaID, int entranceID) {
 	_gfx->_keyColor = 0;
 	_gfx->clearColorPairArray();
 
-	_gfx->_colorPair[_currentArea->_underFireBackgroundColor] = _currentArea->_extraColor[0];
-	_gfx->_colorPair[_currentArea->_usualBackgroundColor] = _currentArea->_extraColor[1];
-	_gfx->_colorPair[_currentArea->_paperColor] = _currentArea->_extraColor[2];
-	_gfx->_colorPair[_currentArea->_inkColor] = _currentArea->_extraColor[3];
+	if (isDOS()) {
+		_gfx->_colorPair[_currentArea->_underFireBackgroundColor] = _currentArea->_extraColor[0];
+		_gfx->_colorPair[_currentArea->_usualBackgroundColor] = _currentArea->_extraColor[1];
+		_gfx->_colorPair[_currentArea->_paperColor] = _currentArea->_extraColor[2];
+		_gfx->_colorPair[_currentArea->_inkColor] = _currentArea->_extraColor[3];
+	}
 
 	swapPalette(areaID);
 	resetInput();
@@ -494,6 +500,84 @@ void CastleEngine::updateTimeVariables() {
 		setGameBit(_gameStateVars[32]);
 		_gameStateVars[32] = 0;
 	}
+}
+
+void CastleEngine::titleScreen() {
+	FreescapeEngine::titleScreen();
+	selectCharacterScreen();
+}
+
+void CastleEngine::drawOption() {
+	_gfx->setViewport(_fullscreenViewArea);
+	if (_option) {
+		if (!_optionTexture) {
+			Graphics::Surface *title = _gfx->convertImageFormatIfNecessary(_option);
+			_optionTexture = _gfx->createTexture(title);
+			title->free();
+			delete title;
+		}
+		_gfx->drawTexturedRect2D(_fullscreenViewArea, _fullscreenViewArea, _optionTexture);
+	}
+	_gfx->setViewport(_viewArea);
+}
+
+void CastleEngine::selectCharacterScreen() {
+	if (!_option)
+		return;
+
+	Graphics::Surface *surface = new Graphics::Surface();
+	surface->create(_screenW, _screenH, _gfx->_texturePixelFormat);
+
+	uint32 green = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0xFF, 0x00);
+	uint32 transparent = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0x00, 0x00, 0x00);
+	drawStringInSurface("Select your character", 63, 16, green, transparent, surface);
+	drawStringInSurface("1. Prince", 150, 82, green, transparent, surface);
+	drawStringInSurface("1. Princess", 150, 92, green, transparent, surface);
+
+	bool selected = false;
+	while (!selected) {
+		Common::Event event;
+		while (_eventManager->pollEvent(event)) {
+			switch (event.type) {
+			case Common::EVENT_QUIT:
+			case Common::EVENT_RETURN_TO_LAUNCHER:
+				quitGame();
+				return;
+
+			case Common::EVENT_SCREEN_CHANGED:
+				_gfx->computeScreenViewport();
+				_gfx->clear(0, 0, 0, true);
+				break;
+			case Common::EVENT_KEYDOWN:
+				switch (event.kbd.keycode) {
+				case Common::KEYCODE_1:
+					selected = true;
+					break;
+				case Common::KEYCODE_2:
+					selected = true;
+					break;
+				default:
+					break;
+				}
+			break;
+			case Common::EVENT_RBUTTONDOWN:
+				// fallthrough
+			case Common::EVENT_LBUTTONDOWN:
+				// TODO: allow to select character with mouse
+				break;
+			default:
+				break;
+			}
+		}
+		_gfx->clear(0, 0, 0, true);
+		drawOption();
+		drawFullscreenSurface(surface);
+		_gfx->flipBuffer();
+		g_system->updateScreen();
+		g_system->delayMillis(15); // try to target ~60 FPS
+	}
+	_gfx->clear(0, 0, 0, true);
+
 }
 
 Common::Error CastleEngine::saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave) {

@@ -245,6 +245,9 @@ public:
 	int execute8bitBinImageSingleCommand(Common::SeekableReadStream *file, Graphics::ManagedSurface *surface, int row, int pixels, int bit, int count);
 	int execute8bitBinImageMultiCommand(Common::SeekableReadStream *file, Graphics::ManagedSurface *surface, int row, int pixels, int bit, int count);
 
+	void parseAmigaAtariHeader(Common::SeekableReadStream *file);
+	Common::SeekableReadStream *decryptFileAmigaAtari(const Common::Path &packed, const Common::Path &unpacker, uint32 unpackArrayOffset);
+
 	// Areas
 	uint16 _startArea;
 	uint16 _endArea;
@@ -305,7 +308,7 @@ public:
 	int _angleRotationIndex;
 	Common::Array<float> _angleRotations;
 
-	Math::Vector3d directionToVector(float pitch, float heading);
+	Math::Vector3d directionToVector(float pitch, float heading, bool useTable);
 	void updateCamera();
 
 	// Camera options

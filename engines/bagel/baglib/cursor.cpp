@@ -19,6 +19,7 @@
  *
  */
 
+#include "graphics/cursorman.h"
 #include "bagel/baglib/cursor.h"
 
 namespace Bagel {
@@ -106,6 +107,15 @@ CBagCursor::~CBagCursor() {
 	assert(isValidObject(this));
 
 	unLoad();
+}
+
+void CBagCursor::setHotspot(int x, int y) {
+	_x = x;
+	_y = y;
+}
+
+CBofPoint CBagCursor::getHotspot() const {
+	return CBofPoint(_x, _y);
 }
 
 ErrorCode CBagCursor::load(CBofBitmap *bmp) {

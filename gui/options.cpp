@@ -60,12 +60,15 @@
 #include "backends/cloud/cloudmanager.h"
 #include "gui/cloudconnectionwizard.h"
 #include "gui/downloaddialog.h"
+#endif
+#endif
+
+#ifdef USE_LIBCURL
 #include "gui/downloadpacksdialog.h"
 #endif
 
 #ifdef USE_SDL_NET
 #include "backends/networking/sdl_net/localwebserver.h"
-#endif
 #endif
 
 #include "graphics/paletteman.h"
@@ -125,7 +128,6 @@ enum {
 };
 #endif
 
-#ifdef USE_CLOUD
 enum {
 	kStoragePopUpCmd = 'sPup',
 	kSyncSavesStorageCmd = 'ssst',
@@ -140,7 +142,6 @@ enum {
 	kDisconnectStorageCmd = 'DcSt',
 	kEnableStorageCmd = 'EnSt'
 };
-#endif
 
 enum {
 	kApplyCmd = 'appl'
@@ -175,12 +176,12 @@ static const int guiBaseValues[] = { 200, 175, 150, 125, 100, 75, 50, 25, -1 };
 static const char *const kbdMouseSpeedLabels[] = { "3", "5", "8", "10", "13", "15", "18", "20", nullptr };
 
 OptionsDialog::OptionsDialog(const Common::String &domain, int x, int y, int w, int h)
-	: Dialog(x, y, w, h), _domain(domain), _graphicsTabId(-1), _midiTabId(-1), _pathsTabId(-1), _tabWidget(nullptr) {
+	: Dialog(x, y, w, h), _domain(domain), _graphicsTabId(-1), _midiTabId(-1), _pathsContainer(nullptr), _tabWidget(nullptr) {
 	init();
 }
 
 OptionsDialog::OptionsDialog(const Common::String &domain, const Common::String &name)
-	: Dialog(name), _domain(domain), _graphicsTabId(-1), _midiTabId(-1), _pathsTabId(-1), _tabWidget(nullptr) {
+	: Dialog(name), _domain(domain), _graphicsTabId(-1), _midiTabId(-1), _pathsContainer(nullptr), _tabWidget(nullptr) {
 	init();
 }
 
@@ -1635,10 +1636,8 @@ void OptionsDialog::addGraphicControls(GuiObject *boss, const Common::String &pr
 
 	_shaderClearButton = addClearButton(boss, prefix + "grShaderClearButton", kClearShaderCmd);
 
-#ifdef USE_CLOUD
 #ifdef USE_LIBCURL
 	_updateShadersButton = new ButtonWidget(boss, prefix + "UpdateShadersButton", _("Download Shaders"), _("Check on the scummvm.org website for updates of shader packs"), kUpdateShadersCmd);
-#endif
 #endif
 
 	enableShaderControls(g_system->hasFeature(OSystem::kFeatureShaders));
@@ -2157,6 +2156,8 @@ GlobalOptionsDialog::GlobalOptionsDialog(LauncherDialog *launcher)
 	_storageWizardConnectButton = nullptr;
 	_redrawCloudTab = false;
 #endif
+#endif
+
 #ifdef USE_SDL_NET
 	_runServerButton = nullptr;
 	_serverInfoLabel = nullptr;
@@ -2169,7 +2170,6 @@ GlobalOptionsDialog::GlobalOptionsDialog(LauncherDialog *launcher)
 	_featureDescriptionLine1 = nullptr;
 	_featureDescriptionLine2 = nullptr;
 	_serverWasRunning = false;
-#endif
 #endif
 #ifdef USE_TTS
 	_enableTTS = false;
@@ -2194,7 +2194,7 @@ void GlobalOptionsDialog::build() {
 	//
 	// 1) The graphics tab
 	//
-	_graphicsTabId = tab->addTab(g_gui.useLowResGUI() ? _("GFX") : _("Graphics"), "GlobalOptions_Graphics", false);
+	_graphicsTabId = tab->addTab(g_gui.useLowResGUI() ? _("GFX") : _("Graphics"), "GlobalOptions_Graphics");
 	ScrollContainerWidget *graphicsContainer = new ScrollContainerWidget(tab, "GlobalOptions_Graphics.Container", "GlobalOptions_Graphics_Container", kGraphicsTabContainerReflowCmd);
 	graphicsContainer->setTarget(this);
 	graphicsContainer->setBackgroundType(ThemeEngine::kWidgetBackgroundNo);
@@ -2228,14 +2228,19 @@ void GlobalOptionsDialog::build() {
 	}
 
 	if (!keymaps.empty()) {
-		tab->addTab(_("Keymaps"), "GlobalOptions_KeyMapper", false);
-		addKeyMapperControls(tab, "GlobalOptions_KeyMapper.", keymaps, Common::ConfigManager::kKeymapperDomain);
+		tab->addTab(_("Keymaps"), "GlobalOptions_KeyMapper");
+
+		ScrollContainerWidget *keymapContainer = new ScrollContainerWidget(tab, "GlobalOptions_KeyMapper.Container", "GlobalOptions_KeyMapper_Container");
+		keymapContainer->setBackgroundType(ThemeEngine::kWidgetBackgroundNo);
+		keymapContainer->setTarget(this);
+
+		addKeyMapperControls(keymapContainer, "GlobalOptions_KeyMapper_Container.", keymaps, Common::ConfigManager::kKeymapperDomain);
 	}
 
 	//
 	// The backend tab (shown only if the backend implements one)
 	//
-	int backendTabId = tab->addTab(_("Backend"), "GlobalOptions_Backend", false);
+	int backendTabId = tab->addTab(_("Backend"), "GlobalOptions_Backend");
 
 	ScrollContainerWidget *backendContainer = new ScrollContainerWidget(tab, "GlobalOptions_Backend.Container", "GlobalOptions_Backend_Container");
 	backendContainer->setBackgroundType(ThemeEngine::kWidgetBackgroundNo);
@@ -2281,15 +2286,18 @@ void GlobalOptionsDialog::build() {
 	// 5) The Paths tab
 	//
 	if (!g_gui.useLowResGUI())
-		_pathsTabId = tab->addTab(_("Paths"), "GlobalOptions_Paths");
+		tab->addTab(_("Paths"), "GlobalOptions_Paths");
 	else
-		_pathsTabId = tab->addTab(_c("Paths", "lowres"), "GlobalOptions_Paths");
-	addPathsControls(tab, "GlobalOptions_Paths.", g_gui.useLowResGUI());
+		tab->addTab(_c("Paths", "lowres"), "GlobalOptions_Paths");
+	_pathsContainer = new ScrollContainerWidget(tab, "GlobalOptions_Paths.Container", "GlobalOptions_Paths_Container");
+	_pathsContainer->setTarget(this);
+	_pathsContainer->setBackgroundType(ThemeEngine::kWidgetBackgroundNo);
+	addPathsControls(_pathsContainer, "GlobalOptions_Paths_Container.", g_gui.useLowResGUI());
 
 	//
 	// 6) The GUI tab
 	//
-	tab->addTab(_("GUI"), "GlobalOptions_GUI", false);
+	tab->addTab(_("GUI"), "GlobalOptions_GUI");
 	ScrollContainerWidget *guiContainer = new ScrollContainerWidget(tab, "GlobalOptions_GUI.Container", "GlobalOptions_GUI_Container");
 	guiContainer->setTarget(this);
 	guiContainer->setBackgroundType(ThemeEngine::kWidgetBackgroundNo);
@@ -2298,7 +2306,7 @@ void GlobalOptionsDialog::build() {
 	//
 	// 7) The miscellaneous tab
 	//
-	tab->addTab(_("Misc"), "GlobalOptions_Misc", false);
+	tab->addTab(_("Misc"), "GlobalOptions_Misc");
 	ScrollContainerWidget *miscContainer = new ScrollContainerWidget(tab, "GlobalOptions_Misc.Container", "GlobalOptions_Misc_Container");
 	miscContainer->setTarget(this);
 	miscContainer->setBackgroundType(ThemeEngine::kWidgetBackgroundNo);
@@ -2310,9 +2318,9 @@ void GlobalOptionsDialog::build() {
 	// 8) The Cloud tab (remote storages)
 	//
 	if (!g_gui.useLowResGUI())
-		tab->addTab(_("Cloud"), "GlobalOptions_Cloud", false);
+		tab->addTab(_("Cloud"), "GlobalOptions_Cloud");
 	else
-		tab->addTab(_c("Cloud", "lowres"), "GlobalOptions_Cloud", false);
+		tab->addTab(_c("Cloud", "lowres"), "GlobalOptions_Cloud");
 
 	ScrollContainerWidget *container = new ScrollContainerWidget(tab, "GlobalOptions_Cloud.Container", "GlobalOptions_Cloud_Container", kCloudTabContainerReflowCmd);
 	container->setTarget(this);
@@ -2321,6 +2329,8 @@ void GlobalOptionsDialog::build() {
 
 	addCloudControls(container, "GlobalOptions_Cloud_Container.", g_gui.useLowResGUI());
 #endif // USE_LIBCURL
+#endif // USE_CLOUD
+
 #ifdef USE_SDL_NET
 	//
 	// 9) The LAN tab (local "cloud" webserver)
@@ -2331,7 +2341,6 @@ void GlobalOptionsDialog::build() {
 		tab->addTab(_c("LAN", "lowres"), "GlobalOptions_Network");
 	addNetworkControls(tab, "GlobalOptions_Network.", g_gui.useLowResGUI());
 #endif // USE_SDL_NET
-#endif // USE_CLOUD
 
 	//
 	// 10) Accessibility
@@ -2420,11 +2429,9 @@ void GlobalOptionsDialog::build() {
 		mode = ThemeEngine::_defaultRendererMode;
 	_rendererPopUp->setSelectedTag(mode);
 
-#ifdef USE_CLOUD
 #ifdef USE_SDL_NET
 	Common::Path rootPath(ConfMan.getPath("rootpath", "cloud"));
 	_rootPath->setLabel(rootPath);
-#endif
 #endif
 }
 
@@ -2502,7 +2509,7 @@ void GlobalOptionsDialog::addPathsControls(GuiObject *boss, const Common::String
 		new ButtonWidget(boss, prefix + "PluginsButton", _c("Plugins Path:", "lowres"), Common::U32String(), kChoosePluginsDirCmd);
 	_pluginsPath = new PathWidget(boss, prefix + "PluginsPath", Common::Path(), _c("None", "path"));
 
-	_pluginsPathClearButton = addClearButton(boss, "GlobalOptions_Paths.PluginsPathClearButton", kPluginsPathClearCmd);
+	_pluginsPathClearButton = addClearButton(boss, prefix + "PluginsPathClearButton", kPluginsPathClearCmd);
 #endif // DYNAMIC_MODULES
 #endif // !defined(__DC__)
 
@@ -2650,10 +2657,8 @@ void GlobalOptionsDialog::addGUIControls(GuiObject *boss, const Common::String &
 		_useSystemDialogsCheckbox->setState(ConfMan.getBool("gui_browser_native", _domain));
 	}
 
-#ifdef USE_CLOUD
 #ifdef USE_LIBCURL
 	new ButtonWidget(boss, prefix + "UpdateIconsButton", _("Download Icons"),  _("Check on the scummvm.org website for updates of icon packs"), kUpdateIconsCmd);
-#endif
 #endif
 }
 
@@ -2773,6 +2778,7 @@ void GlobalOptionsDialog::addCloudControls(GuiObject *boss, const Common::String
 	setupCloudTab();
 }
 #endif // USE_LIBCURL
+#endif // USE_CLOUD
 
 #ifdef USE_SDL_NET
 void GlobalOptionsDialog::addNetworkControls(GuiObject *boss, const Common::String &prefix, bool lowres) {
@@ -2805,7 +2811,6 @@ void GlobalOptionsDialog::addNetworkControls(GuiObject *boss, const Common::Stri
 
 }
 #endif // USE_SDL_NET
-#endif // USE_CLOUD
 
 #ifdef USE_TTS
 void GlobalOptionsDialog::addAccessibilityControls(GuiObject *boss, const Common::String &prefix) {
@@ -2959,7 +2964,6 @@ void GlobalOptionsDialog::apply() {
 		ConfMan.removeKey("pluginspath", _domain);
 #endif // DYNAMIC_MODULES
 
-#ifdef USE_CLOUD
 #ifdef USE_SDL_NET
 	Common::Path rootPath(_rootPath->getLabel());
 	if (!rootPath.empty())
@@ -2967,7 +2971,6 @@ void GlobalOptionsDialog::apply() {
 	else
 		ConfMan.removeKey("rootpath", "cloud");
 #endif // USE_SDL_NET
-#endif // USE_CLOUD
 
 	int oldGuiScale = ConfMan.getInt("gui_scale");
 	ConfMan.setInt("gui_scale", _guiBasePopUp->getSelectedTag(), _domain);
@@ -3014,6 +3017,7 @@ void GlobalOptionsDialog::apply() {
 		}
 	}
 #endif // USE_LIBCURL
+#endif
 
 #ifdef USE_SDL_NET
 #ifdef NETWORKING_LOCALWEBSERVER_ENABLE_PORT_OVERRIDE
@@ -3027,7 +3031,6 @@ void GlobalOptionsDialog::apply() {
 	ConfMan.setInt("local_server_port", port);
 #endif // NETWORKING_LOCALWEBSERVER_ENABLE_PORT_OVERRIDE
 #endif // USE_SDL_NET
-#endif // USE_CLOUD
 
 	Common::String oldThemeId = g_gui.theme()->getThemeId();
 	Common::String oldThemeName = g_gui.theme()->getThemeName();
@@ -3065,7 +3068,6 @@ void GlobalOptionsDialog::apply() {
 	if (_guiDisableBDFScaling) {
 		ConfMan.setBool("gui_disable_fixed_font_scaling", _guiDisableBDFScaling->getState(), _domain);
 	}
-
 
 #ifdef USE_DISCORD
 	if (_discordRpcCheckbox) {
@@ -3519,13 +3521,14 @@ void GlobalOptionsDialog::handleTickle() {
 		_redrawCloudTab = false;
 	}
 #endif // USE_LIBCURL
+#endif // USE_CLOUD
+
 #ifdef USE_SDL_NET
 	if (LocalServer.isRunning() != _serverWasRunning) {
 		_serverWasRunning = !_serverWasRunning;
 		reflowNetworkTabLayout();
 	}
 #endif // USE_SDL_NET
-#endif // USE_CLOUD
 }
 
 void GlobalOptionsDialog::reflowLayout() {
@@ -3543,40 +3546,38 @@ void GlobalOptionsDialog::reflowLayout() {
 		_soundFontClearButton->setEnabled(enabled);
 	}
 
-	if (_pathsTabId != -1) {
-		_tabWidget->setActiveTab(_pathsTabId);
-
-		_tabWidget->removeWidget(_savePathClearButton);
+	if (_pathsContainer) {
+		_pathsContainer->removeWidget(_savePathClearButton);
 		_savePathClearButton->setNext(nullptr);
 		delete _savePathClearButton;
-		_savePathClearButton = addClearButton(_tabWidget, "GlobalOptions_Paths.SavePathClearButton", kSavePathClearCmd);
+		_savePathClearButton = addClearButton(_pathsContainer, "GlobalOptions_Paths_Container.SavePathClearButton", kSavePathClearCmd);
 
-		_tabWidget->removeWidget(_themePathClearButton);
+		_pathsContainer->removeWidget(_themePathClearButton);
 		_themePathClearButton->setNext(nullptr);
 		delete _themePathClearButton;
-		_themePathClearButton = addClearButton(_tabWidget, "GlobalOptions_Paths.ThemePathClearButton", kThemePathClearCmd);
+		_themePathClearButton = addClearButton(_pathsContainer, "GlobalOptions_Paths_Container.ThemePathClearButton", kThemePathClearCmd);
 
-		_tabWidget->removeWidget(_iconPathClearButton);
+		_pathsContainer->removeWidget(_iconPathClearButton);
 		_iconPathClearButton->setNext(nullptr);
 		delete _iconPathClearButton;
-		_iconPathClearButton = addClearButton(_tabWidget, "GlobalOptions_Paths.IconPathClearButton", kIconPathClearCmd);
+		_iconPathClearButton = addClearButton(_pathsContainer, "GlobalOptions_Paths_Container.IconPathClearButton", kIconPathClearCmd);
 
 #ifdef USE_DLC
-		_tabWidget->removeWidget(_dlcPathClearButton);
+		_pathsContainer->removeWidget(_dlcPathClearButton);
 		_dlcPathClearButton->setNext(nullptr);
 		delete _dlcPathClearButton;
-		_dlcPathClearButton = addClearButton(_tabWidget, "GlobalOptions_Paths.DLCPathClearButton", kDLCPathClearCmd);
+		_dlcPathClearButton = addClearButton(_pathsContainer, "GlobalOptions_Paths_Container.DLCPathClearButton", kDLCPathClearCmd);
 #endif
 
-		_tabWidget->removeWidget(_extraPathClearButton);
+		_pathsContainer->removeWidget(_extraPathClearButton);
 		_extraPathClearButton->setNext(nullptr);
 		delete _extraPathClearButton;
-		_extraPathClearButton = addClearButton(_tabWidget, "GlobalOptions_Paths.ExtraPathClearButton", kExtraPathClearCmd);
+		_extraPathClearButton = addClearButton(_pathsContainer, "GlobalOptions_Paths_Container.ExtraPathClearButton", kExtraPathClearCmd);
 
-		_tabWidget->removeWidget(_browserPathClearButton);
+		_pathsContainer->removeWidget(_browserPathClearButton);
 		_browserPathClearButton->setNext(nullptr);
 		delete _browserPathClearButton;
-		_browserPathClearButton = addClearButton(_tabWidget, "GlobalOptions_Paths.BrowserPathClearButton", kBrowserPathClearCmd);
+		_browserPathClearButton = addClearButton(_pathsContainer, "GlobalOptions_Paths_Container.BrowserPathClearButton", kBrowserPathClearCmd);
 	}
 
 	_tabWidget->setActiveTab(activeTab);
@@ -3587,10 +3588,11 @@ void GlobalOptionsDialog::reflowLayout() {
 #ifdef USE_LIBCURL
 	setupCloudTab();
 #endif // USE_LIBCURL
+#endif // USE_CLOUD
+
 #ifdef USE_SDL_NET
 	reflowNetworkTabLayout();
 #endif // USE_SDL_NET
-#endif // USE_CLOUD
 }
 
 #ifdef USE_CLOUD
@@ -3727,6 +3729,7 @@ void GlobalOptionsDialog::shiftWidget(Widget *widget, const char *widgetName, in
 	widget->setPos(x + xOffset, y + yOffset);
 }
 #endif // USE_LIBCURL
+#endif // USE_CLOUD
 
 #ifdef USE_SDL_NET
 void GlobalOptionsDialog::reflowNetworkTabLayout() {
@@ -3782,6 +3785,7 @@ void GlobalOptionsDialog::reflowNetworkTabLayout() {
 }
 #endif // USE_SDL_NET
 
+#ifdef USE_CLOUD
 #ifdef USE_LIBCURL
 void GlobalOptionsDialog::storageSavesSyncedCallback(const Cloud::Storage::BoolResponse &response) {
 	_redrawCloudTab = true;

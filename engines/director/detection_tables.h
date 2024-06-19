@@ -267,6 +267,10 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "kellyparade",		"Kelly Club Pet Parade" },
 	{ "keroppi",			"Keroppi Day Hopper" },
 	{ "kidsmathsquest",		"Kid's Maths Quest" },
+	{ "kidsbiblejbirth",	"Interactive Bible for Kids: The Birth and Boyhood of Jesus" },
+	{ "kidsbiblejlife",		"Interactive Bible for Kids: The Life and Ministry of Jesus" },
+	{ "kidsbiblemoses",		"Interactive Bible for Kids: The Life of Moses" },
+	{ "kidsbiblepaul",		"Interactive Bible for Kids: The Life of Paul" },
 	{ "kingandi",			"The King and I: Animated Thinking Adventure" },
 	{ "korkydragons",		"Dragons!" },
 	{ "kothhoot",			"King of the Hill: Hootenany" },
@@ -916,6 +920,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "girlspack",			"Girl's Pack!" },
 	{ "glitzerschuppen",	"Der Regenbogenfisch Die Suche Nach Den Glitzerschuppen" },
 	{ "globiabc",			"Globi's ABC" },
+	{ "hase",				"Mein Freund, der Hase" },
 	{ "ichsehewas",			"Ich sehe was..." },
 	{ "informaticus",		"Informaticus" },
 	{ "janoschpanama",		"JANOSCH: Oh, wie schön ist Panama" },
@@ -928,6 +933,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "loewe4",				"Löwenzahn 4" },
 	{ "loewe5",				"Löwenzahn 5" },
 	{ "loewe6",				"Löwenzahn 6" },
+	{ "lulu",				"Das Buch von Lulu" },
 	{ "mathica",			"Mathica ... und Mathematik wird zum Abenteuer" },
 	{ "mats3",				"Mats und das rätselhafte Tier" },
 	{ "maus2",				"Die CD-ROM mit der Maus 2" },
@@ -3639,6 +3645,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1t_l("blinkybill1", "", "BLINKY95.EXE", "146512cdebe499a48872cc9e8710d738", 717025, Common::PT_BRA, 404),
 	MACGAME2_l(	"blinkybill1", "", "BB/16M", "17efee018a660458fae80de4364021ac", 481254,
 								   "A Caverna do Fantasma", "cbf7119d62a3528d490cd517b4451061", 5965, Common::IT_ITA, 404),
+	//Original filename is Das Geheimnis der Geisterhöhle
+	MACGAME2_l("blinkybill1", "", "BB/16M", 								"tr:5d2b19cb3951261ca08a95815c703e61", 481254,
+								  "xn--Das Geheimnis der Geisterhhle-55c",	"tr:e2eb9adade533ceb57418c4558323ade", 5960, Common::DE_DEU, 404),
+	WINGAME1_l("blinkybill1", "", "BLINKY95.EXE", "t:53dae92fa6a4f1ac8a95f5c1f5178d0f", 727923, Common::DE_DEU, 404),
 	MACDEMO2(	"blinkybill1", "Demo", "BB/16M", "17efee018a660458fae80de4364021ac", 481254,
 									   "Ghost Cave Demo 16Mb", "5b8b1a76b4724565b8b3f184a753b79a", 2502, 404),
 	WINDEMO1t(	"blinkybill1", "Demo", "BLINKY.EXE", "6641493b9033e5c39e0f0fa1870b1081", 712501, 404),
@@ -4299,6 +4309,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1_l("hamsterland2", "", "HL2SP.EXE",					   "d:8dd22b8bde300c9fb5b66808905300f7", 875665, Common::ES_ESP, 404),
 	WINGAME1("hamsterland2", "",   "HL2EN.EXE",					   "d:4c812a63165c1f50242e879aae62718d", 859681, 404),
 
+	WINGAME2_l("hase", "", "HASE.EXE", "t:45047854f4e15a45a8627618df44e9c3", 696857,
+						   "HASE.LIB", "d:8d8f5a4bf0d27ec926022e90ac4aeefe", 4483876, Common::DE_DEU, 404),
+
 	// Sampler is found on AlphaBonk Farm and probably elsewhere
 	MACGAME1("headbone", "Sampler", "Headbone CD-ROM Sampler", "r:5bbb193a8785c70abe2a4d86b99e1536", 303870, 404),
 	WINGAME2("headbone", "Sampler", "SAMPLER.EXE",  "b083372f35bfaa97f68cfa7f9bb5222e", 2132572,
@@ -4632,9 +4645,12 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	// Original Taiwan release is called 塔克拉玛干—敦煌传奇 (Taklamakan: Dunhuang Chuanqi)
 	MACGAME1("karma", "", "Karma", "ea646eccc9a53f44ce082459d4809a06", 485279, 404),
-	WINGAME2("karma", "", "KARMA.EXE", "e830af6b5dfca4964184e7d61039e120", 697047,
-						  "01_0Y.BIM", "246c2f5ab5499d46f395aa9d0da05c9a", 780158, 404),
+	WINGAME2("karma", "", "USER/KARMA.EXE", "t:72d9457a163a02702d4550fe53833c17", 697047,
+						  "USER/01_0Y.BIM", "f:246c2f5ab5499d46f395aa9d0da05c9a", 780158, 404),
 	WINGAME1_l("karma", "", "DH.EXE", "f917ac9c649bff9eaf538ae69432a145", 690991, Common::ZH_TWN, 400),
+	MACGAME1_l("karma", "", "Karma", "rt:a002b7710fd2a968ff1ddd5aa9819f8f", 485279, Common::DE_DEU, 404),
+	WINGAME2_l("karma", "", "KARMA.EXE", "t:abe9fe1d7ae185cacb6f9f3e5fa8fe77", 697079,
+							  "01_0Y.BIM", "d:5ec986161fb602b5b105ffd066a0c270", 5827468, Common::DE_DEU, 404),
 
 	// Original Mac filename is かるたでおじゃる
 	MACGAME1_l("karuta", "", "xn--t8jb4b0a4b1lzbf", "78138a77207907642744d0960c14d9e5", 486623, Common::JA_JPN, 404),
@@ -4722,6 +4738,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Win/Mac versions are D3
 	PIPGAME1_l("lzone", "", "L-ZONE", "07c3095bd36e5aed00ba12f17f761070", 60096, Common::JA_JPN, 400),
 
+	MACGAME1_l("lulu", "", "Das Buch von Lulu PowerMac", "tr:c49c2f262fa9eb574d06f6f46903330a", 78730, Common::DE_DEU, 404),
+	WINGAME2_l("lulu", "", "LULU.EXE", 					 "t:a89aa6079ba7745917c63b99e52ade66", 876993,
+						   "CHAP/1CHAP.DXR",  			 "d:f4f62669342b305b789479014969e782", 5011138, Common::DE_DEU, 404),
+
 	// Pre-rendered CG animated adventure based on the popular comedy manga
 	// Developed by Future Pirates, published by Toshiba EMI
 	MACGAME1_l("macaroni", "", "Macaroni.PowerMac", "be7faef1b5c713e2d13a693eb6e1f5c9", 180281, Common::JA_JPN, 404),
@@ -4797,7 +4817,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME2t("martian", "", "MC.EXE",			 "55e0837d623be4218b317370abc5fc3b", 1764151,
 							 "BUTTONS/MAIN.QTW", "06a9aab09811715e8ec2cc553c4bdcb4", 1391726, 404),
 
-	MACDEMO1("mathblasterjr", "Preview v1.0c", "Math Blaster Jr. Power MAC", "602e61f10c158183218405dd30a09b3f", 60068, 404),
+	MACDEMO1("mathblasterjr", "Preview v1.0c", "Math Blaster Jr. Power MAC", "r:602e61f10c158183218405dd30a09b3f", 60068, 404),
+	WINDEMO1("mathblasterjr", "Preview v1.0c", "MBSTART.EXE",				 "t:ac78baf4e736b3363dae2a7136d07049", 690041, 404),
 	// from Great Adventures by Fisher-Price: Castle (1995)
 	MACDEMO1("mathblasterjr", "Preview v1.0c", "Math Blst Jr. Pwr Mac", "602e61f10c158183218405dd30a09b3f", 60068, 404),
 
@@ -5365,7 +5386,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACDEMO1_l("racingdays", "Demo", "Racing Days World", "0d5f13d9321d36c23b63f229460928b4", 481803, Common::JA_JPN, 404),
 	MACDEMO1_l("racingdays", "Demo v1.01", "Racing Days World 1.01", "fbe75e9140b23cf5bb2f5fd6f7ce8e88", 481803, Common::JA_JPN, 404),
 
-	MACDEMO1("readblasterjr", "Preview v1.0c", "Reading Blaster Jr. Power Mac", "49aa41e6b624e64e8e48850faa882cc8", 63276, 404),
+	MACDEMO1("readblasterjr", "Preview v1.0c", "Reading Blaster Jr. Power Mac", "r:49aa41e6b624e64e8e48850faa882cc8", 63276, 404),
+	WINDEMO1("readblasterjr", "Preview v1.0c", "RBJUNIOR.EXE",					"t:d146b5084aef8f4edac617c9e0fa79a9", 705457, 404),
 	// from Great Adventures by Fisher-Price: Castle (1995)
 	MACDEMO1("readblasterjr", "Preview v1.0c", "Reading Blaster Power Mac", "49aa41e6b624e64e8e48850faa882cc8", 61732, 404),
 
@@ -6342,6 +6364,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("flipper", "", "Flipper!",	  "6e7e31d05709e1d38d63f4df6a59eec0", 718381, 501),
 	WINGAME1("flipper", "", "FLIP32.EXE", "3460ad87d2ba57104e2810a77b53c220", 1398201, 500),
 
+	MACGAME1("fplit", "", "Toyland",			  "r:7fc35c7129cb027987528b027c6cc27c", 705445, 500),
+	WINGAME2("fplit", "", "PIR32BIT/START32.EXE", "t:564db7e9ffacb6c0fecbf83c1f988069", 1394437,
+						  "FILES/BLOCKS.DIR",	  "d:74388b29ce10d83bbad48c664d87eab3", 7363670, 500),
 	MACDEMO1("fplit", "Demo", "Toyland Preview", "9fbd2e99a6a23933083ba0934e4a7d01", 705417, 500),
 
 	WINDEMO1t("fpready", "Demo", "FPRFS32.EXE", "b976d39fa7f7cf18a05149b5593f43e0", 2901579, 501),
@@ -6544,6 +6569,18 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("kidsbox", "", "KIDS BOX(PPC)", "e7ee6c4e4cf63575db94bf3fc433053d", 107863, 500),
 	WINGAME1t("kidsbox", "Normal", "KIDS_N.EXE", "7abed0fbe806404b5e4045927b293950", 1443095, 500),
 	WINGAME1t("kidsbox", "Slow", "KIDS_O.EXE", "7abed0fbe806404b5e4045927b293950", 1443093, 500),
+
+	WINGAME2("kidsbiblejbirth", "", "Startup.exe",			 "t:db89c88c444f41b95cf5a36599dc9c5c", 1410395,
+									"BIRTDISC/BIRTDISC.Dxr", "d:18846fcf36f09aeac49ab3f1b1b496e4", 6246526, 501),
+
+	WINGAME2("kidsbiblejlife", "", "Startup.exe",			 "t:db89c88c444f41b95cf5a36599dc9c5c", 1410395,
+								   "JESUDISC/DISCJESU.DXR",  "d:b12ed844b5ebe78d70f4be265651b631", 5887462, 501),
+
+	WINDEMO2("kidsbiblemoses", "Demo", "KIB31.EXE",				"t:d72d71e434372368968670a51212cba1", 933051,
+									   "MOSEDISC/DISCMOSE.DXR", "d:7e54012fdb5d6d1f85087ea1de64aae0", 3017034, 501),
+
+	WINGAME2("kidsbiblepaul", "", "Startup.exe",		   "t:db89c88c444f41b95cf5a36599dc9c5c", 1410395,
+								  "PAULDISC/DISCPAUL.DXR", "d:33e2ce00c9ff1dbcc7a7fd05809571ed", 6766086, 501),
 
 	MACGAME1("maccubed", "Disc 1", "Let's Go! Arcade", "5b3a7fa45ec7655c5f9b7fe39ae37a11", 705357, 500),
 	MACGAME1("maccubed", "Disc 2", "Let's Go! Games", "5b3a7fa45ec7655c5f9b7fe39ae37a11", 705357, 500),

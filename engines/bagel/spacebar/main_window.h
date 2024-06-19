@@ -26,7 +26,6 @@
 #include "bagel/boflib/gfx/palette.h"
 #include "bagel/baglib/pan_window.h"
 #include "bagel/baglib/menu_dlg.h"
-#include "bagel/baglib/pda.h"
 #include "bagel/spacebar/thud.h"
 
 namespace Bagel {
@@ -75,8 +74,8 @@ public:
 	CMainWindow();
 	virtual ~CMainWindow();
 
-	ErrorCode attach();
-	ErrorCode detach();
+	ErrorCode attach() override;
+	ErrorCode detach() override;
 	static void setZzazzlVision(bool newValue);
 	static CBofRect &getFilterRect() {
 		return *_xFilterRect;
@@ -103,20 +102,20 @@ public:
 		_nGameMode = mode;
 	}
 
-	ErrorCode setloadFilePos(const CBofPoint dstLoc);
+	ErrorCode setloadFilePos(CBofPoint dstLoc) override;
 
-	CBagObject *onNewLinkObject(const CBofString &sInit);
+	CBagObject *onNewLinkObject(const CBofString &sInit) override;
 
 	void correctZzazzlePoint(CBofPoint *p);
 
-	ErrorCode onCursorUpdate(int nCurrObj);
+	ErrorCode onCursorUpdate(int nCurrObj) override;
 
-	void onClose();
-	void onSize(uint32 nType, int cx, int cy);
-	void onKeyHit(uint32 lKey, uint32 lRepCount);
-	void onLButtonUp(uint32 nFlags, CBofPoint *xPoint, void * = nullptr);
-	void onLButtonDown(uint32 nFlags, CBofPoint *xPoint, void * = nullptr);
-	void onMouseMove(uint32 nFlags, CBofPoint *p, void * = nullptr);
+	void onClose() override;
+	void onSize(uint32 nType, int cx, int cy) override;
+	void onKeyHit(uint32 lKey, uint32 lRepCount) override;
+	void onLButtonUp(uint32 nFlags, CBofPoint *xPoint, void * = nullptr) override;
+	void onLButtonDown(uint32 nFlags, CBofPoint *xPoint, void * = nullptr) override;
+	void onMouseMove(uint32 nFlags, CBofPoint *p, void * = nullptr) override;
 };
 
 } // namespace SpaceBar

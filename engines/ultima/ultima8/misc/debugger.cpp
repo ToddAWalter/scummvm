@@ -758,7 +758,8 @@ void Debugger::dumpCurrentMap() {
 	// Now render the map
 	s->BeginPainting();
 	s->SetOrigin(0, 0);
-	CameraProcess::SetCameraProcess(new CameraProcess(cx + camheight * 4, cy + camheight * 4, camheight));
+	Point3 pt(cx + camheight * 4, cy + camheight * 4, camheight);
+	CameraProcess::SetCameraProcess(new CameraProcess(pt));
 	g->Paint(s, 256, false);
 	s->EndPainting();
 
@@ -978,11 +979,10 @@ bool Debugger::cmdMark(int argc, const char **argv) {
 
 	MainActor *mainActor = getMainActor();
 	int curmap = mainActor->getMapNum();
-	int32 x, y, z;
-	mainActor->getLocation(x, y, z);
+	Point3 pt = mainActor->getLocation();
 
 	Common::String key = Common::String::format("mark_%s", argv[1]);
-	Common::String value = Common::String::format("%d %d %d %d", curmap, x, y, z);
+	Common::String value = Common::String::format("%d %d %d %d", curmap, pt.x, pt.y, pt.z);
 	ConfMan.set(key, value);
 
 	debugPrintf("Set mark \"%s\" to %s\n", argv[1], value.c_str());
@@ -1223,10 +1223,9 @@ bool Debugger::cmdCameraOnAvatar(int argc, const char **argv) {
 	}
 	Actor *actor = getControlledActor();
 	if (actor) {
-		int32 x, y, z;
-		actor->getCentre(x, y, z);
-		if (x > 0 || y > 0)
-			CameraProcess::SetCameraProcess(new CameraProcess(x, y, z));
+		Point3 pt = actor->getCentre();
+		if (pt.x > 0 || pt.y > 0)
+			CameraProcess::SetCameraProcess(new CameraProcess(pt));
 	}
 	return false;
 }
