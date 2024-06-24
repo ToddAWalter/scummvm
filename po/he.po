@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.1.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2024-06-15 22:46+0000\n"
+"POT-Creation-Date: 2024-06-22 18:24+0000\n"
 "PO-Revision-Date: 2023-12-14 14:28+0000\n"
 "Last-Translator: Niv Baehr <bloop93@gmail.com>\n"
 "Language-Team: Hebrew <https://translations.scummvm.org/projects/scummvm/"
@@ -2600,7 +2600,7 @@ msgstr "הקלטה"
 msgid "Playback"
 msgstr "ניגון"
 
-#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:286
+#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:290
 msgid "Edit"
 msgstr "עריכה"
 
@@ -2786,11 +2786,11 @@ msgstr ""
 msgid "Clear value"
 msgstr "ניקוי ערך"
 
-#: gui/widgets/grid.cpp:280
+#: gui/widgets/grid.cpp:284
 msgid "Play"
 msgstr "משחק"
 
-#: gui/widgets/grid.cpp:283
+#: gui/widgets/grid.cpp:287
 msgid "Saves"
 msgstr "שמירות"
 
@@ -4625,14 +4625,14 @@ msgstr "מצב זכוכית מגדלת כבוי. מפעיל מחדש מצב גר
 msgid "Magnify Mode Off"
 msgstr "מצב זכוכית מגדלת כבוי"
 
-#: backends/platform/android/android.cpp:1050
+#: backends/platform/android/android.cpp:1052
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 #, fuzzy
 #| msgid "Settings"
 msgid "Getting help"
 msgstr "הגדרות"
 
-#: backends/platform/android/android.cpp:1053
+#: backends/platform/android/android.cpp:1055
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4654,13 +4654,13 @@ msgid ""
 "checking out a game walkthrough. Good luck!\n"
 msgstr ""
 
-#: backends/platform/android/android.cpp:1062
+#: backends/platform/android/android.cpp:1064
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "בקרות מגע"
 
-#: backends/platform/android/android.cpp:1065
+#: backends/platform/android/android.cpp:1067
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -4729,13 +4729,13 @@ msgid ""
 "\n"
 msgstr ""
 
-#: backends/platform/android/android.cpp:1121
+#: backends/platform/android/android.cpp:1123
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "מוסיף משחקים"
 
-#: backends/platform/android/android.cpp:1124
+#: backends/platform/android/android.cpp:1126
 #, fuzzy
 #| msgid ""
 #| "In this new version of ScummVM Android, significant changes were made to "
@@ -6180,8 +6180,8 @@ msgstr "המתרגם לא מעוניין לשלב את תרגומו בתוך Scu
 #: engines/mohawk/detection_tables.h:2677
 #: engines/mohawk/detection_tables.h:3797
 #: engines/mohawk/detection_tables.h:3812 engines/myst3/detection.cpp:142
-#: engines/saga/detection_tables.h:46 engines/sci/detection_tables.h:5345
-#: engines/sci/detection_tables.h:5353 engines/stark/detection.cpp:319
+#: engines/saga/detection_tables.h:46 engines/sci/detection_tables.h:5358
+#: engines/sci/detection_tables.h:5366 engines/stark/detection.cpp:319
 #: engines/teenagent/detection.cpp:117 engines/toltecs/detection.cpp:210
 #: engines/trecision/detection.cpp:201 engines/zvision/detection_tables.h:129
 msgid "Missing game code"
@@ -8671,7 +8671,7 @@ msgstr "תצוגה / הסתר תפריט השהיה"
 msgid "Toggle Chatty AI"
 msgstr "מיתוג בינה מלאכותית פטפטנית"
 
-#: engines/pink/gui.cpp:289
+#: engines/pink/gui.cpp:291
 msgid "This menu item is not yet implemented"
 msgstr "פריט זה אינו מומש עדיין"
 
@@ -8867,11 +8867,17 @@ msgstr "Casio MT-540"
 msgid "Casio CT-460 / CSM-1"
 msgstr "Casio CT-460 / CSM-1"
 
-#: engines/sci/detection_tables.h:4581
+#: engines/sci/detection_tables.h:1419 engines/sci/detection_tables.h:1430
+#, fuzzy
+#| msgid "Failed to initialize resources"
+msgid "Game does not contain menu resources"
+msgstr "אתחול המשאבים נכשל"
+
+#: engines/sci/detection_tables.h:4594
 msgid "This demo uses an unimplemented version of Robot videos"
 msgstr ""
 
-#: engines/sci/detection_tables.h:4636
+#: engines/sci/detection_tables.h:4649
 msgid "Incomplete game detected. You have to copy data from all the CDs."
 msgstr "נתגלה משחק שאינו שלם. יש להעתיק את הנתונים מכל התקליטורים."
 
@@ -8918,7 +8924,7 @@ msgstr "לא ניתן לנגן וידאו %dbpp על מערכת בעומק צב�
 msgid "SCI32 support not compiled in"
 msgstr "תמיכה במנוע SCI32 לא נבנתה"
 
-#: engines/sci/resource/resource.cpp:860
+#: engines/sci/resource/resource.cpp:856
 msgid ""
 "Missing or corrupt game resources have been detected. Some game features may "
 "not work properly. Please check the console for more information, and verify "

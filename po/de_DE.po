@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.10.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2024-06-15 22:46+0000\n"
+"POT-Creation-Date: 2024-06-22 18:24+0000\n"
 "PO-Revision-Date: 2024-06-15 18:43+0000\n"
 "Last-Translator: Lothar Serra Mari <lothar.serramari@scummvm.org>\n"
 "Language-Team: German <https://translations.scummvm.org/projects/scummvm/"
@@ -2747,7 +2747,7 @@ msgstr "Aufnahme"
 msgid "Playback"
 msgstr "Wiedergabe"
 
-#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:286
+#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:290
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -2937,11 +2937,11 @@ msgstr ""
 msgid "Clear value"
 msgstr "Wert löschen"
 
-#: gui/widgets/grid.cpp:280
+#: gui/widgets/grid.cpp:284
 msgid "Play"
 msgstr "Spielen"
 
-#: gui/widgets/grid.cpp:283
+#: gui/widgets/grid.cpp:287
 msgid "Saves"
 msgstr "Spielstände"
 
@@ -4773,12 +4773,12 @@ msgstr "Vergrößerungs-Modus deaktiviert. Aktiviere Drag-Modus..."
 msgid "Magnify Mode Off"
 msgstr "Vergrößerungs-Modus deaktiviert"
 
-#: backends/platform/android/android.cpp:1050
+#: backends/platform/android/android.cpp:1052
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid "Getting help"
 msgstr "Hilfe"
 
-#: backends/platform/android/android.cpp:1053
+#: backends/platform/android/android.cpp:1055
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4821,13 +4821,13 @@ msgstr ""
 "bleibst, solltest du vielleicht über ein Walkthrough nachdenken. Viel "
 "Glück!\n"
 
-#: backends/platform/android/android.cpp:1062
+#: backends/platform/android/android.cpp:1064
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "Touch-Steuerung"
 
-#: backends/platform/android/android.cpp:1065
+#: backends/platform/android/android.cpp:1067
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -4965,13 +4965,13 @@ msgstr ""
 "  ![Tastatursymbol](keyboard.png \"Tastatursymbol\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1121
+#: backends/platform/android/android.cpp:1123
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "Spiele hinzufügen"
 
-#: backends/platform/android/android.cpp:1124
+#: backends/platform/android/android.cpp:1126
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -6617,8 +6617,8 @@ msgstr ""
 #: engines/mohawk/detection_tables.h:2677
 #: engines/mohawk/detection_tables.h:3797
 #: engines/mohawk/detection_tables.h:3812 engines/myst3/detection.cpp:142
-#: engines/saga/detection_tables.h:46 engines/sci/detection_tables.h:5345
-#: engines/sci/detection_tables.h:5353 engines/stark/detection.cpp:319
+#: engines/saga/detection_tables.h:46 engines/sci/detection_tables.h:5358
+#: engines/sci/detection_tables.h:5366 engines/stark/detection.cpp:319
 #: engines/teenagent/detection.cpp:117 engines/toltecs/detection.cpp:210
 #: engines/trecision/detection.cpp:201 engines/zvision/detection_tables.h:129
 msgid "Missing game code"
@@ -9171,7 +9171,7 @@ msgstr "Pause-Menü anzeigen/verbergen"
 msgid "Toggle Chatty AI"
 msgstr "Schalte die gesprächige KI um"
 
-#: engines/pink/gui.cpp:289
+#: engines/pink/gui.cpp:291
 msgid "This menu item is not yet implemented"
 msgstr "Dieser Menüpunkt ist noch nicht implementiert"
 
@@ -9381,12 +9381,18 @@ msgstr "Casio MT-540"
 msgid "Casio CT-460 / CSM-1"
 msgstr "Casio CT-460 / CSM-1"
 
-#: engines/sci/detection_tables.h:4581
+#: engines/sci/detection_tables.h:1419 engines/sci/detection_tables.h:1430
+#, fuzzy
+#| msgid "Failed to initialize resources"
+msgid "Game does not contain menu resources"
+msgstr "Konnte Ressourcen nicht initialisieren"
+
+#: engines/sci/detection_tables.h:4594
 msgid "This demo uses an unimplemented version of Robot videos"
 msgstr ""
 "Diese Demo verwendete eine nicht implementierte Version von Robot-Videos"
 
-#: engines/sci/detection_tables.h:4636
+#: engines/sci/detection_tables.h:4649
 msgid "Incomplete game detected. You have to copy data from all the CDs."
 msgstr ""
 "Unvollständiges Spiel erkannt. Du musst die Dateien aller CDs kopieren."
@@ -9441,7 +9447,7 @@ msgstr ""
 msgid "SCI32 support not compiled in"
 msgstr "Unterstützung für SCI32 ist nicht eingebaut"
 
-#: engines/sci/resource/resource.cpp:860
+#: engines/sci/resource/resource.cpp:856
 msgid ""
 "Missing or corrupt game resources have been detected. Some game features may "
 "not work properly. Please check the console for more information, and verify "
