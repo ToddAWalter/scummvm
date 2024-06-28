@@ -142,6 +142,7 @@ static const PlainGameDescriptor wintermuteGames[] = {
 	{"reversion2",      "Reversion: The Meeting"},
 	{"reversion3",      "Reversion: The Return"},
 	{"rhiannon",        "Rhiannon: Curse of the four Branches"},
+	{"rhiannonghostspast", "Rhiannon: Ghosts of the Past"},
 	{"ritter",          "1 1/2 Ritter: Auf der Suche nach der hinreissenden Herzelinde"},
 	{"rosemary",        "Rosemary"},
 	{"royalmahjong",    "Royal Mahjong: King's Journey"},
@@ -4172,6 +4173,10 @@ static const WMEGameDescription gameDescriptions[] = {
 	WME_WINENTRY("rhiannon", "",
 		WME_ENTRY1s("data.dcp", "870f348900b735f1cc79c0608ce32b0e", 1046169851), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
 
+	// Rhiannon: Curse of the four Branches
+	WME_WINENTRY("rhiannon", "",
+		WME_ENTRY1s("data.dcp", "38e104ce1ebaf73e81446ab4344e1ad7", 1025512723), Common::DE_DEU, ADGF_UNSTABLE, WME_1_8_10),
+
 	// Rhiannon: Curse of the four Branches (English PC DVD)
 	WME_WINENTRY("rhiannon", "DVD",
 		WME_ENTRY1s("data.dcp", "6736bbc921bb6ce5161b3ad095a97bd4", 1053441028), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
@@ -4195,6 +4200,10 @@ static const WMEGameDescription gameDescriptions[] = {
 	// Rhiannon: Curse of The Four Branches (Demo 2)
 	WME_WINENTRY("rhiannon", "Demo 2",
 		WME_ENTRY1s("data.dcp", "52f111205bf294e8630652981eb31c3d", 79687595), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_8_6),
+
+	// Rhiannon: Ghosts of the Past (Premium Edition)
+	WME_WINENTRY("rhiannonghostspast", "Premium Edition",
+		WME_ENTRY1s("data.dcp", "785d2fcea73508ea40a5b00869b12b03", 946473152), Common::DE_DEU, ADGF_UNSTABLE, WME_1_9_1),
 
 	// 1 1/2 Ritter: Auf der Suche nach der hinreissenden Herzelinde (German)
 	WME_WINENTRY("ritter", "",

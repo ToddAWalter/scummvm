@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2024-06-22 18:24+0000\n"
+"POT-Creation-Date: 2024-06-27 22:34+0000\n"
 "PO-Revision-Date: 2024-06-24 08:43+0000\n"
 "Last-Translator: VAN-Gluon <van.gluonp@gmail.com>\n"
 "Language-Team: Japanese <https://translations.scummvm.org/projects/scummvm/"
@@ -92,7 +92,7 @@ msgstr "上へ"
 #: backends/dialogs/gtk/gtk-dialogs.cpp:65
 #: backends/events/default/default-events.cpp:193
 #: backends/events/default/default-events.cpp:217
-#: backends/platform/wii/options.cpp:47 engines/asylum/asylum.cpp:201
+#: backends/platform/wii/options.cpp:47 engines/asylum/asylum.cpp:204
 #: engines/buried/saveload.cpp:83 engines/cine/saveload.cpp:863
 #: engines/director/lingo/xlibs/jitdraw3.cpp:123
 #: engines/drascula/saveload.cpp:48 engines/grim/inputdialog.cpp:84
@@ -3608,7 +3608,8 @@ msgid "Default game keymap"
 msgstr "キーマッピング(デフォルト)"
 
 #: engines/metaengine.cpp:59 backends/platform/maemo/maemo.cpp:161
-#: engines/asylum/metaengine.cpp:158 engines/hdb/metaengine.cpp:207
+#: engines/agos/metaengine.cpp:227 engines/asylum/metaengine.cpp:159
+#: engines/hdb/metaengine.cpp:207 engines/made/metaengine.cpp:107
 #: engines/parallaction/metaengine.cpp:114
 #: engines/wintermute/keymapper_tables.h:42 engines/zvision/metaengine.cpp:183
 msgid "Left Click"
@@ -3622,15 +3623,17 @@ msgid "Middle Click"
 msgstr "中クリック"
 
 #: engines/metaengine.cpp:70 backends/platform/maemo/maemo.cpp:169
-#: engines/asylum/metaengine.cpp:164 engines/parallaction/metaengine.cpp:120
+#: engines/agos/metaengine.cpp:233 engines/asylum/metaengine.cpp:165
+#: engines/made/metaengine.cpp:114 engines/parallaction/metaengine.cpp:120
 #: engines/wintermute/keymapper_tables.h:48 engines/zvision/metaengine.cpp:189
 msgid "Right Click"
 msgstr "右クリック"
 
 #. I18N: Action in In Cold Blood
-#: engines/metaengine.cpp:76 engines/crab/input/input.cpp:261
-#: engines/grim/grim.cpp:541 engines/hdb/metaengine.cpp:258
-#: engines/icb/icb.cpp:137 engines/icb/icb.cpp:203 engines/mohawk/myst.cpp:595
+#: engines/metaengine.cpp:76 engines/agos/metaengine.cpp:247
+#: engines/crab/input/input.cpp:261 engines/grim/grim.cpp:541
+#: engines/hdb/metaengine.cpp:258 engines/icb/icb.cpp:137
+#: engines/icb/icb.cpp:203 engines/mohawk/myst.cpp:595
 #: engines/mohawk/riven.cpp:876 engines/sky/metaengine.cpp:125
 #: engines/twine/metaengine.cpp:231 engines/wintermute/keymapper_tables.h:1608
 msgid "Pause"
@@ -3641,8 +3644,9 @@ msgid "Game menu"
 msgstr "ゲームメニュー"
 
 #: engines/metaengine.cpp:89 engines/grim/grim.cpp:524
-#: engines/grim/grim.cpp:620 engines/mohawk/myst.cpp:566
-#: engines/mohawk/riven.cpp:847 engines/wintermute/keymapper_tables.h:220
+#: engines/grim/grim.cpp:620 engines/made/metaengine.cpp:121
+#: engines/mohawk/myst.cpp:566 engines/mohawk/riven.cpp:847
+#: engines/wintermute/keymapper_tables.h:220
 #: engines/wintermute/keymapper_tables.h:1092
 #: engines/wintermute/keymapper_tables.h:1276
 #: engines/wintermute/keymapper_tables.h:1601
@@ -5609,6 +5613,7 @@ msgstr "R2"
 #: backends/platform/sdl/miyoo/miyoo.cpp:83
 #: backends/platform/sdl/miyoo/miyoo.cpp:114 engines/grim/grim.cpp:536
 #: engines/grim/grim.cpp:632 engines/hdb/metaengine.cpp:264
+#: engines/made/metaengine.cpp:156
 msgid "Menu"
 msgstr "メニュー"
 
@@ -5943,13 +5948,13 @@ msgstr "スピードメニューを追加"
 msgid "Add game speed menu (similar to PC version)"
 msgstr "ゲームスピードメニューを追加(PC版と同様)"
 
-#: engines/agi/metaengine.cpp:411 engines/asylum/asylum.cpp:674
+#: engines/agi/metaengine.cpp:411 engines/asylum/asylum.cpp:655
 #: engines/buried/saveload.cpp:53 engines/mohawk/riven.cpp:759
 #: engines/petka/saveload.cpp:121
 msgid "This game does not support loading"
 msgstr "このゲームはロード非対応です"
 
-#: engines/agi/metaengine.cpp:433 engines/asylum/asylum.cpp:685
+#: engines/agi/metaengine.cpp:433 engines/asylum/asylum.cpp:666
 #: engines/buried/saveload.cpp:64 engines/mohawk/riven.cpp:774
 #: engines/petka/saveload.cpp:101
 msgid "This game does not support saving"
@@ -6037,11 +6042,11 @@ msgstr ""
 msgid "Cutscene file '%s' not found!"
 msgstr "カットシーンファイル'%s'が見つかりません!"
 
-#: engines/agos/metaengine.cpp:42
+#: engines/agos/metaengine.cpp:46
 msgid "AdLib OPL3 mode"
 msgstr "AdLib OPL3モード"
 
-#: engines/agos/metaengine.cpp:43
+#: engines/agos/metaengine.cpp:47
 msgid ""
 "When AdLib is selected, OPL3 features will be used. Depending on the game, "
 "this will prevent cut-off notes, add extra notes or instruments and/or add "
@@ -6050,11 +6055,11 @@ msgstr ""
 "AdLibを選ぶと、OPL3の機能が使用されます。ゲームによっては音飛び防止、音や楽器"
 "の追加、ステレオ対応などの効果が得られます。"
 
-#: engines/agos/metaengine.cpp:53 engines/agos/metaengine.cpp:64
+#: engines/agos/metaengine.cpp:57 engines/agos/metaengine.cpp:68
 msgid "Use DOS version music tempos"
 msgstr "DOS版の音楽テンポを使用"
 
-#: engines/agos/metaengine.cpp:54 engines/agos/metaengine.cpp:65
+#: engines/agos/metaengine.cpp:58 engines/agos/metaengine.cpp:69
 msgid ""
 "Selecting this option will play the music using the tempos used by the DOS "
 "version of the game. Otherwise, the faster tempos of the Windows version "
@@ -6063,25 +6068,164 @@ msgstr ""
 "このオプションを選択すると、DOS版のテンポでBGMが再生されます。選択しない場"
 "合、Windows版の(より速い)テンポで再生されます。"
 
-#: engines/agos/metaengine.cpp:75 engines/sci/detection_options.h:95
+#: engines/agos/metaengine.cpp:79 engines/sci/detection_options.h:95
 msgid "Prefer digital sound effects"
 msgstr "デジタルSEを選ぶ"
 
-#: engines/agos/metaengine.cpp:76 engines/sci/detection_options.h:96
+#: engines/agos/metaengine.cpp:80 engines/sci/detection_options.h:96
 msgid "Prefer digital sound effects instead of synthesized ones"
 msgstr "合成音声ではなくデジタルSEを選ぶ"
 
-#: engines/agos/metaengine.cpp:86
+#: engines/agos/metaengine.cpp:90
 msgid "Disable fade-out effects"
 msgstr "フェードアウトを無効化"
 
-#: engines/agos/metaengine.cpp:87
+#: engines/agos/metaengine.cpp:91
 msgid "Don't fade every screen to black when leaving a room."
 msgstr "すべての画面で、退室時に暗転しなくなります。"
 
-#: engines/agos/metaengine.cpp:170
+#: engines/agos/metaengine.cpp:176
 msgid "AGOS 2 support is not compiled in"
 msgstr "AGOS 2のサポートはコンパイルされていません"
+
+#: engines/agos/metaengine.cpp:222
+msgid "AGOS main"
+msgstr ""
+
+#: engines/agos/metaengine.cpp:223 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/made/metaengine.cpp:103
+msgid "Game Keymappings"
+msgstr "キーマッピング"
+
+#: engines/agos/metaengine.cpp:224
+#, fuzzy
+#| msgid "Game Keymappings"
+msgid "Yes/No Keymapping"
+msgstr "キーマッピング"
+
+#: engines/agos/metaengine.cpp:239
+#, fuzzy
+#| msgid "Skip cutscene"
+msgid "Exit cutscene"
+msgstr "ムービーをスキップ"
+
+#: engines/agos/metaengine.cpp:252 engines/vcruise/metaengine.cpp:176
+msgid "Music volume down"
+msgstr "BGMの音量ダウン"
+
+#: engines/agos/metaengine.cpp:257 engines/vcruise/metaengine.cpp:181
+msgid "Music volume up"
+msgstr "BGMの音量アップ"
+
+#: engines/agos/metaengine.cpp:263
+#, fuzzy
+#| msgid "Toggle music on/off"
+msgid "Toggle Music on/off"
+msgstr "BGM ON/OFFの切替"
+
+#: engines/agos/metaengine.cpp:268
+#, fuzzy
+#| msgid "Toggle sound effects on/off"
+msgid "Toggle Sound effect on/off"
+msgstr "SE ON/OFFの切替"
+
+#: engines/agos/metaengine.cpp:273
+#, fuzzy
+#| msgid "Toggle fast mode"
+msgid "Toggle Fast mode on/off"
+msgstr "高速モードの切り替え"
+
+#: engines/agos/metaengine.cpp:285 engines/wintermute/keymapper_tables.h:149
+#: engines/wintermute/keymapper_tables.h:731
+#: engines/wintermute/keymapper_tables.h:2116
+#: engines/wintermute/keymapper_tables.h:2216
+msgid "Walk forward"
+msgstr "前に歩く"
+
+#: engines/agos/metaengine.cpp:291
+#, fuzzy
+#| msgid "Run backward"
+msgid "Turn backward"
+msgstr "後退"
+
+#: engines/agos/metaengine.cpp:297 engines/mohawk/riven.cpp:901
+#: engines/wintermute/keymapper_tables.h:161
+#: engines/wintermute/keymapper_tables.h:741
+#: engines/wintermute/keymapper_tables.h:2122
+#: engines/wintermute/keymapper_tables.h:2223
+msgid "Turn left"
+msgstr "左へ"
+
+#: engines/agos/metaengine.cpp:303 engines/mohawk/riven.cpp:907
+#: engines/wintermute/keymapper_tables.h:167
+#: engines/wintermute/keymapper_tables.h:746
+#: engines/wintermute/keymapper_tables.h:2128
+#: engines/wintermute/keymapper_tables.h:2230
+msgid "Turn right"
+msgstr "右へ"
+
+#: engines/agos/metaengine.cpp:311
+#, fuzzy
+#| msgid "Text speed slower / faster"
+msgid "Text speed - Fast"
+msgstr "テキスト表示速度を下げる/上げる"
+
+#: engines/agos/metaengine.cpp:316
+#, fuzzy
+#| msgid "Walking speed: Medium"
+msgid "Text speed - Medium"
+msgstr "歩く速さ：ふつう"
+
+#: engines/agos/metaengine.cpp:321
+#, fuzzy
+#| msgid "Text speed slower / faster"
+msgid "Text speed - Slow"
+msgstr "テキスト表示速度を下げる/上げる"
+
+#: engines/agos/metaengine.cpp:326
+#, fuzzy
+#| msgid "Show Object Line"
+msgid "Show objects to interact"
+msgstr "オブジェクトラインの表示"
+
+#: engines/agos/metaengine.cpp:333
+#, fuzzy
+#| msgid "Toggle sound effects on/off"
+msgid "Toggle background sounds On/Off"
+msgstr "SE ON/OFFの切替"
+
+#. I18N: Characters are game actors
+#: engines/agos/metaengine.cpp:342
+#, fuzzy
+#| msgid "Switching characters:"
+msgid "Switch characters"
+msgstr "キャラクターの切り替え："
+
+#: engines/agos/metaengine.cpp:348
+#, fuzzy
+#| msgid "Toggle music on/off"
+msgid "Toggle hitbox names on/off"
+msgstr "BGM ON/OFFの切替"
+
+#: engines/agos/metaengine.cpp:355
+msgid "Switches between speech only and combined speech and subtitles"
+msgstr ""
+
+#: engines/agos/metaengine.cpp:361
+msgid "Switches between subtitles only and combined speech and subtitles"
+msgstr ""
+
+#: engines/agos/metaengine.cpp:371
+msgid "High speed mode on/off in Swampy Adventures"
+msgstr ""
+
+#: engines/agos/metaengine.cpp:377
+msgid "Press Yes Key"
+msgstr ""
+
+#: engines/agos/metaengine.cpp:382
+msgid "Press No Key"
+msgstr ""
 
 #: engines/agos/midi.cpp:187 engines/kyra/sound/sound_pc_midi.cpp:76
 msgid ""
@@ -6247,15 +6391,69 @@ msgstr "ゲーム内メニューを表示"
 msgid "Open character inventory"
 msgstr "キャラインベントリーを開く"
 
+#: engines/asylum/metaengine.cpp:171 engines/asylum/metaengine.cpp:198
+#: engines/hdb/metaengine.cpp:213 engines/nancy/input.cpp:195
+msgid "Move up"
+msgstr "上"
+
+#: engines/asylum/metaengine.cpp:177 engines/asylum/metaengine.cpp:205
+#: engines/hdb/metaengine.cpp:219 engines/nancy/input.cpp:201
+msgid "Move down"
+msgstr "下"
+
+#: engines/asylum/metaengine.cpp:183 engines/asylum/metaengine.cpp:212
+#: engines/hdb/metaengine.cpp:225 engines/nancy/input.cpp:207
+msgid "Move left"
+msgstr "左に行く"
+
+#: engines/asylum/metaengine.cpp:189 engines/asylum/metaengine.cpp:219
+#: engines/hdb/metaengine.cpp:231 engines/nancy/input.cpp:213
+msgid "Move right"
+msgstr "右に行く"
+
+#: engines/asylum/metaengine.cpp:226
+#, fuzzy
+#| msgid "Toggle music on/off"
+msgid "Toggle animation on/off"
+msgstr "BGM ON/OFFの切替"
+
+#: engines/asylum/metaengine.cpp:232
+#, fuzzy
+#| msgid "Run a game"
+msgid "Return to gameplay"
+msgstr "ゲーム開始"
+
+#: engines/asylum/metaengine.cpp:238
+#, fuzzy
+#| msgid "Previous Page"
+msgid "Previous resource"
+msgstr "前のページ"
+
+#: engines/asylum/metaengine.cpp:245
+msgid "Next resource"
+msgstr ""
+
+#: engines/asylum/metaengine.cpp:252
+#, fuzzy
+#| msgid "Previous page"
+msgid "Previous palette"
+msgstr "前のページ"
+
+#: engines/asylum/metaengine.cpp:259
+#, fuzzy
+#| msgid "Next page"
+msgid "Next palette"
+msgstr "次のページ"
+
 #. I18N: Warn user about loading potentially incompatible saved game
-#: engines/asylum/asylum.cpp:200
+#: engines/asylum/asylum.cpp:203
 #, c-format
 msgid ""
 "WARNING: Attempt to load saved game from a previous version: Version %s / "
 "Build %d"
 msgstr "警告: 旧バージョンのセーブをロードしようとしています: Ver%s/ビルド%d"
 
-#: engines/asylum/asylum.cpp:201 engines/cine/saveload.cpp:863
+#: engines/asylum/asylum.cpp:204 engines/cine/saveload.cpp:863
 msgid "Load anyway"
 msgstr "とにかくロードする"
 
@@ -6534,7 +6732,7 @@ msgstr "手がかり表示の切替"
 #. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
 #. SAVE GAME
 #: engines/bladerunner/metaengine.cpp:330 engines/cge2/metaengine.cpp:221
-#: engines/pegasus/pegasus.cpp:2825
+#: engines/made/metaengine.cpp:162 engines/pegasus/pegasus.cpp:2825
 msgid "Save Game"
 msgstr "ゲームをセーブ"
 
@@ -6543,7 +6741,7 @@ msgstr "ゲームをセーブ"
 #. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
 #. LOAD GAME
 #: engines/bladerunner/metaengine.cpp:339 engines/cge2/metaengine.cpp:226
-#: engines/pegasus/pegasus.cpp:2831
+#: engines/made/metaengine.cpp:168 engines/pegasus/pegasus.cpp:2831
 msgid "Load Game"
 msgstr "ゲームをロード"
 
@@ -6637,10 +6835,6 @@ msgstr "音声合成をオンにする"
 #: engines/cge/metaengine.cpp:57
 msgid "Use TTS to read text in the game (if TTS is available)"
 msgstr "音声合成を使用してゲーム内のテキストを読み上げる(利用可能な場合のみ)"
-
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "キーマッピング"
 
 #. I18N: 3-4 dialogs of game version info, (translation) credits, etc.
 #: engines/cge/metaengine.cpp:204 engines/cge2/metaengine.cpp:216
@@ -7420,22 +7614,6 @@ msgstr "チートモードを有効化"
 msgid "Debug info and level selection becomes available"
 msgstr "デバッグ情報とレベル選択を利用可能にする"
 
-#: engines/hdb/metaengine.cpp:213 engines/nancy/input.cpp:195
-msgid "Move up"
-msgstr "上"
-
-#: engines/hdb/metaengine.cpp:219 engines/nancy/input.cpp:201
-msgid "Move down"
-msgstr "下"
-
-#: engines/hdb/metaengine.cpp:225 engines/nancy/input.cpp:207
-msgid "Move left"
-msgstr "左に行く"
-
-#: engines/hdb/metaengine.cpp:231 engines/nancy/input.cpp:213
-msgid "Move right"
-msgstr "右に行く"
-
 #. I18N: Combat command in Might & Magic 1
 #: engines/hdb/metaengine.cpp:237 engines/mm/mm1/metaengine.cpp:81
 #: engines/scumm/help.cpp:130 engines/scumm/help.cpp:154
@@ -7941,17 +8119,45 @@ msgstr "音声合成によるナレーション"
 msgid "The game is using unsupported engine"
 msgstr "このゲームはサポートされていないエンジンを使用しています"
 
-#: engines/made/metaengine.cpp:34
+#: engines/made/metaengine.cpp:38
 msgid "Play a digital soundtrack during the opening movie"
 msgstr "OPムービー中にデジタルサウンドトラックを再生"
 
-#: engines/made/metaengine.cpp:35
+#: engines/made/metaengine.cpp:39
 msgid ""
 "If selected, the game will use a digital soundtrack during the introduction. "
 "Otherwise, it will play MIDI music."
 msgstr ""
 "選択した場合、イントロ中はデジタルサウンドトラックを使用します。それ以外は"
 "MIDIで再生します。"
+
+#: engines/made/metaengine.cpp:128
+msgid "Cursor Up"
+msgstr ""
+
+#: engines/made/metaengine.cpp:135
+#, fuzzy
+#| msgid "Scroll Down"
+msgid "Cursor Down"
+msgstr "下にスクロール"
+
+#: engines/made/metaengine.cpp:142
+#, fuzzy
+#| msgid "Turn Left"
+msgid "Cursor Left"
+msgstr "左に曲がる"
+
+#: engines/made/metaengine.cpp:149
+#, fuzzy
+#| msgid "Turn Right"
+msgid "Cursor Right"
+msgstr "右に曲がる"
+
+#: engines/made/metaengine.cpp:174
+#, fuzzy
+#| msgid "Reload last save"
+msgid "Repeat Last Message"
+msgstr "最後にセーブしたデータをリロード"
 
 #: engines/mads/metaengine.cpp:47
 msgid "Easy mouse interface"
@@ -8392,20 +8598,6 @@ msgstr "右に進む"
 #: engines/mohawk/riven.cpp:895
 msgid "Move backwards"
 msgstr "後退"
-
-#: engines/mohawk/riven.cpp:901 engines/wintermute/keymapper_tables.h:161
-#: engines/wintermute/keymapper_tables.h:741
-#: engines/wintermute/keymapper_tables.h:2122
-#: engines/wintermute/keymapper_tables.h:2223
-msgid "Turn left"
-msgstr "左へ"
-
-#: engines/mohawk/riven.cpp:907 engines/wintermute/keymapper_tables.h:167
-#: engines/wintermute/keymapper_tables.h:746
-#: engines/wintermute/keymapper_tables.h:2128
-#: engines/wintermute/keymapper_tables.h:2230
-msgid "Turn right"
-msgstr "右へ"
 
 #: engines/mohawk/riven.cpp:913
 msgid "Look up"
@@ -11380,14 +11572,6 @@ msgstr "BGM ON/OFFの切替"
 msgid "Toggle sound effects on/off"
 msgstr "SE ON/OFFの切替"
 
-#: engines/vcruise/metaengine.cpp:176
-msgid "Music volume down"
-msgstr "BGMの音量ダウン"
-
-#: engines/vcruise/metaengine.cpp:181
-msgid "Music volume up"
-msgstr "BGMの音量アップ"
-
 #: engines/vcruise/metaengine.cpp:186
 msgid "Sound effect volume down"
 msgstr "SEの音量ダウン"
@@ -11493,13 +11677,6 @@ msgid ""
 msgstr ""
 "このゲームは3D機能を必要としますが、ScummVMには組み込まれていません。そのた"
 "め、全部または一部がプレイできない可能性があります。"
-
-#: engines/wintermute/keymapper_tables.h:149
-#: engines/wintermute/keymapper_tables.h:731
-#: engines/wintermute/keymapper_tables.h:2116
-#: engines/wintermute/keymapper_tables.h:2216
-msgid "Walk forward"
-msgstr "前に歩く"
 
 #: engines/wintermute/keymapper_tables.h:155
 #: engines/wintermute/keymapper_tables.h:736
@@ -12503,9 +12680,6 @@ msgstr ""
 
 #~ msgid "Go to save/load menu"
 #~ msgstr "セーブ/ロードメニューへ"
-
-#~ msgid "Reload last save"
-#~ msgstr "最後にセーブしたデータをリロード"
 
 #~ msgid "Show credits"
 #~ msgstr "クレジットを表示"
