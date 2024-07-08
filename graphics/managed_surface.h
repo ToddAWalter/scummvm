@@ -131,7 +131,13 @@ public:
 	 * this surface will create its own surface of the same size and copy
 	 * the contents from the source surface.
 	 */
+	WARN_DEPRECATED("Use copyFrom(), a move constructor or supply bounds")
 	ManagedSurface(const ManagedSurface &surf);
+
+	/**
+	 * Create a managed surface from another one.
+	 */
+	ManagedSurface(ManagedSurface &&surf);
 
 	/**
 	 * Create the managed surface.
@@ -154,11 +160,13 @@ public:
 	 * If disposeAfterUse flag is set (default), the surface will reuse all structures
 	 * from the surface and destroy it, otherwise it will make a copy.
 	 */
+	WARN_DEPRECATED("Use copyFrom() instead")
 	ManagedSurface(Surface *surf, DisposeAfterUse::Flag disposeAfterUse = DisposeAfterUse::YES);
 
 	/**
 	 * Create a managed surface from plain Surface.
 	 */
+	WARN_DEPRECATED("Use copyFrom() instead")
 	ManagedSurface(const Surface *surf);
 
 	/**
@@ -190,7 +198,13 @@ public:
 	 *
 	 * @note If the source has a managed surface, it will be duplicated.
 	 */
+	WARN_DEPRECATED("Use copyFrom() or a move constructor instead")
 	ManagedSurface &operator=(const ManagedSurface &surf);
+
+	/**
+	 * Reassign one managed surface to another one.
+	 */
+	ManagedSurface &operator=(ManagedSurface &&surf);
 
 	/**
 	 * Return true if the surface has not yet been allocated.
@@ -664,6 +678,39 @@ public:
 	 * surface to match the dimensions of the passed surface.
 	 */
 	void copyFrom(const Surface &surf);
+
+	/**
+	 * Convert the data from another surface to a given pixel
+	 * format, reinitializing the surface to match the dimensions
+	 * of the passed surface.
+	 */
+	void convertFrom(const ManagedSurface &surf, const PixelFormat &fmt);
+
+	/**
+	 * Convert the data from another surface to a given pixel
+	 * format, reinitializing the surface to match the dimensions
+	 * of the passed surface.
+	 */
+	void convertFrom(const Surface &surf, const PixelFormat &fmt);
+
+	/**
+	 * Scale the data to the given size.
+	 *
+	 * @param newWidth   The resulting width.
+	 * @param newHeight  The resulting height.
+	 * @param filtering  Whether or not to use bilinear filtering.
+	 */
+	ManagedSurface *scale(int16 newWidth, int16 newHeight, bool filtering = false) const;
+
+	/**
+	 * @brief Rotoscale function; this returns a transformed version of this surface after rotation and
+	 * scaling. Please do not use this if angle == 0, use plain old scaling function.
+	 *
+	 * @param transform a TransformStruct wrapping the required info. @see TransformStruct
+	 * @param filtering Whether or not to use bilinear filtering.
+	 *
+	 */
+	ManagedSurface *rotoscale(const TransformStruct &transform, bool filtering = false) const;
 
 	/**
 	 * Draw a line.

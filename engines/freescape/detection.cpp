@@ -163,6 +163,19 @@ static const ADGameDescription gameDescriptions[] = {
 		GF_AMIGA_RETAIL,
 		GUIO3(GUIO_NOMIDI, GUIO_RENDERAMIGA, GAMEOPTION_AUTOMATIC_DRILLING)
 	},
+	{ // Virtual Worlds release
+		"driller",
+		"",
+		{
+			{"driller", 0, "45312c9ccdb567c332f953059e4819a5", 282384},
+			{"text", 0, "bf949a753634cdcb376e0dab9447b08b", 215},
+			AD_LISTEND
+		},
+		Common::EN_ANY,
+		Common::kPlatformAmiga,
+		GF_AMIGA_RETAIL,
+		GUIO3(GUIO_NOMIDI, GUIO_RENDERAMIGA, GAMEOPTION_AUTOMATIC_DRILLING)
+	},
 	{
 		"driller",
 		"",
@@ -289,7 +302,16 @@ static const ADGameDescription gameDescriptions[] = {
 		AD_ENTRY1s("x.prg", "7fc6ef316be4819d88d8031738571a50", 293264),
 		Common::EN_ANY,
 		Common::kPlatformAtariST,
-		GF_ATARI_BUDGET,
+		ADGF_UNSUPPORTED,
+		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+	},
+	{
+		"spacestationoblivion",
+		"",
+		AD_ENTRY1s("oblivion", "7fc6ef316be4819d88d8031738571a50", 293264),
+		Common::EN_ANY,
+		Common::kPlatformAmiga,
+		ADGF_UNSUPPORTED,
 		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
 	},
 	{
@@ -325,6 +347,20 @@ static const ADGameDescription gameDescriptions[] = {
 		ADGF_UNSTABLE,
 		GUIO2(GUIO_NOMIDI, GUIO_RENDERAMIGA)
 	},
+	// Microstatus release decrypted
+	{
+		"darkside",
+		"",
+		{
+			{"0.DRK", 0, "5aa6473a75991f1e1217974a7844a042", 77900},
+			{"1.DRK", 0, "49cc73a5ca7adb26065286a7afd4d0a4", 280704},
+			AD_LISTEND
+		},
+		Common::EN_ANY,
+		Common::kPlatformAmiga,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERATARIST)
+	},
 	// Cinemaware release
 	{
 		"darkside",
@@ -342,7 +378,7 @@ static const ADGameDescription gameDescriptions[] = {
 	// Microstatus release
 	{
 		"darkside",
-		"Encrypted executable with CopyLock",
+		"Encrypted executable with CopyLock, follow the instructions here: https://wiki.scummvm.org/index.php?title=Freescape/DRM",
 		{
 			{"0.DRK", 0, "c19bc332f6550e21e7b8ef79bcf3d99e", 81840},
 			{"1.DRK", 0, "9e700d991054f4393b1ccef706586b5b", 223272},
@@ -351,6 +387,19 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformAtariST,
 		ADGF_UNSUPPORTED,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERATARIST)
+	},
+	{ // Stampede AtariST, Issue 1
+		"darkside",
+		"",
+		{
+			{"0.DRK", 0, "86794a6cb2d371cdf892a2173e3b7568", 47966},
+			{"1.DRK", 0, "9e700d991054f4393b1ccef706586b5b", 223272},
+  			AD_LISTEND
+		},
+		Common::EN_ANY,
+		Common::kPlatformAtariST,
+		ADGF_UNSTABLE,
 		GUIO2(GUIO_NOMIDI, GUIO_RENDERATARIST)
 	},
 	// Stampede Amiga, Issue 1, July 1990
@@ -587,6 +636,19 @@ static const ADGameDescription gameDescriptions[] = {
 		ADGF_UNSUPPORTED,
 		GUIO2(GUIO_NOMIDI, GUIO_RENDERAMIGA)
 	},
+	{ // Virtual Worlds release
+		"totaleclipse",
+		"",
+		{
+			{"0.TEC", 0, "8daa244d6814f06b9a081b7bd0ec542d", 89500},
+			{"1.TEC", 0, "c1b022ad7284578f97aa2ff46ed3db38", 304030},
+  			AD_LISTEND
+		},
+		Common::EN_ANY,
+		Common::kPlatformAmiga,
+		ADGF_UNSUPPORTED,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERAMIGA)
+	},
 	{
 		"totaleclipse",
 		"",
@@ -683,7 +745,7 @@ static const ADGameDescription gameDescriptions[] = {
 	},
 	{
 		"castlemaster",
-		"Virtual Words",
+		"Virtual Worlds",
 		{
 			{"CASTLE.EXE", 0, "f1a141df0e47860246716db20d2ba061", 2806},
 			{"CMC.EXE", 0, "7b9275df446f82fdd0c377f6ec2db546", 57168},
@@ -928,9 +990,9 @@ static const DebugChannelDef debugFlagList[] = {
 	DEBUG_CHANNEL_END
 };
 
-class FreescapeMetaEngineDetection : public AdvancedMetaEngineDetection {
+class FreescapeMetaEngineDetection : public AdvancedMetaEngineDetection<ADGameDescription> {
 public:
-	FreescapeMetaEngineDetection() : AdvancedMetaEngineDetection(Freescape::gameDescriptions, sizeof(ADGameDescription), Freescape::freescapeGames) {
+	FreescapeMetaEngineDetection() : AdvancedMetaEngineDetection(Freescape::gameDescriptions, Freescape::freescapeGames) {
 		_guiOptions = GUIO7(GUIO_NOMIDI, GAMEOPTION_EXTENDED_TIMER, GAMEOPTION_DISABLE_DEMO_MODE, GAMEOPTION_DISABLE_SENSORS, GAMEOPTION_DISABLE_FALLING, GAMEOPTION_INVERT_Y, GAMEOPTION_AUTHENTIC_GRAPHICS);
 	}
 

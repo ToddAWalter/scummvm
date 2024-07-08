@@ -345,6 +345,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "nightlight",			"Night Light" },
 	{ "nikolaiknights",		"Nikolai in Time: In the Time of the Knights" },
 	{ "nikolaimystery",		"Nikolai's Mysteries: The Mystery of the Black Windows" },
+	{ "nikolaipharaohs",	"Nikolai's Pharaohs" },
 	{ "nikolaipirates",		"Nikolai's Pirates" },
 	{ "nikolaispace",		"Nikolai in Outer Space" },
 	{ "nikolaispaceedu",	"Nikolai Space Education" },
@@ -2688,7 +2689,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("jman", "v1.2",  "Journeyman 16MB",  "r:2ce360c9ea2da80a2c6d1040b0ad92dd", 440902, 313),
 	WINGAME1("jman", "",	  "JMAN.EXE",		  "d:7c8230a804abf9353b05627a675b5ffb", 375282, 300),
 	WINGAME1_l("jman", "v1.1", "JMAN.EXE",		  "t:56feca9681406edc2fd78da501694cb2", 370002, Common::DE_DEU, 300),
-//	WINGAME1_l("jman", "", "JOURNEY.EXE",	 "65d06b5fef155a2473434571aff5bc29", -1, Common::JA_JPN, 300), FIXME: Needs additional file
+//	WINGAME1_l("jman", "", "JOURNEY.EXE",	 "65d06b5fef155a2473434571aff5bc29", AD_NO_SIZE, Common::JA_JPN, 300), FIXME: Needs additional file
 	MACDEMO1("jman", "Sneak Preview", "Journeyman Sneak Preview", "9f0bb7ec7720e4f680ee3aa3d22c1c9d", 6222633, 300),
 	MACDEMO1("jman", "CD Demo", "Journeyman Demo", "1ae45c23586b41997ba52e2e7c771c4c", 3077381, 311),
 	MACDEMO1("jman", "CD Demo", "Journeyman Demo", "424093b2bc04a1bfa4376c878f67a364", 3083188, 300),
@@ -3113,7 +3114,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Game is HyperCard based. Movies will play with --start-movie from console.
 	MACGAME1("spelunx", "v2.01 Color", "Spelunx", "8c4ac0488e92704a257698ee45affea5", 1208328, 313),
 
-	WINGAME1("spyclub", "", "SPYCLUB.EXE", "65d06b5fef155a2473434571aff5bc29", -1, 300),
+	WINGAME1("spyclub", "", "SPYCLUB.EXE", "65d06b5fef155a2473434571aff5bc29", AD_NO_SIZE, 300),
 
 	WINGAME1("ssbeastie", "", "BEASTIE.exe", "7c8230a804abf9353b05627a675b5ffb", 1739737, 310),
 
@@ -3201,10 +3202,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINDEMO2t("vvcyber", "Demo", "CYBER.EXE", "f6a00141499568e167ab0ed901fffa05", 639439,
 								 "CYBER.MMM", "eaa81c1e5ee7229bca5f214f86337f3d", 270188, 310),
 
-//	MACGAME1("vvdinosaur", "", "Start Game", "d41d8cd98f00b204e9800998ecf8427e", -1, 300),
+//	MACGAME1("vvdinosaur", "", "Start Game", "d41d8cd98f00b204e9800998ecf8427e", AD_NO_SIZE, 300),
 	MACGAME2("vvdinosaur", "", "Start Adventure (8Mb)", 	  "2ce360c9ea2da80a2c6d1040b0ad92dd", 384984,
 							   "Dinosaur/Chapter1/LDE Intro", "4ae7c14351bc9cfd812c410ba37aecd3", 407023, 310),
-//	WINGAME1("vvdinosaur", "", "DINOSAUR.EXE", "4e6303630f4dd588e730d09241cf7e76", -1, 300),
+//	WINGAME1("vvdinosaur", "", "DINOSAUR.EXE", "4e6303630f4dd588e730d09241cf7e76", AD_NO_SIZE, 300),
 	WINGAME2t("vvdinosaur", "v1.1", "DINOSAUR.EXE", "d9a7b8248c831b9af1a0f3c43269d9d6", 370049,
 								    "STARTLDE.MMM", "87da46f4deaa55032ed54b3d366c272d", 792, 310),
 
@@ -3213,7 +3214,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME2t("vvharp", "", "HYPNOTIC.EXE", "0cf51de2c038e003dd4046295e12a5d6", 370272,
 							"START.MMM",	"cab5ffd61f5f547d2b7be44fe6b67c76", 954, 310),
 
-//	MACGAME1("vvvampire", "", "The Vampire's Coffin", "d41d8cd98f00b204e9800998ecf8427e", -1, 300),
+//	MACGAME1("vvvampire", "", "The Vampire's Coffin", "d41d8cd98f00b204e9800998ecf8427e", AD_NO_SIZE, 300),
 	MACGAME1("vvvampire", "", "The Vampire's Coffin", "7f443f2e63fd497a9ad85b10dc880a91", 384070, 313),
 	WINGAME2t("vvvampire", "", "VAMPIRE.EXE", "97019593c1c86ac3be60c3ba468c07b6", 370837,
 							   "START.MMM",	  "425df941db805b5599e37a1e7b1c4d59", 1584, 310),
@@ -4260,9 +4261,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACDEMO1("gusolis", "Demo", "Cyberopolis DEMO", "r:77f4098988d5386794d1530065f514cd", 303961, 404),
 
 	MACGAME1("guspark", "",		"Gus goes to CyberStone Park", "r:ccfbfc1a0ac231db40a250babaa6ad7c", 285282, 404),
-	MACGAME1("guspark", "",		"Gus goes to CyberStone Park", "r:ccfbfc1a0ac231db40a250babaa6ad7c", 288490, 404),
+	MACGAME1("guspark", "",		"Gus goes to CyberStone Park", "tr:6cb8084d74e94d6f04f619ee9b423a06", 288490, 404),
 	WINGAME1("guspark", "",		"PCINST/CYBSTONE.EXE", "d:ac22c7568c90ab4af7396148521f446e", 707439, 404),
-	WINGAME2("guspark", "",		"CYBSTONE.EXE",		   "d:dc0be57ab8e9f9b54de24ac41b1b4854", 703913,
+	WINGAME2("guspark", "",		"PCINST/CYBSTONE.EXE", "t:296e7735cc8fbf8d2fb6046cef88ee4c", 703913,
 								"CONTENT/INTRO.DIR",   "d:05fbf807ea9b766a12c2c08483cc6fa7", 1082406, 404),
 	WINGAME2_l("guspark", "",	"CYBSTONE.EXE",		   "d:dc0be57ab8e9f9b54de24ac41b1b4854", 703913,
 								"CONTENT/INTRO.DIR",   "d:fb97a887ac99dcb5a1a78520cc00c7d9", 1092858, Common::PT_BRA, 404),
@@ -4606,8 +4607,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	// Windows version isn't Director
 	// Original filename is JMP Turbo™
-	MACGAME1("jman", "Turbo!", "JMP Turbo", "cc3321069072b90f091f220bba16e4d4", -1, 400),
-	MACGAME1("jman", "Making Of", "The Journey", "cc3321069072b90f091f220bba16e4d4", -1, 400),
+	MACGAME1("jman", "Turbo!", "JMP Turbo", "cc3321069072b90f091f220bba16e4d4", AD_NO_SIZE, 400),
+	MACGAME1("jman", "Making Of", "The Journey", "cc3321069072b90f091f220bba16e4d4", AD_NO_SIZE, 400),
 	MACDEMO1("jman", "Director's Cut Demo", "Journeyman - Director's Cut", "01be45e7241194dad07938e7059b88e3", 484284, 400),
 
 	// Original filename is Buried in Time™ PowerPC; also contains 68k binary
@@ -6758,10 +6759,15 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// All original Mac filenames end with ™
 	// Nikolai in Outer Space did not get a Mac release
 	MACGAME1("nikolaiknights", "v2.0", "Nikolai's Knights",   "c43bfadda9be111e461dc0b735430ad3", 720690, 501),
-	MACGAME1("nikolaimystery", "",     "Nikolai's Mysteries", "c43bfadda9be111e461dc0b735430ad3", 719241, 501),
-	MACGAME1("nikolaipirates", "",     "Nikolai's Pirates",   "c43bfadda9be111e461dc0b735430ad3", 719289, 501),
 	WINGAME1("nikolaiknights", "v2.0", "KNIGHT95.EXE",         "1a7acbba10a7246ba58c1d53fc7203f5", 1410541, 501),
+
+	MACGAME1("nikolaimystery", "",     "Nikolai's Mysteries", "c43bfadda9be111e461dc0b735430ad3", 719241, 501),
+
+	WINGAME1("nikolaipharaohs", "",    "PHAR95.EXE",           "t:97e3ec47de3b06d8349d34c2016cc528", 1407221, 501),
+
+	MACGAME1("nikolaipirates", "",     "Nikolai's Pirates",   "c43bfadda9be111e461dc0b735430ad3", 719289, 501),
 	WINGAME1("nikolaipirates", "",     "PIRATE95.EXE",         "3460ad87d2ba57104e2810a77b53c220", 1394017, 500),
+
 	WINGAME1("nikolaispace", "",       "0_LAUNCH.EXE",         "3460ad87d2ba57104e2810a77b53c220", 1394291, 501),
 
 	// spaceedu module can also be launched externally
@@ -7711,20 +7717,25 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	WINGAME1("meancity", "", "mc32.exe", "t:746d26c4e79cf5c81f8aaf09709d8488", 1527265, 602),
 
-	// Masters of the Elements - English and German (from lotharsm)
+	// Masters of the Elements
 	// Original Dutch game Meesters van Macht released in 1997
-	// Released in Germany as "Meister Zufall und die Herrscher der Elemente"
-	// Developed by IJsfontein, published by Tivola
-	// File version of MVM.EXE is 6.0.2.32
+	// Developed by IJsfontein
 	// The game disc is a hybrid CD-ROM containing both the Windows and the Macintosh release.
-	MACGAME2("melements", "",	"check.dxr",			  "f48ce7700bbf5f00a03373397b491a87", 898334,
-								"Masters of the Elements", 0, 1034962, 602),
-	WINGAME2("melements", "",	"CHECK.DXR",			  "c31ee30eebd24a8cf31691fc9926daa4", 901820,
-								"MVM.EXE",				  0, 2565921, 602),
-	MACGAME2_l("melements", "", "check.dxr",			  "bd320cbd150d4d54fec798ce0222bc63", 575554,
-								"Meister Zufall",		  "398eb2cdf121feb490097c6323d52267", 1034962, Common::DE_DEU, 602),
-	WINGAME2_l("melements", "", "CHECK.DXR",			  "d1cd0ed95b0e30597e0089bf3e5caf0f", 575414,
-								"MVM.EXE",				  "518a98696fe1122e08410b0f157f21bf", 1512503, Common::DE_DEU, 602),
+	MACGAME1_l("melements", "", "Masters of the Elements", "r:398eb2cdf121feb490097c6323d52267", 1034706, Common::EN_ANY, 602),
+	WINGAME1_l("melements", "", "MVM.EXE",                 "t:a149844f8c90443483f7fe38beb44111", 2565921, Common::EN_ANY, 602),
+
+	// German: "Meister Zufall und die Herrscher der Elemente", published by Tivola
+	MACGAME1_l("melements", "", "Meister Zufall", "r:398eb2cdf121feb490097c6323d52267", 1034706, Common::DE_DEU, 602),
+	WINGAME1_l("melements", "", "MVM.EXE",        "t:31a3726973886c0f3de3ee127f56fcb3", 1512503, Common::DE_DEU, 602),
+
+	// French: "Le Maître des éléments", published by Gallimard Multimédia
+	// Hybrid disc: Mac version needs to be added, unknown projector file/needs extraction?
+	WINGAME1_l("melements", "", "MDE.EXE", "t:8db5c7ffd823515b341cee7acb72b9a8", 2256946, Common::FR_FRA, 602),
+
+	// Dutch: "Meesters van Macht", Netherlands/Belgium release by Karakter Interactive
+	// Game files likely match the original 1997 release since it is the only variant built with Director 6.0.1
+	MACGAME1_l("melements", "", "Meesters van Macht", "r:888e9ea9987e5ef6833d5af3683fcb3a", 115776,  Common::NL_NLD, 601),
+	WINGAME1_l("melements", "", "MVM.EXE",            "t:25ecda33e9fc9aaf70efcd2e124b114a", 2082817, Common::NL_NLD, 601),
 
 	WINGAME1("meetchuck", "", "HORSE.EXE", "b0f3841f6e8005e519445b22de37749b", 1130649, 600),
 
@@ -8298,8 +8309,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("isscommerce", "", "Mac-Start", "fa52f0136cde568a46249ce74f01a324", 107126, 700),
 	WINGAME1("isscommerce", "", "PC-Start.exe", "c1a2e8b7e41fa204009324a9c7db1030", 6878037, 700),
 
-	MACGAME1("jewels1", "", "Jewels of the Oracle", "fa52f0136cde568a46249ce74f01a324", -1, 700),
-	WINGAME1("jewels1", "", "Jewels.exe", "c1a2e8b7e41fa204009324a9c7db1030", -1, 700),
+	MACGAME1("jewels1", "", "Jewels of the Oracle", "fa52f0136cde568a46249ce74f01a324", AD_NO_SIZE, 700),
+	WINGAME1("jewels1", "", "Jewels.exe", "c1a2e8b7e41fa204009324a9c7db1030", AD_NO_SIZE, 700),
 
 	// All of the installers also use Director
 	// Mac filename is Starta Jönssonligan

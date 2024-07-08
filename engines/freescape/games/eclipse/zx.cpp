@@ -152,11 +152,16 @@ void EclipseEngine::drawZXUI(Graphics::Surface *surface) {
 	_gfx->readFromPalette(7, r, g, b);
 	uint32 gray = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
 
+	_gfx->readFromPalette(5, r, g, b);
+	uint32 blue = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
+
 	_gfx->readFromPalette(2, r, g, b);
 	uint32 red = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
 
+
 	int score = _gameStateVars[k8bitVariableScore];
 	int shield = _gameStateVars[k8bitVariableShield] * 100 / _maxShield;
+	int energy = _gameStateVars[k8bitVariableEnergy];
 	shield = shield < 0 ? 0 : shield;
 
 	uint32 yellow = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0xFF, 0xFF, 0);
@@ -184,6 +189,12 @@ void EclipseEngine::drawZXUI(Graphics::Surface *surface) {
 
 	drawStringInSurface(shieldStr, x, 161, back, red, surface);
 
+	Common::Rect jarBackground(120, 162, 144, 192 - 4);
+	surface->fillRect(jarBackground, back);
+
+	Common::Rect jarWater(120, 192 - energy - 3, 144, 192 - 4);
+	surface->fillRect(jarWater, blue);
+
 	drawStringInSurface(Common::String('0' + _angleRotationIndex - 3), 79, 141, back, yellow, surface, 'Z' - '$' + 1);
 	drawStringInSurface(Common::String('3' - _playerStepIndex), 63, 141, back, yellow, surface, 'Z' - '$' + 1);
 	drawStringInSurface(Common::String('7' - _playerHeightNumber), 240, 141, back, yellow, surface, 'Z' - '$' + 1);
@@ -193,6 +204,10 @@ void EclipseEngine::drawZXUI(Graphics::Surface *surface) {
 		drawStringInSurface("<", 240, 141, back, yellow, surface, 'Z' - '$' + 1);
 	}
 	drawAnalogClock(surface, 89, 172, back, back, gray);
+
+	surface->fillRect(Common::Rect(227, 168, 235, 187), gray);
+	drawCompass(surface, 231, 177, _yaw, 10, back);
+
 	drawIndicator(surface, 65, 7, 8);
 	drawEclipseIndicator(surface, 215, 3, front, gray);
 }

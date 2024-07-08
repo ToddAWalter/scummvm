@@ -38,9 +38,7 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 		initAmigaAtari();
 
 	_playerHeightNumber = 1;
-	_playerHeights.push_back(32);
-	_playerHeights.push_back(48);
-	_playerHeight = _playerHeights[_playerHeightNumber];
+	_playerHeightMaxNumber = 1;
 
 	_playerWidth = 8;
 	_playerDepth = 8;
@@ -74,7 +72,6 @@ void EclipseEngine::initGameState() {
 	FreescapeEngine::initGameState();
 
 	_playerHeightNumber = 1;
-	_playerHeight = _playerHeights[_playerHeightNumber];
 
 	_gameStateVars[k8bitVariableEnergy] = _initialEnergy;
 	_gameStateVars[k8bitVariableShield] = _initialShield;
@@ -416,6 +413,49 @@ void EclipseEngine::drawAnalogClockHand(Graphics::Surface *surface, int x, int y
 	double w = magnitude * cos(degrees * degtorad);
 	double h = magnitude * sin(degrees * degtorad);
 	surface->drawLine(x, y, x+(int)w, y+(int)h, color);
+}
+
+void EclipseEngine::drawCompass(Graphics::Surface *surface, int x, int y, double degrees, double magnitude, uint32 color) {
+	const double degtorad = (M_PI * 2) / 360;
+	double w = magnitude * cos(-degrees * degtorad);
+	double h = magnitude * sin(-degrees * degtorad);
+
+	int dx = 0;
+	int dy = 0;
+
+	// Adjust dx and dy to make the compass look like a compass
+	if (degrees == 0 || degrees == 360) {
+		dx = 0;
+		dy = 2;
+	} else if (degrees > 0 && degrees < 90) {
+		dx = 1;
+		dy = 1;
+	} else if (degrees == 90) {
+		dx = 2;
+		dy = 0;
+	} else if (degrees > 90 && degrees < 180) {
+		dx = 1;
+		dy = -1;
+	} else if (degrees == 180) {
+		dx = 0;
+		dy = 2;
+	} else if (degrees > 180 && degrees < 270) {
+		dx = -1;
+		dy = -1;
+	} else if (degrees == 270) {
+		dx = 2;
+		dy = 0;
+	} else if (degrees > 270 && degrees < 360) {
+		dx = -1;
+		dy = 1;
+	}
+
+	surface->drawLine(x, y, x+(int)w, y+(int)h, color);
+	surface->drawLine(x - dx, y - dy, x+(int)w, y+(int)h, color);
+	surface->drawLine(x + dx, y + dy, x+(int)w, y+(int)h, color);
+
+	surface->drawLine(x - dx, y - dy, x+(int)-w, y+(int)-h, color);
+	surface->drawLine(x + dx, y + dy, x+(int)-w, y+(int)-h, color);
 }
 
 // Copied from BITMAP::circlefill in engines/ags/lib/allegro/surface.cpp
