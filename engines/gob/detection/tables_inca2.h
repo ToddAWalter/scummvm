@@ -72,11 +72,11 @@
 	0, 0, 0
 },
 
-// US floppy box version 1.0 dated 18.03.1994
+// US floppy box dated 18.03.1994
 {
 	{
 		"inca2",
-		"",
+		"v1.0",
 		AD_ENTRY1s("intro.stk", "48cc6e6b0b0b343f876290d2700d8eba", 804780),
 		EN_USA,
 		kPlatformDOS,
@@ -103,7 +103,7 @@
 	0, 0, 0
 },
 {
-	{
+	{	// Bugreport #12757
 		"inca2",
 		"v1.07",
 		AD_ENTRY1s("intro.stk", "b56e4147acc5852c6fc2de5985ab94b0", 804796),

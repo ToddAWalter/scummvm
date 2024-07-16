@@ -338,6 +338,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "myfavmonster",		"My Favourite Monster" },
 	{ "myfirstwords",		"My First Reading & Spelling Words" },
 	{ "mylk",				"Mylk" },
+	{ "mysteriousisland",	"Mysterious Island: A Race Against Time and Hot Lava" },
 	{ "myworld",			"Me & My World" },
 	{ "necrobius",			"Necrobius" },
 	{ "necromancer",		"Necromancer" },
@@ -402,6 +403,8 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "rhem1",				"Rhem" },
 	{ "rhlava",				"Rescue Heroes: Lava Landslide" },
 	{ "rhmeteor",			"Rescue Heroes: Meteor Madness" },
+	{ "robinson",			"Robinson Crusoe" },
+	{ "robinson-makingof",	"Robinson Crusoe: Making-of" },
 	{ "rodneyfs",			"Rodney's Funscreen" },
 	{ "rodneyfs2",			"Rodney's Funscreen² Extreme: Dinky's Revenge" },
 	{ "rodneyww",			"Rodney's Wonder Window" },
@@ -1700,6 +1703,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "timelapse",			"Timelapse" },
 	{ "trekfinalunity",		"Star Trek: The Next Generation - \"A Final Unity\"" },
 	{ "ultrobot",			"Isaac Asimov's The Ultimate Robot" },
+	{ "virgincdrom",		"Virgin Sound and Vision CD-ROM Sampler" },
 	{ "voyeur2",			"Voyeur 2" },
 	{ "wep",				"The Best of Microsoft Entertainment Pack" },
 	{ "windows31",			"Microsoft Windows 3.1" },
@@ -4721,6 +4725,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1t("lifemysteries", "v1.01", "_SETUP/LGM/LGM.EXE", "c9ffbacdc78482eeaf644730a2fedc15", 1024075, 404),
 	WINGAME1t("lifemysteries", "Demo", "LGMDEM.EXE", "dd13662fa71a413c2ba9228ea73e5448", 5539283, 404),
 
+	// Bilingual English/Japanese
+	MACGAME1("llla", "",	  "LLLA",	 "f808a9f231b77617fa559cf9d2da66c1", 304804, 404),
+	WINGAME1("llla", "",	  "LLLA_PC.EXE",	 "3646e2d759d305f25dc7b65970e1024e", 603678, 404),
+
 	// full game is DOS only, not Director
 	MACDEMO1("lion", "Demo", "Lion Demo", "01be45e7241194dad07938e7059b88e3", 484284, 400),
 
@@ -5030,6 +5038,12 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1_l("mysteriousegypt", "", "EGYPTI.EXE",				   "8bdf5baaa1fd82daf59fe0a96d356530", 1295295, Common::FI_FIN, 404),
 	MACDEMO1_l("mysteriousegypt", "Demo", "Egypti demo", "337c94c66b435e075a2d7f94b3cffc49", 483746, Common::FI_FIN, 404),
 	WINDEMO1_l("mysteriousegypt", "Demo", "EGYPTI.EXE",	 "2e8cba31e473bd1567476f57d6aeb4d6", 5574413, Common::FI_FIN, 404),
+
+	// version comes from debug mode (hold Ctrl+Shift when clicking on New Game/Load Game)
+	MACGAME2("mysteriousisland", "v96.04.23", "Mysterious Island", "r:17efee018a660458fae80de4364021ac", 483518,
+											  "INIT.DXR", "t:22a5a1e7542a1abd92c40beb1ca7b61e", 920290, 404),
+	WINGAME2("mysteriousisland", "v96.04.23", "ISLAND.EXE", "t:d8c7d6a10e60da366408d2cee6510f79", 697057,
+											  "INIT.DXR", "t:22a5a1e7542a1abd92c40beb1ca7b61e", 920290, 404),
 
 	MACGAME1("myworld", "", "Me & My World", "bda8fd92e5483a1fa311e9fc68e355fe", 295773, 404),
 	WINGAME1t("myworld", "", "MYWORLD.EXE", "c1be044a34660346d843cf51faca4604", 2138764, 404),
@@ -5763,6 +5777,17 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// System 6 version is D3
 	MACGAME1("videocasino", "", "xn--Video Casino PowerMac-pb4m", "ccf864a8dc6e9d0d26eb73b4683e634b", 60068, 404),
 	MACDEMO1("videocasino", "Demo", "VC.Demo.14.7.Start", "17efee018a660458fae80de4364021ac", 483490, 404),
+
+	// Found in "Get Ready for School, Charlie Brown!" and "One Small Square: Backyard"
+	MACGAME2("virgincdrom", "1995", "CD-ROM Sampler", "rt:d6981e0f81c391ade813edaab25998a3", 483490,
+									"sassets/samp_32.dxr", "t:92c50f1bd7e356130e61782a4fa4becd", 4608510, 404),
+	WINGAME2("virgincdrom", "1995", "SAMPLER.EXE", "t:8def0620c3c35990d38c3728f7ae2785", 697097,
+									"sassets/samp_32.dxr", "t:92c50f1bd7e356130e61782a4fa4becd", 4608510, 404),
+	// Found in "Mysterious Island"
+	MACGAME2("virgincdrom", "1996", "CD-ROM Sampler", "rt:d6981e0f81c391ade813edaab25998a3", 483490,
+									"sassets/samp_32.dxr", "t:3318f992097610d0309885cff440a6c9", 2045566, 404),
+	WINGAME2("virgincdrom", "1996", "SAMPLER.EXE", "t:4a880cb2e7ef8963fd8e50612d1b89ab", 6389135,
+									"sassets/samp_32.dxr", "t:3318f992097610d0309885cff440a6c9", 2045566, 404),
 
 	MACGAME1_l("virtualmuseum", "", "Virtual Museum Vol.1", "8b138db44d4421cc7294a9dc792ccf1b", 503337, Common::JA_JPN, 403),
 
@@ -6547,10 +6572,6 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1_l("keroncuel", "", "keron folder/KERONCUEL", "8f4da7096fa8725ad3ed3153811c9e38", 719664, Common::JA_JPN, 501),
 	WINGAME1t_l("keroncuel", "", "KERONFOL/KERONCUE.EXE", "4bf5fa422a92233d03280dfb30df4ed9", 1418708, Common::JA_JPN, 501),
 
-	// Bilingual English/Japanese
-	MACGAME1("llla", "",	  "LLLA",	 "f808a9f231b77617fa559cf9d2da66c1", 304804, 501),
-	WINGAME1("llla", "",	  "LLLA_PC.EXE",	 "3646e2d759d305f25dc7b65970e1024e", 603678, 501),
-
 	// Requires installation
 	// Windows files in DATA.1 (renamed InstallShield v3 archive)
 	// Mac files in Life in the Universe Installer
@@ -6910,6 +6931,17 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	MACGAME1_l("raveshuttle", "", "Rave Shuttle", "7b0837f93c5de519acdf1feea2a4ccf2", 705673, Common::DE_DEU, 500),
 	WINGAME1_l("raveshuttle", "", "RAVES.EXE", "2e62abdad839e42068afdcd0644d7dcf", 1000911, Common::DE_DEU, 500),
+
+	// German variant of "Robinson Crusoe", published by Tivola
+	// PC/Mac hybrid, but the Projector for the Mac version is embedded into an installer.
+	// The disc contains two versions in two Projector files. The "Standard Version" doesn't use the QTVR features,
+	// while the "Enhanced version" does.
+	WINGAME2_l("robinson",          "Standard Version", "CRUSOE8.EXE", "t:98c98c109102a10f75bd05b76f49a009", 1398759,
+														"CHAP0.DXR",   "5bdff5b8f1eb8928f76fee5939798137",   1111290,  Common::DE_DEU, 500),
+	WINGAME2_l("robinson",          "Enhanced Version", "CRUSOE16.EXE","t:97c3d5d1472bab61962837b0bf820912", 1398987,
+														"CHAP0.DXR",   "5bdff5b8f1eb8928f76fee5939798137",   1111290,  Common::DE_DEU, 500),
+	WINGAME2_l("robinson-makingof", "",                 "MAKING.EXE",  "t:4c5428c6b5e493da6fe35daccded70a0", 1410487,
+														"MOF.DXR",     "904c146c3faeddfbb1e9341b28a88400",   16490984, Common::DE_DEU, 501),
 
 	// Released only in Japan by Interlink of Minato City, Tokyo (1997)
 	// Games play fully in English with Japanese credits only
@@ -9325,10 +9357,16 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	WINGAME1_l("adibouhumain", "", "Adibou_CH.exe", "t:d955b857b9e506d1e3141ca4d81b59d5", 2633827, Common::FR_FRA, 1010),
 
+	MACGAME1_l("adibouhumain", "", "Adibou Aventure.osx", "t:5ec290fb9b3b46624b1f30630a39a456", 3126433, Common::FR_FRA, 1010),
+
 	WINGAME1_l("adiboumots", "", "ADBR_EX56.exe", "t:aee1d0997a82c796292b59d9c398ca20", 3872922, Common::FR_FRA, 1010),
+
+	MACGAME1_l("adiboumots", "", "ADBR_EX56.osx", "t:4284f511d1d68b28640a0c3db6d02ba2", 4557102, Common::FR_FRA, 1010),
 
 	// TRAC report #14403
 	WINGAME1_l("adibounature", "", "ADBS_EX48.exe", "t:aee1d0997a82c796292b59d9c398ca20", 3873754, Common::FR_FRA, 1010),
+
+	MACGAME1_l("adibounature", "", "ADBS_EX48.osx", "t:f2d35f22e06b4a3ff1ab3d960538d27b", 4491818, Common::FR_FRA, 1010),
 
 	// Found on AOL 9.0 promo CD
 	// Game description is based on desktop shortcut after installation

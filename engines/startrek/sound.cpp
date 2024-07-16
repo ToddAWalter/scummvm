@@ -24,6 +24,7 @@
 
 #include "common/file.h"
 #include "common/macresman.h"
+#include "common/tokenizer.h"
 
 #include "audio/audiostream.h"
 #include "audio/decoders/raw.h"
@@ -39,7 +40,7 @@ Sound::Sound(StarTrekEngine *vm) : _vm(vm) {
 	_midiDriver = nullptr;
 	_loopingMidiTrack = MIDITRACK_0;
 
-	if (_vm->getPlatform() == Common::kPlatformDOS || _vm->getPlatform() == Common::kPlatformMacintosh) {
+	if (_vm->getPlatform() == Common::kPlatformDOS) {
 		_midiDevice = MidiDriver::detectDevice(MDT_PCSPK | MDT_ADLIB | MDT_MIDI | MDT_PREFER_MT32);
 		_midiDriver = MidiDriver::createMidi(_midiDevice);
 		_midiDriver->open();
@@ -59,6 +60,8 @@ Sound::Sound(StarTrekEngine *vm) : _vm(vm) {
 		}
 
 		_midiDriver->setTimerCallback(this, Sound::midiDriverCallback);
+	} else {
+		_vm->_musicWorking = false;
 	}
 
 	_soundHandle = new Audio::SoundHandle();
@@ -238,18 +241,11 @@ void Sound::playSpeech(const Common::String &basename) {
 	stopPlayingSpeech();
 
 	Audio::QueuingAudioStream *audioQueue = nullptr;
-	Common::String name = basename;
+	Common::StringTokenizer tok(basename, ",");
 
 	// Play a list of comma-separated audio files in sequence (usually there's only one)
-	while (!name.empty()) {
-		uint i = 0;
-		while (i < name.size() && name[i] != ',') {
-			if (name[i] == '\\')
-				name.setChar('/', i);
-			i++;
-		}
-
-		Common::Path filename = Common::Path("voc/").appendComponent(Common::String(name.c_str(), name.c_str() + i) + ".voc");
+	while (!tok.empty()) {
+		Common::Path filename = Common::Path("voc/").append(Common::Path(tok.nextToken() + ".voc", '\\'));
 		debugC(5, kDebugSound, "Playing speech '%s'", filename.toString().c_str());
 		Common::SeekableReadStream *readStream = SearchMan.createReadStreamForMember(filename);
 		if (readStream == nullptr)
@@ -261,8 +257,6 @@ void Sound::playSpeech(const Common::String &basename) {
 				audioQueue = Audio::makeQueuingAudioStream(audioStream->getRate(), audioStream->isStereo());
 			audioQueue->queueAudioStream(audioStream, DisposeAfterUse::YES);
 		}
-
-		name.erase(0, i + 1);
 	}
 
 	if (audioQueue != nullptr) {
@@ -432,6 +426,9 @@ void Sound::loadPCMusicFile(const Common::String &baseSoundName) {
 }
 
 void Sound::clearMidiSlot(int slot) {
+	if (!_vm->_musicWorking)
+		return;
+
 	_midiSlots[slot].midiParser->stopPlaying();
 	_midiSlots[slot].midiParser->unloadMusic();
 	_midiSlots[slot].track = -1;

@@ -404,7 +404,7 @@ AGSObject *IAGSEngine::GetObject(int32 num) {
 }
 BITMAP *IAGSEngine::CreateBlankBitmap(int32 width, int32 height, int32 coldep) {
 	// [IKM] We should not create Bitmap object here, because
-	// a) we are returning raw allegro bitmap and therefore loosing control over it
+	// a) we are returning raw allegro bitmap and therefore losing control over it
 	// b) plugin won't use Bitmap anyway
 	BITMAP *tempb = create_bitmap_ex(coldep, width, height);
 	clear_to_color(tempb, bitmap_mask_color(tempb));
@@ -843,7 +843,7 @@ void pl_run_plugin_init_gfx_hooks(const char *driverName, void *data) {
 	}
 }
 
-Engine::GameInitError pl_register_plugins(const Std::vector<PluginInfo> &infos) {
+Engine::GameInitError pl_register_plugins(const std::vector<PluginInfo> &infos) {
 	_GP(plugins).clear();
 	_GP(plugins).reserve(MAXPLUGINS);
 

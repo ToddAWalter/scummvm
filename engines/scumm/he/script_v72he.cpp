@@ -318,7 +318,7 @@ void ScummEngine_v72he::arrayBlockOperation(
 		debug("ScummEngine_v72he::arrayBlockOperation(): "
 			"{%8d}[ %4d to %4d ][ %4d to %4d ] = "
 			"({%8d}[ %4d to %4d ][ %4d to %4d ] <?> "
-			"{%8d}[ %4d to %4d ][ %4d to %4d ] <%d>)\n",
+			"{%8d}[ %4d to %4d ][ %4d to %4d ] <?>)\n",
 			dstVariable, dstDownMin, dstDownMax, dstAcrossMin, dstAcrossMax,
 			a2Variable, a2DownMin, a2DownMax, a2AcrossMin, a2AcrossMax,
 			a1Variable, a1DownMin, a1DownMax, a1AcrossMin, a1AcrossMax);
@@ -638,7 +638,7 @@ void ScummEngine_v72he::o72_startScript() {
 			return;
 	}
 
-	runScript(script, (flags == 199 || flags == 200), (flags == 195 || flags == 200), args);
+	runScript(script, (flags == SO_BAK || flags == SO_BAKREC), (flags == SO_REC || flags == SO_BAKREC), args);
 }
 
 void ScummEngine_v72he::o72_startObject() {
@@ -650,7 +650,7 @@ void ScummEngine_v72he::o72_startObject() {
 	entryp = pop();
 	script = pop();
 	flags = fetchScriptByte();
-	runObjectScript(script, entryp, (flags == 199 || flags == 200), (flags == 195 || flags == 200), args);
+	runObjectScript(script, entryp, (flags == SO_BAK || flags == SO_BAKREC), (flags == SO_REC || flags == SO_BAKREC), args);
 }
 
 void ScummEngine_v72he::o72_drawObject() {
@@ -1645,7 +1645,7 @@ void ScummEngine_v72he::o72_jumpToScript() {
 	script = pop();
 	flags = fetchScriptByte();
 	stopObjectCode();
-	runScript(script, (flags == 199 || flags == 200), (flags == 195 || flags == 200), args);
+	runScript(script, (flags == SO_BAK || flags == SO_BAKREC), (flags == SO_REC || flags == SO_BAKREC), args);
 }
 
 void ScummEngine_v72he::o72_openFile() {
@@ -2014,6 +2014,8 @@ void ScummEngine_v72he::checkArrayLimits(int array, int downMin, int downMax, in
 	}
 }
 
+// TODO: Have patience with this one, I'll restore it ASAP...
+#if 0
 void ScummEngine_v72he::copyArray(int dstVariable, int dstDownMin, int dstDownMax, int dstAcrossMin, int dstAcrossMax,
 				int srcVariable, int srcDownMin, int srcDownMax, int srcAcrossMin, int srcAcrossMax) {
 	byte *dstPtr, *srcPtr;
@@ -2104,6 +2106,68 @@ void ScummEngine_v72he::copyArray(int dstVariable, int dstDownMin, int dstDownMa
 		}
 	}
 }
+#else
+void ScummEngine_v72he::copyArray(int array1, int a1_dim2start, int a1_dim2end, int a1_dim1start, int a1_dim1end,
+								  int array2, int a2_dim2start, int a2_dim2end, int a2_dim1start, int a2_dim1end) {
+	byte *dst, *src;
+	int dstPitch, srcPitch;
+	int rowSize;
+	checkArrayLimits(array1, a1_dim2start, a1_dim2end, a1_dim1start, a1_dim1end);
+	checkArrayLimits(array2, a2_dim2start, a2_dim2end, a2_dim1start, a2_dim1end);
+	int a12_num = a1_dim2end - a1_dim2start + 1;
+	int a11_num = a1_dim1end - a1_dim1start + 1;
+	int a22_num = a2_dim2end - a2_dim2start + 1;
+	int a21_num = a2_dim1end - a2_dim1start + 1;
+	if (a22_num != a12_num || a21_num != a11_num) {
+		error("Operation size mismatch (%d vs %d)(%d vs %d)", a12_num, a22_num, a11_num, a21_num);
+	}
+
+	if (array1 != array2) {
+		ArrayHeader *ah1 = (ArrayHeader *)getResourceAddress(rtString, readVar(array1));
+		assert(ah1);
+		ArrayHeader *ah2 = (ArrayHeader *)getResourceAddress(rtString, readVar(array2));
+		assert(ah2);
+		if (FROM_LE_32(ah1->type) == FROM_LE_32(ah2->type)) {
+			getArrayDataPtrAndDataSize(ah1, a1_dim2start, a1_dim1start, a1_dim1end, &dst, &dstPitch, &rowSize);
+			getArrayDataPtrAndDataSize(ah2, a2_dim2start, a2_dim1start, a2_dim1end, &src, &srcPitch, &rowSize);
+			for (; a1_dim2start <= a1_dim2end; ++a1_dim2start) {
+				memcpy(dst, src, rowSize);
+				dst += dstPitch;
+				src += srcPitch;
+			}
+		} else {
+			for (; a1_dim2start <= a1_dim2end; ++a1_dim2start, ++a2_dim2start) {
+				int a2dim1 = a2_dim1start;
+				int a1dim1 = a1_dim1start;
+				for (; a1dim1 <= a1_dim1end; ++a1dim1, ++a2dim1) {
+					int val = readArray(array2, a2_dim2start, a2dim1);
+					writeArray(array1, a1_dim2start, a1dim1, val);
+				}
+			}
+		}
+	} else {
+		if (a2_dim2start != a1_dim2start || a2_dim1start != a1_dim1start) {
+			ArrayHeader *ah = (ArrayHeader *)getResourceAddress(rtString, readVar(array1));
+			assert(ah);
+			if (a2_dim2start > a1_dim2start) {
+				getArrayDataPtrAndDataSize(ah, a1_dim2start, a1_dim1start, a1_dim1end, &dst, &dstPitch, &rowSize);
+				getArrayDataPtrAndDataSize(ah, a2_dim2start, a2_dim1start, a2_dim1end, &src, &srcPitch, &rowSize);
+			} else {
+				// start at the end, so we copy backwards (in case the indices overlap)
+				getArrayDataPtrAndDataSize(ah, a1_dim2end, a1_dim1start, a1_dim1end, &dst, &dstPitch, &rowSize);
+				getArrayDataPtrAndDataSize(ah, a2_dim2end, a2_dim1start, a2_dim1end, &src, &srcPitch, &rowSize);
+				dstPitch = -dstPitch;
+				srcPitch = -srcPitch;
+			}
+			for (; a1_dim2start <= a1_dim2end; ++a1_dim2start) {
+				memcpy(dst, src, rowSize);
+				dst += dstPitch;
+				src += srcPitch;
+			}
+		}
+	}
+}
+#endif
 
 void ScummEngine_v72he::getArrayDataPtrAndDataSize(ArrayHeader *headerPtr, int down, int aMin, int aMax, byte **ptrPtr, int *dataOffsetPtr, int *dataSizePtr) {
 	const int acrossCount = FROM_LE_32(headerPtr->acrossMax) - FROM_LE_32(headerPtr->acrossMin) + 1;

@@ -41,7 +41,7 @@ namespace AGS {
 
 namespace Shared {
 class Bitmap;
-typedef Std::shared_ptr<Shared::Bitmap> PBitmap;
+typedef std::shared_ptr<Shared::Bitmap> PBitmap;
 } // namespace Shared
 
 namespace Engine {
@@ -49,7 +49,7 @@ namespace Engine {
 // Forward declaration
 class IDriverDependantBitmap;
 class IGfxFilter;
-typedef Std::shared_ptr<IGfxFilter> PGfxFilter;
+typedef std::shared_ptr<IGfxFilter> PGfxFilter;
 using Shared::PBitmap;
 
 enum TintMethod {
@@ -104,7 +104,7 @@ public:
 	virtual void SetTintMethod(TintMethod method) = 0;
 	// Initialize given display mode
 	virtual bool SetDisplayMode(const DisplayMode &mode) = 0;
-	// Updates previously set display mode, accomodating to the new screen size
+	// Updates previously set display mode, accommodating to the new screen size
 	virtual void UpdateDeviceScreen(const Size &screen_size) = 0;
 	// Gets if a graphics mode was initialized
 	virtual bool IsModeSet() const = 0;

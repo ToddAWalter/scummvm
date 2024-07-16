@@ -134,7 +134,10 @@ static Common::String customizeGuiOptions(Common::Path gamePath, Common::String 
 		{ SCI_VERSION_0_EARLY,	SCI_VERSION_1_EGA_ONLY,		"CGA320BW.DRV",		GUIO_RENDERCGABW },
 		{ SCI_VERSION_0_EARLY,	SCI_VERSION_1_EGA_ONLY,		"CGA320M.DRV",		GUIO_RENDERCGABW },
 		{ SCI_VERSION_0_EARLY,	SCI_VERSION_1_EGA_ONLY,		"HERCMONO.DRV",		GUIO_RENDERHERCAMBER },
-		{ SCI_VERSION_0_EARLY,	SCI_VERSION_1_EGA_ONLY,		"HERCMONO.DRV",		GUIO_RENDERHERCGREEN }
+		{ SCI_VERSION_0_EARLY,	SCI_VERSION_1_EGA_ONLY,		"HERCMONO.DRV",		GUIO_RENDERHERCGREEN },
+		{ SCI_VERSION_1_EARLY,	SCI_VERSION_1_1,			"VGA320.DRV",		GUIO_RENDERVGA },
+		{ SCI_VERSION_1_EARLY,	SCI_VERSION_1_1,			"VGA320BW.DRV",		GUIO_RENDERVGAGREY },
+		{ SCI_VERSION_1_EARLY,	SCI_VERSION_1_1,			"EGA640.DRV",		GUIO_RENDEREGA }
 	};
 
 	Common::FSNode node(gamePath);
@@ -143,11 +146,16 @@ static Common::String customizeGuiOptions(Common::Path gamePath, Common::String 
 		warning("Game path '%s' could not be accessed", gamePath.toString().c_str());
 		return guiOptions;
 	}
-	
-	for (int i = 0; i < ARRAYSIZE(rmodes); i++) {
-		if ((version == SCI_VERSION_NONE || (version >= rmodes[i].min && version <= rmodes[i].max)) && node.getChild(rmodes[i].gfxDriverName).exists())
-			guiOptions += rmodes[i].guio;
+
+	Common::FSList files;
+	node.getChildren(files, Common::FSNode::kListFilesOnly);
+	for (Common::FSList::const_iterator i = files.begin(); i != files.end(); ++i) {
+		for (int ii = 0; ii < ARRAYSIZE(rmodes); ii++) {
+			if ((version == SCI_VERSION_NONE || (version >= rmodes[ii].min && version <= rmodes[ii].max)) && i->getFileName().equalsIgnoreCase(rmodes[ii].gfxDriverName))
+				guiOptions += rmodes[ii].guio;
+		}
 	}
+
 
 	return guiOptions;
 }

@@ -72,6 +72,7 @@
 #include "director/lingo/xlibs/getscreenrectsxfcn.h"
 #include "director/lingo/xlibs/getscreensizexfcn.h"
 #include "director/lingo/xlibs/gpid.h"
+#include "director/lingo/xlibs/henry.h"
 #include "director/lingo/xlibs/hitmap.h"
 #include "director/lingo/xlibs/inixobj.h"
 #include "director/lingo/xlibs/instobj.h"
@@ -93,6 +94,7 @@
 #include "director/lingo/xlibs/movemousexobj.h"
 #include "director/lingo/xlibs/movieidxxobj.h"
 #include "director/lingo/xlibs/movutils.h"
+#include "director/lingo/xlibs/mystisle.h"
 #include "director/lingo/xlibs/openbleedwindowxcmd.h"
 #include "director/lingo/xlibs/orthoplayxobj.h"
 #include "director/lingo/xlibs/paco.h"
@@ -114,6 +116,7 @@
 #include "director/lingo/xlibs/soundjam.h"
 #include "director/lingo/xlibs/spacemgr.h"
 #include "director/lingo/xlibs/stagetc.h"
+#include "director/lingo/xlibs/syscolor.h"
 #include "director/lingo/xlibs/unittest.h"
 #include "director/lingo/xlibs/valkyrie.h"
 #include "director/lingo/xlibs/videodiscxobj.h"
@@ -250,6 +253,7 @@ static struct XLibProto {
 	XLIBDEF(GetScreenRectsXFCN,	kXObj,			300),	// D3
 	XLIBDEF(GetScreenSizeXFCN,	kXObj,			300),	// D3
 	XLIBDEF(GpidXObj,			kXObj,			400),	// D4
+	XLIBDEF(HenryXObj,			kXObj,					400),	// D4
 	XLIBDEF(HitMap,				kXObj,			400),	// D4
 	XLIBDEF(IniXObj,			kXObj,			400),	// D4
 	XLIBDEF(InstObjXObj,		kXObj,			400),	// D4
@@ -273,6 +277,7 @@ static struct XLibProto {
 	XLIBDEF(MoveMouseXObj,		kXObj,			400),	// D4
 	XLIBDEF(MovieIdxXObj,		kXObj,			400),	// D4
 	XLIBDEF(MovUtilsXObj,		kXObj,			400),	// D4
+	XLIBDEF(MystIsleXObj,			kXObj,					400),	// D4
 	XLIBDEF(OpenBleedWindowXCMD,kXObj,			300),	// D3
 	XLIBDEF(OrthoPlayXObj,		kXObj,			400),	// D4
 	XLIBDEF(PACoXObj,			kXObj,			300),	// D3
@@ -297,6 +302,7 @@ static struct XLibProto {
 	XLIBDEF(SoundJam,			kXObj,			400),	// D4
 	XLIBDEF(SpaceMgr,			kXObj,			400),	// D4
 	XLIBDEF(StageTCXObj,		kXObj,			400),	// D4
+	XLIBDEF(SysColorXObj,			kXObj,					400),	// D4
 	XLIBDEF(TimextraXtra,		kXtraObj,		500),	// D5
 	XLIBDEF(UnitTestXObj,		kXObj,			400),	// D4
 	XLIBDEF(VMisOnXFCN,			kXObj,			400),	// D4
@@ -326,7 +332,7 @@ void Lingo::initXLibs() {
 				continue;
 
 			if (_xlibOpeners.contains(lib->names[i].name))
-				warning("Lingo::initXLibs(): Duplicate enttry for %s", lib->names[i].name);
+				warning("Lingo::initXLibs(): Duplicate entry for %s", lib->names[i].name);
 
 			_xlibOpeners[lib->names[i].name] = lib->opener;
 			_xlibClosers[lib->names[i].name] = lib->closer;

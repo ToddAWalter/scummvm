@@ -65,6 +65,14 @@ void EclipseEngine::loadAssetsZXFullGame() {
 		loadFonts(&file, 0x6163, _font);
 		loadSpeakerFxZX(&file, 0x816, 0x86a);
 		load8bitBinary(&file, 0x635b, 4);
+
+		// These paper colors are invalid, probably to signal the use of floor/sky colors
+		_areaMap[1]->_paperColor = 1;
+		_areaMap[51]->_paperColor = 1;
+
+		// These paper colors are also invalid, but to signal the use of a special effect
+		_areaMap[42]->_paperColor = 0;
+		_areaMap[42]->_underFireBackgroundColor = 0;
 	}
 
 	for (auto &it : _areaMap) {
@@ -187,12 +195,15 @@ void EclipseEngine::drawZXUI(Graphics::Surface *surface) {
 	else if (shield < 100)
 		x = 175;
 
+	if (energy < 0)
+		energy = 0;
+
 	drawStringInSurface(shieldStr, x, 161, back, red, surface);
 
 	Common::Rect jarBackground(120, 162, 144, 192 - 4);
 	surface->fillRect(jarBackground, back);
 
-	Common::Rect jarWater(120, 192 - energy - 3, 144, 192 - 4);
+	Common::Rect jarWater(120, 192 - energy - 4, 144, 192 - 4);
 	surface->fillRect(jarWater, blue);
 
 	drawStringInSurface(Common::String('0' + _angleRotationIndex - 3), 79, 141, back, yellow, surface, 'Z' - '$' + 1);

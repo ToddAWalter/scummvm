@@ -23,6 +23,7 @@
 #define AGS_SHARED_FONT_WFN_FONT_RENDERER_H
 
 #include "common/std/map.h"
+#include "ags/lib/std.h"
 #include "ags/shared/font/ags_font_renderer.h"
 
 namespace AGS3 {
@@ -62,7 +63,7 @@ private:
 		WFNFont *Font;
 		FontRenderParams Params;
 	};
-	Std::map<int, FontData> _fontData;
+	std::map<int, FontData> _fontData;
 };
 
 } // namespace AGS3

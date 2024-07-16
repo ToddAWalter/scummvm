@@ -204,6 +204,22 @@ Common::Error DragonGlobals::syncState(Common::Serializer &s) {
 	return Common::kNoError;
 }
 
+class HocCharacterGlobal : public RWI16Global {
+public:
+	HocCharacterGlobal(uint16 num, int16 *val) : RWI16Global(num, val) {}
+	int16 set(int16 val) override {
+		DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
+		bool buttonVisible = engine->isInvButtonVisible();
+		if (buttonVisible)
+			engine->getScene()->removeInvButtonFromHotAreaList();
+		RWI16Global::set(val);
+		if (buttonVisible)
+			engine->getScene()->addInvButtonToHotAreaList();
+		return get();
+	}
+};
+
+
 HocGlobals::HocGlobals(Clock &clock) : Globals(clock), _unk82(1), _unk55(0),
 	_unkDlgFileNum(0), _unkDlgDlgNum(0),  _currentCharacter2(0), _currentCharacter(0),
 	_unk50(0), _unk49(0), _unk48(0), _unk47(0), _unk46(0), _unk45(0x3f), _unk44(0),
@@ -213,8 +229,8 @@ HocGlobals::HocGlobals(Clock &clock) : Globals(clock), _unk82(1), _unk55(0),
 	_globals.push_back(new RWI16Global(0x37, &_unk55)); // TODO: Special update function FUN_1407_080d, sound init related
 	_globals.push_back(new RWI16Global(0x36, &_unkDlgFileNum));
 	_globals.push_back(new RWI16Global(0x35, &_unkDlgDlgNum));
-	_globals.push_back(new RWI16Global(0x34, &_currentCharacter)); // TODO: Special update function FUN_174e_8f31
-	_globals.push_back(new RWI16Global(0x33, &_currentCharacter2)); // TODO: Special update function FUN_174e_8ee0
+	_globals.push_back(new HocCharacterGlobal(0x34, &_currentCharacter));
+	_globals.push_back(new HocCharacterGlobal(0x33, &_currentCharacter2));
 	_globals.push_back(new RWI16Global(0x32, &_unk50));
 	_globals.push_back(new RWI16Global(0x31, &_unk49));
 	_globals.push_back(new RWI16Global(0x30, &_unk48));
@@ -255,17 +271,38 @@ Common::Error HocGlobals::syncState(Common::Serializer &s) {
 }
 
 WillyGlobals::WillyGlobals(Clock &clock) : Globals(clock),
-	_unk2(0), _unk5(0), _unk81(0) {
+	_unk2(4), _unk3(0), _unk4(0), _unk5(0), _unk74(0), _unk75(300),
+	_unk77(255), _unk78(0), _unk79(0), _unk80(0), _unk81(3), _unk82(1) {
+	_globals.push_back(new DetailLevelROGlobal(0x53));
+	_globals.push_back(new RWI16Global(0x52, &_unk82));
 	_globals.push_back(new RWI16Global(0x51, &_unk81));
+	_globals.push_back(new RWI16Global(0x50, &_unk80));
+	_globals.push_back(new RWI16Global(0x4F, &_unk79));
+	_globals.push_back(new RWI16Global(0x4E, &_unk78));
+	_globals.push_back(new RWI16Global(0x4D, &_unk77));
+	_globals.push_back(new RWI16Global(0x4C, &_unk77)); // TODO: Special set function 1833:665e. Same variable as 0x4D.
+	_globals.push_back(new RWI16Global(0x4B, &_unk75));
+	_globals.push_back(new RWI16Global(0x4A, &_unk74));
 	_globals.push_back(new RWI16Global(0x05, &_unk5));
-	_globals.push_back(new RWI16Global(0x02, &_unk2));
+	_globals.push_back(new RWI16Global(0x04, &_unk4));
+	_globals.push_back(new RWI16Global(0x03, &_unk3));
+	_globals.push_back(new RWI16Global(0x02, &_unk2)); // TODO: Special set function 1574:06ca
 }
 
 Common::Error WillyGlobals::syncState(Common::Serializer &s) {
 	Globals::syncState(s);
 	s.syncAsSint16LE(_unk2);
+	s.syncAsSint16LE(_unk3);
+	s.syncAsSint16LE(_unk4);
 	s.syncAsSint16LE(_unk5);
+	s.syncAsSint16LE(_unk74);
+	s.syncAsSint16LE(_unk75);
+	s.syncAsSint16LE(_unk77);
+	s.syncAsSint16LE(_unk78);
+	s.syncAsSint16LE(_unk79);
+	s.syncAsSint16LE(_unk80);
 	s.syncAsSint16LE(_unk81);
+	s.syncAsSint16LE(_unk82);
 
 	return Common::kNoError;
 }

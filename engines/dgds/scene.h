@@ -145,6 +145,15 @@ public:
 	Common::String dump(const Common::String &indent) const;
 };
 
+class ConditionalSceneOp {
+public:
+	uint _opCode;
+	Common::Array<SceneConditions> _conditionList;
+	Common::Array<SceneOp> _opList;
+
+	Common::String dump(const Common::String &indent) const;
+};
+
 class GameItem : public HotArea {
 public:
 	Common::Array<SceneOp> onDragFinishedOps;
@@ -193,13 +202,13 @@ private:
 
 class SceneTrigger {
 public:
-	SceneTrigger(uint16 num) : _num(num), _enabled(false), _unk(0) {}
+	SceneTrigger(uint16 num) : _num(num), _enabled(false), _timesToCheckBeforeRunning(0) {}
 	Common::String dump(const Common::String &indent) const;
 
 	Common::Array<SceneConditions> conditionList;
 	Common::Array<SceneOp> sceneOpList;
 
-	uint16 _unk; // Only used in Beamish.
+	uint16 _timesToCheckBeforeRunning; // Only used in Beamish.
 	bool _enabled;
 	uint16 getNum() const { return _num; }
 
@@ -245,6 +254,8 @@ enum HeadFlags {
 	kHeadFlag8 = 8,
 	kHeadFlag10 = 0x10,
 	kHeadFlagVisible = 0x20,
+	kHeadFlag40 = 0x40,
+	kHeadFlag80 = 0x80,
 };
 
 class TalkDataHead {
@@ -263,7 +274,7 @@ public:
 
 class TalkData {
 public:
-	TalkData() : _num(0) {}
+	TalkData() : _num(0), _val(0) {}
 	Common::String dump(const Common::String &indent) const;
 
 	uint16 _num;
@@ -293,9 +304,6 @@ public:
 	bool runPreTickOps() { return runOps(_preTickOps); }
 	bool runPostTickOps() { return runOps(_postTickOps); }
 
-	void mouseMoved(const Common::Point pt);
-	void mouseClicked(const Common::Point pt);
-
 	bool runOps(const Common::Array<SceneOp> &ops, int16 addMinutes = 0);
 	virtual Common::Error syncState(Common::Serializer &s) = 0;
 	virtual void enableTrigger(uint16 numm, bool enable = true) {}
@@ -311,6 +319,7 @@ protected:
 	bool readDialogList(Common::SeekableReadStream *s, Common::Array<Dialog> &list, int16 filenum = 0) const;
 	bool readTriggerList(Common::SeekableReadStream *s, Common::Array<SceneTrigger> &list) const;
 	bool readDialogActionList(Common::SeekableReadStream *s, Common::Array<DialogAction> &list) const;
+	bool readConditionalSceneOpList(Common::SeekableReadStream *s, Common::Array<ConditionalSceneOp> &list) const;
 
 	bool checkConditions(const Common::Array<SceneConditions> &cond) const;
 
@@ -320,9 +329,6 @@ protected:
 
 	void setItemAttrOp(const Common::Array<uint16> &args);
 	void setDragItemOp(const Common::Array<uint16> &args);
-
-	void drawDragonCountdown1();
-	void drawDragonCountdown2();
 
 	bool runSceneOp(const SceneOp &op);
 	bool runDragonOp(const SceneOp &op);
@@ -334,6 +340,7 @@ protected:
 
 	Common::Array<SceneOp> _preTickOps;
 	Common::Array<SceneOp> _postTickOps;
+	Common::Array<ConditionalSceneOp> _conditionalOps; // Beamish only
 };
 
 
@@ -439,13 +446,17 @@ public:
 	void freeDialogData(uint16 num);
 	bool loadTalkData(uint16 num);
 	void freeTalkData(uint16 num);
-	void drawVisibleTalkers();
-	void loadTalkDataAndSomething(uint16 talknum, uint16 headnum);
+	void updateVisibleTalkers();
+	void loadTalkDataAndSetFlags(uint16 talknum, uint16 headnum);
+	void drawVisibleHeads(Graphics::ManagedSurface *dst);
 
 	// dragon-specific scene ops
 	void addAndShowTiredDialog();
 	void sceneOpUpdatePasscodeGlobal();
 
+	void prevChoice();
+	void nextChoice();
+	void activateChoice();
 
 protected:
 	HotArea *findAreaUnderMouse(const Common::Point &pt);

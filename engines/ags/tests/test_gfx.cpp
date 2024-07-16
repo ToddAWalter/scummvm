@@ -43,7 +43,7 @@ void Test_GfxSpeed(bool enableSimd, size_t blenderModeStart, size_t blenderModeE
 	uint oldSimdFlags = _G(simd_flags);
 	if (!enableSimd) _G(simd_flags) = AGS3::Globals::SIMD_NONE;
 	if (enableSimd) debug("SIMD optimizations: true\n");
-	else debug("SIMD optmizations: false\n");
+	else debug("SIMD optimizations: false\n");
 	Bitmap *benchgfx32 = BitmapHelper::CreateBitmap(100, 100, 32);
 	Bitmap *benchgfx16 = BitmapHelper::CreateBitmapCopy(benchgfx32, 16);
 	Bitmap *benchgfx8 = BitmapHelper::CreateBitmap(100, 100, 8);
@@ -66,10 +66,10 @@ void Test_GfxSpeed(bool enableSimd, size_t blenderModeStart, size_t blenderModeE
 					uint32 start, end;
 					_G(_blender_mode) = (AGS3::BlenderMode)blenderModes[mode];
 					//if (runs == 2) debug("Dest: %d bpp, Gfx: %d bpp, Blender: %s, Stretched: false, Iters: %d\n", bpps[dest], bpps[gfx], modeNames[mode], benchRuns[runs]);
-					start = Std::chrono::high_resolution_clock::now();
+					start = std::chrono::high_resolution_clock::now();
 					for (int i = 0; i < benchRuns[runs]; i++)
 						destinations[dest]->Blit(graphics[gfx], 0, 0, kBitmap_Transparency);
-					end = Std::chrono::high_resolution_clock::now();
+					end = std::chrono::high_resolution_clock::now();
 					timeNotStretched += end - start;
 					numItersNotStretched += benchRuns[runs];
 					if (mode == kArgbToArgbBlender || mode == kRgbToRgbBlender || mode == kRgbToArgbBlender || mode == kArgbToRgbBlender) {
@@ -79,10 +79,10 @@ void Test_GfxSpeed(bool enableSimd, size_t blenderModeStart, size_t blenderModeE
 					time += end - start;
 					//if (runs == 2) debug("exec time (mills): %u\n\n", end - start);
 					//if (runs == 2) debug("Dest: %d bpp, Gfx: %d bpp, Blender: %s, Stretched: true, Iters: %d\n", bpps[dest], bpps[gfx], modeNames[mode], benchRuns[runs]);
-					start = Std::chrono::high_resolution_clock::now();
+					start = std::chrono::high_resolution_clock::now();
 					for (int i = 0; i < benchRuns[runs]; i++)
 						destinations[dest]->StretchBlt(graphics[gfx], Rect(0, 0, 99, 99), kBitmap_Transparency);
-					end = Std::chrono::high_resolution_clock::now();
+					end = std::chrono::high_resolution_clock::now();
 					time += end - start;
 					numIters += benchRuns[runs] * 2;
 					//if (runs == 2) debug("exec time (mills): %u\n\n", end - start);
@@ -208,31 +208,31 @@ void Test_BlenderModes() {
 											default:
 												tolerance = 0;
 											}
-											if (Std::abs((int)a - (int)(simdCol >> 24)) > tolerance) {
+											if (std::abs((int)a - (int)(simdCol >> 24)) > tolerance) {
 												printInfo();
 												assert(false && "a is over the tolerance");
 											}
-											if (Std::abs((int)r - (int)((simdCol >> 16) & 0xff)) > tolerance) {
+											if (std::abs((int)r - (int)((simdCol >> 16) & 0xff)) > tolerance) {
 												printInfo();
 												assert(false && "r is over the tolerance");
 											}
-											if (Std::abs((int)g - (int)((simdCol >> 8) & 0xff)) > tolerance) {
+											if (std::abs((int)g - (int)((simdCol >> 8) & 0xff)) > tolerance) {
 												printInfo();
 												assert(false && "g is over the tolerance");
 											}
-											if (Std::abs((int)b - (int)(simdCol & 0xff)) > tolerance) {
+											if (std::abs((int)b - (int)(simdCol & 0xff)) > tolerance) {
 												printInfo();
 												assert(false && "b is over the tolerance");
 											}
-											if (Std::abs((int)b16 - (int)(simd2bppCol & 0x1f)) > tolerance16) {
+											if (std::abs((int)b16 - (int)(simd2bppCol & 0x1f)) > tolerance16) {
 												printInfo();
 												assert(false && "b16 is over the tolerance");
 											}
-											if (Std::abs((int)g16 - (int)((simd2bppCol >> 5) & 0x3f)) > tolerance16) {
+											if (std::abs((int)g16 - (int)((simd2bppCol >> 5) & 0x3f)) > tolerance16) {
 												printInfo();
 												assert(false && "g16 is over the tolerance");
 											}
-											if (Std::abs((int)r16 - (int)(simd2bppCol >> 11)) > tolerance16) {
+											if (std::abs((int)r16 - (int)(simd2bppCol >> 11)) > tolerance16) {
 												printInfo();
 												assert(false && "r16 is over the tolerance");
 											}
@@ -250,7 +250,7 @@ void Test_BlenderModes() {
 
 void Test_GfxTransparency() {
 	// Test that every transparency which is a multiple of 10 is converted
-	// forth and back without loosing precision
+	// forth and back without losing precision
 	const size_t arr_sz = 11;
 	const int trans100[arr_sz] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
 	int trans255[arr_sz] = { 0 };

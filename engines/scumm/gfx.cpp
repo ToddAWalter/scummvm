@@ -62,8 +62,6 @@ struct StripTable {
 	int zrun[120];		// FIXME: Why only 120 here?
 };
 
-static const byte bitMasks[9] = { 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF };
-
 enum {
 	kNoDelay = 0,
 	// This should actually be 3 in all games using it;
@@ -2267,8 +2265,13 @@ bool Gdi::drawStrip(byte *dstPtr, VirtScreen *vs, int x, int y, const int width,
 	// palette so that it matches the way these lines have been redrawn in the
 	// FM-TOWNS release.  We take care not to apply this palette change to the
 	// text or inventory, as they still require the original colors.
+	//
+	// Also, the background was redrawn for censorship reasons in the German
+	// release, so we have to take care of the different resource size there.
 	if (_vm->_game.id == GID_INDY3 && (_vm->_game.features & GF_OLD256) && _vm->_game.platform != Common::kPlatformFMTowns
-		&& _vm->_roomResource == 46 && smapLen == 43159 && vs->number == kMainVirtScreen && _vm->enhancementEnabled(kEnhMinorBugFixes)) {
+		&& _vm->_roomResource == 46 && vs->number == kMainVirtScreen
+		&& (smapLen == 43159 || (smapLen == 42953 && _vm->_language == Common::DE_DEU))
+		&& _vm->enhancementEnabled(kEnhMinorBugFixes)) {
 		if (_roomPalette[11] == 11 && _roomPalette[86] == 86)
 			_roomPalette[11] = 86;
 		if (_roomPalette[13] == 13 && _roomPalette[80] == 80)
@@ -2497,6 +2500,8 @@ void GdiV2::decodeMask(int x, int y, const int width, const int height,
 }
 
 #ifdef ENABLE_HE
+static const byte bitMasks[9] = { 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF };
+
 /**
  * Draw a bitmap onto a virtual screen. This is main drawing method for room backgrounds
  * used throughout HE71+ versions.

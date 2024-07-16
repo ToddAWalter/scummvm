@@ -283,6 +283,9 @@ public:
 	void changePlayerHeight(int index);
 	void increaseStepSize();
 	void decreaseStepSize();
+	void changeStepSize();
+
+	void changeAngle();
 	void rise();
 	void lower();
 	bool checkFloor(Math::Vector3d currentPosition);
@@ -337,6 +340,7 @@ public:
 	Math::Vector3d _objExecutingCodeSize;
 	virtual void executeMovementConditions();
 	bool executeObjectConditions(GeometricObject *obj, bool shot, bool collided, bool activated);
+	void executeEntranceConditions(Entrance *entrance);
 	void executeLocalGlobalConditions(bool shot, bool collided, bool timer);
 	void executeCode(FCLInstructionVector &code, bool shot, bool collided, bool timer, bool activated);
 
@@ -416,6 +420,8 @@ public:
 	Math::Vector3d _scaleVector;
 	float _nearClipPlane;
 	float _farClipPlane;
+	float _yminValue;
+	float _ymaxValue;
 
 	// Text messages and Fonts
 	void insertTemporaryMessage(const Common::String message, int deadline);
@@ -443,8 +449,8 @@ public:
 	Common::StringArray _currentEphymeralMessages;
 	Common::BitArray _font;
 	bool _fontLoaded;
-	void drawStringInSurface(const Common::String &str, int x, int y, uint32 fontColor, uint32 backColor, Graphics::Surface *surface, int offset = 0);
-	void drawStringInSurface(const Common::String &str, int x, int y, uint32 primaryFontColor, uint32 secondaryFontColor, uint32 backColor, Graphics::Surface *surface, int offset = 0);
+	virtual void drawStringInSurface(const Common::String &str, int x, int y, uint32 fontColor, uint32 backColor, Graphics::Surface *surface, int offset = 0);
+	virtual void drawStringInSurface(const Common::String &str, int x, int y, uint32 primaryFontColor, uint32 secondaryFontColor, uint32 backColor, Graphics::Surface *surface, int offset = 0);
 	Graphics::Surface *drawStringsInSurface(const Common::Array<Common::String> &lines);
 
 	// Game state

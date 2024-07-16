@@ -79,23 +79,27 @@ DgdsEngine::DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	_gdsScene(nullptr), _resource(nullptr), _gamePals(nullptr), _gameGlobals(nullptr),
 	_detailLevel(kDgdsDetailHigh), _textSpeed(1), _justChangedScene1(false), _justChangedScene2(false),
 	_random("dgds"), _currentCursor(-1), _menuToTrigger(kMenuNone), _isLoading(true),
-	_rstFileName(nullptr), _difficulty(1), _menu(nullptr), _adsInterp(nullptr) {
+	_rstFileName(nullptr), _difficulty(1), _menu(nullptr), _adsInterp(nullptr), _isDemo(false) {
 	syncSoundSettings();
 
 	_platform = gameDesc->platform;
 
-	if (!strcmp(gameDesc->gameId, "rise"))
+	if (!strcmp(gameDesc->gameId, "rise")) {
 		_gameId = GID_DRAGON;
-	else if (!strcmp(gameDesc->gameId, "china"))
+	} else if (!strcmp(gameDesc->gameId, "china")) {
 		_gameId = GID_HOC;
-	else if (!strcmp(gameDesc->gameId, "beamish"))
+	} else if (!strcmp(gameDesc->gameId, "beamish")) {
+		_isDemo = (gameDesc->flags & ADGF_DEMO);
 		_gameId = GID_WILLY;
-	else if (!strcmp(gameDesc->gameId, "sq5demo"))
+	} else if (!strcmp(gameDesc->gameId, "sq5demo")) {
+		_isDemo = true;
 		_gameId = GID_SQ5DEMO;
-	else if (!strcmp(gameDesc->gameId, "comingattractions"))
+	} else if (!strcmp(gameDesc->gameId, "comingattractions")) {
+		_isDemo = true;
 		_gameId = GID_COMINGATTRACTIONS;
-	else
+	} else {
 		error("Unknown game ID");
+	}
 
 	const Common::FSNode gameDataDir(ConfMan.getPath("path"));
 	SearchMan.addSubDirectoryMatching(gameDataDir, "patches");
@@ -186,7 +190,8 @@ bool DgdsEngine::changeScene(int sceneNum) {
 
 	_scene->load(sceneFile, _resource, _decompressor);
 	// These are done inside the load function in the original.. cleaner here..
-	_scene->addInvButtonToHotAreaList();
+	if (!_isDemo)
+		_scene->addInvButtonToHotAreaList();
 	if (_gameId == GID_DRAGON)
 		_clock.setVisibleScript(true);
 
@@ -246,15 +251,35 @@ void DgdsEngine::setShowClock(bool val) {
 	_clock.setVisibleScript(val);
 }
 
-void DgdsEngine::checkDrawInventoryButton() {
-	if (_gdsScene->getCursorList().size() < 2 || _icons->loadedFrameCount() < 2 ||
-			_scene->getHotAreas().size() < 1 || _scene->getHotAreas().front()._num != 0)
-		return;
+bool DgdsEngine::isInvButtonVisible() const {
+	return (_gdsScene->getCursorList().size() >= 2 && _icons && _icons->loadedFrameCount() >= 2 &&
+			!_scene->getHotAreas().empty() && _scene->getHotAreas().front()._num == 0);
+}
 
-	int x = SCREEN_WIDTH - _icons->width(2) - 5;
-	int y = SCREEN_HEIGHT - _icons->height(2) - 5;
+void DgdsEngine::checkDrawInventoryButton() {
+	if (!isInvButtonVisible())
+		return;
 	static const Common::Rect drawWin(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	_icons->drawBitmap(2, x, y, drawWin, _compositionBuffer);
+
+	int16 invButtonIcon = 2;
+	if (getGameId() == GID_HOC) {
+		static const byte HOC_INV_ICONS[] = { 0, 2, 18, 19 };
+		invButtonIcon = HOC_INV_ICONS[_gdsScene->getGlobal(0x33)];
+
+		// draw the swap char button if needed
+		int16 otherChar = _gdsScene->getGlobal(0x34);
+		if (otherChar) {
+			// FIXME: This list repeated in scene too
+			static const byte HOC_CHAR_SWAP_ICONS[] = { 0, 20, 21, 22 };
+			int16 swapCharIcon = HOC_CHAR_SWAP_ICONS[otherChar];
+			int sy = SCREEN_HEIGHT - _icons->height(swapCharIcon) - 5;
+			_icons->drawBitmap(swapCharIcon, 5, sy, drawWin, _compositionBuffer);
+		}
+	}
+
+	int x = SCREEN_WIDTH - _icons->width(invButtonIcon) - 5;
+	int y = SCREEN_HEIGHT - _icons->height(invButtonIcon) - 5;
+	_icons->drawBitmap(invButtonIcon, x, y, drawWin, _compositionBuffer);
 }
 
 void DgdsEngine::init(bool restarting) {
@@ -418,10 +443,16 @@ Common::Error DgdsEngine::run() {
 					_clock.toggleVisibleUser();
 					break;
 				case kDgdsKeyNextChoice:
-					warning("TODO: Implement kDgdsKeyNextChoice");
+					if (_menu->menuShown())
+						_menu->nextChoice();
+					else if (_scene->hasVisibleDialog())
+						_scene->nextChoice();
 					break;
 				case kDgdsKeyPrevChoice:
-					warning("TODO: Implement kDgdsKeyPrevChoice");
+					if (_menu->menuShown())
+						_menu->prevChoice();
+					else if (_scene->hasVisibleDialog())
+						_scene->prevChoice();
 					break;
 				case kDgdsKeyNextItem:
 					warning("TODO: Implement kDgdsKeyNextItem");
@@ -430,10 +461,20 @@ Common::Error DgdsEngine::run() {
 					warning("TODO: Implement kDgdsKeyPrevItem");
 					break;
 				case kDgdsKeyPickUp:
-					warning("TODO: Implement kDgdsKeyPickUp");
+					if (_menu->menuShown())
+						_menu->activateChoice();
+					else if (_scene->hasVisibleDialog())
+						_scene->activateChoice();
+					else
+						warning("TODO: Implement kDgdsKeyPickUp");
 					break;
 				case kDgdsKeyLook:
-					warning("TODO: Implement kDgdsKeyLook");
+					if (_menu->menuShown())
+						_menu->activateChoice();
+					else if (_scene->hasVisibleDialog())
+						_scene->activateChoice();
+					else
+						warning("TODO: Implement kDgdsKeyLook");
 					break;
 				case kDgdsKeyActivate:
 					warning("TODO: Implement kDgdsKeyActivate");
@@ -582,6 +623,7 @@ Common::Error DgdsEngine::run() {
 		bool haveActiveDialog = _scene->checkDialogActive();
 
 		_scene->drawAndUpdateDialogs(&_compositionBuffer);
+		_scene->drawVisibleHeads(&_compositionBuffer);
 
 		bool gameRunning = (!haveActiveDialog && _gameGlobals->getGlobal(0x57) /* TODO: && _dragItem == nullptr*/);
 		_clock.update(gameRunning);
@@ -610,14 +652,13 @@ Common::SeekableReadStream *DgdsEngine::getResource(const Common::String &name, 
 
 
 bool DgdsEngine::canLoadGameStateCurrently(Common::U32String *msg /*= nullptr*/) {
-	return _gdsScene != nullptr;
+	return !_isDemo && _gdsScene != nullptr;
 }
 
 
 bool DgdsEngine::canSaveGameStateCurrently(Common::U32String *msg /*= nullptr*/) {
-	// Doesn't make sense to save non-interactive demos..
-	bool isSavableGame = getGameId() != GID_SQ5DEMO && getGameId() != GID_COMINGATTRACTIONS;
-	return isSavableGame && _gdsScene && _scene && _scene->getNum() != 2
+	// The demos are all non-interactive, so it doesn't make sense to save them.
+	return !_isDemo && _gdsScene && _scene && _scene->getNum() != 2
 			&& _scene->getDragItem() == nullptr && !_isLoading;
 }
 
@@ -660,7 +701,8 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 		_scene->unload();
 		_adsInterp->unload();
 		_scene->load(sceneFile, _resource, _decompressor);
-		_scene->addInvButtonToHotAreaList();
+		if (!_isDemo)
+			_scene->addInvButtonToHotAreaList();
 	}
 
 	result = _scene->syncState(s);

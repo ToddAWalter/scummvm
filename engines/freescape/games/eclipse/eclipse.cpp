@@ -46,9 +46,9 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 
 	_playerStepIndex = 2;
 	_playerSteps.clear();
-	_playerSteps.push_back(1);
-	_playerSteps.push_back(10);
-	_playerSteps.push_back(25);
+	_playerSteps.push_back(2);
+	_playerSteps.push_back(30);
+	_playerSteps.push_back(60);
 
 	_angleRotationIndex = 1;
 	_angleRotations.push_back(5);
@@ -65,6 +65,7 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_endEntrance = 33;
 
 	_lastThirtySeconds = 0;
+	_lastSecond = -1;
 	_resting = false;
 }
 
@@ -357,10 +358,10 @@ void EclipseEngine::pressedKey(const int keycode) {
 		rotate(-_angleRotations[_angleRotationIndex], 0);
 	} else if (keycode == Common::KEYCODE_w) {
 		rotate(_angleRotations[_angleRotationIndex], 0);
+	} else if (keycode == Common::KEYCODE_a) {
+		changeAngle();
 	} else if (keycode == Common::KEYCODE_s) {
-		increaseStepSize();
-	} else if (keycode ==  Common::KEYCODE_x) {
-		decreaseStepSize();
+		changeStepSize();
 	} else if (keycode == Common::KEYCODE_h) {
 		if (_playerHeightNumber == 0)
 			rise();
@@ -616,6 +617,15 @@ void EclipseEngine::updateTimeVariables() {
 		}
 
 		executeLocalGlobalConditions(false, false, true);
+	}
+
+	if (isEclipse() && isSpectrum() && _currentArea->getAreaID() == 42) {
+		if (_lastSecond != seconds) { // Swap ink and paper colors every second
+			_lastSecond = seconds;
+			int tmp = _gfx->_inkColor;
+			_gfx->_inkColor = _gfx->_paperColor;
+			_gfx->_paperColor = tmp;
+		}
 	}
 }
 

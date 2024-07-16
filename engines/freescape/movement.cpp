@@ -212,6 +212,11 @@ void FreescapeEngine::shoot() {
 	executeLocalGlobalConditions(true, false, false); // Only execute "on shot" room/global conditions
 }
 
+void FreescapeEngine::changeAngle() {
+	_angleRotationIndex++;
+	_angleRotationIndex = _angleRotationIndex % int(_angleRotations.size());
+}
+
 void FreescapeEngine::changePlayerHeight(int index) {
 	int scale = _currentArea->getScale();
 
@@ -219,6 +224,11 @@ void FreescapeEngine::changePlayerHeight(int index) {
 	_playerHeight = 32 * (index + 1) - 16 / scale;
 	assert(_playerHeight > 0);
 	_position.setValue(1, _position.y() + _playerHeight);
+}
+
+void FreescapeEngine::changeStepSize() {
+	_playerStepIndex++;
+	_playerStepIndex = _playerStepIndex % int(_playerSteps.size());
 }
 
 void FreescapeEngine::increaseStepSize() {
@@ -433,7 +443,11 @@ bool FreescapeEngine::runCollisionConditions(Math::Vector3d const lastPosition, 
 	Math::Vector3d direction = newPosition - lastPosition;
 	direction.normalize();
 	ray = Math::Ray(lastPosition, direction);
-	collided = _currentArea->checkCollisionRay(ray, 45);
+	int rayLenght = 45;
+	if (_currentArea->getScale() >= 5)
+		rayLenght = 45 / (2 * _currentArea->getScale());
+
+	collided = _currentArea->checkCollisionRay(ray, rayLenght);
 	if (collided) {
 		gobj = (GeometricObject *)collided;
 		debugC(1, kFreescapeDebugMove, "Collided with object id %d of size %f %f %f", gobj->getObjectID(), gobj->getSize().x(), gobj->getSize().y(), gobj->getSize().z());

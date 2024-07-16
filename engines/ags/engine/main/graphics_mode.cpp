@@ -214,7 +214,7 @@ bool try_init_compatible_mode(const DisplayMode &dm) {
 		Debug::Printf("Maximal allowed window size: %d x %d", device_size.Width, device_size.Height);
 	DisplayMode dm_compat = dm;
 
-	Std::unique_ptr<IGfxModeList> modes(_G(gfxDriver)->GetSupportedModeList(dm.ColorDepth));
+	std::unique_ptr<IGfxModeList> modes(_G(gfxDriver)->GetSupportedModeList(dm.ColorDepth));
 
 	// Windowed mode
 	if (dm.IsWindowed()) {
@@ -238,7 +238,7 @@ bool try_init_compatible_mode(const DisplayMode &dm) {
 	if (!result && dm.IsWindowed()) {
 		// When initializing windowed mode we could start with any random window size;
 		// if that did not work, try to find nearest supported mode, as with fullscreen mode,
-		// except refering to max window size as an upper bound
+		// except referring to max window size as an upper bound
 		if (find_nearest_supported_mode(*modes.get(), screen_size, dm.ColorDepth, nullptr, &device_size, dm_compat)) {
 			dm_compat.Vsync = dm.Vsync;
 			dm_compat.Mode = kWnd_Windowed;

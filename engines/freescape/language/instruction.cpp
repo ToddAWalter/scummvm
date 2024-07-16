@@ -89,6 +89,16 @@ Token::Type FCLInstruction::getType() {
 	return _type;
 }
 
+void FreescapeEngine::executeEntranceConditions(Entrance *entrance) {
+	if (!entrance->_conditionSource.empty()) {
+		_firstSound = true;
+		_syncSound = false;
+
+		debugC(1, kFreescapeDebugCode, "Executing entrance condition with collision flag: %s", entrance->_conditionSource.c_str());
+		executeCode(entrance->_condition, false, true, false, false);
+	}
+}
+
 bool FreescapeEngine::executeObjectConditions(GeometricObject *obj, bool shot, bool collided, bool activated) {
 	bool executed = false;
 	assert(obj != nullptr);
@@ -161,8 +171,12 @@ void FreescapeEngine::executeCode(FCLInstructionVector &code, bool shot, bool co
 			break;
 
 		case Token::VARNOTEQ:
-			if (executeEndIfNotEqual(instruction))
-				ip = codeSize;
+			if (executeEndIfNotEqual(instruction)) {
+				if (isCastle())
+					skip = true;
+				else
+					ip = codeSize;
+			}
 			break;
 		case Token::IFGTEQ:
 			skip = !checkIfGreaterOrEqual(instruction);
@@ -354,6 +368,8 @@ void FreescapeEngine::executeSPFX(FCLInstruction &instruction) {
 		if (src == 0 && dst == 1)
 			_currentArea->remapColor(_currentArea->_usualBackgroundColor, _renderMode == Common::kRenderCGA ? 1 : _currentArea->_underFireBackgroundColor);
 		else if (src == 0 && dst == 0)
+			_currentArea->unremapColor(_currentArea->_usualBackgroundColor);
+		else if (src == 15 && dst == 15) // Found in Total Eclipse (DOS)
 			_currentArea->unremapColor(_currentArea->_usualBackgroundColor);
 		else
 			_currentArea->remapColor(src, dst);

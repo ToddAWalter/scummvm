@@ -1,5 +1,5 @@
 /* ScummVM - Graphic Adventure Engine
-*
+ *
  * ScummVM is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
  * file distributed with this source distribution.
@@ -19,47 +19,17 @@
  *
  */
 
- #include "symbols.h"
+#ifndef AGS_LIB_STD_H
+#define AGS_LIB_STD_H
 
-	.globl	SYM(atari_200hz_init)
-	.globl	SYM(atari_200hz_shutdown)
+// Declare Std namespace
+namespace Std {
+}
 
-	.globl	SYM(counter_200hz)
-
-	.text
-
-SYM(atari_200hz_init):
-	move	sr,-(sp)
-	or	#0x700,sr
-
-	move.l	0x114.w,old_200hz
-	move.l	#my_200hz,0x114.w
-
-	move	(sp)+,sr
-	rts
-
-SYM(atari_200hz_shutdown):
-	move	sr,-(sp)
-	or	#0x700,sr
-
-	move.l	old_200hz,0x114.w
-
-	move	(sp)+,sr
-	rts
-
-	.ascii	"XBRA"
-	.ascii	"SCUM"
-old_200hz:
-	dc.l	0
-my_200hz:
-	addq.l	#1,SYM(counter_200hz)
-
-	move.l	old_200hz,-(sp)
-	rts
+// Map Common::Std to AGS3::std
+namespace AGS3 {
+	namespace std = ::Std;
+} // namespace AGS3
 
 
-	.bss
-	.even
-
-SYM(counter_200hz):
-	ds.l	1
+#endif

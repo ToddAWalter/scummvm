@@ -33,12 +33,27 @@
 namespace Sci {
 
 // Attention:
-//  To identify local-call-subroutines code signatures are used.
+//  To identify locally called procedures, code signatures are used.
 //   Offsets change a lot between different versions of games, especially between different language releases.
-//   That's why it isn't good to hardcode the offsets of those subroutines.
+//   That's why it isn't good to hardcode the offsets of those procedures.
 //
 //  Those signatures are just like the script patcher signatures (for further study: engine\script_patches.cpp)
 //   However you may NOT use command SIG_SELECTOR8 nor SIG_SELECTOR16 atm. Proper support for those may be added later.
+
+
+// Empty signature for matching against any procedure.
+//
+// Use this when maintaining signatures is unnecessary or difficult.
+//
+// For example, a local procedure in the Hoyle4 bridge game has an uninit bug.
+// This procedure is also in Hoyle5, where is is compiled as SCI32 bytecode
+// with debug instructions, and compiled again without debug instructions in
+// the Mac version of Hoyle5. This would require three different signatures,
+// but there are only two procedures in the script so it doesn't matter; it's
+// enough to identify that the bug occurs in a local procedure in the script.
+static const uint16 sig_any_procedure[] = {
+	SIG_END
+};
 
 //                Game: Conquests of Camelot
 //      Calling method: endingCartoon2::changeState
@@ -93,17 +108,6 @@ static const uint16 sig_uninitread_hoyle1_1[] = {
 	0x78,                            // push1
 	0x76,                            // push0
 	0x40,                            // call [...]
-	SIG_END
-};
-
-//                Game: Hoyle 5
-//      Calling method: LeadSeat_NoTrump::think
-//   Subroutine offset: 0x22e (script 753)
-// Applies to at least: English PC
-static const uint16 sig_uninitread_hoyle5_1[] = {
-	0x7e, SIG_ADDTOOFFSET(2),        // line N
-	0x7d, 0x73, 0x74, 0x67, 0x62, 0x64, 0x6c, 0x6e, 0x74,
-		  0x2e, 0x73, 0x63, 0x00,               // file "stgbdlnt.sc"
 	SIG_END
 };
 
@@ -323,6 +327,7 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_HOYLE4,        700,   921,  0,              "Print", "addEdit",                      nullptr,    -1,    -1, { WORKAROUND_FAKE, 118 } }, // when saving the game (may also occur in other situations) - bug #6601, bug #6614
 	{ GID_HOYLE4,        400,   400,  1,            "GinHand", "calcRuns",                     nullptr,     4,     4, { WORKAROUND_FAKE,   0 } }, // sometimes while playing Gin Rummy (e.g. when knocking and placing a card) - bug #5665
 	{ GID_HOYLE4,        500,    17,  1,          "Character", "say",                          nullptr,   504,   504, { WORKAROUND_FAKE,   0 } }, // sometimes while playing Cribbage (e.g. when the opponent says "Last Card") - bug #5662
+	{ GID_HOYLE4,        700,   753,  0,   "LeadSeat_NoTrump", "think",              sig_any_procedure,     4,     6, { WORKAROUND_FAKE,   0 } }, // when playing Bridge
 	{ GID_HOYLE4,        800,   870,  0,     "EuchreStrategy", "thinkLead",                    nullptr,     0,     0, { WORKAROUND_FAKE,   0 } }, // while playing Euchre, happens at least on 2nd or 3rd turn - bug #6602
 	{ GID_HOYLE4,         -1,   937,  0,            "IconBar", "dispatchEvent",                nullptr,   408,   408, { WORKAROUND_FAKE,   0 } }, // pressing ENTER on scoreboard while mouse is not on OK button, may not happen all the time - bug #6603
 	{ GID_HOYLE5,         -1,    14, -1,              nullptr, "select",                       nullptr,     1,     1, { WORKAROUND_FAKE,   0 } }, // dragging the sliders in game settings
@@ -335,7 +340,7 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_HOYLE5,        700,    -1,  1,      "BridgeDefense", "makeContractMinusAce",         nullptr,    -1,    -1, { WORKAROUND_FAKE,   0 } }, // when playing Bridge
 	{ GID_HOYLE5,        700,    -1,  1,      "BridgeDefense", "think",                        nullptr,    -1,    -1, { WORKAROUND_FAKE,   0 } }, // when an opponent is playing in Bridge, objects LeadSeat_NoTrump and others
 	{ GID_HOYLE5,        700,    -1,  1,               "Code", "doit",                         nullptr,    -1,    -1, { WORKAROUND_FAKE,   0 } }, // when placing a bid in Bridge, objects c2_tree, other1_tree, compwe_tree - bugs #11168, #11169, #11170, #11183
-	{ GID_HOYLE5,        700,   753,  0,   "LeadSeat_NoTrump", "think",        sig_uninitread_hoyle5_1,     4,     6, { WORKAROUND_FAKE,   0 } }, // when playing Bridge
+	{ GID_HOYLE5,        700,   753,  0,   "LeadSeat_NoTrump", "think",              sig_any_procedure,     4,     6, { WORKAROUND_FAKE,   0 } }, // when playing Bridge
 	{ GID_HOYLE5,        700,  1115,  0,              nullptr, "select",                       nullptr,     1,     1, { WORKAROUND_FAKE,   0 } }, // when adjusting the attitude slider in Bridge - bug #11166
 	{ GID_HOYLE5,       1100,    18,  0,               "Tray", "init",                         nullptr,     0,     0, { WORKAROUND_FAKE,   0 } }, // when playing Poker
 	{ GID_HOYLE5,       1100,  1100,  0,         "anteButton", "handleEvent",                  nullptr,     1,     1, { WORKAROUND_FAKE,   0 } }, // when exiting Poker
@@ -354,6 +359,7 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_KQ5,            25,    25,  0,              "rm025", "doit",                         nullptr,     0,     0, { WORKAROUND_FAKE,   0 } }, // inside witch forest, when going to the room where the walking rock is
 	{ GID_KQ5,            55,    55,  0,         "helpScript", "doit",                         nullptr,     0,     0, { WORKAROUND_FAKE,   0 } }, // when giving the tambourine to the monster in the labyrinth (only happens at one of the locations) - bug #5198
 	{ GID_KQ5,            -1,   755,  0,              "gcWin", "open",                         nullptr,    -1,    -1, { WORKAROUND_FAKE,   0 } }, // when entering control menu in the FM-Towns version
+	{ GID_KQ5,            -1,   764,  0,              "trash", "select",                       nullptr,    -1,    -1, { WORKAROUND_FAKE,   0 } }, // when clicking delete button on save/restore dialog in the FM-Towns version
 	{ GID_KQ6,            -1,    30,  0,               "rats", "changeState",                  nullptr,     0,     5, { WORKAROUND_FAKE,   0 } }, // rats in the catacombs (temps 0-5, all temps!) - bugs #4958, #4998, #5017
 	{ GID_KQ6,           210,   210,  0,              "rm210", "scriptCheck",                  nullptr,     0,     0, { WORKAROUND_FAKE,   1 } }, // using inventory in that room - bug #4953
 	{ GID_KQ6,           500,   500,  0,              "rm500", "init",                         nullptr,     0,     0, { WORKAROUND_FAKE,   0 } }, // going to island of the beast
@@ -697,6 +703,12 @@ const SciWorkaroundEntry kGetAngle_workarounds[] = {
 //    gameID,           room,script,lvl,          object-name, method-name, local-call-signature, index-range,   workaround
 const SciWorkaroundEntry kGetCWD_workarounds[] = {
 	{ GID_LSL6,           -1,     0,  0,               "LSL6", "play",                   nullptr,     0,     0, { WORKAROUND_IGNORE,    0 } }, // Mac version passes uninitialized global (zero) on startup, then immediately overwrites it with kGetSaveDir
+	SCI_WORKAROUNDENTRY_TERMINATOR
+};
+
+//    gameID,           room,script,lvl,          object-name, method-name, local-call-signature, index-range,   workaround
+const SciWorkaroundEntry kGetSaveFiles_workarounds[] = {
+	{ GID_KQ5,            -1,   764,  0,              "trash", "select",                 nullptr,     0,     0, { WORKAROUND_FAKE,      0 } }, // FM-Towns version when clicking delete save button, save-catalog code passes buffers by value instead of address
 	SCI_WORKAROUNDENTRY_TERMINATOR
 };
 

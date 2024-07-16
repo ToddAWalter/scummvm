@@ -45,7 +45,7 @@ using Shared::Stream;
 using Shared::String;
 using Shared::Version;
 
-typedef Std::shared_ptr<Stream> PStream;
+typedef std::shared_ptr<Stream> PStream;
 
 //-----------------------------------------------------------------------------
 // Savegame version history
@@ -111,7 +111,7 @@ struct SavegameSource {
 	// Savegame format version
 	SavegameVersion     Version;
 	// A ponter to the opened stream
-	Std::unique_ptr<Stream> InputStream;
+	std::unique_ptr<Stream> InputStream;
 
 	SavegameSource();
 };
@@ -126,7 +126,7 @@ enum SavegameDescElem {
 	kSvgDesc_All = kSvgDesc_EnvInfo | kSvgDesc_UserText | kSvgDesc_UserImage
 };
 
-// SavegameDescription describes savegame with information about the enviroment
+// SavegameDescription describes savegame with information about the environment
 // it was created in, and custom data provided by user
 struct SavegameDescription {
 	// Name of the engine that saved the game
@@ -150,7 +150,7 @@ struct SavegameDescription {
 	int                 ColorDepth;
 
 	String              UserText;
-	Std::unique_ptr<Bitmap> UserImage;
+	std::unique_ptr<Bitmap> UserImage;
 
 	SavegameDescription();
 };
