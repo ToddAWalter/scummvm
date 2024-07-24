@@ -122,9 +122,9 @@ void Dialog::drawType2BackgroundDragon(Graphics::ManagedSurface *dst, const Comm
 	RequestData::drawCorners(dst, 11, _rect.x, _rect.y, _rect.width, _rect.height);
 	if (!title.empty()) {
 		// TODO: Maybe should measure the font?
-		_state->_loc.y += 10;
-		_state->_loc.height -= 10;
-		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 4, title, 0, true);
+		_state->_loc.y += 11;
+		_state->_loc.height -= 11;
+		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 4, title, 0, true, 0, 15);
 	}
 
 	if (hasFlag(kDlgFlagFlatBg)) {
@@ -136,6 +136,8 @@ void Dialog::drawType2BackgroundDragon(Graphics::ManagedSurface *dst, const Comm
 	RequestData::drawCorners(dst, 19, _state->_loc.x - 2, _state->_loc.y - 2,
 							_state->_loc.width + 4, _state->_loc.height + 4);
 
+	_state->_loc.y++;
+	_state->_loc.height--;
 	_state->_loc.x += 8;
 	_state->_loc.width -= 16;
 }
@@ -151,7 +153,7 @@ void Dialog::drawType2BackgroundChina(Graphics::ManagedSurface *dst, const Commo
 		// TODO: Maybe should measure the font?
 		_state->_loc.y += 11;
 		_state->_loc.height -= 11;
-		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 2, title, _fontColor, false);
+		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 2, title, _fontColor, false, 0, 0);
 	}
 }
 
@@ -167,7 +169,7 @@ void Dialog::drawType2BackgroundBeamish(Graphics::ManagedSurface *dst, const Com
 		// TODO: Maybe should measure the font?
 		_state->_loc.y += 11;
 		_state->_loc.height -= 11;
-		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 2, title, _fontColor, false);
+		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 2, title, _fontColor, false, 0, 0);
 	}
 }
 
@@ -189,8 +191,18 @@ void Dialog::drawType2(Graphics::ManagedSurface *dst, DialogDrawStage stage) {
 		txt = _str;
 	}
 
+	// Special case for HoC to update the Shekel count in their description.
+	// This is how the original game does it too.
+	DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
+	if (_fileNum == 0x5d && _num == 0x32 && engine->getGameId() == GID_HOC) {
+		int16 shekels = engine->getGDSScene()->getGlobal(44);
+		const Common::String numstr = Common::String::format("%3d", shekels);
+		uint32 offset = txt.find("###");
+		if (offset != Common::String::npos)
+			txt.replace(offset, 3, numstr);
+	}
+
 	if (stage == kDlgDrawStageBackground) {
-		DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
 		if (engine->getGameId() == GID_DRAGON)
 			drawType2BackgroundDragon(dst, title);
 		else if (engine->getGameId() == GID_HOC)
@@ -210,6 +222,16 @@ void Dialog::drawType2(Graphics::ManagedSurface *dst, DialogDrawStage stage) {
 static void _filledCircle(int x, int y, int xr, int yr, Graphics::ManagedSurface *dst, byte fgcol, byte bgcol) {
 	Graphics::drawEllipse(x - xr, y - yr, x + xr, y + yr, bgcol, true, _drawPixel, dst);
 	Graphics::drawEllipse(x - xr, y - yr, x + xr, y + yr, fgcol, false, _drawPixel, dst);
+}
+
+// Find the last line that will be printed - we don't use empty lines
+static uint _countPrintedLines(const Common::Array<Common::String> &lines) {
+	uint nprinted = 0;
+	for (uint i = 0; i < lines.size(); i++) {
+		if (!lines[i].empty())
+			nprinted = i;
+	}
+	return nprinted + 1;
 }
 
 // Comic thought box made up of circles with 2 circles going up to it.
@@ -360,11 +382,12 @@ void Dialog::drawFindSelectionXY() {
 	if (_state->_strMouseLoc) {
 		Common::Array<Common::String> lines;
 		int maxWidth = font->wordWrapText(_str, _state->_loc.width, lines);
+		uint nlines = _countPrintedLines(lines);
 
 		if (hasFlag(kDlgFlagLeftJust)) {
 			x = x + (_state->_loc.width - maxWidth - 1) / 2;
 			_state->_lastMouseX = x;
-			y = y + (_state->_loc.height - ((int)lines.size() * _state->_charHeight) - 1) / 2;
+			y = y + (_state->_loc.height - ((int)nlines * _state->_charHeight) - 1) / 2;
 			_state->_lastMouseY = y;
 		}
 
@@ -441,9 +464,10 @@ void Dialog::drawFindSelectionTxtOffset() {
 
 	Common::Array<Common::String> lines;
 	int maxWidth = font->wordWrapText(_str, _state->_loc.width, lines);
+	uint numPrintedLines = _countPrintedLines(lines);
 
 	if (hasFlag(kDlgFlagLeftJust)) {
-		int textHeight = lines.size() * lineHeight;
+		int textHeight = numPrintedLines * lineHeight;
 		dlgx += (_state->_loc.width - maxWidth - 1) / 2;
 		dlgy += (_state->_loc.height - textHeight - 1) / 2;
 	}
@@ -486,8 +510,9 @@ void Dialog::drawForeground(Graphics::ManagedSurface *dst, uint16 fontcol, const
 	const DgdsFont *font = getDlgTextFont();
 	const int h = font->getFontHeight();
 	font->wordWrapText(txt, _state->_loc.width, lines);
+	uint numPrintedLines = _countPrintedLines(lines);
 
-	int ystart = _state->_loc.y + (_state->_loc.height - (int)lines.size() * h) / 2;
+	int ystart = _state->_loc.y + (_state->_loc.height - (int)numPrintedLines * h) / 2;
 
 	int x = _state->_loc.x;
 

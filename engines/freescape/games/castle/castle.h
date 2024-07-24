@@ -27,13 +27,16 @@ public:
 	~CastleEngine();
 
 	Graphics::ManagedSurface *_option;
+	Graphics::Surface *_menu;
 	void initGameState() override;
 	void endGame() override;
+
+	void drawInfoMenu() override;
 	void loadAssetsDOSFullGame() override;
 	void loadAssetsDOSDemo() override;
 	void loadAssetsAmigaDemo() override;
 	void loadAssetsZXFullGame() override;
-	void titleScreen() override;
+	void borderScreen() override;
 	void selectCharacterScreen();
 	void drawOption();
 
@@ -58,10 +61,12 @@ public:
 
 	void drawStringInSurface(const Common::String &str, int x, int y, uint32 fontColor, uint32 backColor, Graphics::Surface *surface, int offset = 0) override;
 	//void drawStringInSurface(const Common::String &str, int x, int y, uint32 primaryFontColor, uint32 secondaryFontColor, uint32 backColor, Graphics::Surface *surface, int offset = 0) override;
-	Graphics::Surface *loadFrames(Common::SeekableReadStream *file, int pos, int numFrames, uint32 back);
+	Graphics::Surface *loadFramesWithHeader(Common::SeekableReadStream *file, int pos, int numFrames, uint32 back);
+	Graphics::Surface *loadFrames(Common::SeekableReadStream *file, Graphics::Surface *surface, int width, int height, uint32 back);
 
 	Graphics::Surface *_keysFrame;
 	int _numberKeys;
+	bool _useRockTravel;
 
 private:
 	Common::SeekableReadStream *decryptFile(const Common::Path &filename);

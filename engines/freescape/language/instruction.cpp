@@ -131,15 +131,16 @@ void FreescapeEngine::executeLocalGlobalConditions(bool shot, bool collided, boo
 		executeCode(conditions[i], shot, collided, timer, false);
 	}
 
+	_executingGlobalCode = true;
 	debugC(1, kFreescapeDebugCode, "Executing global conditions (%d)", _conditions.size());
 	for (uint i = 0; i < _conditions.size(); i++) {
 		debugC(1, kFreescapeDebugCode, "%s", _conditionSources[i].c_str());
 		executeCode(_conditions[i], shot, collided, timer, false);
 	}
+	_executingGlobalCode = false;
 }
 
 void FreescapeEngine::executeCode(FCLInstructionVector &code, bool shot, bool collided, bool timer, bool activated) {
-	assert(!(shot && collided));
 	int ip = 0;
 	bool skip = false;
 	int codeSize = code.size();
@@ -550,9 +551,20 @@ void FreescapeEngine::executeMakeVisible(FCLInstruction &instruction) {
 	debugC(1, kFreescapeDebugCode, "Making obj %d visible in area %d!", objectID, areaID);
 	if (_areaMap.contains(areaID)) {
 		Object *obj = _areaMap[areaID]->objectWithID(objectID);
-		if (!obj && isCastle())
+		if (!obj && isCastle() && _executingGlobalCode)
 			return; // No side effects
-		assert(obj); // We assume an object should be there
+
+		if (!obj) {
+			obj = _areaMap[255]->objectWithID(objectID);
+			if (!obj) {
+				error("obj %d does not exists in area %d nor in the global one!", objectID, areaID);
+				return;
+			}
+			_currentArea->addObjectFromArea(objectID, _areaMap[255]);
+			obj = _areaMap[areaID]->objectWithID(objectID);
+			assert(obj); // We know that an object should be there
+		}
+
 		obj->makeVisible();
 		if (!isDriller()) {
 			Math::AABB boundingBox = createPlayerAABB(_position, _playerHeight);

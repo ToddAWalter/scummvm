@@ -209,6 +209,7 @@ void FreescapeEngine::shoot() {
 
 		_delayedShootObject = gobj;
 	}
+
 	executeLocalGlobalConditions(true, false, false); // Only execute "on shot" room/global conditions
 }
 
@@ -445,7 +446,7 @@ bool FreescapeEngine::runCollisionConditions(Math::Vector3d const lastPosition, 
 	ray = Math::Ray(lastPosition, direction);
 	int rayLenght = 45;
 	if (_currentArea->getScale() >= 5)
-		rayLenght = 45 / (2 * _currentArea->getScale());
+		rayLenght = MAX(5, 45 / (2 * _currentArea->getScale()));
 
 	collided = _currentArea->checkCollisionRay(ray, rayLenght);
 	if (collided) {

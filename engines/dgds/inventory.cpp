@@ -27,20 +27,24 @@
 #include "dgds/image.h"
 #include "dgds/font.h"
 #include "dgds/request.h"
+#include "dgds/includes.h"
 
 namespace Dgds {
+
+/*static*/ const byte Inventory::HOC_CHARACTER_QUALS[] = { 0, 9, 7, 8 };
+
 
 Inventory::Inventory() : _isOpen(false), _prevPageBtn(nullptr), _nextPageBtn(nullptr),
 	_invClock(nullptr), _itemZoomBox(nullptr), _exitButton(nullptr), _clockSkipMinBtn(nullptr),
 	_itemArea(nullptr), _clockSkipHrBtn(nullptr), _dropBtn(nullptr), _itemBox(nullptr),
-	_highlightItemNo(-1), _itemOffset(0), _openedFromSceneNum(0), _showZoomBox(false),
-	_fullWidth(-1)
+	_giveToBtn(nullptr), _changeCharBtn(nullptr), _highlightItemNo(-1), _itemOffset(0),
+	_openedFromSceneNum(0), _showZoomBox(false), _fullWidth(-1)
 {
 }
 
 void Inventory::open() {
 	// Allow double-open becuase that's how the inventory shows item
-	// descriptions.r
+	// descriptions.
 	_isOpen = true;
 	DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
 	int curScene = engine->getScene()->getNum();
@@ -81,6 +85,10 @@ void Inventory::setRequestData(const REQFileData &data) {
 
 	_clockSkipMinBtn = dynamic_cast<ButtonGadget *>(req.findGadgetByNumWithFlags3Not0x40(24));
 	_clockSkipHrBtn = dynamic_cast<ButtonGadget *>(req.findGadgetByNumWithFlags3Not0x40(25));
+
+	_giveToBtn = dynamic_cast<ButtonGadget *>(req.findGadgetByNumWithFlags3Not0x40(29));
+	_changeCharBtn = dynamic_cast<ButtonGadget *>(req.findGadgetByNumWithFlags3Not0x40(27));
+
 	_dropBtn = dynamic_cast<ButtonGadget *>(req.findGadgetByNumWithFlags3Not0x40(16));
 	_itemArea = dynamic_cast<ImageGadget *>(req.findGadgetByNumWithFlags3Not0x40(8));
 
@@ -119,30 +127,54 @@ void Inventory::drawHeader(Graphics::ManagedSurface &surf) {
 
 void Inventory::draw(Graphics::ManagedSurface &surf, int itemCount) {
 	RequestData &boxreq = _reqData._requests[0];
+	DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
+	DgdsGameId gameId = engine->getGameId();
 
 	if (_showZoomBox) {
-		_itemZoomBox->_flags3 &= ~0x40;
+		_itemZoomBox->setVisible(true);
 		boxreq._rect.width = _fullWidth;
 	} else {
-		_itemZoomBox->_flags3 |= 0x40;
+		_itemZoomBox->setVisible(false);
 		boxreq._rect.width = _itemBox->_width + _itemBox->_x * 2;
 	}
 
 	//
 	// Decide whether the nextpage/prevpage buttons should be visible
 	//
-	if ((_itemArea->_width / _itemArea->_xStep) *
-			(_itemArea->_height / _itemArea->_yStep) > itemCount) {
-		// not visible.
-		_prevPageBtn->_flags3 |= 0x40;
-		_nextPageBtn->_flags3 |= 0x40;
-	} else {
-		// clear flag 0x40 - visible.
-		_prevPageBtn->_flags3 &= ~0x40;
-		_nextPageBtn->_flags3 &= ~0x40;
+	bool needPageButtons =
+		(_itemArea->_width / _itemArea->_xStep) *
+			(_itemArea->_height / _itemArea->_yStep) < itemCount;
+	_prevPageBtn->setVisible(needPageButtons);
+	_nextPageBtn->setVisible(needPageButtons);
+
+	//
+	// Decide whether the time buttons should be visible (only in Dragon)
+	//
+	if (gameId != GID_DRAGON) {
+		if (_clockSkipMinBtn)
+			_clockSkipMinBtn->setVisible(false);
+		if (_clockSkipHrBtn)
+			_clockSkipHrBtn->setVisible(false);
+	}
+
+	//
+	// Decide whether the give-to and swap char buttons should be visible (only in China)
+	//
+	int16 otherChar = 0;
+	if (gameId == GID_HOC) {
+		otherChar = engine->getGDSScene()->getGlobal(0x34);
+		_giveToBtn->setVisible(otherChar != 0);
+		// This is only used to give the location so it's always false.
+		_changeCharBtn->setVisible(false);
 	}
 
 	boxreq.drawInvType(&surf);
+
+	if (gameId == GID_HOC && otherChar != 0) {
+		int16 swapCharIcon = DgdsEngine::HOC_CHAR_SWAP_ICONS[otherChar];
+		Common::Point pt = _changeCharBtn->topLeft();
+		engine->getIcons()->drawBitmap(swapCharIcon, pt.x, pt.y, boxreq._rect.toCommonRect(), surf);
+	}
 
 	drawHeader(surf);
 	drawTime(surf);
@@ -160,7 +192,7 @@ void Inventory::drawTime(Graphics::ManagedSurface &surf) {
 	surf.fillRect(Common::Rect(clockpos, _invClock->_width, _invClock->_height), 0);
 	RequestData::drawCorners(&surf, 19, clockpos.x - 2, clockpos.y - 2,
 								_invClock->_width + 4, _invClock->_height + 4);
-	font->drawString(&surf, timeStr, clockpos.x, clockpos.y, font->getStringWidth(timeStr), _invClock->_col3);
+	font->drawString(&surf, timeStr, clockpos.x + 4, clockpos.y, font->getStringWidth(timeStr), _invClock->_col3);
 }
 
 void Inventory::drawItems(Graphics::ManagedSurface &surf) {
@@ -275,10 +307,9 @@ bool Inventory::isItemInInventory(GameItem &item) {
 	DgdsGameId gameId = engine->getGameId();
 	bool result = item._inSceneNum == 2; // && (item._flags & 4)
 	if (gameId == GID_HOC) {
-		byte gameCharacterQuality[] = { 0, 9, 7, 8 };	// TODO: Move this elsewhere?
 		int16 currentCharacter = engine->getGDSScene()->getGlobal(0x33);
 		assert(currentCharacter < 4);
-		result = result && item._quality == gameCharacterQuality[currentCharacter];
+		result = result && item._quality == HOC_CHARACTER_QUALS[currentCharacter];
 	}
 
 	return result;
@@ -316,12 +347,14 @@ void Inventory::mouseLUp(const Common::Point &pt) {
 		return;
 	}
 
+	GDSScene *gds = engine->getGDSScene();
+
 	engine->setMouseCursor(0);
 
 	int itemsPerPage = (_itemArea->_width / _itemArea->_xStep) * (_itemArea->_height / _itemArea->_yStep);
 	if (_exitButton->containsPoint(pt)) {
 		close();
-	} else if (_nextPageBtn->containsPoint(pt) && !(_nextPageBtn->_flags3 & 0x40)) {
+	} else if (_nextPageBtn->containsPoint(pt) && _nextPageBtn->isVisible()) {
 		int numInvItems = 0;
 		Common::Array<GameItem> &items = engine->getGDSScene()->getGameItems();
 		for (auto &item: items) {
@@ -330,13 +363,25 @@ void Inventory::mouseLUp(const Common::Point &pt) {
 		}
 		if (_itemOffset < numInvItems)
 			_itemOffset += itemsPerPage;
-	} else if (_prevPageBtn->containsPoint(pt) && !(_prevPageBtn->_flags3 & 0x40)) {
+	} else if (_prevPageBtn->containsPoint(pt) && _prevPageBtn->isVisible()) {
 		if (_itemOffset > 0)
 			_itemOffset -= itemsPerPage;
-	} else if (_clockSkipMinBtn && _clockSkipMinBtn->containsPoint(pt)) {
+	} else if (_clockSkipMinBtn && _clockSkipMinBtn->isVisible() && _clockSkipMinBtn->containsPoint(pt)) {
 		engine->getClock().addGameTime(1);
-	} else if (_clockSkipHrBtn && _clockSkipHrBtn->containsPoint(pt)) {
+	} else if (_clockSkipHrBtn && _clockSkipHrBtn->isVisible() && _clockSkipHrBtn->containsPoint(pt)) {
 		engine->getClock().addGameTime(60);
+	} else if (_giveToBtn && _giveToBtn->isVisible() && _giveToBtn->containsPoint(pt)) {
+		Common::Array<GameItem> &items = engine->getGDSScene()->getGameItems();
+		for (auto &item: items) {
+			if (item._num == _highlightItemNo) {
+				item._quality = HOC_CHARACTER_QUALS[gds->getGlobal(0x34)];
+				break;
+			}
+		}
+	} else if (_changeCharBtn && _changeCharBtn->containsPoint(pt)) {
+		int16 prevChar = gds->getGlobal(0x33);
+		gds->setGlobal(0x33, gds->getGlobal(0x34));
+		gds->setGlobal(0x34, prevChar);
 	} else if (_dropBtn && _dropBtn->containsPoint(pt) && _highlightItemNo >= 0) {
 		Common::Array<GameItem> &items = engine->getGDSScene()->getGameItems();
 		for (auto &item: items) {
@@ -354,6 +399,13 @@ void Inventory::mouseRUp(const Common::Point &pt) {
 		GameItem *underMouse = itemUnderMouse(pt);
 		if (underMouse) {
 			setShowZoomBox(true);
+			if (engine->getGameId() == GID_HOC) {
+				// Slight hack - blank the background if zooming in HOC because it uses
+				// different palettes for zoomed items (original does this too)
+				// We also do this on scene transition, but need to do it again
+				// here for zooming within the box.
+				engine->getBackgroundBuffer().fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
+			}
 			engine->getScene()->runOps(underMouse->onRClickOps);
 		}
 	} else {

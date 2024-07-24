@@ -155,6 +155,7 @@ static const char *const selectorNameTable[] = {
 	"fade",         // Longbow, Shivers
 	"enable",       // Longbow, SQ6
 	"alterEgo",     // LSL5
+	"normalize",    // Pepper, GK1, QFG4
 	"delete",       // EcoQuest 1
 	"size",         // EcoQuest 1
 	"signal",       // EcoQuest 1, GK1
@@ -167,7 +168,6 @@ static const char *const selectorNameTable[] = {
 	"printLang",    // GK2
 	"test",         // Torin
 	"get",          // Torin, GK1
-	"normalize",    // GK1
 	"setReal",      // GK1
 	"set",          // Torin
 	"clear",        // Torin
@@ -297,6 +297,7 @@ enum ScriptPatcherSelectors {
 	SELECTOR_fade,
 	SELECTOR_enable,
 	SELECTOR_alterEgo,
+	SELECTOR_normalize,
 	SELECTOR_delete,
 	SELECTOR_size,
 	SELECTOR_signal,
@@ -310,7 +311,6 @@ enum ScriptPatcherSelectors {
 	SELECTOR_printLang,
 	SELECTOR_test,
 	SELECTOR_get,
-	SELECTOR_normalize,
 	SELECTOR_setReal,
 	SELECTOR_set,
 	SELECTOR_clear,
@@ -1170,10 +1170,53 @@ static const uint16 camelotPatchSwordEvents[] = {
 	PATCH_END
 };
 
+// After viewing the purse with "count money" or several other commands, the game
+//  always displays a message saying that the purse is empty, even when it isn't.
+//  ARTHUR:handleEvent incorrectly tests the return value of the purse function
+//  instead of also testing the three money globals.
+//
+// We fix this by only displaying the empty-purse message when all of the money
+//  globals are zero.
+//
+// Applies to: All versions
+// Responsible method: ARTHUR:handleEvent
+// Fixes bug: #15288
+static const uint16 camelotSignaturePurseMessages[] = {
+	0x18,                               // not
+	0x30, SIG_UINT16(0x0014),           // bnt 0014 [ selected money ]
+	0x7a,                               // push2
+	0x38, SIG_UINT16(0x0320),           // pushi 0320
+	0x7a,                               // push2
+	SIG_MAGICDWORD,
+	0x39, 0x1d,                         // pushi 1d
+	0x39, 0x22,                         // pushi 22
+	0x43, 0x40, 0x04,                   // callk Random 04
+	0x36,                               // push
+	0x47, 0xff, 0x00, 0x04,             // calle Print [ empty-purse message ]
+	0x32, SIG_UINT16(0x0011),           // jmp 0011    [ cleanup ]
+	SIG_ADDTOOFFSET(+9),
+	0x43, 0x40, 0x04,                   // callk Random 04
+	SIG_END
+};
+
+static const uint16 camelotPatchPurseMessages[] = {
+	0x2f, 0x16,                         // bt 16  [ selected money ]
+	0x89, 0x7a,                         // lsg 7a [ gold ]
+	0x81, 0x79,                         // lag 79 [ silver ]
+	0x14,                               // or
+	0x89, 0x78,                         // lsg 78 [ copper ]
+	0x14,                               // or
+	0x2f, 0x1d,                         // bt 1d  [ skip empty-purse message ]
+	PATCH_GETORIGINALBYTES(4, 9),       // [ prepare empty-purse message ]
+	0x32, PATCH_UINT16(0x0009),         // jmp 0009 [ callk Random / calle Print ]
+	PATCH_END
+};
+
 //         script, description,                                       signature                             patch
 static const SciScriptPatcherEntry camelotSignatures[] = {
 	{ true,     0, "fix sword sheathing",                          1, camelotSignatureSwordSheathing,       camelotPatchSwordSheathing },
 	{ true,     0, "fix sword events",                             1, camelotSignatureSwordEvents,          camelotPatchSwordEvents },
+	{ true,     0, "fix purse messages",                           1, camelotSignaturePurseMessages,        camelotPatchPurseMessages },
 	{ true,    11, "fix hunter missing points",                    1, camelotSignatureHunterMissingPoints,  camelotPatchHunterMissingPoints },
 	{ true,    62, "fix peepingTom Sierra bug",                    1, camelotSignaturePeepingTom,           camelotPatchPeepingTom },
 	{ true,    64, "fix Fatima room messages",                     2, camelotSignatureFatimaRoomMessages,   camelotPatchFatimaRoomMessages },
@@ -1887,6 +1930,32 @@ static const uint16 fanmadePatchDemoQuestInfiniteLoop[] = {
 	PATCH_END
 };
 
+// WORKAROUND
+// Betrayed Alliance contains a malformed menu string that happens to have no
+//  visible effect in the original interpreter, but does in ours. The speed menu
+//  string has the word "Music" at the end, making it appear to be part of the
+//  previous menu item shortcut. Sierra's parser happened to ignore this invalid
+//  suffix, but ours accepts it and displays it in the speed menu.
+//
+// It would take significant modifications to our menu parser to match the
+//  original interpreter's undefined behavior, and the string has already been
+//  fixed in newer versions of the game, so we just patch the bad menu string.
+//
+// Applies to: Betrayed Alliance version 1.3.2 and below
+// Responsible method: heap in script 997
+// Fixes bug: #15159
+static const uint16 fangameSignatureBetrayedAllianceMenu[] = {
+	SIG_MAGICDWORD,                                 // :Slower
+	0x60, 0x2d, 0x4d, 0x75, 0x73, 0x69, 0x63, 0x00, // `-Music
+	SIG_END
+};
+
+static const uint16 fangamePatchBetrayedAllianceMenu[] = {
+	PATCH_ADDTOOFFSET(+2),
+	0x00,                                           // :Slower`-
+	PATCH_END
+};
+
 // This patch is for a bug that first appeared in the LSL3 volume dialog and was
 //  then copied into the templates included with SCI Studio and SCI Companion,
 //  causing it to appear in fan games. See larry3SignatureVolumeSlider.
@@ -1976,6 +2045,7 @@ static const SciScriptPatcherEntry fanmadeSignatures[] = {
 	{  true,     0, "SCI Template: disable volume reset",          1, fangameSignatureVolumeReset2,              fangamePatchVolumeReset2 },
 	{  true,   994, "Cascade Quest: fix auto-saving",              1, fanmadeSignatureCascadeQuestFixAutoSaving, fanmadePatchCascadeQuestFixAutoSaving },
 	{  true,   997, "SCI Template: fix volume slider",             1, fangameSignatureVolumeSlider1,             fangamePatchVolumeSlider1 },
+	{  true,   997, "Betrayed Alliance: fix menu",                 1, fangameSignatureBetrayedAllianceMenu,      fangamePatchBetrayedAllianceMenu },
 	{  true,   997, "SCI Template: fix volume slider",             1, fangameSignatureVolumeSlider2,             fangamePatchVolumeSlider2 },
 	{  true,   999, "Demo Quest: infinite loop on typo",           1, fanmadeSignatureDemoQuestInfiniteLoop,     fanmadePatchDemoQuestInfiniteLoop },
 	SCI_SIGNATUREENTRY_TERMINATOR
@@ -9242,10 +9312,37 @@ static const uint16 larry5PatchRoom500PaletteAnimation[] = {
 	PATCH_END
 };
 
+// The poker jackpot is incorrectly reset to zero when restarting the game.
+//  When starting a new game by starting the program, the jackpot's global
+//  is initialized from the password file MEMORY.DRV with a default value
+//  of one thousand. But when restarting, the password prompt is skipped,
+//  and the jackpot global is left with its initial heap value of zero.
+//
+// We fix this by setting the jackpot's initial heap value to one thousand.
+//
+// Applies to: All versions
+// Responsible method: heap in script 0
+static const uint16 larry5SignaturePokerJackpotInit[] = {
+	SIG_MAGICDWORD,
+	SIG_UINT16(0x03e7),                // global 20 = 999
+	SIG_UINT16(0x0014),                // global 21 = 20
+	SIG_UINT16(0x0001),                // global 22 = 1
+	SIG_ADDTOOFFSET(+0x118),
+	SIG_UINT16(0x0000),                // global 163 = 0 [ jackpot ]
+	SIG_END
+};
+
+static const uint16 larry5PatchPokerJackpotInit[] = {
+	PATCH_ADDTOOFFSET(+0x011e),
+	PATCH_UINT16(0x03e8),              // global 163 = 1000 [ jackpot ]
+	PATCH_END
+};
+
 //          script, description,                                      signature                               patch
 static const SciScriptPatcherEntry larry5Signatures[] = {
 	{  true,     0, "update stopGroop client",                     1, larry5SignatureUpdateStopGroopClient,   larry5PatchUpdateStopGroopClient },
 	{  true,     0, "TPrint uninit parameter",                     1, larry5SignatureHTPrintUninitParameter,  larry5PatchTPrintUninitParameter },
+	{  true,     0, "poker jackpot init",                          1, larry5SignaturePokerJackpotInit,        larry5PatchPokerJackpotInit },
 	{  true,   130, "speed up palette animation",                  1, larry5SignatureMrBiggPaletteAnimation,  larry5PatchMrBiggPaletteAnimation },
 	{  true,   190, "hollywood sign",                              1, larry5SignatureHollywoodSign,           larry5PatchHollywoodSign },
 	{  true,   280, "English-only: fix green card limo bug",       1, larry5SignatureGreenCardLimoBug,        larry5PatchGreenCardLimoBug },
@@ -13312,9 +13409,76 @@ static const uint16 pepperPatchPuzzleBox[] = {
 	PATCH_END
 };
 
+// In the maze, clicking on the dictionary word "musty" can display the wrong
+//  definition. The east doorway is missing a doVerb method, so unlike the
+//  other doorways, it does not update the dictionary word global.
+//
+// We fix this by patching mazeHallE to use mazeHallW's method dictionary
+//  instead of its own empty one. This creates the missing doVerb method.
+//
+// Applies to: All versions
+// Responsible method: heap in script 400
+// Fixes bug: #15266
+static const uint16 pepperSignatureMustyMessage[] = {
+	SIG_MAGICDWORD,                      // mazeHallW
+	SIG_UINT16(0x015a),                  // property dictionary = none
+	SIG_UINT16(0x015a),                  // method dictionary   = doVerb
+	SIG_ADDTOOFFSET(+0x58),              // mazeHallE
+	SIG_UINT16(0x0160),                  // property dictionary = none
+	SIG_UINT16(0x0160),                  // method dictionary   = empty
+	SIG_END
+};
+
+static const uint16 pepperPatchMustyMessage[] = {
+	PATCH_ADDTOOFFSET(+0x5e),           // mazeHallE
+	PATCH_UINT16(0x015a),               // method dictionary = doVerb
+	PATCH_END
+};
+
+// In Act 6, exiting the Penn Mansion kitchen and re-entering while the butler
+//  is standing guard can lockup the game. This also occurs in the original.
+//  The bug can be triggered by clicking Walk on the kitchen when the speed
+//  slider is set to slow, or by first clicking the Truth icon on the kitchen.
+//
+// When clicking Walk on the kitchen, ego starts turning and a 3 cycle timer is
+//  set. When the timer cues, sCaughtGoToKitchen:changeState(0) calls handsOff
+//  and sets ego's motion to zero. But if ego is in the middle of turning, the
+//  turn will complete and ego will then begin walking. This cannot be seen,
+//  because the script hides ego so that the butler's view can contain Pepper.
+//  When the scene completes, ego suddenly appears in an unexpected location,
+//  causing ego's final motion to fail to reach the new-room trigger.
+//
+// We fix this by calling pepper:normalize instead of pepper:setMotion(0) in
+//  sCaughtGoToKitchen:changeState(0). This stops ego's turn in addition to
+//  their motion. The setMotion call is redundant because it is preceded
+//  by a handsOff call that also calls setMotion(0).
+//
+// Applies to: All versions
+// Responsible method: sCaughtGoToKitchen:changeState(0)
+// Fixes bug: #15263
+static const uint16 pepperSignatureKitchenLockup[] = {
+	0x38, SIG_SELECTOR16(setMotion),     // pushi setMotion
+	0x78,                                // push1
+	0x76,                                // push0
+	0x81, 0x00,                          // lag 00
+	0x4a, SIG_MAGICDWORD, 0x06,          // send 06 [ pepper setMotion: 0 ]
+	0x38, SIG_SELECTOR16(stop),          // pushi stop
+	SIG_END
+};
+
+static const uint16 pepperPatchKitchenLockup[] = {
+	0x38, PATCH_SELECTOR16(normalize),  // pushi normalize
+	0x39, 0x00,                         // pushi 00
+	PATCH_ADDTOOFFSET(+2),
+	0x4a, 0x04,                         // send 04 [ pepper normalize: ]
+	PATCH_END
+};
+
 //          script, description,                                         signature                            patch
 static const SciScriptPatcherEntry pepperSignatures[] = {
 	{  true,   116, "puzzle box fix",                                 1, pepperSignaturePuzzleBox,            pepperPatchPuzzleBox },
+	{  true,   380, "kitchen lockup fix",                             1, pepperSignatureKitchenLockup,        pepperPatchKitchenLockup },
+	{  true,   400, "musty message fix",                              1, pepperSignatureMustyMessage,         pepperPatchMustyMessage },
 	{  true,   894, "glass jar fix",                                  1, pepperSignatureGlassJar,             pepperPatchGlassJar },
 	{  true,   928, "Narrator lockup fix",                            1, sciNarratorLockupSignature,          sciNarratorLockupPatch },
 	SCI_SIGNATUREENTRY_TERMINATOR
@@ -21275,11 +21439,11 @@ static const uint16 sq4FloppyPatchEndlessFlight[] = {
 //  without a pointer to the text. This has to be a typo, because there is no
 //  unused text to be found within that script.
 //
-// Sierra's "patch" didn't include a proper fix (as in a modified script).
-//  Instead they shipped a dummy text resource, which somewhat "solved" the
-//  issue in Sierra SCI, but it still showed another textbox with garbage in
-//  it. Funnily Sierra must have known that, because that new text resource
-//  contains: "Hi! This is a kludge!"
+// Sierra's "patch" didn't alter any scripts. Instead they shipped a dummy text
+//  resource, which prevented the missing-resource crash, but still showed
+//  another textbox with garbage in it. The new text resource contains the text:
+//  "Hi! This is a kludge!" By avoiding script changes, the patch was compatible
+//  with all versions on all platforms, and didn't invalidate existing saves.
 //
 // A copy of this script exists in the arcade when the sequel police arrive, but
 //  it has an additional typo that adds another broken function call to the ATM

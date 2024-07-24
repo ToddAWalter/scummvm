@@ -73,6 +73,10 @@
 
 namespace Dgds {
 
+/*static*/
+const byte DgdsEngine::HOC_CHAR_SWAP_ICONS[] = { 0, 20, 21, 22 };
+
+
 DgdsEngine::DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	: Engine(syst), _fontManager(nullptr), _console(nullptr), _inventory(nullptr),
 	_soundPlayer(nullptr), _decompressor(nullptr), _scene(nullptr),
@@ -91,6 +95,8 @@ DgdsEngine::DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	} else if (!strcmp(gameDesc->gameId, "beamish")) {
 		_isDemo = (gameDesc->flags & ADGF_DEMO);
 		_gameId = GID_WILLY;
+	} else if (!strcmp(gameDesc->gameId, "quarky")) {
+		_gameId = GID_QUARKY;
 	} else if (!strcmp(gameDesc->gameId, "sq5demo")) {
 		_isDemo = true;
 		_gameId = GID_SQ5DEMO;
@@ -164,11 +170,16 @@ bool DgdsEngine::changeScene(int sceneNum) {
 
 	_gameGlobals->setLastSceneNum(sceneNum);
 
-	// Save the current foreground if we are going to the inventory, clear it otherwise.
-	if (sceneNum == 2)
+	// Save the current foreground if we are going to the inventory,
+	// *except* for HoC zoomed inventory - that also clears background
+	// because it uses a different palette for the zoomed item view.
+	if (sceneNum == 2 && (!(getGameId() == GID_HOC && _inventory->isZoomVisible()))) {
+		// Force-draw the inv button here to keep it in background
+		checkDrawInventoryButton();
 		_backgroundBuffer.blitFrom(_compositionBuffer);
-	else
+	} else {
 		_backgroundBuffer.fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
+	}
 
 	_scene->runLeaveSceneOps();
 
@@ -198,8 +209,11 @@ bool DgdsEngine::changeScene(int sceneNum) {
 	if (_scene->getMagic() != _gdsScene->getMagic())
 		error("Scene %s magic does (0x%08x) not match GDS magic (0x%08x)", sceneFile.c_str(), _scene->getMagic(), _gdsScene->getMagic());
 
-	if (!_scene->getAdsFile().empty())
-		_adsInterp->load(_scene->getAdsFile());
+	Common::String adsFile = _scene->getAdsFile();
+	adsFile.trim();
+
+	if (!adsFile.empty())
+		_adsInterp->load(adsFile);
 	else
 		_adsInterp->unload();
 
@@ -270,7 +284,6 @@ void DgdsEngine::checkDrawInventoryButton() {
 		int16 otherChar = _gdsScene->getGlobal(0x34);
 		if (otherChar) {
 			// FIXME: This list repeated in scene too
-			static const byte HOC_CHAR_SWAP_ICONS[] = { 0, 20, 21, 22 };
 			int16 swapCharIcon = HOC_CHAR_SWAP_ICONS[otherChar];
 			int sy = SCREEN_HEIGHT - _icons->height(swapCharIcon) - 5;
 			_icons->drawBitmap(swapCharIcon, 5, sy, drawWin, _compositionBuffer);
@@ -372,6 +385,17 @@ void DgdsEngine::loadGameFiles() {
 		reqParser.parse(&invRequestData, "WINV.REQ");
 		reqParser.parse(&vcrRequestData, "WVCR.REQ");
 
+		break;
+	case GID_QUARKY:
+		_gameGlobals = new Globals(_clock);
+		_gamePals->loadPalette("MRALLY.PAL");
+		_gdsScene->load("MRALLY.GDS", _resource, _decompressor);
+
+		debug("%s", _gdsScene->dump("").c_str());
+
+		loadCorners("MCORNERS.BMP");
+		reqParser.parse(&invRequestData, "TOOLINFO.REQ");
+		reqParser.parse(&vcrRequestData, "MVCR.REQ");
 		break;
 	case GID_SQ5DEMO:
 		_gameGlobals = new Globals(_clock);
@@ -483,7 +507,8 @@ Common::Error DgdsEngine::run() {
 					break;
 				}
 			} else if (ev.type == Common::EVENT_LBUTTONDOWN || ev.type == Common::EVENT_LBUTTONUP
-					|| ev.type == Common::EVENT_RBUTTONUP || ev.type == Common::EVENT_MOUSEMOVE) {
+					|| ev.type == Common::EVENT_RBUTTONDOWN || ev.type == Common::EVENT_RBUTTONUP
+					|| ev.type == Common::EVENT_MOUSEMOVE) {
 				mouseEvent = ev.type;
 				_lastMouse = ev.mouse;
 			}
@@ -572,6 +597,9 @@ Common::Error DgdsEngine::run() {
 					break;
 				case Common::EVENT_LBUTTONUP:
 					_scene->mouseLUp(_lastMouse);
+					break;
+				case Common::EVENT_RBUTTONDOWN:
+					_scene->mouseRDown(_lastMouse);
 					break;
 				case Common::EVENT_RBUTTONUP:
 					_scene->mouseRUp(_lastMouse);
@@ -701,8 +729,6 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 		_scene->unload();
 		_adsInterp->unload();
 		_scene->load(sceneFile, _resource, _decompressor);
-		if (!_isDemo)
-			_scene->addInvButtonToHotAreaList();
 	}
 
 	result = _scene->syncState(s);
@@ -716,6 +742,11 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 
 	result = _inventory->syncState(s);
 	if (result.getCode() != Common::kNoError) return result;
+
+	// Add inv button - we deferred this to now to make sure globals etc
+	// are in the right state.
+	if (s.isLoading())
+		_scene->addInvButtonToHotAreaList();
 
 	if (s.getVersion() < 4) {
 		result = _gamePals->syncState(s);
@@ -742,6 +773,7 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 		_storedAreaBuffer.fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
 	}
 
+	debug("%s", _scene->dump("").c_str());
 	_scene->runEnterSceneOps();
 
 	return Common::kNoError;

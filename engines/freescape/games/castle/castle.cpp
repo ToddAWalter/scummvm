@@ -21,6 +21,7 @@
 
 #include "common/file.h"
 #include "common/memstream.h"
+#include "common/config-manager.h"
 
 #include "freescape/freescape.h"
 #include "freescape/games/castle/castle.h"
@@ -29,6 +30,10 @@
 namespace Freescape {
 
 CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEngine(syst, gd) {
+
+	if (!Common::parseBool(ConfMan.get("rock_travel"), _useRockTravel))
+		error("Failed to parse bool from rock_travel option");
+
 	if (isSpectrum())
 		initZX();
 
@@ -50,6 +55,7 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	_option = nullptr;
 	_optionTexture = nullptr;
 	_keysFrame = nullptr;
+	_menu = nullptr;
 
 	_numberKeys = 0;
 }
@@ -106,9 +112,13 @@ void CastleEngine::gotoArea(uint16 areaID, int entranceID) {
 	if (isSpectrum() || isCPC())
 		_gfx->_paperColor = 0;
 	resetInput();
-	Entrance *entrance = (Entrance *)_currentArea->entranceWithID(entranceID);
-	assert(entrance);
-	executeEntranceConditions(entrance);
+
+	if (entranceID > 0) {
+		Entrance *entrance = (Entrance *)_currentArea->entranceWithID(entranceID);
+		assert(entrance);
+		executeEntranceConditions(entrance);
+		executeMovementConditions();
+	}
 }
 
 void CastleEngine::initGameState() {
@@ -119,6 +129,9 @@ void CastleEngine::initGameState() {
 	_gameStateVars[k8bitVariableEnergy] = 1;
 	_countdown = INT_MAX;
 	_numberKeys = 0;
+
+	if (_useRockTravel) // Enable cheat
+		setGameBit(k8bitGameBitTravelRock);
 }
 
 void CastleEngine::endGame() {
@@ -161,6 +174,105 @@ void CastleEngine::pressedKey(const int keycode) {
 		_pitch = 0;
 		updateCamera();
 	}
+}
+
+void CastleEngine::drawInfoMenu() {
+	PauseToken pauseToken = pauseEngine();
+	_savedScreen = _gfx->getScreenshot();
+
+	uint8 r, g, b;
+	uint32 color = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0x00, 0x00, 0x00);
+	Graphics::Surface *surface = new Graphics::Surface();
+	surface->create(_screenW, _screenH, _gfx->_texturePixelFormat);
+	surface->fillRect(_fullscreenViewArea, color);
+
+	uint32 black = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0x00, 0x00);
+	uint32 front = 0;
+	surface->fillRect(_viewArea, black);
+
+	int score = _gameStateVars[k8bitVariableScore];
+	if (isDOS()) {
+		g_system->lockMouse(false);
+		g_system->showMouse(true);
+		surface->copyRectToSurface(*_menu, 40, 33, Common::Rect(0, 0, _menu->w, _menu->h));
+
+		_gfx->readFromPalette(10, r, g, b);
+		front = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
+		drawStringInSurface(Common::String::format("%07d", score), 166, 71, front, black, surface);
+	}
+
+	Texture *menuTexture = _gfx->createTexture(surface);
+	Common::Event event;
+	bool cont = true;
+	while (!shouldQuit() && cont) {
+		while (_eventManager->pollEvent(event)) {
+
+			// Events
+			switch (event.type) {
+			case Common::EVENT_KEYDOWN:
+				if (event.kbd.keycode == Common::KEYCODE_l) {
+					_gfx->setViewport(_fullscreenViewArea);
+					_eventManager->purgeKeyboardEvents();
+					loadGameDialog();
+					if (isDOS()) {
+						g_system->lockMouse(false);
+						g_system->showMouse(true);
+					}
+
+					_gfx->setViewport(_viewArea);
+				} else if (event.kbd.keycode == Common::KEYCODE_s) {
+					_gfx->setViewport(_fullscreenViewArea);
+					_eventManager->purgeKeyboardEvents();
+					saveGameDialog();
+					if (isDOS()) {
+						g_system->lockMouse(false);
+						g_system->showMouse(true);
+					}
+
+					_gfx->setViewport(_viewArea);
+				} else if (isDOS() && event.kbd.keycode == Common::KEYCODE_t) {
+					// TODO
+				} else if ((isDOS() || isCPC()) && event.kbd.keycode == Common::KEYCODE_ESCAPE) {
+					_forceEndGame = true;
+					cont = false;
+				} else if (isSpectrum() && event.kbd.keycode == Common::KEYCODE_1) {
+					_forceEndGame = true;
+					cont = false;
+				} else
+					cont = false;
+				break;
+			case Common::EVENT_SCREEN_CHANGED:
+				_gfx->computeScreenViewport();
+				// TODO: properly refresh screen
+				break;
+			case Common::EVENT_RBUTTONDOWN:
+			// fallthrough
+			case Common::EVENT_LBUTTONDOWN:
+				if (g_system->hasFeature(OSystem::kFeatureTouchscreen))
+					cont = false;
+				break;
+			default:
+				break;
+			}
+		}
+		_gfx->clear(0, 0, 0, true);
+		drawFrame();
+		if (surface)
+			_gfx->drawTexturedRect2D(_fullscreenViewArea, _fullscreenViewArea, menuTexture);
+
+		_gfx->flipBuffer();
+		g_system->updateScreen();
+		g_system->delayMillis(15); // try to target ~60 FPS
+	}
+
+	_savedScreen->free();
+	delete _savedScreen;
+	surface->free();
+	delete surface;
+	delete menuTexture;
+	pauseToken.clear();
+	g_system->lockMouse(true);
+	g_system->showMouse(false);
 }
 
 void CastleEngine::executePrint(FCLInstruction &instruction) {
@@ -426,13 +538,31 @@ void CastleEngine::addGhosts() {
 	for (auto &it : _areaMap) {
 		for (auto &sensor : it._value->getSensors()) {
 			if (sensor->getObjectID() == 125) {
-				_areaMap[it._key]->addGroupFromArea(195, _areaMap[255]);
-				_areaMap[it._key]->addGroupFromArea(212, _areaMap[255]);
-			} else if (sensor->getObjectID() == 126)
-				_areaMap[it._key]->addGroupFromArea(191, _areaMap[255]);
-			else if (sensor->getObjectID() == 127)
-				_areaMap[it._key]->addGroupFromArea(182, _areaMap[255]);
-			else
+				if (isDOS()) {
+					_areaMap[it._key]->addGroupFromArea(195, _areaMap[255]);
+					_areaMap[it._key]->addGroupFromArea(212, _areaMap[255]);
+				} else if (isSpectrum()) {
+					_areaMap[it._key]->addObjectFromArea(170, _areaMap[255]);
+					_areaMap[it._key]->addObjectFromArea(172, _areaMap[255]);
+					_areaMap[it._key]->addObjectFromArea(173, _areaMap[255]);
+				}
+			} else if (sensor->getObjectID() == 126) {
+				if (isDOS())
+					_areaMap[it._key]->addGroupFromArea(191, _areaMap[255]);
+				else if (isSpectrum()) {
+					_areaMap[it._key]->addObjectFromArea(145, _areaMap[255]);
+					_areaMap[it._key]->addObjectFromArea(165, _areaMap[255]);
+					_areaMap[it._key]->addObjectFromArea(166, _areaMap[255]);
+				}
+			} else if (sensor->getObjectID() == 127) {
+				if (isDOS())
+					_areaMap[it._key]->addGroupFromArea(182, _areaMap[255]);
+				else if (isSpectrum()) {
+					_areaMap[it._key]->addObjectFromArea(142, _areaMap[255]);
+					_areaMap[it._key]->addObjectFromArea(143, _areaMap[255]);
+					_areaMap[it._key]->addObjectFromArea(144, _areaMap[255]);
+				}
+			} else
 				debugC(1, kFreescapeDebugParser, "Sensor %d in area %d", sensor->getObjectID(), it._key);
 		}
 	}
@@ -451,31 +581,33 @@ void CastleEngine::checkSensors() {
 		return;
 
 	Sensor *sensor = (Sensor *)&_sensors[0];
-	if (sensor->getObjectID() == 125) {
-		Group *group = (Group *)_currentArea->objectWithID(195);
-		if (!group->isDestroyed() && !group->isInvisible()) {
-			group->_active = true;
-		} else
-			return;
+	if (isDOS()) { // Should be similar to Amiga/AtariST
+		if (sensor->getObjectID() == 125) {
+			Group *group = (Group *)_currentArea->objectWithID(195);
+			if (!group->isDestroyed() && !group->isInvisible()) {
+				group->_active = true;
+			} else
+				return;
 
-		group = (Group *)_currentArea->objectWithID(212);
-		if (!group->isDestroyed() && !group->isInvisible()) {
-			group->_active = true;
-		} else
-			return;
+			group = (Group *)_currentArea->objectWithID(212);
+			if (!group->isDestroyed() && !group->isInvisible()) {
+				group->_active = true;
+			} else
+				return;
 
-	} else if (sensor->getObjectID() == 126) {
-		Group *group = (Group *)_currentArea->objectWithID(191);
-		if (!group->isDestroyed() && !group->isInvisible()) {
-			group->_active = true;
-		} else
-			return;
-	} else if (sensor->getObjectID() == 197) {
-		Group *group = (Group *)_currentArea->objectWithID(182);
-		if (!group->isDestroyed() && !group->isInvisible()) {
-			group->_active = true;
-		} else
-			return;
+		} else if (sensor->getObjectID() == 126) {
+			Group *group = (Group *)_currentArea->objectWithID(191);
+			if (!group->isDestroyed() && !group->isInvisible()) {
+				group->_active = true;
+			} else
+				return;
+		} else if (sensor->getObjectID() == 197) {
+			Group *group = (Group *)_currentArea->objectWithID(182);
+			if (!group->isDestroyed() && !group->isInvisible()) {
+				group->_active = true;
+			} else
+				return;
+		}
 	}
 
 	/*int firingInterval = 10; // This is fixed for all the ghosts?
@@ -498,8 +630,8 @@ void CastleEngine::updateTimeVariables() {
 	}
 }
 
-void CastleEngine::titleScreen() {
-	FreescapeEngine::titleScreen();
+void CastleEngine::borderScreen() {
+	FreescapeEngine::borderScreen();
 	selectCharacterScreen();
 }
 
@@ -517,18 +649,29 @@ void CastleEngine::drawOption() {
 	_gfx->setViewport(_viewArea);
 }
 
+extern Common::String centerAndPadString(const Common::String &x, int y);
+
 void CastleEngine::selectCharacterScreen() {
-	if (!_option)
-		return;
+	Common::Array<Common::String> lines;
+	if (isDOS()) {
+		lines.push_back("Select your character");
+		lines.push_back("");
+		lines.push_back("");
+		lines.push_back("            1. Prince");
+		lines.push_back("            2. Princess");
+	} else if (isSpectrum()) {
+		lines.push_back(centerAndPadString("*******************", 21));
+		lines.push_back(centerAndPadString("Select your character", 21));
+		lines.push_back(centerAndPadString("you wish to play", 21));
+		lines.push_back(centerAndPadString("and press enter", 21));
+		lines.push_back("");
+		lines.push_back(centerAndPadString("1. Prince  ", 21));
+		lines.push_back(centerAndPadString("2. Princess", 21));
+		lines.push_back("");
+		lines.push_back(centerAndPadString("*******************", 21));
+	}
 
-	Graphics::Surface *surface = new Graphics::Surface();
-	surface->create(_screenW, _screenH, _gfx->_texturePixelFormat);
-
-	uint32 green = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0xFF, 0x00);
-	uint32 transparent = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0x00, 0x00, 0x00);
-	drawStringInSurface("Select your character", 63, 16, green, transparent, surface);
-	drawStringInSurface("1. Prince", 150, 82, green, transparent, surface);
-	drawStringInSurface("1. Princess", 150, 92, green, transparent, surface);
+	Graphics::Surface *surface = drawStringsInSurface(lines);
 
 	bool selected = false;
 	while (!selected) {
@@ -548,9 +691,11 @@ void CastleEngine::selectCharacterScreen() {
 				switch (event.kbd.keycode) {
 				case Common::KEYCODE_1:
 					selected = true;
+					// Nothing, since game bit should be already zero
 					break;
 				case Common::KEYCODE_2:
 					selected = true;
+					setGameBit(32);
 					break;
 				default:
 					break;
@@ -566,7 +711,10 @@ void CastleEngine::selectCharacterScreen() {
 			}
 		}
 		_gfx->clear(0, 0, 0, true);
-		drawOption();
+		if (_option)
+			drawOption();
+		else
+			drawBorder();
 		drawFullscreenSurface(surface);
 		_gfx->flipBuffer();
 		g_system->updateScreen();
@@ -577,10 +725,15 @@ void CastleEngine::selectCharacterScreen() {
 }
 
 Common::Error CastleEngine::saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave) {
+	stream->writeUint32LE(_numberKeys);
 	return Common::kNoError;
 }
 
 Common::Error CastleEngine::loadGameStreamExtended(Common::SeekableReadStream *stream) {
+	_numberKeys = stream->readUint32LE();
+
+	if (_useRockTravel) // Enable cheat
+		setGameBit(k8bitGameBitTravelRock);
 	return Common::kNoError;
 }
 

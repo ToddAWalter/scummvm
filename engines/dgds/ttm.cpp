@@ -158,11 +158,13 @@ static const char *ttmOpName(uint16 op) {
 	case 0x2000: return "SET DRAW COLORS";
 	case 0x2010: return "SET FRAME";
 	case 0x2020: return "SET RANDOM DELAY";
+	case 0x2030: return "SET SCROLL 2030??";
 	case 0x2300: return "PAL SET BLOCK SWAP 0";
 	case 0x2310: return "PAL SET BLOCK SWAP 1";
 	case 0x2320: return "PAL SET BLOCK SWAP 2";
 	case 0x2400: return "PAL DO BLOCK SWAP";
 	case 0x3000: return "GOSUB";
+	case 0x3100: return "SCROLL 3100??";
 	case 0x4000: return "SET CLIP WINDOW";
 	case 0x4110: return "FADE OUT";
 	case 0x4120: return "FADE IN";
@@ -199,10 +201,14 @@ static const char *ttmOpName(uint16 op) {
 	case 0xa520: return "DRAW SPRITE FLIPH";
 	case 0xa530: return "DRAW SPRITE FLIPHV";
 	case 0xa600: return "DRAW GETPUT";
+	case 0xa700: return "DRAW A700??";
+	case 0xaf00: return "DRAW FLOOD FILL";
 	case 0xaf10: return "DRAW EMPTY POLY";
 	case 0xaf20: return "DRAW FILLED POLY";
 	case 0xb000: return "INIT CREDITS SCROLL";
 	case 0xb010: return "DRAW CREDITS SCROLL";
+	case 0xb600: return "COPY BUFFER";
+
 	case 0xf010: return "LOAD SCR";
 	case 0xf020: return "LOAD BMP";
 	case 0xf040: return "LOAD FONT";
@@ -223,13 +229,14 @@ static const char *ttmOpName(uint16 op) {
 	case 0x00C0: return "FREE BACKGROUND";
 	case 0x0230: return "reset current music?";
 	case 0x1310: return "STOP SFX";
-	case 0xb600: return "COPY BUFFER";
 	case 0xc020: return "LOAD_SAMPLE";
 	case 0xc030: return "SELECT_SAMPLE";
 	case 0xc040: return "DESELECT_SAMPLE";
 	case 0xc050: return "PLAY_SAMPLE";
 	case 0xc060: return "STOP_SAMPLE";
 	case 0xc0e0: return "FADE SONG";
+	case 0xc210: return "LOAD RAW SFX";
+	case 0xc220: return "PLAY RAW SFX ??";
 
 	default: return "UNKNOWN!!";
 	}
@@ -489,6 +496,7 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		seq._currentPalId = 0;
 		break;
 	case 0x0080: // FREE SHAPE
+		//debug("0x0080: Free from slot %d for seq %d env %d", seq._currentBmpId, seq._seqNum, env._enviro);
 		env._scriptShapes[seq._currentBmpId].reset();
 		break;
 	case 0x0090: // FREE FONT
@@ -533,6 +541,7 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		seq._brushNum = ivals[0];
 		break;
 	case 0x1050: // SELECT BMP:	    id:int [0:n]
+		//debug("0x1051: Select bmp %d for seq %d from env %d", ivals[0], seq._seqNum, env._enviro);
 		seq._currentBmpId = ivals[0];
 		break;
 	case 0x1060: // SELECT PAL:  id:int [0]
@@ -597,7 +606,7 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 			break;
 		warning("TODO: 0x%04x Palette do block swaps 0x%x, 0x%x", op, ivals[0], ivals[1]);
 		break;
-	case 0x3000: {
+	case 0x3000: { // GOSUB ??,??,frame
 		_stackDepth++;
 		bool prevHitOp0110Val = _vm->adsInterpreter()->getHitTTMOp0110();
 		int32 target = findGOTOTarget(env, seq, ivals[2]);
@@ -607,7 +616,8 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		env.scr->seek(env._frameOffsets[target]);
 
 		// TODO: Set some other render-related globals here
-		warning("TODO: TTM 0x3000 GOSUB %d %d, use other args", ivals[0], ivals[1]);
+		if (ivals[0] || ivals[1])
+			warning("TODO: TTM 0x3000 GOSUB use offsets (%d, %d)", ivals[0], ivals[1]);
 
 		run(env, seq);
 		env.scr->seek(prevPos);
@@ -617,6 +627,11 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 
 		_stackDepth--;
 		break;
+	}
+	case 0x3100: { // SCROLL ??,??,??
+		if (seq._executed) // this is a one-shot op.
+			break;
+		warning("TODO: TTM 0x3100 SCROLL %d %d %d", ivals[0], ivals[1], ivals[2]);
 	}
 	case 0x4000: // SET CLIP WINDOW x,y,x2,y2:int	[0..320,0..200]
 		// NOTE: params are xmax/ymax, NOT w/h
@@ -801,6 +816,12 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 						Common::Point(r.left, r.top));
 		break;
 	}
+	case 0xaf00: { // FLOOD FILL x,y
+		Graphics::FloodFill f(_vm->_compositionBuffer.surfacePtr(), 0, seq._drawColFG);
+		f.addSeed(ivals[0], ivals[1]);
+		f.fill();
+		break;
+	}
 	case 0xaf10: { // DRAW EMPTY POLY
 		ClipSurface clipSurf(seq._drawWin, _vm->_compositionBuffer.surfacePtr());
 		for (uint i = 1; i < pts.size(); i++) {
@@ -884,6 +905,7 @@ void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 	case 0xf020: // LOAD BMP:	filename:str
 		if (seq._executed) // this is a one-shot op
 			break;
+		//debug("0xf020: Load bitmap %s to slot %d for env %d", sval.c_str(), env._enviro, seq._currentBmpId);
 		env._scriptShapes[seq._currentBmpId].reset(new Image(_vm->getResourceManager(), _vm->getDecompressor()));
 		env._scriptShapes[seq._currentBmpId]->loadBitmap(sval);
 		break;
@@ -1076,8 +1098,8 @@ void TTMInterpreter::findAndAddSequences(TTMEnviro &env, Common::Array<TTMSeq> &
 						ch[0] = env.scr->readByte();
 						ch[1] = env.scr->readByte();
 					} while (ch[0] != 0 && ch[1] != 0);
-					break;
 				}
+				break;
 			}
 			default:
 				env.scr->skip((op & 0xf) * 2);

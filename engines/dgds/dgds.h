@@ -67,6 +67,7 @@ enum DgdsGameId {
 	GID_WILLY,
 	GID_SQ5DEMO,
 	GID_COMINGATTRACTIONS,
+	GID_QUARKY
 };
 
 enum DgdsDetailLevel {
@@ -93,6 +94,8 @@ public:
 	Common::Platform _platform;
 	Sound *_soundPlayer;
 	Graphics::ManagedSurface _compositionBuffer;
+
+	static const byte HOC_CHAR_SWAP_ICONS[];
 
 private:
 	Console *_console;
