@@ -87,18 +87,34 @@ void CastleEngine::loadAssetsZXFullGame() {
 	if (!file.isOpen())
 		error("Failed to open castlemaster.zx.data");
 
-	loadRiddles(&file, 0x1460 - 1 - 3, 8);
-	//loadMessagesFixedSize(&file, 0x4bc + 1, 16, 27);
-	loadFonts(&file, 0x1219, _font);
 	loadMessagesVariableSize(&file, 0x4bd, 71);
-
-    load8bitBinary(&file, 0x6a3b, 16);
-	loadSpeakerFxZX(&file, 0xc91, 0xccd);
+	switch (_language) {
+		case Common::ES_ESP:
+			loadRiddles(&file, 0xcf0 - 1 - 1 - 1, 8);
+			loadMessagesVariableSize(&file, 0xf3d, 71);
+			load8bitBinary(&file, 0x6aab - 2, 16);
+			loadSpeakerFxZX(&file, 0xca0, 0xcdc);
+			loadFonts(&file, 0x1218 + 16, _font);
+			break;
+		case Common::EN_ANY:
+			loadRiddles(&file, 0x1460 - 1 - 3, 8);
+			load8bitBinary(&file, 0x6a3b, 16);
+			loadSpeakerFxZX(&file, 0xc91, 0xccd);
+			loadFonts(&file, 0x1219, _font);
+			break;
+		default:
+			error("Language not supported");
+			break;
+	}
 
 	loadColorPalette();
 	_gfx->readFromPalette(2, r, g, b);
 	uint32 red = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
 	_keysFrame = loadFramesWithHeader(&file, 0xdf7, 1, red);
+
+	uint32 green = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0, 0xff, 0);
+	_spiritsMeterIndicatorFrame = loadFramesWithHeader(&file, _language == Common::ES_ESP ? 0xe5e : 0xe4f, 1, green);
+
 	Graphics::Surface *background = new Graphics::Surface();
 
 	_gfx->readFromPalette(4, r, g, b);
@@ -109,7 +125,7 @@ void CastleEngine::loadAssetsZXFullGame() {
 	background->create(backgroundWidth * 8, backgroundHeight, _gfx->_texturePixelFormat);
 	background->fillRect(Common::Rect(0, 0, backgroundWidth * 8, backgroundHeight), 0);
 
-	file.seek(0xfc4);
+	file.seek(_language == Common::ES_ESP ? 0xfd3 : 0xfc4);
 	_background = loadFrames(&file, background, backgroundWidth, backgroundHeight, front);
 
 	for (auto &it : _areaMap) {
@@ -128,6 +144,19 @@ void CastleEngine::loadAssetsZXFullGame() {
 	addGhosts();
 	_areaMap[1]->addFloor();
 	_areaMap[2]->addFloor();
+
+	// Discard the first three global conditions
+	// It is unclear why they hide/unhide objects that formed the spirits
+	for (int i = 0; i < 3; i++) {
+		_conditions.remove_at(i);
+		_conditionSources.remove_at(i);
+	}
+
+	_timeoutMessage = _messagesList[1];
+	// Shield is unused in Castle Master
+	_noEnergyMessage = _messagesList[1];
+	_fallenMessage = _messagesList[4];
+	_crushedMessage = _messagesList[3];
 }
 
 void CastleEngine::drawZXUI(Graphics::Surface *surface) {
@@ -157,7 +186,11 @@ void CastleEngine::drawZXUI(Graphics::Surface *surface) {
 	for (int k = 0; k < _numberKeys; k++) {
 		surface->copyRectToSurface((const Graphics::Surface)*_keysFrame, 99 - k * 4, 177, Common::Rect(0, 0, 6, 11));
 	}
-	//surface->copyRectToSurface((const Graphics::Surface)*_background, 0, 0, Common::Rect(0, 0, 8 * 16, 18));
+
+	uint32 green = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0, 0xff, 0);
+
+	surface->fillRect(Common::Rect(152, 156, 216, 164), green);
+	surface->copyRectToSurface((const Graphics::Surface)*_spiritsMeterIndicatorFrame, 140 + _spiritsMeterPosition, 156, Common::Rect(0, 0, 15, 8));
 	//drawEnergyMeter(surface);
 }
 

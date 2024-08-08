@@ -85,12 +85,16 @@ static void _drawPixel(int x, int y, int color, void *data) {
 
 
 const DgdsFont *Dialog::getDlgTextFont() const {
-	const FontManager *fontman = static_cast<DgdsEngine *>(g_engine)->getFontMan();
+	const FontManager *fontman = DgdsEngine::getInstance()->getFontMan();
 	FontManager::FontType fontType = FontManager::kGameDlgFont;
 	if (_fontSize == 1)
 		fontType = FontManager::k8x8Font;
 	else if (_fontSize == 3)
 		fontType = FontManager::k4x5Font;
+	else if (_fontSize == 4 && DgdsEngine::getInstance()->getGameId() == GID_WILLY)
+		fontType = FontManager::kGameFont;
+	else if (_fontSize == 5 && DgdsEngine::getInstance()->getGameId() == GID_HOC)
+		fontType = FontManager::kChinaFont;
 	return fontman->getFont(fontType);
 }
 
@@ -169,7 +173,7 @@ void Dialog::drawType2BackgroundBeamish(Graphics::ManagedSurface *dst, const Com
 		// TODO: Maybe should measure the font?
 		_state->_loc.y += 11;
 		_state->_loc.height -= 11;
-		RequestData::drawHeader(dst, _rect.x, _rect.y, _rect.width, 2, title, _fontColor, false, 0, 0);
+		RequestData::drawHeader(dst, _rect.x, _rect.y + 5, _rect.width, 2, title, _fontColor, false, 0, 0);
 	}
 }
 
@@ -193,7 +197,7 @@ void Dialog::drawType2(Graphics::ManagedSurface *dst, DialogDrawStage stage) {
 
 	// Special case for HoC to update the Shekel count in their description.
 	// This is how the original game does it too.
-	DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
+	DgdsEngine *engine = DgdsEngine::getInstance();
 	if (_fileNum == 0x5d && _num == 0x32 && engine->getGameId() == GID_HOC) {
 		int16 shekels = engine->getGDSScene()->getGlobal(44);
 		const Common::String numstr = Common::String::format("%3d", shekels);
@@ -326,7 +330,7 @@ void Dialog::drawType3(Graphics::ManagedSurface *dst, DialogDrawStage stage) {
 	}
 }
 
-// ellipse
+// ellipse in Dragon, text with no background in HoC
 void Dialog::drawType4(Graphics::ManagedSurface *dst, DialogDrawStage stage) {
 	if (!_state)
 		return;
@@ -351,16 +355,23 @@ void Dialog::drawType4(Graphics::ManagedSurface *dst, DialogDrawStage stage) {
 		//int radius = (midy * 5) / 4;
 
 		// This is not exactly the same as the original - might need some work to get pixel-perfect
-		Common::Rect drawRect(x, y, x + w, y + h);
-		Graphics::drawRoundRect(drawRect, midy, fillbgcolor, true, _drawPixel, dst);
-		Graphics::drawRoundRect(drawRect, midy, fillcolor, false, _drawPixel, dst);
+		if (DgdsEngine::getInstance()->getGameId() != GID_HOC) {
+			Common::Rect drawRect(x, y, x + w, y + h);
+			Graphics::drawRoundRect(drawRect, midy, fillbgcolor, true, _drawPixel, dst);
+			Graphics::drawRoundRect(drawRect, midy, fillcolor, false, _drawPixel, dst);
+		}
 	} else if (stage == kDlgDrawFindSelectionPointXY) {
 		drawFindSelectionXY();
 	} else if (stage == kDlgDrawFindSelectionTxtOffset) {
 		drawFindSelectionTxtOffset();
 	} else {
 		assert(_state);
-		_state->_loc = DgdsRect(x + midy, y + 1, w - midy, h - 1);
+		if (DgdsEngine::getInstance()->getGameId() != GID_HOC) {
+			_state->_loc = DgdsRect(x + midy, y + 1, w - midy, h - 1);
+		} else {
+			_state->_loc = DgdsRect(x, y, w, h);
+			fillcolor = 25; // ignore the color??
+		}
 		drawForeground(dst, fillcolor, _str);
 	}
 }
@@ -620,7 +631,7 @@ void Dialog::updateSelectedAction(int delta) {
 }
 
 struct DialogAction *Dialog::pickAction(bool isClosing, bool isForceClose) {
-	DgdsEngine *engine = static_cast<DgdsEngine *>(g_engine);
+	DgdsEngine *engine = DgdsEngine::getInstance();
 	if (!isForceClose && isClosing) {
 		if (_action.empty())
 			return nullptr;

@@ -729,7 +729,7 @@ void ScummEngine_v2::checkExecVerbs() {
 		if (zone->number == kVerbVirtScreen && _mouse.y <= zone->topline + 8) {
 			// Click into V2 sentence line
 			runInputScript(kSentenceClickArea, 0, 0);
-		} else if (zone->number == kVerbVirtScreen && _mouse.y > zone->topline + inventoryArea) {
+		} else if (zone->number == kVerbVirtScreen && _mouse.y >= zone->topline + inventoryArea) {
 			// Click into V2 inventory
 			int object = checkV2Inventory(_mouse.x, _mouse.y);
 			if (object > 0)
@@ -1133,7 +1133,7 @@ void ScummEngine::drawVerb(int verb, int mode) {
 
 		if (isRtl)
 			vs->curRect.left = _charset->_str.left;
-		vs->curRect.right = _charset->_str.right;
+		vs->curRect.right = (_game.version <= 2) ? MIN<int>(vs->curRect.left + (getResourceSize(rtVerb, verb) - 1) * 8, _screenWidth) : _charset->_str.right;
 		vs->curRect.bottom = _charset->_str.bottom;
 		vs->oldRect = _charset->_str;
 		_charset->_str.left = _charset->_str.right;

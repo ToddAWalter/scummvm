@@ -44,6 +44,7 @@
  * Status of this engine: Supported
  *
  * Games using this engine:
+ * - Adi 1
  * - Adi 2
  * - Adi 4
  * - Adi 5
@@ -64,6 +65,7 @@
  * - Bargon Attack
  * - Le pays des Pierres Magiques
  * - Lost in Time
+ * - Nathan Vacances CM1/CE2
  * - The Bizarre Adventures of Woodruff and the Schnibble
  * - Fascination
  * - Inca II: Nations of Immortality 

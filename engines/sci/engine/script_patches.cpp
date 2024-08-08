@@ -162,6 +162,7 @@ static const char *const selectorNameTable[] = {
 	"obstacles",    // EcoQuest 1, QFG4
 	"handleEvent",  // EcoQuest 2, Shivers
 	"view",         // King's Quest 4, RAMA benchmarking, GK1, QFG4
+	"tWindow",      // Camelot
 #ifdef ENABLE_SCI32
 	"newWith",      // SCI2 array script
 	"posn",         // GK1, Phant2, QFG4
@@ -303,7 +304,8 @@ enum ScriptPatcherSelectors {
 	SELECTOR_signal,
 	SELECTOR_obstacles,
 	SELECTOR_handleEvent,
-	SELECTOR_view
+	SELECTOR_view,
+	SELECTOR_tWindow
 #ifdef ENABLE_SCI32
 	,
 	SELECTOR_newWith,
@@ -1212,6 +1214,48 @@ static const uint16 camelotPatchPurseMessages[] = {
 	PATCH_END
 };
 
+// When returning to the Jaffa Gate after falling through the trap door in
+//  Fatima's house, the guards use the wrong text window. Instead they use
+//  the con man Yasser's text window and caption. tObj:tWindow is initialized
+//  to conWindow by the room, but script 207 forgot to change this default.
+//
+// We fix this by setting tObj:tWindow to guardWindow during this scene.
+//
+// Applies to: All versions
+// Responsible method: walkThruGates:changeState
+// Fixes bug: #14811
+static const uint16 camelotSignatureGuardMessages[] = {
+	0x72, SIG_UINT16(0xff1e),           // lofsa guardWindow
+	SIG_ADDTOOFFSET(+0x9f),
+	0x30, SIG_UINT16(0x0032),           // bnt 0032 [ state 1 ]
+	SIG_ADDTOOFFSET(+0x2f),
+	0x32, SIG_UINT16(0x006f),           // jmp 006f [ toss, ret ]
+	SIG_ADDTOOFFSET(+4),
+	0x30, SIG_UINT16(0x0023),           // bnt 0023 [ state 2 ]
+	SIG_ADDTOOFFSET(+0xe),
+	SIG_MAGICDWORD,
+	0x81, 0x6f,                         // lag 6f  [ tObj ]
+	0x4a, 0x06,                         // send 06 [ tObj talkCue: self ]
+	SIG_ADDTOOFFSET(+0xe),
+	0x32,                               // jmp     [ toss, ret ]
+	SIG_END
+};
+
+static const uint16 camelotPatchGuardMessages[] = {
+	PATCH_ADDTOOFFSET(+0xa2),
+	0x30, PATCH_UINT16(0x002f),         // bnt 002f [ state 1 ]
+	PATCH_ADDTOOFFSET(+0x2f),
+	PATCH_GETORIGINALBYTES(0xd7, 4),
+	0x31, 0x27,                         // bnt 27 [ state 2 ]
+	PATCH_GETORIGINALBYTES(0xde, 0x10),
+	0x38, PATCH_SELECTOR16(tWindow),    // pushi tWindow
+	0x78,                               // push1
+	0x74, PATCH_UINT16(0xfe30),         // lofsa guardWindow
+	0x4a, 0x0c,                         // send 0c [ tObj talkCue: self, tWindow: guardWindow ]
+	PATCH_GETORIGINALBYTES(0xf0, 0xe),
+	PATCH_END
+};
+
 //         script, description,                                       signature                             patch
 static const SciScriptPatcherEntry camelotSignatures[] = {
 	{ true,     0, "fix sword sheathing",                          1, camelotSignatureSwordSheathing,       camelotPatchSwordSheathing },
@@ -1225,6 +1269,7 @@ static const SciScriptPatcherEntry camelotSignatures[] = {
 	{ true,   158, "fix give mule message",                        1, camelotSignatureGiveMuleMessage,      camelotPatchGiveMuleMessage },
 	{ true,   169, "fix relic merchant lockup (1/2)",              1, camelotSignatureRelicMerchantLockup1, camelotPatchRelicMerchantLockup1 },
 	{ true,   169, "fix relic merchant lockup (2/2)",              1, camelotSignatureRelicMerchantLockup2, camelotPatchRelicMerchantLockup2 },
+	{ true,   207, "fix guard messages",                           1, camelotSignatureGuardMessages,        camelotPatchGuardMessages },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -4343,7 +4388,9 @@ static const uint16 gk1EndGameFontPatch[] = {
 //  to kDisposeTextBitmap. By patching just the callk instructions, the Destroy
 //  subop (1) on the stack becomes the new parameter count. The old parameter
 //  count (2) remains on the stack until the next ret instruction. This allows
-//  one patch to work on all calls.
+//  one patch to work on all calls. This patch is hard-coded to little endian
+//  bytecode so that it it is not applied to the Macintosh version, as that
+//  version does use a SCI2.1 interpreter.
 //
 // Applies to: Italian fan translation, PC CD version
 // Responsible methods: DEdit:hilite, DText:dispose, DText:draw, DSelector:dispose, 
@@ -4351,12 +4398,12 @@ static const uint16 gk1EndGameFontPatch[] = {
 //                      TellerButton:hilite, TopicButton:hilite
 static const uint16 gk1ItalianTranslationSignature[] = {
 	SIG_MAGICDWORD,
-	0x43, 0x91, SIG_UINT16(0x0004),     // callk 91 0004 [ SCI2: invalid, SCI2.1: kBitmap ]
+	0x43, 0x91, 0x04, 0x00,             // callk 91 0004 [ SCI2: invalid, SCI2.1: kBitmap ]
 	SIG_END
 };
 
 static const uint16 gk1ItalianTranslationPatch[] = {
-	0x43, 0x2e, PATCH_UINT16(0x0002),   // callk 2e 0002 [ kDisposeTextBitmap ]
+	0x43, 0x2e, 0x02, 0x00,             // callk 2e 0002 [ kDisposeTextBitmap ]
 	PATCH_END
 };
 

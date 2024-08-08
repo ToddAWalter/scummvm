@@ -58,6 +58,7 @@ class Menu;
 struct DgdsADS;
 class ADSInterpreter;
 class Globals;
+class ShellGame;
 
 const float MS_PER_FRAME = 16.6667f;
 
@@ -116,6 +117,9 @@ private:
 	Globals *_gameGlobals;
 	Inventory *_inventory;
 
+	// HoC only
+	ShellGame *_shellGame;
+
 	FontManager *_fontManager;
 	Common::SharedPtr<Image> _corners;
 	Common::SharedPtr<Image> _icons;
@@ -141,6 +145,7 @@ private:
 	const char *_rstFileName;
 
 	bool _isDemo;
+	bool _flipMode;
 
 public:
 	DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc);
@@ -212,6 +217,10 @@ public:
 	const Common::String &getBackgroundFile() const { return _backgroundFile; }
 	void setMenuToTrigger(MenuId menu) { _menuToTrigger = menu; }
 	bool isInvButtonVisible() const;
+	ShellGame *getShellGame() { return _shellGame; }
+
+	static DgdsEngine *getInstance() { return static_cast<DgdsEngine *>(g_engine); }
+	void setFlipMode(bool mode) { _flipMode = mode; }
 
 private:
 	Common::Error syncGame(Common::Serializer &s);

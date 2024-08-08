@@ -762,7 +762,19 @@ MiniscriptInstructionOutcome Modulo::arithExecute(MiniscriptThread *thread, doub
 		thread->error("Arithmetic error: Modulo division by zero");
 		return kMiniscriptInstructionOutcomeFailed;
 	}
-	result = fmod(left, right);
+
+	// fmod keeps the sign from the left operand, but mTropolis modulo keeps the
+	// sign of the right operand.
+	double r = fmod(left, right);
+	if (signbit(left) != signbit(right)) {
+		if (r == 0.0)
+			r = copysign(0.0, right);
+		else
+			r += right;
+	}
+
+	result = r;
+
 	return kMiniscriptInstructionOutcomeContinue;
 }
 
@@ -1259,7 +1271,7 @@ MiniscriptInstructionOutcome BuiltinFunc::executeStr2Num(MiniscriptThread *threa
 
 #ifdef MTROPOLIS_DEBUG_ENABLE
 		if (Debugger *debugger = thread->getRuntime()->debugGetDebugger())
-			debugger->notify(kDebugSeverityError, Common::String::format("Failed to parse '%s' as a number", str.c_str()));
+			debugger->notify(kDebugSeverityWarning, Common::String::format("Failed to parse '%s' as a number", str.c_str()));
 #endif
 
 		result = 0.0;

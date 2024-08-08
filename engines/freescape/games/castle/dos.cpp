@@ -72,7 +72,7 @@ void CastleEngine::loadDOSFonts(Common::SeekableReadStream *file, int pos) {
 		}
 		//debugN("\n");
 	}
-	debug("%lx", file->pos());
+	debug("%llx", file->pos());
 	_fontPlane1.set_size(64 * 59);
 	_fontPlane1.set_bits(bufferPlane1);
 
@@ -125,21 +125,19 @@ void CastleEngine::loadAssetsDOSFullGame() {
 				break;
 			case Common::FR_FRA:
 				stream = decryptFile("CMLF");
-				loadMessagesVariableSize(stream, 0x11, 164);
 				break;
 			case Common::DE_DEU:
 				stream = decryptFile("CMLG");
-				loadMessagesVariableSize(stream, 0x11, 164);
 				break;
 			case Common::EN_ANY:
 				stream = decryptFile("CMLE");
 				loadRiddles(stream, 0xaae, 11);
-				loadMessagesVariableSize(stream, 0x11, 164);
 				break;
 			default:
 				error("Invalid or unsupported language: %x", _language);
 		}
 
+		loadMessagesVariableSize(stream, 0x11, 164);
 		delete stream;
 
 		stream = decryptFile("CMEDF");

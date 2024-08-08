@@ -49,7 +49,10 @@ public:
 	void checkSensors() override;
 	void updateTimeVariables() override;
 
+	bool checkIfGameEnded() override;
+
 	void executePrint(FCLInstruction &instruction) override;
+	void executeMakeInvisible(FCLInstruction &instruction) override;
 	void gotoArea(uint16 areaID, int entranceID) override;
 	Common::Error saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave = false) override;
 	Common::Error loadGameStreamExtended(Common::SeekableReadStream *stream) override;
@@ -65,8 +68,14 @@ public:
 	Graphics::Surface *loadFrames(Common::SeekableReadStream *file, Graphics::Surface *surface, int width, int height, uint32 back);
 
 	Graphics::Surface *_keysFrame;
+	Graphics::Surface *_spiritsMeterIndicatorFrame;
 	int _numberKeys;
 	bool _useRockTravel;
+	int _spiritsDestroyed;
+	int _spiritsMeter;
+	int _spiritsMeterPosition;
+	int _spiritsMeterMax;
+	int _spiritsToKill;
 
 private:
 	Common::SeekableReadStream *decryptFile(const Common::Path &filename);

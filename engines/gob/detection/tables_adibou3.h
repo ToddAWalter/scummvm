@@ -27,6 +27,7 @@
 
 /* Detection tables for Adibou 3 / Adiboo 3 series. */
 /* This Game uses the DEV7 Engine, more Information can be found here: https://wiki.scummvm.org/index.php?title=DEV7_Information */
+/* These games are part of the Adibou series. For more information, refer to our wiki: https://wiki.scummvm.org/index.php?title=Adibou_Games */
 
 #ifndef GOB_DETECTION_TABLES_ADIBOU3_H
 #define GOB_DETECTION_TABLES_ADIBOU3_H
@@ -46,9 +47,8 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0, 0, 0
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
-
 {
 	{ // Supplied by BJNFNE
 		"adibou3",
@@ -60,7 +60,20 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0, 0, 0
+	"b3_common.stk", "b3_storyboard.obc", 0
+},
+{
+	{
+		"adibou3",
+		_s("Missing game code"), // Adibou 3 3.00 (Engine: DEV7 version 1.2.0.0)
+		AD_ENTRY1s("b3_common.stk", "c8d8db01b33ded9ecba2e371ca188a4c", 501767),
+		FR_FRA,
+		kPlatformWindows,
+		ADGF_UNSUPPORTED,
+		GUIO0()
+	},
+	kFeatures800x600,
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 
 // -- German: Adiboo 3 --
@@ -77,7 +90,7 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 
 {
@@ -92,14 +105,14 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 
 {
 	{ // Supplied by BJNFNE
 
 		"adibou3",
-		_s("Missing game code"), // Adiboo 3 3.10 (Engine: DEV7 version 1.3.0.0)
+		_s("Missing game code"), // Adiboo 3 3.10 (Engine: DEV7 version 1.30b)
 		AD_ENTRY1s("b3_common.stk", "2293ff44a5bb7a36f5219443f0ede5cf", 554569),
 		DE_DEU,
 		kPlatformWindows,
@@ -107,28 +120,13 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
-},
-
-{
-	{ // Supplied by BJNFNE
-
-		"adibou3",
-		_s("Missing game code"), // Adiboo 3 3.10 Demo (Engine: DEV7 version 1.3.0.0)
-		AD_ENTRY1s("b3_common.stk", "0c7624de252a9be3c67616f298ecb34a", 558632),
-		DE_DEU,
-		kPlatformWindows,
-		ADGF_UNSUPPORTED | ADGF_DEMO,
-		GUIO0()
-	},
-	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 {
 	{ // Supplied by BJNFNE
 
 		"adibou3",
-		_s("Missing game code"), // Adiboo 3 3.10 (shipped with English Application) (Engine: DEV7 version 1.3.0.0)
+		_s("Missing game code"), // Adiboo 3 3.10 (shipped with English Application) (Engine: DEV7 version 1.30b)
 		AD_ENTRY1s("b3_common.stk", "fc3a619b44366ded7027bc458d34be6a", 554569),
 		DE_DEU,
 		kPlatformWindows,
@@ -136,13 +134,13 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 {
 	{ // Supplied by BJNFNE
 
 		"adibou3",
-		_s("Missing game code"), // Adiboo 3 3.10 (shipped with Nature Application) (Engine: DEV7 version 1.3.0.0)
+		_s("Missing game code"), // Adiboo 3 3.10 (shipped with Nature Application) (Engine: DEV7 version 1.30b)
 		AD_ENTRY1s("b3_common.stk", "814d8edb015969618dbcc670b18fcfb4", 554569),
 		DE_DEU,
 		kPlatformWindows,
@@ -150,7 +148,7 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 
 // -- English: Adiboo 3 --
@@ -167,7 +165,21 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
+},
+{
+	{
+
+		"adibou3",
+		_s("Missing game code"), // Adiboo 3 3.10 (shipped with Music Application) (Engine: DEV7 version 1.3.0.0)
+		AD_ENTRY1s("b3_common.stk", "4409c79e9005f46bf4298dc0273c9d12", 552743),
+		EN_ANY,
+		kPlatformWindows,
+		ADGF_UNSUPPORTED,
+		GUIO0()
+	},
+	kFeatures800x600,
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 
 // -- Dutch: Adiboo 3 --
@@ -184,7 +196,52 @@
 		GUIO0()
 	},
 	kFeatures800x600,
-	0,0,0
+	"b3_common.stk", "b3_storyboard.obc", 0
+},
+
+// -- Demos --
+
+{
+	{
+
+		"adibou3",
+		_s("Missing game code"), // Adiboo 3 Preview Demo (Engine: DEV7 version 1.2.0.0)
+		AD_ENTRY1s("VmdLauncher.stk", "89a55e998a03063e35c92c8b5c76c4f4", 88596675),
+		EN_ANY,
+		kPlatformWindows,
+		ADGF_UNSUPPORTED | ADGF_DEMO,
+		GUIO0()
+	},
+	kFeatures800x600,
+	"VmdLauncher.stk", "VmdLauncher.obc", 0
+},
+{
+	{ // Supplied by BJNFNE
+
+		"adibou3",
+		_s("Missing game code"), // Adiboo 3 3.10 Demo (Engine: DEV7 version 1.30b)
+		AD_ENTRY1s("b3_common.stk", "0c7624de252a9be3c67616f298ecb34a", 558632),
+		DE_DEU,
+		kPlatformWindows,
+		ADGF_UNSUPPORTED | ADGF_DEMO,
+		GUIO0()
+	},
+	kFeatures800x600,
+	"b3_common.stk", "b3_storyboard.obc", 0
+},
+{
+	{
+
+		"adibou3",
+		_s("Missing game code"), // Adiboo 3 3.10 Du pareil au même (Engine: DEV7 version 1.30b)
+		AD_ENTRY1s("b3_common.stk", "c0a485db0c58462693fe3da3c8eaa084", 559844),
+		FR_FRA,
+		kPlatformWindows,
+		ADGF_UNSUPPORTED | ADGF_DEMO,
+		GUIO0()
+	},
+	kFeatures800x600,
+	"b3_common.stk", "b3_storyboard.obc", 0
 },
 
 #endif // GOB_DETECTION_TABLES_ADIBOU3_H
