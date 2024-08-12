@@ -57,6 +57,45 @@ enum CameraMovement {
 	kRightMovement
 };
 
+enum FREESCAPEAction {
+	kActionNone,
+	kActionEscape,
+	kActionSave,
+	kActionLoad,
+	kActionToggleSound,
+	kActionMoveUp,
+	kActionMoveDown,
+	kActionMoveLeft,
+	kActionMoveRight,
+	kActionShoot,
+	kActionRunMode,
+	kActionChangeAngle,
+	kActionChangeStepSize,
+	kActionToggleRiseLower,
+	kActionRiseOrFlyUp,
+	kActionLowerOrFlyDown,
+	kActionChangeModeOrSkip,
+	kActionFaceForward,
+	kActionRotateUp,
+	kActionRotateDown,
+	kActionRotateLeft,
+	kActionRotateRight,
+	kActionTurnBack,
+	kActionInfoMenu,
+	kActionIncreaseStepSize,
+	kActionDecreaseStepSize,
+	kActionToggleFlyMode,
+	kActionToggleClipMode,
+	// Driller
+	kActionDeployDrillingRig,
+	kActionCollectDrillingRig,
+	// Total Eclipse
+	kActionRest,
+	// Castle
+	kActionSelectPrince,
+	kActionSelectPrincess,
+};
+
 typedef Common::HashMap<uint16, Area *> AreaMap;
 typedef Common::Array<byte *> ColorMap;
 typedef Common::HashMap<uint16, int32> StateVars;
@@ -101,6 +140,7 @@ private:
 	Common::EventManager *_delegate;
 
 	Common::KeyState _currentKeyDown;
+	Common::CustomEventType _currentActionDown;
 	uint32 _keyRepeatTime;
 };
 
@@ -269,7 +309,7 @@ public:
 	bool _shootMode;
 	bool _noClipMode;
 	bool _invertY;
-	virtual void initKeymaps(Common::Keymap *engineKeyMap, const char *target);
+	virtual void initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *infoScreenKeyMap, const char *target);
 	EventManagerWrapper *_eventManager;
 	void processInput();
 	void resetInput();
@@ -402,7 +442,13 @@ public:
 
 	void playSoundZX(Common::Array<soundUnitZX> *data);
 	Common::HashMap<uint16, Common::Array<soundUnitZX>*> _soundsSpeakerFxZX;
-	int _nextSoundToPlay = 1;
+	int _soundIndexShoot;
+	int _soundIndexCollide;
+	int _soundIndexFall;
+	int _soundIndexClimb;
+	int _soundIndexMenu;
+	int _soundIndexStart;
+	int _soundIndexAreaChange;
 
 	// Rendering
 	int _screenW, _screenH;
@@ -507,6 +553,20 @@ public:
 
 	// Random
 	Common::RandomSource *_rnd;
+};
+
+enum GameReleaseFlags {
+	GF_AMIGA_RETAIL = (1 << 0),
+	GF_AMIGA_BUDGET = (1 << 1),
+	GF_ZX_RETAIL = (1 << 2),
+	GF_ZX_BUDGET = (1 << 3),
+	GF_ZX_DISC = (1 << 4),
+	GF_CPC_RETAIL = (1 << 5),
+	GF_CPC_RETAIL_ALT = (1 << 6),
+	GF_CPC_BUDGET = (1 << 7),
+	GF_CPC_VIRTUALWORLDS = (1 << 8),
+	GF_ATARI_RETAIL = (1 << 9),
+	GF_ATARI_BUDGET = (1 << 10)
 };
 
 extern FreescapeEngine *g_freescape;

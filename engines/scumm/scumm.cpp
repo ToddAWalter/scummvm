@@ -1082,7 +1082,7 @@ Common::Error ScummEngine::init() {
 			// files. The rescumm utility used to be used to extract those files.
 			// While that is still possible, we now support reading those files
 			// directly. The first step is to check whether one of them is present
-			// (we do that here); the rest is handled by the  ScummFile class and
+			// (we do that here); the rest is handled by the ScummFile class and
 			// code in openResourceFile() (and in the Sound class, for MONSTER.SOU
 			// handling).
 			assert(_game.version >= 5 && _game.heversion == 0);
@@ -1229,18 +1229,18 @@ Common::Error ScummEngine::init() {
 			// turn the space into an underscore.
 
 			static const char *monkeyIslandFileNames[] = {
-			        "Monkey Island",
-			        "Monkey_Island"
+				"Monkey Island",
+				"Monkey_Island"
 			};
 
-		       for (int i = 0; i < ARRAYSIZE(monkeyIslandFileNames); i++) {
-		                if (resource.exists(monkeyIslandFileNames[i])) {
-		                        macResourceFile = monkeyIslandFileNames[i];
-		                }
-		        }
+			for (int i = 0; i < ARRAYSIZE(monkeyIslandFileNames); i++) {
+				if (resource.exists(monkeyIslandFileNames[i])) {
+					macResourceFile = monkeyIslandFileNames[i];
+				}
+			}
 
 			if (macResourceFile.empty()) {
-			        GUI::MessageDialog dialog(_(
+				GUI::MessageDialog dialog(_(
 "Could not find the 'Monkey Island' Macintosh executable to read the\n"
 "instruments from. Music will be disabled."), _("OK"));
 				dialog.runModal();
@@ -1731,12 +1731,16 @@ void ScummEngine::resetScumm() {
 		_macGui->reset();
 	}
 
-	if (_game.version == 0) {
+	if ((_game.id == GID_MANIAC) && (_game.platform == Common::kPlatformC64)) {
+		initScreens(9, 145); // The main virtual screen is offset lower by one pixel
+	} else if (_game.version == 0) {
 		initScreens(8, 144);
 	} else if ((_game.id == GID_MANIAC) && (_game.version <= 1) && !(_game.platform == Common::kPlatformNES)) {
 		initScreens(16, 152);
 	} else if (_game.version >= 7 || _game.heversion >= 71) {
 		initScreens(0, _screenHeight);
+	} else if ((_game.id == GID_ZAK) && (_game.platform == Common::kPlatformC64)) {
+		initScreens(17, 145); // The main virtual screen is offset lower by one pixel
 	} else {
 		initScreens(16, 144);
 	}
@@ -2437,7 +2441,7 @@ Common::Error ScummEngine::go() {
 		// expected. The timer resolution is lower than the frame-time
 		// derived from it, i.e., one tick represents three frames. We need
 		// to round up VAR_TIMER_NEXT to the nearest multiple of three.
-		if (_game.id == GID_MANIAC && _game.version == 1) {
+		if (_game.id == GID_MANIAC && _game.version == 1 && _game.platform != Common::kPlatformNES) {
 			delta = ceil(delta / 3.0) * 3;
 		}
 
@@ -2666,19 +2670,22 @@ void ScummEngine::scummLoop(int delta) {
 	if (_game.version <= 3)
 		displayDialog();
 
-	processInput();
+	bool isFTDOSDemo = (_game.id == GID_FT) && (_game.features & GF_DEMO) && (_game.platform == Common::kPlatformDOS);
 
-	if (_game.version == 8) {
-		// In v7-8 this function is executed at the end of processInput().
-		// Currently there are no known cases for v7 in which not calling this here,
-		// causes issues. Because of the way things are positioned in our implementation
-		// of the SCUMM loop, as of now enabling this for v7 breaks the screen shake
-		// effect. For v8 we really need to call this here, so let's do that...
-		checkExecVerbs();
+	// In v7 we have to run processInput() at the end of the loop,
+	// to allow one frame time to pass between checkExecVerbs() and runAllScripts().
+	// Several time-based effects (e.g. shaking) depend on this...
+	if (_game.version != 7 || isFTDOSDemo) {
+		processInput();
 
-		// Saving is performed here in v8; this is important when saving the thumbnail,
-		// which would otherwise miss blastObjects/Texts on the bitmap.
-		scummLoop_handleSaveLoad();
+		// Additionally, v8 runs checkExecVerbs() at the end of processInput()...
+		if (_game.version == 8) {
+			checkExecVerbs();
+
+			// Also, saving is performed here in v8; this is important when saving
+			// the thumbnail, which would otherwise miss blastObjects/Texts on the bitmap.
+			scummLoop_handleSaveLoad();
+		}
 	}
 
 	// BlastObjects/Texts are completely removed in this moment of the codepath, in v7.
@@ -2736,15 +2743,29 @@ load_game:
 		((SoundHE *)_sound)->handleSoundFrame();
 	}
 
-	if (_game.version < 8) {
+	if (_game.version < 7 || isFTDOSDemo) {
 		runAllScripts();
+		checkExecVerbs();
 	}
 
-	// SCUMM v7-8 executes checkExecVerbs inside the function
-	// which processes keyboard inputs, so we handle it above
-	// in that case. Again, we make an exception for v7, for now.
-	if (_game.version < 8)
-		checkExecVerbs();
+	// It's verified from FT and DIG disasms that this is where
+	// runAllScripts() should be called; this will delay the
+	// scripts executions between checkExecVerbs() and runAllScripts()
+	// by exactly one frame, and this is what allows sequences of:
+	// - Set screen shake on
+	// - breakHere() for a certain number of times
+	// - Set screen shake off
+	//
+	// to work and to be timed correctly.
+	// 
+	// Again, from the disasms, we call runAllScripts() on a loop,
+	// while the _saveLoadFlag is active.
+	if (_game.version == 7 && !isFTDOSDemo) {
+		do {
+			runAllScripts();
+			scummLoop_handleSaveLoad();
+		} while (_saveLoadFlag != 0);
+	}
 
 	checkAndRunSentenceScript();
 
@@ -2804,6 +2825,15 @@ load_game:
 		// scummLoop_handleActors (but watch out for regressions!)
 		if (_game.version <= 5)
 			playActorSounds();
+	}
+
+	// It's verified from FT and DIG disasms that this is where
+	// these two functions should be called; this will delay the
+	// scripts executions between checkExecVerbs() and runAllScripts()
+	// by exactly one frame.
+	if (_game.version == 7 && !isFTDOSDemo) {
+		processInput();
+		checkExecVerbs();
 	}
 
 	scummLoop_handleSound();
@@ -3769,7 +3799,7 @@ void ScummEngine::runBootscript() {
 
 	args[0] = _bootParam;
 
-	if (_game.id == GID_MANIAC && (_game.features & GF_DEMO) && (_game.platform != Common::kPlatformC64))
+	if ((_game.id == GID_MANIAC && (_game.features & GF_DEMO) && (_game.platform != Common::kPlatformC64)) || ConfMan.getBool("enable_demo_mode"))
 		runScript(9, 0, 0, args);
 	else
 		runScript(1, 0, 0, args);

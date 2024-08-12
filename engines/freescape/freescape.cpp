@@ -79,7 +79,7 @@ FreescapeEngine::FreescapeEngine(OSystem *syst, const ADGameDescription *gd)
 		error("Failed to parse bool from disable_falling option");
 
 	if (!Common::parseBool(ConfMan.get("invert_y"), _invertY))
-		error("Failed to parse bool from disable_falling option");
+		error("Failed to parse bool from invert_y option");
 
 	_gameStateControl = kFreescapeGameStateStart;
 	_startArea = 0;
@@ -148,6 +148,16 @@ FreescapeEngine::FreescapeEngine(OSystem *syst, const ADGameDescription *gd)
 	_playerDepth = 0;
 	_stepUpDistance = 0;
 	_colorNumber = 0;
+
+	_soundIndexShoot = 1;
+	_soundIndexCollide = -1;
+	_soundIndexFall = -1;
+	_soundIndexClimb = -1;
+	_soundIndexMenu = -1;
+	_soundIndexStart = -1;
+	_soundIndexAreaChange = -1;
+	//_soundIndexEndGame = -1;
+	//_soundIndexSensor = -1;
 
 	_fullscreenViewArea = Common::Rect(0, 0, _screenW, _screenH);
 	_viewArea = _fullscreenViewArea;
@@ -479,72 +489,50 @@ void FreescapeEngine::processInput() {
 		if (_gameStateControl != kFreescapeGameStatePlaying) {
 			if (event.type == Common::EVENT_SCREEN_CHANGED)
 				; // Allow event
-			else if (_gameStateControl == kFreescapeGameStateEnd && event.type == Common::EVENT_KEYDOWN) {
+			else if (_gameStateControl == kFreescapeGameStateEnd
+						&& (event.type == Common::EVENT_KEYDOWN || event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START)) {
 				_endGameKeyPressed = true;
 				continue;
-			} else if (event.type == Common::EVENT_KEYDOWN && event.kbd.keycode == Common::KEYCODE_ESCAPE)
+			} else if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START && event.customType == kActionEscape)
 				; // Allow event
 			else if (event.customType != 0xde00)
 				continue;
 		}
 
 		switch (event.type) {
-		case Common::EVENT_JOYBUTTON_DOWN:
-			if (_hasFallen || _playerWasCrushed)
-				break;
-			switch (event.joystick.button) {
-			case Common::JOYSTICK_BUTTON_B:
-			case Common::JOYSTICK_BUTTON_DPAD_UP:
-				move(kForwardMovement, _scaleVector.x(), deltaTime);
-				break;
-			case Common::JOYSTICK_BUTTON_DPAD_DOWN:
-				move(kBackwardMovement, _scaleVector.x(), deltaTime);
-				break;
-			case Common::JOYSTICK_BUTTON_DPAD_LEFT:
-				move(kLeftMovement, _scaleVector.y(), deltaTime);
-				break;
-			case Common::JOYSTICK_BUTTON_DPAD_RIGHT:
-				move(kRightMovement, _scaleVector.y(), deltaTime);
-				break;
-			}
-		break;
-		case Common::EVENT_KEYDOWN:
+		case Common::EVENT_CUSTOM_ENGINE_ACTION_START:
 			if (_hasFallen)
 				break;
-			switch (event.kbd.keycode) {
-			case Common::KEYCODE_o:
-			case Common::KEYCODE_UP:
+			switch (event.customType) {
+			case kActionMoveUp:
 				move(kForwardMovement, _scaleVector.x(), deltaTime);
 				break;
-			case Common::KEYCODE_k:
-			case Common::KEYCODE_DOWN:
+			case kActionMoveDown:
 				move(kBackwardMovement, _scaleVector.x(), deltaTime);
 				break;
-			case Common::KEYCODE_LEFT:
+			case kActionMoveLeft:
 				move(kLeftMovement, _scaleVector.y(), deltaTime);
 				break;
-			case Common::KEYCODE_RIGHT:
+			case kActionMoveRight:
 				move(kRightMovement, _scaleVector.y(), deltaTime);
 				break;
-			case Common::KEYCODE_KP5:
-			case Common::KEYCODE_KP0:
-			case Common::KEYCODE_0:
+			case kActionShoot:
 				shoot();
 				break;
-			case Common::KEYCODE_p:
+			case kActionRotateUp:
 				rotate(0, 5);
 				break;
-			case Common::KEYCODE_l:
+			case kActionRotateDown:
 				rotate(0, -5);
 				break;
-			case Common::KEYCODE_u:
+			case kActionTurnBack:
 				rotate(180, 0);
 				break;
-			case Common::KEYCODE_n:
+			case kActionToggleClipMode:
 				_noClipMode = !_noClipMode;
 				_flyMode = _noClipMode;
 				break;
-			case Common::KEYCODE_ESCAPE:
+			case kActionEscape:
 				drawFrame();
 				_savedScreen = _gfx->getScreenshot();
 				openMainMenuDialog();
@@ -552,7 +540,7 @@ void FreescapeEngine::processInput() {
 				_savedScreen->free();
 				delete _savedScreen;
 				break;
-			case Common::KEYCODE_SPACE:
+			case kActionChangeModeOrSkip:
 				_shootMode = !_shootMode;
 				centerCrossair();
 				if (!_shootMode) {
@@ -564,13 +552,19 @@ void FreescapeEngine::processInput() {
 					_eventManager->purgeKeyboardEvents();
 				}
 				break;
-			case Common::KEYCODE_i:
+			case kActionInfoMenu:
 				drawInfoMenu();
 				break;
 			default:
-				pressedKey(event.kbd.keycode);
+				pressedKey(event.customType);
 				break;
 			}
+			break;
+		case Common::EVENT_KEYDOWN:
+			if (_hasFallen)
+				break;
+
+			pressedKey(event.kbd.keycode);
 			break;
 
 		case Common::EVENT_KEYUP:

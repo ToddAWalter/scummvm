@@ -454,6 +454,8 @@ bool ScummEngine::handleNextCharsetCode(Actor *a, int *code) {
 			_nextTop -= _charset->getFontHeight() - oldy;
 			break;
 		default:
+			// We should never get here! Any invalid control code by this point
+			// has already been converted by a normal character to be displayed.
 			error("handleNextCharsetCode: invalid code %d", c);
 		}
 	}
@@ -527,7 +529,8 @@ bool ScummEngine_v72he::handleNextCharsetCode(Actor *a, int *code) {
 			endLoop = endText = true;
 			break;
 		default:
-			error("handleNextCharsetCode: invalid code %d", c);
+			// Ignore the control code, reset the buffer position...
+			buffer--;
 		}
 	}
 	_charsetBufPos = buffer - _charsetBuffer;
@@ -848,6 +851,8 @@ void ScummEngine_v2::drawSentence() {
 	Common::Rect sentenceline;
 	const byte *temp;
 	int slot = getVerbSlot(VAR(VAR_SENTENCE_VERB), 0);
+	int pixelYOffset = (_game.platform == Common::kPlatformC64) ? 1 : 0;
+	int pixelXOffset = (_game.platform == Common::kPlatformC64) ? 1 : 0;
 
 	if (!((_userState & USERSTATE_IFACE_SENTENCE) ||
 		  (_game.platform == Common::kPlatformNES && (_userState & USERSTATE_IFACE_ALL))))
@@ -890,9 +895,9 @@ void ScummEngine_v2::drawSentence() {
 	}
 
 	_string[2].charset = 1;
-	_string[2].ypos = _virtscr[kVerbVirtScreen].topline;
-	_string[2].xpos = 0;
-	_string[2].right = _virtscr[kVerbVirtScreen].w - 1;
+	_string[2].ypos = _virtscr[kVerbVirtScreen].topline + pixelYOffset;
+	_string[2].xpos = 0 + pixelXOffset;
+	_string[2].right = _virtscr[kVerbVirtScreen].w - 1 + pixelXOffset;
 	if (_game.platform == Common::kPlatformNES) {
 		_string[2].xpos = 16;
 		_string[2].color = 0;
@@ -930,10 +935,10 @@ void ScummEngine_v2::drawSentence() {
 		sentenceline.left = 16;
 		sentenceline.right = _virtscr[kVerbVirtScreen].w - 1;
 	} else {
-		sentenceline.top = _virtscr[kVerbVirtScreen].topline;
-		sentenceline.bottom = _virtscr[kVerbVirtScreen].topline + 8;
-		sentenceline.left = 0;
-		sentenceline.right = _virtscr[kVerbVirtScreen].w - 1;
+		sentenceline.top = _virtscr[kVerbVirtScreen].topline + pixelYOffset;
+		sentenceline.bottom = _virtscr[kVerbVirtScreen].topline + 8 + pixelYOffset;
+		sentenceline.left = 0 + pixelXOffset;
+		sentenceline.right = _virtscr[kVerbVirtScreen].w - 1 + pixelXOffset;
 	}
 	restoreBackground(sentenceline);
 
@@ -1432,19 +1437,16 @@ int ScummEngine::convertMessageToString(const byte *msg, byte *dst, int dstSize)
 		if (chr == 0xFF) {
 			chr = src[num++];
 
-			// WORKAROUND for bug #1675, a script bug in Indy3. Apparently,
-			// a german 'sz' was encoded incorrectly as 0xFF2E. We replace
-			// this by the correct encoding here. See also ScummEngine::resStrLen().
-			if (_game.id == GID_INDY3 && chr == 0x2E) {
-				*dst++ = 0xE1;
-				continue;
-			}
-
-			// WORKAROUND for bug #2715: Yet another script bug in Indy3.
-			// Once more a german 'sz' was encoded incorrectly, but this time
-			// they simply encoded it as 0xFF instead of 0xE1. Happens twice
-			// in script 71.
-			if (_game.id == GID_INDY3 && chr == 0x20 && vm.slot[_currentScript].number == 71) {
+			// WORKAROUND for bugs #1675 and #2715, script bugs in German Indy3.
+			// Some German 'sz' (Eszett) characters were encoded incorrectly as
+			// 0xFF instead of 0xE1, triggering convertMessageToString() and then
+			// causing a fatal error there. We replace this by the correct encoding
+			// here. At least the DOS and Amiga German releases are affected.
+			//
+			// See also ScummEngine::resStrLen().
+			if (_game.id == GID_INDY3 && _language == Common::DE_DEU &&
+				((_roomResource == 23 && chr == 0x2E) ||
+				 (_roomResource == 21 && chr == 0x20))) {
 				num--;
 				*dst++ = 0xE1;
 				continue;
@@ -1497,7 +1499,8 @@ int ScummEngine::convertMessageToString(const byte *msg, byte *dst, int dstSize)
 					}
 					break;
 				default:
-					error("convertMessageToString(): string escape sequence %d unknown", chr);
+					// Invalid control code. Just print the character...
+					*dst++ = chr;
 				}
 				num += (_game.version == 8) ? 4 : 2;
 			}

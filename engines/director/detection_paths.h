@@ -30,7 +30,6 @@ const char *const directoryGlobs[] = {
 	"data",
 	"gadget",						// Gadget
 	"program",						// Arc Media products
-	"demodata",						// Edmark demos
 	"media",						// Gundam
 	"mvm",							// Master of the Elements
 	"module_1",
@@ -43,10 +42,6 @@ const char *const directoryGlobs[] = {
 	"data_1",
 	"data_2",						// JumpStart World
 	"numbers",						// JumpStart Learning Games
-	"xtras",
-	"files",						// Babar
-	"swanlake",						// Barbie Swan Lake
-	"assets",						// Barbie Nail Designer
 	"fjpc",							// Forestia Jr
 	"movies",						// Mulle Meck (Gary Gadget) series
 	"winroot",
@@ -93,10 +88,6 @@ const char *const directoryGlobs[] = {
 	"95instal",						// Fisher-Price Little People
 	"freading",
 	"fsetup",						// My First Reading Words (Eureka)
-	"english",
-	"deutsch",
-	"francais",						// Rename from Français
-	"italiano",						// Virtual Tourism Paris
 	"popup",						// Pop Up Computer
 	"alpha",						// Interactive Alphabet
 	"technik",						// Glasklar Technology Interactive
@@ -108,30 +99,14 @@ const char *const directoryGlobs[] = {
 	"file",
 	"mfile",
 	"movie",						// Teichiku demos
-	"install_mac",
-	"install_win",
-	"copyto_hd",					// Incarnatia
-	"alcohol 101",
-	"audio",
-	"print",
-	"vids",							// Alcohol 101
-	"dir_data",						// Garage
-	"cd extra",
-	"catalog",						// Sarah McLachlan ECD (NettMedia)
-	"hd",							// Grammar Playtime
 	"scr",
 	"scr_mov",						// Cardcaptor Sakura screen savers
-	"dicfiles",						// Time Blazers series
 	"docs",							// Enhanced CDs
 	"lingo expo",					// D4 sample movies
 	"main",							// Meet MediaBand
-	"toinstall",					// Jönssonligan series
-	"pingucd",
-	"instdata",						// Pingu
 	"bellinin bikinit",				// Bellini 3 (Finnish)
-	"put me on your desktop",		// Betty Page
-	"abc",							// Alphabet Train
-	"123",							// Ktar Alarkam
+//	"abc",							// Alphabet Train
+//	"123",							// Ktar Alarkam
 	"vlaams",
 	"ned",							// I Spy School Days (Dutch)
 	"fl1",
@@ -139,19 +114,8 @@ const char *const directoryGlobs[] = {
 	"cipdemo",
 	"cipher",						// Jewels of the Oracle
 	"gems",							// Gems of Darkness / Jewels II
-	"corel cd home",
-	"the cassandra galleries",		// Cassandra Galleries
-	"knights",						// Nikolai's Knights
-	"nemcina",						// Německá gramatika
 	"hdfiles",
 	"creator",						// Get a Head series
-	"32bit",
-	"sd",
-	"mac install",
-	"slam dunk typing",
-	"typing",						// Slam Dunk Typing
-	"ceremony",
-	"copytohd",						// Ceremony of Innocence
 	"xn--t8jo8k",					// Perfect Blue screen savers
 	"maccurio",
 	"wincurio",						// Curio City
@@ -162,24 +126,7 @@ const char *const directoryGlobs[] = {
 	"_setup",
 	"bin",
 	"adam resources",				// ADAM Software Products
-	"material",						// NY Yankees Yearbook
 	"NAV",
-	"InsMilo",						// Milo and the Magical Stones
-	"dir",
-	"CHRISTMAS PRESENT",			// Christmas Present
-	"Subotnick Hummingbirds",		// All My Hummingbirds Have Alibis
-	"Silly Noisy House Folder",		// A Silly Noisy House
-	"Treasures of the AMNH",		// Treasures of the American Museum of Natural History (Mac)
-	"TAMNH",						// Treasures of the American Museum of Natural History (Win)
-	"xn--Sacred and Secular -ere",	// Sacred and Secular (Mac) ("Sacred and Secular ƒ")
-	"SACRED",						// Sacred and Secular (Win)
-	"Dracula - Truth and Terror",	// Dracula: Truth and Terror (Mac)
-	"DRACULA",						// Dracula: Truth and Terror (Win)
-	"The Louvre for Kids",			// The Louvre Museum (Mac)
-	"LOUVRE",						// The Louvre Museum (Win)
-	"Trinity",						// The Day After Trinity
-	"Puppet Motel Folder",			// Puppet Motel (Mac)
-	"PUPPET",						// Puppet Motel (Win)
 	"Daedalus Max",					// The Daedalus Encounter
 	0
 };

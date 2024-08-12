@@ -428,10 +428,11 @@ void ScummEngine_v2::decodeParseString() {
 		buffer[29] = 'y';
 	}
 
+	int pixelXOffset = (_game.platform == Common::kPlatformC64) ? 1 : 0;
 	int textSlot = 0;
-	_string[textSlot].xpos = 0;
+	_string[textSlot].xpos = 0 + pixelXOffset;
 	_string[textSlot].ypos = 0;
-	_string[textSlot].right = _screenWidth - 1;
+	_string[textSlot].right = _screenWidth - 1 + pixelXOffset;
 	_string[textSlot].center = false;
 	_string[textSlot].overhead = false;
 
@@ -1336,8 +1337,11 @@ void ScummEngine_v2::o2_findObject() {
 	int y = getVarOrDirectByte(PARAM_2) * V12_Y_MULTIPLIER;
 	obj = findObject(x, y);
 	if (obj == 0 && (_game.platform == Common::kPlatformNES) && (_userState & USERSTATE_IFACE_INVENTORY)) {
-		if (_mouseOverBoxV2 >= 0 && _mouseOverBoxV2 < 4)
-			obj = findInventory(VAR(VAR_EGO), _mouseOverBoxV2 + _inventoryOffset + 1);
+		if (_mouseOverBoxV2 >= 0 && _mouseOverBoxV2 < 4) {
+			// Simulate inverse order
+			int invCount = getInventoryCount(VAR(VAR_EGO));
+			obj = findInventory(VAR(VAR_EGO), invCount - _inventoryOffset - _mouseOverBoxV2);
+		}
 	}
 	setResult(obj);
 }

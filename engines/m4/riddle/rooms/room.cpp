@@ -27,6 +27,8 @@ namespace M4 {
 namespace Riddle {
 namespace Rooms {
 
+int Room::_ripSketching;
+
 void Room::restoreAutosave() {
 	if (g_engine->autosaveExists()) {
 		_G(kernel).restore_slot = 0;
@@ -325,6 +327,18 @@ void Room::sendWSMessage_120000(int trigger) {
 	sendWSMessage_120000(_G(my_walker), trigger);
 }
 
+void Room::sendWSMessage_130000(machine *recv, int val1) {
+	if (val1 == 0)
+		val1 = -1;
+
+	_G(globals)[V023] = kernel_trigger_create(val1);
+	sendWSMessage(0x130000, 0, recv, 0, 0, 1);
+}
+
+void Room::sendWSMessage_130000(int val1) {
+	sendWSMessage_130000(_G(my_walker), val1);
+}
+
 void Room::sendWSMessage_140000(machine *mach, int trigger) {
 	if (!trigger)
 		trigger = -1;
@@ -364,9 +378,133 @@ void Room::sendWSMessage_190000(machine *recv, int trigger) {
 	sendWSMessage(0x190000, 0, recv, 0, nullptr, 1);
 }
 
+void Room::sendWSMessage_190000(int trigger) {
+	sendWSMessage_190000(_G(my_walker), trigger);
+}
+
 void Room::sendWSMessage_1a0000(machine *recv, int trigger) {
 	_G(globals)[V024] = trigger << 16;
 	sendWSMessage(0x1a0000, 0, recv, 0, nullptr, 1);
+}
+
+void Room::sendWSMessage_29a0000(machine *recv, int val1) {
+	_G(globals)[GLB_TEMP_1] = val1 << 24;
+	sendWSMessage(0x29a0000, 0, recv, 0, 0, 1);
+}
+
+void Room::sendWSMessage_29a0000(int val1) {
+	sendWSMessage_29a0000(_G(my_walker), val1);
+}
+
+void Room::sendWSMessage_multi(const char *name) {
+	int vSI = 0, vCX = 0;
+
+	switch (_G(kernel).trigger) {
+	case -1:
+	case 8:
+		player_update_info();
+
+		switch (_G(player_info).facing) {
+		case 1:
+		case 2:
+			ws_walk(_G(player_info).x, _G(player_info).y, nullptr, 1, 2);
+			break;
+
+		case 3:
+			ws_walk(_G(player_info).x, _G(player_info).y, nullptr, 1, 3);
+			break;
+
+		case 4:
+		case 5:
+			ws_walk(_G(player_info).x, _G(player_info).y, nullptr, 1, 4);
+			break;
+
+		case 7:
+		case 8:
+			ws_walk(_G(player_info).x, _G(player_info).y, nullptr, 1, 8);
+			break;
+
+		case 9:
+			ws_walk(_G(player_info).x, _G(player_info).y, nullptr, 1, 9);
+			break;
+
+		case 10:
+		case 11:
+			ws_walk(_G(player_info).x, _G(player_info).y, nullptr, 1, 10);
+			break;
+
+		default:
+			break;
+		}
+
+		player_set_commands_allowed(false);
+		break;
+
+	case 1:
+		player_update_info();
+		digi_preload("950_s34");
+
+		switch (_G(player_info).facing) {
+		case 2:
+		case 10:
+			vCX = 39;
+			vSI = 17;
+			_ripSketching = series_load("RIP SKETCHING IN NOTEBOOK POS 2");
+			break;
+
+		case 3:
+		case 9:
+			vCX = 36;
+			vSI = 22;
+			_ripSketching = series_load("RIP SKETCHING IN NOTEBOOK POS 3");
+			break;
+
+		case 4:
+		case 8:
+			vCX = 45;
+			vSI = 19;
+			_ripSketching = series_load("RIP SKETCHING IN NOTEBOOK POS 4");
+			break;
+
+		default:
+			break;
+		}
+
+		setGlobals1(_ripSketching, 1, vSI, vSI, vSI, 0, vCX + 1, vCX, vCX, vCX);
+		sendWSMessage_110000(3);
+		digi_play(name, 1);
+		break;
+
+	case 3:
+		if (_G(player_info).facing == 0 || _G(player_info).facing == 9)
+			sendWSMessage_190000(9);
+
+		sendWSMessage_120000(4);
+		digi_play("950_s34", 2, 200, 7);
+		break;
+
+	case 4:
+		sendWSMessage_110000(5);
+		break;
+
+	case 5:
+		sendWSMessage_140000(6);
+		break;
+
+	case 6:
+		series_unload(_ripSketching);
+		digi_unload("950_s34");
+		player_set_commands_allowed(true);
+		return;
+
+	case 7:
+		if (_G(player_info).facing == 3 || _G(player_info).facing == 9)
+			sendWSMessage_190000(5);
+		break;
+
+	default:
+		break;
+	}
 }
 
 int Room::getNumKeyItemsPlaced() const {
