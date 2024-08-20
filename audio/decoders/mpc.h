@@ -19,23 +19,41 @@
  *
  */
 
-#ifndef MTROPOLIS_PLUGIN_SPQR_DATA_H
-#define MTROPOLIS_PLUGIN_SPQR_DATA_H
+/**
+ * @file
+ * Sound decoder used in engines:
+ *  - qdengine
+ */
 
-#include "mtropolis/data.h"
+#ifndef AUDIO_MPC_H
+#define AUDIO_MPC_H
 
-namespace MTropolis {
+#include "common/scummsys.h"
+#include "common/types.h"
 
-namespace Data {
+#ifdef USE_MPCDEC
 
-namespace SPQR {
+namespace Common {
+class SeekableReadStream;
+}
 
-// Known SPQR - The Empire's Darkest Hour custom modifiers:
+namespace Audio {
 
-} // End of namespace SPQR
+class SeekableAudioStream;
 
-} // End of namespace Data
+/**
+ * Create a new SeekableAudioStream from the Ogg Vorbis data in the given stream.
+ * Allows for seeking (which is why we require a SeekableReadStream).
+ *
+ * @param stream			the SeekableReadStream from which to read the Ogg Vorbis data
+ * @param disposeAfterUse	whether to delete the stream after use
+ * @return	a new SeekableAudioStream, or NULL, if an error occurred
+ */
+SeekableAudioStream *makeMPCStream(
+	Common::SeekableReadStream *stream,
+	DisposeAfterUse::Flag disposeAfterUse);
 
-} // End of namespace MTropolis
+} // End of namespace Audio
 
-#endif
+#endif // #ifdef USE_MPCDEC
+#endif // #ifndef AUDIO_MPC_H

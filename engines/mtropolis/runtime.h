@@ -1366,6 +1366,7 @@ struct HighLevelSceneTransition {
 		kTypeChangeToScene,
 		kTypeChangeSharedScene,
 		kTypeForceLoadScene,
+		kTypeRequestUnloadScene,
 	};
 
 	HighLevelSceneTransition(const Common::SharedPtr<Structural> &hlst_scene, Type hlst_type, bool hlst_addToDestinationScene, bool hlst_addToReturnList);
@@ -1737,6 +1738,8 @@ public:
 	void queueCloneObject(const Common::WeakPtr<RuntimeObject> &obj);
 	void queueKillObject(const Common::WeakPtr<RuntimeObject> &obj);
 	void queueChangeObjectParent(const Common::WeakPtr<RuntimeObject> &obj, const Common::WeakPtr<RuntimeObject> &newParent);
+
+	void hotLoadScene(Structural *structural);
 
 #ifdef MTROPOLIS_DEBUG_ENABLE
 	void debugSetEnabled(bool enabled);
@@ -2187,11 +2190,19 @@ public:
 
 class Structural : public RuntimeObject, public IModifierContainer, public IMessageConsumer, public Debuggable {
 public:
+	enum class SceneLoadState {
+		kNotAScene,
+		kSceneNotLoaded,
+		kSceneLoaded,
+	};
+
 	Structural();
 	explicit Structural(Runtime *runtime);
 	virtual ~Structural();
 
 	bool isStructural() const override;
+	SceneLoadState getSceneLoadState() const;
+	void setSceneLoadState(SceneLoadState sceneLoadState);
 
 	bool readAttribute(MiniscriptThread *thread, DynamicValue &result, const Common::String &attrib) override;
 	bool readAttributeIndexed(MiniscriptThread *thread, DynamicValue &result, const Common::String &attrib, const DynamicValue &index) override;
@@ -2258,6 +2269,7 @@ protected:
 	MiniscriptInstructionOutcome scriptSetPaused(MiniscriptThread *thread, const DynamicValue &value);
 	MiniscriptInstructionOutcome scriptSetLoop(MiniscriptThread *thread, const DynamicValue &value);
 	MiniscriptInstructionOutcome scriptSetDebug(MiniscriptThread *thread, const DynamicValue &value);
+	MiniscriptInstructionOutcome scriptSetUnload(MiniscriptThread *thread, const DynamicValue &value);
 
 	// If you override this, you must override visitInternalReferences too.
 	virtual void linkInternalReferences(ObjectLinkingScope *outerScope);
@@ -2283,6 +2295,7 @@ protected:
 	bool _loop;
 
 	int32 _flushPriority;
+	SceneLoadState _sceneLoadState;
 
 	Common::SharedPtr<StructuralHooks> _hooks;
 
@@ -2684,6 +2697,7 @@ public:
 	void removeMediaCue(const MediaCueState *mediaCue);
 
 	void triggerAutoPlay(Runtime *runtime);
+	virtual void tryAutoSetName(Runtime *runtime, Project *project);
 
 	virtual bool resolveMediaMarkerLabel(const Label &label, int32 &outResolution) const;
 

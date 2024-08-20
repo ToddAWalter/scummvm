@@ -19,31 +19,30 @@
  *
  */
 
-#ifndef MTROPOLIS_PLUGIN_SPQR_H
-#define MTROPOLIS_PLUGIN_SPQR_H
+#ifndef TWINE_PARSER_ANIM3DS_H
+#define TWINE_PARSER_ANIM3DS_H
 
-#include "mtropolis/modifier_factory.h"
-#include "mtropolis/modifiers.h"
-#include "mtropolis/plugin/spqr_data.h"
-#include "mtropolis/runtime.h"
+#include "twine/parser/parser.h"
+#include "twine/shared.h"
 
-namespace MTropolis {
+namespace TwinE {
 
-namespace SPQR {
-
-class SPQRPlugIn;
-
-class SPQRPlugIn : public MTropolis::PlugIn {
-public:
-	SPQRPlugIn();
-
-	void registerModifiers(IPlugInModifierRegistrar *registrar) const override;
-
-private:
+struct T_ANIM_3DS {
+	char Name[4]; // Name of the animation
+	int16 Deb;    // Start frame in the HQR
+	int16 Fin;    // End frame in the HQR
 };
 
-} // End of namespace SPQR
+class Anim3DSData : public Parser {
+private:
+	Common::Array<T_ANIM_3DS> _anims; // ListAnim3DS
 
-} // End of namespace MTropolis
+public:
+	bool loadFromStream(Common::SeekableReadStream &stream, bool lba1) override;
+
+	const Common::Array<T_ANIM_3DS> &getAnims() const { return _anims; }
+};
+
+} // End of namespace TwinE
 
 #endif

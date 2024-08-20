@@ -41,7 +41,16 @@ DarkEngine::DarkEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEn
 	_soundIndexMenu = -1;
 	_soundIndexStart = 9;
 	_soundIndexAreaChange = 5;
+	_soundIndexHit = 2;
 	_soundIndexRestoreECD = 19;
+
+	_soundIndexNoShield = -1;
+	_soundIndexNoEnergy = -1;
+	_soundIndexFallen = -1;
+	_soundIndexTimeout = -1;
+	_soundIndexForceEndGame = -1;
+	_soundIndexCrushed = -1;
+	_soundIndexMissionComplete = -1;
 
 	if (isDOS())
 		initDOS();
@@ -171,73 +180,70 @@ void DarkEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *infoS
 	FreescapeEngine::initKeymaps(engineKeyMap, infoScreenKeyMap, target);
 	Common::Action *act;
 
-	{
-		act = new Common::Action("SAVE", _("Save Game"));
-		act->setCustomEngineActionEvent(kActionSave);
-		act->addDefaultInputMapping("s");
-		infoScreenKeyMap->addAction(act);
+	act = new Common::Action("SAVE", _("Save Game"));
+	act->setCustomEngineActionEvent(kActionSave);
+	act->addDefaultInputMapping("s");
+	infoScreenKeyMap->addAction(act);
 
-		act = new Common::Action("LOAD", _("Load Game"));
-		act->setCustomEngineActionEvent(kActionLoad);
-		act->addDefaultInputMapping("l");
-		infoScreenKeyMap->addAction(act);
+	act = new Common::Action("LOAD", _("Load Game"));
+	act->setCustomEngineActionEvent(kActionLoad);
+	act->addDefaultInputMapping("l");
+	infoScreenKeyMap->addAction(act);
 
-		act = new Common::Action("QUIT", _("Quit Game"));
-		act->setCustomEngineActionEvent(kActionEscape);
-		if (isSpectrum())
-			act->addDefaultInputMapping("1");
-		else
-			act->addDefaultInputMapping("ESCAPE");
-		infoScreenKeyMap->addAction(act);
+	act = new Common::Action("QUIT", _("Quit Game"));
+	act->setCustomEngineActionEvent(kActionEscape);
+	if (isSpectrum())
+		act->addDefaultInputMapping("1");
+	else
+		act->addDefaultInputMapping("ESCAPE");
 
-		if (!(isAmiga() || isAtariST())) {
-			act = new Common::Action("TOGGLESOUND", _("Toggle Sound"));
-			act->setCustomEngineActionEvent(kActionToggleSound);
-			act->addDefaultInputMapping("t");
-			infoScreenKeyMap->addAction(act);
-		}
+	infoScreenKeyMap->addAction(act);
+
+	if (!(isAmiga() || isAtariST())) {
+		act = new Common::Action("TOGGLESOUND", _("Toggle Sound"));
+		act->setCustomEngineActionEvent(kActionToggleSound);
+		act->addDefaultInputMapping("t");
+		infoScreenKeyMap->addAction(act);
 	}
 
-	{
-		act = new Common::Action("ROTL", _("Rotate Left"));
-		act->setCustomEngineActionEvent(kActionRotateLeft);
-		act->addDefaultInputMapping("q");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("ROTL", _("Rotate Left"));
+	act->setCustomEngineActionEvent(kActionRotateLeft);
+	act->addDefaultInputMapping("q");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("ROTR", _("Rotate Right"));
-		act->setCustomEngineActionEvent(kActionRotateRight);
-		act->addDefaultInputMapping("w");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("ROTR", _("Rotate Right"));
+	act->setCustomEngineActionEvent(kActionRotateRight);
+	act->addDefaultInputMapping("w");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("INCSTEPSIZE", _("Increase Step Size"));
-		act->setCustomEngineActionEvent(kActionIncreaseStepSize);
-		act->addDefaultInputMapping("s");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("INCSTEPSIZE", _("Increase Step Size"));
+	act->setCustomEngineActionEvent(kActionIncreaseStepSize);
+	act->addDefaultInputMapping("s");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("DECSTEPSIZE", _("Decrease Step Size"));
-		act->setCustomEngineActionEvent(kActionDecreaseStepSize);
-		act->addDefaultInputMapping("x");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("DECSTEPSIZE", _("Decrease Step Size"));
+	act->setCustomEngineActionEvent(kActionDecreaseStepSize);
+	act->addDefaultInputMapping("x");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("RISE", _("Rise/Fly up"));
-		act->setCustomEngineActionEvent(kActionRiseOrFlyUp);
-		act->addDefaultInputMapping("JOY_B");
-		act->addDefaultInputMapping("r");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("RISE", _("Rise/Fly up"));
+	act->setCustomEngineActionEvent(kActionRiseOrFlyUp);
+	act->addDefaultInputMapping("JOY_B");
+	act->addDefaultInputMapping("r");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("LOWER", _("Lower/Fly down"));
-		act->setCustomEngineActionEvent(kActionLowerOrFlyDown);
-		act->addDefaultInputMapping("JOY_Y");
-		act->addDefaultInputMapping("f");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("LOWER", _("Lower/Fly down"));
+	act->setCustomEngineActionEvent(kActionLowerOrFlyDown);
+	act->addDefaultInputMapping("JOY_Y");
+	act->addDefaultInputMapping("f");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("JETPACK", _("Enable/Disable Jetpack"));
-		act->setCustomEngineActionEvent(kActionToggleFlyMode);
-		act->addDefaultInputMapping("JOY_LEFT_SHOULDER");
-		act->addDefaultInputMapping("JOY_RIGHT_SHOULDER");
-		act->addDefaultInputMapping("j");
-		engineKeyMap->addAction(act);
-	}
+	act = new Common::Action("JETPACK", _("Enable/Disable Jetpack"));
+	act->setCustomEngineActionEvent(kActionToggleFlyMode);
+	act->addDefaultInputMapping("JOY_LEFT_SHOULDER");
+	act->addDefaultInputMapping("JOY_RIGHT_SHOULDER");
+	act->addDefaultInputMapping("j");
+	engineKeyMap->addAction(act);
 }
 
 void DarkEngine::initGameState() {
@@ -293,9 +299,9 @@ bool DarkEngine::tryDestroyECDFullGame(int index) {
 		case 8:
 			assert(index <= 1);
 			if (index == 0)
-				return true;
-			else if (index == 1)
 				return !(checkECD(18, 0) && checkECD(10, 0)); // Check both
+			else if (index == 1)
+				return true;
 			break;
 
 		case 10:
@@ -401,7 +407,7 @@ bool DarkEngine::tryDestroyECDFullGame(int index) {
 
 bool DarkEngine::tryDestroyECD(int index) {
 	if (isDemo()) {
-		if (index == 1) {
+		if (index == 0) {
 			return false;
 		}
 		return true;
@@ -745,6 +751,9 @@ void DarkEngine::drawBinaryClock(Graphics::Surface *surface, int xPosition, int 
 	if (_gameStateControl == kFreescapeGameStatePlaying)
 		number = _ticks / 2;
 	else if (_gameStateControl == kFreescapeGameStateEnd) {
+		if (_endGameDelayTicks > 0) // Wait until the endgame is ready
+			return;
+
 		if (_gameStateVars[kVariableDarkEnding] == 0)
 			number = (1 << 15) - 1;
 		else
@@ -787,8 +796,7 @@ void DarkEngine::drawIndicator(Graphics::Surface *surface, int xPosition, int yP
 void DarkEngine::drawSensorShoot(Sensor *sensor) {
 	if (_gameStateControl == kFreescapeGameStatePlaying) {
 		// Avoid playing new sounds, so the endgame can progress
-		if (isSpectrum())
-			playSound(2, true);
+		playSound(_soundIndexHit, true);
 	}
 
 	Math::Vector3d target;
@@ -809,6 +817,10 @@ void DarkEngine::drawSensorShoot(Sensor *sensor) {
 
 void DarkEngine::drawInfoMenu() {
 	PauseToken pauseToken = pauseEngine();
+	if (_savedScreen) {
+		_savedScreen->free();
+		delete _savedScreen;
+	}
 	_savedScreen = _gfx->getScreenshot();
 	uint32 color = 0;
 	switch (_renderMode) {
@@ -901,6 +913,7 @@ void DarkEngine::drawInfoMenu() {
 
 	_savedScreen->free();
 	delete _savedScreen;
+	_savedScreen = nullptr;
 	surface->free();
 	delete surface;
 

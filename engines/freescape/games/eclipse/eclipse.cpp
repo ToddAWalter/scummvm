@@ -39,8 +39,19 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_soundIndexFall = 3;
 	_soundIndexClimb = 4;
 	_soundIndexMenu = -1;
-	_soundIndexStart = -1;
-	_soundIndexAreaChange = -1;
+	_soundIndexStart = 9;
+	_soundIndexAreaChange = 5;
+
+	_soundIndexStartFalling = -1;
+	_soundIndexEndFalling = -1;
+
+	_soundIndexNoShield = -1;
+	_soundIndexNoEnergy = -1;
+	_soundIndexFallen = -1;
+	_soundIndexTimeout = -1;
+	_soundIndexForceEndGame = -1;
+	_soundIndexCrushed = -1;
+	_soundIndexMissionComplete = -1;
 
 	if (isDOS())
 		initDOS();
@@ -120,7 +131,10 @@ bool EclipseEngine::checkIfGameEnded() {
 	if (_gameStateControl == kFreescapeGameStatePlaying) {
 		if (_hasFallen && _avoidRenderingFrames == 0) {
 			_hasFallen = false;
-			playSoundFx(4, false);
+			if (isDOS())
+				playSoundFx(4, false);
+			else
+				playSound(_soundIndexStartFalling, false);
 
 			// If shield is less than 11 after a fall, the game ends
 			if (_gameStateVars[k8bitVariableShield] > 15 + 11) {
@@ -173,67 +187,63 @@ void EclipseEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *in
 	FreescapeEngine::initKeymaps(engineKeyMap, infoScreenKeyMap, target);
 	Common::Action *act;
 
-	{
-		act = new Common::Action("SAVE", _("Save Game"));
-		act->setCustomEngineActionEvent(kActionSave);
-		act->addDefaultInputMapping("s");
-		infoScreenKeyMap->addAction(act);
+	act = new Common::Action("SAVE", _("Save Game"));
+	act->setCustomEngineActionEvent(kActionSave);
+	act->addDefaultInputMapping("s");
+	infoScreenKeyMap->addAction(act);
 
-		act = new Common::Action("LOAD", _("Load Game"));
-		act->setCustomEngineActionEvent(kActionLoad);
-		act->addDefaultInputMapping("l");
-		infoScreenKeyMap->addAction(act);
+	act = new Common::Action("LOAD", _("Load Game"));
+	act->setCustomEngineActionEvent(kActionLoad);
+	act->addDefaultInputMapping("l");
+	infoScreenKeyMap->addAction(act);
 
-		act = new Common::Action("QUIT", _("Quit Game"));
-		act->setCustomEngineActionEvent(kActionEscape);
-		if (isSpectrum())
-			act->addDefaultInputMapping("1");
-		else
-			act->addDefaultInputMapping("ESCAPE");
-		infoScreenKeyMap->addAction(act);
+	act = new Common::Action("QUIT", _("Quit Game"));
+	act->setCustomEngineActionEvent(kActionEscape);
+	if (isSpectrum())
+		act->addDefaultInputMapping("1");
+	else
+		act->addDefaultInputMapping("ESCAPE");
+	infoScreenKeyMap->addAction(act);
 
-		act = new Common::Action("TOGGLESOUND", _("Toggle Sound"));
-		act->setCustomEngineActionEvent(kActionToggleSound);
-		act->addDefaultInputMapping("t");
-		infoScreenKeyMap->addAction(act);
-	}
+	act = new Common::Action("TOGGLESOUND", _("Toggle Sound"));
+	act->setCustomEngineActionEvent(kActionToggleSound);
+	act->addDefaultInputMapping("t");
+	infoScreenKeyMap->addAction(act);
 
-	{
-		act = new Common::Action("ROTL", _("Rotate Left"));
-		act->setCustomEngineActionEvent(kActionRotateLeft);
-		act->addDefaultInputMapping("q");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("ROTL", _("Rotate Left"));
+	act->setCustomEngineActionEvent(kActionRotateLeft);
+	act->addDefaultInputMapping("q");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("ROTR", _("Rotate Right"));
-		act->setCustomEngineActionEvent(kActionRotateRight);
-		act->addDefaultInputMapping("w");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("ROTR", _("Rotate Right"));
+	act->setCustomEngineActionEvent(kActionRotateRight);
+	act->addDefaultInputMapping("w");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("CHNGANGLE", _("Change Angle"));
-		act->setCustomEngineActionEvent(kActionChangeAngle);
-		act->addDefaultInputMapping("a");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("CHNGANGLE", _("Change Angle"));
+	act->setCustomEngineActionEvent(kActionChangeAngle);
+	act->addDefaultInputMapping("a");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("CHNGSTEPSIZE", _("Change Step Size"));
-		act->setCustomEngineActionEvent(kActionChangeStepSize);
-		act->addDefaultInputMapping("s");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("CHNGSTEPSIZE", _("Change Step Size"));
+	act->setCustomEngineActionEvent(kActionChangeStepSize);
+	act->addDefaultInputMapping("s");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("TGGLHEIGHT", _("Toggle Height"));
-		act->setCustomEngineActionEvent(kActionToggleRiseLower);
-		act->addDefaultInputMapping("h");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("TGGLHEIGHT", _("Toggle Height"));
+	act->setCustomEngineActionEvent(kActionToggleRiseLower);
+	act->addDefaultInputMapping("h");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("REST", _("Rest"));
-		act->setCustomEngineActionEvent(kActionRest);
-		act->addDefaultInputMapping("r");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("REST", _("Rest"));
+	act->setCustomEngineActionEvent(kActionRest);
+	act->addDefaultInputMapping("r");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("FACEFRWARD", _("Face Forward"));
-		act->setCustomEngineActionEvent(kActionFaceForward);
-		act->addDefaultInputMapping("f");
-		engineKeyMap->addAction(act);
-	}
+	act = new Common::Action("FACEFRWARD", _("Face Forward"));
+	act->setCustomEngineActionEvent(kActionFaceForward);
+	act->addDefaultInputMapping("f");
+	engineKeyMap->addAction(act);
 }
 
 void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
@@ -259,11 +269,7 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 		_yaw = 180;
 		_pitch = 0;
 
-		if (isSpectrum())
-			playSound(7, true);
-		else
-			playSound(9, true);
-
+		playSound(_soundIndexStart, true);
 		if (isEclipse2()) {
 			_yaw = 120;
 			_gameStateControl = kFreescapeGameStateStart;
@@ -276,10 +282,7 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 		else
 			_pitch = 10;
 	} else {
-		if (isSpectrum())
-			playSound(7, false);
-		else
-			playSound(5, false);
+		playSound(_soundIndexAreaChange, false);
 	}
 
 	_gfx->_keyColor = 0;
@@ -338,11 +341,8 @@ void EclipseEngine::borderScreen() {
 				drawFullscreenMessageAndWait(_messagesList[23]);
 			} else if (_variant & GF_ZX_DEMO_CRASH) {
 				drawFullscreenMessageAndWait(_messagesList[9]);
-				playSound(3, true);
 				drawFullscreenMessageAndWait(_messagesList[10]);
-				playSound(3, true);
 				drawFullscreenMessageAndWait(_messagesList[11]);
-				playSound(3, true);
 			}
 		} else {
 			FreescapeEngine::borderScreen();
@@ -352,6 +352,10 @@ void EclipseEngine::borderScreen() {
 
 void EclipseEngine::drawInfoMenu() {
 	PauseToken pauseToken = pauseEngine();
+	if (_savedScreen) {
+		_savedScreen->free();
+		delete _savedScreen;
+	}
 	_savedScreen = _gfx->getScreenshot();
 	uint32 color = 0;
 	switch (_renderMode) {
@@ -406,7 +410,7 @@ void EclipseEngine::drawInfoMenu() {
 					saveGameDialog();
 					_gfx->setViewport(_viewArea);
 				} else if (isDOS() && event.customType == kActionToggleSound) {
-					playSound(6, true);
+					playSound(_soundIndexMenu, true);
 				} else if ((isDOS() || isCPC() || isSpectrum()) && event.customType == kActionEscape) {
 					_forceEndGame = true;
 					cont = false;
@@ -434,6 +438,7 @@ void EclipseEngine::drawInfoMenu() {
 
 	_savedScreen->free();
 	delete _savedScreen;
+	_savedScreen = nullptr;
 	surface->free();
 	delete surface;
 	delete menuTexture;

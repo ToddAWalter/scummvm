@@ -98,8 +98,15 @@ DrillerEngine::DrillerEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_soundIndexFall = 3;
 	_soundIndexClimb = -1;
 	_soundIndexMenu = -1;
-	_soundIndexStart = -1;
-	_soundIndexAreaChange = -1;
+	_soundIndexStart = 9;
+	_soundIndexAreaChange = 5;
+
+	_soundIndexNoShield = 20;
+	_soundIndexNoEnergy = 20;
+	_soundIndexFallen = 20;
+	_soundIndexTimeout = 20;
+	_soundIndexForceEndGame = 20;
+	_soundIndexCrushed = 20;
 }
 
 DrillerEngine::~DrillerEngine() {
@@ -135,51 +142,49 @@ void DrillerEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *in
 		infoScreenKeyMap->addAction(act);
 	}
 
-	{
-		act = new Common::Action("ROTL", _("Rotate Left"));
-		act->setCustomEngineActionEvent(kActionRotateLeft);
-		act->addDefaultInputMapping("q");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("ROTL", _("Rotate Left"));
+	act->setCustomEngineActionEvent(kActionRotateLeft);
+	act->addDefaultInputMapping("q");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("ROTR", _("Rotate Right"));
-		act->setCustomEngineActionEvent(kActionRotateRight);
-		act->addDefaultInputMapping("w");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("ROTR", _("Rotate Right"));
+	act->setCustomEngineActionEvent(kActionRotateRight);
+	act->addDefaultInputMapping("w");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("INCSTEPSIZE", _("Increase Step Size"));
-		act->setCustomEngineActionEvent(kActionIncreaseStepSize);
-		act->addDefaultInputMapping("s");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("INCSTEPSIZE", _("Increase Step Size"));
+	act->setCustomEngineActionEvent(kActionIncreaseStepSize);
+	act->addDefaultInputMapping("s");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("DECSTEPSIZE", _("Decrease Step Size"));
-		act->setCustomEngineActionEvent(kActionDecreaseStepSize);
-		act->addDefaultInputMapping("x");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("DECSTEPSIZE", _("Decrease Step Size"));
+	act->setCustomEngineActionEvent(kActionDecreaseStepSize);
+	act->addDefaultInputMapping("x");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("RISE", _("Rise/Fly up"));
-		act->setCustomEngineActionEvent(kActionRiseOrFlyUp);
-		act->addDefaultInputMapping("JOY_B");
-		act->addDefaultInputMapping("r");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("RISE", _("Rise/Fly up"));
+	act->setCustomEngineActionEvent(kActionRiseOrFlyUp);
+	act->addDefaultInputMapping("JOY_B");
+	act->addDefaultInputMapping("r");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("LOWER", _("Lower/Fly down"));
-		act->setCustomEngineActionEvent(kActionLowerOrFlyDown);
-		act->addDefaultInputMapping("JOY_Y");
-		act->addDefaultInputMapping("f");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("LOWER", _("Lower/Fly down"));
+	act->setCustomEngineActionEvent(kActionLowerOrFlyDown);
+	act->addDefaultInputMapping("JOY_Y");
+	act->addDefaultInputMapping("f");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("DEPLOY", _("Deploy drilling rig"));
-		act->setCustomEngineActionEvent(kActionDeployDrillingRig);
-		act->addDefaultInputMapping("JOY_LEFT_SHOULDER");
-		act->addDefaultInputMapping("d");
-		engineKeyMap->addAction(act);
+	act = new Common::Action("DEPLOY", _("Deploy drilling rig"));
+	act->setCustomEngineActionEvent(kActionDeployDrillingRig);
+	act->addDefaultInputMapping("JOY_LEFT_SHOULDER");
+	act->addDefaultInputMapping("d");
+	engineKeyMap->addAction(act);
 
-		act = new Common::Action("COLLECT", _("Collect drilling rig"));
-		act->setCustomEngineActionEvent(kActionCollectDrillingRig);
-		act->addDefaultInputMapping("c");
-		act->addDefaultInputMapping("JOY_RIGHT_SHOULDER");
-		engineKeyMap->addAction(act);
-	}
+	act = new Common::Action("COLLECT", _("Collect drilling rig"));
+	act->setCustomEngineActionEvent(kActionCollectDrillingRig);
+	act->addDefaultInputMapping("c");
+	act->addDefaultInputMapping("JOY_RIGHT_SHOULDER");
+	engineKeyMap->addAction(act);
 }
 
 void DrillerEngine::gotoArea(uint16 areaID, int entranceID) {
@@ -235,7 +240,7 @@ void DrillerEngine::gotoArea(uint16 areaID, int entranceID) {
 	if (areaID == _startArea && entranceID == _startEntrance) {
 		_yaw = 280;
 		_pitch = 0;
-		playSound(9, true);
+		playSound(_soundIndexStart, true);
 	} else if (areaID == 127) {
 		assert(entranceID == 0);
 		_yaw = 90;
@@ -244,7 +249,7 @@ void DrillerEngine::gotoArea(uint16 areaID, int entranceID) {
 		// Show the number of completed areas
 		_areaMap[127]->_name.replace(0, 3, Common::String::format("%4d", _gameStateVars[32]));
 	} else
-		playSound(5, false);
+		playSound(_soundIndexAreaChange, false);
 
 	debugC(1, kFreescapeDebugMove, "starting player position: %f, %f, %f", _position.x(), _position.y(), _position.z());
 	clearTemporalMessages();
@@ -296,12 +301,17 @@ void DrillerEngine::loadAssets() {
 	_noShieldMessage = _messagesList[15];
 	_noEnergyMessage = _messagesList[16];
 	_fallenMessage = _messagesList[17];
+	_forceEndGameMessage = _messagesList[18];
 	// Small extra feature: allow player to be crushed in Driller
 	_crushedMessage = "CRUSHED!";
 }
 
 void DrillerEngine::drawInfoMenu() {
 	PauseToken pauseToken = pauseEngine();
+	if (_savedScreen) {
+		_savedScreen->free();
+		delete _savedScreen;
+	}
 	_savedScreen = _gfx->getScreenshot();
 
 	uint32 color = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0x00, 0x00, 0x00);
@@ -443,6 +453,7 @@ void DrillerEngine::drawInfoMenu() {
 
 	_savedScreen->free();
 	delete _savedScreen;
+	_savedScreen = nullptr;
 	surface->free();
 	delete surface;
 	delete menuTexture;
@@ -905,6 +916,11 @@ bool DrillerEngine::onScreenControls(Common::Point mouse) {
 }
 
 void DrillerEngine::drawSensorShoot(Sensor *sensor) {
+	if (_gameStateControl == kFreescapeGameStatePlaying) {
+		// Avoid playing new sounds, so the endgame can progress
+		playSound(_soundIndexHit, true);
+	}
+
 	Math::Vector3d target;
 	target = _position;
 	target.y() = target.y() - _playerHeight;
@@ -933,6 +949,8 @@ void DrillerEngine::updateTimeVariables() {
 
 	if (_lastMinute != minutes) {
 		_lastMinute = minutes;
+		if (_gameStateVars[k8bitVariableEnergy] > 0)
+			_gameStateVars[k8bitVariableEnergy] = _gameStateVars[k8bitVariableEnergy] - 1;
 		_gameStateVars[0x1e] += 1;
 		_gameStateVars[0x1f] += 1;
 		executeLocalGlobalConditions(false, true, false); // Only execute "on collision" room/global conditions

@@ -269,6 +269,10 @@ void CastleEngine::pressedKey(const int keycode) {
 
 void CastleEngine::drawInfoMenu() {
 	PauseToken pauseToken = pauseEngine();
+	if (_savedScreen) {
+		_savedScreen->free();
+		delete _savedScreen;
+	}
 	_savedScreen = _gfx->getScreenshot();
 
 	uint8 r, g, b;
@@ -358,6 +362,7 @@ void CastleEngine::drawInfoMenu() {
 
 	_savedScreen->free();
 	delete _savedScreen;
+	_savedScreen = nullptr;
 	surface->free();
 	delete surface;
 	delete menuTexture;
@@ -517,7 +522,7 @@ void CastleEngine::drawFullscreenRiddleAndWait(uint16 riddle) {
 			// Events
 			switch (event.type) {
 			case Common::EVENT_CUSTOM_ENGINE_ACTION_START:
-				if (event.customType == kActionChangeModeOrSkip) {
+				if (event.customType == kActionSkip) {
 					cont = false;
 				}
 				break;

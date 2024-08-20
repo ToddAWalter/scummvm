@@ -28,54 +28,19 @@ const char *const directoryGlobs[] = {
 	"install",
 	"win_data",						// L-ZONE
 	"data",
-	"gadget",						// Gadget
 	"program",						// Arc Media products
 	"media",						// Gundam
 	"mvm",							// Master of the Elements
 	"module_1",
 	"module_2",						// Takeru
-	"simpdata",
-	"simpsons",						// Simpsons Cartoon Studio
 	"datas",						// O!KAY! subscription from Domino Verlag
-	"daten",						// Bibi Blocksberg games (German)
 	"data_k",
 	"data_1",
 	"data_2",						// JumpStart World
 	"numbers",						// JumpStart Learning Games
-	"fjpc",							// Forestia Jr
-	"movies",						// Mulle Meck (Gary Gadget) series
-	"winroot",
-	"setup",
-	"program files",
-	"tohd",
-	"terzio",
-	"flugzeuge bauen",
-	"willyhau",
-	"willyraumschiff",				// Willy Werkel (Mulle Meck) series
-	"demo",							// Tivola Demo - Frühjahr '97 sampler
-	"demos",						// Headbone samplers
 	"blender",						// Blender CD-ROM magazines
-	"bilder",
-	"elk1",							// Blinky Bill Kindergarten
-	"endsoung",
-	"gerhelp",
-	"gervideo",						// GGMD German
-	"music",
-	"solos",
-	"duthelp",
-	"dutvideo",
-	"endsound",						// GGMD Dutch
-	"macos9",
-	"macosx",						// Sethi 3
-	"kripos",
-	"strisser",
-	"polis",
-	"poliisi",
 	"cd_data",						// Polis
-	"oslo",							// Oslo's Tools & Gadgets
-	"ojo2000",
-	"stuff",						// Abrapalabra
-	"tooned",						// Stay Tooned
+	"ojo2000",						// Abrapalabra
 	"p2data",
 	"p2media",
 	"p3media",
@@ -83,25 +48,11 @@ const char *const directoryGlobs[] = {
 	"bb",							// Blinky Bill
 	"fctdata",
 	"fct",					   		// Felix the Cat
-	"dayfiles",
-	"xmasfun",						// Fisher-Price Xmas Fun
 	"95instal",						// Fisher-Price Little People
-	"freading",
-	"fsetup",						// My First Reading Words (Eureka)
 	"popup",						// Pop Up Computer
-	"alpha",						// Interactive Alphabet
-	"technik",						// Glasklar Technology Interactive
-	"badday",
-	"copy to hdd",					// Rename from HDDにコピーしてください
-	"bdm",
-	"dkyasp",						// Bad Day on the Midway Japanese
 	"win_demo",
 	"file",
 	"mfile",
-	"movie",						// Teichiku demos
-	"scr",
-	"scr_mov",						// Cardcaptor Sakura screen savers
-	"docs",							// Enhanced CDs
 	"lingo expo",					// D4 sample movies
 	"main",							// Meet MediaBand
 	"bellinin bikinit",				// Bellini 3 (Finnish)
@@ -109,13 +60,10 @@ const char *const directoryGlobs[] = {
 //	"123",							// Ktar Alarkam
 	"vlaams",
 	"ned",							// I Spy School Days (Dutch)
-	"fl1",
-	"flipper",						// Flipper games (Yoram Gross)
+	"fl1",							// Flipper & Lopaka
 	"cipdemo",
 	"cipher",						// Jewels of the Oracle
 	"gems",							// Gems of Darkness / Jewels II
-	"hdfiles",
-	"creator",						// Get a Head series
 	"xn--t8jo8k",					// Perfect Blue screen savers
 	"maccurio",
 	"wincurio",						// Curio City
