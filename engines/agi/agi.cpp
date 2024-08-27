@@ -594,9 +594,14 @@ Common::Error AgiEngine::go() {
 	}
 	inGameTimerReset();
 
-	runGame();
+	int ec = runGame();
 
-	return Common::kNoError;
+	switch (ec) {
+	case errOK:            return Common::kNoError;
+	case errFilesNotFound: return Common::kNoGameDataFoundError;
+	case errBadFileOpen:   return Common::kReadingFailed;
+	default:               return Common::kUnknownError;
+	}
 }
 
 void AgiEngine::syncSoundSettings() {

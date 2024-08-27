@@ -52,14 +52,19 @@ private:
 	int _lookMirror = 0;
 	int _tableRaises = 0;
 	int _paintingOpening = 0;
+	int _ripThrowsBall = 0;
+	int _deskOpening = 0;
+	int _cabinetOpens = 0;
 
-	void disableHotspots();
 	void setHotspots();
 	bool takeKeys();
 	bool takeBilliardBall();
 	bool billiardBallOnTable();
 	void useSwitchPaintingOpen();
 	void useSwitchPaintingClosed();
+	void useAceOfSpades1();
+	void useAceOfSpades2();
+	bool lookBilliardBall();
 
 public:
 	Room406() : Room() {}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2024-08-19 13:46+0000\n"
+"POT-Creation-Date: 2024-08-26 06:09+0000\n"
 "PO-Revision-Date: 2024-08-18 06:28+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
@@ -3231,7 +3231,7 @@ msgstr "Движок графічних квестів"
 #: dists/android.strings.xml.cpp:34
 #: backends/events/default/default-events.cpp:217
 #: backends/events/default/default-events.cpp:358
-#: engines/adl/metaengine.cpp:326 engines/hdb/metaengine.cpp:275
+#: engines/adl/metaengine.cpp:338 engines/hdb/metaengine.cpp:275
 #: engines/mohawk/myst_stacks/menu.cpp:317
 #: engines/mohawk/riven_stacks/aspit.cpp:454 engines/saga/metaengine.cpp:448
 #: engines/scumm/help.cpp:84 engines/scumm/help.cpp:86
@@ -6046,6 +6046,16 @@ msgstr "Завжди використовуйте гострий монохро�
 msgid "Do not emulate NTSC artifacts for text"
 msgstr "Не емулюйте артефакти NTSC для тексту"
 
+#: engines/adl/metaengine.cpp:104
+#, fuzzy
+#| msgid "Use silver cursors"
+msgid "Use checkered cursor"
+msgstr "Використовувати срібні курсори"
+
+#: engines/adl/metaengine.cpp:105
+msgid "Use the checkered cursor from later Apple II models"
+msgstr ""
+
 #: engines/agi/detection_tables.h:253
 msgid "Early AGI games for Tandy Color Computer are not yet supported."
 msgstr "Ранішні гри AGI для Tandy Color Computer ще не підтримуються."
@@ -7593,21 +7603,22 @@ msgstr "Повернути"
 msgid "Rotate down"
 msgstr "Повернути"
 
-#: engines/freescape/movement.cpp:89
+#. I18N: Toggles between cursor lock modes, switching between free cursor movement and camera/head movement.
+#: engines/freescape/movement.cpp:90
 #, fuzzy
 #| msgid "Change mode"
 msgid "Change mode"
 msgstr "Змінити режим"
 
 #. I18N: ESC key
-#: engines/freescape/movement.cpp:95 engines/lure/metaengine.cpp:209
+#: engines/freescape/movement.cpp:96 engines/lure/metaengine.cpp:209
 #: engines/mads/metaengine.cpp:292 engines/mm/mm1/metaengine.cpp:41
 #: engines/mm/mm1/metaengine.cpp:47 engines/saga/metaengine.cpp:328
 #: engines/twine/metaengine.cpp:436 engines/wintermute/keymapper_tables.h:60
 msgid "Escape"
 msgstr "Втікти"
 
-#: engines/freescape/movement.cpp:100
+#: engines/freescape/movement.cpp:101
 msgid "Info Menu"
 msgstr "Інфо-меню"
 
@@ -7628,39 +7639,43 @@ msgstr "Обертання наліво"
 msgid "Rotate Right"
 msgstr "Обертання направо"
 
-#: engines/freescape/games/dark/dark.cpp:219
-#: engines/freescape/games/driller/driller.cpp:155
+#. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
+#: engines/freescape/games/dark/dark.cpp:220
+#: engines/freescape/games/driller/driller.cpp:156
 #, fuzzy
 #| msgid "Increase the scale factor"
 msgid "Increase Step Size"
 msgstr "Збільшити масштаб"
 
-#: engines/freescape/games/dark/dark.cpp:224
-#: engines/freescape/games/driller/driller.cpp:160
+#. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
+#: engines/freescape/games/dark/dark.cpp:226
+#: engines/freescape/games/driller/driller.cpp:162
 #, fuzzy
 #| msgid "Decrease the scale factor"
 msgid "Decrease Step Size"
 msgstr "Зменшити масштаб"
 
-#: engines/freescape/games/dark/dark.cpp:229
-#: engines/freescape/games/driller/driller.cpp:165
+#: engines/freescape/games/dark/dark.cpp:231
+#: engines/freescape/games/driller/driller.cpp:167
 msgid "Rise/Fly up"
 msgstr "Піднятися/Летіти догори"
 
-#: engines/freescape/games/dark/dark.cpp:235
-#: engines/freescape/games/driller/driller.cpp:171
+#: engines/freescape/games/dark/dark.cpp:237
+#: engines/freescape/games/driller/driller.cpp:173
 msgid "Lower/Fly down"
 msgstr "Знизитись/Летіти додолу"
 
-#: engines/freescape/games/dark/dark.cpp:241
+#: engines/freescape/games/dark/dark.cpp:243
 msgid "Enable/Disable Jetpack"
 msgstr ""
 
-#: engines/freescape/games/driller/driller.cpp:177
+#. I18N: drilling rig is an in game item
+#: engines/freescape/games/driller/driller.cpp:180
 msgid "Deploy drilling rig"
 msgstr "Запустити обладнання буріння"
 
-#: engines/freescape/games/driller/driller.cpp:183
+#. I18N: drilling rig is an in game item
+#: engines/freescape/games/driller/driller.cpp:187
 msgid "Collect drilling rig"
 msgstr "Взяти обладнання буріння"
 
