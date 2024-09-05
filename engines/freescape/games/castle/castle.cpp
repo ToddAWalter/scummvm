@@ -51,6 +51,8 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	_playerSteps.push_back(120);
 	_playerStepIndex = 2;
 
+	_angleRotations.push_back(5);
+
 	_playerWidth = 8;
 	_playerDepth = 8;
 	_stepUpDistance = 32;
@@ -63,7 +65,20 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	_spiritsMeterIndicatorFrame = nullptr;
 	_strenghtBackgroundFrame = nullptr;
 	_strenghtBarFrame = nullptr;
+	_thunderFrame = nullptr;
 	_menu = nullptr;
+	_menuButtons = nullptr;
+
+	_menuCrawlIndicator = nullptr;
+	_menuWalkIndicator = nullptr;
+	_menuRunIndicator = nullptr;
+	_menuFxOnIndicator = nullptr;
+	_menuFxOffIndicator = nullptr;
+
+	_flagFrames[0] = nullptr;
+	_flagFrames[1] = nullptr;
+	_flagFrames[2] = nullptr;
+	_flagFrames[3] = nullptr;
 
 	_numberKeys = 0;
 	_spiritsDestroyed = 0;
@@ -298,7 +313,7 @@ void CastleEngine::drawInfoMenu() {
 	if (isDOS()) {
 		g_system->lockMouse(false);
 		g_system->showMouse(true);
-		surface->copyRectToSurface(*_menu, 40, 33, Common::Rect(0, 0, _menu->w, _menu->h));
+		surface->copyRectToSurface(*_menu, 47, 35, Common::Rect(0, 0, _menu->w, _menu->h));
 
 		_gfx->readFromPalette(10, r, g, b);
 		front = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
@@ -336,7 +351,7 @@ void CastleEngine::drawInfoMenu() {
 					_gfx->setViewport(_viewArea);
 				} else if (isDOS() && event.customType == kActionToggleSound) {
 					// TODO
-				} else if ((isDOS() || isCPC() || isSpectrum()) && event.customType == kActionEscape) {
+				} else if ((isCPC() || isSpectrum()) && event.customType == kActionEscape) {
 					_forceEndGame = true;
 					cont = false;
 				} else
@@ -424,37 +439,22 @@ void CastleEngine::executePrint(FCLInstruction &instruction) {
 	insertTemporaryMessage(_messagesList[index], _countdown - 3);
 }
 
+void CastleEngine::executeRedraw(FCLInstruction &instruction) {
+	FreescapeEngine::executeRedraw(instruction);
+	tryToCollectKey();
+}
 
 void CastleEngine::loadAssets() {
 	FreescapeEngine::loadAssets();
 	if (isDOS()) {
-		for (auto &it : _areaMap)
+		for (auto &it : _areaMap) {
 			it._value->addStructure(_areaMap[255]);
+			it._value->addObjectFromArea(229, _areaMap[255]);
+			it._value->addObjectFromArea(242, _areaMap[255]);
+		}
 
 		_areaMap[1]->addFloor();
 		_areaMap[2]->addFloor();
-
-		_menu = loadBundledImage("castle_menu");
-		assert(_menu);
-		_menu->convertToInPlace(_gfx->_texturePixelFormat);
-
-		_strenghtBackgroundFrame = loadBundledImage("castle_strength_background");
-		_strenghtBackgroundFrame->convertToInPlace(_gfx->_texturePixelFormat);
-
-		_strenghtBarFrame = loadBundledImage("castle_strength_bar");
-		_strenghtBarFrame->convertToInPlace(_gfx->_texturePixelFormat);
-
-		_strenghtWeightsFrames.push_back(loadBundledImage("castle_strength_weight_0"));
-		_strenghtWeightsFrames[0]->convertToInPlace(_gfx->_texturePixelFormat);
-
-		_strenghtWeightsFrames.push_back(loadBundledImage("castle_strength_weight_1"));
-		_strenghtWeightsFrames[1]->convertToInPlace(_gfx->_texturePixelFormat);
-
-		_strenghtWeightsFrames.push_back(loadBundledImage("castle_strength_weight_2"));
-		_strenghtWeightsFrames[2]->convertToInPlace(_gfx->_texturePixelFormat);
-
-		_strenghtWeightsFrames.push_back(loadBundledImage("castle_strength_weight_3"));
-		_strenghtWeightsFrames[3]->convertToInPlace(_gfx->_texturePixelFormat);
 	}
 }
 
@@ -798,16 +798,19 @@ void CastleEngine::checkSensors() {
 	}*/
 }
 
-void CastleEngine::updateTimeVariables() {
-	if (_gameStateControl != kFreescapeGameStatePlaying)
-		return;
-	// This function only executes "on collision" room/global conditions
-
+void CastleEngine::tryToCollectKey() {
 	if (_gameStateVars[32] > 0) { // Key collected!
 		setGameBit(_gameStateVars[32]);
 		_gameStateVars[32] = 0;
 		_numberKeys++;
 	}
+}
+
+void CastleEngine::updateTimeVariables() {
+	if (_gameStateControl != kFreescapeGameStatePlaying)
+		return;
+	// This function only executes "on collision" room/global conditions
+	tryToCollectKey();
 
 	int seconds, minutes, hours;
 	getTimeFromCountdown(seconds, minutes, hours);

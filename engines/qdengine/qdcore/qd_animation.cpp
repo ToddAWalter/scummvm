@@ -148,7 +148,7 @@ void qdAnimation::redraw(int x, int y, int z, int mode) const {
 		mode |= GR_BLACK_FON;
 
 	if (tileAnimation()) {
-		tileAnimation()->drawFrame(Vect2i(x, y), get_cur_frame_number(), mode);
+		tileAnimation()->drawFrame(Vect2i(x, y), get_cur_frame_number(), mode, -1);
 	} else if (const qdAnimationFrame *p = get_cur_frame())
 		p->redraw(x, y, z, mode);
 }
@@ -167,6 +167,9 @@ void qdAnimation::redraw(int x, int y, int z, float scale, int mode) const {
 
 	if (check_flag(QD_ANIMATION_FLAG_BLACK_FON))
 		mode |= GR_BLACK_FON;
+
+	if (tileAnimation())
+		tileAnimation()->drawFrame_scale(Vect2i(x, y), get_cur_frame_number(), scale, mode);
 
 	if (const qdAnimationFrame *p = get_cur_frame(scale))
 		p->redraw(x, y, z, scale, mode);
@@ -555,9 +558,6 @@ bool qdAnimation::qda_load(Common::Path fpath) {
 		tile_flag = fh->readByte();
 	}
 
-	if (version > 104)
-		warning("qdAnimation::qda_load(): Animation version > 104: %d, '%s'", version, transCyrillic(fpath.toString()));
-
 	if (!tile_flag) {
 		if (num_scales) {
 			_scales.resize(num_scales);
@@ -598,7 +598,9 @@ bool qdAnimation::qda_load(Common::Path fpath) {
 
 		debugC(1, kDebugLoad, "qdAnimation::qda_load() tileAnimation %s", transCyrillic(fpath.toString()));
 		_tileAnimation = new grTileAnimation;
-		_tileAnimation->load(fh);
+		_tileAnimation->load(fh, version);
+
+		//_tileAnimation->dumpTiles(fpath, 50);
 	}
 
 	init_size();

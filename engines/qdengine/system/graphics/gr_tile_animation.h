@@ -23,6 +23,8 @@
 #ifndef QDENGINE_SYSTEM_GRAPHICS_GR_TILE_ANIMATION_H
 #define QDENGINE_SYSTEM_GRAPHICS_GR_TILE_ANIMATION_H
 
+#include "common/path.h"
+
 #include "qdengine/xmath.h"
 #include "qdengine/system/graphics/gr_tile_sprite.h"
 
@@ -67,15 +69,23 @@ public:
 
 	void addFrame(const uint32 *frame_data);
 
-	bool load(Common::SeekableReadStream *fh);
+	bool load(Common::SeekableReadStream *fh, int version);
 
-	void drawFrame(const Vect2i &position, int32 frame_index, int32 mode = 0) const;
+	void drawFrame(const Vect2i &position, int32 frame_index, int32 mode, int closest_scale) const;
 	void drawFrame(const Vect2i &position, int frame_index, float angle, int mode = 0) const;
+	void drawFrame_scale(const Vect2i &position, int frame_index, float scale, int mode) const;
 
 	static void setProgressHandler(CompressionProgressHandler handler, void *context) {
 		_progressHandler = handler;
 		_progressHandlerContext = context;
 	}
+
+	void addScale(int i, float scale);
+	byte *decode_frame_data(int frame_index, int closest_scale) const;
+	int find_closest_scale(float *scale) const;
+	bool wasFrameSizeChanged(int frame_index, int scaleIdx, float scale) const;
+
+	void dumpTiles(Common::Path baseName, int tilesPerRow);
 
 private:
 
@@ -95,6 +105,16 @@ private:
 	int _frameCount;
 
 	typedef Std::vector<uint32> FrameIndex;
+
+	struct ScaleArray {
+		float _scale;
+		Vect2i _frameSize;
+		Vect2i _frameTileSize;
+		int _frameStart;
+	};
+
+	Std::vector<ScaleArray> _scaleArray;
+
 	/// индекс кадров - номера тайлов, из которых состоят кадры
 	/// _frameTileSize.x * _frameTileSize.y на кадр
 	FrameIndex _frameIndex;
@@ -106,6 +126,8 @@ private:
 	/// данные тайлов
 	TileData _tileData;
 
+	Std::vector<Vect2i> _frameSizeArray;
+
 	static CompressionProgressHandler _progressHandler;
 	static void *_progressHandlerContext;
 };
@@ -113,4 +135,3 @@ private:
 } // namespace QDEngine
 
 #endif // QDENGINE_SYSTEM_GRAPHICS_GR_TILE_ANIMATION_H
-

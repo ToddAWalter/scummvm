@@ -2282,6 +2282,9 @@ if test "$have_gcc" = yes; then
 		cxx_version="`echo "${cxx_version}" | sed -e 's/"\([^ ]*\) .*/\1/'`"
 		cxx_version="clang $cxx_version, ok"
 
+		_clang_major=`gcc_get_define __clang_major__`
+		_clang_minor=`gcc_get_define __clang_minor__`
+
 		append_var CXXFLAGS "-Wshadow"
 	else
 		cxx_version="GCC $cxx_version, ok"
@@ -3288,6 +3291,7 @@ EOF
 		;;
 	haiku*)
 		append_var DEFINES "-DSYSTEM_NOT_SUPPORTING_D_TYPE"
+		append_var DEFINES "-D_GNU_SOURCE"
 		# Needs -lnetwork for the timidity MIDI driver
 		append_var LIBS "-lnetwork"
 		_seq_midi=no
@@ -4039,6 +4043,7 @@ case $_backend in
 	android)
 		append_var DEFINES "-DREDUCE_MEMORY_USAGE"
 		append_var DEFINES "-DNONSTANDARD_PORT"
+		append_var DEFINES "-DANDROID_BACKEND"
 		append_var INCLUDES '-I$(srcdir)/backends/platform/'$_backend
 		append_var CXXFLAGS "-Wa,--noexecstack"
 		append_var LDFLAGS "-Wl,-z,noexecstack"
@@ -7100,6 +7105,12 @@ case $_host_cpu in
 			_ext_avx2=yes
 		fi
 		_ext_neon=no
+		# SSE2 is always available on x86_64
+		if !(test "$have_clang" = yes && (test $_clang_major -gt 5) || (test $_clang_major -eq 5 && test $_clang_minor -gt 0)) &&
+		   !(test "$have_gcc" = yes && (test $_cxx_major -gt 4) || (test $_cxx_major -eq 4 && test $_cxx_minor -gt 9)); then
+			# Need GCC 4.9+ or Clang 5.0+ for target pragma
+			_ext_avx2=no
+		fi
 		;;
 	i[3-6]86)
 		if test "$_ext_sse2" = auto ; then
@@ -7109,6 +7120,12 @@ case $_host_cpu in
 			_ext_avx2=no
 		fi
 		_ext_neon=no
+		if !(test "$have_clang" = yes && (test $_clang_major -gt 5) || (test $_clang_major -eq 5 && test $_clang_minor -gt 0)) &&
+		   !(test "$have_gcc" = yes && (test $_cxx_major -gt 4) || (test $_cxx_major -eq 4 && test $_cxx_minor -gt 9)); then
+			# Need GCC 4.9+ or Clang 5.0+ for target pragma
+			_ext_sse2=no
+			_ext_avx2=no
+		fi
 		;;
 	aarch64)
 		if test "$_ext_neon" = auto ; then
@@ -7116,17 +7133,19 @@ case $_host_cpu in
 		fi
 		_ext_sse2=no
 		_ext_avx2=no
+		# On aarch64 neon is always available and doesn't need a target pragma
 		;;
 	arm*)
 		if test "$_ext_neon" = auto ; then
 			_ext_neon=no
 		fi
-		if test "$_ext_neon" = yes ; then
-			# -mfpu=neon doesn't work with aarch64 but neon is available
-			add_line_to_config_mk 'NEON_CXXFLAGS = -mfpu=neon'
-		fi
 		_ext_sse2=no
 		_ext_avx2=no
+		if !(test "$have_clang" = yes && (test $_clang_major -gt 19) || (test $_clang_major -eq 19 && test $_clang_minor -gt 1)) &&
+		   !(test "$have_gcc" = yes && (test $_cxx_major -gt 4) || (test $_cxx_major -eq 4 && test $_cxx_minor -gt 9)); then
+			# Need GCC 4.9+ or Clang 19.1+ for target pragma
+			_ext_neon=no
+		fi
 		;;
 	*)
 		_ext_sse2=no
@@ -7134,15 +7153,6 @@ case $_host_cpu in
 		_ext_neon=no
 		;;
 esac
-
-if test "$have_gcc" = yes; then
-	# Need 4.9 for pragma target
-	if (test $_cxx_major -lt 4) || (test $_cxx_major -eq 4 && test $_cxx_minor -lt 9); then
-		_ext_sse2=no
-		_ext_avx2=no
-		_ext_neon=no
-	fi
-fi
 
 define_in_config_if_yes "$_ext_sse2" 'SCUMMVM_SSE2'
 echo_n "Enabling x86/amd64 SSE2... "

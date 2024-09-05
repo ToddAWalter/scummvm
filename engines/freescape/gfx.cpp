@@ -130,7 +130,7 @@ byte getCGAStipple(byte x, int back, int fore) {
 }
 
 void Renderer::clearColorPairArray() {
-	for (int i = 0; i < 15; i++)
+	for (int i = 0; i < 16; i++)
 		_colorPair[i] = 0;
 }
 
@@ -187,7 +187,7 @@ uint16 duplicate_bits(uint8 byte) {
 }
 
 
-void scaleStipplePattern(byte originalPattern[128], byte newPattern[128]) {
+void Renderer::scaleStipplePattern(byte originalPattern[128], byte newPattern[128]) {
     // Initialize the new pattern to all 0
     memset(newPattern, 0, 128);
 

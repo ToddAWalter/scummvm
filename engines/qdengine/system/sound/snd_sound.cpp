@@ -48,7 +48,12 @@ bool sndSound::release_sound_buffer() {
 }
 
 bool sndSound::play() {
-	debugC(5, kDebugSound, "sndSound::play(). this: %p",  (void *)this);
+	debugC(5, kDebugSound, "sndSound::play(). %s",  transCyrillic(_sound->_fname.toString()));
+
+	if (!_sound->_audioStream) {
+		warning("sndSound::play(): audioStream is null for '%s'", transCyrillic(_sound->_fname.toString()));
+		return false;
+	}
 
 	_flags &= ~SOUND_FLAG_PAUSED;
 
@@ -71,6 +76,8 @@ bool sndSound::stop() {
 	if (_sound && _sound->_audioStream)
 		_sound->_audioStream->seek(0);
 
+	_isStopped = true;
+
 	return true;
 }
 
@@ -88,6 +95,9 @@ void sndSound::resume() {
 }
 
 sndSound::status_t sndSound::status() const {
+	if (_isStopped)
+		return SOUND_STOPPED;
+
 	if (is_paused())
 		return sndSound::SOUND_PAUSED;
 

@@ -246,11 +246,20 @@ bool ScummEngine::hasFeature(EngineFeature f) const {
 			(Common::String(_game.guioptions).contains(GAMEOPTION_AUDIO_OVERRIDE) ||
 			 Common::String(_game.guioptions).contains(GAMEOPTION_NETWORK))
 		) ||
-		(f == kSupportsQuitDialogOverride && (_useOriginalGUI || !ChainedGamesMan.empty()));
+		(f == kSupportsQuitDialogOverride && (gameSupportsQuitDialogOverride() || !ChainedGamesMan.empty()));
 }
 
 bool Scumm::ScummEngine::enhancementEnabled(int32 cls) {
 	return _activeEnhancements & cls;
+}
+
+bool ScummEngine::gameSupportsQuitDialogOverride() const {
+	bool supportsOverride = isUsingOriginalGUI();
+
+	supportsOverride &= !(_game.platform == Common::kPlatformNES);
+	supportsOverride &= !(_game.platform == Common::kPlatformSegaCD);
+
+	return supportsOverride;
 }
 
 
@@ -808,8 +817,13 @@ const ExtraGuiOptions ScummMetaEngine::getExtraGuiOptions(const Common::String &
 #endif
 	}
     if (target.empty() || gameid == "maniac") {
-		// The kiosk demo is only available on Maniac v1
-		bool isValidTarget = !extra.contains("Demo") && extra.contains("V1");
+		// The kiosk demo script is in V1/V2 DOS, V2 Atari ST and V2 Amiga.
+        bool isValidTarget = !extra.contains("Demo") &&
+			(platform == Common::kPlatformDOS   ||
+			 platform == Common::kPlatformAmiga ||
+			 platform == Common::kPlatformAtariST) &&
+			 !guiOptionsString.contains("lang_Italian");
+
 		if (isValidTarget)
 			options.push_back(mmDemoObjectLabelsOption);
     }

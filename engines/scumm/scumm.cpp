@@ -246,7 +246,7 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 		_debugMode = true;
 
 	_copyProtection = ConfMan.getBool("copy_protection");
-	if (ConfMan.getBool("demo_mode"))
+    if (ConfMan.getBool("demo_mode") || ConfMan.getBool("enable_demo_mode"))
 		_game.features |= GF_DEMO;
 	if (ConfMan.hasKey("nosubtitles")) {
 		// We replaced nosubtitles *ages* ago. Just convert it silently
@@ -309,8 +309,23 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 
 	case Common::kRenderCGA:
 	case Common::kRenderEGA:
-		if ((_game.version >= 4 && !(_game.features & GF_16COLOR) && !_supportsEGADithering)
-			|| (_game.features & GF_OLD256) || (_game.platform != Common::kPlatformDOS && !_supportsEGADithering))
+		// An actual use case for letting users change the render mode on Monkey Island 1 (Amiga):
+		// between revisions and localizations there were two variants of the executable:
+		// 
+		// - One which used the EGA palette for actors, resulting in
+		//   characters having the usual "sunburnt" effect; as an example,
+		//   one of the italian versions shipped with this executable.
+		// 
+		// - One which used a custom paler palette for actors, which might
+		//   be how most of the people experienced the game.
+		//
+		// Let's allow the user to change at least this setting...
+		// The default is the Amiga renderer, i.e. the second option.
+		if (_game.id == GID_MONKEY_VGA && _renderMode == Common::kRenderEGA && _game.platform == Common::kPlatformAmiga)
+			break;
+
+		if ((_game.version >= 4 && !(_game.features & GF_16COLOR) && !_supportsEGADithering) ||
+			(_game.features & GF_OLD256) || (_game.platform != Common::kPlatformDOS && !_supportsEGADithering))
 			_renderMode = Common::kRenderDefault;
 		break;
 
@@ -3786,7 +3801,7 @@ void ScummEngine::restart() {
 	runBootscript();
 }
 
-bool ScummEngine::isUsingOriginalGUI() {
+bool ScummEngine::isUsingOriginalGUI() const {
 	if (_game.id == GID_MONKEY2 && (_game.features & GF_DEMO))
 		return false;
 

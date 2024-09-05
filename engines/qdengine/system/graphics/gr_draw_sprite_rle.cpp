@@ -57,8 +57,14 @@ void grDispatcher::putSpr_rle(int x, int y, int sx, int sy, const class RLEBuffe
 	} else
 		dy = 1;
 
+	Graphics::ManagedSurface *target = _surfaceOverride ? _surfaceOverride : _screenBuf;
+	if (target == _surfaceOverride) {
+		debugC(3, kDebugImGui, "grDispatcher::putSpr_rle(): %p", (void *)target);
+		debugC(3, kDebugImGui, "grDispatcher::putSpr_rle(%d, %d, %d, %d)", x, y, sx, sy);
+	}
+
 	for (int i = 0; i < psy; i++) {
-		uint16 *scr_buf = reinterpret_cast<uint16 *>(_screenBuf->getBasePtr(x, y));
+		uint16 *scr_buf = reinterpret_cast<uint16 *>(target->getBasePtr(x, y));
 
 		const char *rle_header = p->header_ptr(py + i);
 		const uint32 *rle_data = p->data_ptr(py + i);
@@ -248,8 +254,6 @@ void grDispatcher::putSprMask_rle(int x, int y, int sx, int sy, const RLEBuffer 
 	int dx = -1;
 	int dy = -1;
 
-	x *= 2;
-
 	if (mode & GR_FLIP_HORIZONTAL) {
 		x += (psx - 1) * 2;
 		px = sx - px - psx;
@@ -264,7 +268,6 @@ void grDispatcher::putSprMask_rle(int x, int y, int sx, int sy, const RLEBuffer 
 	} else
 		dy = 1;
 
-	warning("STUB: grDispatcher::putSprMask_rle");
 	for (int i = 0; i < psy; i++) {
 		uint16 *scr_buf = reinterpret_cast<uint16 *>(_screenBuf->getBasePtr(x, y));
 

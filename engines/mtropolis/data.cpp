@@ -416,6 +416,10 @@ bool Label::load(DataReader &reader) {
 	return reader.readU32(superGroupID) && reader.readU32(labelID);
 }
 
+bool UniversalTime::load(DataReader &reader) {
+	return reader.readS32(value) && reader.readS32(scale) && reader.readS32(base);
+}
+
 InternalTypeTaggedValue::InternalTypeTaggedValue() : type(0) {
 }
 
@@ -526,6 +530,11 @@ bool PlugInTypeTaggedValue::load(DataReader &reader) {
 		if (!reader.readS32(value.asInt))
 			return false;
 		break;
+	case kUniversalTime:
+		value.constructField(&ValueUnion::asUniversalTime);
+		if (!value.asUniversalTime.load(reader))
+			return false;
+		break;
 	case kIntegerRange:
 		value.constructField(&ValueUnion::asIntRange);
 		if (!value.asIntRange.load(reader))
@@ -563,6 +572,11 @@ bool PlugInTypeTaggedValue::load(DataReader &reader) {
 			if (!reader.readTerminatedStr(value.asString, length2))
 				return false;
 		} break;
+	case kRGBColor:
+		value.constructField(&ValueUnion::asColor);
+		if (!value.asColor.load(reader))
+			return false;
+		break;
 	case kVariableReference: {
 			value.constructField(&ValueUnion::asVarRefGUID);
 			uint32 extraDataSize;
@@ -1575,7 +1589,7 @@ DataReadErrorCode VectorMotionModifier::load(DataReader &reader) {
 		|| !reader.readU16(unknown1) || !reader.readU8(vecSourceLength) || !reader.readU8(vecStringLength)
 		|| !reader.readNonTerminatedStr(vecSource, vecSourceLength)
 		/*|| !reader.readNonTerminatedStr(vecString, vecStringLength)*/)	// mTropolis bug!
-		return kDataReadErrorNone;
+		return kDataReadErrorReadFailed;
 
 	return kDataReadErrorNone;
 }
@@ -1594,7 +1608,7 @@ DataReadErrorCode SceneTransitionModifier::load(DataReader &reader) {
 	if (!enableWhen.load(reader) || !disableWhen.load(reader) || !reader.readU16(transitionType)
 		|| !reader.readU16(direction) || !reader.readU16(unknown3) || !reader.readU16(steps)
 		|| !reader.readU32(duration) || !reader.readBytes(unknown5))
-		return kDataReadErrorNone;
+		return kDataReadErrorReadFailed;
 
 	return kDataReadErrorNone;
 }
@@ -1614,7 +1628,7 @@ DataReadErrorCode ElementTransitionModifier::load(DataReader &reader) {
 	if (!enableWhen.load(reader) || !disableWhen.load(reader) || !reader.readU16(revealType)
 		|| !reader.readU16(transitionType) || !reader.readU16(unknown3) || !reader.readU16(unknown4)
 		|| !reader.readU16(steps) || !reader.readU16(rate))
-		return kDataReadErrorNone;
+		return kDataReadErrorReadFailed;
 
 	return kDataReadErrorNone;
 }

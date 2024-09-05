@@ -19,7 +19,8 @@
  *
  */
 
-#include "audio/decoders/raw.h"
+#include "audio/audiostream.h"
+#include "audio/decoders/vorbis.h"
 #include "audio/decoders/wave.h"
 #include "common/debug.h"
 #include "common/system.h"
@@ -32,41 +33,9 @@
 
 namespace QDEngine {
 
-wavSound::wavSound() : _data(NULL) {
-	_data_length = 0;
-	_bits_per_sample = 0;
-	_channels = 0;
-	_samples_per_sec = 0;
-}
+wavSound::wavSound() {}
 
-wavSound::~wavSound() {
-	free_data();
-}
-
-bool wavSound::init(int data_len, int bits, int chn, int samples) {
-	free_data();
-
-	_data_length = data_len;
-	_data = new char[_data_length];
-
-	_channels = chn;
-	_bits_per_sample = bits;
-	_samples_per_sec = samples;
-
-	return true;
-}
-
-void wavSound::free_data() {
-	if (_data) {
-		delete [] _data;
-		_data = NULL;
-	}
-
-	_data_length = 0;
-	_bits_per_sample = 0;
-	_channels = 0;
-	_samples_per_sec = 0;
-}
+wavSound::~wavSound() {}
 
 bool wavSound::wav_file_load(const Common::Path fpath) {
 	debugC(3, kDebugSound, "[%d] Loading Wav: %s", g_system->getMillis(), transCyrillic(fpath.toString()));
@@ -80,36 +49,18 @@ bool wavSound::wav_file_load(const Common::Path fpath) {
 	Common::SeekableReadStream *stream;
 
 	if (qdFileManager::instance().open_file(&stream, fpath.toString().c_str(), false)) {
-		int size, rate;
-		byte flags;
-		uint16 type;
-		int blockAlign;
-
-		if (!Audio::loadWAVFromStream(*stream, size, rate, flags, &type, &blockAlign)) {
-			warning("Error loading wav file header: '%s", transCyrillic(fpath.toString()));
-			delete stream;
+		if (_fname.baseName().hasSuffixIgnoreCase(".ogg")) {
+#ifdef USE_VORBIS
+			_audioStream = Audio::makeVorbisStream(stream, DisposeAfterUse::NO);
+#else
+			warning("wavSound::wav_file_load(%s): Vorbis support not compiled", fpath.toString().c_str());
 			return false;
+#endif
+		} else {
+			_audioStream = Audio::makeWAVStream(stream, DisposeAfterUse::NO);
 		}
 
-		int bits;
-		if (flags & Audio::FLAG_UNSIGNED)
-			bits = 8;
-		else if (flags & Audio::FLAG_16BITS)
-			bits = 16;
-		else if (flags & Audio::FLAG_24BITS)
-			bits = 24;
-		else
-			bits = 8;
-
-		int channels = 1;
-		if (flags & Audio::FLAG_STEREO)
-			channels = 2;
-
-		init(size, bits, channels, rate);
-
-		stream->seek(0);
-
-		_audioStream = Audio::makeWAVStream(stream, DisposeAfterUse::NO);
+		_length = (float)_audioStream->getLength().msecs() / 1000.0;
 	}
 
 	return true;

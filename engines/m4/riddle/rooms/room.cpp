@@ -29,6 +29,12 @@ namespace Rooms {
 
 int Room::_ripSketching;
 
+void Room::preload() {
+	_G(player).walker_type = 1;
+	_G(player).shadow_type = 1;
+	LoadWSAssets("OTHER SCRIPT");
+}
+
 void Room::restoreAutosave() {
 	if (g_engine->autosaveExists()) {
 		_G(kernel).restore_slot = 0;
@@ -585,6 +591,10 @@ void Room::disableHotspots() {
 void Room::enableHotspots() {
 	for (auto *hs = _G(currentSceneDef).hotspots; hs; hs = hs->next)
 		hs->active = true;
+}
+
+bool Room::checkStrings() const {
+	return _G(string1).empty() && _G(string2).empty() && _G(string3).empty();
 }
 
 } // namespace Rooms

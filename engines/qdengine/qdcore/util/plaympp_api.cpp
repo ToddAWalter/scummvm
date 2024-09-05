@@ -44,7 +44,7 @@ mpegPlayer::~mpegPlayer() {
 }
 
 bool mpegPlayer::play(const Common::Path file, bool loop, int vol) {
-	bool isOGG = file.baseName().hasSuffix(".ogg");
+	bool isOGG = file.baseName().hasSuffixIgnoreCase(".ogg");
 
 	debugC(1, kDebugSound, "mpegPlayer::play(%s, %d, %d)", file.toString().c_str(), loop, vol);
 
@@ -153,9 +153,13 @@ bool mpegPlayer::init_library(void *dsound_device) {
 void mpegPlayer::deinit_library() {
 }
 
+mpegPlayer *g_mpegPlayer = nullptr;
+
 mpegPlayer &mpegPlayer::instance() {
-	static mpegPlayer player;
-	return player;
+	if (!g_mpegPlayer)
+		g_mpegPlayer = new mpegPlayer;
+
+	return *g_mpegPlayer;
 }
 
 void mpegPlayer::syncMusicSettings() {

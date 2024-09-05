@@ -80,6 +80,10 @@ void OpenGLRenderer::init() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_SCISSOR_TEST);
 	setViewport(_viewport);
+	glEnable(GL_DEPTH_CLAMP);
+
+	scaleStipplePattern(_defaultStippleArray, _stipples[15]);
+	memcpy(_defaultStippleArray, _stipples[15], 128);
 }
 
 void OpenGLRenderer::setViewport(const Common::Rect &rect) {

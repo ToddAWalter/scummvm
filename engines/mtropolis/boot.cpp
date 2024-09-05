@@ -1078,6 +1078,13 @@ public:
 		kPlugInStandard,
 		kPlugInObsidian,
 		kPlugInMIDI,
+		kPlugInFTTS,
+		kPlugInRWC,
+		kPlugInKnowWonder,
+		kPlugInAxLogic,
+		kPlugInHoologic,
+		kPlugInMLine,
+		kPlugInThereware,
 	};
 
 	enum BitDepth {
@@ -1126,6 +1133,7 @@ public:
 	BitDepth getEnhancedBitDepth() const;
 	RuntimeVersion getRuntimeVersion() const;
 	const Common::Point &getResolution() const;
+	bool getWantPrintVFS() const;
 
 private:
 	enum ArchiveType {
@@ -1150,6 +1158,7 @@ private:
 	void setEnhancedBitDepth(BitDepth bitDepth);
 	void setRuntimeVersion(RuntimeVersion version);
 	void setMainSegmentFile(const Common::String &mainSegmentFilePath);
+	void printVFS();
 
 	void executeFunction(const Common::String &functionName, const Common::Array<Common::String> &paramTokens);
 
@@ -1171,13 +1180,17 @@ private:
 	Common::Array<Common::SharedPtr<Common::Archive> > _persistentArchives;
 	Common::String _mainSegmentFileOverride;
 	bool _isMac;
+	bool _wantPrintVFS;
 	Common::Point _preferredResolution;
 	BitDepth _bitDepth;
 	BitDepth _enhancedBitDepth;
 	RuntimeVersion _runtimeVersion;
 };
 
-BootScriptContext::BootScriptContext(bool isMac) : _isMac(isMac), _preferredResolution(0, 0), _bitDepth(kBitDepthAuto), _enhancedBitDepth(kBitDepthAuto), _runtimeVersion(kRuntimeVersionAuto) {
+BootScriptContext::BootScriptContext(bool isMac)
+	: _isMac(isMac), _preferredResolution(0, 0)
+	, _bitDepth(kBitDepthAuto), _enhancedBitDepth(kBitDepthAuto), _runtimeVersion(kRuntimeVersionAuto)
+	, _wantPrintVFS(false) {
 	_vfsLayout._pathSeparator = isMac ? ':' : '/';
 
 	VirtualFileSystemLayout::ArchiveJunction fsJunction;
@@ -1295,6 +1308,9 @@ void BootScriptContext::setMainSegmentFile(const Common::String &mainSegmentFile
 	_mainSegmentFileOverride = mainSegmentFilePath;
 }
 
+void BootScriptContext::printVFS() {
+	_wantPrintVFS = true;
+}
 
 void BootScriptContext::bootObsidianRetailMacEn() {
 	addPlugIn(kPlugInObsidian);
@@ -1456,7 +1472,14 @@ void BootScriptContext::executeFunction(const Common::String &functionName, cons
 	const EnumBinding plugInEnum[] = {ENUM_BINDING(kPlugInMTI),
 									  ENUM_BINDING(kPlugInStandard),
 									  ENUM_BINDING(kPlugInObsidian),
-									  ENUM_BINDING(kPlugInMIDI)};
+									  ENUM_BINDING(kPlugInMIDI),
+									  ENUM_BINDING(kPlugInFTTS),
+									  ENUM_BINDING(kPlugInRWC),
+									  ENUM_BINDING(kPlugInKnowWonder),
+									  ENUM_BINDING(kPlugInAxLogic),
+									  ENUM_BINDING(kPlugInHoologic),
+									  ENUM_BINDING(kPlugInMLine),
+									  ENUM_BINDING(kPlugInThereware),};
 
 	const EnumBinding bitDepthEnum[] = {ENUM_BINDING(kBitDepthAuto),
 										ENUM_BINDING(kBitDepth8),
@@ -1537,6 +1560,10 @@ void BootScriptContext::executeFunction(const Common::String &functionName, cons
 
 		parseString(functionName, paramTokens, 0, str1);
 		setMainSegmentFile(str1);
+	} else if (functionName == "printVFS") {
+		checkParams(functionName, paramTokens, 0);
+
+		printVFS();
 	} else {
 		error("Unknown function '%s'", functionName.c_str());
 	}
@@ -1629,6 +1656,10 @@ BootScriptContext::RuntimeVersion BootScriptContext::getRuntimeVersion() const {
 
 const Common::Point &BootScriptContext::getResolution() const {
 	return _preferredResolution;
+}
+
+bool BootScriptContext::getWantPrintVFS() const {
+	return _wantPrintVFS;
 }
 
 namespace Games {
@@ -2090,6 +2121,41 @@ Common::SharedPtr<MTropolis::PlugIn> loadMTIPlugIn(const MTropolisGameDescriptio
 	return mtiPlugIn;
 }
 
+Common::SharedPtr<MTropolis::PlugIn> loadFTTSPlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> fttsPlugIn(PlugIns::createFTTS());
+	return fttsPlugIn;
+}
+
+Common::SharedPtr<MTropolis::PlugIn> loadRWCPlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> rwcPlugIn(PlugIns::createRWC());
+	return rwcPlugIn;
+}
+
+Common::SharedPtr<MTropolis::PlugIn> loadKnowWonderPlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> kwPlugIn(PlugIns::createKnowWonder());
+	return kwPlugIn;
+}
+
+Common::SharedPtr<MTropolis::PlugIn> loadAXLogicPlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> axPlugIn(PlugIns::createAXLogic());
+	return axPlugIn;
+}
+
+Common::SharedPtr<MTropolis::PlugIn> loadHoologicPlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> hlPlugIn(PlugIns::createHoologic());
+	return hlPlugIn;
+}
+
+Common::SharedPtr<MTropolis::PlugIn> loadMLinePlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> mlinePlugIn(PlugIns::createMLine());
+	return mlinePlugIn;
+}
+
+Common::SharedPtr<MTropolis::PlugIn> loadTherewarePlugIn(const MTropolisGameDescription &gameDesc) {
+	Common::SharedPtr<MTropolis::PlugIn> twPlugIn(PlugIns::createThereware());
+	return twPlugIn;
+}
+
 enum PlayerType {
 	kPlayerTypeNone,
 
@@ -2308,7 +2374,7 @@ void findWindowsMainSegment(Common::Archive &fs, const BootScriptContext &bootSc
 			for (const char *suffix : mainSegmentSuffixes) {
 				if (fileName.hasSuffixIgnoreCase(suffix)) {
 					filteredFiles.push_back(archiveMember);
-					debug(4, "Identified possible main segment file %s", fileName.c_str());
+					debug(4, "Identified possible main segment file %s", archiveMember->getPathInArchive().toString(fs.getPathSeparator()).c_str());
 					break;
 				}
 			}
@@ -2682,6 +2748,57 @@ void resolveBitDepthAndResolutionFromPresentationSettings(Common::SeekableReadSt
 BootConfiguration::BootConfiguration() : _bitDepth(0), _enhancedBitDepth(0), _width(0), _height(0) {
 }
 
+bool stableSortCaseInsensitive(const Common::String &a, const Common::String &b) {
+	uint shorterPath = a.size();
+	if (b.size() < shorterPath)
+		shorterPath = b.size();
+
+	bool aLessSensitive = false;
+	bool bLessSensitive = false;
+	for (uint i = 0; i < shorterPath; i++) {
+		char ca = a[i];
+		char cb = b[i];
+
+		char ccia = invariantToLower(ca);
+		char ccib = invariantToLower(cb);
+
+		if (ccia < ccib)
+			return true;
+		if (ccib < ccia)
+			return false;
+
+		if (ca < cb)
+			aLessSensitive = true;
+		if (cb < ca)
+			bLessSensitive = true;
+	}
+
+	if (aLessSensitive)
+		return true;
+	if (bLessSensitive)
+		return false;
+
+	return a.size() < b.size();
+}
+
+struct StablePathInArchiveSorter {
+	explicit StablePathInArchiveSorter(char pathSeparator);
+
+	bool operator()(const Common::ArchiveMember *a, const Common::ArchiveMember *b) const {
+		Common::String aPathStr = a->getPathInArchive().toString(_pathSeparator);
+		Common::String bPathStr = b->getPathInArchive().toString(_pathSeparator);
+
+		return stableSortCaseInsensitive(aPathStr, bPathStr);
+	}
+
+private:
+	char _pathSeparator;
+};
+
+StablePathInArchiveSorter::StablePathInArchiveSorter(char pathSeparator) : _pathSeparator(pathSeparator) {
+}
+
+
 BootConfiguration bootProject(const MTropolisGameDescription &gameDesc) {
 	BootConfiguration bootConfig;
 
@@ -2724,7 +2841,72 @@ BootConfiguration bootProject(const MTropolisGameDescription &gameDesc) {
 
 	bootScriptContext.finalize();
 
+	if (bootScriptContext.getWantPrintVFS()) {
+		const VirtualFileSystemLayout &vfsLayout = bootScriptContext.getVFSLayout();
+
+		char pathSeparator = vfsLayout._pathSeparator;
+
+		debug("VFS layout:");
+
+		debug("Workspace root: %s", vfsLayout._workspaceRoot.toString(pathSeparator).c_str());
+
+		debug("Archive junctions:");
+
+		for (const VirtualFileSystemLayout::ArchiveJunction &arcJunction : vfsLayout._archiveJunctions) {
+			debug("Physical paths from archive '%s':", arcJunction._archiveName.c_str());
+
+			Common::ArchiveMemberList memberList;
+			arcJunction._archive->listMembers(memberList);
+
+			Common::Array<Common::ArchiveMember *> sortedArchiveMembers;
+
+			for (const Common::ArchiveMemberPtr &archiveMember : memberList)
+				sortedArchiveMembers.push_back(archiveMember.get());
+
+			Common::sort(sortedArchiveMembers.begin(), sortedArchiveMembers.end(), StablePathInArchiveSorter(pathSeparator));
+
+			for (const Common::ArchiveMember *archiveMember : sortedArchiveMembers) {
+				debug("    %s%c%s", arcJunction._archiveName.c_str(), pathSeparator, archiveMember->getPathInArchive().toString(pathSeparator).c_str());
+			}
+
+			debug("%s", "");
+		}
+
+		debug("Virtual-to-physical path mappings:");
+		for (const VirtualFileSystemLayout::PathJunction &pathJunction : vfsLayout._pathJunctions) {
+			debug("    %s -> %s", pathJunction._srcPath.c_str(), pathJunction._destPath.c_str());
+		}
+		debug("%s", "");
+
+		debug("Exclusions:");
+
+		Common::StringArray exclusions = vfsLayout._exclusions;
+		Common::sort(exclusions.begin(), exclusions.end(), stableSortCaseInsensitive);
+
+		for (const Common::String &str : vfsLayout._exclusions)
+			debug("    %s", str.c_str());
+
+		debug("%s", "");
+	}
+
 	Common::SharedPtr<VirtualFileSystem> vfs(new VirtualFileSystem(bootScriptContext.getVFSLayout()));
+
+	if (bootScriptContext.getWantPrintVFS()) {
+		debug("Files in VFS:");
+		Common::ArchiveMemberList memberList;
+		vfs->listMembers(memberList);
+
+		Common::Array<Common::ArchiveMember *> sortedArchiveMembers;
+
+		for (const Common::ArchiveMemberPtr &archiveMember : memberList)
+			sortedArchiveMembers.push_back(archiveMember.get());
+
+		Common::sort(sortedArchiveMembers.begin(), sortedArchiveMembers.end(), StablePathInArchiveSorter(vfs->getPathSeparator()));
+
+		for (const Common::ArchiveMember *archiveMember : sortedArchiveMembers) {
+			debug("    %s", archiveMember->getPathInArchive().toString(vfs->getPathSeparator()).c_str());
+		}
+	}
 
 	Common::Path playerLocation;
 	Common::Path mainSegmentLocation;
@@ -2800,6 +2982,8 @@ BootConfiguration bootProject(const MTropolisGameDescription &gameDesc) {
 
 		vfs->listMatchingMembers(pluginFiles, pluginsLocation.appendComponent("*"));
 
+		
+		debug(4, "Looking for plug-in files in %s", pluginsLocation.toString(vfs->getPathSeparator()).c_str());
 		for (const Common::ArchiveMemberPtr &pluginFile : pluginFiles) {
 			Common::String fileName = pluginFile->getFileName();
 			uint fnameLen = fileName.size();
@@ -2812,6 +2996,10 @@ BootConfiguration bootProject(const MTropolisGameDescription &gameDesc) {
 		// and possibly case-sensitive too.  Sort order on Windows is case-insensitive.  However, we don't
 		// want to rely on the filenames having the correct case on the user machine.
 		Common::sort(pluginPathsSorted.begin(), pluginPathsSorted.end(), Boot::sortPathFileName);
+
+		for (const Common::Path &plugInPath : pluginPathsSorted) {
+			debug(4, "Found plug-in %s", plugInPath.toString(vfs->getPathSeparator()).c_str());
+		}
 
 		if (gameDesc.desc.platform == Common::kPlatformMacintosh) {
 			Boot::loadCursorsMac(*vfs, playerLocation, *cursorGraphics);
@@ -2840,6 +3028,27 @@ BootConfiguration bootProject(const MTropolisGameDescription &gameDesc) {
 			break;
 		case Boot::BootScriptContext::kPlugInMTI:
 			plugIns.push_back(Boot::loadMTIPlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInFTTS:
+			plugIns.push_back(Boot::loadFTTSPlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInRWC:
+			plugIns.push_back(Boot::loadRWCPlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInKnowWonder:
+			plugIns.push_back(Boot::loadKnowWonderPlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInAxLogic:
+			plugIns.push_back(Boot::loadAXLogicPlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInHoologic:
+			plugIns.push_back(Boot::loadHoologicPlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInMLine:
+			plugIns.push_back(Boot::loadMLinePlugIn(gameDesc));
+			break;
+		case Boot::BootScriptContext::kPlugInThereware:
+			plugIns.push_back(Boot::loadTherewarePlugIn(gameDesc));
 			break;
 		default:
 			error("Unknown plug-in ID");

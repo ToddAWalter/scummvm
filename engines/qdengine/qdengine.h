@@ -41,9 +41,12 @@ class Screen;
 namespace QDEngine {
 
 struct QDEngineGameDescription;
+class grDispatcher;
+class qdGameDispatcher;
 
 enum QDEngineDebugChannels {
 	kDebugGraphics = 1,
+	kDebugImGui,
 	kDebugInput,
 	kDebugLoad,
 	kDebugLog,
@@ -59,9 +62,14 @@ class QDEngineEngine : public Engine {
 private:
 	const ADGameDescription *_gameDescription;
 	Common::RandomSource _randomSource;
+
+	grDispatcher *_grD = nullptr;
+	qdGameDispatcher *_gameD = nullptr;
+
 protected:
 	// Engine APIs
 	Common::Error run() override;
+
 public:
 	Graphics::Screen *_screen = nullptr;
 	Graphics::PixelFormat _pixelformat;
@@ -71,6 +79,7 @@ public:
 	int _screenH;
 
 	bool _forceFullRedraw = false;
+
 public:
 	QDEngineEngine(OSystem *syst, const ADGameDescription *gameDesc);
 	~QDEngineEngine() override;
@@ -128,6 +137,9 @@ public:
 	qdScreenTextFormat _global_text_format;
 	// Global format for dialog topics
 	qdScreenTextFormat _global_topic_format;
+
+private:
+	void init_graphics();
 };
 
 extern QDEngineEngine *g_engine;

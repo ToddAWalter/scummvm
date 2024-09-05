@@ -121,7 +121,6 @@ private:
 	machine *_lockButton2 = nullptr;
 	machine *_lockButton3 = nullptr;
 	machine *_lockButton4 = nullptr;
-	int _407h = 0;
 	int _ripEnters = 0;
 	int _stair = 0;
 	machine *_ripley = nullptr;
@@ -137,6 +136,32 @@ private:
 	int _407rp99 = 0;
 	int _pump407 = 0;
 	int _hangRip = 0;
+	int _rptmhr11 = 0;
+	int _407tpis2 = 0;
+	int _ripHeadTurn = 0;
+	int _jarWaterFallingLeft = 0;
+	int _jarWaterFallingCentre = 0;
+	int _jarWaterFallingRight = 0;
+	machine *_jarLeft = nullptr;
+	machine *_jarCentre = nullptr;
+	machine *_jarRight = nullptr;
+	machine *_sink = nullptr;
+	int _407a = 0;
+	int _407b = 0;
+	int _407c = 0;
+	int _407d = 0;
+	int _407e = 0;
+	int _407h = 0;
+	int _407j = 0;
+	int _407k = 0;
+	int _407l = 0;
+	int _407m = 0;
+	int _407o = 0;
+	int _407p = 0;
+	int _407q = 0;
+	int _407r = 0;
+	int _407s = 0;
+	int _exit = 0;
 
 	void setHotspots();
 	void lookItem(const char *item, const char *digi);
@@ -191,12 +216,44 @@ private:
 	void useValveHandle();
 	bool usePump();
 	void usePump2();
+	void takeLetter();
+	void takeFaucetPipe1();
+	void takeFaucetPipe2();
+	void takeFaucetPipe3();
+	void takeSurgicalTube1();
+	void takeSurgicalTube2();
+	void takeSurgicalTube3();
+	void takeGardenHose1();
+	void takeGardenHose2();
+	void takeGardenHose3();
+	void takeGardenHose4();
+	void takeGlassJar1();
+	void takeGlassJar2();
+	void takePeriodicTable1();
+	void takePeriodicTable2();
+	void takeJarGrips();
+	void takeJarCork1();
+	void takeJarCork2();
+	void takeJarRubberPlug1();
+	void takeJarRubberPlug2();
+	void takeNozzlesTube();
+	void takeLeverKey1();
+	void takeLeverKey2();
+	void takeLeverKey3();
+	void takeAirValveHandle();
+	void takeFaucetHandle();
+	void takePumpRod1();
+	void takePumpRod2();
+	void takePumpRod3();
+	void takePumpGrips1();
+	void takePumpGrips2();
+	void takeRubberPlug();
+	void takeSurgicalTube();
 
 public:
 	Room407() : Room() {}
 	~Room407() override {}
 
-	void preload() override;
 	void init() override;
 	void daemon() override;
 	void pre_parser() override;

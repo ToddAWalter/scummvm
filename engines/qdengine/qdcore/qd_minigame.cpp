@@ -34,7 +34,12 @@
 #include "qdengine/minigames/qd_empty_minigame_interface.h"
 
 // maski
+#include "qdengine/minigames/arkada_avtomat.h"
 #include "qdengine/minigames/kartiny.h"
+#include "qdengine/minigames/maski_21.h"
+#include "qdengine/minigames/masky_order.h"
+#include "qdengine/minigames/orchestra.h"
+#include "qdengine/minigames/scroll.h"
 #include "qdengine/minigames/tetris.h"
 
 // 2mice1
@@ -140,7 +145,7 @@ bool qdMiniGame::load_script(const xml::tag *p) {
 			set_game_name(it->data());
 			break;
 		case QDSCR_MINIGAME_CONFIG_FILE:
-			set_config_file_name(it->data());
+			set_config_file_name(Common::Path(it->data(), '\\'));
 			load_config();
 			_config.reserve(_config.size() + config_size);
 			break;
@@ -179,7 +184,7 @@ bool qdMiniGame::save_script(Common::WriteStream &fh, int indent) const {
 	}
 
 	if (!_config_file_name.empty()) {
-		fh.writeString(Common::String::format(" config_file=\"%s\"", qdscr_XML_string(config_file_name())));
+		fh.writeString(Common::String::format(" config_file=\"%s\"", qdscr_XML_string(config_file_name().toString('\\'))));
 	}
 
 	if (!_dll_name.empty()) {
@@ -262,16 +267,31 @@ bool qdMiniGame::load_interface() {
 	if (!_dll_name.empty()) {
 
 		// maski
-		// Arkada_avtomat.dll
-		// MaskyOrder.dll
-		// kartiny.dll
-		// maski_21.dll
-		// maski_21_random.dll
-		// orchestra.dll
-		// scroll.dll
-		if (_dll_name == "DLL\\tetris.dll") {
+		if (_dll_name == "Resource\\DLL\\tetris.dll") {
 			_interface = new qdTetrisMiniGame();
 			return true;
+		} else if (_dll_name == "Resource\\DLL\\scroll.dll") {
+			_interface = new qdScrollMiniGame();
+			return true;
+		} else if (_dll_name == "Resource\\DLL\\MaskyOrder.dll") {
+			_interface = new qdMaskyOrderMiniGame();
+			return true;
+		} else if (_dll_name == "Resource\\DLL\\maski_21.dll") {
+			_interface = new qdMaski21MiniGame(false);
+			return true;
+		} else if (_dll_name == "Resource\\DLL\\maski_21_random.dll") {
+			_interface = new qdMaski21MiniGame(true);
+			return true;
+		} else if (_dll_name == "Resource\\DLL\\kartiny.dll") {
+			_interface = new qdKartinyMiniGame();
+			return true;
+		} else if (_dll_name == "Resource\\DLL\\orchestra.dll") {
+			_interface = new qdOrchestraMiniGame();
+			return true;
+		} else if (_dll_name == "Resource\\DLL\\Arkada_avtomat.dll") {
+			_interface = new qdArkadaAvtomatMiniGame();
+			return true;
+
 
 		// 3mice1
 		} else if (_dll_name == "DLL\\Book_gusenica.dll" || _dll_name == "DLL\\Book_les.dll"
