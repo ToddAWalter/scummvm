@@ -19,6 +19,7 @@
  *
  */
 
+#include "backends/imgui/IconsMaterialSymbols.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "backends/imgui/imgui.h"
@@ -28,6 +29,8 @@
 #include "common/compression/unzip.h"
 #include "common/debug.h"
 #include "common/path.h"
+#include "common/stack.h"
+#include "common/system.h"
 
 #include "graphics/opengl/shader.h"
 #include "graphics/managed_surface.h"
@@ -42,6 +45,8 @@
 #include "qdengine/system/graphics/gr_dispatcher.h"
 
 namespace QDEngine {
+
+const int TILES_ID = -1337;
 
 ImGuiState *_state = nullptr;
 
@@ -73,34 +78,79 @@ ImGuiImage getImageID(Common::Path filename, int frameNum) {
 	if (_state->_frames.contains(key))
 		return _state->_frames[key];
 
-	// Load the animation
-	qdAnimation *animation = new qdAnimation();
-	animation->qda_load(filename);
-
-	qdAnimationFrame *frame = animation->get_frame(frameNum);
-
 	int sx = 10, sy = 10;
-	if (frame) {
-		sx = frame->size_x();
-		sy = frame->size_y();
+	Graphics::ManagedSurface *surface = nullptr;
+
+	if (_state->_displayMode == kDisplayQDA) {
+		// Load the animation
+		qdAnimation *animation = new qdAnimation();
+		animation->qda_load(filename);
+
+		_state->_qdaToDisplayFrameCount = animation->num_frames();
+
+		if (frameNum == TILES_ID) {
+			if (animation->tileAnimation()) {
+				surface = animation->tileAnimation()->dumpTiles(25);
+
+				sx = surface->w;
+				sy = surface->h;
+			}
+		} else if (frameNum < 0) { // Tiles
+			if (animation->tileAnimation()) {
+				surface = animation->tileAnimation()->dumpFrameTiles(-frameNum + 1, 0.91670f);
+
+				sx = surface->w;
+				sy = surface->h;
+			}
+		} else {
+			if (animation->tileAnimation()) {
+				Vect2i size = animation->tileAnimation()->frameSize();
+
+				sx = size.x;
+				sy = size.y;
+			} else {
+				qdAnimationFrame *frame = animation->get_frame(frameNum);
+
+				if (frame) {
+					sx = frame->size_x();
+					sy = frame->size_y();
+				}
+			}
+
+			surface = new Graphics::ManagedSurface(sx, sy, g_engine->_pixelformat);
+
+			animation->set_cur_frame(frameNum);
+
+			grDispatcher::instance()->surfaceOverride(surface);
+			animation->redraw(sx / 2, sy / 2, 0, 0.91670f, 0);
+			grDispatcher::instance()->resetSurfaceOverride();
+		}
+	} else if (_state->_displayMode == kDisplayTGA) {
+		qdSprite *sprite = new qdSprite();
+		if (sprite->load(filename)) {
+			sx = sprite->size_x();
+			sy = sprite->size_y();
+
+			surface = new Graphics::ManagedSurface(sx, sy, g_engine->_pixelformat);
+
+			grDispatcher::instance()->surfaceOverride(surface);
+			sprite->redraw(sx / 2, sy / 2, 0);
+			grDispatcher::instance()->resetSurfaceOverride();
+		} else {
+			warning("Error loading TGA file '%s'", transCyrillic(filename.toString()));
+		}
 	}
-	Graphics::ManagedSurface surface(sx, sy, g_engine->_pixelformat);
 
-	if (frame) {
-		grDispatcher::instance()->surfaceOverride(&surface);
+	if (surface)
+		_state->_frames[key] = { (ImTextureID)(intptr_t)loadTextureFromSurface(surface->surfacePtr()), sx, sy };
 
-		frame->redraw(sx / 2, sy / 2, 0);
-
-		grDispatcher::instance()->resetSurfaceOverride();
-	}
-
-	_state->_frames[key] = { (ImTextureID)(intptr_t)loadTextureFromSurface(surface.surfacePtr()), sx, sy };
+	delete surface;
 
 	return _state->_frames[key];
 }
 
-void showImage(const ImGuiImage &image, const char *name, float thumbnailSize) {
-	ImVec2 size = { (float)image.width * 2, (float)image.height * 2 };
+void showImage(const ImGuiImage &image, const char *name, float scale) {
+	ImVec2 size = { (float)image.width * scale, (float)image.height * scale };
 
 	ImGui::BeginGroup();
 	ImVec2 screenPos = ImGui::GetCursorScreenPos();
@@ -109,6 +159,213 @@ void showImage(const ImGuiImage &image, const char *name, float thumbnailSize) {
 	ImGui::Image(image.id, size);
 	ImGui::EndGroup();
 	//setToolTipImage(image, name);
+}
+
+FileTree::FileTree(Common::Path *p, Common::String n, bool node, int i) {
+	id = i;
+
+	if (!node) {
+		name = (char *)transCyrillic(n);
+	} else {
+		path = *p;
+		name = (char *)transCyrillic(p->baseName());
+	}
+}
+
+void populateFileList() {
+	Common::Array<Common::Path> files;
+
+	// Iterate through the 3 resource pak files
+	for (int i = 0; i < qdFileManager::instance().get_num_packages(); i++) {
+		Common::Archive *archive = qdFileManager::instance().get_package(i);
+		Common::ArchiveMemberList members;
+
+		if (archive)
+			archive->listMembers(members);
+
+		for (auto &it : members)
+			files.push_back(it->getPathInArchive());
+	}
+
+	Common::sort(files.begin(), files.end());
+
+	// Now build a tree
+	Common::Path curr;
+	Common::Stack<FileTree *> treeStack;
+
+	_state->_files.name = "Resource";
+	treeStack.push(&_state->_files);
+
+	int id = 0;
+	for (int f = 0; f < files.size(); f++) {
+		// Skip duplicates between the archives
+		if (f && files[f] == files[f - 1])
+			continue;
+
+		Common::Path parent = files[f].getParent();
+
+		if (parent != curr) {
+			Common::StringArray curArr = curr.splitComponents();
+			Common::StringArray newArr = parent.splitComponents();
+
+			if (curArr.back().empty())
+				curArr.pop_back();
+
+			if (newArr.back().empty())
+				newArr.pop_back();
+
+			int pos = 0;
+			while (pos < curArr.size() && pos < newArr.size() && curArr[pos] == newArr[pos])
+				pos++;
+
+			// if we need to close directories
+			if (pos < curArr.size()) {
+				for (int i = pos; i < curArr.size(); i++)
+					(void)treeStack.pop();
+			}
+
+			for (; pos < newArr.size(); pos++) {
+				if (id == 0 && newArr[pos] == "Resource") // Skip the root node
+					continue;
+
+				treeStack.top()->children.push_back(new FileTree(nullptr, newArr[pos], false, ++id));
+				treeStack.push(treeStack.top()->children.back());
+			}
+
+			curr = parent;
+		}
+
+		treeStack.top()->children.push_back(new FileTree(&files[f], "", true, ++id));
+
+		id++;
+	}
+}
+
+static void displayQDA() {
+	int totalFrames = _state->_qdaToDisplayFrameCount;
+
+	ImGuiImage imgID;
+	if (!_state->_fileToDisplay.empty()) {
+		imgID = getImageID(_state->_fileToDisplay, _state->_qdaToDisplayFrame);
+
+		ImGui::Text("Frame %s: %d of %d  [%d x %d]", transCyrillic(_state->_fileToDisplay.toString()), _state->_qdaToDisplayFrame + 1,
+				totalFrames, imgID.width, imgID.height);
+	} else {
+		ImGui::Text("Frame <none>");
+	}
+
+	ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+	if (ImGui::BeginTabBar("FrameTabBar", tab_bar_flags)) {
+
+		if (ImGui::BeginTabItem("Animation")) {
+
+			if (ImGui::Button(ICON_MS_FAST_REWIND)) {
+				_state->_qdaToDisplayFrame = 0;
+				_state->_qdaIsPlaying = false;
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button(ICON_MS_SKIP_PREVIOUS)) {
+				_state->_qdaToDisplayFrame = _state->_qdaToDisplayFrame + totalFrames - 1;
+				_state->_qdaToDisplayFrame %= totalFrames;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button(ICON_MS_PLAY_ARROW))
+				_state->_qdaIsPlaying = !_state->_qdaIsPlaying;
+
+			ImGui::SameLine();
+			if (ImGui::Button(ICON_MS_SKIP_NEXT)) {
+				_state->_qdaToDisplayFrame += 1;
+				_state->_qdaToDisplayFrame %= totalFrames;
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button(ICON_MS_FAST_FORWARD)) {
+				_state->_qdaToDisplayFrame = totalFrames - 1;
+				_state->_qdaIsPlaying = false;
+			}
+
+			ImGui::SameLine();
+
+			// Frame Count
+			char buf[6];
+			snprintf(buf, 6, "%d", _state->_qdaToDisplayFrame);
+
+			ImGui::SetNextItemWidth(35);
+			ImGui::InputText("##frame", buf, 5, ImGuiInputTextFlags_CharsDecimal);
+			ImGui::SetItemTooltip("Frame");
+
+			ImGui::Separator();
+
+			if (!_state->_fileToDisplay.empty()) {
+				showImage(imgID, (char *)transCyrillic(_state->_fileToDisplay.toString()), 1.0);
+			} else {
+				ImGui::InvisibleButton("##canvas", ImVec2(32.f, 32.f));
+			}
+
+			ImGui::SameLine();
+
+			imgID = getImageID(_state->_fileToDisplay, -_state->_qdaToDisplayFrame - 1);
+
+			showImage(imgID, (char *)transCyrillic(_state->_fileToDisplay.toString()), 1.0);
+
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("Tiles")) {
+			if (!_state->_fileToDisplay.empty()) {
+				imgID = getImageID(_state->_fileToDisplay, TILES_ID);
+
+				showImage(imgID, (char *)transCyrillic(_state->_fileToDisplay.toString()), 1.0);
+			} else {
+				ImGui::InvisibleButton("##canvas", ImVec2(32.f, 32.f));
+			}
+
+			ImGui::EndTabItem();
+		}
+
+		ImGui::EndTabBar();
+	}
+}
+
+static void displayTGA() {
+	ImGuiImage imgID;
+
+	imgID = getImageID(_state->_fileToDisplay, 0);
+
+	ImGui::Text("TGA %s: [%d x %d]", transCyrillic(_state->_fileToDisplay.toString()), imgID.width, imgID.height);
+
+	ImGui::Separator();
+
+	showImage(imgID, (char *)transCyrillic(_state->_fileToDisplay.toString()), 1.0);
+}
+
+void displayTree(FileTree *tree) {
+	if (tree->children.empty()) { // It is a file
+		if (ImGui::Selectable(tree->name.c_str(), _state->_fileToDisplay == tree->path)) {
+			_state->_fileToDisplay = tree->path;
+
+			if (tree->name.hasSuffixIgnoreCase(".qda")) {
+				_state->_qdaToDisplayFrame = 0;
+				_state->_qdaIsPlaying = false;
+
+				_state->_displayMode = kDisplayQDA;
+			} else if (tree->name.hasSuffixIgnoreCase(".tga")) {
+				_state->_displayMode = kDisplayTGA;
+			} else {
+				_state->_displayMode = -1;
+			}
+		}
+
+		return;
+	}
+
+	if (ImGui::TreeNode((void*)(intptr_t)(tree->id), tree->name.c_str())) {
+		for (auto &it : tree->children)
+			displayTree(it);
+
+		ImGui::TreePop();
+	}
 }
 
 void showArchives() {
@@ -120,8 +377,8 @@ void showArchives() {
 
 	// Calculate the window size
 	ImVec2 windowSize = ImVec2(
-		viewportSize.x * 0.7f,
-		viewportSize.y * 0.7f
+		viewportSize.x * 0.9f,
+		viewportSize.y * 0.9f
 	);
 
 	// Calculate the centered position
@@ -135,37 +392,18 @@ void showArchives() {
 	ImGui::SetNextWindowSize(windowSize, ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("Archives", &_state->_showArchives)) {
-		ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, ImGui::GetContentRegionAvail().y), ImGuiChildFlags_None);
+		ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.4f, ImGui::GetContentRegionAvail().y), ImGuiChildFlags_None);
 
-		ImGui::Button("\uef4f"); // Filter	// filter_alt
+		ImGui::Button(ICON_MS_FILTER_ALT);
 		ImGui::SameLine();
 
-		ImGuiTextFilter nameFilter;
-		nameFilter.Draw();
+		_state->_nameFilter.Draw();
 		ImGui::Separator();
 
-		// Iterate through the 3 resource pak files
-		for (int i = 0; i < 3; i++) {
-			Common::Archive *archive = qdFileManager::instance().get_package(i);
-			Common::ArchiveMemberList members;
+		if (_state->_files.children.empty())
+			populateFileList();
 
-			if (archive)
-				archive->listMembers(members);
-
-			if (archive && ImGui::TreeNode(Common::String::format("Resource/resource%d.pak", i).c_str())) {
-
-				for (auto &it : members) {
-					const char *fileName = (char *)transCyrillic(it->getFileName());
-					if (nameFilter.PassFilter(fileName) && ImGui::Selectable(fileName) && it->getFileName().hasSuffixIgnoreCase(".qda")) {
-						_state->_qdaToDisplay = it->getPathInArchive();
-						_state->_qdaToDisplayFrame = 0;
-					}
-
-				}
-
-				ImGui::TreePop();
-			}
-		}
+		displayTree(&_state->_files);
 
 		ImGui::EndChild();
 
@@ -174,22 +412,10 @@ void showArchives() {
 		{ // Right pane
 			ImGui::BeginChild("ChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), ImGuiChildFlags_Border);
 
-			ImGuiImage imgID;
-			if (!_state->_qdaToDisplay.empty()) {
-				imgID = getImageID(_state->_qdaToDisplay, _state->_qdaToDisplayFrame);
-
-				ImGui::Text("Frame %s: %d  [%d x %d]", transCyrillic(_state->_qdaToDisplay.toString()), _state->_qdaToDisplayFrame,
-						imgID.width, imgID.height);
-			} else {
-				ImGui::Text("Frame <none>");
-			}
-
-			ImGui::Separator();
-
-			if (!_state->_qdaToDisplay.empty()) {
-				showImage(imgID, (char *)transCyrillic(_state->_qdaToDisplay.toString()), 120.0f);
-			} else {
-				ImGui::InvisibleButton("##canvas", ImVec2(32.f, 32.f));
+			if (_state->_displayMode == kDisplayQDA) {
+				displayQDA();
+			} else if (_state->_displayMode == kDisplayTGA) {
+				displayTGA();
 			}
 
 			ImGui::EndChild();
@@ -218,7 +444,7 @@ void onImGuiInit() {
 	icons_config.OversampleV = 3;
 	icons_config.GlyphOffset = {0, 4};
 
-	static const ImWchar icons_ranges[] = {0xE000, 0xF8FF, 0};
+	static const ImWchar icons_ranges[] = {ICON_MIN_MS, ICON_MAX_MS, 0};
 	ImGui::addTTFFontFromArchive("MaterialSymbolsSharp.ttf", 16.f, &icons_config, icons_ranges);
 
 	_state = new ImGuiState();
@@ -232,6 +458,13 @@ void onImGuiRender() {
 
 	if (!_state)
 		return;
+
+	if (_state->_qdaIsPlaying && g_system->getMillis() > _state->_qdaNextFrameTimestamp) {
+		_state->_qdaToDisplayFrame++;
+		_state->_qdaToDisplayFrame %= _state->_qdaToDisplayFrameCount;
+
+		_state->_qdaNextFrameTimestamp = g_system->getMillis() + 50; // 20 fps
+	}
 
 	ImGui::GetIO().ConfigFlags &= ~(ImGuiConfigFlags_NoMouseCursorChange | ImGuiConfigFlags_NoMouse);
 

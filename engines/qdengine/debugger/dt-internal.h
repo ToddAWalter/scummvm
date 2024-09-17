@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef QDENGINE_DEBUGGER_H
-#define QDENGINE_DEBUGGER_H
+#ifndef QDENGINE_DT_INTERNAL_H
+#define QDENGINE_DT_INTERNAL_H
 
 namespace QDEngine {
 
@@ -30,17 +30,42 @@ typedef struct ImGuiImage {
 	int height;
 } ImGuiImage;
 
+enum {
+	kDisplayQDA,
+	kDisplayTGA,
+};
+
+struct FileTree {
+	Common::Path path;
+	Common::String name;
+	Common::Array<FileTree *> children;
+	int id;
+
+	FileTree(Common::Path *p, Common::String n, bool node, int i);
+	FileTree() { id = 0; }
+};
+
 typedef struct ImGuiState {
 	bool _showArchives = false;
 
 	Common::HashMap<Common::String, ImGuiImage> _frames;
 
-	Common::Path _qdaToDisplay;
+	Common::Path _fileToDisplay;
+
 	int _qdaToDisplayFrame = -1;
+	int _qdaToDisplayFrameCount = 0;
+	bool _qdaIsPlaying = false;
+	int _qdaNextFrameTimestamp = 0;
+
+	ImGuiTextFilter _nameFilter;
+
+	FileTree _files;
+
+	int _displayMode = -1;
 } ImGuiState;
 
 extern ImGuiState *_state;
 
 }
 
-#endif // QDENGINE_DEBUGGER_H
+#endif // QDENGINE_DT_INTERNAL_H

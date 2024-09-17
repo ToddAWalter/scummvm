@@ -32,6 +32,10 @@ namespace Common {
 class SeekableReadStream;
 }
 
+namespace Graphics {
+class ManagedSurface;
+}
+
 namespace QDEngine {
 
 typedef void (*CompressionProgressHandler)(int percents_loaded, void *context);
@@ -66,6 +70,7 @@ public:
 	bool compress(grTileCompressionMethod method);
 
 	grTileSprite getTile(int tile_index) const;
+	grTileSprite getFrameTile(int frame_number, int tile_index) const;
 
 	void addFrame(const uint32 *frame_data);
 
@@ -73,7 +78,19 @@ public:
 
 	void drawFrame(const Vect2i &position, int32 frame_index, int32 mode, int closest_scale) const;
 	void drawFrame(const Vect2i &position, int frame_index, float angle, int mode = 0) const;
+	void drawFrame(const Vect2i &position, int frame_index, float angle, const Vect2f &scale, int mode) const;
+
 	void drawFrame_scale(const Vect2i &position, int frame_index, float scale, int mode) const;
+
+	void drawMask(const Vect2i &position, int frame_index, uint32 mask_color, int mask_alpha, int mode, int closest_scale) const;
+	void drawMask_scale(const Vect2i &pos, int frame_index, uint32 mask_colour, int mask_alpha, float scale, int mode) const;
+	void drawMask_rot(const Vect2i &pos, int frame_index, uint32 mask_colour, int mask_alpha, float angle, int mode) const;
+	void drawMask_rot(const Vect2i &pos, int frame_index, uint32 mask_colour, int mask_alpha, float angle, Vect2f scale, int mode) const;
+
+	void drawContour(const Vect2i &position, int frame_index, uint32 color, int mode, int closest_scale) const;
+	void drawContour(const Vect2i &position, int frame_index, uint32 color, float scale, int mode) const;
+
+	bool hit(int frame_number, Vect2i &pos) const;
 
 	static void setProgressHandler(CompressionProgressHandler handler, void *context) {
 		_progressHandler = handler;
@@ -85,7 +102,10 @@ public:
 	int find_closest_scale(float *scale) const;
 	bool wasFrameSizeChanged(int frame_index, int scaleIdx, float scale) const;
 
-	void dumpTiles(Common::Path baseName, int tilesPerRow);
+	Graphics::ManagedSurface *dumpTiles(int tilesPerRow) const;
+	void dumpTiles(Common::Path baseName, int tilesPerRow) const;
+
+	Graphics::ManagedSurface *dumpFrameTiles(int frame_index, float scale) const;
 
 private:
 

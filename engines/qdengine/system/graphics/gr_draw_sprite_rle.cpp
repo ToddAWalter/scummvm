@@ -31,7 +31,7 @@
 namespace QDEngine {
 
 void grDispatcher::putSpr_rle(int x, int y, int sx, int sy, const class RLEBuffer *p, int mode, bool alpha_flag) {
-	debugC(2, kDebugGraphics, "grDispatcher::putSpr_rle(%d, %d, %d, %d)", x, y, sx, sy);
+	debugC(4, kDebugGraphics, "grDispatcher::putSpr_rle([%d, %d], [%d, %d], mode: %d, alpha: %d", x, y, sx, sy, mode, alpha_flag);
 
 	int px = 0;
 	int py = 0;
@@ -57,14 +57,8 @@ void grDispatcher::putSpr_rle(int x, int y, int sx, int sy, const class RLEBuffe
 	} else
 		dy = 1;
 
-	Graphics::ManagedSurface *target = _surfaceOverride ? _surfaceOverride : _screenBuf;
-	if (target == _surfaceOverride) {
-		debugC(3, kDebugImGui, "grDispatcher::putSpr_rle(): %p", (void *)target);
-		debugC(3, kDebugImGui, "grDispatcher::putSpr_rle(%d, %d, %d, %d)", x, y, sx, sy);
-	}
-
 	for (int i = 0; i < psy; i++) {
-		uint16 *scr_buf = reinterpret_cast<uint16 *>(target->getBasePtr(x, y));
+		uint16 *scr_buf = reinterpret_cast<uint16 *>(_screenBuf->getBasePtr(x, y));
 
 		const char *rle_header = p->header_ptr(py + i);
 		const uint32 *rle_data = p->data_ptr(py + i);
@@ -161,7 +155,7 @@ void grDispatcher::putSpr_rle(int x, int y, int sx, int sy, const class RLEBuffe
 }
 
 void grDispatcher::putSpr_rle(int x, int y, int sx, int sy, const class RLEBuffer *p, int mode, float scale, bool alpha_flag) {
-	debugC(2, kDebugGraphics, "grDispatcher::putSpr_rle(%d, %d, %d, %d, scale=%f)", x, y, sx, sy, scale);
+	debugC(4, kDebugGraphics, "grDispatcher::putSpr_rle([%d, %d], [%d, %d], mode: %d, scale: %f, alpha: %d", x, y, sx, sy, mode, scale, alpha_flag);
 
 	int sx_dest = round(float(sx) * scale);
 	int sy_dest = round(float(sy) * scale);
@@ -241,7 +235,7 @@ void grDispatcher::putSpr_rle(int x, int y, int sx, int sy, const class RLEBuffe
 }
 
 void grDispatcher::putSprMask_rle(int x, int y, int sx, int sy, const RLEBuffer *p, uint32 mask_color, int mask_alpha, int mode, bool alpha_flag) {
-	debugC(2, kDebugGraphics, "grDispatcher::putSprMask_rle(%d, %d, %d, %d)", x, y, sx, sy);
+	debugC(4, kDebugGraphics, "grDispatcher::putSprMask_rle([%d, %d], [%d, %d], ...)", x, y, sx, sy);
 
 	int px = 0;
 	int py = 0;
@@ -392,7 +386,7 @@ void grDispatcher::putSprMask_rle(int x, int y, int sx, int sy, const RLEBuffer 
 }
 
 void grDispatcher::putSprMask_rle(int x, int y, int sx, int sy, const RLEBuffer *p, uint32 mask_color, int mask_alpha, int mode, float scale, bool alpha_flag) {
-	debugC(2, kDebugGraphics, "grDispatcher::putSprMask_rle(%d, %d, %d, %d, scale=%f)", x, y, sx, sy, scale);
+	debugC(4, kDebugGraphics, "grDispatcher::putSprMask_rle([%d, %d], [%d, %d], scale: %f, ...)", x, y, sx, sy, scale);
 
 	int sx_dest = round(float(sx) * scale);
 	int sy_dest = round(float(sy) * scale);
@@ -486,10 +480,12 @@ void grDispatcher::putSprMask_rle(int x, int y, int sx, int sy, const RLEBuffer 
 				fx += dx;
 			}
 		}
-		}
+	}
 }
 
 void grDispatcher::putSpr_rle_rot(const Vect2i &pos, const Vect2i &size, const RLEBuffer *data, bool has_alpha, int mode, float angle) {
+	debugC(4, kDebugGraphics, "grDispatcher::putSpr_rle_rot([%d, %d], [%d, %d], alpha: %d, mode: %d, angle: %f", pos.x, pos.y, size.x, size.y, has_alpha, mode, angle);
+
 	byte *buf = (byte *)temp_buffer(size.x * size.y * 4);
 
 	byte *buf_ptr = buf;
@@ -515,6 +511,8 @@ void grDispatcher::putSpr_rle_rot(const Vect2i &pos, const Vect2i &size, const R
 }
 
 void grDispatcher::putSpr_rle_rot(const Vect2i &pos, const Vect2i &size, const RLEBuffer *data, bool has_alpha, int mode, float angle, const Vect2f &scale) {
+	debugC(4, kDebugGraphics, "grDispatcher::putSpr_rle_rot([%d, %d], [%d, %d], alpha: %d, mode: %d, angle: %f, scale: [%f, %f]", pos.x, pos.y, size.x, size.y, has_alpha, mode, angle, scale.x, scale.y);
+
 	byte *buf = (byte *)temp_buffer(size.x * size.y * 4);
 
 	byte *buf_ptr = buf;
@@ -629,8 +627,8 @@ void grDispatcher::drawSprContour(int x, int y, int sx, int sy, const class RLEB
 
 	warning("STUB: grDispatcher::drawSprContour");
 	for (int i = 0; i < psy; i++) {
-		uint16 *scr_buf = reinterpret_cast<uint16 *>(_screenBuf->getBasePtr(x, y));
-		uint16 *scr_buf_prev = (i) ? reinterpret_cast<uint16 *>(_screenBuf + _yTable[y - dy] + x) : scr_buf;
+		uint16 *scr_buf = (uint16 *)_screenBuf->getBasePtr(x, y);
+		uint16 *scr_buf_prev = (i) ? (uint16 *)_screenBuf->getBasePtr(x, y - dy) : scr_buf;
 		p->decode_line(py + i, i & 1);
 
 		const uint16 *data_ptr = (i & 1) ? data1 + px : data0 + px;
@@ -686,7 +684,7 @@ void grDispatcher::drawSprContour(int x, int y, int sx, int sy, const class RLEB
 
 		y += dy;
 	}
-	uint16 *scr_buf_prev = reinterpret_cast<uint16 *>(_screenBuf + _yTable[y - dy] + x);
+	uint16 *scr_buf_prev = (uint16 *)_screenBuf->getBasePtr(x, y - dy);
 	const uint16 *data_ptr_prev = (psy & 1) ? data0 + px : data1 + px;
 	if (!alpha_flag) {
 		for (int j = 0; j < psx; j += 2) {

@@ -316,8 +316,8 @@ struct AgiDir {
 
 	// 0 = not in mem, can be freed
 	// 1 = in mem, can be released
-	// 2 = not in mem, cant be released
-	// 3 = in mem, cant be released
+	// 2 = not in mem, can't be released
+	// 3 = in mem, can't be released
 	// 0x40 = was compressed
 	uint8 flags;
 
@@ -358,6 +358,8 @@ enum CycleInnerLoopType {
 };
 
 typedef Common::Array<int16> SavedGameSlotIdArray;
+
+struct AgiAppleIIgsDelayOverwriteGameEntry;
 
 /**
  * AGI game structure.
@@ -450,12 +452,16 @@ struct AgiGame {
 
 	bool automaticRestoreGame;
 
+	byte speedLevel; /**< Current game speed for certain platforms/versions */
+
 	uint16 appleIIgsSpeedControllerSlot;
-	int appleIIgsSpeedLevel;
 
 	const char *getString(int number);
 	void setString(int number, const char *str);
-	void setAppleIIgsSpeedLevel(int appleIIgsSpeedLevel);
+	/**
+	 * Sets the speed level and displays a message box.
+	 */
+	void setSpeedLevel(byte s);
 
 	AgiGame() {
 		_vm = nullptr;
@@ -526,8 +532,9 @@ struct AgiGame {
 
 		automaticRestoreGame = false;
 
+		speedLevel = 2; // normal speed
+
 		appleIIgsSpeedControllerSlot = 0xffff;	// we didn't add yet speed menu
-		appleIIgsSpeedLevel = 2;  // normal speed
 	}
 };
 
@@ -759,6 +766,8 @@ public:
 	bool getFlag(int16 flagNr);
 	void setFlag(int16 flagNr, bool newState);
 	void flipFlag(int16 flagNr);
+	/** Sets a flag in AGIv2+, sets a variable in AGIv1 */
+	void setFlagOrVar(int16 flagNr, bool newState);
 
 	const AGIGameDescription *_gameDescription;
 
@@ -931,6 +940,9 @@ public:
 
 	const Common::String getTargetName() const { return _targetName; }
 
+private:
+	byte getAppleIIgsTimeDelay(const AgiAppleIIgsDelayOverwriteGameEntry *appleIIgsDelayOverwrite, byte &newTimeDelay) const;
+
 	// Objects
 public:
 	int loadObjects(const char *fname);
@@ -1076,6 +1088,10 @@ private:
 
 public:
 	const AgiOpCodeEntry *getOpCodesTable() { return _opCodes; }
+
+private:
+	void goldRushClockTimeWorkaround_OnReadVar();
+	void goldRushClockTimeWorkaround_OnWriteVar(byte oldValue);
 };
 
 } // End of namespace Agi
