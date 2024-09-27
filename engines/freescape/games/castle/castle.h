@@ -61,6 +61,7 @@ public:
 	void updateTimeVariables() override;
 
 	bool checkIfGameEnded() override;
+	void drawSensorShoot(Sensor *sensor) override;
 
 	void executePrint(FCLInstruction &instruction) override;
 	void executeMakeInvisible(FCLInstruction &instruction) override;
@@ -105,7 +106,7 @@ public:
 	Graphics::ManagedSurface *_endGameThroneFrame;
 	Graphics::ManagedSurface *_endGameBackgroundFrame;
 
-	int _numberKeys;
+	Common::Array<int> _keysCollected;
 	bool _useRockTravel;
 	int _spiritsDestroyed;
 	int _spiritsMeter;

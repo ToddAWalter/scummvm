@@ -49,6 +49,7 @@
 // shveik
 #include "qdengine/minigames/inv_popup.h"
 #include "qdengine/minigames/shveik_shkatulka.h"
+#include "qdengine/minigames/shveik_portret.h"
 
 
 namespace QDEngine {
@@ -316,7 +317,9 @@ bool qdMiniGame::load_interface() {
 		} else if (_dll_name == "DLL\\ShveikShkatulka.dll") {
 			_interface = new qdShveikShkatulkaMiniGame();
 			return true;
-		// ShveikPortret.dll
+		} else if (_dll_name == "DLL\\ShveikPortret.dll") {
+			_interface = new qdShveikPortretMiniGame();
+			return true;
 
 		// klepa
 		// Karaoke.dll

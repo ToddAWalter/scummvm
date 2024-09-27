@@ -29,12 +29,64 @@ namespace Riddle {
 namespace Rooms {
 
 class Room608 : public Room {
+private:
+	int _rp01 = 0;
+	int _rp09 = 0;
+	int _ripHandChin = 0;
+	int _ripLowReach = 0;
+	int _ripLowReach2 = 0;
+	int _ripTalker = 0;
+	int _tt01 = 0;
+	int _tt02 = 0;
+	int _tt03 = 0;
+	int _tt05 = 0;
+	int _old01 = 0;
+	int _old02 = 0;
+	int _old05 = 0;
+	int _old08 = 0;
+	int _old05a = 0;
+	int _old05b = 0;
+	int _old05c = 0;
+	int _old05d = 0;
+	int _old05f = 0;
+	int _all5a = 0;
+	int _loop0 = 0;
+	int _loop1 = 0;
+	int _horn = 0;
+	machine *_ripley = nullptr;
+	machine *_shadow = nullptr;
+	machine *_shadow5 = nullptr;
+	machine *_tt = nullptr;
+	machine *_ol = nullptr;
+	machine *_ol2 = nullptr;
+	machine *_stump = nullptr;
+	machine *_lighter = nullptr;
+	machine *_pole = nullptr;
+	machine *_puffin = nullptr;
+	machine *_end1 = nullptr;
+	machine *_end2 = nullptr;
+	int _val1 = 0;
+	int _val2 = 0;
+	int _val3 = 0;
+	int _val4 = 0;
+	int _val5 = 0;
+
+	void conv608a();
+	bool takeStump1();
+	bool takePuffin();
+	bool stumpHole();
+	bool takeStump2();
+	bool takeLighter();
+	bool hornCordWater();
+
 public:
 	Room608() : Room() {}
 	~Room608() override {}
 
 	void init() override;
 	void daemon() override;
+	void pre_parser() override;
+	void parser() override;
 };
 
 } // namespace Rooms
