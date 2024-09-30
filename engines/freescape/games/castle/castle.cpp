@@ -22,6 +22,7 @@
 #include "common/file.h"
 #include "common/memstream.h"
 #include "common/config-manager.h"
+#include "common/random.h"
 
 #include "backends/keymapper/action.h"
 #include "backends/keymapper/keymap.h"
@@ -356,6 +357,8 @@ void CastleEngine::initGameState() {
 	_exploredAreas[_startArea] = true;
 	if (_useRockTravel) // Enable cheat
 		setGameBit(k8bitGameBitTravelRock);
+
+	_gfx->_shakeOffset = Common::Point();
 }
 
 bool CastleEngine::checkIfGameEnded() {
@@ -608,6 +611,7 @@ void CastleEngine::executeDestroy(FCLInstruction &instruction) {
 		_spiritsDestroyed++;
 		_shootingFrames = 0;
 		_gfx->_inkColor = _currentArea->_inkColor;
+		_gfx->_shakeOffset = Common::Point();
 	}
 
 	if (obj->isDestroyed())
@@ -649,26 +653,30 @@ void CastleEngine::loadAssets() {
 
 void CastleEngine::loadRiddles(Common::SeekableReadStream *file, int offset, int number) {
 	file->seek(offset);
+
+	Common::Array<Common::Point> origins;
+	for (int i = 0; i < number; i++) {
+		Common::Point origin;
+		origin.x = file->readByte();
+		origin.y = file->readByte();
+		debugC(1, kFreescapeDebugParser, "riddle %d origin: %d, %d", i, origin.x, origin.y);
+		origins.push_back(origin);
+	}
+
 	debugC(1, kFreescapeDebugParser, "Riddle table:");
-	int maxLineSize = isSpectrum() ? 20 : 23;
+	int maxLineSize = isSpectrum() ? 20 : 24;
 
 	for (int i = 0; i < number; i++) {
-		int header = file->readByte();
-		debugC(1, kFreescapeDebugParser, "riddle %d header: %x", i, header);
-		int numberLines = 6;
-		if (header == 0x18)
-			numberLines = 8;
-		else if (header == 0x15 || header == 0x1a || header == 0x1b || header == 0x1c || header == 0x1e)
-			numberLines = 7;
-		else if (header == 0x1d)
-			numberLines = 6;
-		else if (header == 0x27)
-			numberLines = 5;
+		Riddle riddle;
+		riddle._origin = origins[i];
+		int numberLines = file->readByte();
+		debugC(1, kFreescapeDebugParser, "riddle %d number of lines: %d", i, numberLines);
 
-		if (isSpectrum())
-			--numberLines;
-
+		int8 x, y;
 		for (int j = 0; j < numberLines; j++) {
+
+			x = file->readByte();
+			y = file->readByte();
 			int size = file->readByte();
 			debugC(1, kFreescapeDebugParser, "size: %d (max %d?)", size, maxLineSize);
 
@@ -678,63 +686,31 @@ void CastleEngine::loadRiddles(Common::SeekableReadStream *file, int offset, int
 				while (size-- > 0)
 					message = message + "*";
 
-				//debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-				debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-				debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-				debugC(1, kFreescapeDebugParser, "'%s'", message.c_str());
-				_riddleList.push_back(message);
+				debugC(1, kFreescapeDebugParser, "'%s' with offset: %d, %d", message.c_str(), x, y);
+				riddle._lines.push_back(RiddleText(x, y, message));
 				continue;
 			} else if (size > maxLineSize) {
-				for (int k = j; k < numberLines; k++)
-					_riddleList.push_back(message);
-
-				if (isSpectrum()) {
-					debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-					debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-				}
-
-				debugC(1, kFreescapeDebugParser, "'%s'", message.c_str());
-				break;
+				assert(0);
 			} else if (size == 0) {
-				size = 20;
+				assert(0);
 			}
 
-			int padSpaces = (22 - size) / 2;
 			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-
-			int k = padSpaces;
-
-			if (size > 0) {
-				while (k-- > 0)
-					message = message + " ";
-
-				while (size-- > 0) {
-					byte c = file->readByte();
-					if (c != 0)
-						message = message + c;
-				}
-
-				k = padSpaces;
-				while (k-- > 0)
-					message = message + " ";
+			while (size-- > 0) {
+				byte c = file->readByte();
+				if (c != 0)
+					message = message + c;
 			}
 
-
-			if (isAmiga() || isAtariST())
+			/*if (isAmiga() || isAtariST())
 				debug("extra byte: %x", file->readByte());
 			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-			debugC(1, kFreescapeDebugParser, "'%s'", message.c_str());
+			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());*/
+			debugC(1, kFreescapeDebugParser, "'%s' with offset: %d, %d", message.c_str(), x, y);
 
-			_riddleList.push_back(message);
+			riddle._lines.push_back(RiddleText(x, y, message));
 		}
-
-		if (numberLines < 7)
-			for (int j = numberLines; j < 7; j++) {
-				_riddleList.push_back("");
-				debugC(1, kFreescapeDebugParser, "Padded with ''");
-			}
-
+		_riddleList.push_back(riddle);
 	}
 	debugC(1, kFreescapeDebugParser, "End of riddles at %" PRIx64, file->pos());
 }
@@ -808,40 +784,40 @@ void CastleEngine::drawFullscreenRiddleAndWait(uint16 riddle) {
 }
 
 void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics::Surface *surface) {
-
-	Common::StringArray riddleMessages;
-	for (int i = 7 * riddle; i < 7 * (riddle + 1); i++) {
-		riddleMessages.push_back(_riddleList[i]);
-	}
-	uint32 frameColor = 0;
-	if (isDOS()) {
-		int w = 34;
-		surface->copyRectToSurface((const Graphics::Surface)*_riddleTopFrame, 40, w, Common::Rect(0, 0, _riddleTopFrame->w, _riddleTopFrame->h));
-		for (w += _riddleTopFrame->h; w < 136;) {
-			surface->copyRectToSurface((const Graphics::Surface)*_riddleBackgroundFrame, 40, w, Common::Rect(0, 0, _riddleBackgroundFrame->w, _riddleBackgroundFrame->h));
-			w += _riddleBackgroundFrame->h;
-		}
-		surface->copyRectToSurface((const Graphics::Surface)*_riddleBottomFrame, 40, 136, Common::Rect(0, 0, _riddleBottomFrame->w, _riddleBottomFrame->h - 1));
-	} else {
-		frameColor = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0xD8, 0xD8, 0xD8);
-		surface->fillRect(_viewArea, frameColor);
-	}
-
 	int x = 0;
 	int y = 0;
-	int numberOfLines = 7;
+	int maxWidth = 136;
 
 	if (isDOS()) {
-		x = 60;
-		y = 62;
-	} else if (isSpectrum() || isCPC()) {
-		x = 60;
-		y = 40;
+		x = 40;
+		y = 34;
+	} else if (isSpectrum()) {
+		x = 64;
+		y = 37;
+	}
+	surface->copyRectToSurface((const Graphics::Surface)*_riddleTopFrame, x, y, Common::Rect(0, 0, _riddleTopFrame->w, _riddleTopFrame->h));
+	for (y += _riddleTopFrame->h; y < maxWidth;) {
+		surface->copyRectToSurface((const Graphics::Surface)*_riddleBackgroundFrame, x, y, Common::Rect(0, 0, _riddleBackgroundFrame->w, _riddleBackgroundFrame->h));
+		y += _riddleBackgroundFrame->h;
+	}
+	surface->copyRectToSurface((const Graphics::Surface)*_riddleBottomFrame, x, maxWidth, Common::Rect(0, 0, _riddleBottomFrame->w, _riddleBottomFrame->h - 1));
+
+	Common::Array<RiddleText> riddleMessages = _riddleList[riddle]._lines;
+	x = _riddleList[riddle]._origin.x;
+	y = _riddleList[riddle]._origin.y;
+
+	if (isDOS()) {
+		x = 38;
+		y = 33;
+	} else if (isSpectrum()) {
+		x = 64;
+		y = 36;
 	}
 
-	for (int i = 0; i < numberOfLines; i++) {
-		drawStringInSurface(riddleMessages[i], x, y, front, back, surface);
-		y = y + 10;
+	for (int i = 0; i < int(riddleMessages.size()); i++) {
+		x = x + riddleMessages[i]._dx;
+		y = y + riddleMessages[i]._dy;
+		drawStringInSurface(riddleMessages[i]._text, x, y, front, back, surface);
 	}
 	drawFullscreenSurface(surface);
 }
@@ -1012,6 +988,12 @@ void CastleEngine::checkSensors() {
 void CastleEngine::drawSensorShoot(Sensor *sensor) {
 	if (isSpectrum()) {
 		_gfx->_inkColor = 1 + (_gfx->_inkColor + 1) % 7;
+	} else if (isDOS()) {
+		float shakeIntensity = 10;
+		Common::Point shakeOffset;
+		shakeOffset.x = (_rnd->getRandomNumber(10) / 10.0 - 0.5f) * shakeIntensity;
+		shakeOffset.y = (_rnd->getRandomNumber(10) / 10.0 - 0.5f) * shakeIntensity;
+		_gfx->_shakeOffset = shakeOffset;
 	} else {
 		/* TODO */
 	}
