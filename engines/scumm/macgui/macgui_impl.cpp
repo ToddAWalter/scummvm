@@ -43,6 +43,7 @@ namespace Scumm {
 
 MacGuiImpl::MacGuiImpl(ScummEngine *vm, const Common::Path &resourceFile) : _vm(vm), _system(_vm->_system), _surface(_vm->_macScreen), _resourceFile(resourceFile) {
 	_fonts.clear();
+	_strsStrings.clear();
 
 	// kMacRomanConversionTable is a conversion table from Mac Roman
 	// 128-255 to unicode. What we need, however, is a mapping from
@@ -62,6 +63,28 @@ MacGuiImpl::MacGuiImpl(ScummEngine *vm, const Common::Path &resourceFile) : _vm(
 MacGuiImpl::~MacGuiImpl() {
 	delete _bannerWindow;
 	delete _windowManager;
+}
+
+Common::String MacGuiImpl::readCString(uint8 *&data) {
+	Common::String result(reinterpret_cast<const char *>(data));
+	data += result.size() + 1;
+
+	while (data[0] == '\0') {
+		data++;
+	}
+
+	return result;
+}
+
+Common::String MacGuiImpl::readPascalString(uint8 *&data) {
+	Common::String result(reinterpret_cast<const char *>(&data[1]), (uint32)data[0]);
+	data += (uint32)data[0] + 1;
+
+	while (data[0] == '\0') {
+		data++;
+	}
+
+	return result;
 }
 
 int MacGuiImpl::toMacRoman(int unicode) const {
@@ -173,11 +196,19 @@ void MacGuiImpl::initialize() {
 		// Add the Apple menu
 
 		const Graphics::MacMenuData menuSubItems[] = {
-			{ 0, NULL, 0, 0, false }
+			{ 0, nullptr, 0, 0, false }
 		};
 
-		// TODO: This can be found in the STRS resource
-		Common::String aboutMenuDef = "About " + name() + "...<B;(-";
+		Common::String aboutMenuDef;
+
+		switch (_vm->_game.id) {
+		case GID_INDY3:
+		case GID_LOOM:
+			aboutMenuDef = _strsStrings[11].c_str();
+			break;
+		default:
+			aboutMenuDef = "About " + name() + "...<B;(-";
+		}
 
 		if (_vm->_game.id == GID_LOOM) {
 			aboutMenuDef += ";";
@@ -565,6 +596,21 @@ MacGuiImpl::MacDialogWindow *MacGuiImpl::createDialog(int dialogId) {
 	Common::MacResManager resource;
 	Common::SeekableReadStream *res;
 
+	Common::String saveGameFileAsResStr, gameFileResStr;
+	switch (_vm->_game.id) {
+	case GID_INDY3:
+		saveGameFileAsResStr = _strsStrings[18].c_str();
+		gameFileResStr = _strsStrings[19].c_str();
+		break;
+	case GID_LOOM:
+		saveGameFileAsResStr = _strsStrings[17].c_str();
+		gameFileResStr = _strsStrings[18].c_str();
+		break;
+	default:
+		saveGameFileAsResStr = "Save Game File as...";
+		gameFileResStr = "Game file";
+	}
+
 	resource.open(_resourceFile);
 
 	Common::Rect bounds;
@@ -629,8 +675,11 @@ MacGuiImpl::MacDialogWindow *MacGuiImpl::createDialog(int dialogId) {
 
 				// Skip drive label box and listbox
 				bool doNotDraw = (isOpenDialog && (i == 6 || i == 7)) || ((isOpenDialog || isSaveDialog) && i == 3);
-				if (!doNotDraw)
+				if (!doNotDraw) {
 					window->innerSurface()->frameRect(r, kBlack);
+				} else if (_vm->_game.id == GID_INDY3 && i == 3) {
+					drawFakeDriveLabel(window, Common::Rect(r.left + 9, r.top, r.right, r.bottom), _hardDriveIcon, "ScummVM", Graphics::kTextAlignLeft);
+				}
 
 				break;
 			}
@@ -653,7 +702,7 @@ MacGuiImpl::MacDialogWindow *MacGuiImpl::createDialog(int dialogId) {
 				// Static text
 				str = getDialogString(res, len);
 				if (isSaveDialog && i == 2)
-					str = "Save Game File as...";
+					str = saveGameFileAsResStr;
 
 				window->addStaticText(r, str, enabled);
 				break;
@@ -665,7 +714,7 @@ MacGuiImpl::MacDialogWindow *MacGuiImpl::createDialog(int dialogId) {
 				// Adjust for pixel accuracy...
 				r.left -= 1;
 
-				MacGuiImpl::MacEditText *editText = window->addEditText(r, "Game file", enabled);
+				MacGuiImpl::MacEditText *editText = window->addEditText(r, gameFileResStr, enabled);
 				editText->selectAll();
 
 				window->innerSurface()->frameRect(Common::Rect(r.left - 2, r.top - 3, r.right + 3, r.bottom + 3), kBlack);
@@ -760,12 +809,70 @@ bool MacGuiImpl::runOkCancelDialog(Common::String text) {
 	return ret;
 }
 
+void MacGuiImpl::drawFakePathList(MacDialogWindow *window, Common::Rect r, byte *icon, const char *text, Graphics::TextAlign alignment) {
+	// Draw the text...
+	window->addStaticText(Common::Rect(r.left + 22, r.top + 2, r.right - 21, r.bottom - 1), text, true, alignment);
+
+	// Draw the icon...
+	Graphics::Surface *iconSurf = new Graphics::Surface();
+	iconSurf->create(16, 16, Graphics::PixelFormat::createFormatCLUT8());
+	iconSurf->setPixels(icon);
+	window->drawSprite(iconSurf, r.left + 4, r.top + 1);
+	delete iconSurf;
+
+	// Draw the arrow...
+	Graphics::Surface *arrowSurf = new Graphics::Surface();
+	arrowSurf->create(16, 16, Graphics::PixelFormat::createFormatCLUT8());
+	arrowSurf->setPixels(_arrowDownIcon);
+	window->drawSprite(arrowSurf, r.right - 19, r.top + 1);
+	delete arrowSurf;
+
+	// Draw the black frame...
+	window->innerSurface()->frameRect(r, kBlack);
+
+	// Draw the shadows...
+	window->innerSurface()->hLine(r.left + 3, r.bottom, r.right, kBlack);
+	window->innerSurface()->vLine(r.right, r.top + 3, r.bottom, kBlack);
+}
+
+void MacGuiImpl::drawFakeDriveLabel(MacDialogWindow *window, Common::Rect r, byte *icon, const char *text, Graphics::TextAlign alignment) {
+	// Draw the text...
+	window->addStaticText(Common::Rect(r.left + 25, r.top, r.right, r.bottom), text, true, alignment);
+
+	// Draw the icon...
+	Graphics::Surface *surf = new Graphics::Surface();
+	surf->create(16, 16, Graphics::PixelFormat::createFormatCLUT8());
+	surf->setPixels(icon);
+	window->drawSprite(surf, r.left + 6, r.top);
+	delete surf;
+}
+
 bool MacGuiImpl::runQuitDialog() {
-	return runOkCancelDialog("Are you sure you want to quit?");
+	Common::String quitString;
+	switch (_vm->_game.id) {
+	case GID_INDY3:
+	case GID_LOOM:
+		quitString = _strsStrings[15].c_str();
+		break;
+	default:
+		quitString = "Are you sure you want to quit?";
+	}
+
+	return runOkCancelDialog(quitString);
 }
 
 bool MacGuiImpl::runRestartDialog() {
-	return runOkCancelDialog("Are you sure you want to restart this game from the beginning?");
+	Common::String restartString;
+	switch (_vm->_game.id) {
+	case GID_INDY3:
+	case GID_LOOM:
+		restartString = _strsStrings[14].c_str();
+		break;
+	default:
+		restartString = "Are you sure you want to restart this game from the beginning?";
+	}
+
+	return runOkCancelDialog(restartString);
 }
 
 void MacGuiImpl::drawBanner(char *message) {

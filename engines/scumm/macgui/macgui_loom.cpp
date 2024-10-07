@@ -49,6 +49,7 @@ MacLoomGui::MacLoomGui(ScummEngine *vm, const Common::Path &resourceFile) : MacG
 	// a large screen, and it's not saved.
 
 	_practiceBoxPos = Common::Point(215, 376 + 2 * _vm->_screenDrawOffset);
+	readStrings();
 }
 
 MacLoomGui::~MacLoomGui() {
@@ -56,6 +57,110 @@ MacLoomGui::~MacLoomGui() {
 		_practiceBox->free();
 		delete _practiceBox;
 	}
+}
+
+void MacLoomGui::readStrings() {
+	Common::MacResManager resource;
+	resource.open(_resourceFile);
+	uint32 strsLen = resource.getResLength(MKTAG('S', 'T', 'R', 'S'), 0);
+	Common::SeekableReadStream *strsStream = resource.getResource(MKTAG('S', 'T', 'R', 'S'), 0);
+	uint8 *strsBlock = (uint8 *)malloc(strsLen);
+	strsStream->read(strsBlock, strsLen);
+
+	uint8 *strsData = strsBlock;
+
+	// Most of these are debug strings. We parse the entire STRS block anyway,
+	// for any future need.
+
+	// Debug strings
+	for (int i = 0; i < 6; i++) {
+		_strsStrings.emplace_back(readCString(strsData));
+	}
+
+	_strsStrings.emplace_back(readPascalString(strsData));
+	_strsStrings.emplace_back(readPascalString(strsData));
+
+	_strsStrings.emplace_back(readCString(strsData));
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// "\x14", "About Loom...<B;(-", "MacScumm", "MacScumm"
+	for (int i = 0; i < 4; i++) {
+		_strsStrings.emplace_back(readPascalString(strsData));
+	}
+
+	// "Are you sure you want to restart this game from the beginning?"
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// "Are you sure you want to quit?"
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// "Open Game File...", "Save Game File as..." "Game file"
+	for (int i = 0; i < 3; i++) {
+		_strsStrings.emplace_back(readPascalString(strsData));
+	}
+
+	// "This disk is full.  The game was not saved."
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// "An error occured while saving.  The game was not saved.  Please try saving the game to another disk."
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// "Select a color"
+	_strsStrings.emplace_back(readPascalString(strsData));
+
+	// Debug strings
+	for (int i = 0; i < 67; i++) {
+		_strsStrings.emplace_back(readCString(strsData));
+	}
+
+	// "About", "PRESENTS"
+	for (int i = 0; i < 2; i++) {
+		_strsStrings.emplace_back(readPascalString(strsData));
+	}
+
+	// "%s Interpreter version %c.%c.%c"
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// All the other "About" dialog strings
+	for (int i = 0; i < 30; i++) {
+		_strsStrings.emplace_back(readPascalString(strsData));
+	}
+
+	// "ERROR #%d"
+	_strsStrings.emplace_back(readCString(strsData));
+
+	// Other debug strings...
+	for (int i = 0; i < 4; i++) {
+		_strsStrings.emplace_back(readPascalString(strsData));
+	}
+
+	for (int i = 0; i < 3; i++) {
+		_strsStrings.emplace_back(readCString(strsData));
+	}
+
+	_strsStrings.emplace_back(readPascalString(strsData));
+	_strsStrings.emplace_back(readPascalString(strsData));
+
+	// "Copyright (c) 1989 Lucasfilm Ltd. All Rights Reserved.", "rb, "wb", "wb"
+	for (int i = 0; i < 4; i++) {
+		_strsStrings.emplace_back(readCString(strsData));
+	}
+
+	// Other debug strings...
+	_strsStrings.emplace_back(readPascalString(strsData));
+
+	_strsStrings.emplace_back(readCString(strsData));
+
+	for (int i = 0; i < 5; i++) {
+		_strsStrings.emplace_back(readPascalString(strsData));
+	}
+
+	for (int i = 0; i < 7; i++) {
+		_strsStrings.emplace_back(readCString(strsData));
+	}
+
+	free(strsBlock);
+	delete strsStream;
 }
 
 const Graphics::Font *MacLoomGui::getFontByScummId(int32 id) {
@@ -170,71 +275,71 @@ void MacLoomGui::runAboutDialog() {
 	Graphics::Surface *lucasFilm = loadPict(5000);
 	Graphics::Surface *loom = loadPict(5001);
 
-	// TODO: These strings are part of the STRS resource, but I don't know
-	// how to safely read them from there yet. So hard-coded it is for now.
+	const char *subVers = (const char *)_vm->getStringAddress(5);
+	Common::String version = Common::String::format(_strsStrings[91].c_str(), subVers, '5', '1', '6');
 
 	const TextLine page1[] = {
-		{ 0, 23, kStyleExtraBold, Graphics::kTextAlignCenter, "PRESENTS" },
+		{ 0, 23, kStyleExtraBold, Graphics::kTextAlignCenter, _strsStrings[90].c_str() }, // "PRESENTS"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page2[] = {
-		{ 1, 59, kStyleRegular, Graphics::kTextAlignCenter, "TM & \xA9 1990 LucasArts Entertainment Company.  All rights reserved." },
-		{ 0, 70, kStyleRegular, Graphics::kTextAlignCenter, "Release Version 1.2  25-JAN-91 Interpreter version 5.1.6" },
+		{ 1, 59, kStyleRegular, Graphics::kTextAlignCenter, _strsStrings[92].c_str() }, // "TM & \xA9 1990 LucasArts Entertainment Company.  All rights reserved."
+		{ 0, 70, kStyleRegular, Graphics::kTextAlignCenter, version.c_str() }, // "Release Version 1.2  25-JAN-91 Interpreter version 5.1.6"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page3[] = {
-		{ 1, 11, kStyleBold, Graphics::kTextAlignCenter, "Macintosh version by" },
-		{ 0, 25, kStyleHeader, Graphics::kTextAlignCenter, "Eric Johnston" },
-		{ 0, 49, kStyleBold, Graphics::kTextAlignCenter, "Macintosh scripting by" },
-		{ 1, 63, kStyleHeader, Graphics::kTextAlignCenter, "Ron Baldwin" },
+		{ 1, 11, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[93].c_str() }, // "Macintosh version by"
+		{ 0, 25, kStyleHeader, Graphics::kTextAlignCenter, _strsStrings[95].c_str() }, // "Eric Johnston"
+		{ 0, 49, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[94].c_str() }, // "Macintosh scripting by"
+		{ 1, 63, kStyleHeader, Graphics::kTextAlignCenter, _strsStrings[96].c_str() }, // "Ron Baldwin"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page4[] = {
-		{ 0, 26, kStyleBold, Graphics::kTextAlignCenter, "Original game created by" },
-		{ 1, 40, kStyleHeader, Graphics::kTextAlignCenter, "Brian Moriarty" },
+		{ 0, 26, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[97].c_str() }, // "Original game created by"
+		{ 1, 40, kStyleHeader, Graphics::kTextAlignCenter, _strsStrings[98].c_str() }, // "Brian Moriarty"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page5[] = {
-		{ 1, 11, kStyleBold, Graphics::kTextAlignCenter, "Produced by" },
-		{ 0, 25, kStyleHeader, Graphics::kTextAlignCenter, "Gregory D. Hammond" },
-		{ 0, 49, kStyleBold, Graphics::kTextAlignCenter, "Macintosh Version Produced by" },
-		{ 1, 63, kStyleHeader, Graphics::kTextAlignCenter, "David Fox" },
+		{ 1, 11, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[99].c_str() }, // "Produced by"
+		{ 0, 25, kStyleHeader, Graphics::kTextAlignCenter, _strsStrings[101].c_str() }, // "Gregory D. Hammond"
+		{ 0, 49, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[100].c_str() }, // "Macintosh Version Produced by"
+		{ 1, 63, kStyleHeader, Graphics::kTextAlignCenter, _strsStrings[102].c_str() }, // "David Fox"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page6[] = {
-		{ 1, 6, kStyleBold, Graphics::kTextAlignCenter, "SCUMM Story System" },
-		{ 1, 16, kStyleBold, Graphics::kTextAlignCenter, "created by" },
-		{ 97, 35, kStyleHeader, Graphics::kTextAlignLeft, "Ron Gilbert" },
-		{ 1, 51, kStyleBold, Graphics::kTextAlignCenter, "and" },
-		{ 122, 65, kStyleHeader, Graphics::kTextAlignLeft, "Aric Wilmunder" },
+		{ 1, 6, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[103].c_str() }, // "SCUMM Story System"
+		{ 1, 16, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[104].c_str() }, // "created by"
+		{ 97, 35, kStyleHeader, Graphics::kTextAlignLeft, _strsStrings[106].c_str() }, // "Ron Gilbert"
+		{ 1, 51, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[105].c_str() }, // "and"
+		{ 122, 65, kStyleHeader, Graphics::kTextAlignLeft, _strsStrings[107].c_str() }, // "Aric Wilmunder"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page7[] = {
-		{ 1, 16, kStyleBold, Graphics::kTextAlignCenter, "Stumped?  Loom hint books are available!" },
-		{ 76, 33, kStyleRegular, Graphics::kTextAlignLeft, "In the U.S. call" },
-		{ 150, 34, kStyleBold, Graphics::kTextAlignLeft, "1 (800) STAR-WARS" },
-		{ 150, 43, kStyleRegular, Graphics::kTextAlignLeft, "that\xD5s  1 (800) 782-7927" },
-		{ 80, 63, kStyleRegular, Graphics::kTextAlignLeft, "In Canada call" },
-		{ 150, 64, kStyleBold, Graphics::kTextAlignLeft, "1 (800) 828-7927" },
+		{ 1, 16, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[108].c_str() }, // "Stumped?  Loom hint books are available!"
+		{ 76, 33, kStyleRegular, Graphics::kTextAlignLeft, _strsStrings[111].c_str() }, // "In the U.S. call"
+		{ 150, 34, kStyleBold, Graphics::kTextAlignLeft, _strsStrings[109].c_str() }, // "1 (800) STAR-WARS"
+		{ 150, 43, kStyleRegular, Graphics::kTextAlignLeft, _strsStrings[113].c_str() }, // "that\xD5s  1 (800) 782-7927"
+		{ 80, 63, kStyleRegular, Graphics::kTextAlignLeft, _strsStrings[112].c_str() }, // "In Canada call"
+		{ 150, 64, kStyleBold, Graphics::kTextAlignLeft, _strsStrings[110].c_str() }, // "1 (800) 828-7927"
 		TEXT_END_MARKER
 	};
 
 	const TextLine page8[] = {
-		{ 1, 11, kStyleBold, Graphics::kTextAlignCenter, "Need a hint NOW?  Having problems?" },
-		{ 81, 25, kStyleRegular, Graphics::kTextAlignLeft, "For technical support call" },
-		{ 205, 26, kStyleBold, Graphics::kTextAlignLeft, "1 (415) 721-3333" },
-		{ 137, 35, kStyleRegular, Graphics::kTextAlignLeft, "For hints call" },
+		{ 1, 11, kStyleBold, Graphics::kTextAlignCenter, _strsStrings[114].c_str() }, // "Need a hint NOW?  Having problems?"
+		{ 81, 25, kStyleRegular, Graphics::kTextAlignLeft, _strsStrings[117].c_str() }, // "For technical support call"
+		{ 205, 26, kStyleBold, Graphics::kTextAlignLeft, _strsStrings[115].c_str() }, // "1 (415) 721-3333"
+		{ 137, 35, kStyleRegular, Graphics::kTextAlignLeft, _strsStrings[118].c_str() }, // "For hints call"
 
-		{ 205, 36, kStyleBold, Graphics::kTextAlignLeft, "1 (900) 740-JEDI" },
-		{ 1, 50, kStyleRegular, Graphics::kTextAlignCenter, "The charge for the hint line is 75\xA2 per minute." },
-		{ 1, 60, kStyleRegular, Graphics::kTextAlignCenter, "(You must have your parents\xD5 permission to" },
-		{ 1, 70, kStyleRegular, Graphics::kTextAlignCenter, "call this number if you are under 18.)" },
+		{ 205, 36, kStyleBold, Graphics::kTextAlignLeft, _strsStrings[116].c_str() }, // "1 (900) 740-JEDI"
+		{ 1, 50, kStyleRegular, Graphics::kTextAlignCenter, _strsStrings[119].c_str() }, // "The charge for the hint line is 75\xA2 per minute."
+		{ 1, 60, kStyleRegular, Graphics::kTextAlignCenter, _strsStrings[120].c_str() }, // "(You must have your parents\xD5 permission to"
+		{ 1, 70, kStyleRegular, Graphics::kTextAlignCenter, _strsStrings[121].c_str() }, // "call this number if you are under 18.)"
 		TEXT_END_MARKER
 	};
 
@@ -488,22 +593,26 @@ void MacLoomGui::runDraftsInventory() {
 // make something that just looks similar to one.
 
 bool MacLoomGui::runOpenDialog(int &saveSlotToHandle) {
-	Common::Rect bounds(88, 28, 448, 208);
+	Common::Rect bounds(88, 28, 448, 210);
 
 	MacDialogWindow *window = createWindow(bounds);
 
-	window->addButton(Common::Rect(254, 135, 334, 155), "Open", true);
-	window->addButton(Common::Rect(254, 104, 334, 124), "Cancel", true);
-	window->addButton(Common::Rect(254, 59, 334, 79), "Delete", true);
+	window->addButton(Common::Rect(254, 137, 334, 157), "Open", true);
+	window->addButton(Common::Rect(254, 106, 334, 126), "Cancel", true);
+	window->addButton(Common::Rect(254, 62, 334, 82), "Desktop", false);
+	window->addButton(Common::Rect(254, 34, 334, 54), "Eject", false);
 
-	window->drawDottedHLine(253, 91, 334);
+	window->drawDottedHLine(253, 93, 334);
 
 	bool availSlots[100];
 	int slotIds[100];
 	Common::StringArray savegameNames;
 	prepareSaveLoad(savegameNames, availSlots, slotIds, ARRAYSIZE(availSlots));
 
-	window->addListBox(Common::Rect(14, 13, 217, 159), savegameNames, true);
+	drawFakePathList(window, Common::Rect(14, 8, 232, 26), _folderIcon, "Loom", Graphics::kTextAlignLeft);
+	drawFakeDriveLabel(window, Common::Rect(242, 10, 340, 28), _hardDriveIcon, "ScummVM", Graphics::kTextAlignLeft);
+
+	window->addListBox(Common::Rect(14, 31, 232, 161), savegameNames, true);
 
 	window->setDefaultWidget(0);
 
@@ -524,11 +633,6 @@ bool MacLoomGui::runOpenDialog(int &saveSlotToHandle) {
 
 		if (clicked == 1)
 			break;
-
-		if (clicked == 2) {
-			if (runOkCancelDialog("Are you sure you want to delete the saved game?"))
-				runOkCancelDialog("Deleting savegames is currently unsupported in ScummVM.");
-		}
 	}
 
 	delete window;
@@ -540,14 +644,19 @@ bool MacLoomGui::runSaveDialog(int &saveSlotToHandle, Common::String &name) {
 
 	MacDialogWindow *window = createWindow(bounds);
 
-	window->addButton(Common::Rect(254, 159, 334, 179), "Save", true);
-	window->addButton(Common::Rect(254, 128, 334, 148), "Cancel", true);
-	window->addButton(Common::Rect(254, 83, 334, 103), "Delete", false);
+	window->addButton(Common::Rect(254, 163, 334, 183), "Save", true);
+	window->addButton(Common::Rect(254, 132, 334, 152), "Cancel", true);
+	window->addButton(Common::Rect(254, 90, 334, 110), "New", false);
+	window->addButton(Common::Rect(254, 62, 334, 82), "Desktop", false);
+	window->addButton(Common::Rect(254, 34, 334, 54), "Eject", false);
 
 	bool busySlots[100];
 	int slotIds[100];
 	Common::StringArray savegameNames;
 	prepareSaveLoad(savegameNames, busySlots, slotIds, ARRAYSIZE(busySlots));
+
+	Common::String saveGameFileAsResStr = _strsStrings[17].c_str();
+	Common::String gameFileResStr = _strsStrings[18].c_str();
 
 	int firstAvailableSlot = -1;
 	for (int i = 1; i < ARRAYSIZE(busySlots); i++) { // Skip the autosave slot
@@ -557,18 +666,21 @@ bool MacLoomGui::runSaveDialog(int &saveSlotToHandle, Common::String &name) {
 		}
 	}
 
-	window->addListBox(Common::Rect(14, 9, 217, 139), savegameNames, true, true);
+	drawFakePathList(window, Common::Rect(14, 8, 232, 26), _folderIcon, "Loom", Graphics::kTextAlignLeft);
+	drawFakeDriveLabel(window, Common::Rect(242, 10, 340, 28), _hardDriveIcon, "ScummVM", Graphics::kTextAlignLeft);
 
-	MacGuiImpl::MacEditText *editText = window->addEditText(Common::Rect(16, 164, 229, 180), "Game file", true);
+	window->addListBox(Common::Rect(14, 31, 232, 129), savegameNames, true, true);
+
+	MacGuiImpl::MacEditText *editText = window->addEditText(Common::Rect(16, 159, 229, 175), gameFileResStr, true);
 
 	Graphics::Surface *s = window->innerSurface();
 	const Graphics::Font *font = getFont(kSystemFont);
 
-	s->frameRect(Common::Rect(14, 161, 232, 183), kBlack);
+	s->frameRect(Common::Rect(14, 156, 232, 178), kBlack);
 
-	window->drawDottedHLine(253, 115, 334);
+	window->drawDottedHLine(253, 121, 334);
 
-	font->drawString(s, "Save Game File as...", 14, 143, 218, kBlack, Graphics::kTextAlignLeft, 4);
+	font->drawString(s, saveGameFileAsResStr, 14, 138, 218, kBlack, Graphics::kTextAlignLeft, 4);
 
 	window->setDefaultWidget(0);
 	editText->selectAll();
@@ -721,8 +833,6 @@ bool MacLoomGui::runOptionsDialog() {
 		_vm->_musicEngine->setQuality(musicQuality);
 		ConfMan.setInt("mac_snd_quality", musicQuality);
 
-		debug(6, "MacLoomGui::runOptionsDialog(): music quality: %d - unimplemented!", window->getWidgetValue(12));
-
 		_vm->syncSoundSettings();
 		ConfMan.flushToDisk();
 	}
@@ -782,8 +892,7 @@ void MacLoomGui::update(int delta) {
 				debug(1, "MacLoomGui: Creating practice mode box");
 
 				_practiceBox = new Graphics::Surface();
-				_practiceBox->create(w, h, Graphics::PixelFormat
-::createFormatCLUT8());
+				_practiceBox->create(w, h, Graphics::PixelFormat::createFormatCLUT8());
 
 				_practiceBox->fillRect(Common::Rect(w, h), kBlack);
 

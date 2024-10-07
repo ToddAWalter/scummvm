@@ -55,7 +55,7 @@ void MenuOptions::newGame() {
 		// intro screen 1 - twinsun
 		_engine->_screens->loadImage(TwineImage(Resources::HQR_RESS_FILE, 15, 16));
 
-		_engine->_text->_drawTextBoxBackground = false;
+		_engine->_text->_flagMessageShade = false;
 		_engine->_text->_renderTextTriangle = true;
 
 		_engine->_text->initDial(TextBankId::Inventory_Intro_and_Holomap);
@@ -90,7 +90,7 @@ void MenuOptions::newGame() {
 	}
 	_engine->_screens->clearScreen();
 
-	_engine->_text->_drawTextBoxBackground = true;
+	_engine->_text->_flagMessageShade = true;
 	_engine->_text->_renderTextTriangle = false;
 
 	// set main palette back
@@ -150,10 +150,10 @@ void MenuOptions::drawSelectableCharacter(int32 x, int32 y) {
 
 	const bool selected = _onScreenKeyboardX == x && _onScreenKeyboardY == y;
 	if (selected) {
-		_engine->_interface->drawFilledRect(rect, COLOR_91);
+		_engine->_interface->box(rect, COLOR_91);
 	} else {
 		_engine->blitWorkToFront(rect);
-		_engine->_interface->drawTransparentBox(rect, 4);
+		_engine->_interface->shadeBox(rect, 4);
 	}
 
 	_engine->_menu->drawRectBorders(rect);
@@ -211,9 +211,9 @@ void MenuOptions::drawInputText(int32 centerx, int32 top, int32 type, const char
 	Common::Rect rectBox(rect);
 	rectBox.grow(-1);
 	_engine->_menu->drawRectBorders(rect);
-	_engine->_interface->drawTransparentBox(rectBox, 3);
+	_engine->_interface->shadeBox(rectBox, 3);
 
-	_engine->_text->drawText(centerx - _engine->_text->getTextSize(text) / 2, top + 6, text);
+	_engine->_text->drawText(centerx - _engine->_text->sizeFont(text) / 2, top + 6, text);
 	_engine->copyBlockPhys(rect);
 }
 
@@ -243,7 +243,7 @@ bool MenuOptions::enterText(TextId textIdx, char *textTargetBuf, size_t bufSize)
 	_engine->_text->getMenuText(textIdx, buffer, sizeof(buffer));
 	_engine->_text->setFontColor(COLOR_WHITE);
 	const int halfScreenWidth = (_engine->width() / 2);
-	_engine->_text->drawText(halfScreenWidth - (_engine->_text->getTextSize(buffer) / 2), 20, buffer);
+	_engine->_text->drawText(halfScreenWidth - (_engine->_text->sizeFont(buffer) / 2), 20, buffer);
 	_engine->copyBlockPhys(0, 0, _engine->width() - 1, 99);
 
 	Common::fill(&_onScreenKeyboardDirty[0], &_onScreenKeyboardDirty[ARRAYSIZE(_onScreenKeyboardDirty)], 1);

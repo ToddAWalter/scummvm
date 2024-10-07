@@ -59,6 +59,9 @@ static const uint32 kPlasmaEffectFilesize = 262176;
 #define HEIGHT_STANDARD 50
 #define MENU_SPACE 6
 
+#define	SIZE_INV_OBJ_X	75
+#define	SIZE_INV_OBJ_Y	65
+
 namespace MenuButtonTypes {
 enum MenuButtonTypesEnum {
 	kMusicVolume = 1,
@@ -277,14 +280,14 @@ void Menu::processPlasmaEffect(const Common::Rect &rect, int32 color) {
 	_engine->_frontVideoBuffer.blitFrom(_engine->_imageBuffer, prect, rect);
 }
 
-void Menu::drawRectBorders(const Common::Rect &rect, int32 colorLeftTop, int32 colorRightBottom) {
-	_engine->_interface->drawLine(rect.left, rect.top, rect.right, rect.top, colorLeftTop);               // top line
-	_engine->_interface->drawLine(rect.left, rect.top, rect.left, rect.bottom, colorLeftTop);             // left line
-	_engine->_interface->drawLine(rect.right, rect.top + 1, rect.right, rect.bottom, colorRightBottom);   // right line
-	_engine->_interface->drawLine(rect.left + 1, rect.bottom, rect.right, rect.bottom, colorRightBottom); // bottom line
+void Menu::drawRectBorders(const Common::Rect &rect, int32 colorLeftTop, int32 colorRightBottom) { // DrawCadre
+	_engine->_interface->drawLine(rect.left, rect.top, rect.right, rect.top, colorLeftTop);                   // top line
+	_engine->_interface->drawLine(rect.left, rect.top + 1, rect.left, rect.bottom, colorLeftTop);             // left line
+	_engine->_interface->drawLine(rect.right, rect.top + 1, rect.right, rect.bottom, colorRightBottom);       // right line
+	_engine->_interface->drawLine(rect.left + 1, rect.bottom, rect.right - 1, rect.bottom, colorRightBottom); // bottom line
 }
 
-void Menu::drawRectBorders(int32 left, int32 top, int32 right, int32 bottom, int32 colorLeftTop, int32 colorRightBottom) {
+void Menu::drawRectBorders(int32 left, int32 top, int32 right, int32 bottom, int32 colorLeftTop, int32 colorRightBottom) { // DrawCadre
 	drawRectBorders(Common::Rect(left, top, right, bottom), colorLeftTop, colorLeftTop);
 }
 
@@ -319,7 +322,7 @@ void Menu::drawButtonGfx(const MenuSettings *menuSettings, const Common::Rect &r
 			if (!(_engine->getRandomNumber() % 5)) {
 				_plasmaEffectPtr[(_engine->getRandomNumber() % PLASMA_WIDTH * 10) + 20 * PLASMA_WIDTH] = 255;
 			}
-			_engine->_interface->drawFilledRect(Common::Rect(newWidth, rect.top, rect.right, rect.bottom), COLOR_SELECT_MENU);
+			_engine->_interface->box(Common::Rect(newWidth, rect.top, rect.right, rect.bottom), COLOR_SELECT_MENU);
 		} else {
 			processPlasmaEffect(rect, COLOR_64);
 			if (!(_engine->getRandomNumber() % 5)) {
@@ -328,14 +331,14 @@ void Menu::drawButtonGfx(const MenuSettings *menuSettings, const Common::Rect &r
 		}
 	} else {
 		_engine->blitWorkToFront(rect);
-		_engine->_interface->drawTransparentBox(rect, 4);
+		_engine->_interface->shadeBox(rect, 4);
 	}
 
 	drawRectBorders(rect);
 
 	_engine->_text->setFontColor(COLOR_WHITE);
-	_engine->_text->setFontParameters(2, 8);
-	const int32 textSize = _engine->_text->getTextSize(dialText);
+	_engine->_text->setFont(INTER_LEAVE, INTER_SPACE);
+	const int32 textSize = _engine->_text->sizeFont(dialText);
 	_engine->_text->drawText((_engine->width() / 2) - (textSize / 2), rect.top + 7, dialText);
 }
 
@@ -1005,7 +1008,8 @@ void Menu::drawHealthBar(int32 left, int32 right, int32 top, int32 barLeftPaddin
 	const int32 barLeft = left + barLeftPadding;
 	const int32 healthBarRight = _engine->_screens->lerp(barLeft, right, 50, _engine->_scene->_sceneHero->_lifePoint);
 	const int32 barBottom = top + barHeight;
-	_engine->_interface->drawFilledRect(Common::Rect(barLeft, top, healthBarRight, barBottom), COLOR_91);
+	_engine->_interface->box(Common::Rect(barLeft, top, healthBarRight, barBottom), COLOR_91);
+	_engine->_interface->box(Common::Rect(healthBarRight, top, left + 325, barBottom), COLOR_BLACK);
 	drawRectBorders(Common::Rect(barLeft, top, right, barBottom));
 }
 
@@ -1036,10 +1040,19 @@ void Menu::drawMagicPointsBar(int32 left, int32 right, int32 top, int32 barLeftP
 	}
 	const int32 barLeft = left + barLeftPadding;
 	const int32 barBottom = top + barHeight;
-	const int32 barRight = _engine->_screens->lerp(barLeft, right, 80, _engine->_gameState->_magicPoint);
+	// max magic level is 4
+	const int32 maxMagicPoints = 4 * 20;
+	const int32 barRight = _engine->_screens->lerp(barLeft, right, maxMagicPoints, _engine->_gameState->_magicPoint);
 	const Common::Rect pointsRect(barLeft, top, barRight, barBottom);
-	_engine->_interface->drawFilledRect(pointsRect, COLOR_75);
-	drawRectBorders(barLeft, top, barLeft + _engine->_gameState->_magicLevelIdx * 80, barBottom);
+	_engine->_interface->box(pointsRect, COLOR_75);
+
+	for (int32 l = 0; l < _engine->_gameState->_magicLevelIdx; l++) {
+		const int32 x1 = _engine->_screens->lerp(barLeft, right, 40, _engine->_gameState->_magicLevelIdx * 10);
+		_engine->_interface->drawLine(x1, top + barHeight, x1, top + 35 + 15 - 1, 0);
+	}
+
+	const int32 rectRight = _engine->_screens->lerp(barLeft, right, 40, _engine->_gameState->_magicLevelIdx * 10);
+	drawRectBorders(barLeft, top, rectRight, barBottom);
 }
 
 void Menu::drawSpriteAndString(int32 left, int32 top, const SpriteData &spriteData, const Common::String &str, int32 color) {
@@ -1065,7 +1078,7 @@ void Menu::drawInfoMenu(int16 left, int16 top, int16 width) {
 	drawRectBorders(rect);
 	Common::Rect filledRect(rect);
 	filledRect.grow(-1);
-	_engine->_interface->drawFilledRect(filledRect, COLOR_BLACK);
+	_engine->_interface->box(filledRect, COLOR_BLACK);
 
 	const int32 boxLeft = left + 9;
 	const int32 boxRight = left + 325;
@@ -1139,11 +1152,11 @@ void Menu::drawBehaviour(int32 left, int32 top, HeroBehaviourType behaviour, int
 		const int32 titleBoxTop = boxRect.bottom + titleOffset;
 		const int32 titleBoxBottom = titleBoxTop + titleHeight;
 
-		_engine->_interface->drawFilledRect(boxRect, COLOR_BRIGHT_BLUE2);
+		_engine->_interface->box(boxRect, COLOR_BRIGHT_BLUE2);
 
 		// behaviour menu title
 		const Common::Rect titleRect(titleBoxLeft, titleBoxTop, titleBoxRight, titleBoxBottom);
-		_engine->_interface->drawFilledRect(titleRect, COLOR_BLACK);
+		_engine->_interface->box(titleRect, COLOR_BLACK);
 		drawRectBorders(titleRect);
 
 		_engine->_text->setFontColor(COLOR_WHITE);
@@ -1151,9 +1164,9 @@ void Menu::drawBehaviour(int32 left, int32 top, HeroBehaviourType behaviour, int
 		char dialText[256];
 		_engine->_text->getMenuText(_engine->_actor->getTextIdForBehaviour(), dialText, sizeof(dialText));
 
-		_engine->_text->drawText(titleBoxCenter - _engine->_text->getTextSize(dialText) / 2, titleBoxTop + 1, dialText);
+		_engine->_text->drawText(titleBoxCenter - _engine->_text->sizeFont(dialText) / 2, titleBoxTop + 1, dialText);
 	} else {
-		_engine->_interface->drawFilledRect(boxRect, COLOR_BLACK);
+		_engine->_interface->box(boxRect, COLOR_BLACK);
 	}
 
 	_engine->_renderer->drawObj3D(boxRect, -600, angle, *_behaviourEntity, _moveMenu);
@@ -1178,7 +1191,7 @@ void Menu::drawBehaviourMenu(int32 left, int32 top, int32 angle) {
 
 	Common::Rect boxRect(titleRect);
 	boxRect.grow(-1);
-	_engine->_interface->drawTransparentBox(boxRect, 2);
+	_engine->_interface->shadeBox(boxRect, 2);
 
 	prepareAndDrawBehaviour(left, top, angle, HeroBehaviourType::kNormal);
 	prepareAndDrawBehaviour(left, top, angle, HeroBehaviourType::kAthletic);
@@ -1290,8 +1303,8 @@ void Menu::processBehaviourMenu(bool behaviourMenu) {
 }
 
 Common::Rect Menu::calcItemRect(int32 left, int32 top, int32 item, int32 *centerX, int32 *centerY) const {
-	const int32 itemWidth = 74;
-	const int32 itemHeight = 64;
+	const int32 itemWidth = SIZE_INV_OBJ_X;
+	const int32 itemHeight = SIZE_INV_OBJ_Y;
 	const int32 itemPadding = 11;
 	const int32 itemWidthHalf = itemWidth / 2;
 	const int32 itemHeightHalf = itemHeight / 2;
@@ -1311,7 +1324,7 @@ void Menu::drawOneInventory(int32 left, int32 top, int32 item) {
 	const Common::Rect rect = calcItemRect(left, top, item, &itemX, &itemY);
 	const int32 color = _inventorySelectedItem == item ? _inventorySelectedColor : COLOR_BLACK;
 
-	_engine->_interface->drawFilledRect(rect, color);
+	_engine->_interface->box(rect, color);
 
 	if (item < NUM_INVENTORY_ITEMS && _engine->_gameState->hasItem((InventoryItems)item) && (!_engine->_gameState->inventoryDisabled() || item == InventoryItems::kiCloverLeaf)) {
 		_itemAngle[item] += LBAAngles::ANGLE_2;
@@ -1329,8 +1342,10 @@ void Menu::drawOneInventory(int32 left, int32 top, int32 item) {
 }
 
 void Menu::drawListInventory(int32 left, int32 top) {
-	const Common::Rect rect(left, top, left + 605, top + 310);
-	_engine->_interface->drawTransparentBox(rect, 4);
+	constexpr int w = (SIZE_INV_OBJ_X + 10) * 7 + 10;
+	constexpr int h = (SIZE_INV_OBJ_Y + 10) * 4 + 10;
+	const Common::Rect rect(left, top, left + w, top + h);
+	_engine->_interface->shadeBox(rect, 4);
 	drawRectBorders(rect);
 	for (int32 item = 0; item < NUM_INVENTORY_ITEMS; item++) {
 		drawOneInventory(left, top, item);
@@ -1338,7 +1353,7 @@ void Menu::drawListInventory(int32 left, int32 top) {
 	_engine->_interface->unsetClip();
 }
 
-void Menu::processInventoryMenu() {
+void Menu::inventory() {
 	int32 tmpAlphaLight = _engine->_scene->_alphaLight;
 	int32 tmpBetaLight = _engine->_scene->_betaLight;
 
@@ -1355,15 +1370,15 @@ void Menu::processInventoryMenu() {
 	}
 
 	const int32 left = _engine->width() / 2 - 303;
-	const int32 top = _engine->height() / 2 - 210;
+	const int32 top = _engine->height() / 2 - 230;
 	drawListInventory(left, top);
 
 	_engine->_text->initDial(TextBankId::Inventory_Intro_and_Holomap);
 
 	_engine->_text->setFontCrossColor(COLOR_BRIGHT_BLUE);
-	_engine->_text->initDialogueBox();
+	_engine->_text->initDialWindow();
 
-	ProgressiveTextState textState = ProgressiveTextState::ContinueRunning;
+	ProgressiveTextState dialstate = ProgressiveTextState::ContinueRunning;
 	bool updateItemText = true;
 
 	ScopedCursor scopedCursor(_engine);
@@ -1423,30 +1438,28 @@ void Menu::processInventoryMenu() {
 		}
 
 		if (updateItemText) {
-			_engine->_text->initInventoryDialogueBox();
+			_engine->_text->secondInitDialWindow();
 			if (_inventorySelectedItem < NUM_INVENTORY_ITEMS && _engine->_gameState->hasItem((InventoryItems)_inventorySelectedItem) && !_engine->_gameState->inventoryDisabled()) {
 				_engine->_text->initInventoryText((InventoryItems)_inventorySelectedItem);
 			} else {
 				_engine->_text->initInventoryText(InventoryItems::MaxInventoryItems);
 			}
-			textState = ProgressiveTextState::ContinueRunning;
+			dialstate = ProgressiveTextState::End;
 			updateItemText = false;
 		}
 
-		if (textState == ProgressiveTextState::ContinueRunning) {
-			textState = _engine->_text->updateProgressiveText();
-		} else {
-			_engine->_text->fadeInRemainingChars();
+		if (dialstate != ProgressiveTextState::NextPage) {
+			dialstate = _engine->_text->nextDialChar();
 		}
 
 		if (_engine->_input->toggleActionIfActive(TwinEActionType::UINextPage)) {
 			// restart the item description to appear from the beginning
-			if (textState == ProgressiveTextState::End) {
+			if (dialstate == ProgressiveTextState::End) {
 				updateItemText = true;
 			}
-			if (textState == ProgressiveTextState::NextPage) {
-				_engine->_text->initInventoryDialogueBox();
-				textState = ProgressiveTextState::ContinueRunning;
+			if (dialstate == ProgressiveTextState::NextPage) {
+				_engine->_text->secondInitDialWindow();
+				dialstate = ProgressiveTextState::ContinueRunning;
 			}
 		}
 
@@ -1460,7 +1473,7 @@ void Menu::processInventoryMenu() {
 		}
 	}
 
-	_engine->_text->_hasValidTextHandle = false;
+	_engine->_text->closeDial();
 
 	_engine->_scene->_alphaLight = tmpAlphaLight;
 	_engine->_scene->_betaLight = tmpBetaLight;

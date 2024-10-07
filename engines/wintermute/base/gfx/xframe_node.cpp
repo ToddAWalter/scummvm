@@ -98,7 +98,7 @@ void FrameNode::setTransformation(int slot, Math::Vector3d pos, Math::Vector3d s
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool FrameNode::loadFromXData(const Common::String &filename, XModel *model, XFileData *xobj, Common::Array<MaterialReference> &materialReferences) {
+bool FrameNode::loadFromXData(const Common::String &filename, XModel *model, XFileData *xobj) {
 	_gameRef->miniUpdate();
 
 	bool res = true;
@@ -109,7 +109,7 @@ bool FrameNode::loadFromXData(const Common::String &filename, XModel *model, XFi
 
 	if (objectType == kXClassMesh) { // load a child mesh
 		XMesh *mesh = _gameRef->_renderer3D->createXMesh();
-		res = mesh->loadFromXData(filename, xobj, materialReferences);
+		res = mesh->loadFromXData(filename, xobj);
 		if (res) {
 			_meshes.add(mesh);
 			return true;
@@ -161,13 +161,13 @@ bool FrameNode::loadFromXData(const Common::String &filename, XModel *model, XFi
 
 		// Enumerate child objects.
 		res = false;
-		uint numChildren = 0;
+		uint32 numChildren = 0;
 		xobj->getChildren(numChildren);
 		for (uint32 i = 0; i < numChildren; i++) {
 			XFileData xchildData;
 			res = xobj->getChild(i, xchildData);
 			if (res)
-				res = childFrame->loadFromXData(filename, model, &xchildData, materialReferences);
+				res = childFrame->loadFromXData(filename, model, &xchildData);
 		}
 		if (res)
 			_frames.add(childFrame);
@@ -182,13 +182,6 @@ bool FrameNode::loadFromXData(const Common::String &filename, XModel *model, XFi
 			model->_ticksPerSecond = xobj->getXAnimTicksPerSecondObject()->_animTicksPerSecond;
 			return true;
 		}
-	} else if (objectType == kXClassMaterial) {
-		MaterialReference materialReference;
-		xobj->getName(materialReference._name);
-		materialReference._material = new Material(_gameRef);
-		materialReference._material->loadFromX(xobj, filename);
-		materialReferences.push_back(materialReference);
-		return true;
 	}
 
 	return true;
@@ -211,7 +204,7 @@ bool FrameNode::mergeFromXData(const Common::String &filename, XModel *model, XF
 		// Enumerate child objects.
 		res = false;
 
-		uint numChildren = 0;
+		uint32 numChildren = 0;
 		xobj->getChildren(numChildren);
 		for (uint32 i = 0; i < numChildren; i++) {
 			XFileData xchildData;

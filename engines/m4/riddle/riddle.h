@@ -46,6 +46,22 @@ private:
 	Rooms::Section7 _section7;
 	Rooms::Section8 _section8;
 	Rooms::Section9 _section9;
+	int _ripReadTelegram = 0;
+
+	/**
+	 * Combines the items in the player _verb and _noun,
+	 * removing them from the player's inventory and replacing
+	 * them with the new combined item.
+	 * @param newItem	New item to give to player
+	 */
+	void combineItems(const char *newItem);
+
+	/**
+	 * Splits apart a combined item
+	*/
+	void splitItems(const char *item1, const char *item2);
+
+	void showMessageLog(int trigger);
 
 protected:
 	/**
@@ -70,7 +86,6 @@ public:
 	void syncFlags(Common::Serializer &s) override;
 
 	void global_daemon() override;
-	void global_pre_parser() override;
 	void global_parser() override;
 };
 

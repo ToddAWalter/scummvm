@@ -26,7 +26,7 @@
 #include "common/util.h"
 #include "graphics/surface.h"
 #include "twine/audio/sound.h"
-#include "twine/debugger/debug_scene.h"
+#include "twine/debugger/debug_state.h"
 #include "twine/input.h"
 #include "twine/menu/interface.h"
 #include "twine/menu/menu.h"
@@ -394,7 +394,7 @@ void Redraw::processDrawListShadows(const DrawListStruct &drawCmd) {
 
 		addRedrawArea(_engine->_interface->_clip);
 
-		_engine->_debugScene->drawClip(renderRect);
+		_engine->_debugState->drawClip(renderRect);
 	}
 	_engine->_interface->unsetClip();
 }
@@ -438,7 +438,7 @@ void Redraw::processDrawListActors(const DrawListStruct &drawCmd, bool bgRedraw)
 			_engine->blitFrontToWork(_engine->_interface->_clip);
 		}
 
-		_engine->_debugScene->drawClip(_engine->_interface->_clip);
+		_engine->_debugState->drawClip(_engine->_interface->_clip);
 	}
 	_engine->_interface->unsetClip();
 }
@@ -499,7 +499,7 @@ void Redraw::processDrawListActorSprites(const DrawListStruct &drawCmd, bool bgR
 			_engine->blitFrontToWork(_engine->_interface->_clip);
 		}
 
-		_engine->_debugScene->drawClip(renderRect);
+		_engine->_debugState->drawClip(renderRect);
 		_engine->_interface->unsetClip();
 	}
 }
@@ -746,7 +746,7 @@ void Redraw::renderOverlays() {
 			char text[10];
 			snprintf(text, sizeof(text), "%d", overlay->num);
 
-			const int32 textLength = _engine->_text->getTextSize(text);
+			const int32 textLength = _engine->_text->sizeFont(text);
 			const int32 textHeight = 48;
 
 			Common::Rect renderRect;
@@ -772,7 +772,7 @@ void Redraw::renderOverlays() {
 			char text[10];
 			Common::sprintf_s(text, "%d", range);
 
-			const int32 textLength = _engine->_text->getTextSize(text);
+			const int32 textLength = _engine->_text->sizeFont(text);
 			const int32 textHeight = 48;
 
 			Common::Rect renderRect;
@@ -795,7 +795,7 @@ void Redraw::renderOverlays() {
 			const int32 item = overlay->num;
 			const Common::Rect rect(10, 10, 79, 79);
 
-			_engine->_interface->drawFilledRect(rect, COLOR_BLACK);
+			_engine->_interface->box(rect, COLOR_BLACK);
 			_engine->_interface->setClip(rect);
 
 			const BodyData &bodyPtr = _engine->_resources->_inventoryTable[item];
@@ -811,7 +811,7 @@ void Redraw::renderOverlays() {
 			char text[256];
 			_engine->_text->getMenuText((TextId)overlay->num, text, sizeof(text));
 
-			const int32 textLength = _engine->_text->getTextSize(text);
+			const int32 textLength = _engine->_text->sizeFont(text);
 			const int32 textHeight = 48;
 
 			Common::Rect renderRect;
@@ -865,7 +865,7 @@ void Redraw::renderText() {
 	const int x = padding;
 	const int height = _engine->_text->lineHeight;
 	const int y = _engine->height() - height - padding;
-	const int width = _engine->_text->getTextSize(_text.c_str());
+	const int width = _engine->_text->sizeFont(_text.c_str());
 	_engine->_text->drawText(x, y, _text.c_str(), true);
 	_engine->copyBlockPhys(x, y, x + width, y + height);
 	const Common::Rect redraw(x, y, x + width, y + height);
@@ -909,9 +909,7 @@ void Redraw::redrawEngineActions(bool bgRedraw) { // AffScene
 	correctZLevels(drawList, drawListPos);
 	processDrawList(drawList, drawListPos, bgRedraw);
 
-	if (_engine->_cfgfile.Debug) {
-		_engine->_debugScene->renderDebugView();
-	}
+	_engine->_debugState->renderDebugView();
 
 	renderOverlays();
 	renderText();

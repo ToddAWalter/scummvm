@@ -1,4 +1,3 @@
-
 /* ScummVM - Graphic Adventure Engine
  *
  * ScummVM is the legal property of its developers, whose names
@@ -28,6 +27,9 @@
 
 namespace M4 {
 namespace Riddle {
+
+extern const int16 RIPLEY_SERIES_DIRS[];
+extern const int16 RIPLEY_SHADOWS_DIRS[6];
 
 // These are the walker types
 enum {

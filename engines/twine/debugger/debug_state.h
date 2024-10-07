@@ -25,12 +25,13 @@
 #include "common/rect.h"
 #include "common/scummsys.h"
 #include "twine/shared.h"
+#include <cstdarg>
 
 namespace TwinE {
 
 class TwinEEngine;
 
-class DebugScene {
+class DebugState {
 private:
 	TwinEEngine *_engine;
 
@@ -68,19 +69,28 @@ private:
 
 	ScenePositionsProjected calculateBoxPositions(const IVec3 &mins, const IVec3 &maxs);
 	bool drawBox(const ScenePositionsProjected &positions, uint8 color);
+
+	/** Change scenario camera positions */
+	void changeGridCamera();
+
 public:
-	DebugScene(TwinEEngine *engine);
+	DebugState(TwinEEngine *engine);
 	bool _showingZones = false;
 	bool _showingActors = false;
 	bool _showingTracks = false;
 	bool _showingClips = false;
 	bool _godMode = false;
-	int32 _typeZones = 127; // all zones on as default
+	unsigned int _typeZones = 127; // all zones on as default
 	int16 _onlyLoadActor = -1;
 
-	void renderDebugView();
+	bool _useFreeCamera = false;
+	bool _disableGridRendering = false;
+	TextBankId _textBankId = TextBankId::Inventory_Intro_and_Holomap;
 
+	void renderDebugView();
 	void drawClip(const Common::Rect &rect);
+
+	void update();
 };
 
 } // namespace TwinE

@@ -43,7 +43,7 @@ void DrillerEngine::loadAssetsAmigaFullGame() {
 		}
 		_title = loadAndConvertNeoImage(&file, 0x10, palette);
 
-		loadFonts(&file, 0x8940, _font);
+		loadFonts(&file, 0x8940);
 		loadMessagesFixedSize(&file, 0xc66e, 14, 20);
 		loadGlobalObjects(&file, 0xbd62, 8);
 		load8bitBinary(&file, 0x29c16, 16);
@@ -68,7 +68,7 @@ void DrillerEngine::loadAssetsAmigaFullGame() {
 		if (!file.isOpen())
 			error("Failed to open 'driller' executable for Amiga");
 
-		loadFonts(&file, 0xa62, _font);
+		loadFonts(&file, 0xa62);
 		loadMessagesFixedSize(&file, 0x499a, 14, 20);
 		loadGlobalObjects(&file, 0x4098, 8);
 		load8bitBinary(&file, 0x21a3e, 16);
@@ -120,12 +120,12 @@ void DrillerEngine::loadAssetsAmigaDemo() {
 		error("Failed to open 'driller' file");
 
 	if (_variant & GF_AMIGA_MAGAZINE_DEMO) {
-		loadFonts(&file, 0xa62, _font);
+		loadFonts(&file, 0xa62);
 		loadMessagesFixedSize(&file, 0x3df0, 14, 20);
 		loadGlobalObjects(&file, 0x3ba6, 8);
 		_demoMode = false;
 	} else {
-		loadFonts(&file, 0xa30, _font);
+		loadFonts(&file, 0xa30);
 		loadMessagesFixedSize(&file, 0x3960, 14, 20);
 		loadGlobalObjects(&file, 0x3716, 8);
 	}
@@ -174,11 +174,11 @@ void DrillerEngine::drawAmigaAtariSTUI(Graphics::Surface *surface) {
 	}
 
 	drawStringInSurface(_currentArea->_name, 188, 185, primaryFontColor, secondaryFontColor, black, surface);
-	drawStringInSurface(Common::String::format("%07d", score), 240, 129, primaryFontColor, secondaryFontColor, black, surface);
+	drawStringInSurface(Common::String::format("%07d", score), 241, 129, primaryFontColor, secondaryFontColor, black, surface);
 
 	int seconds, minutes, hours;
 	getTimeFromCountdown(seconds, minutes, hours);
-	drawStringInSurface(Common::String::format("%02d:", hours), 208, 7, primaryFontColor, secondaryFontColor, black, surface);
+	drawStringInSurface(Common::String::format("%02d:", hours), 210, 7, primaryFontColor, secondaryFontColor, black, surface);
 	drawStringInSurface(Common::String::format("%02d:", minutes), 230, 7, primaryFontColor, secondaryFontColor, black, surface);
 	drawStringInSurface(Common::String::format("%02d", seconds), 254, 7, primaryFontColor, secondaryFontColor, black, surface);
 

@@ -21,13 +21,29 @@ For a more comprehensive changelog of the latest experimental code, see:
   - Fixed duration of timed text boxes. They were shown only half as long as
     they should be, making e.g. the King's Quest III intro hard to read.
 
+ AGOS:
+  - Added keymapper support.
+
  AGS:
   - Syncronized with upstream AGS 3.6.0.58.
   - Fixed glitchy staircase in old Maniac Mansion Mania episodes, caused by
     imperfect pathfinding.
 
+ BBVS:
+  - Added keymapper support.
+
+ Cine:
+  - Added keymapper support.
+
+ Composer:
+  - Added keymapper support.
+
  Crusie:
   - Added support for Russian fan-translation.
+  - Added keymapper support.
+
+ Draci:
+  - Added keymapper support.
 
  Freescape:
   - Added support for Atari/Amiga releases of Dark Side.
@@ -35,18 +51,47 @@ For a more comprehensive changelog of the latest experimental code, see:
   - Added "authentic graphics" mode.
   - Fixed several glitches in the different render modes.
   - Refactored sound handling for different games.
+  - Refactored font handling to use common classes.
   - Improved keymapper support coverage.
+  - Correctly implement aspect ratio correction following dosbox implementation.
+
+ Groovie:
+  - Added keymapper support.
+
+ Hopkins:
+  - Added keymapper support.
+
+ Hugo:
+  - Added keymapper support.
+
+ Illusions:
+  - Added keymapper support.
+
+ Lure:
+  - Added keymapper support.
+
+ MADE:
+  - Added keymapper support.
+
+ MADS:
+  - Added keymapper support.
 
  MM:
    - Added MT32/LAPC-1 support for Xeen engine.
    - Fixed Xeen regression which caused some sound effects to stop abruptly.
    - Fixed spell SP/gem requirements in MM1 enhanced mode, and actually remove spell points & gems when spells are cast.
 
+ SAGA:
+  - Added keymapper support.
+
  SCI:
    - Added support for Russian fan-translation of QFG3.
 
  SCUMM:
    - Added map generator from Moonbase Console for Moonbase Commander.
+
+ Stark:
+  - Added keymapper support.
 
  Sword1:
    - Added a "Windows audio engine" mode available within the ScummVM game
@@ -57,12 +102,28 @@ For a more comprehensive changelog of the latest experimental code, see:
      music volume attenuation for when speech is playing. By default the setting
      is off, since the game was developed with DOS and AIL sound drivers in mind,
      and it is also not available for Macintosh and PSX versions.
+  - Added keymapper support.
+
+ Tinsel:
+  - Added keymapper support.
 
  Tony:
    - Fix crash with rapid cursor switching.
 
  TsAGE:
    - Added support for Russian CD fan-translation for Ringworld.
+
+ Toon:
+  - Added keymapper support.
+
+ Touche:
+  - Added keymapper support.
+
+ Trecision:
+  - Added keymapper support.
+
+ Tucker:
+  - Added keymapper support.
 
  Ultima:
    - Alter Ultima VIII default gamepad bindings.
@@ -71,6 +132,9 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Alter Ultima VIII minimap to use game palette.
    - Fixed Ultima VIII item splitting & merging on game map.
    - Fixed Ultima VIII animation, audio, and scene transition issues.
+
+ macOS port:
+   - Autoupdates now use Sparkle 2.x.
 
 
 #### 2.8.1 (2024-03-31)

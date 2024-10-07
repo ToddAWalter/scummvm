@@ -50,19 +50,36 @@ XMeshOpenGL::~XMeshOpenGL() {
 bool XMeshOpenGL::render(XModel *model) {
 	float *vertexData = _skinMesh->_mesh->_vertexData;
 	auto indexData = _skinMesh->_mesh->_indexData;
-	auto indexRanges = _skinMesh->_mesh->_indexRanges;
-	auto materialIndices = _skinMesh->_mesh->_materialIndices;
 	if (vertexData == nullptr) {
 		return false;
 	}
 
-	for (uint32 i = 0; i < _numAttrs; i++) {
-		int materialIndex = materialIndices[i];
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, _materials[materialIndex]->_diffuse.data);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, _materials[materialIndex]->_diffuse.data);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, _materials[materialIndex]->_specular.data);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, _materials[materialIndex]->_emissive.data);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, _materials[materialIndex]->_shininess);
+	bool noAttrs = false;
+	auto attrsTable = _skinMesh->_mesh->_dxmesh->getAttributeTable();
+	uint32 numAttrs = attrsTable->_size;
+	DXAttributeRange *attrs;
+	if (numAttrs == 0) {
+		noAttrs = true;
+		numAttrs = 1;
+		attrs = new DXAttributeRange[numAttrs];
+	} else {
+		attrs = attrsTable->_ptr;
+	}
+
+	if (noAttrs) {
+		attrs[0]._attribId = 0;
+		attrs[0]._vertexStart = attrs[0]._faceStart = 0;
+		attrs[0]._vertexCount = _skinMesh->_mesh->_dxmesh->getNumVertices();
+		attrs[0]._faceCount = _skinMesh->_mesh->_dxmesh->getNumFaces();
+	}
+
+	for (uint32 i = 0; i < numAttrs; i++) {
+		int materialIndex = attrs[i]._attribId;
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, _materials[materialIndex]->_material._diffuse._data);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, _materials[materialIndex]->_material._diffuse._data);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, _materials[materialIndex]->_material._specular._data);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, _materials[materialIndex]->_material._emissive._data);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, _materials[materialIndex]->_material._power);
 
 		bool textureEnable = false;
 		if (_materials[materialIndex]->getSurface()) {
@@ -84,7 +101,7 @@ bool XMeshOpenGL::render(XModel *model) {
 		if (textureEnable)
 			glTexCoordPointer(2, GL_FLOAT, XSkinMeshLoader::kVertexComponentCount * sizeof(float), vertexData + XSkinMeshLoader::kTextureCoordOffset);
 
-		glDrawElements(GL_TRIANGLES, indexRanges[i + 1] - indexRanges[i], GL_UNSIGNED_SHORT, indexData.data() + indexRanges[i]);
+		glDrawElements(GL_TRIANGLES, attrsTable->_ptr[i]._faceCount * 3, GL_UNSIGNED_SHORT, indexData.data() + attrsTable->_ptr[i]._faceStart * 3);
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
@@ -93,6 +110,10 @@ bool XMeshOpenGL::render(XModel *model) {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
+
+	if (noAttrs) {
+		delete[] attrs;
+	}
 
 	return true;
 }

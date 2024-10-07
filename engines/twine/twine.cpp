@@ -41,9 +41,7 @@
 #include "twine/audio/music.h"
 #include "twine/audio/sound.h"
 #include "twine/debugger/console.h"
-#include "twine/debugger/debug.h"
-#include "twine/debugger/debug_grid.h"
-#include "twine/debugger/debug_scene.h"
+#include "twine/debugger/debug_state.h"
 #include "twine/detection.h"
 #include "twine/holomap_v1.h"
 #include "twine/holomap_v2.h"
@@ -76,7 +74,9 @@
 #include "twine/shared.h"
 #include "twine/slideshow.h"
 #include "twine/text.h"
-
+#ifdef USE_IMGUI
+#include "twine/debugger/debugtools.h"
+#endif
 namespace TwinE {
 
 ScopedEngineFreeze::ScopedEngineFreeze(TwinEEngine *engine, bool pause) : _engine(engine) {
@@ -223,10 +223,8 @@ TwinEEngine::TwinEEngine(OSystem *system, Common::Language language, uint32 flag
 	}
 	_sound = new Sound(this);
 	_text = new Text(this);
-	_debugGrid = new DebugGrid(this);
 	_input = new Input(this);
-	_debug = new Debug(this);
-	_debugScene = new DebugScene(this);
+	_debugState = new DebugState(this);
 	setDebugger(new TwinEConsole(this));
 }
 
@@ -254,10 +252,8 @@ TwinEEngine::~TwinEEngine() {
 	delete _holomap;
 	delete _sound;
 	delete _text;
-	delete _debugGrid;
 	delete _input;
-	delete _debug;
-	delete _debugScene;
+	delete _debugState;
 }
 
 void TwinEEngine::pushMouseCursorVisible() {
@@ -332,13 +328,22 @@ Common::Error TwinEEngine::run() {
 			debug("Boot parameter: %i", sceneIndex);
 			_gameState->initEngineVars();
 			_text->normalWinDial();
-			_text->_drawTextBoxBackground = true;
+			_text->_flagMessageShade = true;
 			_text->_renderTextTriangle = false;
 			_scene->_needChangeScene = sceneIndex;
 			_scene->_heroPositionType = ScenePositionType::kScene;
 			_state = EngineState::GameLoop;
 		}
 	}
+
+#ifdef USE_IMGUI
+	ImGuiCallbacks callbacks;
+	bool drawImGui = debugChannelSet(-1, kDebugImGui);
+	callbacks.init = TwinE::onImGuiInit;
+	callbacks.render = drawImGui ? TwinE::onImGuiRender : nullptr;
+	callbacks.cleanup = TwinE::onImGuiCleanup;
+	_system->setImGuiCallbacks(callbacks);
+#endif
 
 	bool quitGame = false;
 	while (!quitGame && !shouldQuit()) {
@@ -355,7 +360,7 @@ Common::Error TwinEEngine::run() {
 			}
 			_text->_renderTextTriangle = false;
 			_text->normalWinDial();
-			_text->_drawTextBoxBackground = true;
+			_text->_flagMessageShade = true;
 			_state = EngineState::GameLoop;
 			break;
 		case EngineState::GameLoop:
@@ -381,6 +386,14 @@ Common::Error TwinEEngine::run() {
 #endif
 			break;
 		}
+#ifdef USE_IMGUI
+		// For performance reasons, disable the renderer callback if the ImGui debug flag isn't set
+		if (debugChannelSet(-1, kDebugImGui) != drawImGui) {
+			drawImGui = !drawImGui;
+			callbacks.render = drawImGui ? TwinE::onImGuiRender : nullptr;
+			_system->setImGuiCallbacks(callbacks);
+		}
+#endif
 	}
 
 	ConfMan.setBool("combatauto", _actor->_combatAuto);
@@ -514,7 +527,6 @@ void TwinEEngine::initConfigurations() {
 
 	_cfgfile.Sound = ConfGetBoolOrDefault("sound", true);
 	_cfgfile.Fps = ConfGetIntOrDefault("fps", DEFAULT_FRAMES_PER_SECOND);
-	_cfgfile.Debug = ConfGetBoolOrDefault("debug", false);
 	_cfgfile.Mouse = ConfGetBoolOrDefault("mouse", true);
 
 	_cfgfile.UseAutoSaving = ConfGetBoolOrDefault("useautosaving", false);
@@ -532,7 +544,6 @@ void TwinEEngine::initConfigurations() {
 	debug(1, "Sound:          %s", (_cfgfile.Sound ? "true" : "false"));
 	debug(1, "Movie:          %i", _cfgfile.Movie);
 	debug(1, "Fps:            %i", _cfgfile.Fps);
-	debug(1, "Debug:          %s", (_cfgfile.Debug ? "true" : "false"));
 	debug(1, "UseAutoSaving:  %s", (_cfgfile.UseAutoSaving ? "true" : "false"));
 	debug(1, "WallCollision:  %s", (_cfgfile.WallCollision ? "true" : "false"));
 	debug(1, "AutoAggressive: %s", (_actor->_combatAuto ? "true" : "false"));
@@ -702,7 +713,7 @@ void TwinEEngine::processBookOfBu() {
 	_screens->fadeToBlack(_screens->_paletteRGBA);
 	_screens->loadImage(TwineImage(Resources::HQR_RESS_FILE, 15, 16));
 	_text->initDial(TextBankId::Inventory_Intro_and_Holomap);
-	_text->_drawTextBoxBackground = false;
+	_text->_flagMessageShade = false;
 	_text->bigWinDial();
 	_text->setFontCrossColor(COLOR_WHITE);
 	const bool tmpFlagDisplayText = _cfgfile.FlagDisplayText;
@@ -710,7 +721,7 @@ void TwinEEngine::processBookOfBu() {
 	_text->drawTextProgressive(TextId::kBookOfBu);
 	_cfgfile.FlagDisplayText = tmpFlagDisplayText;
 	_text->normalWinDial();
-	_text->_drawTextBoxBackground = true;
+	_text->_flagMessageShade = true;
 	_text->initSceneTextBank();
 	_screens->fadeToBlack(_screens->_paletteRGBACustom);
 	_screens->clearScreen();
@@ -734,7 +745,7 @@ void TwinEEngine::processBonusList() {
 void TwinEEngine::processInventoryAction() {
 	ScopedEngineFreeze scoped(this);
 	extInitSvga();
-	_menu->processInventoryMenu();
+	_menu->inventory();
 
 	switch (_loopInventoryItem) {
 	case kiHolomap:
@@ -868,7 +879,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 
 	_movements->update();
 
-	_debug->processDebug();
+	_debugState->update();
 
 	if (_menuOptions->flagCredits) {
 		if (isLBA1()) {
@@ -984,7 +995,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 			if (_redraw->_flagMCGA) {
 				_text->drawText(_redraw->_sceneryViewX + 5, _redraw->_sceneryViewY, PauseString);
 			} else {
-				const int width = _text->getTextSize(PauseString);
+				const int width = _text->sizeFont(PauseString);
 				const int bottom = height() - _text->lineHeight;
 				_text->drawText(5, bottom, PauseString);
 				copyBlockPhys(5, bottom, 5 + width, bottom + _text->lineHeight);

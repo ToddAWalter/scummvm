@@ -52,41 +52,24 @@ Common::SeekableReadStream *CastleEngine::decryptFile(const Common::Path &filena
 extern byte kEGADefaultPalette[16][3];
 extern Common::MemoryReadStream *unpackEXE(Common::File &ms);
 
-void CastleEngine::loadDOSFonts(Common::SeekableReadStream *file, int pos) {
-	file->seek(pos);
-	byte *bufferPlane1 = (byte *)malloc(sizeof(byte) * 59 * 8);
-	byte *bufferPlane2 = (byte *)malloc(sizeof(byte) * 59 * 8);
-	byte *bufferPlane3 = (byte *)malloc(sizeof(byte) * 59 * 8);
-
-	for (int i = 0; i < 59 * 8; i++) {
-		//debug("%lx", file->pos());
-		for (int j = 0; j < 4; j++) {
-			uint16 c = readField(file, 16);
-			assert(c < 256);
-			if (j == 1) {
-				bufferPlane1[i] = c;
-			} else if (j == 2) {
-				bufferPlane2[i] = c;
-			} else if (j == 3) {
-				bufferPlane3[i] = c;
-			}
-		}
-		//debugN("\n");
-	}
-	//debug("%" PRIx64, file->pos());
-	_fontPlane1.set_size(64 * 59);
-	_fontPlane1.set_bits(bufferPlane1);
-
-	_fontPlane2.set_size(64 * 59);
-	_fontPlane2.set_bits(bufferPlane2);
-
-	_fontPlane3.set_size(64 * 59);
-	_fontPlane3.set_bits(bufferPlane3);
-	_fontLoaded = true;
-	free(bufferPlane1);
-	free(bufferPlane2);
-	free(bufferPlane3);
-}
+byte kEGARiddleFontPalette[16][3] = {
+	{0x00, 0x00, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00},
+	{0xaa, 0x55, 0x00}
+};
 
 Graphics::ManagedSurface *CastleEngine::loadFrameFromPlanes(Common::SeekableReadStream *file, int widthInBytes, int height) {
 	Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
@@ -170,7 +153,6 @@ void CastleEngine::loadAssetsDOSFullGame() {
 		stream = unpackEXE(file);
 		if (stream) {
 			loadSpeakerFxDOS(stream, 0x636d + 0x200, 0x63ed + 0x200);
-			loadDOSFonts(stream, 0x29696);
 
 			stream->seek(0x197c0);
 			_endGameBackgroundFrame = loadFrameFromPlanes(stream, 112, 108);
@@ -241,6 +223,27 @@ void CastleEngine::loadAssetsDOSFullGame() {
 			_thunderFrame = loadFrameFromPlanes(stream, 16, 128);
 			_thunderFrame->convertToInPlace(_gfx->_texturePixelFormat, (byte *)&kEGADefaultPalette, 16);
 
+			stream->seek(0x29696);
+			Common::Array<Graphics::ManagedSurface *> chars;
+			Common::Array<Graphics::ManagedSurface *> charsRiddle;
+			for (int i = 0; i < 90; i++) {
+				Graphics::ManagedSurface *img = loadFrameFromPlanes(stream, 8, 8);
+				Graphics::ManagedSurface *imgRiddle = new Graphics::ManagedSurface();
+				imgRiddle->copyFrom(*img);
+
+				chars.push_back(img);
+				chars[i]->convertToInPlace(_gfx->_texturePixelFormat, (byte *)&kEGADefaultPalette, 16);
+
+				charsRiddle.push_back(imgRiddle);
+				charsRiddle[i]->convertToInPlace(_gfx->_texturePixelFormat, (byte *)&kEGARiddleFontPalette, 16);
+			}
+			_font = Font(chars);
+			_font.setCharWidth(9);
+
+			_fontRiddle = Font(charsRiddle);
+			_fontRiddle.setCharWidth(9);
+			_fontLoaded = true;
+
 			// No header
 			// Another thunder frame?
 		}
@@ -266,7 +269,7 @@ void CastleEngine::loadAssetsDOSFullGame() {
 		switch (_language) {
 			case Common::ES_ESP:
 				stream = decryptFile("CMLS");
-				loadRiddles(stream, 0xaae, 20);
+				loadRiddles(stream, 0xaae - 2 - 20 * 2, 20);
 				break;
 			case Common::FR_FRA:
 				stream = decryptFile("CMLF");
@@ -318,7 +321,6 @@ void CastleEngine::loadAssetsDOSDemo() {
 		stream = unpackEXE(file);
 		if (stream) {
 			loadSpeakerFxDOS(stream, 0x636d + 0x200, 0x63ed + 0x200);
-			loadDOSFonts(stream, 0x293f6);
 
 			stream->seek(0x197c0 - 0x2a0);
 			_endGameBackgroundFrame = loadFrameFromPlanes(stream, 112, 108);
@@ -374,6 +376,27 @@ void CastleEngine::loadAssetsDOSDemo() {
 			// No header
 			_thunderFrame = loadFrameFromPlanes(stream, 16, 128);
 			_thunderFrame->convertToInPlace(_gfx->_texturePixelFormat, (byte *)&kEGADefaultPalette, 16);
+
+			stream->seek(0x293f6); // TODO: check this
+			Common::Array<Graphics::ManagedSurface *> chars;
+			Common::Array<Graphics::ManagedSurface *> charsRiddle;
+			for (int i = 0; i < 90; i++) {
+				Graphics::ManagedSurface *img = loadFrameFromPlanes(stream, 8, 8);
+				Graphics::ManagedSurface *imgRiddle = new Graphics::ManagedSurface();
+				imgRiddle->copyFrom(*img);
+
+				chars.push_back(img);
+				chars[i]->convertToInPlace(_gfx->_texturePixelFormat, (byte *)&kEGADefaultPalette, 16);
+
+				charsRiddle.push_back(imgRiddle);
+				charsRiddle[i]->convertToInPlace(_gfx->_texturePixelFormat, (byte *)&kEGARiddleFontPalette, 16);
+			}
+			_font = Font(chars);
+			_font.setCharWidth(9);
+
+			_fontRiddle = Font(charsRiddle);
+			_fontRiddle.setCharWidth(9);
+			_fontLoaded = true;
 		}
 
 		delete stream;
@@ -396,7 +419,7 @@ void CastleEngine::loadAssetsDOSDemo() {
 
 		stream = decryptFile("CMLD"); // Only english
 		loadMessagesVariableSize(stream, 0x11, 164);
-		loadRiddles(stream, 0xaae, 21);
+		loadRiddles(stream, 0xaae - 2 - 21 * 2, 21);
 		delete stream;
 
 		stream = decryptFile("CDEDF");

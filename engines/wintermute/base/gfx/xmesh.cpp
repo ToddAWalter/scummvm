@@ -33,14 +33,15 @@
 #include "engines/wintermute/base/gfx/xframe_node.h"
 #include "engines/wintermute/base/gfx/xfile_loader.h"
 #include "engines/wintermute/base/gfx/xmodel.h"
+#include "engines/wintermute/base/gfx/xbuffer.h"
+#include "engines/wintermute/base/gfx/xskinmesh.h"
 #include "engines/wintermute/base/base_engine.h"
 #include "engines/wintermute/math/math_util.h"
+#include "engines/wintermute/utils/path_util.h"
 
 namespace Wintermute {
 
 XMesh::XMesh(Wintermute::BaseGame *inGame) : BaseNamedObject(inGame) {
-	_numAttrs = 0;
-
 	_skinMesh = nullptr;
 	_skinnedMesh = false;
 
@@ -54,7 +55,7 @@ XMesh::~XMesh() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool XMesh::loadFromXData(const Common::String &filename, XFileData *xobj, Common::Array<MaterialReference> &materialReferences) {
+bool XMesh::loadFromXData(const Common::String &filename, XFileData *xobj) {
 	// get name
 	if (!XModel::loadName(this, xobj)) {
 		BaseEngine::LOG(0, "Error loading mesh name");
@@ -63,13 +64,102 @@ bool XMesh::loadFromXData(const Common::String &filename, XFileData *xobj, Commo
 
 	XMeshObject *meshObject = xobj->getXMeshObject();
 	if (!meshObject) {
+		BaseEngine::LOG(0, "Error loading mesh");
+		return false;
+	}
+
+	// load mesh
+	DXBuffer bufMaterials;
+	DXBuffer bufAdjacency;
+	//DXBuffer bufBoneOffset;
+	//uint32 numFaces;
+	uint32 numMaterials;
+	DXMesh *mesh;
+	DXSkinInfo *skinInfo = nullptr;
+
+	auto res = DXLoadSkinMesh(xobj, bufAdjacency, bufMaterials, numMaterials, &skinInfo, &mesh);
+	if (!res) {
 		BaseEngine::LOG(0, "Error loading skin mesh");
 		return false;
 	}
 
-	XSkinMeshLoader *mesh = new XSkinMeshLoader(this, meshObject);
-	_skinMesh = new SkinMeshHelper(mesh);
-	mesh->loadMesh(filename, xobj, materialReferences);
+	XSkinMeshLoader *meshLoader = new XSkinMeshLoader(this, meshObject, mesh, skinInfo);
+	meshLoader->loadMesh(filename, xobj);
+
+	_skinMesh = new SkinMeshHelper(meshLoader, mesh, skinInfo);
+
+
+	// check for materials
+	if ((bufMaterials.ptr() == nullptr) || (numMaterials == 0)) {
+		// no materials are found, create default material
+		Material *mat = new Material(_gameRef);
+		mat->_material._diffuse.color._r = 0.5f;
+		mat->_material._diffuse.color._g = 0.5f;
+		mat->_material._diffuse.color._b = 0.5f;
+		mat->_material._specular = mat->_material._diffuse;
+		mat->_material._ambient = mat->_material._diffuse;
+		_materials.add(mat);
+	} else {
+		// load the materials
+		DXMaterial *fileMats = (DXMaterial *)bufMaterials.ptr();
+		for (uint i = 0; i < numMaterials; i++) {
+			Material *mat = new Material(_gameRef);
+			mat->_material = fileMats[i];
+			mat->_material._ambient = mat->_material._diffuse;
+			if (fileMats[i]._textureFilename[0] != '\0') {
+				mat->setTexture(PathUtil::getDirectoryName(filename) + fileMats[i]._textureFilename, true);
+			}
+			_materials.add(mat);
+		}
+	}
+
+	_skinnedMesh = false;
+
+	if (skinInfo) {
+		_skinnedMesh = skinInfo->getNumBones() > 0;
+		for (uint index = 0; index < skinInfo->getNumBones(); index++) {
+			SkinWeights currSkinWeights;
+			DXBone *bone = skinInfo->getBone(index);
+			currSkinWeights._boneName = bone->_name;
+
+			int weightCount = bone->_numInfluences;
+			currSkinWeights._vertexIndices.resize(weightCount);
+			currSkinWeights._vertexWeights.resize(weightCount);
+
+			for (int i = 0; i < weightCount; ++i) {
+				currSkinWeights._vertexIndices[i] = bone->_vertices[i];
+			}
+
+			for (int i = 0; i < weightCount; ++i) {
+				currSkinWeights._vertexWeights[i] = bone->_weights[i];
+			}
+
+			for (int r = 0; r < 4; ++r) {
+				for (int c = 0; c < 4; ++c) {
+					currSkinWeights._offsetMatrix(c, r) = bone->_transform._m4x4[r * 4 + c];
+				}
+			}
+
+			// mirror at orign
+			currSkinWeights._offsetMatrix(2, 3) *= -1.0f;
+
+			// mirror base vectors
+			currSkinWeights._offsetMatrix(2, 0) *= -1.0f;
+			currSkinWeights._offsetMatrix(2, 1) *= -1.0f;
+
+			// change handedness
+			currSkinWeights._offsetMatrix(0, 2) *= -1.0f;
+			currSkinWeights._offsetMatrix(1, 2) *= -1.0f;
+
+			meshLoader->_skinWeightsList.push_back(currSkinWeights);
+		}
+	}
+
+	meshLoader->generateAdjacency(_adjacency);
+
+	bufAdjacency.free();
+	bufMaterials.free();
+	//bufBoneOffset.free();
 
 	return true;
 }
@@ -90,7 +180,7 @@ bool XMesh::findBones(FrameNode *rootFrame) {
 		if (frame) {
 			_boneMatrices[i] = frame->getCombinedMatrix();
 		} else {
-			warning("XMeshOpenGL::findBones could not find bone %s", skinWeightsList[i]._boneName.c_str());
+			warning("XMesh::findBones could not find bone %s", skinWeightsList[i]._boneName.c_str());
 		}
 	}
 

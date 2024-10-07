@@ -19,34 +19,61 @@
  *
  */
 
-#ifndef TWINE_GRIDDEBUG_H
-#define TWINE_GRIDDEBUG_H
+#ifndef WINTERMUTE_XBUFFER_H
+#define WINTERMUTE_XBUFFER_H
 
-#include "common/scummsys.h"
+#include <common/types.h>
+#include <common/util.h>
 
-namespace TwinE {
+namespace Wintermute {
 
-class TwinEEngine;
-
-class DebugGrid {
+struct DXBuffer {
 private:
-	TwinEEngine *_engine;
+
+	byte *_ptr;
+	uint64 _size;
 
 public:
-	DebugGrid(TwinEEngine *engine);
 
-	bool _useFreeCamera = false;
-	bool _canChangeScenes = false;
-	bool _disableGridRendering = false;
+	DXBuffer() {
+		_ptr = nullptr;
+		_size = 0;
+	}
 
-	/** Change scenario camera positions */
-	void changeGridCamera();
-	/** Change grid index */
-	void changeGrid();
-	/** Apply and change disappear celling grid */
-	void applyCellingGrid();
+	DXBuffer(uint64 size) {
+		_ptr = new uint8_t[size];
+		if (_ptr == nullptr) {
+			size = 0;
+			return;
+		}
+		_size = size;
+	}
+
+	DXBuffer(const uint8 *ptr, uint64 size) {
+		_ptr = new uint8[size];
+		if (_ptr == nullptr) {
+			size = 0;
+			return;
+		}
+		memcpy(_ptr, ptr, size);
+		_size = size;
+	}
+
+	void free() {
+		delete[] _ptr;
+		_ptr = nullptr;
+		_size = 0;
+	}
+
+	byte *ptr() const {
+		return _ptr;
+	}
+
+	uint64 size() const {
+		return _size;
+	}
 };
 
-} // namespace TwinE
+} // namespace Wintermute
 
 #endif

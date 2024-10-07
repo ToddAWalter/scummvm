@@ -282,7 +282,7 @@ void HolomapV1::drawHoloMap(uint8 *holomapImage, uint32 holomapImageSize) {
 }
 
 void HolomapV1::drawHolomapText(int32 centerx, int32 top, const char *title) {
-	const int32 size = _engine->_text->getTextSize(title);
+	const int32 size = _engine->_text->sizeFont(title);
 	const int32 x = centerx - size / 2;
 	const int32 y = top;
 	_engine->_text->setFontColor(COLOR_WHITE);
@@ -316,7 +316,7 @@ void HolomapV1::renderHolomapVehicle(uint &frameNumber, ActorMoveStruct &move, A
 	_engine->_renderer->setFollowCamera(0, 0, 0, 60, 128, 0, distance(30000));
 	_engine->_renderer->setLightVector(-60, 128, 0);
 	// background of the vehicle
-	_engine->_interface->drawFilledRect(rect, COLOR_BLACK);
+	_engine->_interface->box(rect, COLOR_BLACK);
 	Common::Rect dummy;
 	_engine->_renderer->affObjetIso(0, 0, 0, LBAAngles::ANGLE_0, newAngle, LBAAngles::ANGLE_0, bodyData, dummy);
 	_engine->copyBlockPhys(rect);
@@ -645,7 +645,7 @@ void HolomapV1::holoMap() {
 			// but it's not part of the original code
 			_engine->_interface->memoClip();
 			_engine->_interface->setClip(rect);
-			_engine->_interface->drawFilledRect(rect, COLOR_BLACK);
+			_engine->_interface->box(rect, COLOR_BLACK);
 			_engine->_renderer->setInverseAngleCamera(calpha, cbeta, cgamma);
 			_engine->_renderer->setLightVector(calpha, cbeta, 0);
 			drawListPos(calpha, cbeta, cgamma, false);
@@ -676,7 +676,7 @@ void HolomapV1::holoMap() {
 	}
 
 	_engine->_screens->clearScreen();
-	_engine->_text->_drawTextBoxBackground = true;
+	_engine->_text->_flagMessageShade = true;
 	_engine->setPalette(_engine->_screens->_paletteRGBA);
 	_engine->_scene->_alphaLight = alphaLightTmp;
 	_engine->_scene->_betaLight = betaLightTmp;

@@ -105,11 +105,6 @@ void XModel::cleanup(bool complete) {
 	}
 	_matSprites.clear();
 
-	for (uint i = 0; i < _materialReferences.size(); ++i) {
-		delete _materialReferences[i]._material;
-	}
-	_materialReferences.clear();
-
 	// remove root frame
 	delete _rootFrame;
 	_rootFrame = nullptr;
@@ -141,14 +136,14 @@ bool XModel::loadFromFile(const Common::String &filename, XModel *parentModel) {
 
 	_rootFrame = new FrameNode(_gameRef);
 
-	uint numChildren = 0;
+	uint32 numChildren = 0;
 	xfile->getEnum().getChildren(numChildren);
 	for (uint i = 0; i < numChildren; i++) {
 		resLoop = xfile->getEnum().getChild(i, xobj);
 		if (!resLoop)
 			break;
 
-		res = _rootFrame->loadFromXData(filename, this, &xobj, _materialReferences);
+		res = _rootFrame->loadFromXData(filename, this, &xobj);
 		if (!res) {
 			BaseEngine::LOG(0, "Error loading top level object from '%s'", filename.c_str());
 			break;
@@ -196,7 +191,7 @@ bool XModel::mergeFromFile(const Common::String &filename) {
 	XFileData xobj;
 	bool resLoop = false;
 
-	uint numChildren = 0;
+	uint32 numChildren = 0;
 	xfile->getEnum().getChildren(numChildren);
 	for (uint i = 0; i < numChildren; i++) {
 		resLoop = xfile->getEnum().getChild(i, xobj);
@@ -251,7 +246,7 @@ bool XModel::loadAnimationSet(const Common::String &filename, XFileData *xobj) {
 	XFileData xchildData;
 	XClassType objectType;
 
-	uint numChildren = 0;
+	uint32 numChildren = 0;
 	xobj->getChildren(numChildren);
 
 	for (uint32 i = 0; i < numChildren; i++) {
@@ -296,7 +291,7 @@ bool XModel::loadAnimation(const Common::String &filename, XFileData *xobj, Anim
 	// create the new object
 	Animation *anim = new Animation(_gameRef);
 
-	uint numChildren = 0;
+	uint32 numChildren = 0;
 	xobj->getChildren(numChildren);
 
 	for (uint32 i = 0; i < numChildren; i++) {

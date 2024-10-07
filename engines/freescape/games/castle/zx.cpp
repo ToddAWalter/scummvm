@@ -38,7 +38,7 @@ void CastleEngine::initZX() {
 	_soundIndexClimb = -1;
 	_soundIndexMenu = -1;
 	_soundIndexStart = 6;
-	_soundIndexAreaChange = 5;
+	_soundIndexAreaChange = 7;
 }
 
 Graphics::ManagedSurface *CastleEngine::loadFrameWithHeader(Common::SeekableReadStream *file, int pos, uint32 front, uint32 back) {
@@ -91,6 +91,7 @@ Graphics::ManagedSurface *CastleEngine::loadFrame(Common::SeekableReadStream *fi
 void CastleEngine::loadAssetsZXFullGame() {
 	Common::File file;
 	uint8 r, g, b;
+	Common::Array<Graphics::ManagedSurface *> chars;
 
 	file.open("castlemaster.zx.title");
 	if (file.isOpen()) {
@@ -117,13 +118,33 @@ void CastleEngine::loadAssetsZXFullGame() {
 			loadMessagesVariableSize(&file, 0xf3d, 71);
 			load8bitBinary(&file, 0x6aab - 2, 16);
 			loadSpeakerFxZX(&file, 0xca0, 0xcdc);
-			loadFonts(&file, 0x1218 + 16, _font);
+
+			file.seek(0x1218 + 16);
+			for (int i = 0; i < 90; i++) {
+				Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
+				surface->create(8, 8, Graphics::PixelFormat::createFormatCLUT8());
+				chars.push_back(loadFrame(&file, surface, 1, 8, 1));
+			}
+			_font = Font(chars);
+			_font.setCharWidth(9);
+			_fontLoaded = true;
+
 			break;
 		case Common::EN_ANY:
 			loadRiddles(&file, 0x145c - 2 - 9 * 2, 9);
 			load8bitBinary(&file, 0x6a3b, 16);
 			loadSpeakerFxZX(&file, 0xc91, 0xccd);
-			loadFonts(&file, 0x1219, _font);
+
+			file.seek(0x1219);
+			for (int i = 0; i < 90; i++) {
+				Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
+				surface->create(8, 8, Graphics::PixelFormat::createFormatCLUT8());
+				chars.push_back(loadFrame(&file, surface, 1, 8, 1));
+			}
+			_font = Font(chars);
+			_font.setCharWidth(9);
+			_fontLoaded = true;
+
 			break;
 		default:
 			error("Language not supported");
@@ -137,7 +158,7 @@ void CastleEngine::loadAssetsZXFullGame() {
 	_gfx->readFromPalette(7, r, g, b);
 	uint32 white = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
 
-	_keysBorderFrames.push_back(loadFrameWithHeader(&file, 0xdf7, white, red));
+	_keysBorderFrames.push_back(loadFrameWithHeader(&file, 0xdf7, red, white));
 
 	uint32 green = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0, 0xff, 0);
 	_spiritsMeterIndicatorFrame = loadFrameWithHeader(&file, _language == Common::ES_ESP ? 0xe5e : 0xe4f, green, white);
@@ -169,7 +190,7 @@ void CastleEngine::loadAssetsZXFullGame() {
 
 	_strenghtWeightsFrames = loadFramesWithHeader(&file, _language == Common::ES_ESP ? 0xf92 : 0xf83, 4, yellow, black);
 
-	_flagFrames = loadFramesWithHeader(&file, 0x10e4, 4, green, black);
+	_flagFrames = loadFramesWithHeader(&file, (_language == Common::ES_ESP ? 0x10e4 + 15 : 0x10e4), 4, green, black);
 
 	int thunderWidth = 4;
 	int thunderHeight = 43;
@@ -192,10 +213,12 @@ void CastleEngine::loadAssetsZXFullGame() {
 
 		it._value->addObjectFromArea(164, _areaMap[255]);
 		it._value->addObjectFromArea(174, _areaMap[255]);
+		it._value->addObjectFromArea(175, _areaMap[255]);
 		for (int16 id = 136; id < 140; id++) {
 			it._value->addObjectFromArea(id, _areaMap[255]);
 		}
 
+		it._value->addObjectFromArea(195, _areaMap[255]);
 		for (int16 id = 214; id < 228; id++) {
 			it._value->addObjectFromArea(id, _areaMap[255]);
 		}
@@ -256,7 +279,8 @@ void CastleEngine::drawZXUI(Graphics::Surface *surface) {
 	surface->copyRectToSurface((const Graphics::Surface)*_spiritsMeterIndicatorFrame, 140 + _spiritsMeterPosition, 156, Common::Rect(0, 0, 15, 8));
 	drawEnergyMeter(surface, Common::Point(63, 154));
 
-	int flagFrameIndex = (_ticks / 10) % 4;
+	int ticks = g_system->getMillis() / 20;
+	int flagFrameIndex = (ticks / 10) % 4;
 	surface->copyRectToSurface(*_flagFrames[flagFrameIndex], 264, 9, Common::Rect(0, 0, _flagFrames[flagFrameIndex]->w, _flagFrames[flagFrameIndex]->h));
 }
 

@@ -20,33 +20,17 @@
  *
  */
 
-#ifndef M4_BURGER_GUI_CHEAPO_H
-#define M4_BURGER_GUI_CHEAPO_H
+#ifndef M4_GUI_CHEAPO_H
+#define M4_GUI_CHEAPO_H
 
 #include "common/str.h"
 #include "m4/graphics/gr_buff.h"
 #include "m4/m4_types.h"
 
 namespace M4 {
-namespace Burger {
 namespace GUI {
 
-constexpr int16 INVENTORY_CELLS_COUNT = 128;
-constexpr int16 ARROW_WIDTH = 8;
 constexpr int16 MAX_BUTTONS = 20;
-constexpr int16 MAX_INVENTORY = 9;
-
-constexpr int16 LEFT_ARROW_TAG = 128;
-constexpr int16 RIGHT_ARROW_TAG = 129;
-
-constexpr int16 LEFT_ARROW_TAG_DORMANT = 130;
-constexpr int16 RIGHT_ARROW_TAG_DORMANT = 134;
-constexpr int16 LEFT_ARROW_TAG_ROLL = 131;
-constexpr int16 RIGHT_ARROW_TAG_ROLL = 135;
-constexpr int16 LEFT_ARROW_TAG_DOWN = 132;
-constexpr int16 RIGHT_ARROW_TAG_DOWN = 136;
-constexpr int16 LEFT_ARROW_TAG_NONFUNC = 133;
-constexpr int16 RIGHT_ARROW_TAG_NONFUNC = 137;
 
 enum ControlStatus {
 	NOTHING, IN_CONTROL, OVER_CONTROL, SELECTED, TRACKING
@@ -59,7 +43,6 @@ enum ButtonState {
 class RectClass;
 class ButtonClass;
 class InterfaceBox;
-class Inventory;
 
 class RectClass {
 public:
@@ -117,6 +100,8 @@ public:
 	ButtonClass(const RectClass &r, const Common::String &btnName, int16 tag);
 	ButtonClass(const RectClass &r, const Common::String &btnName, int16 tag,
 		int16 unknown, int16 relaxed, int16 over, int16 picked, int sprite);
+	ButtonClass(const RectClass &r, const Common::String &btnName, int16 tag,
+		int16 relaxed, int16 over, int16 picked, int sprite);
 	~ButtonClass();
 
 	void draw(GrBuff *interface_buffer);
@@ -173,53 +158,7 @@ public:
 
 };
 
-class Inventory : public RectClass {
-	struct Entry {
-		Common::String _name;
-		Common::String _verb;
-		int16 _cell = -1;
-		int16 _cursor = -1;
-	};
-private:
-	int32 _sprite = 0;
-	int16 _tag = 0;
-	int16 _num_cells = 0;
-	bool _right_arrow_visible = false;
-
-	int16 cell_pos_x(int16 index);
-	int16 cell_pos_y(int16 index);
-	int16 interface_tracking = -1;
-
-public:
-	int16 _scroll = 0;
-	int16 _cells_h = 0, _cells_v = 0;
-	int16 _cell_w = 0, _cell_h = 0;
-	int16 _must_redraw1 = 0, _must_redraw2 = 0;
-	int16 _highlight = 0;
-	bool _must_redraw_all = false;
-
-	Entry _items[INVENTORY_CELLS_COUNT];
-
-public:
-	Inventory(const RectClass &r, int32 sprite, int16 cells_h, int16 cells_v, int16 cell_w, int16 cell_h, int16 tag);
-	~Inventory();
-
-	void draw(GrBuff *interface_buffer);
-
-	int16 inside(int16 x, int16 y) const override;
-	ControlStatus track(int32 eventType, int16 x, int16 y);
-
-	bool add(const Common::String &name, const Common::String &verb, int32 cel, int32 cursor);
-	bool remove(const Common::String &name);
-	void highlight_part(int16 index);
-
-	bool need_left() const;
-	bool need_right() const;
-	void set_scroll(int32 new_scroll);
-};
-
 } // namespace GUI
-} // namespace Burger
 } // namespace M4
 
 #endif

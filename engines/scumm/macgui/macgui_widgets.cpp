@@ -355,7 +355,7 @@ void MacGuiImpl::MacStaticText::draw(bool drawFocused) {
 	debug(1, "MacGuiImpl::MacStaticText: Drawing text %d (_fullRedraw = %d, drawFocused = %d, _value = %d)", _id, _fullRedraw, drawFocused, _value);
 
 	_window->innerSurface()->fillRect(_bounds, _bg);
-	drawText(_text, _bounds.left, _bounds.top, _bounds.width(), _fg, _bg, Graphics::kTextAlignLeft, _wordWrap, 1);
+	drawText(_text, _bounds.left, _bounds.top, _bounds.width(), _fg, _bg, _alignment, _wordWrap, 1);
 	_window->markRectAsDirty(_bounds);
 
 	_redraw = false;
@@ -902,8 +902,8 @@ Common::Rect MacGuiImpl::MacSlider::getHandleRect(int value) {
 
 void MacGuiImpl::MacSlider::fill(Common::Rect r, bool inverted) {
 	Color pattern[2][4] = {
-		{ kBlack, kWhite, kWhite, kWhite },
-		{ kWhite, kWhite, kBlack, kWhite }
+		{ kWhite, kWhite, kBlack, kWhite },
+		{ kBlack, kWhite, kWhite, kWhite }
 	};
 
 	Graphics::Surface *s = _window->innerSurface();
