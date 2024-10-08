@@ -188,6 +188,10 @@ int32 getDistance3D(const IVec3 &v1, const IVec3 &v2);
 struct BoundingBox {
 	IVec3 mins;
 	IVec3 maxs;
+
+	bool isValid() const {
+		return mins.x <= maxs.x && mins.y <= maxs.y && mins.z <= maxs.z;
+	}
 };
 
 struct ActorBoundingBox {
@@ -752,8 +756,12 @@ inline constexpr int32 FromAngle(int32 angle) {
 	return angle;
 }
 
-inline double AngleToRadians(int32 angle) {
-	return 2.0 * M_PI * angle / (double)LBAAngles::ANGLE_360;
+inline double AngleToDegree(int32 angle) {
+	return (double)angle / (double)LBAAngles::ANGLE_360 * 360.0;
+}
+
+inline int DegreeToAngle(double degree) {
+	return (int)(degree * (double)LBAAngles::ANGLE_360) / 360.0;
 }
 
 inline int32 ClampAngle(int32 angle) {

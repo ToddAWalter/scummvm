@@ -233,13 +233,13 @@ int32 Actor::searchBody(BodyType bodyIdx, int32 actorIdx, ActorBoundingBox &acto
 		return -1;
 	}
 	ActorStruct *actor = _engine->_scene->getActor(actorIdx);
-	const EntityBody *body = actor->_entityDataPtr->getBody((int)bodyIdx);
+	const EntityBody *body = actor->_entityDataPtr->getEntityBody((int)bodyIdx);
 	if (body == nullptr) {
 		warning("Failed to get entity body for body idx %i", (int)bodyIdx);
 		return -1;
 	}
 	actorBoundingBox = body->actorBoundingBox;
-	return body->hqrBodyIndex;
+	return (int)bodyIdx;
 }
 
 void Actor::initBody(BodyType bodyIdx, int16 actorIdx) {
@@ -275,7 +275,7 @@ void Actor::initBody(BodyType bodyIdx, int16 actorIdx) {
 	if (actorBoundingBox.hasBoundingBox) {
 		localActor->_boundingBox = actorBoundingBox.bbox;
 	} else {
-		const BodyData &bd = _engine->_resources->_bodyData[localActor->_body];
+		const BodyData &bd = localActor->_entityDataPtr->getBody(localActor->_body);
 		localActor->_boundingBox = bd.bbox;
 
 		int32 size = 0;
@@ -298,7 +298,7 @@ void Actor::initBody(BodyType bodyIdx, int16 actorIdx) {
 		localActor->_boundingBox.maxs.z = size;
 	}
 	if (oldBody != -1 && localActor->_anim != -1) {
-		copyInterAnim(_engine->_resources->_bodyData[oldBody], _engine->_resources->_bodyData[localActor->_body]);
+		copyInterAnim(localActor->_entityDataPtr->getBody(oldBody), localActor->_entityDataPtr->getBody(localActor->_body));
 	}
 }
 
@@ -406,10 +406,7 @@ void Actor::hitObj(int32 actorIdx, int32 actorIdxAttacked, int32 hitforce, int32
 			_engine->_movements->_lastJoyFlag = true;
 		}
 
-		actor->_lifePoint -= hitforce;
-		if (actor->_lifePoint < 0) {
-			actor->_lifePoint = 0;
-		}
+		actor->addLife(-hitforce);
 	} else {
 		_engine->_animations->initAnim(AnimationTypes::kHit, AnimType::kAnimationInsert, AnimationTypes::kAnimInvalid, actorIdxAttacked);
 	}

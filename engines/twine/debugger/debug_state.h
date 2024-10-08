@@ -82,6 +82,13 @@ public:
 	bool _godMode = false;
 	unsigned int _typeZones = 127; // all zones on as default
 	int16 _onlyLoadActor = -1;
+	const char *_openPopup = nullptr;
+	bool _holomapFlagsWindow = false;
+	bool _gameFlagsWindow = false;
+	bool _menuTextWindow = false;
+	bool _sceneDetailsWindow = false;
+	bool _actorDetailsWindow = true;
+	bool _sceneFlagsWindow = false;
 
 	bool _useFreeCamera = false;
 	bool _disableGridRendering = false;

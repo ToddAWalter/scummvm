@@ -150,7 +150,6 @@ private:
 
 	TextData _textData;
 	Anim3DSData _anim3DSData;
-
 public:
 	Resources(TwinEEngine *engine) : _engine(engine) {}
 	~Resources();
@@ -171,9 +170,6 @@ public:
 	SpriteData _spriteData[NUM_SPRITES];
 
 	AnimData _animData[NUM_ANIMS];
-
-	/** Actors 3D body table - size of NUM_BODIES */
-	BodyData _bodyData[NUM_BODIES];
 
 	/** Table with all loaded samples */
 	uint8 *_samplesTable[NUM_SAMPLES]{nullptr};
@@ -197,6 +193,9 @@ public:
 	void initResources();
 
 	const Trajectory *getTrajectory(int index) const;
+	const TrajectoryData &getTrajectories() const {
+		return _trajectories;
+	}
 	void loadEntityData(EntityData &entityData, int32 &index);
 
 	const TextEntry *getText(TextBankId textBankId, TextId index) const;

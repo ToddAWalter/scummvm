@@ -434,10 +434,10 @@ bool Animations::initAnim(AnimationTypes newAnim, AnimType flag, AnimationTypes 
 
 	if (actor->_anim == -1) {
 		// if no previous animation
-		setAnimObjet(0, _engine->_resources->_animData[newanim], _engine->_resources->_bodyData[actor->_body], &actor->_animTimerData);
+		setAnimObjet(0, _engine->_resources->_animData[newanim], actor->_entityDataPtr->getBody(actor->_body), &actor->_animTimerData);
 	} else {
 		// interpolation between animations
-		stockInterAnim(_engine->_resources->_bodyData[actor->_body], &actor->_animTimerData);
+		stockInterAnim(actor->_entityDataPtr->getBody(actor->_body), &actor->_animTimerData);
 	}
 
 	actor->_anim = newanim;
@@ -562,7 +562,7 @@ void Animations::doAnim(int32 actorIdx) {
 			const AnimData &animData = _engine->_resources->_animData[actor->_anim];
 
 			bool keyFramePassed = false;
-			if (_engine->_resources->_bodyData[actor->_body].isAnimated()) {
+			if (actor->_entityDataPtr->getBody(actor->_body).isAnimated()) {
 				keyFramePassed = setInterDepObjet(actor->_frame, animData, &actor->_animTimerData);
 			}
 
@@ -677,19 +677,11 @@ void Animations::doAnim(int32 actorIdx) {
 			col1 |= collision->doCornerReajustTwinkel(actor, actor->_boundingBox.maxs.x, actor->_boundingBox.mins.y, actor->_boundingBox.maxs.z, 4);
 			col1 |= collision->doCornerReajustTwinkel(actor, actor->_boundingBox.mins.x, actor->_boundingBox.mins.y, actor->_boundingBox.maxs.z, 8);
 		} else {
-			// TODO: hack to fix tank-not-moving bug https://bugs.scummvm.org/ticket/13177
-			// remove processActorSave
-			const IVec3 processActorSave = processActor;
-
 			// check other actors collisions with bricks
 			col1 |= collision->doCornerReajust(actor, actor->_boundingBox.mins.x, actor->_boundingBox.mins.y, actor->_boundingBox.mins.z, 1);
 			col1 |= collision->doCornerReajust(actor, actor->_boundingBox.maxs.x, actor->_boundingBox.mins.y, actor->_boundingBox.mins.z, 2);
 			col1 |= collision->doCornerReajust(actor, actor->_boundingBox.maxs.x, actor->_boundingBox.mins.y, actor->_boundingBox.maxs.z, 4);
 			col1 |= collision->doCornerReajust(actor, actor->_boundingBox.mins.x, actor->_boundingBox.mins.y, actor->_boundingBox.maxs.z, 8);
-			// TODO: hack to fix tank-not-moving bug https://bugs.scummvm.org/ticket/13177
-			if (actorIdx == 1 && _engine->_scene->_currentSceneIdx == LBA1SceneId::Hamalayi_Mountains_2nd_fighting_scene) {
-				processActor = processActorSave;
-			}
 		}
 
 		// process wall hit while running

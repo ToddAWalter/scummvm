@@ -19,15 +19,19 @@
  *
  */
 
-#include "backends/imgui/IconsMaterialSymbols.h"
-
+#include "twine/debugger/debugtools.h"
 #include "backends/imgui/imgui.h"
+#include "backends/imgui/imgui_utils.h"
+#include "common/scummsys.h"
+#include "common/str-enc.h"
+#include "common/str.h"
 #include "common/util.h"
 #include "twine/debugger/debug_state.h"
-#include "twine/debugger/debugtools.h"
 #include "twine/debugger/dt-internal.h"
 #include "twine/holomap.h"
+#include "twine/parser/entity.h"
 #include "twine/renderer/redraw.h"
+#include "twine/resources/resources.h"
 #include "twine/scene/actor.h"
 #include "twine/scene/gamestate.h"
 #include "twine/scene/grid.h"
@@ -36,15 +40,95 @@
 #include "twine/shared.h"
 #include "twine/twine.h"
 
+namespace ImGuiEx {
+
+bool InputIVec3(const char *label, TwinE::IVec3 &v, ImGuiInputTextFlags flags = 0) {
+	int tmp[3] = {v.x, v.y, v.z};
+	if (ImGui::InputInt3(label, tmp, flags)) {
+		v.x = tmp[0];
+		v.y = tmp[1];
+		v.z = tmp[2];
+		return true;
+	}
+	return false;
+}
+
+bool InputAngle(const char *label, int32 *v, int step = 1, int step_fast = 100, const char *format = "%.2f", ImGuiInputTextFlags flags = 0) {
+	double tmp = TwinE::AngleToDegree(*v);
+	if (ImGui::InputDouble(label, &tmp, step, step_fast, format, flags)) {
+		*v = TwinE::DegreeToAngle(tmp);
+		return true;
+	}
+	ImGui::SetItemTooltip("Angle: %i", (int)*v);
+	return false;
+}
+
+bool InputBoundingBox(ImGuiID id, const char *prefixLabel, TwinE::BoundingBox &bbox) {
+	TwinE::BoundingBox copy = bbox;
+	Common::String idStr = Common::String::format("%s mins##mins%u", prefixLabel, id);
+	if (ImGuiEx::InputIVec3(idStr.c_str(), copy.mins, ImGuiInputTextFlags_EnterReturnsTrue)) {
+		if (copy.isValid()) {
+			bbox.mins = copy.mins;
+		}
+		return true;
+	}
+	idStr = Common::String::format("%s maxs##maxs%u", prefixLabel, id);
+	if (ImGuiEx::InputIVec3(idStr.c_str(), copy.maxs, ImGuiInputTextFlags_EnterReturnsTrue)) {
+		if (copy.isValid()) {
+			bbox.maxs = copy.maxs;
+		}
+		return true;
+	}
+	return false;
+}
+
+} // namespace ImGuiEx
+
 namespace TwinE {
 
-#define GAME_STATE_TITLE "Game State"
-#define MAIN_WINDOW_TITLE "Debug window"
 #define HOLOMAP_FLAGS_TITLE "Holomap flags"
 #define GAME_FLAGS_TITLE "Game flags"
 #define ACTOR_DETAILS_TITLE "Actor"
-#define GRID_TITLE "Grid"
 #define MENU_TEXT_TITLE "Menu texts"
+
+static const char *toString(ShapeType type) {
+	switch (type) {
+	case ShapeType::kNone:
+		return "None";
+	case ShapeType::kSolid:
+		return "Solid";
+	case ShapeType::kStairsTopLeft:
+		return "StairsTopLeft";
+	case ShapeType::kStairsTopRight:
+		return "StairsTopRight";
+	case ShapeType::kStairsBottomLeft:
+		return "StairsBottomLeft";
+	case ShapeType::kStairsBottomRight:
+		return "StairsBottomRight";
+	case ShapeType::kDoubleSideStairsTop1:
+		return "DoubleSideStairsTop1";
+	case ShapeType::kDoubleSideStairsBottom1:
+		return "DoubleSideStairsBottom1";
+	case ShapeType::kDoubleSideStairsLeft1:
+		return "DoubleSideStairsLeft1";
+	case ShapeType::kDoubleSideStairsRight1:
+		return "DoubleSideStairsRight1";
+	case ShapeType::kDoubleSideStairsTop2:
+		return "DoubleSideStairsTop2";
+	case ShapeType::kDoubleSideStairsBottom2:
+		return "DoubleSideStairsBottom2";
+	case ShapeType::kDoubleSideStairsLeft2:
+		return "DoubleSideStairsLeft2";
+	case ShapeType::kDoubleSideStairsRight2:
+		return "DoubleSideStairsRight2";
+	case ShapeType::kFlatBottom1:
+		return "FlatBottom1";
+	case ShapeType::kFlatBottom2:
+		return "FlatBottom2";
+	default:
+		return "Unknown";
+	}
+}
 
 void onImGuiInit() {
 	ImGuiIO &io = ImGui::GetIO();
@@ -63,12 +147,131 @@ void onImGuiInit() {
 	_tinyFont = ImGui::addTTFFontFromArchive("FreeSans.ttf", 10.0f, nullptr, nullptr);
 }
 
-static void mainWindow(int &currentActor, TwinEEngine *engine) {
-	if (ImGui::Begin(MAIN_WINDOW_TITLE)) {
+static void holomapFlagsWindow(TwinEEngine *engine) {
+	if (!engine->_debugState->_holomapFlagsWindow) {
+		return;
+	}
+	if (ImGui::Begin(HOLOMAP_FLAGS_TITLE, &engine->_debugState->_holomapFlagsWindow)) {
+		if (ImGui::BeginTable("###holomapflags", 8)) {
+			for (int i = 0; i < engine->numHoloPos(); ++i) {
+				ImGui::TableNextColumn();
+				Common::String id = Common::String::format("[%03d]", i);
+				ImGuiEx::InputInt(id.c_str(), &engine->_gameState->_holomapFlags[i]);
+				ImGui::SetItemTooltip("%s", engine->_holomap->getLocationName(i));
+			}
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+}
+
+static void sceneFlagsWindow(TwinEEngine *engine) {
+	if (!engine->_debugState->_sceneFlagsWindow) {
+		return;
+	}
+
+	if (ImGui::Begin("Scene flags", &engine->_debugState->_sceneFlagsWindow)) {
+		if (ImGui::BeginTable("###sceneflags", 8)) {
+			for (int i = 0; i < NUM_SCENES_FLAGS; ++i) {
+				ImGui::TableNextColumn();
+				Common::String id = Common::String::format("[%03d]", i);
+				ImGuiEx::InputInt(id.c_str(), &engine->_scene->_listFlagCube[i]);
+			}
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+}
+
+static void gameFlagsWindow(TwinEEngine *engine) {
+	if (!engine->_debugState->_gameFlagsWindow) {
+		return;
+	}
+	if (ImGui::Begin(GAME_FLAGS_TITLE, &engine->_debugState->_gameFlagsWindow)) {
+		ImGui::Text("Chapter %i", engine->_gameState->getChapter());
+		if (ImGui::BeginTable("###gameflags", 8)) {
+			for (int i = 0; i < NUM_GAME_FLAGS; ++i) {
+				ImGui::TableNextColumn();
+				Common::String id = Common::String::format("[%03d]", i);
+				int16 val = engine->_gameState->hasGameFlag(i);
+				if (ImGuiEx::InputInt(id.c_str(), &val)) {
+					engine->_gameState->setGameFlag(i, val);
+				}
+			}
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+}
+
+static void menuTextsWindow(TwinEEngine *engine) {
+	if (!engine->_debugState->_menuTextWindow) {
+		return;
+	}
+	if (ImGui::Begin(MENU_TEXT_TITLE, &engine->_debugState->_menuTextWindow)) {
+		int id = (int)engine->_debugState->_textBankId;
+		if (ImGui::InputInt("Text bank", &id)) {
+			engine->_debugState->_textBankId = (TextBankId)id;
+		}
+		const TextBankId oldTextBankId = engine->_text->textBank();
+		engine->_text->initDial(engine->_debugState->_textBankId);
+		for (int32 i = 0; i < 1000; ++i) {
+			char buf[256];
+			if (engine->_text->getMenuText((TextId)i, buf, sizeof(buf))) {
+				ImGui::Text("%4i: %s\n", i, buf);
+			}
+		}
+		engine->_text->initDial(oldTextBankId);
+	}
+	ImGui::End();
+}
+
+static void sceneSelectionCombo(TwinEEngine *engine) {
+	Scene *scene = engine->_scene;
+	GameState *gameState = engine->_gameState;
+	Common::U32String originalSceneName(gameState->_sceneName, Common::kDos850);
+	const Common::String sceneName = originalSceneName.encode(Common::kUtf8);
+	if (ImGui::BeginCombo("Scene", sceneName.c_str())) {
+		for (int i = 0; i < engine->numHoloPos(); ++i) {
+			Common::U32String originalLocationName(engine->_holomap->getLocationName(i), Common::kDos850);
+			const Common::String locationName = originalLocationName.encode(Common::kUtf8);
+			Common::String name = Common::String::format("[%03d] %s", i, locationName.c_str());
+			if (ImGui::Selectable(name.c_str(), i == engine->_scene->_currentSceneIdx)) {
+				scene->_currentSceneIdx = i;
+				scene->_needChangeScene = scene->_currentSceneIdx;
+				engine->_redraw->_firstTime = true;
+			}
+		}
+		ImGui::EndCombo();
+	}
+}
+
+static const struct ZonesDesc {
+	const char *name;
+	ZoneType type;
+	const char *desc;
+} ZoneDescriptions[] = {
+	{"Cube", ZoneType::kCube, "Change to another scene"},
+	{"Camera", ZoneType::kCamera, "Binds camera view"},
+	{"Sceneric", ZoneType::kSceneric, "For use in Life Script"},
+	{"Grid", ZoneType::kGrid, "Set disappearing Grid fragment"},
+	{"Object", ZoneType::kObject, "Give bonus"},
+	{"Text", ZoneType::kText, "Displays text message"},
+	{"Ladder", ZoneType::kLadder, "Hero can climb on it"},
+	{"Escalator", ZoneType::kEscalator, nullptr},
+	{"Hit", ZoneType::kHit, nullptr},
+	{"Rail", ZoneType::kRail, nullptr}};
+
+static void sceneDetailsWindows(TwinEEngine *engine) {
+	if (!engine->_debugState->_sceneDetailsWindow) {
+		return;
+	}
+	if (ImGui::Begin("Scene", &engine->_debugState->_sceneDetailsWindow)) {
 		Scene *scene = engine->_scene;
 		GameState *gameState = engine->_gameState;
 		ImGui::Text("Scene: %i", scene->_currentSceneIdx);
 		ImGui::Text("Scene name: %s", gameState->_sceneName);
+		sceneSelectionCombo(engine);
 
 		if (ImGui::Checkbox("Bounding boxes", &engine->_debugState->_showingActors)) {
 			engine->_redraw->_firstTime = true;
@@ -79,66 +282,255 @@ static void mainWindow(int &currentActor, TwinEEngine *engine) {
 		if (ImGui::Checkbox("Zones", &engine->_debugState->_showingZones)) {
 			engine->_redraw->_firstTime = true;
 		}
-
+		// if (ImGui::Checkbox("Tracks", &engine->_debugState->_showingTracks)) {
+		// 	engine->_redraw->_firstTime = true;
+		// }
 		if (engine->_debugState->_showingZones) {
-			if (ImGui::CollapsingHeader("Zones")) {
-				static const struct ZonesDesc {
-					const char *name;
-					ZoneType type;
-					const char *desc;
-				} d[] = {
-					{"Cube", ZoneType::kCube, "Change to another scene"},
-					{"Camera", ZoneType::kCamera, "Binds camera view"},
-					{"Sceneric", ZoneType::kSceneric, "For use in Life Script"},
-					{"Grid", ZoneType::kGrid, "Set disappearing Grid fragment"},
-					{"Object", ZoneType::kObject, "Give bonus"},
-					{"Text", ZoneType::kText, "Displays text message"},
-					{"Ladder", ZoneType::kLadder, "Hero can climb on it"},
-					{"Escalator", ZoneType::kEscalator, nullptr},
-					{"Hit", ZoneType::kHit, nullptr},
-					{"Rail", ZoneType::kRail, nullptr}};
-
-				for (int i = 0; i < ARRAYSIZE(d); ++i) {
-					ImGui::CheckboxFlags(d[i].name, &engine->_debugState->_typeZones, (1u << (uint32)d[i].type));
-					if (d[i].desc) {
-						ImGui::SetTooltip(d[i].desc);
+			if (ImGui::CollapsingHeader("Show zone types")) {
+				for (int i = 0; i < ARRAYSIZE(ZoneDescriptions); ++i) {
+					if (ImGui::CheckboxFlags(ZoneDescriptions[i].name, &engine->_debugState->_typeZones, (1u << (uint32)ZoneDescriptions[i].type))) {
+						engine->_redraw->_firstTime = true;
+					}
+					if (ZoneDescriptions[i].desc) {
+						ImGui::SetItemTooltip(ZoneDescriptions[i].desc);
 					}
 				}
 			}
 		}
 
-		if (ImGui::BeginCombo("Scene", gameState->_sceneName)) {
-			for (int i = 0; i < engine->numHoloPos(); ++i) {
-				Common::String name = Common::String::format("[%03d] %s", i, engine->_holomap->getLocationName(i));
-				if (ImGui::Selectable(name.c_str(), i == engine->_scene->_currentSceneIdx)) {
-					scene->_currentSceneIdx = i;
-					scene->_needChangeScene = scene->_currentSceneIdx;
-					engine->_redraw->_firstTime = true;
+		if (ImGui::CollapsingHeader("Zones##zonesheader")) {
+			for (int i = 0; i < scene->_sceneNumZones; ++i) {
+				ZoneStruct *zone = &scene->_sceneZones[i];
+				ImGui::Text("Zone idx: %i", i);
+				ImGui::Indent();
+				const ZonesDesc &zoneDesc = ZoneDescriptions[(int)zone->type];
+				ImGui::Text("Type: %s", zoneDesc.name);
+				if (zoneDesc.desc != nullptr) {
+					ImGui::SameLine();
+					ImGui::Text("%s", zoneDesc.desc);
+				}
+				ImGui::PushID(i);
+				ImGuiEx::InputIVec3("Mins", zone->mins);
+				ImGuiEx::InputIVec3("Maxs", zone->maxs);
+				ImGui::PopID();
+
+				ImGui::Text("Num: %i", zone->num);
+				ImGui::Text("Info0: %i", zone->infoData.generic.info0);
+				ImGui::Text("Info1: %i", zone->infoData.generic.info1);
+				ImGui::Text("Info2: %i", zone->infoData.generic.info2);
+				ImGui::Text("Info3: %i", zone->infoData.generic.info3);
+				ImGui::Text("Info4: %i", zone->infoData.generic.info4);
+				ImGui::Text("Info5: %i", zone->infoData.generic.info5);
+				ImGui::Text("Info6: %i", zone->infoData.generic.info6);
+				ImGui::Text("Info7: %i", zone->infoData.generic.info7);
+				ImGui::Unindent();
+			}
+		}
+
+		if (ImGui::CollapsingHeader("Tracks##tracksheader")) {
+			for (int i = 0; i < scene->_sceneNumTracks; ++i) {
+				ImGui::Text("Track %i: %i %i %i", i, scene->_sceneTracks[i].x, scene->_sceneTracks[i].y, scene->_sceneTracks[i].z);
+			}
+		}
+
+		if (ImGui::CollapsingHeader("Trajectories##trajectoriesheader")) {
+			const TrajectoryData &trajectories = engine->_resources->getTrajectories();
+			for (int i = 0; i < (int)trajectories.getTrajectories().size(); ++i) {
+				const Trajectory *trajectory = trajectories.getTrajectory(i);
+				ImGui::Text("Trajectory %i", i);
+				ImGui::SameLine();
+				Common::String buttonId = Common::String::format("Activate##activateTrajectory%i", i);
+				if (ImGui::Button(buttonId.c_str())) {
+					scene->_holomapTrajectory = i;
+					scene->reloadCurrentScene();
+				}
+				ImGui::Indent();
+				ImGui::Text("location: %i", trajectory->locationIdx);
+				ImGui::Text("trajectory location: %i", trajectory->trajLocationIdx);
+				ImGui::Text("vehicle: %i", trajectory->vehicleIdx);
+				ImGui::Text("pos: %i %i %i", trajectory->pos.x, trajectory->pos.y, trajectory->pos.z);
+				ImGui::Text("num anim frames: %i", trajectory->numAnimFrames);
+				ImGui::Unindent();
+			}
+		}
+		ImGuiEx::InputInt("Previous scene index", &scene->_previousSceneIdx);
+		ImGuiEx::InputInt("Need change scene index", &scene->_needChangeScene);
+
+		ImGui::Text("Climbing flag");
+		ImGui::SameLine();
+		ImGuiEx::Boolean(scene->_flagClimbing);
+
+		ImGuiEx::InputInt("Currently followed actor", &scene->_currentlyFollowedActor);
+
+		ImGui::Checkbox("Enable enhancements", &scene->_enableEnhancements);
+		ImGui::Checkbox("Render grid tiles", &scene->_enableGridTileRendering);
+		ImGuiEx::InputInt("Current script value", &scene->_currentScriptValue);
+		ImGuiEx::InputInt("Talking actor", &scene->_talkingActor);
+		ImGuiEx::InputInt("Cube jingle", &scene->_cubeJingle);
+		ImGuiEx::InputIVec3("New hero pos", scene->_newHeroPos);
+		ImGui::InputInt("Alpha light", &scene->_alphaLight);
+		ImGui::InputInt("Beta light", &scene->_betaLight);
+		ImGuiEx::InputInt("Fall Y position", &scene->_startYFalling);
+		ImGui::Text("Hero position type: %i", (int)scene->_heroPositionType);
+	}
+	ImGui::End();
+}
+
+static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
+	if (!engine->_debugState->_actorDetailsWindow) {
+		return;
+	}
+	ActorStruct *actor = engine->_scene->getActor(actorIdx);
+	if (actor == nullptr) {
+		return;
+	}
+
+	if (ImGui::Begin(ACTOR_DETAILS_TITLE, &engine->_debugState->_actorDetailsWindow)) {
+		if (actorIdx < 0 || actorIdx > engine->_scene->_nbObjets) {
+			actorIdx = 0;
+		}
+		Common::String currentActorLabel = Common::String::format("Actor %i", actorIdx);
+		if (ImGui::BeginCombo("Actor", currentActorLabel.c_str())) {
+			for (int i = 0; i < engine->_scene->_nbObjets; ++i) {
+				Common::String label = Common::String::format("Actor %i", i);
+				if (engine->_scene->_mecaPenguinIdx == i) {
+					label += " (Penguin)";
+				}
+				const bool selected = i == actorIdx;
+				if (ImGui::Selectable(label.c_str(), selected)) {
+					actorIdx = i;
 				}
 			}
 			ImGui::EndCombo();
 		}
 
-		if (currentActor < 0 || currentActor > engine->_scene->_nbObjets) {
-			currentActor = 0;
+		ImGui::Separator();
+
+		ImGuiEx::InputIVec3("Pos", actor->_posObj);
+		ImGuiEx::InputAngle("Rotation", &actor->_beta);
+		ImGuiEx::InputInt("Speed", &actor->_speed);
+		ImGuiEx::InputInt("Life", &actor->_lifePoint);
+		ImGuiEx::InputInt("Armor", &actor->_armor);
+		ImGuiEx::InputBoundingBox(actorIdx, "Bounding box", actor->_boundingBox);
+
+		if (ImGui::BeginTable("Properties", 2)) {
+			ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed);
+			ImGui::TableHeadersRow();
+
+			ImGui::TableNextColumn();
+			ImGui::Text("Followed");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_followedActor);
+			ImGui::TableNextColumn();
+			ImGui::Text("Control mode");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_controlMode);
+			ImGui::TableNextColumn();
+			ImGui::Text("Delay");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_delayInMillis);
+			ImGui::TableNextColumn();
+			ImGui::Text("Strength");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_strengthOfHit);
+			ImGui::TableNextColumn();
+			ImGui::Text("Hit by");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_hitBy);
+			ImGui::TableNextColumn();
+			ImGui::Text("Bonus");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_bonusParameter);
+			ImGui::TableNextColumn();
+			ImGui::Text("Brick shape");
+			ImGui::TableNextColumn();
+			ImGui::Text("%s", toString(actor->brickShape()));
+			ImGui::TableNextColumn();
+			ImGui::Text("Brick causes damage");
+			ImGui::TableNextColumn();
+			ImGuiEx::Boolean(actor->brickCausesDamage());
+			ImGui::TableNextColumn();
+			ImGui::Text("Collision");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_objCol);
+			ImGui::TableNextColumn();
+			ImGui::Text("Talk color");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_talkColor);
+			ImGui::TableNextColumn();
+			ImGui::Text("Body");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_body); // TODO: link to resources
+			ImGui::TableNextColumn();
+			ImGui::Text("Gen body");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_genBody);
+			ImGui::TableNextColumn();
+			ImGui::Text("Save gen body");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_saveGenBody);
+			ImGui::TableNextColumn();
+			ImGui::Text("Gen anim");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_genAnim);
+			ImGui::TableNextColumn();
+			ImGui::Text("Next gen anim");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_nextGenAnim);
+			ImGui::TableNextColumn();
+			ImGui::Text("Ptr anim action");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_ptrAnimAction);
+			ImGui::TableNextColumn();
+			ImGui::Text("Sprite");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i", actor->_sprite);
+			ImGui::TableNextColumn();
+			ImGui::Text("A3DS");
+			ImGui::TableNextColumn();
+			ImGui::Text("%i %i %i", actor->A3DS.Num, actor->A3DS.Deb, actor->A3DS.Fin);
+
+			ImGui::EndTable();
 		}
-		Common::String currentActorLabel = Common::String::format("Actor %i", currentActor);
-		if (ImGui::BeginCombo("Actor", currentActorLabel.c_str())) {
-			for (int i = 0; i < engine->_scene->_nbObjets; ++i) {
-				Common::String label = Common::String::format("Actor %i", i);
-				const bool selected = i == currentActor;
-				if (ImGui::Selectable(label.c_str(), selected)) {
-					currentActor = i;
-				}
+
+		if (actor->_body != -1) {
+			ImGui::SeparatorText("Body");
+			BodyData &bodyData = actor->_entityDataPtr->getBody(actor->_body);
+			ImGuiEx::InputBoundingBox((int)(uintptr)&bodyData, "Bounding box", bodyData.bbox);
+		}
+
+		ImGui::SeparatorText("Entity");
+		EntityData &entityData = actor->_entityData;
+		Common::Array<EntityBody> &entityBodies = entityData.getBodies();
+		ImGui::Text("Bodies: %i", (int)entityBodies.size());
+		for (EntityBody &entityBody : entityBodies) {
+			ImGui::Text("%s index: %i", Resources::HQR_FILE3D_FILE, entityBody.index);
+			ImGui::Indent();
+			ImGui::Text("%s index: %i", Resources::HQR_BODY_FILE, entityBody.hqrBodyIndex);
+			Common::String id = Common::String::format("Has bounding box##%i", entityBody.index);
+			ImGui::Checkbox(id.c_str(), &entityBody.actorBoundingBox.hasBoundingBox);
+			ImGuiEx::InputBoundingBox((int)(uintptr)&entityBody, "Bounding box", entityBody.actorBoundingBox.bbox);
+			ImGui::Unindent();
+		}
+		Common::Array<EntityAnim> &animations = entityData.getAnimations();
+		ImGui::Text("Animations: %i", (int)animations.size());
+		for (EntityAnim &animation : animations) {
+			ImGui::Text("Animation type: %i", (int)animation.animation);
+			ImGui::Indent();
+			ImGui::Text("Body animation index: %i", (int)animation.animIndex);
+			ImGui::Text("actions: %i", (int)animation._actions.size());
+			for (EntityAnim::Action &action : animation._actions) {
+				ImGui::BulletText("%i", (int)action.type);
 			}
-			ImGui::EndCombo();
+			ImGui::Unindent();
 		}
 	}
 	ImGui::End();
 }
 
-static void gameState(TwinEEngine *engine) {
-	if (ImGui::Begin(GAME_STATE_TITLE)) {
+static void gameStateMenu(TwinEEngine *engine) {
+	if (ImGui::BeginMenu("Game State")) {
 		int keys = engine->_gameState->_inventoryNumKeys;
 		if (ImGui::InputInt("Keys", &keys)) {
 			engine->_gameState->setKeys(keys);
@@ -171,52 +563,41 @@ static void gameState(TwinEEngine *engine) {
 		if (ImGui::InputInt("Gas", &gas)) {
 			engine->_gameState->setGas(gas);
 		}
-	}
-	ImGui::End();
-}
+		const TextBankId oldTextBankId = engine->_text->textBank();
+		engine->_text->initDial(TextBankId::Inventory_Intro_and_Holomap);
 
-static void holomapFlags(TwinEEngine *engine) {
-	if (ImGui::Begin(HOLOMAP_FLAGS_TITLE)) {
-		if (ImGui::BeginTable("###holomapflags", 8)) {
-			for (int i = 0; i < engine->numHoloPos(); ++i) {
-				ImGui::TableNextColumn();
-				ImGui::Text("[%03d] = %d", i, engine->_gameState->_holomapFlags[i]);
+		for (int i = 0; i < NUM_INVENTORY_ITEMS; ++i) {
+			Common::String label;
+			if (engine->_text->getText((TextId)(100 + i))) {
+				Common::U32String original(engine->_text->_currDialTextEntry->string, Common::kDos850);
+				label = original.encode(Common::kUtf8).substr(0, 30);
+			} else {
+				label = Common::String::format("Item %i", i);
 			}
-			ImGui::EndTable();
-		}
-	}
-	ImGui::End();
-}
-
-static void gameFlags(TwinEEngine *engine) {
-	if (ImGui::Begin(GAME_FLAGS_TITLE)) {
-		ImGui::Text("Chapter %i", engine->_gameState->getChapter());
-		if (ImGui::BeginTable("###gameflags", 8)) {
-			for (int i = 0; i < NUM_GAME_FLAGS; ++i) {
-				ImGui::TableNextColumn();
-				ImGui::Text("[%03d] = %d", i, engine->_gameState->hasGameFlag(i));
+			uint8 &value = engine->_gameState->_inventoryFlags[i];
+			bool hasItem = value != 0;
+			if (ImGui::Checkbox(label.c_str(), &hasItem)) {
+				value = hasItem == 0 ? 0 : 1;
 			}
-			ImGui::EndTable();
 		}
+		engine->_text->initDial(oldTextBankId);
+		ImGui::EndMenu();
 	}
-	ImGui::End();
 }
 
-static void grid(TwinEEngine *engine) {
-	if (ImGui::Begin(GRID_TITLE)) {
+static void gridMenu(TwinEEngine *engine) {
+	if (ImGui::BeginMenu("Grid")) {
 		ImGui::Text("World cube %i %i %i", engine->_grid->_worldCube.x, engine->_grid->_worldCube.y, engine->_grid->_worldCube.z);
-		ImGui::Text("World cube %i %i %i", engine->_grid->_worldCube.x, engine->_grid->_worldCube.y, engine->_grid->_worldCube.z);
-
+#if 0
 		Grid *grid = engine->_grid;
-		// Increase celling grid index
-		if (ImGui::Button(ICON_MS_PLUS_ONE)) {
+
+		if (ImGui::Button(ICON_MS_ADD)) {
 			grid->_cellingGridIdx++;
 			if (grid->_cellingGridIdx > 133) {
 				grid->_cellingGridIdx = 133;
 			}
 		}
-		// Decrease celling grid index
-		if (ImGui::Button(ICON_MS_EV_SHADOW_MINUS)) {
+		if (ImGui::Button(ICON_MS_REMOVE)) {
 			grid->_cellingGridIdx--;
 			if (grid->_cellingGridIdx < 0) {
 				grid->_cellingGridIdx = 0;
@@ -238,58 +619,48 @@ static void grid(TwinEEngine *engine) {
 				engine->_scene->_needChangeScene = SCENE_CEILING_GRID_FADE_2; // tricky to make the fade
 			}
 		}
+#endif
+		ImGui::EndMenu();
 	}
-	ImGui::End();
 }
 
-static void menuTexts(TwinEEngine *engine) {
-	if (ImGui::Begin(MENU_TEXT_TITLE)) {
-		int id = (int)engine->_debugState->_textBankId;
-		if (ImGui::InputInt("Text bank", &id)) {
-			engine->_debugState->_textBankId = (TextBankId)id;
+static void debuggerMenu(TwinEEngine *engine) {
+	if (ImGui::BeginMenu("Debugger")) {
+		if (ImGui::MenuItem("Texts")) {
+			engine->_debugState->_menuTextWindow = true;
 		}
-		const TextBankId oldTextBankId = engine->_text->textBank();
-		engine->_text->initDial(engine->_debugState->_textBankId);
-		for (int32 i = 0; i < 1000; ++i) {
-			char buf[256];
-			if (engine->_text->getMenuText((TextId)i, buf, sizeof(buf))) {
-				ImGui::Text("%4i: %s\n", i, buf);
-			}
+		if (ImGui::MenuItem("Holomap flags")) {
+			engine->_debugState->_holomapFlagsWindow = true;
 		}
-		engine->_text->initDial(oldTextBankId);
-	}
-	ImGui::End();
-}
+		if (ImGui::MenuItem("Game flags")) {
+			engine->_debugState->_gameFlagsWindow = true;
+		}
+		if (ImGui::MenuItem("Scene details")) {
+			engine->_debugState->_sceneDetailsWindow = true;
+		}
+		if (ImGui::MenuItem("Scene flags")) {
+			engine->_debugState->_sceneFlagsWindow = true;
+		}
+		if (ImGui::MenuItem("Actor details")) {
+			engine->_debugState->_actorDetailsWindow = true;
+		}
 
-static void actorDetails(int actorIdx, TwinEEngine *engine) {
-	if (ActorStruct *actor = engine->_scene->getActor(actorIdx)) {
-		if (ImGui::Begin(ACTOR_DETAILS_TITLE)) {
-			ImGui::Text("Idx %i", actor->_actorIdx);
-			ImGui::Text("Pos %i %i %i", actor->_posObj.x, actor->_posObj.y, actor->_posObj.z);
-			ImGui::Text("Followed %i", actor->_followedActor);
-			ImGui::Text("Rotation %i", actor->_beta);
-			ImGui::Text("Speed %i", actor->_speed);
-			ImGui::Text("Control mode %i", actor->_controlMode);
-			ImGui::Text("Delay %i", actor->_delayInMillis);
-			ImGui::Text("Crop %i %i %i %i", actor->_cropLeft, actor->_cropTop, actor->_cropRight, actor->_cropBottom);
-			ImGui::Text("Strength %i", actor->_strengthOfHit);
-			ImGui::Text("Hit by %i", actor->_hitBy);
-			ImGui::Text("Bonus %i", actor->_bonusParameter);
-			ImGui::Text("Life %i", actor->_lifePoint);
-			ImGui::Text("Brick shape %i", actor->brickShape());
-			ImGui::Text("Brick causes damage %i", actor->brickCausesDamage());
-			ImGui::Text("Collision %i", actor->_objCol);
-			ImGui::Text("Body %i", actor->_body);
-			ImGui::Text("Gen body %i", actor->_genBody);
-			ImGui::Text("Save gen body %i", actor->_saveGenBody);
-			ImGui::Text("Gen anim %i", actor->_genAnim);
-			ImGui::Text("Next gen anim %i", actor->_nextGenAnim);
-			ImGui::Text("Ptr anim action %i", actor->_ptrAnimAction);
-			ImGui::Text("Sprite %i", actor->_sprite);
-			ImGui::Text("A3DS %i %i %i", actor->A3DS.Num, actor->A3DS.Deb, actor->A3DS.Fin);
-			ImGui::Text("Hit by %i", actor->_hitBy);
+		ImGui::SeparatorText("Actions");
+
+		if (ImGui::MenuItem("Center actor")) {
+			ActorStruct *actor = engine->_scene->getActor(OWN_ACTOR_SCENE_INDEX);
+			actor->_posObj = engine->_grid->_worldCube;
+			actor->_posObj.y += 1000;
 		}
-		ImGui::End();
+
+		ImGui::SeparatorText("Options");
+
+		ImGui::Checkbox("Free camera", &engine->_debugState->_useFreeCamera);
+		ImGui::Checkbox("God mode", &engine->_debugState->_godMode);
+
+		sceneSelectionCombo(engine);
+
+		ImGui::EndMenu();
 	}
 }
 
@@ -307,30 +678,23 @@ void onImGuiRender() {
 	TwinEEngine *engine = (TwinEEngine *)g_engine;
 
 	if (ImGui::BeginMainMenuBar()) {
-		if (ImGui::BeginMenu("Debugger")) {
-			ImGui::Checkbox("Free camera", &engine->_debugState->_useFreeCamera);
-			ImGui::Checkbox("God mode", &engine->_debugState->_godMode);
-
-			if (ImGui::MenuItem("Center actor")) {
-				ActorStruct *actor = engine->_scene->getActor(OWN_ACTOR_SCENE_INDEX);
-				actor->_posObj = engine->_grid->_worldCube;
-				actor->_posObj.y += 1000;
-			}
-			ImGui::EndMenu();
-		}
+		debuggerMenu(engine);
+		gameStateMenu(engine);
+		gridMenu(engine);
 		ImGui::EndMainMenuBar();
 	}
 
-	mainWindow(currentActor, engine);
-	gameState(engine);
-	grid(engine);
-	menuTexts(engine);
+	actorDetailsWindow(currentActor, engine);
+	sceneDetailsWindows(engine);
+	menuTextsWindow(engine);
+	holomapFlagsWindow(engine);
+	gameFlagsWindow(engine);
+	sceneFlagsWindow(engine);
 
-	// TODO: combine them
-	holomapFlags(engine);
-	gameFlags(engine);
-
-	actorDetails(currentActor, engine);
+	if (engine->_debugState->_openPopup) {
+		ImGui::OpenPopup(engine->_debugState->_openPopup);
+		engine->_debugState->_openPopup = nullptr;
+	}
 }
 
 void onImGuiCleanup() {
