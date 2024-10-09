@@ -160,7 +160,7 @@ void Movies::scaleFla2x() {
 	}
 }
 
-void Movies::processFrame() {
+void Movies::drawNextFrameFla() {
 	FLASampleStruct sample;
 
 	_frameData.nbFrames = _file.readSint16LE();
@@ -201,13 +201,13 @@ void Movies::processFrame() {
 				// FLA movies don't use cross fade
 				// fade out tricky
 				if (_fadeOut != 1) {
-					_engine->_screens->convertPalToRGBA(_engine->_screens->_palette, _engine->_screens->_paletteRGBACustom);
-					_engine->_screens->fadeToBlack(_engine->_screens->_paletteRGBACustom);
+					_engine->_screens->convertPalToRGBA(_engine->_screens->_palette, _engine->_screens->_palettePcx);
+					_engine->_screens->fadeToBlack(_engine->_screens->_palettePcx);
 					_fadeOut = 1;
 				}
 				break;
 			case 3:
-				_flaPaletteVar = true;
+				_flagFirst = true;
 				break;
 			case 4:
 				// TODO: fade out for 1 second before we stop it
@@ -305,7 +305,7 @@ void Movies::prepareGIF(int index) {
 	debug(2, "Show gif with id %i from %s", index, Resources::HQR_FLAGIF_FILE);
 	delete stream;
 	_engine->delaySkip(5000);
-	_engine->setPalette(_engine->_screens->_paletteRGBA);
+	_engine->setPalette(_engine->_screens->_ptrPal);
 }
 
 void Movies::playGIFMovie(const char *flaName) {
@@ -407,7 +407,7 @@ bool Movies::playMovie(const char *name) { // PlayAnimFla
 
 		ScopedKeyMap scopedKeyMap(_engine, cutsceneKeyMapId);
 
-		_flaPaletteVar = true;
+		_flagFirst = true;
 		do {
 			FrameMarker frame(_engine, _flaHeaderData.speed);
 			_engine->readKeys();
@@ -418,25 +418,25 @@ bool Movies::playMovie(const char *name) { // PlayAnimFla
 				finished = true;
 				break;
 			}
-			processFrame();
+			drawNextFrameFla();
 			scaleFla2x();
 			_engine->_frontVideoBuffer.blitFrom(_engine->_imageBuffer, _engine->_imageBuffer.getBounds(), _engine->_frontVideoBuffer.getBounds());
 
 			// Only blit to screen if isn't a fade
 			if (_fadeOut == -1) {
-				_engine->_screens->convertPalToRGBA(_engine->_screens->_palette, _engine->_screens->_paletteRGBACustom);
+				_engine->_screens->convertPalToRGBA(_engine->_screens->_palette, _engine->_screens->_palettePcx);
 				if (currentFrame == 0) {
 					// fade in the first frame
-					_engine->_screens->fadeIn(_engine->_screens->_paletteRGBACustom);
+					_engine->_screens->fadeIn(_engine->_screens->_palettePcx);
 				} else {
-					_engine->setPalette(_engine->_screens->_paletteRGBACustom);
+					_engine->setPalette(_engine->_screens->_palettePcx);
 				}
 			}
 
 			// TRICKY: fade in tricky
 			if (_fadeOutFrames >= 2) {
-				_engine->_screens->convertPalToRGBA(_engine->_screens->_palette, _engine->_screens->_paletteRGBACustom);
-				_engine->_screens->fadeToPal(_engine->_screens->_paletteRGBACustom);
+				_engine->_screens->convertPalToRGBA(_engine->_screens->_palette, _engine->_screens->_palettePcx);
+				_engine->_screens->fadeToPal(_engine->_screens->_palettePcx);
 				_fadeOut = -1;
 				_fadeOutFrames = 0;
 			}
@@ -447,7 +447,7 @@ bool Movies::playMovie(const char *name) { // PlayAnimFla
 		warning("Unsupported fla version: %u, %s", version, fileNamePath.c_str());
 	}
 
-	_engine->_screens->fadeToBlack(_engine->_screens->_paletteRGBACustom);
+	_engine->_screens->fadeToBlack(_engine->_screens->_palettePcx);
 
 	_engine->_sound->stopSamples();
 	return finished;

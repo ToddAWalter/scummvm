@@ -338,7 +338,7 @@ void HolomapV1::drawHolomapTrajectory(int32 trajectoryIndex) {
 	_engine->_screens->clearScreen();
 
 	initHoloDatas();
-	_engine->setPalette(_engine->_screens->_paletteRGBACustom);
+	_engine->setPalette(_engine->_screens->_palettePcx);
 
 	ScopedEngineFreeze timeFreeze(_engine);
 	const int32 cameraPosX = _engine->width() / 2 + 80;
@@ -422,7 +422,7 @@ void HolomapV1::drawHolomapTrajectory(int32 trajectoryIndex) {
 	}
 
 	_engine->_screens->clearScreen();
-	_engine->setPalette(_engine->_screens->_paletteRGBA);
+	_engine->setPalette(_engine->_screens->_ptrPal);
 	_engine->_gameState->init3DGame();
 	_engine->_interface->restoreClip();
 
@@ -461,7 +461,7 @@ int32 HolomapV1::searchPrevArrow(int32 num) const {
 void HolomapV1::drawListPos(int calpha, int cbeta, int cgamma, bool pos) {
 	int nbobjets = 0;
 	DrawListStruct listTri[MAX_HOLO_POS_2];
-	const int numCube = _engine->_scene->_currentSceneIdx;
+	const int numCube = _engine->_scene->_numCube;
 	const int maxHoloPos = _engine->numHoloPos();
 	for (int n = 0; n < maxHoloPos; ++n) {
 		if (!(_engine->_gameState->_holomapFlags[n] & HOLOMAP_CAN_FOCUS) && n != numCube) {
@@ -527,11 +527,11 @@ void HolomapV1::holoMap() {
 
 	_engine->_gameState->init3DGame();
 
-	_engine->_screens->fadeToBlack(_engine->_screens->_paletteRGBA);
+	_engine->_screens->fadeToBlack(_engine->_screens->_ptrPal);
 	_engine->_sound->stopSamples();
 	_engine->_interface->unsetClip();
 	_engine->_screens->clearScreen();
-	_engine->_screens->fadeToBlack(_engine->_screens->_paletteRGBA);
+	_engine->_screens->fadeToBlack(_engine->_screens->_ptrPal);
 
 	initHoloDatas();
 
@@ -549,7 +549,7 @@ void HolomapV1::holoMap() {
 		error("Failed to load holomap image");
 	}
 
-	int32 current = _engine->_scene->_currentSceneIdx;
+	int32 current = _engine->_scene->_numCube;
 	_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
 
 	int32 otimer = _engine->timerRef;
@@ -575,7 +575,7 @@ void HolomapV1::holoMap() {
 		if (_engine->_input->toggleActionIfActive(TwinEActionType::HolomapPrev)) {
 			current = searchPrevArrow(current);
 			if (current == -1) {
-				current = _engine->_scene->_currentSceneIdx;
+				current = _engine->_scene->_numCube;
 			}
 			_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
 			oalpha = calpha;
@@ -588,7 +588,7 @@ void HolomapV1::holoMap() {
 		} else if (_engine->_input->toggleActionIfActive(TwinEActionType::HolomapNext)) {
 			current = searchNextArrow(current);
 			if (current == -1) {
-				current = _engine->_scene->_currentSceneIdx;
+				current = _engine->_scene->_numCube;
 			}
 			_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
 			oalpha = calpha;
@@ -671,13 +671,13 @@ void HolomapV1::holoMap() {
 
 		if (flagpal) {
 			flagpal = false;
-			_engine->_screens->fadeToPal(_engine->_screens->_paletteRGBACustom);
+			_engine->_screens->fadeToPal(_engine->_screens->_palettePcx);
 		}
 	}
 
 	_engine->_screens->clearScreen();
 	_engine->_text->_flagMessageShade = true;
-	_engine->setPalette(_engine->_screens->_paletteRGBA);
+	_engine->setPalette(_engine->_screens->_ptrPal);
 	_engine->_scene->_alphaLight = alphaLightTmp;
 	_engine->_scene->_betaLight = betaLightTmp;
 

@@ -52,9 +52,9 @@ void Actor::restartHeroScene() {
 
 	sceneHero->_staticFlags.bComputeCollisionWithObj = 1;
 	sceneHero->_staticFlags.bComputeCollisionWithBricks = 1;
-	sceneHero->_staticFlags.bIsZonable = 1;
+	sceneHero->_staticFlags.bCheckZone = 1;
 	sceneHero->_staticFlags.bCanDrown = 1;
-	sceneHero->_staticFlags.bCanFall = 1;
+	sceneHero->_staticFlags.bObjFallable = 1;
 
 	sceneHero->_armor = 1;
 	sceneHero->_offsetTrack = -1;
@@ -412,7 +412,7 @@ void Actor::hitObj(int32 actorIdx, int32 actorIdxAttacked, int32 hitforce, int32
 	}
 }
 
-void Actor::processActorCarrier(int32 actorIdx) {
+void Actor::checkCarrier(int32 actorIdx) {
 	ActorStruct *actor = _engine->_scene->getActor(actorIdx);
 	if (!actor->_staticFlags.bIsCarrierActor) {
 		return;

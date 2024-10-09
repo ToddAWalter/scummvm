@@ -200,7 +200,7 @@ bool TwinEConsole::doSetHolomapTrajectory(int argc, const char **argv) {
 		debugPrintf("Expected to get a holomap trajectory index as parameter\n");
 		return true;
 	}
-	_engine->_scene->_holomapTrajectory = atoi(argv[1]);
+	_engine->_scene->_numHolomapTraj = atoi(argv[1]);
 	_engine->_scene->reloadCurrentScene();
 	return false;
 }
@@ -318,7 +318,7 @@ bool TwinEConsole::doGiveKashes(int argc, const char **argv) {
 }
 
 bool TwinEConsole::doToggleDarkPal(int argc, const char **argv) {
-	if (_engine->_screens->_useAlternatePalette) {
+	if (_engine->_screens->_flagPalettePcx) {
 		debugPrintf("Disabling dark palette\n");
 		_engine->_screens->setNormalPal();
 	} else {
@@ -379,7 +379,7 @@ bool TwinEConsole::doChangeScene(int argc, const char **argv) {
 		debugPrintf("Scene index out of bounds\n");
 		return true;
 	}
-	_engine->_scene->_needChangeScene = atoi(argv[1]);
+	_engine->_scene->_newCube = atoi(argv[1]);
 	_engine->_scene->_heroPositionType = ScenePositionType::kScene;
 	_engine->_scene->changeCube();
 	return true;

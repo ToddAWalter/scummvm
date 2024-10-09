@@ -76,7 +76,7 @@ void MenuOptions::newGame() {
 		}
 		_engine->_cfgfile.FlagDisplayText = tmpFlagDisplayText;
 
-		_engine->_screens->fadeToBlack(_engine->_screens->_paletteRGBACustom);
+		_engine->_screens->fadeToBlack(_engine->_screens->_palettePcx);
 		_engine->_screens->clearScreen();
 
 		if (!aborted) {
@@ -94,7 +94,7 @@ void MenuOptions::newGame() {
 	_engine->_text->_renderTextTriangle = false;
 
 	// set main palette back
-	_engine->setPalette(_engine->_screens->_paletteRGBA);
+	_engine->setPalette(_engine->_screens->_ptrPal);
 }
 
 // TODO: dotemu has credits_<lang>.txt files
@@ -102,8 +102,8 @@ void MenuOptions::showCredits() {
 	const int32 tmpShadowMode = _engine->_cfgfile.ShadowMode;
 	_engine->_cfgfile.ShadowMode = 0;
 	_engine->_gameState->initEngineVars();
-	_engine->_scene->_currentSceneIdx = LBA1SceneId::Credits_List_Sequence;
-	_engine->_scene->_needChangeScene = LBA1SceneId::Credits_List_Sequence;
+	_engine->_scene->_numCube = LBA1SceneId::Credits_List_Sequence;
+	_engine->_scene->_newCube = LBA1SceneId::Credits_List_Sequence;
 
 	flagCredits = true;
 	_engine->gameEngineLoop();
@@ -121,7 +121,7 @@ void MenuOptions::showEndSequence() {
 	_engine->_movie->playMovie(FLA_THEEND);
 
 	_engine->_screens->clearScreen();
-	_engine->setPalette(_engine->_screens->_paletteRGBA);
+	_engine->setPalette(_engine->_screens->_ptrPal);
 }
 
 void MenuOptions::drawSelectableCharacter(int32 x, int32 y) {

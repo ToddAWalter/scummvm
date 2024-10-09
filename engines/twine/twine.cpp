@@ -330,7 +330,7 @@ Common::Error TwinEEngine::run() {
 			_text->normalWinDial();
 			_text->_flagMessageShade = true;
 			_text->_renderTextTriangle = false;
-			_scene->_needChangeScene = sceneIndex;
+			_scene->_newCube = sceneIndex;
 			_scene->_heroPositionType = ScenePositionType::kScene;
 			_state = EngineState::GameLoop;
 		}
@@ -710,7 +710,7 @@ void TwinEEngine::processActorSamplePosition(int32 actorIdx) {
 }
 
 void TwinEEngine::processBookOfBu() {
-	_screens->fadeToBlack(_screens->_paletteRGBA);
+	_screens->fadeToBlack(_screens->_ptrPal);
 	_screens->loadImage(TwineImage(Resources::HQR_RESS_FILE, 15, 16));
 	_text->initDial(TextBankId::Inventory_Intro_and_Holomap);
 	_text->_flagMessageShade = false;
@@ -723,11 +723,11 @@ void TwinEEngine::processBookOfBu() {
 	_text->normalWinDial();
 	_text->_flagMessageShade = true;
 	_text->initSceneTextBank();
-	_screens->fadeToBlack(_screens->_paletteRGBACustom);
+	_screens->fadeToBlack(_screens->_palettePcx);
 	_screens->clearScreen();
 	// TODO: the palette handling here looks wrong
-	setPalette(_screens->_paletteRGBA);
-	_screens->_fadePalette = true;
+	setPalette(_screens->_ptrPal);
+	_screens->_flagFade = true;
 }
 
 void TwinEEngine::processBonusList() {
@@ -750,7 +750,7 @@ void TwinEEngine::processInventoryAction() {
 	switch (_loopInventoryItem) {
 	case kiHolomap:
 		_holomap->holoMap();
-		_screens->_fadePalette = true;
+		_screens->_flagFade = true;
 		break;
 	case kiMagicBall:
 		if (_gameState->_usingSabre) {
@@ -866,10 +866,10 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 		_queuedFlaMovie.clear();
 	}
 
-	if (_scene->_needChangeScene > -1) {
+	if (_scene->_newCube > -1) {
 		if (!isMod() && isDemo() && isLBA1()) {
 			// the demo only has these scenes
-			if (_scene->_needChangeScene != LBA1SceneId::Citadel_Island_Prison && _scene->_needChangeScene != LBA1SceneId::Citadel_Island_outside_the_citadel && _scene->_needChangeScene != LBA1SceneId::Citadel_Island_near_the_tavern) {
+			if (_scene->_newCube != LBA1SceneId::Citadel_Island_Prison && _scene->_newCube != LBA1SceneId::Citadel_Island_outside_the_citadel && _scene->_newCube != LBA1SceneId::Citadel_Island_near_the_tavern) {
 				_music->playMidiFile(6);
 				return true;
 			}
@@ -983,7 +983,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 			// unfreeze here - the redrawEngineActions is also doing a freeze
 			// see https://bugs.scummvm.org/ticket/14808
 			unfreezeTime();
-			_screens->_fadePalette = true;
+			_screens->_flagFade = true;
 			_redraw->redrawEngineActions(true);
 		}
 
@@ -1045,10 +1045,20 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 			continue;
 		}
 
-		if (actor->_lifePoint == 0) {
+		if (actor->_lifePoint <= 0) {
 			if (IS_HERO(a)) {
 				_animations->initAnim(AnimationTypes::kLandDeath, AnimType::kAnimationSet, AnimationTypes::kStanding, OWN_ACTOR_SCENE_INDEX);
 				actor->_controlMode = ControlMode::kNoMove;
+#if 0 // TODO: enable me - found in the lba1 community release source code
+				// Disable collisions on Twinsen to allow other objects to continue their tracks
+				// while the death animation is playing
+				actor->_staticFlags.bObjFallable = 1;
+				actor->_staticFlags.bCheckZone = 0;
+				actor->_staticFlags.bComputeCollisionWithObj = 0;
+				actor->_staticFlags.bComputeCollisionWithBricks = 0;
+				actor->_staticFlags.bCanDrown = 1;
+				actor->_workFlags.bIsHitting = 0;
+#endif
 			} else {
 				_sound->playSample(Samples::Explode, 1, actor->posObj(), a);
 
@@ -1072,7 +1082,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 
 		_animations->doAnim(a);
 
-		if (actor->_staticFlags.bIsZonable) {
+		if (actor->_staticFlags.bCheckZone) {
 			_scene->checkZoneSce(a);
 		}
 
@@ -1121,7 +1131,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 					if (_gameState->_inventoryNumLeafs > 0) { // use clover leaf automaticaly
 						_scene->_sceneHero->_posObj = _scene->_newHeroPos;
 
-						_scene->_needChangeScene = _scene->_currentSceneIdx;
+						_scene->_newCube = _scene->_numCube;
 						_gameState->setMaxMagicPoints();
 
 						_grid->centerOnActor(_scene->_sceneHero);
@@ -1130,7 +1140,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 
 						_scene->_sceneHero->setLife(getMaxLife());
 						_redraw->_firstTime = true;
-						_screens->_fadePalette = true;
+						_screens->_flagFade = true;
 						_gameState->addLeafs(-1);
 						_actor->_cropBottomScreen = 0;
 					} else { // game over
@@ -1141,11 +1151,11 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 						actor->_beta = _actor->_previousHeroAngle;
 						actor->setLife(getMaxLife());
 
-						if (_scene->_previousSceneIdx != _scene->_currentSceneIdx) {
+						if (_scene->_oldcube != _scene->_numCube) {
 							_scene->_newHeroPos.x = -1;
 							_scene->_newHeroPos.y = -1;
 							_scene->_newHeroPos.z = -1;
-							_scene->_currentSceneIdx = _scene->_previousSceneIdx;
+							_scene->_numCube = _scene->_oldcube;
 							_scene->stopRunningGame();
 						}
 
@@ -1156,14 +1166,14 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 					}
 				}
 			} else {
-				_actor->processActorCarrier(a);
+				_actor->checkCarrier(a);
 				actor->_workFlags.bIsDead = 1;
 				actor->_body = -1;
 				actor->_zoneSce = -1;
 			}
 		}
 
-		if (_scene->_needChangeScene != -1) {
+		if (_scene->_newCube != -1) {
 			return false;
 		}
 	}
@@ -1179,7 +1189,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 		_scene->_sceneHero->_staticFlags.bIsInvisible = 0;
 	}
 
-	_scene->_needChangeScene = SCENE_CEILING_GRID_FADE_1;
+	_scene->_newCube = SCENE_CEILING_GRID_FADE_1;
 	_redraw->_firstTime = false;
 
 	return false;
@@ -1187,7 +1197,7 @@ bool TwinEEngine::runGameEngine() { // mainLoopInteration
 
 bool TwinEEngine::gameEngineLoop() {
 	_redraw->_firstTime = true;
-	_screens->_fadePalette = true;
+	_screens->_flagFade = true;
 	_movements->setActorAngle(LBAAngles::ANGLE_0, -LBAAngles::ANGLE_90, LBAAngles::ANGLE_1, &_loopMovePtr);
 
 	while (_sceneLoopState == SceneLoopState::Continue) {

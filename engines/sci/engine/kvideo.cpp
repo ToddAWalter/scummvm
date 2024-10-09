@@ -112,7 +112,6 @@ void playVideo(Video::VideoDecoder &videoDecoder) {
 		g_system->delayMillis(10);
 	}
 }
-
 reg_t kShowMovie(EngineState *s, int argc, reg_t *argv) {
 	reg_t retval = s->r_acc;
 
@@ -125,6 +124,7 @@ reg_t kShowMovie(EngineState *s, int argc, reg_t *argv) {
 	Common::ScopedPtr<Video::VideoDecoder> videoDecoder;
 
 	bool switchedGraphicsMode = false;
+	bool syncLastFrame = true;
 
 	if (argv[0].isPointer()) {
 		Common::Path filename(s->_segMan->getString(argv[0]));
@@ -142,6 +142,7 @@ reg_t kShowMovie(EngineState *s, int argc, reg_t *argv) {
 						const Graphics::PixelFormat format = *it;
 						g_sci->_gfxScreen->gfxDriver()->initScreen(&format);
 						switchedGraphicsMode = true;
+						syncLastFrame = false;
 						break;
 					}
 				}
@@ -169,17 +170,30 @@ reg_t kShowMovie(EngineState *s, int argc, reg_t *argv) {
 	} else {
 		// Windows AVI: Only used by KQ6 CD for the Sierra logo and intro cartoon.
 		// The first parameter is a subop. Some of the subops set the accumulator.
-		// The interpreter implements subops 0-6. KQ6 only calls 0, 1, 2, 3, 6.
-		// Subop 0 plays the AVI; it is the only one that needs to be implemented.
-
+		// The interpreter implements subops 0-6. KQ6 only calls 0, 1, 2, 6.
+		// Subop 0: Open movie file
+		// Subop 1: Setup movie playback rectangle
+		// Subop 2: Play movie
+		// Subop 6: Close movie file
+		// We just play it on opcode 0, since the config parameters that are passed
+		// to opcodes 1 and 2 aren't properly used anyway (the video will be centered,
+		// regardless of any x, y, width and height settings).
+		// Using any other opcode than 0 would also require unblocking the engine
+		// after the movie playback like this (with <pauseToken> being the second
+		// argument passed to opcode 2):
+		// invokeSelector(s, <pauseToken>, g_sci->getKernel()->findSelector("cue"), argc, argv);
 		switch (argv[0].toUint16()) {
 		case 0: {
 			Common::String filename = s->_segMan->getString(argv[1]);
+			// For KQ6, this changes the vertical 200/440 upscaling to 200/400, since this is the expected behavior. Also,
+			// the calculation of the scaled x/y coordinates works slightly differently compared to the normal gfx rendering.
+			g_sci->_gfxScreen->gfxDriver()->setFlags(GfxDriver::kMovieMode);
 			videoDecoder.reset(new Video::AVIDecoder());
 			if (!videoDecoder->loadFile(filename.c_str())) {
 				warning("Failed to open movie file %s", filename.c_str());
 				videoDecoder.reset();
 			}
+			syncLastFrame = false;
 			retval = TRUE_REG;
 			break;
 		}
@@ -189,7 +203,8 @@ reg_t kShowMovie(EngineState *s, int argc, reg_t *argv) {
 	}
 
 	if (videoDecoder) {
-		bool is8bit = videoDecoder->getPixelFormat().bytesPerPixel == 1;
+		if (videoDecoder->getPixelFormat().bytesPerPixel > 1)
+			syncLastFrame = false;
 
 		playVideo(*videoDecoder);
 
@@ -197,10 +212,12 @@ reg_t kShowMovie(EngineState *s, int argc, reg_t *argv) {
 		// We also won't be copying the screen to the SCI screen...
 		if (switchedGraphicsMode)
 			g_sci->_gfxScreen->gfxDriver()->initScreen();
-		else if (is8bit) {
+		else if (syncLastFrame) {
 			g_sci->_gfxScreen->kernelSyncWithFramebuffer();
 			g_sci->_gfxPalette16->kernelSyncScreenPalette();
 		}
+
+		g_sci->_gfxScreen->gfxDriver()->clearFlags(GfxDriver::kMovieMode);
 	}
 
 	if (reshowCursor)

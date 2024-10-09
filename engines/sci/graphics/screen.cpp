@@ -38,7 +38,7 @@
 
 namespace Sci {
 
-GfxScreen::GfxScreen(ResourceManager *resMan, Common::RenderMode renderMode) : _resMan(resMan), _hiresGlyphBuffer(nullptr) {
+GfxScreen::GfxScreen(ResourceManager *resMan, Common::RenderMode renderMode) : _resMan(resMan), _hiresGlyphBuffer(nullptr), _activeHiresView(false) {
 
 	// Scale the screen, if needed
 	_upscaledHires = GFX_SCREEN_UPSCALED_DISABLED;
@@ -53,15 +53,6 @@ GfxScreen::GfxScreen(ResourceManager *resMan, Common::RenderMode renderMode) : _
 
 	_curPaletteMapValue = 0;
 	_paletteModsEnabled = false;
-
-	// King's Quest 6 has hires content in the Windows version which we also
-	// allow to be optionally enabled in the DOS version.
-	if (g_sci->getGameId() == GID_KQ6) {
-		if ((g_sci->getPlatform() == Common::kPlatformWindows) ||
-			(g_sci->getPlatform() == Common::kPlatformDOS && g_sci->useHiresGraphics())) {
-			_upscaledHires = GFX_SCREEN_UPSCALED_640x440;
-		}
-	}
 
 	if (g_sci->getPlatform() == Common::kPlatformMacintosh) {
 		if (getSciVersion() <= SCI_VERSION_01) {
@@ -120,15 +111,6 @@ GfxScreen::GfxScreen(ResourceManager *resMan, Common::RenderMode renderMode) : _
 		for (int i = 0; i <= _scriptWidth; i++)
 			_upscaledWidthMapping[i] = i * 2;
 		break;
-	case GFX_SCREEN_UPSCALED_640x440:
-		// used by King's Quest 6 on Windows
-		_displayWidth = 640;
-		_displayHeight = 440;
-		for (int i = 0; i <= _scriptHeight; i++)
-			_upscaledHeightMapping[i] = (i * 11) / 5;
-		for (int i = 0; i <= _scriptWidth; i++)
-			_upscaledWidthMapping[i] = i * 2;
-		break;
 	default:
 		if (!_displayWidth)
 			_displayWidth = _width;
@@ -177,14 +159,14 @@ GfxScreen::GfxScreen(ResourceManager *resMan, Common::RenderMode renderMode) : _
 		_gfxDrv = new SCI0_HerculesDriver(renderMode == Common::kRenderHercG ? 0x66ff66 : 0xffbf66, requestRGB, false);
 		break;
 	case Common::kRenderEGA:
-		// No support for this mode in the Korean version yet.
-		if (getSciVersion() > SCI_VERSION_1_EGA_ONLY && g_sci->getLanguage() != Common::KO_KOR)
+		if (getSciVersion() > SCI_VERSION_1_EGA_ONLY)
 			_gfxDrv = new SCI1_EGADriver(requestRGB);
 		break;
 	case Common::kRenderVGAGrey:
-		// No support for this mode in the Korean version yet.
-		if (g_sci->getLanguage() != Common::KO_KOR)
-			_gfxDrv = new SCI1_VGAGreyScaleDriver(requestRGB);
+		_gfxDrv = new SCI1_VGAGreyScaleDriver(requestRGB);
+		break;
+	case Common::kRenderWin16c:
+		_gfxDrv = new KQ6WinGfx16ColorsDriver(ConfMan.getBool("windows_cursors") == false, true, requestRGB);
 		break;
 	case Common::kRenderPC98_8c:
 		if (g_sci->getGameId() == GID_PQ2)
@@ -217,9 +199,22 @@ GfxScreen::GfxScreen(ResourceManager *resMan, Common::RenderMode renderMode) : _
 			else
 				_gfxDrv = new PC98Gfx16ColorsDriver(1, true, true, PC98Gfx16ColorsDriver::kFontStyleSpecialSCI1, requestRGB, true);
 			break;
+
+		case Common::kPlatformWindows:
+		case Common::kPlatformDOS:
+			// King's Quest 6 has hires content in the Windows version which we also allow to be optionally enabled in the DOS version
+			// and which we also optionally allow to be disabled in the Windows version (the Windows version has support in the original
+			// interpreter code for a small 320 x 240 window on desktops with resolutions of less than 640 x 480, but I haven't managed
+			// to produce it in a Win95 VM; the windows setting don't seem to allow less than 640 x 480, so I don't know if it is actually
+			// possible to set it up).
+			if (g_sci->getGameId() == GID_KQ6 && (g_sci->getPlatform() == Common::kPlatformWindows || g_sci->useHiresGraphics())) {
+				_gfxDrv = new KQ6WinGfxDriver(ConfMan.getBool("windows_cursors") == false, !g_sci->useHiresGraphics(), requestRGB);
+				break;
+			}
+			// fallthrough
 		default:
 			if (g_sci->getLanguage() == Common::KO_KOR)
-				_gfxDrv = new UpscaledGfxDriver(_displayWidth, _displayHeight + extraHeight, 1, true, requestRGB);
+				_gfxDrv = new UpscaledGfxDriver(1, true, requestRGB);
 			else // The driver has to be told if is SCI_VERSION_01, since that cannot be determined from the number of colors.
 				_gfxDrv = new GfxDefaultDriver(_displayWidth, _displayHeight + extraHeight, getSciVersion() < SCI_VERSION_01, requestRGB);
 			break;
@@ -347,11 +342,15 @@ void GfxScreen::copyRectToScreen(const Common::Rect &rect) {
  * This copies a rect to screen w/o scaling adjustment and is only meant to be
  * used on hires graphics used in upscaled hires mode.
  */
-void GfxScreen::copyDisplayRectToScreen(const Common::Rect &rect) {
-	if (!_upscaledHires)
-		error("copyDisplayRectToScreen: not in upscaled hires mode");
+void GfxScreen::copyHiResRectToScreen(const byte *srcBuffer, int pitch, int x, int y, int w, int h, const byte *colorMap) {
+	if (!_gfxDrv->supportsHiResGraphics())
+		error("%s(): Hires graphics display is not supported by the active gfx driver", __FUNCTION__);
 
-	displayRect(rect, rect.left, rect.top);
+	_gfxDrv->setFlags(GfxDriver::kHiResMode);
+	_gfxDrv->setColorMap(colorMap);
+	_gfxDrv->copyRectToScreen(srcBuffer, 0, 0, pitch, x, y, w, h, nullptr, nullptr);
+	_gfxDrv->clearFlags(GfxDriver::kHiResMode);
+	toggleActiveHiresView(true);
 }
 
 void GfxScreen::copyRectToScreen(const Common::Rect &rect, int16 x, int16 y) {
@@ -619,13 +618,6 @@ int GfxScreen::bitsGetDataSize(Common::Rect rect, byte mask) {
 	if (mask & GFX_SCREEN_MASK_CONTROL) {
 		byteCount += pixels; // _controlScreen
 	}
-	if (mask & GFX_SCREEN_MASK_DISPLAY) {
-		if (!_upscaledHires)
-			error("bitsGetDataSize() called w/o being in upscaled hires mode");
-		byteCount += pixels; // _displayScreen (coordinates actually are given to us for hires displayScreen)
-		if (_paletteMapScreen)
-			byteCount += pixels; // _paletteMapScreen
-	}
 	return byteCount;
 }
 
@@ -644,13 +636,6 @@ void GfxScreen::bitsSave(Common::Rect rect, byte mask, byte *memoryPtr) {
 	}
 	if (mask & GFX_SCREEN_MASK_CONTROL) {
 		bitsSaveScreen(rect, _controlScreen, _width, memoryPtr);
-	}
-	if (mask & GFX_SCREEN_MASK_DISPLAY) {
-		if (!_upscaledHires)
-			error("bitsSave() called w/o being in upscaled hires mode");
-		bitsSaveScreen(rect, _displayScreen, _displayWidth, memoryPtr);
-		if (_paletteMapScreen)
-			bitsSaveScreen(rect, _paletteMapScreen, _displayWidth, memoryPtr);
 	}
 }
 
@@ -708,19 +693,6 @@ void GfxScreen::bitsRestore(const byte *memoryPtr) {
 	}
 	if (mask & GFX_SCREEN_MASK_CONTROL) {
 		bitsRestoreScreen(rect, memoryPtr, _controlScreen, _width);
-	}
-	if (mask & GFX_SCREEN_MASK_DISPLAY) {
-		if (!_upscaledHires)
-			error("bitsRestore() called w/o being in upscaled hires mode");
-		bitsRestoreScreen(rect, memoryPtr, _displayScreen, _displayWidth);
-		if (_paletteMapScreen)
-			bitsRestoreScreen(rect, memoryPtr, _paletteMapScreen, _displayWidth);
-
-		// WORKAROUND - we are not sure what sierra is doing. If we don't do this here, portraits won't get fully removed
-		//  from screen. Some lowres showBits() call is used for that and it's not covering the whole area
-		//  We would need to find out inside the kq6 windows interpreter, but this here works already and seems not to have
-		//  any side-effects. The whole hires is hacked into the interpreter, so maybe this is even right.
-		copyDisplayRectToScreen(rect);
 	}
 }
 
@@ -950,10 +922,6 @@ void GfxScreen::adjustBackUpscaledCoordinates(int16 &y, int16 &x) {
 	case GFX_SCREEN_UPSCALED_640x400:
 		x /= 2;
 		y /= 2;
-		break;
-	case GFX_SCREEN_UPSCALED_640x440:
-		x /= 2;
-		y = (y * 5) / 11;
 		break;
 	default:
 		break;

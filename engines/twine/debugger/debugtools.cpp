@@ -26,11 +26,13 @@
 #include "common/str-enc.h"
 #include "common/str.h"
 #include "common/util.h"
+#include "graphics/palette.h"
 #include "twine/debugger/debug_state.h"
 #include "twine/debugger/dt-internal.h"
 #include "twine/holomap.h"
 #include "twine/parser/entity.h"
 #include "twine/renderer/redraw.h"
+#include "twine/renderer/screens.h"
 #include "twine/resources/resources.h"
 #include "twine/scene/actor.h"
 #include "twine/scene/gamestate.h"
@@ -165,6 +167,58 @@ static void holomapFlagsWindow(TwinEEngine *engine) {
 	ImGui::End();
 }
 
+static void addColor(float startingPosX, uint index, const Graphics::Palette &palette) {
+	uint8 r, g, b;
+	palette.get(index, r, g, b);
+	const float borderWidth = 1.0f;
+	ImDrawList *drawList = ImGui::GetWindowDrawList();
+	const ImDrawListFlags backupFlags = drawList->Flags;
+	drawList->Flags &= ~ImDrawListFlags_AntiAliasedLines;
+	const ImVec2 available = ImGui::GetContentRegionAvail();
+	const float contentRegionWidth = available.x + ImGui::GetCursorPosX();
+	const ImVec2 colorButtonSize(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+	ImVec2 globalCursorPos = ImGui::GetCursorScreenPos();
+	const ImVec2 &windowPos = ImGui::GetWindowPos();
+	const ImVec2 v1(globalCursorPos.x + borderWidth, globalCursorPos.y + borderWidth);
+	const ImVec2 v2(globalCursorPos.x + colorButtonSize.x, globalCursorPos.y + colorButtonSize.y);
+	drawList->AddRectFilled(v1, v2, IM_COL32(r, g, b, 255));
+
+	ImGui::PushID((int)index);
+	if (ImGui::InvisibleButton("", colorButtonSize)) {
+	}
+	ImGui::SetItemTooltip("Index: %i, R(%d), G(%d), B(%d)", (int)index, (int)r, (int)g, (int)b);
+	ImGui::PopID();
+
+	globalCursorPos.x += colorButtonSize.x;
+	if (globalCursorPos.x > windowPos.x + contentRegionWidth - colorButtonSize.x) {
+		globalCursorPos.x = startingPosX;
+		globalCursorPos.y += colorButtonSize.y;
+	}
+	ImGui::SetCursorScreenPos(globalCursorPos);
+	// restore the draw list flags from above
+	drawList->Flags = backupFlags;
+}
+
+static void paletteWindow(TwinEEngine *engine) {
+	if (!engine->_debugState->_paletteWindow) {
+		return;
+	}
+
+	const ImVec2 available = ImGui::GetContentRegionAvail();
+	const float contentRegionHeight = available.y + ImGui::GetCursorPosY();
+	const ImVec2 windowSize(10.0f * ImGui::GetFrameHeight(), contentRegionHeight);
+	ImGui::SetNextWindowSize(windowSize, ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Palette", &engine->_debugState->_paletteWindow)) {
+		const Graphics::Palette &palette = engine->_frontVideoBuffer.getPalette();
+		const ImVec2 &pos = ImGui::GetCursorScreenPos();
+		for (uint palettePanelIdx = 0; palettePanelIdx < palette.size(); ++palettePanelIdx) {
+			addColor(pos.x, palettePanelIdx, palette);
+		}
+	}
+	ImGui::End();
+}
+
 static void sceneFlagsWindow(TwinEEngine *engine) {
 	if (!engine->_debugState->_sceneFlagsWindow) {
 		return;
@@ -236,9 +290,9 @@ static void sceneSelectionCombo(TwinEEngine *engine) {
 			Common::U32String originalLocationName(engine->_holomap->getLocationName(i), Common::kDos850);
 			const Common::String locationName = originalLocationName.encode(Common::kUtf8);
 			Common::String name = Common::String::format("[%03d] %s", i, locationName.c_str());
-			if (ImGui::Selectable(name.c_str(), i == engine->_scene->_currentSceneIdx)) {
-				scene->_currentSceneIdx = i;
-				scene->_needChangeScene = scene->_currentSceneIdx;
+			if (ImGui::Selectable(name.c_str(), i == engine->_scene->_numCube)) {
+				scene->_numCube = i;
+				scene->_newCube = scene->_numCube;
 				engine->_redraw->_firstTime = true;
 			}
 		}
@@ -269,7 +323,7 @@ static void sceneDetailsWindows(TwinEEngine *engine) {
 	if (ImGui::Begin("Scene", &engine->_debugState->_sceneDetailsWindow)) {
 		Scene *scene = engine->_scene;
 		GameState *gameState = engine->_gameState;
-		ImGui::Text("Scene: %i", scene->_currentSceneIdx);
+		ImGui::Text("Scene: %i", scene->_numCube);
 		ImGui::Text("Scene name: %s", gameState->_sceneName);
 		sceneSelectionCombo(engine);
 
@@ -341,7 +395,7 @@ static void sceneDetailsWindows(TwinEEngine *engine) {
 				ImGui::SameLine();
 				Common::String buttonId = Common::String::format("Activate##activateTrajectory%i", i);
 				if (ImGui::Button(buttonId.c_str())) {
-					scene->_holomapTrajectory = i;
+					scene->_numHolomapTraj = i;
 					scene->reloadCurrentScene();
 				}
 				ImGui::Indent();
@@ -353,8 +407,8 @@ static void sceneDetailsWindows(TwinEEngine *engine) {
 				ImGui::Unindent();
 			}
 		}
-		ImGuiEx::InputInt("Previous scene index", &scene->_previousSceneIdx);
-		ImGuiEx::InputInt("Need change scene index", &scene->_needChangeScene);
+		ImGuiEx::InputInt("Previous scene index", &scene->_oldcube);
+		ImGuiEx::InputInt("Need change scene index", &scene->_newCube);
 
 		ImGui::Text("Climbing flag");
 		ImGui::SameLine();
@@ -368,8 +422,8 @@ static void sceneDetailsWindows(TwinEEngine *engine) {
 		ImGuiEx::InputInt("Talking actor", &scene->_talkingActor);
 		ImGuiEx::InputInt("Cube jingle", &scene->_cubeJingle);
 		ImGuiEx::InputIVec3("New hero pos", scene->_newHeroPos);
-		ImGui::InputInt("Alpha light", &scene->_alphaLight);
-		ImGui::InputInt("Beta light", &scene->_betaLight);
+		ImGuiEx::InputInt("Alpha light", &scene->_alphaLight);
+		ImGuiEx::InputInt("Beta light", &scene->_betaLight);
 		ImGuiEx::InputInt("Fall Y position", &scene->_startYFalling);
 		ImGui::Text("Hero position type: %i", (int)scene->_heroPositionType);
 	}
@@ -413,91 +467,169 @@ static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
 		ImGuiEx::InputInt("Armor", &actor->_armor);
 		ImGuiEx::InputBoundingBox(actorIdx, "Bounding box", actor->_boundingBox);
 
-		if (ImGui::BeginTable("Properties", 2)) {
-			ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
-			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed);
-			ImGui::TableHeadersRow();
+		if (ImGui::CollapsingHeader("Properties")) {
+			if (ImGui::BeginTable("Properties", 2)) {
+				ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed);
+				ImGui::TableHeadersRow();
 
-			ImGui::TableNextColumn();
-			ImGui::Text("Followed");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_followedActor);
-			ImGui::TableNextColumn();
-			ImGui::Text("Control mode");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_controlMode);
-			ImGui::TableNextColumn();
-			ImGui::Text("Delay");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_delayInMillis);
-			ImGui::TableNextColumn();
-			ImGui::Text("Strength");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_strengthOfHit);
-			ImGui::TableNextColumn();
-			ImGui::Text("Hit by");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_hitBy);
-			ImGui::TableNextColumn();
-			ImGui::Text("Bonus");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_bonusParameter);
-			ImGui::TableNextColumn();
-			ImGui::Text("Brick shape");
-			ImGui::TableNextColumn();
-			ImGui::Text("%s", toString(actor->brickShape()));
-			ImGui::TableNextColumn();
-			ImGui::Text("Brick causes damage");
-			ImGui::TableNextColumn();
-			ImGuiEx::Boolean(actor->brickCausesDamage());
-			ImGui::TableNextColumn();
-			ImGui::Text("Collision");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_objCol);
-			ImGui::TableNextColumn();
-			ImGui::Text("Talk color");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_talkColor);
-			ImGui::TableNextColumn();
-			ImGui::Text("Body");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_body); // TODO: link to resources
-			ImGui::TableNextColumn();
-			ImGui::Text("Gen body");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_genBody);
-			ImGui::TableNextColumn();
-			ImGui::Text("Save gen body");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_saveGenBody);
-			ImGui::TableNextColumn();
-			ImGui::Text("Gen anim");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_genAnim);
-			ImGui::TableNextColumn();
-			ImGui::Text("Next gen anim");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_nextGenAnim);
-			ImGui::TableNextColumn();
-			ImGui::Text("Ptr anim action");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_ptrAnimAction);
-			ImGui::TableNextColumn();
-			ImGui::Text("Sprite");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i", actor->_sprite);
-			ImGui::TableNextColumn();
-			ImGui::Text("A3DS");
-			ImGui::TableNextColumn();
-			ImGui::Text("%i %i %i", actor->A3DS.Num, actor->A3DS.Deb, actor->A3DS.Fin);
+				ImGui::TableNextColumn();
+				ImGui::Text("Followed");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_followedActor);
+				ImGui::TableNextColumn();
+				ImGui::Text("Control mode");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_controlMode);
+				ImGui::TableNextColumn();
+				ImGui::Text("Delay");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_delayInMillis);
+				ImGui::TableNextColumn();
+				ImGui::Text("Strength");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_strengthOfHit);
+				ImGui::TableNextColumn();
+				ImGui::Text("Hit by");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_hitBy);
+				ImGui::TableNextColumn();
+				ImGui::Text("Bonus");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_bonusParameter);
+				ImGui::TableNextColumn();
+				ImGui::Text("ZoneSce");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_zoneSce);
+				ImGui::TableNextColumn();
+				ImGui::Text("Brick shape");
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", toString(actor->brickShape()));
+				ImGui::TableNextColumn();
+				ImGui::Text("Brick causes damage");
+				ImGui::TableNextColumn();
+				ImGuiEx::Boolean(actor->brickCausesDamage());
+				ImGui::TableNextColumn();
+				ImGui::Text("Collision");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_objCol);
+				ImGui::TableNextColumn();
+				ImGui::Text("Talk color");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_talkColor);
+				ImGui::TableNextColumn();
+				ImGui::Text("Body");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_body); // TODO: link to resources
+				ImGui::TableNextColumn();
+				ImGui::Text("Gen body");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_genBody);
+				ImGui::TableNextColumn();
+				ImGui::Text("Save gen body");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_saveGenBody);
+				ImGui::TableNextColumn();
+				ImGui::Text("Gen anim");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_genAnim);
+				ImGui::TableNextColumn();
+				ImGui::Text("Next gen anim");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_nextGenAnim);
+				ImGui::TableNextColumn();
+				ImGui::Text("Ptr anim action");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_ptrAnimAction);
+				ImGui::TableNextColumn();
+				ImGui::Text("Sprite");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_sprite);
+				ImGui::TableNextColumn();
+				ImGui::Text("A3DS");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i %i %i", actor->A3DS.Num, actor->A3DS.Deb, actor->A3DS.Fin);
 
-			ImGui::EndTable();
+				ImGui::EndTable();
+			}
+		}
+
+		if (ImGui::CollapsingHeader("Work Flags", ImGuiTreeNodeFlags_DefaultOpen)) {
+			static const char *Names[] = {
+				"WAIT_HIT_FRAME",
+				"OK_HIT",
+				"ANIM_END",
+				"NEW_FRAME",
+				"WAS_DRAWN",
+				"OBJ_DEAD",
+				"AUTO_STOP_DOOR",
+				"ANIM_MASTER_ROT",
+				"FALLING",
+				"IS_TARGETABLE",
+				"IS_BLINKING",
+				"DRAW_SHADOW",
+				"ANIM_MASTER_GRAVITY",
+				"SKATING",
+				"OK_RENVOIE",
+				"LEFT_JUMP",
+				"RIGHT_JUMP",
+				"WAIT_SUPER_HIT",
+				"TRACK_MASTER_ROT",
+				"FLY_JETPACK",
+				"DONT_PICK_CODE_JEU",
+				"MANUAL_INTER_FRAME",
+				"WAIT_COORD",
+				"CHECK_FALLING"};
+			if (ImGui::BeginTable("##workflags", 6)) {
+				for (int i = 0; i < ARRAYSIZE(Names); ++i) {
+					ImGui::TableNextColumn();
+					ImGui::CheckboxFlags(Names[i], (uint32_t *)&actor->_workFlags, (1 << i));
+				}
+				ImGui::EndTable();
+			}
+		}
+		if (ImGui::CollapsingHeader("Flags", ImGuiTreeNodeFlags_DefaultOpen)) {
+			static const char *Names[] = {
+				"CHECK_OBJ_COL",
+				"CHECK_BRICK_COL",
+				"CHECK_ZONE",
+				"SPRITE_CLIP",
+				"PUSHABLE",
+				"COL_BASSE",
+				"CHECK_CODE_JEU",
+				"CHECK_WATER_COL",
+				"0x000100",
+				"INVISIBLE",
+				"SPRITE_3D",
+				"OBJ_FALLABLE",
+				"NO_SHADOW",
+				"OBJ_BACKGROUND",
+				"OBJ_CARRIER",
+				"MINI_ZV",
+				"POS_INVALIDE",
+				"NO_CHOC",
+				"ANIM_3DS",
+				"NO_PRE_CLIP",
+				"OBJ_ZBUFFER",
+				"OBJ_IN_WATER",
+			};
+			if (ImGui::BeginTable("##staticflags", 6)) {
+				for (int i = 0; i < ARRAYSIZE(Names); ++i) {
+					ImGui::TableNextColumn();
+					ImGui::CheckboxFlags(Names[i], (uint32_t *)&actor->_staticFlags, (1 << i));
+				}
+				ImGui::EndTable();
+			}
 		}
 
 		if (actor->_body != -1) {
 			ImGui::SeparatorText("Body");
-			BodyData &bodyData = actor->_entityDataPtr->getBody(actor->_body);
-			ImGuiEx::InputBoundingBox((int)(uintptr)&bodyData, "Bounding box", bodyData.bbox);
+			if (actor->_entityDataPtr != nullptr) {
+				BodyData &bodyData = actor->_entityDataPtr->getBody(actor->_body);
+				ImGuiEx::InputBoundingBox((int)(uintptr)&bodyData, "Bounding box", bodyData.bbox);
+			} else {
+				ImGui::Text("No entity data");
+			}
 		}
 
 		ImGui::SeparatorText("Entity");
@@ -652,6 +784,43 @@ static void debuggerMenu(TwinEEngine *engine) {
 			actor->_posObj = engine->_grid->_worldCube;
 			actor->_posObj.y += 1000;
 		}
+		if (ImGui::BeginMenu("Palettes")) {
+			if (ImGui::MenuItem("Show palette")) {
+				engine->_debugState->_paletteWindow = true;
+			}
+			if (ImGui::MenuItem("Dark palette")) {
+				engine->_screens->setDarkPal();
+			}
+			if (ImGui::MenuItem("Normal palette")) {
+				engine->_screens->setNormalPal();
+			}
+#if 0
+			// TODO: the fade functions are blocking and break the imgui begin/end cycle
+			LifeScriptContext fakeCtx(0, engine->_scene->_sceneHero);
+			if (ImGui::MenuItem("lFADE_PAL_RED")) {
+				engine->_scriptLife->lFADE_PAL_RED(engine, fakeCtx);
+			}
+			if (ImGui::MenuItem("lFADE_ALARM_RED")) {
+				engine->_scriptLife->lFADE_ALARM_RED(engine, fakeCtx);
+			}
+			if (ImGui::MenuItem("lFADE_ALARM_PAL")) {
+				engine->_scriptLife->lFADE_ALARM_PAL(engine, fakeCtx);
+			}
+			if (ImGui::MenuItem("lFADE_RED_PAL")) {
+				engine->_scriptLife->lFADE_RED_PAL(engine, fakeCtx);
+			}
+			if (ImGui::MenuItem("lFADE_RED_ALARM")) {
+				engine->_scriptLife->lFADE_RED_ALARM(engine, fakeCtx);
+			}
+			if (ImGui::MenuItem("lFADE_PAL_ALARM")) {
+				engine->_scriptLife->lFADE_PAL_ALARM(engine, fakeCtx);
+			}
+#endif
+			ImGui::EndMenu();
+		}
+		if (ImGui::MenuItem("Force Redraw")) {
+			engine->_redraw->_firstTime = true;
+		}
 
 		ImGui::SeparatorText("Options");
 
@@ -689,6 +858,7 @@ void onImGuiRender() {
 	menuTextsWindow(engine);
 	holomapFlagsWindow(engine);
 	gameFlagsWindow(engine);
+	paletteWindow(engine);
 	sceneFlagsWindow(engine);
 
 	if (engine->_debugState->_openPopup) {
