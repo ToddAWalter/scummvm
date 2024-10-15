@@ -22,8 +22,10 @@
 #ifndef TWINE_DEBUG_SCENE_H
 #define TWINE_DEBUG_SCENE_H
 
+#include "common/array.h"
 #include "common/rect.h"
 #include "common/scummsys.h"
+#include "twine/debugger/ringbuffer.h"
 #include "twine/shared.h"
 #include <cstdarg>
 
@@ -90,6 +92,9 @@ public:
 	bool _actorDetailsWindow = true;
 	bool _sceneFlagsWindow = false;
 	bool _paletteWindow = false;
+	bool _loggerWindow = false;
+	bool _frameTimeWindow = false;
+	bool _frameDataRecording = true;
 
 	bool _useFreeCamera = false;
 	bool _disableGridRendering = false;
@@ -97,6 +102,16 @@ public:
 
 	void renderDebugView();
 	void drawClip(const Common::Rect &rect);
+
+	struct FrameData {
+		uint32 frameTime;
+		int32 waitMillis;
+		uint32 maxDelay;
+	};
+	using FrameDataBuffer = RingBuffer<FrameData, 256>;
+	FrameDataBuffer _frameData;
+
+	void addFrameData(uint32 frameTime, int32 waitMillis, uint32 maxDelay);
 
 	void update();
 };

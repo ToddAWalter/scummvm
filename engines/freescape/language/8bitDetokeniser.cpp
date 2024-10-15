@@ -29,7 +29,7 @@
 
 namespace Freescape {
 
-uint8 k8bitMaxVariable = 64;
+uint8 k8bitVariableShield = 63;
 
 Common::String detokenise8bitCondition(Common::Array<uint16> &tokenisedCondition, FCLInstructionVector &instructions, bool isAmigaAtari) {
 	Common::String detokenisedStream;
@@ -434,7 +434,7 @@ Common::String detokenise8bitCondition(Common::Array<uint16> &tokenisedCondition
 
 		case 47:
 			detokenisedStream += "IFLTE (v";
-			currentInstruction = FCLInstruction(Token::IFGTEQ);
+			currentInstruction = FCLInstruction(Token::IFLTEQ);
 			break;
 
 		case 48:

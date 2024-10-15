@@ -20,7 +20,6 @@
  */
 
 #include "twine/scene/gamestate.h"
-#include "common/file.h"
 #include "common/rect.h"
 #include "common/str.h"
 #include "common/system.h"
@@ -66,7 +65,7 @@ void GameState::init3DGame() {
 
 void GameState::initGameStateVars() {
 	debug(2, "Init game state variables");
-	_engine->_extra->resetExtras();
+	_engine->_extra->clearExtra();
 
 	for (int32 i = 0; i < OVERLAY_MAX_ENTRIES; i++) {
 		_engine->_redraw->overlayList[i].num = -1;
@@ -137,7 +136,7 @@ void GameState::initEngineVars() {
 	setChapter(0);
 
 	_engine->_scene->_sceneTextBank = TextBankId::Options_and_menus;
-	_engine->_scene->_currentlyFollowedActor = OWN_ACTOR_SCENE_INDEX;
+	_engine->_scene->_numObjFollow = OWN_ACTOR_SCENE_INDEX;
 	_engine->_actor->_heroBehaviour = HeroBehaviourType::kNormal;
 	_engine->_actor->_previousHeroAngle = 0;
 	_engine->_actor->_previousHeroBehaviour = HeroBehaviourType::kNormal;
@@ -330,21 +329,19 @@ void GameState::setGameFlag(uint8 index, int16 value) {
 }
 
 void GameState::doFoundObj(InventoryItems item) {
-	ScopedEngineFreeze freeze(_engine);
 	_engine->_grid->centerOnActor(_engine->_scene->_sceneHero);
 
-	_engine->extInitSvga();
 	// Hide hero in scene
-	_engine->_scene->_sceneHero->_staticFlags.bIsInvisible = 1;
-	_engine->_redraw->redrawEngineActions(true);
-	_engine->_scene->_sceneHero->_staticFlags.bIsInvisible = 0;
+	_engine->_scene->_sceneHero->_flags.bIsInvisible = 1;
+	_engine->_redraw->drawScene(true);
+	_engine->_scene->_sceneHero->_flags.bIsInvisible = 0;
 
 	_engine->saveFrontBuffer();
 
 	IVec3 itemCamera;
-	itemCamera.x = _engine->_grid->_newCamera.x * SIZE_BRICK_XZ;
-	itemCamera.y = _engine->_grid->_newCamera.y * SIZE_BRICK_Y;
-	itemCamera.z = _engine->_grid->_newCamera.z * SIZE_BRICK_XZ;
+	itemCamera.x = _engine->_grid->_startCube.x * SIZE_BRICK_XZ;
+	itemCamera.y = _engine->_grid->_startCube.y * SIZE_BRICK_Y;
+	itemCamera.z = _engine->_grid->_startCube.z * SIZE_BRICK_XZ;
 
 	BodyData &bodyData = _engine->_scene->_sceneHero->_entityDataPtr->getBody(_engine->_scene->_sceneHero->_body);
 	const IVec3 bodyPos = _engine->_scene->_sceneHero->_posObj - itemCamera;
@@ -414,9 +411,9 @@ void GameState::doFoundObj(InventoryItems item) {
 		_engine->_interface->unsetClip();
 		init3DGame();
 
-		if (_engine->_animations->doSetInterAnimObjet(currentAnimState, currentAnimData, bodyData, &_engine->_scene->_sceneHero->_animTimerData)) {
+		if (_engine->_animations->setInterAnimObjet(currentAnimState, currentAnimData, bodyData, &_engine->_scene->_sceneHero->_animTimerData)) {
 			currentAnimState++; // keyframe
-			if (currentAnimState >= currentAnimData.getNumKeyframes()) {
+			if (currentAnimState >= currentAnimData.getNbFramesAnim()) {
 				currentAnimState = currentAnimData.getLoopFrame();
 			}
 		}
@@ -455,7 +452,7 @@ void GameState::doFoundObj(InventoryItems item) {
 
 		// advance the timer to play animations
 		_engine->timerRef++;
-		debugC(3, kDebugLevels::kDebugTime, "FoundObj time: %i", _engine->timerRef);
+		debugC(3, kDebugLevels::kDebugTimers, "FoundObj time: %i", _engine->timerRef);
 	}
 
 	while (_engine->_text->playVoxSimple(_engine->_text->_currDialTextEntry)) {
@@ -511,9 +508,9 @@ void GameState::processGameoverAnimation() {
 
 	_engine->testRestoreModeSVGA(false);
 	// workaround to fix hero redraw after drowning
-	_engine->_scene->_sceneHero->_staticFlags.bIsInvisible = 1;
-	_engine->_redraw->redrawEngineActions(true);
-	_engine->_scene->_sceneHero->_staticFlags.bIsInvisible = 0;
+	_engine->_scene->_sceneHero->_flags.bIsInvisible = 1;
+	_engine->_redraw->drawScene(true);
+	_engine->_scene->_sceneHero->_flags.bIsInvisible = 0;
 
 	// TODO: inSceneryView
 	_engine->setPalette(_engine->_screens->_ptrPal);
@@ -539,15 +536,15 @@ void GameState::processGameoverAnimation() {
 			return;
 		}
 
-		zoom = _engine->_collision->boundRuleThree(40000, 3200, _engine->toSeconds(10), _engine->timerRef - startLbaTime);
-		const int32 angle = _engine->_screens->lerp(1, LBAAngles::ANGLE_360, _engine->toSeconds(2), (_engine->timerRef - startLbaTime) % _engine->toSeconds(2));
+		zoom = boundRuleThree(40000, 3200, _engine->toSeconds(10), _engine->timerRef - startLbaTime);
+		const int32 angle = ruleThree32(1, LBAAngles::ANGLE_360, _engine->toSeconds(2), (_engine->timerRef - startLbaTime) % _engine->toSeconds(2));
 
 		_engine->blitWorkToFront(rect);
 		_engine->_renderer->setFollowCamera(0, 0, 0, 0, -angle, 0, zoom);
 		_engine->_renderer->affObjetIso(0, 0, 0, LBAAngles::ANGLE_0, LBAAngles::ANGLE_0, LBAAngles::ANGLE_0, gameOverPtr, dummy);
 
 		_engine->timerRef++;
-		debugC(3, kDebugLevels::kDebugTime, "GameOver time: %i", _engine->timerRef);
+		debugC(3, kDebugLevels::kDebugTimers, "GameOver time: %i", _engine->timerRef);
 	}
 
 	_engine->_sound->playSample(Samples::Explode);

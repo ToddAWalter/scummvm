@@ -32,22 +32,22 @@ extern void sendWSMessage_multi(const char *name);
 /**
  * Sets a bunch of globals. Sooooo many globals.
  */
-extern void setGlobals1(int val1, int val2, int val3, int val4, int val5,
+extern void setGlobals1(int series, int val2, int val3, int val4, int val5,
 	int val6 = 0, int val7 = 0, int val8 = 0, int val9 = 0, int val10 = 0,
 	int val11 = 0, int val12 = 0, int val13 = 0, int val14 = 0, int val15 = 0,
 	int val16 = 0, int val17 = 0, int val18 = 0, int val19 = 0, int val20 = 0,
 	int val21 = 0);
 extern void setGlobals3(int series, int val1, int val2);
-extern void setGlobals4(int val1, int val2, int val3, int val4);
+extern void setGlobals4(int series, int val2, int val3, int val4);
 
-extern void sendWSMessage_10000(int val1, machine *recv, int val2, int val3,
+extern void sendWSMessage_10000(int val1, machine *mach, int val2, int val3,
 	int val4, int trigger, int val9, int val6, int val7, int val8);
-extern void sendWSMessage_10000(machine *recv, int val1, int val2, int val3,
+extern void sendWSMessage_10000(machine *mach, int val1, int val2, int index,
 	int trigger, int val4);
 
-machine *triggerMachineByHash_3000(int val1, int val2, const int16 *normalDirs,
-	const int16 *shadowDirs, int val3, int val4, int val5,
-	MessageCB intrMsg, const char *machName);
+machine *triggerMachineByHash_3000(int myHash, int dataHash,
+	int normalDir, int shadowDir, int param1, int param2,
+	int index, MessageCB intrMsg, const char *machName);
 extern void sendWSMessage_60000(machine *mach);
 extern void sendWSMessage_80000(machine *mach);
 extern void sendWSMessage_B0000(machine *mach, int trigger);
@@ -87,6 +87,10 @@ extern void sendWSMessage_210000(machine *recv, int trigger);
 extern void sendWSMessage_29a0000(machine *recv, int val1);
 extern void sendWSMessage_29a0000(int val1);
 
+extern void intrMsgNull(frac16 myMessage, machine *sender);
+extern void triggerMachineByHashCallback(frac16 myMessage, machine *sender = nullptr);
+extern void triggerMachineByHashCallback3000(frac16 myMessage, machine *sender = nullptr);
+extern void triggerMachineByHashCallbackAlways(frac16 myMessage, machine *sender = nullptr);
 
 } // namespace Riddle
 } // namespace M4

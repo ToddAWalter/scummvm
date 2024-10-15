@@ -209,6 +209,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 				AdWalkplane *plane = new AdWalkplane(_gameRef);
 				plane->setName(meshNames[i].c_str());
 				plane->_mesh = meshes[i];
+				plane->_mesh->computeNormals();
 				plane->_mesh->fillVertexBuffer(0xFF0000FF);
 				plane->_receiveShadows = ExtNode->_receiveShadows;
 				_planes.add(plane);
@@ -219,6 +220,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 				AdBlock *block = new AdBlock(_gameRef);
 				block->setName(meshNames[i].c_str());
 				block->_mesh = meshes[i];
+				block->_mesh->computeNormals();
 				block->_mesh->fillVertexBuffer(0xFFFF0000);
 				block->_receiveShadows = ExtNode->_receiveShadows;
 				_blocks.add(block);
@@ -239,6 +241,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 				AdGeneric *generic = new AdGeneric(_gameRef);
 				generic->setName(meshNames[i].c_str());
 				generic->_mesh = meshes[i];
+				generic->_mesh->computeNormals();
 				generic->_mesh->fillVertexBuffer(0xFF00FF00);
 				generic->_receiveShadows = ExtNode->_receiveShadows;
 				_generics.add(generic);
@@ -255,8 +258,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 	createLights();
 
 	if (_lights.size() > 0) {
-		uint activeLight = 0;
-		setActiveLight(activeLight);
+		setActiveLight(0);
 	}
 
 	delete geomExt;
@@ -293,7 +295,7 @@ bool AdSceneGeometry::setActiveCamera(int camera, float fov, float nearClipPlane
 		if (fov >= 0.0f) {
 			_cameras[camera]->_fov = fov;
 		} else {
-			_cameras[camera]->_fov = _cameras[camera]->_originalFOV;
+			_cameras[camera]->_fov = _cameras[camera]->_origFov;
 		}
 
 		_cameras[camera]->_nearClipPlane = nearClipPlane;
@@ -354,17 +356,13 @@ Math::Matrix4 *AdSceneGeometry::getViewMatrix() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::storeDrawingParams() {
-	// implement this later
-	//	CBRenderD3D* m_Renderer = (CBRenderD3D*)_gameRef->m_Renderer;
+	_drawingViewport = _gameRef->_renderer3D->getViewPort();
 
-	//  // store values
-	//	m_Renderer->m_Device->GetViewport(&m_DrawingViewport);
+	// store values
+	//_gameRef->_renderer3D->getWorldTransform(_lastWorldMat);
+	//_gameRef->_renderer3D->getViewTransform(_lastViewMat);
+	//_gameRef->_renderer3D->getProjectionTransform(_lastProjMat);
 
-	//	m_Renderer->m_Device->GetTransform(D3DTS_WORLD, &m_LastWorldMat);
-	//	m_Renderer->m_Device->GetTransform(D3DTS_VIEW, &m_LastViewMat);
-	//	m_Renderer->m_Device->GetTransform(D3DTS_PROJECTION, &m_LastProjMat);
-
-	warning("AdSceneGeometry::storeDrawingParams not yet implemented");
 
 	AdScene *scene = ((AdGame *)_gameRef)->_scene;
 	if (scene) {
@@ -377,17 +375,17 @@ bool AdSceneGeometry::storeDrawingParams() {
 
 	Rect32 rc;
 	_gameRef->getCurrentViewportRect(&rc);
-//	float width = (float)rc.right - (float)rc.left;
-//	float height = (float)rc.bottom - (float)rc.top;
+	float width = (float)rc.right - (float)rc.left;
+	float height = (float)rc.bottom - (float)rc.top;
 
 	// margins
-	//	int mleft = rc.left;
-	//	int mright = m_Renderer->m_Width - Width - rc.left;
-	//	int mtop = rc.top;
-	//	int mbottom = m_Renderer->m_Height - Height - rc.top;
+	int mleft = rc.left;
+	int mright = _gameRef->_renderer3D->getWidth() - width - rc.left;
+	int mtop = rc.top;
+	int mbottom = _gameRef->_renderer3D->getHeight() - height - rc.top;
 
-	//	m_LastOffsetX = _gameRef->_offsetX + (mleft - mright)/2;
-	//	m_LastOffsetY = _gameRef->_offsetY + (mtop - mbottom)/2;
+	_lastOffsetX = _gameRef->_offsetX + (mleft - mright) / 2;
+	_lastOffsetY = _gameRef->_offsetY + (mtop - mbottom) / 2;
 
 	_lastValuesInitialized = true;
 
@@ -396,8 +394,8 @@ bool AdSceneGeometry::storeDrawingParams() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::render(bool render) {
-	//	store values
-	//	StoreDrawingParams();
+	// store values
+	storeDrawingParams();
 	if (render) {
 		_gameRef->_renderer3D->renderSceneGeometry(_planes, _blocks, _generics, _lights, getActiveCamera());
 	}
@@ -428,11 +426,11 @@ float AdSceneGeometry::getHeightAt(Math::Vector3d pos, float tolerance, bool *in
 			float *v1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
 			float *v2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
 
-			if (lineIntersectsTriangle(pos, dir,
-			                           Math::Vector3d(v0[0], v0[1], v0[2]),
-			                           Math::Vector3d(v1[0], v1[1], v1[2]),
-			                           Math::Vector3d(v2[0], v2[1], v2[2]),
-			                           intersection.x(), intersection.y(), intersection.z())) {
+			if (intersectTriangle(pos, dir,
+								  Math::Vector3d(v0[0], v0[1], v0[2]),
+								  Math::Vector3d(v1[0], v1[1], v1[2]),
+								  Math::Vector3d(v2[0], v2[1], v2[2]),
+								  intersection.x(), intersection.y(), intersection.z())) {
 				if (intersection.y() > pos.y() + tolerance) {
 					continue; // only fall down
 				}
@@ -455,9 +453,6 @@ float AdSceneGeometry::getHeightAt(Math::Vector3d pos, float tolerance, bool *in
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::directPathExists(Math::Vector3d *p1, Math::Vector3d *p2) {
-	// pretty sure this stuff can be somewhat simplified by factoring it out
-	// into some functions but let's leave this to a later point
-
 	// test walkplanes
 	for (uint i = 0; i < _planes.size(); i++) {
 		for (int j = 0; j < _planes[i]->_mesh->faceCount(); j++) {
@@ -468,17 +463,17 @@ bool AdSceneGeometry::directPathExists(Math::Vector3d *p1, Math::Vector3d *p2) {
 			Math::Vector3d intersection;
 			float dist;
 
-			if (lineSegmentIntersectsTriangle(*p1, *p2, Math::Vector3d(v0[0], v0[1], v0[2]),
-			                                  Math::Vector3d(v1[0], v1[1], v1[2]),
-			                                  Math::Vector3d(v2[0], v2[1], v2[2]),
-			                                  intersection, dist)) {
-				if (lineIntersectsTriangle(*p1, *p1 - *p2, v0, v1, v2,
-				                           intersection.x(), intersection.y(), intersection.z())) {
+			if (pickGetIntersect(*p1, *p2, Math::Vector3d(v0[0], v0[1], v0[2]),
+								 Math::Vector3d(v1[0], v1[1], v1[2]),
+								 Math::Vector3d(v2[0], v2[1], v2[2]),
+								 intersection, dist)) {
+				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2,
+									  intersection.x(), intersection.y(), intersection.z())) {
 					return false;
 				}
 
-				if (lineIntersectsTriangle(*p2, *p2 - *p1, v0, v1, v2,
-				                           intersection.x(), intersection.y(), intersection.z())) {
+				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2,
+									  intersection.x(), intersection.y(), intersection.z())) {
 					return false;
 				}
 			}
@@ -499,17 +494,17 @@ bool AdSceneGeometry::directPathExists(Math::Vector3d *p1, Math::Vector3d *p2) {
 			Math::Vector3d intersection;
 			float dist;
 
-			if (lineSegmentIntersectsTriangle(*p1, *p2, Math::Vector3d(v0[0], v0[1], v0[2]),
-			                                  Math::Vector3d(v1[0], v1[1], v1[2]),
-			                                  Math::Vector3d(v2[0], v2[1], v2[2]),
-			                                  intersection, dist)) {
-				if (lineIntersectsTriangle(*p1, *p1 - *p2, v0, v1, v2,
-				                           intersection.x(), intersection.y(), intersection.z())) {
+			if (pickGetIntersect(*p1, *p2, Math::Vector3d(v0[0], v0[1], v0[2]),
+								 Math::Vector3d(v1[0], v1[1], v1[2]),
+								 Math::Vector3d(v2[0], v2[1], v2[2]),
+								 intersection, dist)) {
+				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2,
+									  intersection.x(), intersection.y(), intersection.z())) {
 					return false;
 				}
 
-				if (lineIntersectsTriangle(*p2, *p2 - *p1, v0, v1, v2,
-				                           intersection.x(), intersection.y(), intersection.z())) {
+				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2,
+									  intersection.x(), intersection.y(), intersection.z())) {
 					return false;
 				}
 			}
@@ -536,12 +531,12 @@ Math::Vector3d AdSceneGeometry::getBlockIntersection(Math::Vector3d *p1, Math::V
 			Math::Vector3d intersection;
 			float dist;
 
-			if (lineSegmentIntersectsTriangle(*p1, *p2, v0, v1, v2, intersection, dist)) {
-				if (lineIntersectsTriangle(*p1, *p1 - *p2, v0, v1, v2, intersection.x(), intersection.y(), intersection.z())) {
+			if (pickGetIntersect(*p1, *p2, v0, v1, v2, intersection, dist)) {
+				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2, intersection.x(), intersection.y(), intersection.z())) {
 					return intersection;
 				}
 
-				if (lineIntersectsTriangle(*p2, *p2 - *p1, v0, v1, v2, intersection.x(), intersection.y(), intersection.z())) {
+				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2, intersection.x(), intersection.y(), intersection.z())) {
 					return intersection;
 				}
 			}
@@ -637,10 +632,37 @@ bool AdSceneGeometry::convert2Dto3DTolerant(int x, int y, Math::Vector3d *pos) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::convert2Dto3D(int x, int y, Math::Vector3d *pos) {
+	if (!_lastValuesInitialized) {
+		_drawingViewport = _gameRef->_renderer3D->getViewPort();
+		//_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
+	}
+
+	float resWidth, resHeight;
+	float layerWidth, layerHeight;
+	float modWidth, modHeight;
+	bool customViewport;
+	_gameRef->_renderer3D->getProjectionParams(&resWidth, &resHeight, &layerWidth, &layerHeight, &modWidth, &modHeight, &customViewport);
+
+	// modify coordinates according to viewport settings
+	int mleft = _drawingViewport.left;
+	int mright = resWidth - _drawingViewport.width() - _drawingViewport.left;
+	int mtop = _drawingViewport.top;
+	int mbottom = resHeight - _drawingViewport.height() - _drawingViewport.top;
+
+	x -= (mleft + mright) / 2 + modWidth;
+	y -= (mtop + mbottom) / 2 + modHeight;
+
+	Math::Vector3d vPickRayDir;
+	Math::Vector3d vPickRayOrig;
+
+	Math::Ray rayScene = _gameRef->_renderer3D->rayIntoScene(x, y);
+	vPickRayDir = rayScene.getDirection();
+	vPickRayOrig = rayScene.getOrigin();
+
+
 	bool intFound = false;
 	float minDist = FLT_MAX;
-
-	Math::Ray ray = _gameRef->_renderer3D->rayIntoScene(x, y);
+	Math::Vector3d intersection, ray;
 
 	for (uint32 i = 0; i < _planes.size(); i++) {
 		for (int j = 0; j < _planes[i]->_mesh->faceCount(); j++) {
@@ -648,15 +670,14 @@ bool AdSceneGeometry::convert2Dto3D(int x, int y, Math::Vector3d *pos) {
 			float *v0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
 			float *v1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
 			float *v2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
-			Math::Vector3d intersection;
 
-			if (lineIntersectsTriangle(ray.getOrigin(), ray.getDirection(),
-			                           Math::Vector3d(v0[0], v0[1], v0[2]),
-			                           Math::Vector3d(v1[0], v1[1], v1[2]),
-			                           Math::Vector3d(v2[0], v2[1], v2[2]),
-			                           intersection.x(), intersection.y(), intersection.z())) {
-				Math::Vector3d lineSegement = intersection - getActiveCamera()->_position;
-				float dist = lineSegement.getMagnitude();
+			if (intersectTriangle(vPickRayOrig, vPickRayDir,
+								  Math::Vector3d(v0[0], v0[1], v0[2]),
+								  Math::Vector3d(v1[0], v1[1], v1[2]),
+								  Math::Vector3d(v2[0], v2[1], v2[2]),
+							      intersection.x(), intersection.y(), intersection.z())) {
+				ray = intersection - vPickRayOrig;
+				float dist = ray.getMagnitude();
 
 				if (dist < minDist) {
 					*pos = intersection;
@@ -691,8 +712,7 @@ bool AdSceneGeometry::getPath(Math::Vector3d source, Math::Vector3d target, AdPa
 		_PFRerun = rerun;
 
 		// prepare working path
-		uint i;
-		uint j;
+		uint i, j;
 
 		for (i = 0; i < _PFPath.size(); i++) {
 			delete _PFPath[i];
@@ -1294,24 +1314,18 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::convert3Dto2D(Math::Vector3d *pos, int32 *x, int32 *y) {
-	Math::Matrix4 worldMat;
-	worldMat.setToIdentity();
+bool AdSceneGeometry::convert3Dto2D(Math::Vector3d *position, int32 *x, int32 *y) {
+	DXMatrix worldMat;
+	DXMatrixIdentity(&worldMat);
+	DXMatrix projMat = DXMatrix(_lastProjMat.getData());
+	DXMatrixTranspose(&projMat, &projMat);
+	DXMatrix viewMat = DXMatrix(_lastViewMat.getData());
+	DXMatrixTranspose(&viewMat, &viewMat);
 
-	Math::Vector3d vect2D;
-	int viewportTmp[4];
-	// TODO: gluMathProject expects an OpenGL viewport,
-	// hence the first coordinates specify the lower left corner
-	// wme works with a Direct3D viewport, though
-	// so check if this does work
-	viewportTmp[0] = _drawingViewport.left;
-	viewportTmp[1] = _drawingViewport.bottom;
-	viewportTmp[2] = _drawingViewport.width();
-	viewportTmp[3] = _drawingViewport.height();
-	Math::Matrix4 modelViewMatrix = _lastViewMat * worldMat;
-	Math::gluMathProject(*pos, modelViewMatrix.getData(), _lastProjMat.getData(), viewportTmp, vect2D);
-	*x = vect2D.x() + _lastScrollX;
-	*y = vect2D.y() + _lastScrollY;
+	DXVector3 vect2D, pos = DXVector3(position->x(), position->y(), position->z());
+	DXVec3Project(&vect2D, &pos, &_drawingViewport, &projMat, &viewMat, &worldMat);
+	*x = vect2D._x + _lastScrollX;
+	*y = vect2D._y + _lastScrollY;
 
 	return true;
 }

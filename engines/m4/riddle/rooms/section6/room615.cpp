@@ -102,7 +102,7 @@ void Room615::daemon() {
 	case 11:
 		if (_flag1) {
 			_flag1 = false;
-			series_stream_check_series(_untie, 30000);
+			series_set_frame_rate(_untie, 30000);
 			digi_play("615r02", 1, 255, 15);
 		} else {
 			_flag1 = true;
@@ -123,7 +123,7 @@ void Room615::daemon() {
 			_flag1 = false;
 			_pu = series_stream("515PU02", 6, 0x100, 24);
 			series_stream_break_on_frame(_pu, 5, 22);
-			series_stream_check_series(_pu, 4);
+			series_set_frame_rate(_pu, 4);
 		} else {
 			_flag1 = true;
 		}
@@ -136,7 +136,7 @@ void Room615::daemon() {
 	case 24:
 		if (_flag1) {
 			_flag1 = false;
-			series_stream_check_series(_untie, 7);
+			series_set_frame_rate(_untie, 7);
 			ws_OverrideCrunchTime(_untie);
 			series_stream_break_on_frame(_untie, 144, 26);
 			digi_play("615t03", 1, 255, 25);
@@ -148,7 +148,7 @@ void Room615::daemon() {
 	case 25:
 		_flag1 = false;
 		_ripTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 393, 361, 97, 256, 1,
-			triggerMachineByHashCallbackNegative, "rip talker");
+			triggerMachineByHashCallback, "rip talker");
 		sendWSMessage_10000(1, _ripTalker, _ripTalk, 1, 1, 40, _ripTalk, 1, 7, 4);
 		sendWSMessage_1a0000(_ripTalker, 11);
 		digi_play("615r03", 1, 255, 40);
@@ -156,7 +156,7 @@ void Room615::daemon() {
 
 	case 26:
 		if (!_val1)
-			series_stream_check_series(_untie, 3000);
+			series_set_frame_rate(_untie, 3000);
 		break;
 
 	case 40:
@@ -172,7 +172,7 @@ void Room615::daemon() {
 
 			_val1 = 1;
 			terminateMachineAndNull(_ripTalker);
-			series_stream_check_series(_untie, 7);
+			series_set_frame_rate(_untie, 7);
 			ws_OverrideCrunchTime(_untie);
 	
 		} else {
@@ -192,12 +192,12 @@ void Room615::daemon() {
 			series_load("SAFARI SHADOW 1", 11);
 			series_load("SAFARI SHADOW 1", 12);
 
-			_pu = triggerMachineByHash_3000(8, 0, RIPLEY_SERIES_DIRS, RIPLEY_SHADOWS_DIRS,
+			_pu = triggerMachineByHash_3000(8, 0, *RIPLEY_SERIES_DIRS, *RIPLEY_SHADOWS_DIRS,
 				392, 361, 10, triggerMachineByHashCallback3000, "rip");
 			sendWSMessage_10000(_pu, 426, 347, 9, 50, 1);
 
 			_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-				triggerMachineByHashCallbackNegative, "untie tt");
+				triggerMachineByHashCallback, "untie tt");
 			sendWSMessage_10000(1, _tt, _loop7, 1, 1, 50, _loop7, 1, 5, 1);
 			sendWSMessage_1a0000(_tt, 15);
 			digi_play("615t04", 1, 255, 50);
@@ -228,7 +228,7 @@ void Room615::daemon() {
 
 	case 57:
 		_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-			triggerMachineByHashCallbackNegative, "x");
+			triggerMachineByHashCallback, "x");
 		sendWSMessage_10000(1, _tt, _loop0, 1, 1, 60, _loop0, 1, 5, 1);
 		sendWSMessage_1a0000(_tt, 13);
 		break;
@@ -250,7 +250,7 @@ void Room615::daemon() {
 
 	case 65:
 		_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-			triggerMachineByHashCallbackNegative, "spleen");
+			triggerMachineByHashCallback, "spleen");
 		sendWSMessage_10000(1, _tt, _loop1, 1, 1, 75, _loop1, 1, 7, 1);
 		sendWSMessage_1a0000(_tt, 13);
 		break;
@@ -270,7 +270,7 @@ void Room615::daemon() {
 		if (_ctr1 >= 1) {
 			_ctr1 = 0;
 			_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-				triggerMachineByHashCallbackNegative, "spleen");
+				triggerMachineByHashCallback, "spleen");
 			sendWSMessage_10000(1, _tt, _loop2, 1, 1, 85, _loop2, 1, 9, 1);
 			sendWSMessage_1a0000(_tt, 13);
 			digi_play("615t07", 1, 255, 85);
@@ -335,12 +335,12 @@ void Room615::daemon() {
 		if (_ctr1 >= 1) {
 			_ctr1 = 0;
 			_untie = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-				triggerMachineByHashCallbackNegative, "spleen");
+				triggerMachineByHashCallback, "spleen");
 			sendWSMessage_10000(1, _untie, _loop5, 1, 1, 105, _loop5, 1, 5, 1);
 			sendWSMessage_1a0000(_untie, 15);
 
 			_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-				triggerMachineByHashCallbackNegative, "spleen");
+				triggerMachineByHashCallback, "spleen");
 			sendWSMessage_10000(1, _tt, _loop6, 1, 1, 105, _loop6, 1, 1, 1);
 			digi_play("615r09", 1, 255, 105);
 		} else {
@@ -401,11 +401,11 @@ void Room615::daemon() {
 
 	case 116:
 		series_stream_break_on_frame(_untie, 58, 150);
-		series_stream_check_series(_untie, 30000);
+		series_set_frame_rate(_untie, 30000);
 		break;
 
 	case 118:
-		series_stream_check_series(_untie, 6);
+		series_set_frame_rate(_untie, 6);
 		ws_OverrideCrunchTime(_untie);
 		digi_play("615t10", 1, 255, 119);
 		break;
@@ -414,7 +414,7 @@ void Room615::daemon() {
 		_val2 = 1;
 
 		if (_val2) {
-			series_stream_check_series(_untie, 6);
+			series_set_frame_rate(_untie, 6);
 			ws_OverrideCrunchTime(_untie);
 		} else {
 			kernel_timing_trigger(10, 151);
@@ -424,13 +424,13 @@ void Room615::daemon() {
 	case 120:
 		midi_play("love", 255, 0, -1, 949);
 		_untie = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-			triggerMachineByHashCallbackNegative, "spleen");
+			triggerMachineByHashCallback, "spleen");
 		sendWSMessage_10000(1, _untie, _loop5, 1, 1, 125, _loop5, 1, 1, 1);
 		sendWSMessage_190000(_untie, 15);
 		sendWSMessage_1a0000(_untie, 15);
 
 		_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x400, 0,
-			triggerMachineByHashCallbackNegative, "spleen");
+			triggerMachineByHashCallback, "spleen");
 		sendWSMessage_10000(1, _tt, _loop7, 1, 1, 125, _loop7, 1, 5, 1);
 		sendWSMessage_1a0000(_tt, 13);
 		digi_play("615t10a", 1, 255, 125);
@@ -481,7 +481,7 @@ void Room615::daemon() {
 		break;
 
 	case 135:
-		series_stream_check_series(_untie, 400);
+		series_set_frame_rate(_untie, 400);
 		kernel_timing_trigger(60, 140);
 		break;
 
@@ -499,14 +499,14 @@ void Room615::daemon() {
 
 	case 150:
 		if (!_val2) {
-			series_stream_check_series(_untie, 30000);
+			series_set_frame_rate(_untie, 30000);
 			kernel_timing_trigger(10, 151);
 		}
 		break;
 
 	case 151:
 		if (_val2) {
-			series_stream_check_series(_untie, 6);
+			series_set_frame_rate(_untie, 6);
 			ws_OverrideCrunchTime(_untie);
 		} else {
 			kernel_timing_trigger(10, 151);

@@ -38,11 +38,11 @@ private:
 	int _val6 = 0;
 	int _val7 = 0;
 	int _val8 = 0;
-	int _val9 = 0;
+	//int _val9 = 0;
 	int _val10 = 0;
 	int _val11 = 0;
 	KernelTriggerType _val12 = KT_DAEMON;
-	bool _val13 = false;
+	bool _fengFlag = false;
 	int _val14 = 0;
 	int _val15 = 0;
 	int _val16 = 0;
@@ -51,17 +51,17 @@ private:
 	KernelTriggerType _triggerMode1 = KT_DAEMON;
 	KernelTriggerType _triggerMode2 = KT_DAEMON;
 	machine *_door = nullptr;
-	int _hands1 = 0;
-	int _hands2 = 0;
-	int _hands3 = 0;
-	machine *_hands4 = nullptr;
-	int _clasped1 = 0;
-	int _clasped2 = 0;
-	int _clasped3 = 0;
-	int _clasped4 = 0;
+	int _mei1 = 0;
+	int _mei2 = 0;
+	int _mei3 = 0;
+	machine *_mei = nullptr;
+	int _feng1 = 0;
+	int _feng2 = 0;
+	int _feng3 = 0;
+	int _feng4 = 0;
 	machine *_shadow4 = nullptr;
 	machine *_shadow5 = nullptr;
-	machine *_machine1 = nullptr;
+	machine *_fengLi = nullptr;
 	machine *_machine2 = nullptr;
 	machine *_machine3 = nullptr;
 	machine *_ripPonders = nullptr;
@@ -83,8 +83,8 @@ private:
 
 	static void escapePressed(void *, void *);
 
-	void loadHands();
-	void loadClasped();
+	void setupMei();
+	void loadFengLi();
 	void setFengActive(bool flag);
 	void setShadow4(bool active);
 	void setShadow5(bool active);
@@ -106,6 +106,7 @@ public:
 	void daemon() override;
 	void pre_parser() override;
 	void parser() override;
+	void syncGame(Common::Serializer &s) override;
 };
 
 } // namespace Rooms

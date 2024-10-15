@@ -52,11 +52,6 @@ class XFileData;
 
 class XModel : public BaseObject {
 private:
-	// the D3DX effect stuff is missing here
-	// at the moment I am not aware of whether this is used
-	// in Alpha Polaris or any other WME game
-	// if it is, then this would mean a decent amount of work
-	// since we would need to parse and emulate D3DX effects in OpenGL
 	class XModelMatSprite {
 	public:
 		char *_matName;
@@ -118,10 +113,7 @@ private:
 	};
 
 public:
-	// default ticks per second for .X models seems to be 4800
-	// not sure if this is truly documented anywhere, though
-	// on the other hand, wme chooses the same value,
-	// so should be fine for our purposes
+
 	const static int kDefaultTicksPerSecond = 4800;
 
 	DECLARE_PERSISTENT(XModel, BaseObject)
@@ -133,6 +125,9 @@ public:
 
 	bool loadFromFile(const Common::String &filename, XModel *parentModel = nullptr);
 	bool mergeFromFile(const Common::String &filename);
+
+	bool loadAnimationSet(const Common::String &filename, XFileData *xobj);
+	bool loadAnimation(const Common::String &filename, XFileData *xobj, AnimationSet *parentAnimSet = nullptr);
 
 	bool update() override;
 	bool render();
@@ -150,9 +145,6 @@ public:
 	static bool loadName(BaseNamedObject *obj, XFileData *data);
 	static bool loadName(Common::String &targetStr, XFileData *data);
 
-	bool loadAnimationSet(const Common::String &filename, XFileData *xobj);
-	bool loadAnimation(const Common::String &filename, XFileData *xobj, AnimationSet *parentAnimSet = nullptr);
-
 	Math::Matrix4 _lastWorldMat;
 	Rect32 _boundingRect;
 	BaseObject *_owner;
@@ -164,7 +156,7 @@ public:
 	bool stopAnim(int channel, uint32 transitionTime);
 	bool stopAnim(uint32 transitionTime);
 
-	Math::Matrix4 *getBoneMatrix(const char *boneName);
+	DXMatrix *getBoneMatrix(const char *boneName);
 	FrameNode *getRootFrame();
 
 	bool setMaterialSprite(const char *materialName, const char *spriteFilename);
@@ -185,7 +177,7 @@ private:
 	bool findBones(bool animOnly = false, XModel *parentModel = nullptr);
 
 	void updateBoundingRect();
-	void static inline updateRect(Rect32 *rc, int32 x, int32 y);
+	void static inline updateRect(Rect32 *rc, Math::Vector3d vec);
 	Rect32 _drawingViewport;
 	Math::Matrix4 _lastViewMat;
 	Math::Matrix4 _lastProjMat;

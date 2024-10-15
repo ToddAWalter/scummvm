@@ -20,9 +20,9 @@
  */
 
 #include "twine/scene/scene.h"
+#include "common/config-manager.h"
 #include "common/file.h"
 #include "common/memstream.h"
-#include "common/stream.h"
 #include "common/util.h"
 #include "twine/audio/music.h"
 #include "twine/audio/sound.h"
@@ -49,71 +49,71 @@ Scene::~Scene() {
 
 void Scene::setActorStaticFlags(ActorStruct *act, uint32 staticFlags) {
 	if (staticFlags & 0x1) {
-		act->_staticFlags.bComputeCollisionWithObj = 1;
+		act->_flags.bComputeCollisionWithObj = 1;
 	}
 	if (staticFlags & 0x2) {
-		act->_staticFlags.bComputeCollisionWithBricks = 1;
+		act->_flags.bComputeCollisionWithBricks = 1;
 	}
 	if (staticFlags & 0x4) {
-		act->_staticFlags.bCheckZone = 1;
+		act->_flags.bCheckZone = 1;
 	}
 	if (staticFlags & 0x8) {
-		act->_staticFlags.bSpriteClip = 1;
+		act->_flags.bSpriteClip = 1;
 	}
 	if (staticFlags & 0x10) {
-		act->_staticFlags.bCanBePushed = 1;
+		act->_flags.bCanBePushed = 1;
 	}
 	if (staticFlags & 0x20) {
-		act->_staticFlags.bComputeLowCollision = 1;
+		act->_flags.bComputeLowCollision = 1;
 	}
 	if (staticFlags & 0x40) {
-		act->_staticFlags.bCanDrown = 1;
+		act->_flags.bCanDrown = 1;
 	}
 	if (staticFlags & 0x80) {
-		act->_staticFlags.bComputeCollisionWithFloor = 1;
+		act->_flags.bComputeCollisionWithFloor = 1;
 	}
 
 	if (staticFlags & 0x100) {
-		act->_staticFlags.bUnk0100 = 1;
+		act->_flags.bUnk0100 = 1;
 	}
 	if (staticFlags & 0x200) {
-		act->_staticFlags.bIsInvisible = 1;
+		act->_flags.bIsInvisible = 1;
 	}
 	if (staticFlags & 0x400) {
-		act->_staticFlags.bSprite3D = 1;
+		act->_flags.bSprite3D = 1;
 	}
 	if (staticFlags & 0x800) {
-		act->_staticFlags.bObjFallable = 1;
+		act->_flags.bObjFallable = 1;
 	}
 	if (staticFlags & 0x1000) {
-		act->_staticFlags.bNoShadow = 1;
+		act->_flags.bNoShadow = 1;
 	}
 	if (staticFlags & 0x2000) {
-		act->_staticFlags.bIsBackgrounded = 1;
+		act->_flags.bIsBackgrounded = 1;
 	}
 	if (staticFlags & 0x4000) {
-		act->_staticFlags.bIsCarrierActor = 1;
+		act->_flags.bIsCarrierActor = 1;
 	}
 	if (staticFlags & 0x8000) {
-		act->_staticFlags.bUseMiniZv = 1;
+		act->_flags.bUseMiniZv = 1;
 	}
 	if (staticFlags & 0x10000) {
-		act->_staticFlags.bHasInvalidPosition = 1;
+		act->_flags.bHasInvalidPosition = 1;
 	}
 	if (staticFlags & 0x20000) {
-		act->_staticFlags.bNoElectricShock = 1;
+		act->_flags.bNoElectricShock = 1;
 	}
 	if (staticFlags & 0x40000) {
-		act->_staticFlags.bHasSpriteAnim3D = 1;
+		act->_flags.bHasSpriteAnim3D = 1;
 	}
 	if (staticFlags & 0x80000) {
-		act->_staticFlags.bNoPreClipping = 1;
+		act->_flags.bNoPreClipping = 1;
 	}
 	if (staticFlags & 0x100000) {
-		act->_staticFlags.bHasZBuffer = 1;
+		act->_flags.bHasZBuffer = 1;
 	}
 	if (staticFlags & 0x200000) {
-		act->_staticFlags.bHasZBufferInWater = 1;
+		act->_flags.bHasZBufferInWater = 1;
 	}
 }
 
@@ -180,7 +180,7 @@ bool Scene::loadSceneCubeXY(int numcube, int32 *cubex, int32 *cubey) {
 
 void Scene::loadModel(ActorStruct &actor, int32 modelIndex, bool lba1) {
 	actor._body = modelIndex;
-	if (!actor._staticFlags.bSprite3D) {
+	if (!actor._flags.bSprite3D) {
 		debug(1, "Init actor with model %i", modelIndex);
 		_engine->_resources->loadEntityData(actor._entityData, modelIndex);
 		actor._entityDataPtr = &actor._entityData;
@@ -250,7 +250,7 @@ bool Scene::loadSceneLBA2() {
 		act->_strengthOfHit = stream.readByte();
 		setBonusParameterFlags(act, stream.readUint16LE());
 		act->_beta = (int16)stream.readUint16LE();
-		act->_speed = (int16)stream.readUint16LE(); // srot
+		act->_srot = (int16)stream.readUint16LE();
 		act->_controlMode = (ControlMode)stream.readByte(); // move
 		act->_cropLeft = stream.readSint16LE();
 		act->_delayInMillis = act->_cropLeft; // TODO: this might not be needed
@@ -260,7 +260,7 @@ bool Scene::loadSceneLBA2() {
 		act->_followedActor = act->_cropBottom; // TODO: is this needed? and valid?
 		act->_bonusAmount = stream.readSint16LE();
 		act->_talkColor = stream.readByte();
-		if (act->_staticFlags.bHasSpriteAnim3D) {
+		if (act->_flags.bHasSpriteAnim3D) {
 			/*act->spriteAnim3DNumber = */stream.readSint32LE();
 			/*act->spriteSizeHit = */stream.readSint16LE();
 			/*act->cropBottom = act->spriteSizeHit;*/
@@ -385,7 +385,7 @@ bool Scene::loadSceneLBA1() {
 		setBonusParameterFlags(act, stream.readUint16LE());
 		act->_bonusParameter.givenNothing = 0;
 		act->_beta = (int16)stream.readUint16LE();
-		act->_speed = (int16)stream.readUint16LE();
+		act->_srot = (int16)stream.readUint16LE();
 		act->_controlMode = (ControlMode)stream.readUint16LE();
 		act->_cropLeft = stream.readSint16LE();
 		act->_delayInMillis = act->_cropLeft; // TODO: this might not be needed
@@ -443,20 +443,29 @@ bool Scene::loadSceneLBA1() {
 	if (_enableEnhancements) {
 		switch (_numCube) {
 		case LBA1SceneId::Hamalayi_Mountains_landing_place:
+			// move the mine a little bit, as it's too close to the change cube zone
 			_sceneActors[21]._posObj.x = _sceneActors[21]._oldPos.x = 6656 + 256;
 			_sceneActors[21]._posObj.z = _sceneActors[21]._oldPos.z = 768;
 			break;
 		case LBA1SceneId::Principal_Island_outside_the_fortress:
+			// https://bugs.scummvm.org/ticket/13818
 			_sceneActors[29]._posObj.z = _sceneActors[29]._oldPos.z = 1795;
+
 #if 0
+			// increase the zones for opening the doors
+			// red card door
 			_sceneZones[15].mins.x = 1104;
 			_sceneZones[15].mins.z = 8448;
 			_sceneZones[15].maxs.x = 4336;
 			_sceneZones[15].maxs.z = 11488;
+
+			// red card door
 			_sceneZones[16].mins.x = 21104;
 			_sceneZones[16].mins.z = 4608;
 			_sceneZones[16].maxs.x = 23824;
 			_sceneZones[16].maxs.z = 8080;
+
+			// blue card door
 			_sceneZones[22].mins.x = 6144;
 			_sceneZones[22].mins.z = 6144;
 			_sceneZones[22].maxs.x = 8865;
@@ -495,7 +504,7 @@ bool Scene::loadScene(int32 index) {
 }
 
 void Scene::clearScene() {
-	_engine->_extra->resetExtras();
+	_engine->_extra->clearExtra();
 
 	// ClearFlagsCube
 	for (int32 i = 0; i < ARRAYSIZE(_listFlagCube); i++) {
@@ -506,7 +515,7 @@ void Scene::clearScene() {
 		_engine->_redraw->overlayList[i].num = -1;
 	}
 
-	_engine->_screens->setNormalPal();
+	_engine->_screens->_flagPalettePcx = false;
 }
 
 void Scene::reloadCurrentScene() {
@@ -545,7 +554,7 @@ void Scene::changeCube() {
 					pos.y = zone->infoData.ChangeScene.y - zone->mins.y + track.y;
 					pos.z = zone->infoData.ChangeScene.z - zone->mins.z + track.z;
 					_engine->_scene->_heroPositionType = ScenePositionType::kZone;
-					debug(3, "Using zone position %i:%i:%i", pos.x, pos.y, pos.z);
+					debug(2, "Using zone position %i:%i:%i", pos.x, pos.y, pos.z);
 				}
 			}
 		}
@@ -593,7 +602,8 @@ void Scene::changeCube() {
 
 	if (_numHolomapTraj != -1) {
 		_engine->testRestoreModeSVGA(false);
-		_engine->_holomap->drawHolomapTrajectory(_numHolomapTraj);
+		_engine->_screens->setBlackPal();
+		_engine->_holomap->holoTraj(_numHolomapTraj);
 		_numHolomapTraj = -1;
 	}
 
@@ -628,16 +638,16 @@ void Scene::changeCube() {
 	}
 
 	_engine->_gameState->_inventoryNumKeys = 0;
-	_engine->_disableScreenRecenter = false;
+	_engine->_cameraZone = false;
 
-	ActorStruct *followedActor = getActor(_currentlyFollowedActor);
+	ActorStruct *followedActor = getActor(_numObjFollow);
 	_engine->_grid->centerOnActor(followedActor);
 
 	_engine->_gameState->_magicBall = -1;
 	_engine->_movements->_lastJoyFlag = true;
 	_engine->_grid->_useCellingGrid = -1;
 	_engine->_grid->_cellingGridIdx = -1;
-	_engine->_screens->_flagFade = false;
+	_engine->_screens->_flagFade = true;
 	_engine->_renderer->setLightVector(_alphaLight, _betaLight, LBAAngles::ANGLE_0);
 
 	_newCube = SCENE_CEILING_GRID_FADE_1;
@@ -783,12 +793,12 @@ void Scene::checkZoneSce(int32 actorIdx) {
 				}
 				break;
 			case ZoneType::kCamera:
-				if (_currentlyFollowedActor == actorIdx && !_engine->_debugState->_useFreeCamera) {
-					_engine->_disableScreenRecenter = true;
-					if (_engine->_grid->_newCamera.x != zone->infoData.CameraView.x || _engine->_grid->_newCamera.y != zone->infoData.CameraView.y || _engine->_grid->_newCamera.z != zone->infoData.CameraView.z) {
-						_engine->_grid->_newCamera.x = zone->infoData.CameraView.x;
-						_engine->_grid->_newCamera.y = zone->infoData.CameraView.y;
-						_engine->_grid->_newCamera.z = zone->infoData.CameraView.z;
+				if (_numObjFollow == actorIdx && !_engine->_debugState->_useFreeCamera) {
+					_engine->_cameraZone = true;
+					if (_engine->_grid->_startCube.x != zone->infoData.CameraView.x || _engine->_grid->_startCube.y != zone->infoData.CameraView.y || _engine->_grid->_startCube.z != zone->infoData.CameraView.z) {
+						_engine->_grid->_startCube.x = zone->infoData.CameraView.x;
+						_engine->_grid->_startCube.y = zone->infoData.CameraView.y;
+						_engine->_grid->_startCube.z = zone->infoData.CameraView.z;
 						_engine->_redraw->_firstTime = true;
 					}
 				}
@@ -797,7 +807,7 @@ void Scene::checkZoneSce(int32 actorIdx) {
 				actor->_zoneSce = zone->num;
 				break;
 			case ZoneType::kGrid:
-				if (_currentlyFollowedActor == actorIdx) {
+				if (_numObjFollow == actorIdx) {
 					tmpCellingGrid = true;
 					if (_engine->_grid->_useCellingGrid != zone->num) {
 						if (zone->num != -1) {
@@ -806,8 +816,9 @@ void Scene::checkZoneSce(int32 actorIdx) {
 
 						_engine->_grid->_useCellingGrid = zone->num;
 						_engine->_grid->_cellingGridIdx = z;
-						ScopedEngineFreeze freeze(_engine);
+						_engine->saveTimer(false);
 						_engine->_grid->initCellingGrid(_engine->_grid->_useCellingGrid);
+						_engine->restoreTimer();
 					}
 				}
 				break;
@@ -819,12 +830,13 @@ void Scene::checkZoneSce(int32 actorIdx) {
 				break;
 			case ZoneType::kText:
 				if (IS_HERO(actorIdx) && _engine->_movements->shouldExecuteAction()) {
-					ScopedEngineFreeze scopedFreeze(_engine);
+					_engine->saveTimer(false);
 					_engine->testRestoreModeSVGA(true);
 					_engine->_text->setFontCrossColor(zone->infoData.DisplayText.textColor);
 					_talkingActor = actorIdx;
 					_engine->_text->drawTextProgressive((TextId)zone->num);
-					_engine->_redraw->redrawEngineActions(true);
+					_engine->restoreTimer();
+					_engine->_redraw->drawScene(true);
 				}
 				break;
 			case ZoneType::kLadder:
@@ -849,7 +861,7 @@ void Scene::checkZoneSce(int32 actorIdx) {
 		}
 	}
 
-	if (!tmpCellingGrid && actorIdx == _currentlyFollowedActor && _engine->_grid->_useCellingGrid != -1) {
+	if (!tmpCellingGrid && actorIdx == _numObjFollow && _engine->_grid->_useCellingGrid != -1) {
 		_engine->_grid->_useCellingGrid = -1;
 		_engine->_grid->_cellingGridIdx = -1;
 		_engine->_grid->copyMapToCube();

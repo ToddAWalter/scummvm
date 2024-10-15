@@ -57,7 +57,7 @@ void Room608::init() {
 		ws_walk_load_walker_series(NORMAL_DIRS1, NORMAL_NAMES1);
 		ws_walk_load_shadow_series(SHADOW_DIRS1, SHADOW_NAMES1);
 		_ol = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x200, 0,
-			triggerMachineByHashCallbackNegative, "ol");
+			triggerMachineByHashCallback, "ol");
 		sendWSMessage_10000(1, _ol, _old1, 1, 1, 200, _old1, 1, 1, 0);
 		_val1 = 0;
 		_val2 = 0;
@@ -141,7 +141,7 @@ void Room608::init() {
 		ws_walk_load_walker_series(SECTION6_NORMAL_DIRS, SECTION6_NORMAL_NAMES);
 		ws_walk_load_shadow_series(SECTION6_SHADOW_DIRS, SECTION6_SHADOW_NAMES);
 
-		_tt = triggerMachineByHash_3000(8, 9, SECTION6_NORMAL_DIRS, SECTION6_SHADOW_DIRS,
+		_tt = triggerMachineByHash_3000(8, 9, *SECTION6_NORMAL_DIRS, *SECTION6_SHADOW_DIRS,
 			-30, 324, 3, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 105, 324, 5, 20, 1);
 	} else if (_G(flags)[V203] == 6) {
@@ -162,7 +162,7 @@ void Room608::init() {
 		ws_walk_load_walker_series(SECTION6_NORMAL_DIRS, SECTION6_NORMAL_NAMES);
 		ws_walk_load_shadow_series(SECTION6_SHADOW_DIRS, SECTION6_SHADOW_NAMES);
 
-		_tt = triggerMachineByHash_3000(8, 9, SECTION6_NORMAL_DIRS, SECTION6_SHADOW_DIRS,
+		_tt = triggerMachineByHash_3000(8, 9, *SECTION6_NORMAL_DIRS, *SECTION6_SHADOW_DIRS,
 			-30, 324, 3, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 103, 318, 3, 700, 1);
 	}
@@ -214,7 +214,7 @@ void Room608::daemon() {
 		_shadow = series_show("safari shadow 3", 0xf00, 0, -1, -1, 0,
 			_G(player_info).scale, _G(player_info).x, _G(player_info).y);
 		_ripley = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "rip talker");
+			triggerMachineByHashCallback, "rip talker");
 		sendWSMessage_10000(1, _ripley, _rp01, 1, 13, -1, _rp01, 20, 20, 0);
 		break;
 
@@ -225,7 +225,7 @@ void Room608::daemon() {
 		_ttShadow = series_show("tt walker shadow 5", 0xf00, 0, -1, -1, 0,
 			_G(player_info).scale, _G(player_info).x, _G(player_info).y);
 		_ttTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "tt talker");
+			triggerMachineByHashCallback, "tt talker");
 		sendWSMessage_10000(1, _ttTalker, _tt01, 63, 54, 22, _tt01, 54, 54, 0);
 		break;
 
@@ -686,7 +686,7 @@ void Room608::daemon() {
 		_val2 = 0;
 		_val3 = 1;
 		_ol2 = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "rip talker");
+			triggerMachineByHashCallback, "rip talker");
 		sendWSMessage_10000(1, _ol2, _old5f, 1, 1, -1, _old5f, 1, 4, 1);
 		sendWSMessage_1a0000(_ol2, 11);
 		digi_play("608r44", 1, 255, 226);
@@ -732,7 +732,7 @@ void Room608::daemon() {
 		_val2 = 0;
 		_val3 = 1;
 		_ol2 = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "rip talker");
+			triggerMachineByHashCallback, "rip talker");
 		sendWSMessage_10000(1, _ol2, _old5f, 1, 1, -1, _old5f, 1, 4, 1);
 		sendWSMessage_1a0000(_ol2, 11);
 		digi_play("608r44", 1, 255, 268);
@@ -859,7 +859,7 @@ void Room608::daemon() {
 
 	case 500:
 		terminateMachineAndNull(_ol);
-		_ol = triggerMachineByHash_3000(8, 15, NORMAL_DIRS1, SHADOW_DIRS1,
+		_ol = triggerMachineByHash_3000(8, 15, *NORMAL_DIRS1, *SHADOW_DIRS1,
 			499, 318, 9, triggerMachineByHashCallback3000, "ow walker");
 		sendWSMessage_10000(_ol, 487, 290, 11, -1, 1);
 		kernel_timing_trigger(60, 501);
@@ -899,17 +899,17 @@ void Room608::daemon() {
 		break;
 
 	case 505:
-		series_stream_check_series(_ol2, 240);
+		series_set_frame_rate(_ol2, 240);
 		series_stream_break_on_frame(_ol2, 50, 506);
 		break;
 
 	case 506:
-		series_stream_check_series(_ol2, 7);
+		series_set_frame_rate(_ol2, 7);
 		series_stream_break_on_frame(_ol2, 53, 508);
 		break;
 
 	case 507:
-		series_stream_check_series(_ol2, 13);
+		series_set_frame_rate(_ol2, 13);
 		digi_play("608r47", 1);
 		break;
 
@@ -938,13 +938,13 @@ void Room608::daemon() {
 		break;
 
 	case 514:
-		series_stream_check_series(_ol2, 300);
+		series_set_frame_rate(_ol2, 300);
 		kernel_timing_trigger(60, 555);
 		series_stream_break_on_frame(_ol2, 275, 515);
 		break;
 
 	case 515:
-		series_stream_check_series(_ol2, 7);
+		series_set_frame_rate(_ol2, 7);
 		series_stream_break_on_frame(_ol2, 290, 516);
 		break;
 
@@ -1003,7 +1003,7 @@ void Room608::daemon() {
 
 		sendWSMessage_10000(_G(my_walker), 524, 296, 9, 532, 1);
 		_ol = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x200, 0,
-			triggerMachineByHashCallbackNegative, "ol");
+			triggerMachineByHashCallback, "ol");
 		sendWSMessage_10000(1, _ol, _old8, 1, 1, -1, _old8, 1, 1, 1);
 		break;
 
@@ -1051,7 +1051,7 @@ void Room608::daemon() {
 
 	case 548:
 		terminateMachineAndNull(_ol);
-		_ol = triggerMachineByHash_3000(8, 15, NORMAL_DIRS1, SHADOW_DIRS1,
+		_ol = triggerMachineByHash_3000(8, 15, *NORMAL_DIRS1, *SHADOW_DIRS1,
 			487, 293, 9, triggerMachineByHashCallback3000, "ow walker");
 		sendWSMessage_10000(_ol, 417, 295, 9, 549, 0);
 		kernel_timing_trigger(300, 551);
@@ -1124,7 +1124,7 @@ void Room608::daemon() {
 		_ttShadow = series_show("tt walker shadow 3", 0xf00, 0, -1, -1, 0,
 			_G(player_info).scale, _G(player_info).x, _G(player_info).y);
 		_ttTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "tt walker");
+			triggerMachineByHashCallback, "tt walker");
 		sendWSMessage_10000(1, _ttTalker, _tt02, 1, 11, 703, _tt02, 11, 11, 0);
 		break;
 
@@ -1193,7 +1193,7 @@ void Room608::daemon() {
 		series_unload(204);
 
 		_ttTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0xd00, 0,
-			triggerMachineByHashCallbackNegative, "tt walker");
+			triggerMachineByHashCallback, "tt walker");
 		sendWSMessage_10000(1, _ttTalker, _tt03, 1, 60, -1, _tt03, 60, 60, 0);
 		digi_play("608t06", 1, 255, 726);
 		break;
@@ -1222,7 +1222,7 @@ void Room608::daemon() {
 
 		_ol2 = series_stream("608all5", 5, 0x600, 750);
 		series_stream_break_on_frame(_ol2, 21, 783);
-		series_stream_check_series(_ol2, 10);
+		series_set_frame_rate(_ol2, 10);
 		break;
 
 	case 731:
@@ -1236,7 +1236,7 @@ void Room608::daemon() {
 		break;
 
 	case 734:
-		series_stream_check_series(_ol2, 7);
+		series_set_frame_rate(_ol2, 7);
 		series_stream_break_on_frame(_ol2, 107, 792);
 		break;
 
@@ -1291,7 +1291,7 @@ void Room608::daemon() {
 		ws_hide_walker(_tt);
 
 		_ttTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "tt walker");
+			triggerMachineByHashCallback, "tt walker");
 		sendWSMessage_10000(1, _ttTalker, _all5a, 1, 1, -1, _all5a, 1, 6, 4);
 		digi_play("608r58", 2, 255, 752);
 		break;
@@ -1334,11 +1334,11 @@ void Room608::daemon() {
 	case 766:
 		terminateMachineAndNull(_ttTalker);
 		_ttTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "tt talker");
+			triggerMachineByHashCallback, "tt talker");
 		sendWSMessage_10000(1, _ttTalker, _loop0, 1, 1, -1, _loop0, 1, 6, 4);
 
 		_ripley = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-			triggerMachineByHashCallbackNegative, "rip talker");
+			triggerMachineByHashCallback, "rip talker");
 		sendWSMessage_10000(1, _ripley, _loop1, 1, 1, -1, _loop1, 1, 1, 0);
 		digi_play("608t11a", 2, 255, 767);
 		break;
@@ -1476,7 +1476,7 @@ void Room608::parser() {
 					_G(player_info).scale, _G(player_info).x, _G(player_info).y);
 				ws_hide_walker();
 				_ripley = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-					triggerMachineByHashCallbackNegative, "rip");
+					triggerMachineByHashCallback, "rip");
 
 				_G(kernel).trigger_mode = KT_DAEMON;
 				sendWSMessage_10000(1, _ripley, _rp09, 1, 23, 300, _rp09, 23, 23, 0);
@@ -1525,7 +1525,7 @@ void Room608::parser() {
 				_G(player_info).x, _G(player_info).y);
 			_horn = series_load("608rp03");
 			_ol2 = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-				triggerMachineByHashCallbackNegative, "ol");
+				triggerMachineByHashCallback, "ol");
 			sendWSMessage_10000(1, _ol2, _horn, 1, 24, 2, _horn, 24, 24, 0);
 			break;
 		case 2:
@@ -1565,7 +1565,7 @@ void Room608::parser() {
 				_G(player_info).x, _G(player_info).y);
 			_horn = series_load("608rp03");
 			_ol2 = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-				triggerMachineByHashCallbackNegative, "ol");
+				triggerMachineByHashCallback, "ol");
 			sendWSMessage_10000(1, _ol2, _horn, 39, 1, 2, _horn, 1, 1, 0);
 			break;
 		case 2:
@@ -1679,7 +1679,7 @@ void Room608::parser() {
 
 			ws_hide_walker();
 			_ripley = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-				triggerMachineByHashCallbackNegative, "rip");
+				triggerMachineByHashCallback, "rip");
 
 			_G(kernel).trigger_mode = KT_DAEMON;
 			sendWSMessage_10000(1, _ripley, _rp09, 1, 23, 300, _rp09, 23, 23, 0);
@@ -1733,7 +1733,7 @@ void Room608::parser() {
 
 			ws_hide_walker();
 			_ripley = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-				triggerMachineByHashCallbackNegative, "rip");
+				triggerMachineByHashCallback, "rip");
 
 			_G(kernel).trigger_mode = KT_DAEMON;
 			sendWSMessage_10000(1, _ripley, _rp09, 1, 23, 300, _rp09, 23, 23, 0);
@@ -2095,7 +2095,7 @@ bool Room608::hornCordWater() {
 			_shadow5 = series_show("safari shadow 5", _G(player_info).depth, 144, -1, -1, 0,
 				_G(player_info).scale, _G(player_info).x, _G(player_info.y));
 			_ol2 = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
-				triggerMachineByHashCallbackNegative, "ol");
+				triggerMachineByHashCallback, "ol");
 			sendWSMessage_10000(1, _ol2, _horn, 1, 16, 2, _horn, 16, 16, 0);
 			return true;
 

@@ -27,29 +27,28 @@
 
 #include "engines/wintermute/dcgf.h"
 #include "engines/wintermute/base/gfx/skin_mesh_helper.h"
-#include "engines/wintermute/base/gfx/xskinmesh_loader.h"
 #include "engines/wintermute/base/gfx/xskinmesh.h"
 #include "engines/wintermute/base/gfx/xfile_loader.h"
 
 namespace Wintermute {
 
 //////////////////////////////////////////////////////////////////////////
-SkinMeshHelper::SkinMeshHelper(XSkinMeshLoader *meshLoader, DXMesh *mesh, DXSkinInfo *skinInfo) {
-	_mesh = meshLoader;
-	_dxmesh = mesh;
+SkinMeshHelper::SkinMeshHelper(DXMesh *mesh, DXSkinInfo *skinInfo) {
+	_mesh = mesh;
 	_skinInfo = skinInfo;
 }
 
 //////////////////////////////////////////////////////////////////////////
 SkinMeshHelper::~SkinMeshHelper() {
 	delete _mesh;
-	delete _dxmesh;
+	_mesh = nullptr;
 	delete _skinInfo;
+	_skinInfo = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
 uint SkinMeshHelper::getNumFaces() {
-	return _dxmesh->getNumFaces();
+	return _mesh->getNumFaces();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -59,14 +58,14 @@ uint SkinMeshHelper::getNumBones() {
 
 //////////////////////////////////////////////////////////////////////////
 bool SkinMeshHelper::getOriginalMesh(DXMesh **mesh) {
-	return _dxmesh->cloneMesh(mesh);
+	return _mesh->cloneMesh(mesh);
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool SkinMeshHelper::generateSkinnedMesh(uint32 options, float minWeight, uint32 *adjacencyOut, DXMesh **mesh) {
+bool SkinMeshHelper::generateSkinnedMesh(uint32 *adjacencyOut, DXMesh **mesh) {
 	bool res = getOriginalMesh(mesh);
 	if (res) {
-	 	(*mesh)->generateAdjacency(adjacencyOut);
+		(*mesh)->generateAdjacency(adjacencyOut);
 	}
 
 	return res;
@@ -74,19 +73,19 @@ bool SkinMeshHelper::generateSkinnedMesh(uint32 options, float minWeight, uint32
 
 //////////////////////////////////////////////////////////////////////////
 bool SkinMeshHelper::updateSkinnedMesh(const DXMatrix *boneTransforms, DXMesh *mesh) {
-	void *sourceVerts = reinterpret_cast<void *>(_dxmesh->getVertexBuffer().ptr());
+	void *sourceVerts = reinterpret_cast<void *>(_mesh->getVertexBuffer().ptr());
 	void *targetVerts = reinterpret_cast<void *>(mesh->getVertexBuffer().ptr());
 
 	return _skinInfo->updateSkinnedMesh(boneTransforms, sourceVerts, targetVerts);
 }
 
 //////////////////////////////////////////////////////////////////////////
-const char *SkinMeshHelper::getBoneName(uint boneIndex) {
+const char *SkinMeshHelper::getBoneName(uint32 boneIndex) {
 	return _skinInfo->getBoneName(boneIndex);
 }
 
 //////////////////////////////////////////////////////////////////////////
-DXMatrix *SkinMeshHelper::getBoneOffsetMatrix(uint boneIndex) {
+DXMatrix *SkinMeshHelper::getBoneOffsetMatrix(uint32 boneIndex) {
 	return _skinInfo->getBoneOffsetMatrix(boneIndex);
 }
 

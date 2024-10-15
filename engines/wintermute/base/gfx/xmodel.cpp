@@ -62,8 +62,7 @@ XModel::XModel(BaseGame *inGame, BaseObject *owner) : BaseObject(inGame) {
 	_lastProjMat.setToIdentity();
 	_lastOffsetX = _lastOffsetY = 0;
 
-	_BBoxStart = Math::Vector3d(0.0f, 0.0f, 0.0f);
-	_BBoxEnd = Math::Vector3d(0.0f, 0.0f, 0.0f);
+	_BBoxStart = _BBoxEnd = Math::Vector3d(0.0f, 0.0f, 0.0f);
 	_boundingRect.setEmpty();
 
 	for (int i = 0; i < X_NUM_ANIMATION_CHANNELS; i++) {
@@ -130,8 +129,8 @@ bool XModel::loadFromFile(const Common::String &filename, XModel *parentModel) {
 	bool res = xfile->openFile(filename);
 	if (!res) {
 		delete xfile;
-		//return false;
-		error("XModel: Error loading X file: %s", filename.c_str());
+		BaseEngine::LOG(0, "Error loading X file: %s", filename.c_str());
+		return false;
 	}
 
 	_rootFrame = new FrameNode(_gameRef);
@@ -365,8 +364,8 @@ bool XModel::update() {
 
 	// update matrices
 	if (_rootFrame) {
-		Math::Matrix4 tempMat;
-		tempMat.setToIdentity();
+		DXMatrix tempMat;
+		DXMatrixIdentity(&tempMat);
 		_rootFrame->updateMatrices(tempMat);
 
 		return _rootFrame->updateMeshes();
@@ -390,7 +389,6 @@ bool XModel::playAnim(int channel, const Common::String &name, uint32 transition
 
 	// find animation set by name
 	AnimationSet *anim = getAnimationSetByName(name);
-
 	if (anim) {
 		char *currentAnim = _channels[channel]->getName();
 		if (_owner && currentAnim) {
@@ -479,6 +477,11 @@ bool XModel::render() {
 		// render everything
 		bool res = _rootFrame->render(this);
 
+		// remember matrices for object picking purposes
+		//_gameRef->_renderer3D->getWorldTransform(_lastWorldMat);
+		//_gameRef->_renderer3D->getWorldTransform(_lastViewMat);
+		//_gameRef->_renderer3D->getWorldTransform(_lastProjMat);
+
 		// remember scene offset
 		Rect32 rc;
 		_gameRef->getCurrentViewportRect(&rc);
@@ -518,7 +521,7 @@ bool XModel::renderFlatShadowModel() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-Math::Matrix4 *XModel::getBoneMatrix(const char *boneName) {
+DXMatrix *XModel::getBoneMatrix(const char *boneName) {
 	FrameNode *bone = _rootFrame->findFrame(boneName);
 
 	if (bone) {
@@ -539,34 +542,61 @@ bool XModel::isTransparentAt(int x, int y) {
 		return false;
 	}
 
+	x += _lastOffsetX;
+	y += _lastOffsetY;
+
+	if (!_gameRef->_renderer3D->_camera)
+		return true;
+
+	float resWidth, resHeight;
+	float layerWidth, layerHeight;
+	float modWidth, modHeight;
+	bool customViewport;
+	_gameRef->_renderer3D->getProjectionParams(&resWidth, &resHeight, &layerWidth, &layerHeight, &modWidth, &modHeight, &customViewport);
+
+	x -= _drawingViewport.left + modWidth;
+	y -= _drawingViewport.top + modHeight;
+
+	if (customViewport) {
+		x += _gameRef->_renderer3D->_drawOffsetX;
+		y += _gameRef->_renderer3D->_drawOffsetY;
+	}
+
 	Math::Ray ray = _gameRef->_renderer3D->rayIntoScene(x, y);
+	Math::Vector3d pickRayDir;
+	Math::Vector3d pickRayOrig;
+	pickRayDir = ray.getDirection();
+	pickRayOrig = ray.getOrigin();
 
 	// transform to model space
-	Math::Vector3d end = ray.getOrigin() + ray.getDirection();
+	Math::Vector3d end = pickRayOrig + pickRayDir;
 	Math::Matrix4 m = _lastWorldMat;
 	m.inverse();
-	m.transform(&ray.getOrigin(), true);
+	m.transform(&pickRayOrig, true);
 	m.transform(&end, true);
-	Math::Vector3d pickRayDirection = end - ray.getOrigin();
+	pickRayDir = end - pickRayOrig;
 
-	return !_rootFrame->pickPoly(&ray.getOrigin(), &pickRayDirection);
+	return !_rootFrame->pickPoly(&pickRayOrig, &pickRayDir);
 }
 
 //////////////////////////////////////////////////////////////////////////
 void XModel::updateBoundingRect() {
-	_BBoxStart = Math::Vector3d(0, 0, 0);
-	_BBoxStart = Math::Vector3d(0, 0, 0);
+	_BBoxStart = _BBoxEnd = Math::Vector3d(0, 0, 0);
 
 	if (_rootFrame) {
 		_rootFrame->getBoundingBox(&_BBoxStart, &_BBoxEnd);
 	}
 
-	_boundingRect.left = INT_MAX_VALUE;
-	_boundingRect.top = INT_MAX_VALUE;
-	_boundingRect.right = INT_MIN_VALUE;
-	_boundingRect.bottom = INT_MIN_VALUE;
+	_boundingRect.left = _boundingRect.top = INT_MAX_VALUE;
+	_boundingRect.right = _boundingRect.bottom = INT_MIN_VALUE;
 
+	Math::Matrix4 viewMat, projMat, worldMat;
 	Math::Vector3d vec2d(0, 0, 0);
+	_gameRef->_renderer3D->getViewTransform(viewMat);
+	_gameRef->_renderer3D->getProjectionTransform(projMat);
+	_gameRef->_renderer3D->getWorldTransform(worldMat);
+
+	_drawingViewport = _gameRef->_renderer3D->getViewPort();
 
 	float x1 = _BBoxStart.x();
 	float x2 = _BBoxEnd.x();
@@ -579,36 +609,41 @@ void XModel::updateBoundingRect() {
 	int32 screenY = 0;
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x1, y1, z1), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x1, y1, z2), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x1, y2, z1), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x1, y2, z2), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x2, y1, z1), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x2, y1, z2), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x2, y2, z1), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
 
 	_gameRef->_renderer3D->project(_lastWorldMat, Math::Vector3d(x2, y2, z2), screenX, screenY);
-	updateRect(&_boundingRect, screenX, screenY);
+	updateRect(&_boundingRect, Math::Vector3d(screenX, screenY, 0));
+
+	_boundingRect.left -= _gameRef->_renderer3D->_drawOffsetX;
+	_boundingRect.right -= _gameRef->_renderer3D->_drawOffsetX;
+	_boundingRect.bottom -= _gameRef->_renderer3D->_drawOffsetY;
+	_boundingRect.top -= _gameRef->_renderer3D->_drawOffsetY;
 }
 
 //////////////////////////////////////////////////////////////////////////
-void XModel::updateRect(Rect32 *rc, int32 x, int32 y) {
-	rc->left   = MIN(rc->left, x);
-	rc->right  = MAX(rc->right, x);
-	rc->top    = MIN(rc->top, y);
-	rc->bottom = MAX(rc->bottom, y);
+void XModel::updateRect(Rect32 *rc, Math::Vector3d vec) {
+	rc->left   = MIN(rc->left, (int32)vec.x());
+	rc->right  = MAX(rc->right, (int32)vec.x());
+	rc->top    = MIN(rc->top, (int32)vec.y());
+	rc->bottom = MAX(rc->bottom, (int32)vec.y());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -926,9 +961,6 @@ bool XModel::persist(BasePersistenceManager *persistMgr) {
 			_matSprites.add(MatSprite);
 		}
 	}
-
-	if (!persistMgr->getIsSaving())
-		initializeSimple();
 
 	return true;
 }

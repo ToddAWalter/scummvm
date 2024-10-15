@@ -20,28 +20,69 @@
  */
 
 #include "engines/wintermute/base/gfx/base_renderer3d.h"
+#include "engines/wintermute/base/base_game.h"
 
 #include "math/glmath.h"
 
 namespace Wintermute {
 
-BaseRenderer3D::BaseRenderer3D(Wintermute::BaseGame *inGame) : BaseRenderer(inGame), _overrideAmbientLightColor(false) {
+BaseRenderer3D::BaseRenderer3D(Wintermute::BaseGame *inGame) : BaseRenderer(inGame) {
+	_camera = nullptr;
+
+	_state = RSTATE_NONE;
+	_fov = (float)M_PI / 4;
+
+	_nearClipPlane = DEFAULT_NEAR_PLANE;
+	_farClipPlane = DEFAULT_FAR_PLANE;
+
+	_spriteBatchMode = false;
+
+	_ambientLightColor = 0x00000000;
+	_ambientLightOverride = false;
 }
 
 BaseRenderer3D::~BaseRenderer3D() {
 }
 
-bool BaseRenderer3D::setAmbientLightColor(uint32 color) {
-	_ambientLightColor = color;
-	_overrideAmbientLightColor = true;
-	setAmbientLight();
-	return true;
+void BaseRenderer3D::initLoop() {
+	deleteRectList();
+	setup2D();
 }
 
-bool BaseRenderer3D::setDefaultAmbientLightColor() {
-	_ambientLightColor = 0x00000000;
-	_overrideAmbientLightColor = false;
-	setAmbientLight();
+bool BaseRenderer3D::drawSprite(BaseSurfaceOpenGL3D &tex, const Wintermute::Rect32 &rect,
+							float zoomX, float zoomY, const Wintermute::Vector2 &pos,
+							uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode,
+							bool mirrorX, bool mirrorY) {
+	Vector2 scale(zoomX / 100.0f, zoomY / 100.0f);
+	return drawSpriteEx(tex, rect, pos, Vector2(0.0f, 0.0f), scale, 0.0f, color, alphaDisable, blendMode, mirrorX, mirrorY);
+}
+
+bool BaseRenderer3D::getProjectionParams(float *resWidth, float *resHeight, float *layerWidth, float *layerHeight,
+										 float *modWidth, float *modHeight, bool *customViewport) {
+	*resWidth = _width;
+	*resHeight = _height;
+
+	int lWidth, lHeight;
+	Rect32 sceneViewport;
+	_gameRef->getLayerSize(&lWidth, &lHeight, &sceneViewport, customViewport);
+	*layerWidth = (float)lWidth;
+	*layerHeight = (float)lHeight;
+
+	*modWidth = 0.0f;
+	*modHeight = 0.0f;
+	if (*layerWidth > *resWidth)
+		*modWidth  = (*layerWidth - *resWidth) / 2.0f;
+	if (*layerHeight > *resHeight)
+		*modHeight = (*layerHeight - *resHeight) / 2.0f;
+
+	// new in 1.7.2.1
+	// if layer height is smaller than resolution, we assume that we don't want to scroll
+	// and that the camera overviews the entire resolution
+	if (*layerHeight < *resHeight) {
+		*modHeight -= (*resHeight - *layerHeight) / 2;
+		*layerHeight = *resHeight;
+	}
+
 	return true;
 }
 
@@ -51,10 +92,38 @@ void BaseRenderer3D::project(const Math::Matrix4 &worldMatrix, const Math::Vecto
 	Math::Vector3d windowCoords;
 	Math::Matrix4 modelMatrix = tmp * _lastViewMatrix;
 	int viewport[4] = { _viewport3dRect.left, _height - _viewport3dRect.bottom, _viewport3dRect.width(), _viewport3dRect.height()};
-	Math::gluMathProject(point, modelMatrix.getData(), _projectionMatrix3d.getData(), viewport, windowCoords);
+	Math::gluMathProject(point, modelMatrix.getData(), _projectionMatrix.getData(), viewport, windowCoords);
 	x = windowCoords.x();
 	// The Wintermute script code will expect a Direct3D viewport
 	y = viewport[3] - windowCoords.y();
+}
+
+Math::Ray BaseRenderer3D::rayIntoScene(int x, int y) {
+	Math::Vector3d direction((((2.0f * x) / _viewport3dRect.width()) - 1) / _projectionMatrix(0, 0),
+	                        -(((2.0f * y) / _viewport3dRect.height()) - 1) / _projectionMatrix(1, 1),
+	                        -1.0f);
+
+	Math::Matrix4 m = _lastViewMatrix;
+	m.inverse();
+	m.transpose();
+	m.transform(&direction, false);
+
+	Math::Vector3d origin = m.getPosition();
+	return Math::Ray(origin, direction);
+}
+
+bool BaseRenderer3D::setAmbientLightColor(uint32 color) {
+	_ambientLightColor = color;
+	_ambientLightOverride = true;
+	setAmbientLight();
+	return true;
+}
+
+bool BaseRenderer3D::setDefaultAmbientLightColor() {
+	_ambientLightColor = 0x00000000;
+	_ambientLightOverride = false;
+	setAmbientLight();
+	return true;
 }
 
 Rect32 BaseRenderer3D::getViewPort() {
@@ -67,33 +136,6 @@ Graphics::PixelFormat BaseRenderer3D::getPixelFormat() const {
 
 void BaseRenderer3D::fade(uint16 alpha) {
 	fadeToColor(0, 0, 0, (byte)(255 - alpha));
-}
-
-void BaseRenderer3D::initLoop() {
-	deleteRectList();
-	setup2D();
-}
-
-Math::Ray BaseRenderer3D::rayIntoScene(int x, int y) {
-	Math::Vector3d direction((((2.0f * x) / _viewport3dRect.width()) - 1) / _projectionMatrix3d(0, 0),
-	                        -(((2.0f * y) / _viewport3dRect.height()) - 1) / _projectionMatrix3d(1, 1),
-	                        -1.0f);
-
-	Math::Matrix4 m = _lastViewMatrix;
-	m.inverse();
-	m.transpose();
-	m.transform(&direction, false);
-
-	Math::Vector3d origin = m.getPosition();
-	return Math::Ray(origin, direction);
-}
-
-bool BaseRenderer3D::drawSprite(BaseSurfaceOpenGL3D &tex, const Wintermute::Rect32 &rect,
-	                        float zoomX, float zoomY, const Wintermute::Vector2 &pos,
-	                        uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode,
-	                        bool mirrorX, bool mirrorY) {
-	Vector2 scale(zoomX / 100.0f, zoomY / 100.0f);
-	return drawSpriteEx(tex, rect, pos, Vector2(0.0f, 0.0f), scale, 0.0f, color, alphaDisable, blendMode, mirrorX, mirrorY);
 }
 
 Math::Matrix3 BaseRenderer3D::build2dTransformation(const Vector2 &center, float angle) {

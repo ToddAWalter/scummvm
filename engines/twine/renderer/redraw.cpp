@@ -252,7 +252,7 @@ int32 Redraw::fillActorDrawingList(DrawListStruct *drawList, bool flagflip) {
 			continue;
 		}
 		// no redraw required
-		if (actor->_staticFlags.bIsBackgrounded && !flagflip) {
+		if (actor->_flags.bIsBackgrounded && !flagflip) {
 			// get actor position on screen
 			const IVec3 &projPos = _engine->_renderer->projectPoint(actor->posObj() - _engine->_grid->_worldCube);
 			// check if actor is visible on screen, otherwise don't display it
@@ -262,14 +262,14 @@ int32 Redraw::fillActorDrawingList(DrawListStruct *drawList, bool flagflip) {
 			continue;
 		}
 		// if the actor isn't set as hidden
-		if (actor->_body == -1 || actor->_staticFlags.bIsInvisible) {
+		if (actor->_body == -1 || actor->_flags.bIsInvisible) {
 			continue;
 		}
 		// get actor position on screen
 		const IVec3 &projPos = _engine->_renderer->projectPoint(actor->posObj() - _engine->_grid->_worldCube);
 
-		if ((actor->_staticFlags.bSpriteClip && projPos.x > -112 && projPos.x < _engine->width() + 112 && projPos.y > VIEW_X0 && projPos.y < _engine->height() + 171) ||
-		    ((!actor->_staticFlags.bSpriteClip) && projPos.x > VIEW_X0 && projPos.x < VIEW_X1(_engine) && projPos.y > VIEW_Y0 && projPos.y < VIEW_Y1(_engine))) {
+		if ((actor->_flags.bSpriteClip && projPos.x > -112 && projPos.x < _engine->width() + 112 && projPos.y > VIEW_X0 && projPos.y < _engine->height() + 171) ||
+		    ((!actor->_flags.bSpriteClip) && projPos.x > VIEW_X0 && projPos.x < VIEW_X1(_engine) && projPos.y > VIEW_Y0 && projPos.y < VIEW_Y1(_engine))) {
 
 			int32 ztri = actor->_posObj.x - _engine->_grid->_worldCube.x + actor->_posObj.z - _engine->_grid->_worldCube.z;
 
@@ -279,10 +279,10 @@ int32 Redraw::fillActorDrawingList(DrawListStruct *drawList, bool flagflip) {
 				ztri = standOnActor->_posObj.x - _engine->_grid->_worldCube.x + standOnActor->_posObj.z - _engine->_grid->_worldCube.z + 2;
 			}
 
-			if (actor->_staticFlags.bSprite3D) {
+			if (actor->_flags.bSprite3D) {
 				drawList[drawListPos].type = DrawListType::DrawActorSprites;
 				drawList[drawListPos].numObj = n;
-				if (actor->_staticFlags.bSpriteClip) {
+				if (actor->_flags.bSpriteClip) {
 					ztri = actor->_animStep.x - _engine->_grid->_worldCube.x + actor->_animStep.z - _engine->_grid->_worldCube.z;
 				}
 			} else {
@@ -295,7 +295,7 @@ int32 Redraw::fillActorDrawingList(DrawListStruct *drawList, bool flagflip) {
 			drawListPos++;
 
 			// if use shadows
-			if (_engine->_cfgfile.ShadowMode != 0 && !(actor->_staticFlags.bNoShadow)) {
+			if (_engine->_cfgfile.ShadowMode != 0 && !(actor->_flags.bNoShadow)) {
 				if (actor->_carryBy != -1) {
 					drawList[drawListPos].xw = actor->_posObj.x;
 					drawList[drawListPos].yw = actor->_posObj.y - 1;
@@ -313,7 +313,7 @@ int32 Redraw::fillActorDrawingList(DrawListStruct *drawList, bool flagflip) {
 				drawList[drawListPos].num = 1;
 				drawListPos++;
 			}
-			if (_flagMCGA && n == _engine->_scene->_currentlyFollowedActor) {
+			if (_flagMCGA && n == _engine->_scene->_numObjFollow) {
 				_sceneryViewX = projPos.x;
 				_sceneryViewY = projPos.y;
 			}
@@ -404,7 +404,7 @@ void Redraw::processDrawListActors(const DrawListStruct &drawCmd, bool bgRedraw)
 	ActorStruct *actor = _engine->_scene->getActor(actorIdx);
 	if (actor->_anim >= 0) {
 		const AnimData &animData = _engine->_resources->_animData[actor->_anim];
-		_engine->_animations->doSetInterAnimObjet(actor->_frame, animData, actor->_entityDataPtr->getBody(actor->_body), &actor->_animTimerData);
+		_engine->_animations->setInterAnimObjet(actor->_frame, animData, actor->_entityDataPtr->getBody(actor->_body), &actor->_animTimerData);
 	}
 
 	const IVec3 &delta = actor->posObj() - _engine->_grid->_worldCube;
@@ -434,7 +434,7 @@ void Redraw::processDrawListActors(const DrawListStruct &drawCmd, bool bgRedraw)
 
 		addRedrawArea(_engine->_interface->_clip);
 
-		if (actor->_staticFlags.bIsBackgrounded && bgRedraw) {
+		if (actor->_flags.bIsBackgrounded && bgRedraw) {
 			_engine->blitFrontToWork(_engine->_interface->_clip);
 		}
 
@@ -465,7 +465,7 @@ void Redraw::processDrawListActorSprites(const DrawListStruct &drawCmd, bool bgR
 	renderRect.bottom = renderRect.top + dy;
 
 	bool validClip;
-	if (actor->_staticFlags.bSpriteClip) {
+	if (actor->_flags.bSpriteClip) {
 		const Common::Rect rect(_projPosScreen.x + actor->_cropLeft, _projPosScreen.y + actor->_cropTop, _projPosScreen.x + actor->_cropRight, _projPosScreen.y + actor->_cropBottom);
 		validClip = _engine->_interface->setClip(rect);
 	} else {
@@ -477,7 +477,7 @@ void Redraw::processDrawListActorSprites(const DrawListStruct &drawCmd, bool bgR
 
 		actor->_workFlags.bWasDrawn = 1;
 
-		if (actor->_staticFlags.bSpriteClip) {
+		if (actor->_flags.bSpriteClip) {
 			const int32 xm = (actor->_animStep.x + DEMI_BRICK_XZ) / SIZE_BRICK_XZ;
 			const int32 ym = actor->_animStep.y / SIZE_BRICK_Y;
 			const int32 zm = (actor->_animStep.z + DEMI_BRICK_XZ) / SIZE_BRICK_XZ;
@@ -495,7 +495,7 @@ void Redraw::processDrawListActorSprites(const DrawListStruct &drawCmd, bool bgR
 
 		addRedrawArea(_engine->_interface->_clip);
 
-		if (actor->_staticFlags.bIsBackgrounded && bgRedraw) {
+		if (actor->_flags.bIsBackgrounded && bgRedraw) {
 			_engine->blitFrontToWork(_engine->_interface->_clip);
 		}
 
@@ -544,7 +544,7 @@ void Redraw::processDrawListExtras(const DrawListStruct &drawCmd) {
 
 void Redraw::correctZLevels(DrawListStruct *listTri, int32 drawListPos) {
 	ActorStruct *ptrobj = _engine->_scene->getActor(OWN_ACTOR_SCENE_INDEX);
-	if (ptrobj->_staticFlags.bIsInvisible || ptrobj->_body == -1) {
+	if (ptrobj->_flags.bIsInvisible || ptrobj->_body == -1) {
 		return;
 	}
 
@@ -574,7 +574,7 @@ void Redraw::correctZLevels(DrawListStruct *listTri, int32 drawListPos) {
 		default:
 			break;
 		case DrawListType::DrawActorSprites:
-			if (ptrobj->_staticFlags.bSpriteClip) {
+			if (ptrobj->_flags.bSpriteClip) {
 				IVec3 pmin = ptrobj->_animStep + ptrobj->_boundingBox.mins;
 				IVec3 pmax = ptrobj->_animStep + ptrobj->_boundingBox.maxs;
 
@@ -767,7 +767,7 @@ void Redraw::renderOverlays() {
 			break;
 		}
 		case OverlayType::koNumberRange: {
-			const int32 range = _engine->_collision->boundRuleThree(overlay->info, overlay->num, 100, overlay->timerEnd - _engine->timerRef - _engine->toSeconds(1));
+			const int32 range = boundRuleThree(overlay->info, overlay->num, 100, overlay->timerEnd - _engine->timerRef - _engine->toSeconds(1));
 
 			char text[10];
 			Common::sprintf_s(text, "%d", range);
@@ -872,16 +872,16 @@ void Redraw::renderText() {
 	addRedrawArea(redraw);
 }
 
-void Redraw::redrawEngineActions(bool bgRedraw) { // AffScene
+void Redraw::drawScene(bool bgRedraw) { // AffScene
 	int32 tmp_projPosX = _projPosScreen.x;
 	int32 tmp_projPosY = _projPosScreen.y;
 
 	_engine->_interface->unsetClip();
 
 	if (bgRedraw) {
-		_engine->freezeTime(false);
+		_engine->saveTimer(false);
 		if (_engine->_scene->_newCube != SCENE_CEILING_GRID_FADE_1 && _engine->_scene->_newCube != SCENE_CEILING_GRID_FADE_2) {
-			_engine->_screens->fadeOut(_engine->_screens->_ptrPal);
+			_engine->_screens->fadeToBlack(_engine->_screens->_ptrPal);
 		}
 		_engine->_screens->clearScreen();
 
@@ -894,7 +894,7 @@ void Redraw::redrawEngineActions(bool bgRedraw) { // AffScene
 		_engine->saveFrontBuffer();
 
 		if (_engine->_scene->_newCube != SCENE_CEILING_GRID_FADE_1 && _engine->_scene->_newCube != SCENE_CEILING_GRID_FADE_2) {
-			_engine->_screens->fadeIn(_engine->_screens->_ptrPal);
+			_engine->_screens->fadeToPal(_engine->_screens->_ptrPal);
 		}
 	} else {
 		blitBackgroundAreas();
@@ -923,16 +923,16 @@ void Redraw::redrawEngineActions(bool bgRedraw) { // AffScene
 
 	if (bgRedraw) {
 		moveNextAreas();
-		_engine->unfreezeTime();
+		_engine->restoreTimer();
 	} else {
 		flipRedrawAreas();
 	}
 
 	if (_engine->_screens->_flagFade) {
 		if (_engine->_screens->_flagPalettePcx) {
-			_engine->_screens->fadeToPal(_engine->_screens->_ptrPal);
+			_engine->_screens->fadeToPal(_engine->_screens->_palettePcx);
 		} else {
-			_engine->_screens->fadeToPal(_engine->_screens->_mainPaletteRGBA);
+			_engine->_screens->fadeToPal(_engine->_screens->_ptrPal);
 		}
 		_engine->_screens->_flagFade = false;
 	}

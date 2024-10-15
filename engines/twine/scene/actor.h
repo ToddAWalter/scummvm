@@ -37,7 +37,7 @@ namespace TwinE {
 #define NUM_BODIES 469 // 131 for lba1
 
 /** Actors move structure */
-struct ActorMoveStruct {
+struct RealValue {
 	int16 startValue = 0;
 	int16 endValue = 0;
 	int16 timeValue = 0;
@@ -148,8 +148,8 @@ private:
 
 public:
 	ActorStruct(int maxLife = 0) : _lifePoint(maxLife), _maxLife(maxLife) {}
-	StaticFlagsStruct _staticFlags; // Flags
-	DynamicFlagsStruct _workFlags;  // WorkFlags
+	StaticFlagsStruct _flags;
+	DynamicFlagsStruct _workFlags;
 
 	EntityData _entityData;
 	inline ShapeType brickShape() const { return _col; }
@@ -192,15 +192,15 @@ public:
 	int32 _strengthOfHit = 0;
 	int32 _hitBy = -1;
 	BonusParameter _bonusParameter;
-	int32 _beta = 0; // facing angle of actor. Minumum is 0 (SW). Going counter clock wise (BETA in original sources)
-	int32 _speed = 40; // SRot - speed of movement
+	int32 _beta = 0; // facing angle of actor. Minumum is 0 (SW). Going counter clock wise
+	int32 _srot = 40; // speed of rotation
 	ControlMode _controlMode = ControlMode::kNoMove; // Move
-	int32 _delayInMillis = 0;
+	int32 _delayInMillis = 0; // Info
 	int32 _cropLeft = 0;      // Info
 	int32 _cropTop = 0;       // Info1
 	int32 _cropRight = 0;     // Info2
 	int32 _cropBottom = 0;    // Info3
-	int32 _followedActor = 0; // same as info3
+	int32 _followedActor = 0; // same as Info3
 	int32 _bonusAmount = 0;
 	int32 _talkColor = COLOR_BLACK;
 	int32 _armor = 1;
@@ -226,7 +226,7 @@ public:
 	/**
 	 * colliding actor id
 	 */
-	int32 _objCol = -1; // ObjCol
+	int32 _objCol = -1;
 	/**
 	 * actor id we are standing on
 	 */
@@ -247,7 +247,7 @@ public:
 	int16 SizeSHit; // lba2 - always square
 
 	BoundingBox _boundingBox; // Xmin, YMin, Zmin, Xmax, Ymax, Zmax
-	ActorMoveStruct realAngle;
+	RealValue realAngle;
 	AnimTimerDataStruct _animTimerData;
 };
 
@@ -263,8 +263,6 @@ inline void ActorStruct::setLife(int32 val) {
 	_lifePoint = val;
 	if (_lifePoint > _maxLife) {
 		_lifePoint = _maxLife;
-	} else if (_lifePoint < 0) {
-		_lifePoint = 0;
 	}
 }
 

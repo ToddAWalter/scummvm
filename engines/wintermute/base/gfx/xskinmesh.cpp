@@ -33,6 +33,9 @@
 #include "engines/wintermute/base/gfx/xskinmesh.h"
 #include "engines/wintermute/base/gfx/xmath.h"
 
+#include "common/array.h"
+#include "math/matrix4.h"
+
 namespace Wintermute {
 
 struct MeshData {
@@ -72,6 +75,38 @@ uint32 DXGetFVFVertexSize(uint32 fvf) {
 	return size;
 }
 
+bool DXComputeBoundingBox(DXVector3 *pfirstposition, uint32 numvertices, uint32 dwstride, DXVector3 *pmin, DXVector3 *pmax) {
+	DXVector3 vec;
+	uint32 i;
+
+	if (!pfirstposition || !pmin || !pmax )
+		return false;
+
+	*pmin = *pfirstposition;
+	*pmax = *pmin;
+
+	for (i = 0; i < numvertices; i++) {
+		vec = *((DXVector3 *)((byte *)pfirstposition + dwstride * i));
+
+		if (vec._x < pmin->_x)
+			pmin->_x = vec._x;
+		if (vec._x > pmax->_x)
+			pmax->_x = vec._x;
+
+		if (vec._y < pmin->_y)
+			pmin->_y = vec._y;
+		if (vec._y > pmax->_y)
+			pmax->_y = vec._y;
+
+		if (vec._z < pmin->_z)
+			pmin->_z = vec._z;
+		if (vec._z > pmax->_z)
+			pmax->_z = vec._z;
+	}
+
+	return true;
+}
+
 static bool createMesh(uint32 numFaces, uint32 numVertices, uint32 fvf, DXMesh **mesh) {
 	if (!mesh)
 		return false;
@@ -90,7 +125,7 @@ static bool createMesh(uint32 numFaces, uint32 numVertices, uint32 fvf, DXMesh *
 	return true;
 }
 
-static bool createSkinInfo(uint32 vertexCount, uint32 boneCount, DXSkinInfo **skinInfo) {
+static bool createSkinInfo(uint32 vertexCount, uint32 fvf, uint32 boneCount, DXSkinInfo **skinInfo) {
 	if (!skinInfo)
 		return false;
 
@@ -98,7 +133,7 @@ static bool createSkinInfo(uint32 vertexCount, uint32 boneCount, DXSkinInfo **sk
 	if (!skin)
 		return false;
 
-	if (!skin->create(vertexCount, boneCount)) {
+	if (!skin->create(vertexCount, fvf, boneCount)) {
 		delete skin;
 		return false;
 	}
@@ -330,10 +365,10 @@ static void fillAttributeTable(const uint32 *attribBuffer, uint32 numfaces, cons
 	attribTableSize++;
 }
 
-bool DXSkinInfo::create(uint32 vertexCount, uint32 boneCount) {
+bool DXSkinInfo::create(uint32 vertexCount, uint32 fvf, uint32 boneCount) {
 	_numVertices = vertexCount;
 	_numBones = boneCount;
-	_fvf = 0;
+	_fvf = fvf;
 
 	_bones = new DXBone[boneCount];
 	if (!_bones) {
@@ -349,66 +384,80 @@ void DXSkinInfo::destroy() {
 }
 
 bool DXSkinInfo::updateSkinnedMesh(const DXMatrix *boneTransforms, void *srcVertices, void *dstVertices) {
-	uint32 size = DXGetFVFVertexSize(_fvf);
+	uint32 vertexSize = DXGetFVFVertexSize(_fvf);
+	uint32 normalOffset = sizeof(DXVector3);
 	uint32 i, j;
 
 	for (i = 0; i < _numVertices; i++) {
-		DXVector3 *position = (DXVector3 *)((byte *)dstVertices + size * i);
+		DXVector3 *position = (DXVector3 *)((byte *)dstVertices + vertexSize * i);
 		position->_x = 0.0f;
 		position->_y = 0.0f;
 		position->_z = 0.0f;
 	}
 
 	for (i = 0; i < _numBones; i++) {
-		DXMatrix boneInverse, matrix;
+		//DXMatrix boneInverse, matrix;
 
-		DXMatrixInverse(&boneInverse, NULL, &_bones[i]._transform);
-		DXMatrixMultiply(&matrix, &boneTransforms[i], &boneInverse);
-		DXMatrixMultiply(&matrix, &matrix, &_bones[i]._transform);
+		Math::Matrix4 boneMatrix;
+		boneMatrix.setData(boneTransforms[i]._m4x4);
+
+		//DXMatrixInverse(&boneInverse, NULL, &_bones[i]._transform);
+		//DXMatrixMultiply(&matrix, &boneTransforms[i], &boneInverse);
+		//DXMatrixMultiply(&matrix, &matrix, &_bones[i]._transform);
 
 		for (j = 0; j < _bones[i]._numInfluences; j++) {
-			DXVector3 position;
-			DXVector3 *position_src = (DXVector3 *)((byte *)srcVertices + size * _bones[i]._vertices[j]);
-			DXVector3 *position_dest = (DXVector3 *)((byte *)dstVertices + size * _bones[i]._vertices[j]);
+			Math::Vector3d position;
+			DXVector3 *positionSrc = (DXVector3 *)((byte *)srcVertices + vertexSize * _bones[i]._vertices[j]);
+			DXVector3 *positionDst = (DXVector3 *)((byte *)dstVertices + vertexSize * _bones[i]._vertices[j]);
 			float weight = _bones[i]._weights[j];
 
-			DXVec3TransformCoord(&position, position_src, &matrix);
-			position_dest->_x += weight * position._x;
-			position_dest->_y += weight * position._y;
-			position_dest->_z += weight * position._z;
+			position.set(positionSrc->_x, positionSrc->_y, positionSrc->_z);
+			boneMatrix.transform(&position, true);
+			//DXVec3TransformCoord(&position, positionSrc, &matrix);
+
+			positionDst->_x += weight * position.x();
+			positionDst->_y += weight * position.y();
+			positionDst->_z += weight * position.z();
 		}
 	}
 
 	if (_fvf & DXFVF_NORMAL) {
 		for (i = 0; i < _numVertices; i++) {
-			DXVector3 *normal = (DXVector3 *)((byte *)dstVertices + size * i + sizeof(DXVector3));
+			DXVector3 *normal = (DXVector3 *)((byte *)dstVertices + vertexSize * i + normalOffset);
 			normal->_x = 0.0f;
 			normal->_y = 0.0f;
 			normal->_z = 0.0f;
 		}
 
 		for (i = 0; i < _numBones; i++) {
-			DXMatrix boneInverse, matrix;
+			//DXMatrix boneInverse, matrix;
 
-			DXMatrixInverse(&boneInverse, nullptr, &_bones[i]._transform);
-			DXMatrixMultiply(&matrix, &_bones[i]._transform, &boneTransforms[i]);
+			Math::Matrix4 boneMatrix;
+			boneMatrix.setData(boneTransforms[i]._m4x4);
+			boneMatrix.transpose();
+			boneMatrix.inverse();
+
+			//DXMatrixInverse(&boneInverse, nullptr, &_bones[i]._transform);
+			//DXMatrixMultiply(&matrix, &_bones[i]._transform, &boneTransforms[i]);
 
 			for (j = 0; j < _bones[i]._numInfluences; j++) {
-				DXVector3 normal;
-				DXVector3 *normalSrc = (DXVector3 *)((byte *)srcVertices + size * _bones[i]._vertices[j] + sizeof(DXVector3));
-				DXVector3 *normalDest = (DXVector3 *)((byte *)dstVertices + size * _bones[i]._vertices[j] + sizeof(DXVector3));
+				Math::Vector3d normal;
+				DXVector3 *normalSrc = (DXVector3 *)((byte *)srcVertices + vertexSize * _bones[i]._vertices[j] + normalOffset);
+				DXVector3 *normalDst = (DXVector3 *)((byte *)dstVertices + vertexSize * _bones[i]._vertices[j] + normalOffset);
 				float weight = _bones[i]._weights[j];
 
-				DXVec3TransformNormal(&normal, normalSrc, &boneInverse);
-				DXVec3TransformNormal(&normal, &normal, &matrix);
-				normalDest->_x += weight * normal._x;
-				normalDest->_y += weight * normal._y;
-				normalDest->_z += weight * normal._z;
+				//DXVec3TransformNormal(&normal, normalSrc, &boneInverse);
+				//DXVec3TransformNormal(&normal, &normal, &matrix);
+				normal.set(normalSrc->_x, normalSrc->_y, normalSrc->_z);
+				boneMatrix.transform(&normal, true);
+				normalDst->_x += weight * normal.x();
+				normalDst->_y += weight * normal.y();
+				normalDst->_z += weight * normal.z();
 			}
 		}
 
 		for (i = 0; i < _numVertices; i++) {
-			DXVector3 *normalDest = (DXVector3 *)((byte *)dstVertices + (i * size) + sizeof(DXVector3));
+			DXVector3 *normalDest = (DXVector3 *)((byte *)dstVertices + (i * vertexSize) + normalOffset);
 			if ((normalDest->_x != 0.0f) && (normalDest->_y != 0.0f) && (normalDest->_z != 0.0f)) {
 				DXVec3Normalize(normalDest, normalDest);
 			}
@@ -475,6 +524,18 @@ bool DXSkinInfo::setBoneOffsetMatrix(uint32 boneIdx, const float *boneTransform)
 	for (int m = 0; m < 16; m++) {
 		_bones[boneIdx]._transform._m4x4[m] = boneTransform[m];
 	}
+
+	// mirror at orign
+	_bones[boneIdx]._transform._m[3][2] *= -1.0f;
+
+	// mirror base vectors
+	_bones[boneIdx]._transform._m[0][2] *= -1.0f;
+	_bones[boneIdx]._transform._m[1][2] *= -1.0f;
+
+	// change handedness
+	_bones[boneIdx]._transform._m[2][0] *= -1.0f;
+	_bones[boneIdx]._transform._m[2][1] *= -1.0f;
+
 	return true;
 }
 
@@ -517,10 +578,12 @@ static bool parseDeclData(XFileData &fileData, struct MeshData *meshData) {
 		case DXDECLUSAGE_NORMAL:
 			assert(!(meshData->_fvf & DXFVF_NORMAL));
 			normalOffset = vertexSize;
+			meshData->_fvf |= DXFVF_NORMAL;
 			break;
 		case DXDECLUSAGE_TEXCOORD:
 			assert(!(meshData->_fvf & DXFVF_TEX1));
 			textureOffset = vertexSize;
+			meshData->_fvf |= DXFVF_TEX1;
 			break;
 		case DXDECLUSAGE_TANGENT:
 			//tangentOffset = vertexSize;
@@ -547,7 +610,7 @@ static bool parseDeclData(XFileData &fileData, struct MeshData *meshData) {
 		return false;
 	}
 
-	if (normalOffset != (uint32)-1) {
+	if (meshData->_fvf & DXFVF_NORMAL) {
 		if (!meshData->_indices)
 			return false;
 		delete[] meshData->_normals;
@@ -559,16 +622,14 @@ static bool parseDeclData(XFileData &fileData, struct MeshData *meshData) {
 			return false;
 		}
 		memcpy(meshData->_normalIndices, meshData->_indices, numFaceIndices * sizeof(uint32));
-		meshData->_fvf |= DXFVF_NORMAL;
 	}
 
-	if (textureOffset != (uint32)-1) {
+	if (meshData->_fvf & DXFVF_TEX1) {
 		delete[] meshData->_texCoords;
 		meshData->_texCoords = new DXVector2[meshData->_numVertices];
 		if (!meshData->_texCoords) {
 			return false;
 		}
-		meshData->_fvf |= DXFVF_TEX1;
 	}
 
 	for (i = 0; i < meshData->_numVertices; ++i) {
@@ -638,7 +699,7 @@ static bool parseSkinMeshHeader(XFileData &fileData, struct MeshData *meshData) 
 	}
 
 	meshData->_boneCount = skinMeshHeaderObj->_nBones;
-	return createSkinInfo(meshData->_numVertices, meshData->_boneCount, &meshData->_skinInfo);
+	return createSkinInfo(meshData->_numVertices, meshData->_fvf, meshData->_boneCount, &meshData->_skinInfo);
 }
 
 static bool parseTextureFilename(XFileData &fileData, char *filenameOut) {
@@ -985,9 +1046,9 @@ static bool parseMesh(XFileData *fileData, struct MeshData *meshData) {
 	}
 
 	if (!meshData->_skinInfo) {
-		/*result = createSkinInfo(meshData->_numVertices, meshData->_boneCount, &meshData->_skinInfo);
+		result = createSkinInfo(meshData->_numVertices, meshData->_fvf, meshData->_boneCount, &meshData->_skinInfo);
 		if (!result)
-			return false;*/
+			return false;
 	}
 
 	return true;
@@ -1007,7 +1068,7 @@ static void cleanupMeshData(MeshData *meshData, bool releaseSkin = true) {
 		delete meshData->_skinInfo;
 }
 
-bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &adjacencyOut, DXBuffer &materialsOut, uint32 &numMaterialsOut, DXSkinInfo **skinInfoOut, DXMesh **meshOut) {
+bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &materialsOut, uint32 &numMaterialsOut, DXSkinInfo **skinInfoOut, DXMesh **meshOut) {
 	MeshData meshData{};
 	DXMesh *mesh;
 	uint32 i;
@@ -1020,7 +1081,6 @@ bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &adjacencyOut, DXBuffer &mater
 	if (meshData._numVertices == 0) {
 		createMesh(meshData._numTriFaces, meshData._numVertices, meshData._fvf, &mesh);
 		*meshOut = mesh;
-		adjacencyOut = DXBuffer(meshData._numTriFaces * 3 * sizeof(uint32));
 		numMaterialsOut = meshData._numMaterials;
 		materialsOut = DXBuffer(meshData._numMaterials * sizeof(DXMaterial));
 		*skinInfoOut = meshData._skinInfo;
@@ -1082,17 +1142,17 @@ bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &adjacencyOut, DXBuffer &mater
 	for (i = 0; i < meshData._numPolyFaces; i++) {
 		uint32 count = meshData._numTriPerFace[i];
 		uint32 firstIndex = *indexInPtr++;
-		// 1 -> 1
-		// 2 -> 2
-		// 3 -> 3
-		// 1 -> 4
-		// 3 -> 5
-		// 4 -> 6
+		// 1 -> 1 -> 3
+		// 2 -> 2 -> 2
+		// 3 -> 3 -> 1
+		// 1 -> 4 -> 6
+		// 3 -> 5 -> 5
+		// 4 -> 6 -> 4
 		while (count--) {
-			*indices++ = firstIndex;
-			*indices++ = *indexInPtr;
-			indexInPtr++;
-			*indices++ = *indexInPtr;
+			indices[2] = firstIndex;
+			indices[1] = *indexInPtr++;
+			indices[0] = *indexInPtr;
+			indices += 3;
 		}
 		indexInPtr++;
 	}
@@ -1131,24 +1191,7 @@ bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &adjacencyOut, DXBuffer &mater
 	memcpy(materials.ptr(), meshData._materials, meshData._numMaterials * sizeof(DXMaterial));
 
 
-	DXBuffer adjacency = DXBuffer(meshData._numTriFaces * 3 * sizeof(uint32));
-	if (!adjacency.ptr()) {
-		materials.free();
-		cleanupMeshData(&meshData);
-		delete mesh;
-		return false;
-	}
-	if (!mesh->generateAdjacency((uint32 *)adjacency.ptr())) {
-		materials.free();
-		adjacency.free();
-		cleanupMeshData(&meshData);
-		delete mesh;
-		return false;
-	}
-
-
 	*meshOut = mesh;
-	adjacencyOut = adjacency;
 	numMaterialsOut = meshData._numMaterials;
 	materialsOut = materials;
 	*skinInfoOut = meshData._skinInfo;

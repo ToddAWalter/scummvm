@@ -43,6 +43,7 @@ class Material;
 class ShadowVolume;
 class VideoTheoraPlayer;
 class SkinMeshHelper;
+class DXMesh;
 struct XMeshObject;
 
 class XMesh : public BaseNamedObject {
@@ -70,19 +71,15 @@ public:
 	bool restoreDeviceObjects();
 
 protected:
-
-	void updateBoundingBox();
-
-	// Wintermute3D used the ID3DXSKININFO interface
-	// we will only store, whether this mesh is skinned at all
-	// and factor out the necessary computations into some functions
-	bool _skinnedMesh;
+	bool generateMesh();
 
 	SkinMeshHelper *_skinMesh;
+	DXMesh *_blendedMesh;
+	DXMesh *_staticMesh;
 
-	BaseArray<Math::Matrix4 *> _boneMatrices;
+	DXMatrix **_boneMatrices;
 
-	Common::Array<uint32> _adjacency;
+	uint32 *_adjacency;
 
 	BaseArray<Material *> _materials;
 };

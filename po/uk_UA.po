@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
 "POT-Creation-Date: 2024-09-19 19:33+0000\n"
-"PO-Revision-Date: 2024-08-18 06:28+0000\n"
+"PO-Revision-Date: 2024-10-10 12:54+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/uk/>\n"
@@ -17,9 +17,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.4\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 5.7.2\n"
 "X-Language-name: Українська\n"
 
 #. I18N: built on <build date> with <compiler>
@@ -664,11 +664,11 @@ msgstr "Шляхи"
 
 #: gui/editgamedialog.cpp:291
 msgid "Check Integrity"
-msgstr ""
+msgstr "Перевірити цілісність"
 
 #: gui/editgamedialog.cpp:291
 msgid "Perform integrity check for all game files"
-msgstr ""
+msgstr "Зробити перевірку цілісності усіх файлів гри"
 
 #: gui/editgamedialog.cpp:296
 msgid "Game Path:"
@@ -841,14 +841,15 @@ msgstr "Примітки:"
 msgid ""
 "Verifying file integrity may take a long time to complete. Please wait...\n"
 msgstr ""
+"Перевірка цілісності файлів може зайняти деякий час. Будь-ласка заждіть...\n"
 
 #: gui/integrity-dialog.cpp:107 gui/integrity-dialog.cpp:168
 msgid "Calculating file checksums..."
-msgstr ""
+msgstr "Обчислюю контрольні суми файлів..."
 
 #: gui/integrity-dialog.cpp:120
 msgid "Launch Email Client"
-msgstr ""
+msgstr "Запустити поштового клієнта"
 
 #: gui/integrity-dialog.cpp:174
 msgid "Calculation complete"
@@ -867,21 +868,30 @@ msgid ""
 "If you are sure that this is a valid unknown variant, please send the "
 "following e-mail to integrity@scummvm.org"
 msgstr ""
+"### Результати\n"
+"Ваш набір файлів гри виглядає невідомим для нас.\n"
+"\n"
+"У разі, якщо ви впевнені, що це є дійсно новий варіант, будь-ласка, "
+"надішліть наступний лист до integrity@scummvm.org"
 
 #: gui/integrity-dialog.cpp:537
 msgid ""
 "The game doesn't seem to have any files. Are you sure the path is correct?"
 msgstr ""
+"Виглядає, що гра взагалі не має файлів. Чи ви впевнені, що шлях вказано "
+"вірно?"
 
 #: gui/integrity-dialog.cpp:542
 msgid ""
 "The game doesn't seem to have any metadata associated with it, so it is "
 "unable to be matched. Please fill in the correct metadata for the game."
 msgstr ""
+"Гра не має метаданих, тож нема з чим її порівняти. Будь-ласка, заповніть "
+"правильні метадані для гри."
 
 #: gui/integrity-dialog.cpp:569
 msgid "Files all OK"
-msgstr ""
+msgstr "Всі файли в порядку"
 
 #: gui/filebrowser-dialog.cpp:53
 msgid "Choose file for loading"
@@ -3137,7 +3147,7 @@ msgstr "Macintosh (ч/б)"
 
 #: common/rendermode.cpp:57
 msgid "VGA Grey Scale"
-msgstr ""
+msgstr "Сіра шкала VGA"
 
 #: common/rendermode.cpp:92
 msgctxt "lowres"
@@ -3704,10 +3714,8 @@ msgid "Matched game IDs for the %s engine:"
 msgstr "Можливі ідентифікатори гри для движка %s:"
 
 #: engines/metaengine.cpp:39
-#, fuzzy
-#| msgid "Game id not supported"
 msgid "Game not implemented"
-msgstr "Game id не підтримується"
+msgstr "Гру не реалізовано"
 
 #: engines/metaengine.cpp:58 engines/saga/metaengine.cpp:267
 msgid "Default game keymap"
@@ -4709,7 +4717,7 @@ msgstr "Режим збільнення вимкнено. Повертаюся �
 
 #: backends/platform/3ds/osystem-events.cpp:385
 msgid "Hover Mode"
-msgstr "Режим огляду"
+msgstr "Режим наведення"
 
 #: backends/platform/3ds/osystem-events.cpp:389
 msgid "Drag Mode"
@@ -6048,14 +6056,12 @@ msgid "Do not emulate NTSC artifacts for text"
 msgstr "Не емулюйте артефакти NTSC для тексту"
 
 #: engines/adl/metaengine.cpp:104
-#, fuzzy
-#| msgid "Use silver cursors"
 msgid "Use checkered cursor"
-msgstr "Використовувати срібні курсори"
+msgstr "Використовувати курсор-шахівку"
 
 #: engines/adl/metaengine.cpp:105
 msgid "Use the checkered cursor from later Apple II models"
-msgstr ""
+msgstr "Використовувати курсор у вигляді шахівки, як на пізніх моделях Apple II"
 
 #: engines/agi/detection_tables.h:261
 msgid "Early AGI games for Tandy Color Computer are not yet supported."
@@ -6161,7 +6167,7 @@ msgstr "Ввімкнути захист від копіювання"
 #: engines/saga/metaengine.cpp:53 engines/scumm/dialogs.cpp:1189
 #: engines/scumm/metaengine.cpp:756
 msgid "Enable any copy protection that would otherwise be bypassed by default."
-msgstr ""
+msgstr "Ввімкнути захист від копіювання, який зазвичай перескакується."
 
 #: engines/agi/metaengine.cpp:408 engines/asylum/asylum.cpp:655
 #: engines/buried/saveload.cpp:53 engines/mohawk/riven.cpp:759
@@ -6307,7 +6313,7 @@ msgstr "Підтримку для AGOS 2 не скомпільовано"
 #. It is never disabled and it is not game specific
 #: engines/agos/metaengine.cpp:227
 msgid "AGOS main"
-msgstr ""
+msgstr "Головна AGOS"
 
 #: engines/agos/metaengine.cpp:228 engines/cine/metaengine.cpp:259
 #: engines/hopkins/metaengine.cpp:209 engines/lure/metaengine.cpp:169
@@ -6358,14 +6364,10 @@ msgid "Toggle music on/off"
 msgstr "Перемикання музики"
 
 #: engines/agos/metaengine.cpp:273
-#, fuzzy
-#| msgid "Toggle sound effects on/off"
 msgid "Toggle sound effect on/off"
 msgstr "Перемикання звукових ефектів"
 
 #: engines/agos/metaengine.cpp:278
-#, fuzzy
-#| msgid "Toggle fast mode"
 msgid "Toggle fast mode on/off"
 msgstr "Перемикання швидкого режиму"
 
@@ -6377,10 +6379,8 @@ msgid "Walk forward"
 msgstr "Іти вперед"
 
 #: engines/agos/metaengine.cpp:296
-#, fuzzy
-#| msgid "Run backward"
 msgid "Turn backward"
-msgstr "Бігти назад"
+msgstr "Повернутися назад"
 
 #: engines/agos/metaengine.cpp:302 engines/mohawk/riven.cpp:901
 #: engines/wintermute/keymapper_tables.h:161
@@ -6399,34 +6399,24 @@ msgid "Turn right"
 msgstr "Повернутися вправо"
 
 #: engines/agos/metaengine.cpp:316
-#, fuzzy
-#| msgid "Text speed slower / faster"
 msgid "Text speed - Fast"
-msgstr "Швидкість тексту повільніше / швидше"
+msgstr "Швидкість тексту - швидше"
 
 #: engines/agos/metaengine.cpp:321
-#, fuzzy
-#| msgid "Walking speed: Medium"
 msgid "Text speed - Medium"
-msgstr "Швидкість ходи: Середня"
+msgstr "Швидкість тексту - середня"
 
 #: engines/agos/metaengine.cpp:326
-#, fuzzy
-#| msgid "Text speed slower / faster"
 msgid "Text speed - Slow"
-msgstr "Швидкість тексту повільніше / швидше"
+msgstr "Швидкість тексту - повільна"
 
 #: engines/agos/metaengine.cpp:331
-#, fuzzy
-#| msgid "Show Object Line"
 msgid "Show objects to interact"
-msgstr "Показувати лінії об'єктів"
+msgstr "Показувати об'єкти для взаємодії"
 
 #: engines/agos/metaengine.cpp:338
-#, fuzzy
-#| msgid "Toggle sound effects on/off"
 msgid "Toggle background sounds on/off"
-msgstr "Перемикання звукових ефектів"
+msgstr "Перемикання фонових звукових ефектів"
 
 #. I18N: Characters are game actors
 #: engines/agos/metaengine.cpp:347
@@ -6434,10 +6424,8 @@ msgid "Switch characters"
 msgstr "Переключити героїв"
 
 #: engines/agos/metaengine.cpp:353
-#, fuzzy
-#| msgid "Toggle music on/off"
 msgid "Toggle hitbox names on/off"
-msgstr "Перемикання музики"
+msgstr "Перемикання назви хіт-боксів"
 
 #: engines/agos/metaengine.cpp:360
 msgid "Switches between speech only and combined speech and subtitles"
@@ -6653,40 +6641,28 @@ msgid "Move right"
 msgstr "Рухатись направо"
 
 #: engines/asylum/metaengine.cpp:226
-#, fuzzy
-#| msgid "Toggle music on/off"
 msgid "Toggle animation on/off"
-msgstr "Перемикання музики"
+msgstr "Перемикання анімації"
 
 #: engines/asylum/metaengine.cpp:232
-#, fuzzy
-#| msgid "Run a game"
 msgid "Return to gameplay"
-msgstr "Запустити гру"
+msgstr "Повернутися у гру"
 
 #: engines/asylum/metaengine.cpp:238
-#, fuzzy
-#| msgid "Previous Page"
 msgid "Previous resource"
-msgstr "Попередня сторінка"
+msgstr "Попередній ресурс"
 
 #: engines/asylum/metaengine.cpp:245
-#, fuzzy
-#| msgid "[ Resources ]"
 msgid "Next resource"
-msgstr "[ Ресурси ]"
+msgstr "Наступний ресурс"
 
 #: engines/asylum/metaengine.cpp:252
-#, fuzzy
-#| msgid "Previous page"
 msgid "Previous palette"
-msgstr "Попередня сторінка"
+msgstr "Попередня палітра"
 
 #: engines/asylum/metaengine.cpp:259
-#, fuzzy
-#| msgid "Next page"
 msgid "Next palette"
-msgstr "Наступна сторінка"
+msgstr "Наступна палітра"
 
 #. I18N: Warn user about loading potentially incompatible saved game
 #: engines/asylum/asylum.cpp:203
@@ -7041,10 +7017,8 @@ msgid "Game Keymappings"
 msgstr "Мапа клавіш гри"
 
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:225
-#, fuzzy
-#| msgid "Skip"
 msgid "Exit/Skip"
-msgstr "Пропустити"
+msgstr "Вийти/Пропустити"
 
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
 #: engines/hopkins/metaengine.cpp:238 engines/lure/metaengine.cpp:191
@@ -7195,56 +7169,40 @@ msgstr "Порожнє автозбереження"
 #: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:102
 #: engines/mads/metaengine.cpp:274 engines/tinsel/metaengine.cpp:239
 #: engines/trecision/metaengine.cpp:120
-#, fuzzy
-#| msgid "Default game keymap"
 msgid "Default keymappings"
-msgstr "Мапа клавіш за замовчунням"
+msgstr "Мапи клавіш за замовчунням"
 
 #: engines/cine/metaengine.cpp:260
-#, fuzzy
-#| msgid "Game Keymappings"
 msgid "Key to mouse keymappings"
-msgstr "Мапа клавіш гри"
+msgstr "Мапа клавіш до миші"
 
 #: engines/cine/metaengine.cpp:261
-#, fuzzy
-#| msgid "Game Keymappings"
 msgid "Exit screen keymappings"
-msgstr "Мапа клавіш гри"
+msgstr "Мапа клавіш виходу з екрану"
 
 #: engines/cine/metaengine.cpp:277
 msgid "Exit Sony intro screen"
 msgstr ""
 
 #: engines/cine/metaengine.cpp:283
-#, fuzzy
-#| msgid "Select to end of line"
 msgid "Select option / Click in game"
-msgstr "Виділити до кінця рядку"
+msgstr "Вибрати опцію / Клацнути у грі"
 
 #: engines/cine/metaengine.cpp:290
-#, fuzzy
-#| msgid "Open main menu"
 msgid "Open action menu / Close menu"
-msgstr "Відкрити головне меню"
+msgstr "Відкрити меню дій / Закрити меню"
 
 #: engines/cine/metaengine.cpp:295
-#, fuzzy
-#| msgid "Default game keymap"
 msgid "Default game speed"
-msgstr "Мапа клавіш за замовчунням"
+msgstr "Швидкість гри за замовчунням"
 
 #: engines/cine/metaengine.cpp:300
-#, fuzzy
-#| msgid "Show game credits"
 msgid "Slower game speed"
-msgstr "Показати авторів гри"
+msgstr "Повільніша швидкість гри"
 
 #: engines/cine/metaengine.cpp:307
-#, fuzzy
-#| msgid "Fast movie speed"
 msgid "Faster game speed"
-msgstr "Режим швидкого відео"
+msgstr "Скоріша швидкість гри"
 
 #: engines/cine/metaengine.cpp:315 engines/grim/grim.cpp:506
 #: engines/hpl1/metaengine.cpp:90 engines/scumm/help.cpp:243
@@ -7253,10 +7211,8 @@ msgid "Examine"
 msgstr "Розглянути"
 
 #: engines/cine/metaengine.cpp:320 engines/saga/metaengine.cpp:394
-#, fuzzy
-#| msgid "Take off"
 msgid "Take"
-msgstr "Зняти"
+msgstr "Взяти"
 
 #. I18N: Action in In Cold Blood
 #: engines/cine/metaengine.cpp:325 engines/crab/input/input.cpp:251
@@ -7284,61 +7240,45 @@ msgid "Use"
 msgstr "Використати"
 
 #: engines/cine/metaengine.cpp:335
-#, fuzzy
-#| msgid "Active"
 msgid "Activate"
-msgstr "Активне"
+msgstr "Активувати"
 
 #: engines/cine/metaengine.cpp:340
 msgid "Speak"
 msgstr ""
 
 #: engines/cine/metaengine.cpp:345
-#, fuzzy
-#| msgid "Action"
 msgid "Action menu"
-msgstr "Дія"
+msgstr "Меню дій"
 
 #: engines/cine/metaengine.cpp:351
-#, fuzzy
-#| msgid "Pause/Game menu"
 msgid "System menu"
-msgstr "Пауза/Меню гри"
+msgstr "Системне меню"
 
 #. I18N: Opens collision map of where the actor can freely move
 #: engines/cine/metaengine.cpp:358
-#, fuzzy
-#| msgid "Speech Options"
 msgid "Show collisions"
-msgstr "Налаштування озвучки"
+msgstr "Показати зіткнення"
 
 #. I18N: Move Actor to top-left direction
 #: engines/cine/metaengine.cpp:393
-#, fuzzy
-#| msgid "Move left"
 msgid "Move up-left"
-msgstr "Рухатись наліво"
+msgstr "Рухатись догори-наліво"
 
 #. I18N: Move Actor to top-right direction
 #: engines/cine/metaengine.cpp:399
-#, fuzzy
-#| msgid "Move right"
 msgid "Move up-right"
-msgstr "Рухатись направо"
+msgstr "Рухатись догори-направо"
 
 #. I18N: Move Actor to bottom-left direction
 #: engines/cine/metaengine.cpp:405
-#, fuzzy
-#| msgid "Move down"
 msgid "Move down-left"
-msgstr "Рухатись вниз"
+msgstr "Рухатись донизу-наліво"
 
 #. I18N: Move Actor to bottom-right direction
 #: engines/cine/metaengine.cpp:411
-#, fuzzy
-#| msgid "Move right"
 msgid "Move down-right"
-msgstr "Рухатись направо"
+msgstr "Рухатись донизу-направо"
 
 #: engines/cine/metaengine.cpp:416
 msgid "Menu option up"
@@ -7574,10 +7514,8 @@ msgid "Use alternative camera controls"
 msgstr "Використовувати альтернативне управління камерою"
 
 #: engines/freescape/metaengine.cpp:119
-#, fuzzy
-#| msgid "Filter graphics"
 msgid "Authentic graphics"
-msgstr "Фільтрування графіки"
+msgstr "Автентична графіка"
 
 #: engines/freescape/metaengine.cpp:120
 msgid "Keep graphics as close as possible to the original"
@@ -11927,10 +11865,8 @@ msgstr "Пропустити рядок"
 
 #. I18N: Toggles walking speed of actor
 #: engines/trecision/metaengine.cpp:144
-#, fuzzy
-#| msgid "Toggle fast mode"
 msgid "Toggle fast walk"
-msgstr "Перемикання швидкого режиму"
+msgstr "Перемикання швидкої ходи"
 
 #: engines/trecision/metaengine.cpp:163
 #, fuzzy

@@ -20,9 +20,6 @@
  */
 
 #include "twine/scene/animations.h"
-#include "common/endian.h"
-#include "common/memstream.h"
-#include "common/stream.h"
 #include "common/util.h"
 #include "twine/audio/sound.h"
 #include "twine/debugger/debug_state.h"
@@ -95,7 +92,7 @@ int16 Animations::patchInterStep(int32 deltaTime, int32 keyFrameLength, int16 ne
 	return computedPos;
 }
 
-bool Animations::doSetInterAnimObjet(int32 keyframeIdx, const AnimData &animData, BodyData &bodyData, AnimTimerDataStruct *animTimerDataPtr) {
+bool Animations::setInterAnimObjet(int32 keyframeIdx, const AnimData &animData, BodyData &bodyData, AnimTimerDataStruct *animTimerDataPtr) {
 	if (!bodyData.isAnimated()) {
 		return false;
 	}
@@ -392,7 +389,7 @@ bool Animations::initAnim(AnimationTypes newAnim, AnimType flag, AnimationTypes 
 		return false;
 	}
 
-	if (actor->_staticFlags.bSprite3D) {
+	if (actor->_flags.bSprite3D) {
 		return false;
 	}
 
@@ -470,7 +467,7 @@ void Animations::doAnim(int32 actorIdx) {
 	const IVec3 &oldPos = actor->_oldPos;
 
 	IVec3 &processActor = actor->_processActor;
-	if (actor->_staticFlags.bSprite3D) {
+	if (actor->_flags.bSprite3D) {
 		if (actor->_strengthOfHit) {
 			actor->_workFlags.bIsHitting = 1;
 		}
@@ -478,7 +475,7 @@ void Animations::doAnim(int32 actorIdx) {
 		processActor = actor->posObj();
 
 		if (!actor->_workFlags.bIsFalling) {
-			if (actor->_speed) {
+			if (actor->_srot) {
 				int32 xAxisRotation = actor->realAngle.getRealValueFromTime(_engine->timerRef);
 				if (!xAxisRotation) {
 					if (actor->realAngle.endValue > 0) {
@@ -497,7 +494,7 @@ void Animations::doAnim(int32 actorIdx) {
 				processActor.x = actor->_posObj.x + destPos.x;
 				processActor.z = actor->_posObj.z + destPos.y;
 
-				_engine->_movements->setActorAngle(LBAAngles::ANGLE_0, actor->_speed, LBAAngles::ANGLE_17, &actor->realAngle);
+				_engine->_movements->initRealValue(LBAAngles::ANGLE_0, actor->_srot, LBAAngles::ANGLE_17, &actor->realAngle);
 
 				if (actor->_workFlags.bIsSpriteMoving) {
 					if (actor->_doorWidth) { // open door
@@ -513,7 +510,7 @@ void Animations::doAnim(int32 actorIdx) {
 							}
 
 							actor->_workFlags.bIsSpriteMoving = 0;
-							actor->_speed = 0;
+							actor->_srot = 0;
 						}
 					} else { // close door
 						bool updatePos = false;
@@ -540,16 +537,16 @@ void Animations::doAnim(int32 actorIdx) {
 							processActor = actor->_animStep;
 
 							actor->_workFlags.bIsSpriteMoving = 0;
-							actor->_speed = 0;
+							actor->_srot = 0;
 						}
 					}
 				}
 			}
 
-			if (actor->_staticFlags.bCanBePushed) {
+			if (actor->_flags.bCanBePushed) {
 				processActor += actor->_animStep;
 
-				if (actor->_staticFlags.bUseMiniZv) {
+				if (actor->_flags.bUseMiniZv) {
 					processActor.x = ((processActor.x / (SIZE_BRICK_XZ / 4)) * (SIZE_BRICK_XZ / 4));
 					processActor.z = ((processActor.z / (SIZE_BRICK_XZ / 4)) * (SIZE_BRICK_XZ / 4));
 				}
@@ -595,7 +592,7 @@ void Animations::doAnim(int32 actorIdx) {
 				processAnimActions(actorIdx);
 
 				int16 numKeyframe = actor->_frame;
-				if (numKeyframe == (int16)animData.getNumKeyframes()) {
+				if (numKeyframe == (int16)animData.getNbFramesAnim()) {
 					actor->_workFlags.bIsHitting = 0;
 
 					if (actor->_flagAnim == AnimType::kAnimationTypeRepeat) {
@@ -648,7 +645,7 @@ void Animations::doAnim(int32 actorIdx) {
 
 	// actor collisions with bricks
 	uint32 col1 = 0; 	/** Cause damage in current processed actor */
-	if (actor->_staticFlags.bComputeCollisionWithBricks) {
+	if (actor->_flags.bComputeCollisionWithBricks) {
 		ShapeType col = _engine->_grid->worldColBrick(oldPos);
 
 		if (col != ShapeType::kNone) {
@@ -660,7 +657,7 @@ void Animations::doAnim(int32 actorIdx) {
 			}
 		}
 
-		if (actor->_staticFlags.bComputeCollisionWithObj) {
+		if (actor->_flags.bComputeCollisionWithObj) {
 			collision->checkObjCol(actorIdx);
 		}
 
@@ -670,7 +667,7 @@ void Animations::doAnim(int32 actorIdx) {
 
 		collision->setCollisionPos(processActor);
 
-		if (IS_HERO(actorIdx) && !actor->_staticFlags.bComputeLowCollision) {
+		if (IS_HERO(actorIdx) && !actor->_flags.bComputeLowCollision) {
 			// check hero collisions with bricks
 			col1 |= collision->doCornerReajustTwinkel(actor, actor->_boundingBox.mins.x, actor->_boundingBox.mins.y, actor->_boundingBox.mins.z, 1);
 			col1 |= collision->doCornerReajustTwinkel(actor, actor->_boundingBox.maxs.x, actor->_boundingBox.mins.y, actor->_boundingBox.mins.z, 2);
@@ -740,9 +737,12 @@ void Animations::doAnim(int32 actorIdx) {
 				collision->reajustPos(processActor, col);
 			}
 
+			if (actor->_workFlags.bIsFalling) {
+				debugC(1, TwinE::kDebugCollision, "Actor %d reset falling", actorIdx);
+			}
 			actor->_workFlags.bIsFalling = 0;
 		} else {
-			if (actor->_staticFlags.bObjFallable && actor->_carryBy == -1) {
+			if (actor->_flags.bObjFallable && actor->_carryBy == -1) {
 				col = _engine->_grid->worldColBrick(processActor.x, processActor.y - 1, processActor.z);
 
 				if (col != ShapeType::kNone) {
@@ -753,6 +753,7 @@ void Animations::doAnim(int32 actorIdx) {
 					collision->reajustPos(processActor, col);
 				} else {
 					if (!actor->_workFlags.bIsRotationByAnim) {
+						debugC(1, TwinE::kDebugCollision, "Actor %d is falling", actorIdx);
 						actor->_workFlags.bIsFalling = 1;
 
 						if (IS_HERO(actorIdx) && _engine->_scene->_startYFalling == 0) {
@@ -783,7 +784,7 @@ void Animations::doAnim(int32 actorIdx) {
 			actor->setLife(0);
 		}
 	} else {
-		if (actor->_staticFlags.bComputeCollisionWithObj) {
+		if (actor->_flags.bComputeCollisionWithObj) {
 			collision->checkObjCol(actorIdx);
 		}
 	}

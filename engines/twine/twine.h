@@ -22,7 +22,6 @@
 #ifndef TWINE_TWINE_H
 #define TWINE_TWINE_H
 
-#include "backends/keymapper/keymap.h"
 #include "common/platform.h"
 #include "common/random.h"
 #include "common/rect.h"
@@ -32,7 +31,6 @@
 #include "engines/metaengine.h"
 #include "graphics/managed_surface.h"
 #include "graphics/screen.h"
-#include "graphics/pixelformat.h"
 #include "graphics/surface.h"
 #include "twine/detection.h"
 #include "twine/input.h"
@@ -61,7 +59,7 @@ static const struct TwinELanguage {
 	const char *name;
 	const char *id;
 	const int voice;
-} LanguageTypes[] = {
+} ListLanguage[] = { // TabLanguage
 	{"English", "EN_", 1},
 	{"French", "FR_", 2},
 	{"German", "DE_", 3},
@@ -164,12 +162,6 @@ enum class SceneLoopState {
 	Finished = 1
 };
 
-struct ScopedEngineFreeze {
-	TwinEEngine *_engine;
-	ScopedEngineFreeze(TwinEEngine *engine, bool pause = false);
-	~ScopedEngineFreeze();
-};
-
 struct ScopedCursor {
 	TwinEEngine *_engine;
 	ScopedCursor(TwinEEngine *engine);
@@ -198,12 +190,26 @@ public:
 	void update() override;
 };
 
+
+int32 boundRuleThree(int32 val1, int32 val2, int32 nbstep, int32 step);
+
+/**
+ * Linear interpolation of the given value between start and end
+ * @param value color component
+ * @param start lower range
+ * @param end upper range
+ * @param t the location in given range
+ * @return the lerped value
+ * @note Doesn't clamp
+ */
+int32 ruleThree32(int32 value, int32 start, int32 end, int32 t);
+
 class TwinEEngine : public Engine {
 private:
 	int32 _isTimeFreezed = 0;
 	int32 _saveFreezedTime = 0;
 	int32 _mouseCursorState = 0;
-	ActorMoveStruct _loopMovePtr; // mainLoopVar1
+	RealValue _realFalling; // mainLoopVar1
 	PauseToken _pauseToken;
 	TwineGameType _gameType;
 	EngineState _state = EngineState::Menu;
@@ -220,7 +226,7 @@ private:
 	void initConfigurations();
 	/** Initialize all needed stuffs at first time running engine */
 	void initAll();
-	void playIntro();
+	void introduction();
 	void processActorSamplePosition(int32 actorIdx);
 	/** Allocate video memory, both front and back buffers */
 	void allocVideoMemory(int32 w, int32 h);
@@ -319,7 +325,7 @@ public:
 	bool _flagRain = false;
 
 	/** Disable screen recenter */
-	bool _disableScreenRecenter = false;
+	bool _cameraZone = false;
 
 	Graphics::ManagedSurface _imageBuffer;
 	/** Work video buffer */
@@ -357,14 +363,14 @@ public:
 	void restoreFrontBuffer();
 	void saveFrontBuffer();
 
-	void freezeTime(bool pause);
-	void unfreezeTime();
+	void saveTimer(bool pause);
+	void restoreTimer();
 
 	/**
 	 * Game engine main loop
 	 * @return true if we want to show credit sequence
 	 */
-	bool gameEngineLoop();
+	bool mainLoop();
 
 	/**
 	 * Deplay certain seconds till proceed - Can also Skip this delay
@@ -377,7 +383,8 @@ public:
 	 * Set a new palette in the SDL screen buffer
 	 * @param palette palette to set in RGBA
 	 */
-	void setPalette(const uint32 *palette);
+	void setPalette(const Graphics::Palette &palette, uint startColor = 0u);
+
 	/**
 	 * @brief Set the Palette object
 	 *

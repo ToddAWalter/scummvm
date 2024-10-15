@@ -21,7 +21,12 @@
 
 #include "backends/imgui/IconsMaterialSymbols.h"
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
+
 #include "backends/imgui/imgui.h"
+#include "graphics/palette.h"
 
 namespace ImGuiEx {
 
@@ -35,12 +40,8 @@ bool InputInt(const char *label, INT *v, int step = 1, int step_fast = 100, ImGu
 	return false;
 }
 
-void Boolean(bool val) {
-	if (val) {
-		ImGui::Text(ICON_MS_CHECK_BOX);
-	} else {
-		ImGui::Text(ICON_MS_CHECK_BOX_OUTLINE_BLANK);
-	}
-}
+void Boolean(bool val);
+void Palette(const Graphics::Palette &palette);
+bool toggleButton(const char *label, bool *p_value, bool inverse = false);
 
 } // namespace ImGuiEx

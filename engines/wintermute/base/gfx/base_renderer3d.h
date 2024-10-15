@@ -51,17 +51,22 @@ class Mesh3DS;
 class XMesh;
 class ShadowVolume;
 
+#define DEFAULT_NEAR_PLANE 90.0f
+#define DEFAULT_FAR_PLANE  10000.0f
+
 class BaseRenderer3D : public BaseRenderer {
 public:
 	BaseRenderer3D(BaseGame *inGame = nullptr);
 	~BaseRenderer3D() override;
 
+	bool getProjectionParams(float *resWidth, float *resHeight, float *layerWidth, float *layerHeight,
+							 float *modWidth, float *modHeight, bool *customViewport);
 	bool setAmbientLightColor(uint32 color);
 	bool setDefaultAmbientLightColor();
 	virtual void setAmbientLight() = 0;
 
 	uint32 _ambientLightColor;
-	bool _overrideAmbientLightColor;
+	bool _ambientLightOverride;
 
 	virtual int maximumLightsCount() = 0;
 	virtual void enableLight(int index) = 0;
@@ -87,14 +92,36 @@ public:
 	void initLoop() override;
 
 	virtual bool setProjection2D() = 0;
+
 	virtual void setWorldTransform(const Math::Matrix4 &transform) = 0;
+//	void setWorldTransform(const Math::Matrix4 &transform) {
+//		_worldMatrix = transform;
+//	}
+
+	void setViewTransform(const Math::Matrix4 &transform) {
+		_viewMatrix = transform;
+	}
+
+	void setProjectionTransform(const Math::Matrix4 &transform) {
+		_projectionMatrix = transform;
+	}
+
+	void getWorldTransform(Math::Matrix4 &transform) {
+		transform = _worldMatrix;
+	}
+
+	void getViewTransform(Math::Matrix4 &transform) {
+		transform = _viewMatrix;
+	}
+
+	void getProjectionTransform(Math::Matrix4 &transform) {
+		transform = _projectionMatrix;
+	}
 
 	void project(const Math::Matrix4 &worldMatrix, const Math::Vector3d &point, int32 &x, int32 &y);
 	Math::Ray rayIntoScene(int x, int y);
 
-	Math::Matrix4 lastProjectionMatrix() {
-		return _projectionMatrix3d;
-	}
+	Camera3D *_camera;
 
 	virtual Mesh3DS *createMesh3DS() = 0;
 	virtual XMesh *createXMesh() = 0;
@@ -113,8 +140,16 @@ public:
 
 protected:
 	Math::Matrix4 _lastViewMatrix;
-	Math::Matrix4 _projectionMatrix3d;
 	Rect32 _viewport3dRect;
+	Math::Matrix4 _worldMatrix;
+	Math::Matrix4 _viewMatrix;
+	Math::Matrix4 _projectionMatrix;
+	Rect32 _viewport;
+	float _fov;
+	float _nearClipPlane;
+	float _farClipPlane;
+	TRendererState _state;
+	bool _spriteBatchMode;
 
 	void flipVertical(Graphics::Surface *s);
 };

@@ -20,14 +20,13 @@
  */
 
 #include "backends/keymapper/action.h"
-#include "backends/keymapper/standard-actions.h"
+#include "backends/keymapper/keymap.h"
 #include "base/plugins.h"
-#include "common/fs.h"
-#include "common/savefile.h"
 #include "common/system.h"
 #include "common/translation.h"
 #include "engines/advancedDetector.h"
 #include "graphics/managed_surface.h"
+#include "graphics/palette.h"
 #include "graphics/scaler.h"
 #include "twine/achievements_tables.h"
 #include "twine/detection.h"
@@ -195,7 +194,11 @@ void TwinEMetaEngine::getSavegameThumbnail(Graphics::Surface &thumb) {
 	TwinEEngine *engine = (TwinEEngine *)g_engine;
 	const Graphics::ManagedSurface &managedSurface = engine->_workVideoBuffer;
 	const Graphics::Surface &screenSurface = managedSurface.rawSurface();
-	::createThumbnail(&thumb, (const uint8 *)screenSurface.getPixels(), screenSurface.w, screenSurface.h, engine->_screens->_palette);
+	Graphics::Palette *pal = &engine->_screens->_ptrPal;
+	if (engine->_screens->_flagPalettePcx) {
+		pal = &engine->_screens->_palettePcx;
+	}
+	::createThumbnail(&thumb, (const uint8 *)screenSurface.getPixels(), screenSurface.w, screenSurface.h, pal->data());
 }
 
 //
@@ -333,7 +336,7 @@ Common::KeymapArray TwinEMetaEngine::initKeymaps(const char *target) const {
 		act->addDefaultInputMapping("JOY_UP");
 		gameKeyMap->addAction(act);
 
-		act = new Action("MOVEBACKWARD", _("Move Backward"));
+		act = new Action("MOVEBACKWARD", _("Move Backwards"));
 		act->setCustomEngineActionEvent(TwinEActionType::MoveBackward);
 		act->addDefaultInputMapping("DOWN");
 		act->addDefaultInputMapping("KP2");

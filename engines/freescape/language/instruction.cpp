@@ -213,6 +213,13 @@ bool FreescapeEngine::executeCode(FCLInstructionVector &code, bool shot, bool co
 				skipDepth = conditionalDepth - 1;
 			break;
 
+		case Token::IFLTEQ:
+			skip = !checkIfLessOrEqual(instruction);
+			if (skip)
+				skipDepth = conditionalDepth - 1;
+			break;
+
+
 		case Token::ELSE:
 			skip = !skip;
 			if (skip)
@@ -467,6 +474,13 @@ bool FreescapeEngine::checkIfGreaterOrEqual(FCLInstruction &instruction) {
 	return (_gameStateVars[variable] >= value);
 }
 
+bool FreescapeEngine::checkIfLessOrEqual(FCLInstruction &instruction) {
+	uint16 variable = instruction._source;
+	uint16 value = instruction._destination;
+	debugC(1, kFreescapeDebugCode, "Check if variable %d is less than equal to %d!", variable, value);
+	return (_gameStateVars[variable] <= value);
+}
+
 
 bool FreescapeEngine::executeEndIfNotEqual(FCLInstruction &instruction) {
 	uint16 variable = instruction._source;
@@ -479,18 +493,15 @@ void FreescapeEngine::executeIncrementVariable(FCLInstruction &instruction) {
 	int32 variable = instruction._source;
 	int32 increment = instruction._destination;
 	_gameStateVars[variable] = _gameStateVars[variable] + increment;
-	switch (variable) {
-	case k8bitVariableScore:
+	if (variable == k8bitVariableScore) {
 		debugC(1, kFreescapeDebugCode, "Score incremented by %d up to %d", increment, _gameStateVars[variable]);
-		break;
-	case k8bitVariableEnergy:
+	} else if (variable == k8bitVariableEnergy) {
 		if (_gameStateVars[variable] > _maxEnergy)
 			_gameStateVars[variable] = _maxEnergy;
 		else if (_gameStateVars[variable] < 0)
 			_gameStateVars[variable] = 0;
 		debugC(1, kFreescapeDebugCode, "Energy incremented by %d up to %d", increment, _gameStateVars[variable]);
-		break;
-	case k8bitVariableShield:
+	} else if (variable == k8bitVariableShield) {
 		if (_gameStateVars[variable] > _maxShield)
 			_gameStateVars[variable] = _maxShield;
 		else if (_gameStateVars[variable] < 0)
@@ -500,10 +511,8 @@ void FreescapeEngine::executeIncrementVariable(FCLInstruction &instruction) {
 			flashScreen(_renderMode == Common::kRenderCGA ? 1 :_currentArea->_underFireBackgroundColor);
 
 		debugC(1, kFreescapeDebugCode, "Shield incremented by %d up to %d", increment, _gameStateVars[variable]);
-		break;
-	default:
+	} else {
 		debugC(1, kFreescapeDebugCode, "Variable %d by %d incremented up to %d!", variable, increment, _gameStateVars[variable]);
-		break;
 	}
 }
 

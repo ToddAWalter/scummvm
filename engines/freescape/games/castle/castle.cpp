@@ -677,6 +677,7 @@ void CastleEngine::loadAssets() {
 			it._value->addStructure(_areaMap[255]);
 			it._value->addObjectFromArea(229, _areaMap[255]);
 			it._value->addObjectFromArea(242, _areaMap[255]);
+			it._value->addObjectFromArea(139, _areaMap[255]);
 		}
 
 		_areaMap[1]->addFloor();
@@ -731,14 +732,15 @@ void CastleEngine::loadRiddles(Common::SeekableReadStream *file, int offset, int
 			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
 			while (size-- > 0) {
 				byte c = file->readByte();
-				if (c != 0)
+				if (c > 0x7F) {
+					file->seek(-1, SEEK_CUR);
+					break;
+				} else if (c != 0)
 					message = message + c;
 			}
 
-			/*if (isAmiga() || isAtariST())
+			if (isAmiga() || isAtariST())
 				debug("extra byte: %x", file->readByte());
-			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());
-			debugC(1, kFreescapeDebugParser, "extra byte: %x", file->readByte());*/
 			debugC(1, kFreescapeDebugParser, "'%s' with offset: %d, %d", message.c_str(), x, y);
 
 			riddle._lines.push_back(RiddleText(x, y, message));
@@ -1052,11 +1054,33 @@ void CastleEngine::updateTimeVariables() {
 }
 
 void CastleEngine::borderScreen() {
-	FreescapeEngine::borderScreen();
-	if (isAmiga() && isDemo()) {
-		// Skip character selection
-	} else
-		selectCharacterScreen();
+	if (isAmiga() && isDemo())
+		return; // Skip character selection
+
+	if (isSpectrum())
+		FreescapeEngine::borderScreen();
+	else {
+		uint32 color = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0x00, 0x00, 0x00);
+		Graphics::Surface *surface = new Graphics::Surface();
+		surface->create(_screenW, _screenH, _gfx->_texturePixelFormat);
+		surface->fillRect(_fullscreenViewArea, color);
+
+		int x = 40;
+		int y = 34;
+
+		Common::Array<RiddleText> selectMessage = _riddleList[19]._lines;
+		for (int i = 0; i < int(selectMessage.size()); i++) {
+			x = x + selectMessage[i]._dx;
+			y = y + selectMessage[i]._dy;
+			// Color is not important, as the font has already a palette
+			drawStringInSurface(selectMessage[i]._text, x, y, 0, 0, surface);
+		}
+		drawFullscreenSurface(surface);
+		drawBorderScreenAndWait(surface, 6 * 60);
+		surface->free();
+		delete surface;
+	}
+	selectCharacterScreen();
 }
 
 void CastleEngine::drawOption() {
@@ -1080,49 +1104,39 @@ void CastleEngine::selectCharacterScreen() {
 	surface->create(_screenW, _screenH, _gfx->_texturePixelFormat);
 	surface->fillRect(_fullscreenViewArea, color);
 
-	switch (_language) {
-		case Common::ES_ESP:
-			// No accent in "príncipe" since it is not supported by the font
-			if (isDOS()) {
-				lines.push_back("Elija su personaje");
-				lines.push_back("");
-				lines.push_back("");
-				lines.push_back("            1. Principe");
-				lines.push_back("            2. Princesa");
-			} else if (isSpectrum()) {
-				lines.push_back(centerAndPadString("*******************", 21));
-				lines.push_back(centerAndPadString("Seleccion el ", 21));
-				lines.push_back(centerAndPadString("personaje que quiera", 21));
-				lines.push_back(centerAndPadString("ser y precione enter", 21));
-				lines.push_back("");
-				lines.push_back(centerAndPadString("1. Principe", 21));
-				lines.push_back(centerAndPadString("2. Princesa", 21));
-				lines.push_back("");
-				lines.push_back(centerAndPadString("*******************", 21));
-			}
-			break;
-		default: //case Common::EN_ANY:
-			if (isDOS()) {
-				lines.push_back("Select your character");
-				lines.push_back("");
-				lines.push_back("");
-				lines.push_back("            1. Prince");
-				lines.push_back("            2. Princess");
-			} else if (isSpectrum()) {
-				lines.push_back(centerAndPadString("*******************", 21));
-				lines.push_back(centerAndPadString("Select your character", 21));
-				lines.push_back(centerAndPadString("you wish to play", 21));
-				lines.push_back(centerAndPadString("and press enter", 21));
-				lines.push_back("");
-				lines.push_back(centerAndPadString("1. Prince  ", 21));
-				lines.push_back(centerAndPadString("2. Princess", 21));
-				lines.push_back("");
-				lines.push_back(centerAndPadString("*******************", 21));
-			}
-			break;
+	if (_language != Common::ES_ESP) {
+		int x = 0;
+		int y = 0;
+
+		Common::Array<RiddleText> selectMessage = _riddleList[21]._lines;
+		for (int i = 0; i < int(selectMessage.size()); i++) {
+			x = x + selectMessage[i]._dx;
+			y = y + selectMessage[i]._dy;
+			drawStringInSurface(selectMessage[i]._text, x, y, color, color, surface);
+		}
+		drawFullscreenSurface(surface);
+	} else {
+		// No accent in "príncipe" since it is not supported by the font
+		if (isDOS()) {
+			lines.push_back("Elija su personaje");
+			lines.push_back("");
+			lines.push_back("");
+			lines.push_back("            1. Principe");
+			lines.push_back("            2. Princesa");
+		} else if (isSpectrum()) {
+			lines.push_back(centerAndPadString("*******************", 21));
+			lines.push_back(centerAndPadString("Seleccion el ", 21));
+			lines.push_back(centerAndPadString("personaje que quiera", 21));
+			lines.push_back(centerAndPadString("ser y precione enter", 21));
+			lines.push_back("");
+			lines.push_back(centerAndPadString("1. Principe", 21));
+			lines.push_back(centerAndPadString("2. Princesa", 21));
+			lines.push_back("");
+			lines.push_back(centerAndPadString("*******************", 21));
+		}
+		drawStringsInSurface(lines, surface);
 	}
 
-	drawStringsInSurface(lines, surface);
 	_system->lockMouse(false);
 	_system->showMouse(true);
 	Common::Rect princeSelector(82, 100, 163, 109);
@@ -1224,6 +1238,10 @@ Common::Error CastleEngine::loadGameStreamExtended(Common::SeekableReadStream *s
 
 	if (_useRockTravel) // Enable cheat
 		setGameBit(k8bitGameBitTravelRock);
+
+	for (auto &it : _areaMap) {
+		it._value->resetAreaGroups();
+	}
 	return Common::kNoError;
 }
 

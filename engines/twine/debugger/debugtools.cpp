@@ -20,8 +20,11 @@
  */
 
 #include "twine/debugger/debugtools.h"
+#include "backends/imgui/components/imgui_logger.h"
 #include "backends/imgui/imgui.h"
+#include "backends/imgui/imgui_fonts.h"
 #include "backends/imgui/imgui_utils.h"
+#include "common/log.h"
 #include "common/scummsys.h"
 #include "common/str-enc.h"
 #include "common/str.h"
@@ -132,6 +135,23 @@ static const char *toString(ShapeType type) {
 	}
 }
 
+static void onLog(LogMessageType::Type type, int level, uint32 debugChannels, const char *message) {
+	switch (type) {
+	case LogMessageType::kError:
+		_logger->addLog("[error]%s", message);
+		break;
+	case LogMessageType::kWarning:
+		_logger->addLog("[warn]%s", message);
+		break;
+	case LogMessageType::kInfo:
+		_logger->addLog("%s", message);
+		break;
+	case LogMessageType::kDebug:
+		_logger->addLog("[debug]%s", message);
+		break;
+	}
+}
+
 void onImGuiInit() {
 	ImGuiIO &io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
@@ -147,6 +167,10 @@ void onImGuiInit() {
 	ImGui::addTTFFontFromArchive("MaterialSymbolsSharp.ttf", 16.f, &icons_config, icons_ranges);
 
 	_tinyFont = ImGui::addTTFFontFromArchive("FreeSans.ttf", 10.0f, nullptr, nullptr);
+
+	_logger = new ImGuiEx::ImGuiLogger;
+
+	Common::setLogWatcher(onLog);
 }
 
 static void holomapFlagsWindow(TwinEEngine *engine) {
@@ -167,38 +191,6 @@ static void holomapFlagsWindow(TwinEEngine *engine) {
 	ImGui::End();
 }
 
-static void addColor(float startingPosX, uint index, const Graphics::Palette &palette) {
-	uint8 r, g, b;
-	palette.get(index, r, g, b);
-	const float borderWidth = 1.0f;
-	ImDrawList *drawList = ImGui::GetWindowDrawList();
-	const ImDrawListFlags backupFlags = drawList->Flags;
-	drawList->Flags &= ~ImDrawListFlags_AntiAliasedLines;
-	const ImVec2 available = ImGui::GetContentRegionAvail();
-	const float contentRegionWidth = available.x + ImGui::GetCursorPosX();
-	const ImVec2 colorButtonSize(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-	ImVec2 globalCursorPos = ImGui::GetCursorScreenPos();
-	const ImVec2 &windowPos = ImGui::GetWindowPos();
-	const ImVec2 v1(globalCursorPos.x + borderWidth, globalCursorPos.y + borderWidth);
-	const ImVec2 v2(globalCursorPos.x + colorButtonSize.x, globalCursorPos.y + colorButtonSize.y);
-	drawList->AddRectFilled(v1, v2, IM_COL32(r, g, b, 255));
-
-	ImGui::PushID((int)index);
-	if (ImGui::InvisibleButton("", colorButtonSize)) {
-	}
-	ImGui::SetItemTooltip("Index: %i, R(%d), G(%d), B(%d)", (int)index, (int)r, (int)g, (int)b);
-	ImGui::PopID();
-
-	globalCursorPos.x += colorButtonSize.x;
-	if (globalCursorPos.x > windowPos.x + contentRegionWidth - colorButtonSize.x) {
-		globalCursorPos.x = startingPosX;
-		globalCursorPos.y += colorButtonSize.y;
-	}
-	ImGui::SetCursorScreenPos(globalCursorPos);
-	// restore the draw list flags from above
-	drawList->Flags = backupFlags;
-}
-
 static void paletteWindow(TwinEEngine *engine) {
 	if (!engine->_debugState->_paletteWindow) {
 		return;
@@ -209,12 +201,51 @@ static void paletteWindow(TwinEEngine *engine) {
 	const ImVec2 windowSize(10.0f * ImGui::GetFrameHeight(), contentRegionHeight);
 	ImGui::SetNextWindowSize(windowSize, ImGuiCond_FirstUseEver);
 
-	if (ImGui::Begin("Palette", &engine->_debugState->_paletteWindow)) {
-		const Graphics::Palette &palette = engine->_frontVideoBuffer.getPalette();
-		const ImVec2 &pos = ImGui::GetCursorScreenPos();
-		for (uint palettePanelIdx = 0; palettePanelIdx < palette.size(); ++palettePanelIdx) {
-			addColor(pos.x, palettePanelIdx, palette);
+	if (ImGui::Begin("Palettes", &engine->_debugState->_paletteWindow)) {
+		if (engine->_screens->_flagPalettePcx) {
+			ImGui::Text("palettepcx is active");
+		} else {
+			ImGui::Text("ptrpal is active");
 		}
+
+		ImGui::SeparatorText("Front buffer palette");
+		const Graphics::Palette &frontBufferPalette = engine->_frontVideoBuffer.getPalette();
+		ImGui::PushID("frontBufferPalette");
+		ImGuiEx::Palette(frontBufferPalette);
+		ImGui::PopID();
+
+		ImGui::SeparatorText("PalettePCX");
+		ImGui::PushID("palettePcx");
+		ImGuiEx::Palette(engine->_screens->_palettePcx);
+		ImGui::PopID();
+
+		ImGui::SeparatorText("Palette");
+		ImGui::PushID("ptrPal");
+		ImGuiEx::Palette(engine->_screens->_ptrPal);
+		ImGui::PopID();
+	}
+	ImGui::End();
+}
+
+static float WaitTime(void *data, int i) {
+	TwinE::DebugState::FrameDataBuffer &buffer = *(TwinE::DebugState::FrameDataBuffer *)data;
+	return (float)buffer[i].waitMillis;
+}
+
+static float FrameTime(void *data, int i) {
+	TwinE::DebugState::FrameDataBuffer &buffer = *(TwinE::DebugState::FrameDataBuffer *)data;
+	return (float)buffer[i].frameTime;
+}
+
+static void frameTimeWindow(TwinEEngine *engine) {
+	if (!engine->_debugState->_frameTimeWindow) {
+		return;
+	}
+
+	if (ImGui::Begin("Frame time", &engine->_debugState->_frameTimeWindow)) {
+		ImGui::Checkbox("Record", &engine->_debugState->_frameDataRecording);
+		ImGui::PlotHistogram("Wait time", WaitTime, &engine->_debugState->_frameData, (int)engine->_debugState->_frameData.size(), 0, "Wait time in millis", -100.0f, 100.0f, ImVec2(0, 80));
+		ImGui::PlotHistogram("Frame time", FrameTime, &engine->_debugState->_frameData, (int)engine->_debugState->_frameData.size(), 0, "Frame time in millis", -100.0f, 100.0f, ImVec2(0, 80));
 	}
 	ImGui::End();
 }
@@ -402,7 +433,7 @@ static void sceneDetailsWindows(TwinEEngine *engine) {
 				ImGui::Text("location: %i", trajectory->locationIdx);
 				ImGui::Text("trajectory location: %i", trajectory->trajLocationIdx);
 				ImGui::Text("vehicle: %i", trajectory->vehicleIdx);
-				ImGui::Text("pos: %i %i %i", trajectory->pos.x, trajectory->pos.y, trajectory->pos.z);
+				ImGui::Text("pos: %i %i %i", trajectory->angle.x, trajectory->angle.y, trajectory->angle.z);
 				ImGui::Text("num anim frames: %i", trajectory->numAnimFrames);
 				ImGui::Unindent();
 			}
@@ -414,7 +445,7 @@ static void sceneDetailsWindows(TwinEEngine *engine) {
 		ImGui::SameLine();
 		ImGuiEx::Boolean(scene->_flagClimbing);
 
-		ImGuiEx::InputInt("Currently followed actor", &scene->_currentlyFollowedActor);
+		ImGuiEx::InputInt("Currently followed actor", &scene->_numObjFollow);
 
 		ImGui::Checkbox("Enable enhancements", &scene->_enableEnhancements);
 		ImGui::Checkbox("Render grid tiles", &scene->_enableGridTileRendering);
@@ -462,7 +493,7 @@ static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
 
 		ImGuiEx::InputIVec3("Pos", actor->_posObj);
 		ImGuiEx::InputAngle("Rotation", &actor->_beta);
-		ImGuiEx::InputInt("Speed", &actor->_speed);
+		ImGuiEx::InputInt("Rotation speed", &actor->_srot);
 		ImGuiEx::InputInt("Life", &actor->_lifePoint);
 		ImGuiEx::InputInt("Armor", &actor->_armor);
 		ImGuiEx::InputBoundingBox(actorIdx, "Bounding box", actor->_boundingBox);
@@ -514,6 +545,10 @@ static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
 				ImGui::TableNextColumn();
 				ImGui::Text("%i", actor->_objCol);
 				ImGui::TableNextColumn();
+				ImGui::Text("Carried by");
+				ImGui::TableNextColumn();
+				ImGui::Text("%i", actor->_carryBy);
+				ImGui::TableNextColumn();
 				ImGui::Text("Talk color");
 				ImGui::TableNextColumn();
 				ImGui::Text("%i", actor->_talkColor);
@@ -554,7 +589,7 @@ static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
 			}
 		}
 
-		if (ImGui::CollapsingHeader("Work Flags", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Work Flags")) {
 			static const char *Names[] = {
 				"WAIT_HIT_FRAME",
 				"OK_HIT",
@@ -588,7 +623,7 @@ static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
 				ImGui::EndTable();
 			}
 		}
-		if (ImGui::CollapsingHeader("Flags", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Flags")) {
 			static const char *Names[] = {
 				"CHECK_OBJ_COL",
 				"CHECK_BRICK_COL",
@@ -616,7 +651,7 @@ static void actorDetailsWindow(int &actorIdx, TwinEEngine *engine) {
 			if (ImGui::BeginTable("##staticflags", 6)) {
 				for (int i = 0; i < ARRAYSIZE(Names); ++i) {
 					ImGui::TableNextColumn();
-					ImGui::CheckboxFlags(Names[i], (uint32_t *)&actor->_staticFlags, (1 << i));
+					ImGui::CheckboxFlags(Names[i], (uint32_t *)&actor->_flags, (1 << i));
 				}
 				ImGui::EndTable();
 			}
@@ -758,6 +793,10 @@ static void gridMenu(TwinEEngine *engine) {
 
 static void debuggerMenu(TwinEEngine *engine) {
 	if (ImGui::BeginMenu("Debugger")) {
+		ImGui::Text("Timer: %i", (int)engine->timerRef);
+		if (ImGui::MenuItem("Logs")) {
+			engine->_debugState->_loggerWindow = true;
+		}
 		if (ImGui::MenuItem("Texts")) {
 			engine->_debugState->_menuTextWindow = true;
 		}
@@ -776,6 +815,9 @@ static void debuggerMenu(TwinEEngine *engine) {
 		if (ImGui::MenuItem("Actor details")) {
 			engine->_debugState->_actorDetailsWindow = true;
 		}
+		if (ImGui::MenuItem("Frame time")) {
+			engine->_debugState->_frameTimeWindow = true;
+		}
 
 		ImGui::SeparatorText("Actions");
 
@@ -785,18 +827,18 @@ static void debuggerMenu(TwinEEngine *engine) {
 			actor->_posObj.y += 1000;
 		}
 		if (ImGui::BeginMenu("Palettes")) {
+			LifeScriptContext fakeCtx(0, engine->_scene->_sceneHero);
 			if (ImGui::MenuItem("Show palette")) {
 				engine->_debugState->_paletteWindow = true;
 			}
 			if (ImGui::MenuItem("Dark palette")) {
-				engine->_screens->setDarkPal();
+				engine->_scriptLife->lSET_DARK_PAL(engine, fakeCtx);
 			}
 			if (ImGui::MenuItem("Normal palette")) {
-				engine->_screens->setNormalPal();
+				engine->_scriptLife->lSET_NORMAL_PAL(engine, fakeCtx);
 			}
 #if 0
 			// TODO: the fade functions are blocking and break the imgui begin/end cycle
-			LifeScriptContext fakeCtx(0, engine->_scene->_sceneHero);
 			if (ImGui::MenuItem("lFADE_PAL_RED")) {
 				engine->_scriptLife->lFADE_PAL_RED(engine, fakeCtx);
 			}
@@ -860,6 +902,8 @@ void onImGuiRender() {
 	gameFlagsWindow(engine);
 	paletteWindow(engine);
 	sceneFlagsWindow(engine);
+	frameTimeWindow(engine);
+	_logger->draw("Logger", &engine->_debugState->_loggerWindow);
 
 	if (engine->_debugState->_openPopup) {
 		ImGui::OpenPopup(engine->_debugState->_openPopup);
@@ -868,6 +912,8 @@ void onImGuiRender() {
 }
 
 void onImGuiCleanup() {
+	delete _logger;
+	_logger = nullptr;
 }
 
 } // namespace TwinE

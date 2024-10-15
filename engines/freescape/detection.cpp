@@ -775,7 +775,23 @@ static const ADGameDescription gameDescriptions[] = {
 			{"CMH.EXE", 0, "26337adc7861300e5395e992e42b6329", 59968},
 			AD_LISTEND
 		},
-		Common::EN_ANY,
+		Common::UNK_LANG, // Multi-language
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO4(GUIO_NOMIDI, GAMEOPTION_TRAVEL_ROCK, GUIO_RENDEREGA, GUIO_RENDERCGA)
+	},
+	{
+		"castlemaster",
+		"Virtual Worlds",
+		{
+			{"CASTLE.EXE", 0, "ee80b083151fb1d70e3045a02f0de7fd", 2688},
+			{"CMC.EXE", 0, "9015c244dc8a97fe55df7b235b31e00c", 57168},
+			{"CME.EXE", 0, "d563ae1475752e6a9a81b1350abebef3", 89248},
+			{"CMH.EXE", 0, "cc68c42d254b3aa0f208cd08731c6805", 59968},
+			{"CMT.EXE", 0, "5814e68a175f74ebce0773a73e7488c7", 78768},
+			AD_LISTEND
+		},
+		Common::UNK_LANG, // Multi-language
 		Common::kPlatformDOS,
 		ADGF_UNSTABLE,
 		GUIO4(GUIO_NOMIDI, GAMEOPTION_TRAVEL_ROCK, GUIO_RENDEREGA, GUIO_RENDERCGA)
@@ -791,7 +807,7 @@ static const ADGameDescription gameDescriptions[] = {
 			{"CMH.EXE", 0, "03b6f4c5b8931259e42e229de06ac5fc", 35645},
 			AD_LISTEND
 		},
-		Common::EN_ANY,
+		Common::UNK_LANG, // Multi-language
 		Common::kPlatformDOS,
 		ADGF_UNSTABLE,
 		GUIO4(GUIO_NOMIDI, GAMEOPTION_TRAVEL_ROCK, GUIO_RENDEREGA, GUIO_RENDERCGA)
@@ -807,7 +823,7 @@ static const ADGameDescription gameDescriptions[] = {
 			{"CMT.EXE", 0, "8c8621b5927d090bb7a4dca8d39cbfcf", 78816},
 			AD_LISTEND
 		},
-		Common::EN_ANY,
+		Common::UNK_LANG, // Multi-language
 		Common::kPlatformDOS,
 		ADGF_UNSUPPORTED,
 		GUIO4(GUIO_NOMIDI, GAMEOPTION_TRAVEL_ROCK, GUIO_RENDEREGA, GUIO_RENDERCGA)

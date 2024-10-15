@@ -163,7 +163,7 @@ private:
 	// objectRotation
 	int16 _itemAngle[NUM_INVENTORY_ITEMS];
 	/** Behaviour menu move pointer */
-	ActorMoveStruct _moveMenu;
+	RealValue _moveMenu;
 
 	/**
 	 * Draws main menu button
@@ -238,7 +238,7 @@ public:
 	EngineState run();
 
 	/** Used to run the in-game give-up menu */
-	int32 giveupMenu();
+	int32 quitMenu();
 
 	void inGameOptionsMenu();
 

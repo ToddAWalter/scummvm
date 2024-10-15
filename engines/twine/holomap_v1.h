@@ -23,9 +23,10 @@
 #define TWINE_HOLOMAPV1_H
 
 #include "twine/holomap.h"
+#include "twine/shared.h"
 
 #define NUM_HOLOMAPCOLORS 32
-#define HOLOMAP_PALETTE_INDEX 192
+#define HOLOMAP_PALETTE_INDEX (12*16)
 
 namespace TwinE {
 
@@ -68,10 +69,10 @@ private:
 	int32 _numHoloPos = 0;
 	Location _listHoloPos[MAX_HOLO_POS];
 
-	int32 _holomapPaletteIndex = 0;
-	uint8 _paletteHolomap[NUMOFCOLORS * 3]{0};
+	int32 _rotPalPos = 0;
+	uint8 _rotPal[NUMOFCOLORS * 3]{0};
 
-	void drawHolomapText(int32 centerx, int32 top, const char *title);
+	void drawTitle(int32 centerx, int32 top, const char *title);
 	int32 searchNextArrow(int32 num) const;
 	int32 searchPrevArrow(int32 num) const;
 
@@ -80,12 +81,12 @@ private:
 	/**
 	 * Renders a holomap path with single path points appearing slowly one after another
 	 */
-	void drawHoloObj(const IVec3 &angle, int32 x, int32 y);
+	void drawHoloObj(const IVec3 &angle, int32 x, int32 y, int16 size);
 	void computeCoorGlobe(Common::SeekableReadStream *holomapSurfaceStream);
 	void computeCoorMapping();
 	void computeGlobeProj();
 	void drawHoloMap(uint8 *holomapImage, uint32 holomapImageSize);
-	void renderHolomapVehicle(uint &frameNumber, ActorMoveStruct &move, AnimTimerDataStruct &animTimerData, BodyData &bodyData, AnimData &animData);
+	void renderHolomapVehicle(uint &frameNumber, RealValue &move, AnimTimerDataStruct &animTimerData, BodyData &bodyData, AnimData &animData);
 
 	/**
 	 * Controls the size/zoom of the holomap planet
@@ -113,7 +114,7 @@ public:
 	 */
 	void clrHoloPos(int32 locationIdx) override;
 
-	void drawHolomapTrajectory(int32 trajectoryIndex) override;
+	void holoTraj(int32 trajectoryIndex) override;
 
 	/** Load Holomap content */
 	void initHoloDatas() override;

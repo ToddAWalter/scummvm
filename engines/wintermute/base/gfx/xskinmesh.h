@@ -112,7 +112,7 @@ class DXSkinInfo {
 
 public:
 	~DXSkinInfo() { destroy(); }
-	bool create(uint32 vertexCount, uint32 boneCount);
+	bool create(uint32 vertexCount, uint32 fvf, uint32 boneCount);
 	void destroy();
 	uint32 getNumBones() { return _numBones; }
 	bool setBoneName(uint32 boneIdx, const char *name);
@@ -157,8 +157,9 @@ public:
 	bool generateAdjacency(uint32 *adjacency);
 };
 
-bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &adjacencyOut, DXBuffer &materialsOut, uint32 &numMaterialsOut, DXSkinInfo **skinInfoOut, DXMesh **meshOut);
+bool DXLoadSkinMesh(XFileData *fileData, DXBuffer &materialsOut, uint32 &numMaterialsOut, DXSkinInfo **skinInfoOut, DXMesh **meshOut);
 uint32 DXGetFVFVertexSize(uint32 fvf);
+bool DXComputeBoundingBox(DXVector3 *pfirstposition, uint32 numvertices, uint32 dwstride, DXVector3 *pmin, DXVector3 *pmax);
 
 } // namespace Wintermute
 

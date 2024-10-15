@@ -51,6 +51,12 @@
 #include "qdengine/minigames/shveik_shkatulka.h"
 #include "qdengine/minigames/shveik_portret.h"
 
+// 3mice2
+#include "qdengine/minigames/3mice2_sbor_karty.h"
+#include "qdengine/minigames/3mice2_kovrik.h"
+#include "qdengine/minigames/3mice2_sudoku.h"
+#include "qdengine/minigames/3mice2_states.h"
+#include "qdengine/minigames/3mice2_testo.h"
 
 namespace QDEngine {
 
@@ -326,17 +332,27 @@ bool qdMiniGame::load_interface() {
 		// puzzle.dll
 
 		// 3mice2
+		} else if (_dll_name == "DLL\\3Mice2_sbor_karty.dll") {
+			_interface = new qd3mice2SborKartyMiniGame();
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_kovrik.dll") {
+			_interface = new qd3mice2KovrikMiniGame();
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_sudoku.dll") {
+			_interface = new qd3mice2SudokuMiniGame();
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_states.dll") {
+			_interface = new qd3mice2StatesMiniGame();
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_testo.dll") {
+			_interface = new qd3mice2TestoMiniGame();
+			return true;
 		// 3Mice2_babochka.dll
-		// 3Mice2_kovrik.dll
 		// 3Mice2_plate.dll
 		// 3Mice2_raskr1.dll
 		// 3Mice2_raskr2.dll
 		// 3Mice2_raskr3.dll
 		// 3Mice2_raskr4.dll
-		// 3Mice2_sbor_karty.dll
-		// 3Mice2_states.dll
-		// 3Mice2_sudoku.dll
-		// 3Mice2_testo.dll
 
 		// dogncat
 		// scores.dll

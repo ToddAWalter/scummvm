@@ -26,7 +26,6 @@
  */
 
 #include "engines/wintermute/base/gfx/xmaterial.h"
-#include "engines/wintermute/base/gfx/xskinmesh_loader.h"
 #include "engines/wintermute/base/gfx/skin_mesh_helper.h"
 
 #include "graphics/opengl/system_headers.h"
@@ -48,14 +47,30 @@ XMeshOpenGL::~XMeshOpenGL() {
 
 //////////////////////////////////////////////////////////////////////////
 bool XMeshOpenGL::render(XModel *model) {
-	float *vertexData = _skinMesh->_mesh->_vertexData;
-	auto indexData = _skinMesh->_mesh->_indexData;
+	if (!_blendedMesh)
+		return false;
+
+	auto fvf = _blendedMesh->getFVF();
+	uint32 vertexSize = DXGetFVFVertexSize(fvf) / sizeof(float);
+	float *vertexData = (float *)_blendedMesh->getVertexBuffer().ptr();
 	if (vertexData == nullptr) {
 		return false;
 	}
+	uint32 offset = 0, normalOffset = 0, textureOffset = 0;
+	if (fvf & DXFVF_XYZ) {
+		offset += sizeof(DXVector3) / sizeof(float);
+	}
+	if (fvf & DXFVF_NORMAL) {
+		normalOffset = offset;
+		offset += sizeof(DXVector3) / sizeof(float);
+	}
+	if (fvf & DXFVF_TEX1) {
+		textureOffset = offset;
+	}
+	uint32 *indexData = (uint32 *)_blendedMesh->getIndexBuffer().ptr();
 
 	bool noAttrs = false;
-	auto attrsTable = _skinMesh->_mesh->_dxmesh->getAttributeTable();
+	auto attrsTable = _blendedMesh->getAttributeTable();
 	uint32 numAttrs = attrsTable->_size;
 	DXAttributeRange *attrs;
 	if (numAttrs == 0) {
@@ -69,8 +84,8 @@ bool XMeshOpenGL::render(XModel *model) {
 	if (noAttrs) {
 		attrs[0]._attribId = 0;
 		attrs[0]._vertexStart = attrs[0]._faceStart = 0;
-		attrs[0]._vertexCount = _skinMesh->_mesh->_dxmesh->getNumVertices();
-		attrs[0]._faceCount = _skinMesh->_mesh->_dxmesh->getNumFaces();
+		attrs[0]._vertexCount = _blendedMesh->getNumVertices();
+		attrs[0]._faceCount = _blendedMesh->getNumFaces();
 	}
 
 	for (uint32 i = 0; i < numAttrs; i++) {
@@ -96,12 +111,12 @@ bool XMeshOpenGL::render(XModel *model) {
 		if (textureEnable)
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glVertexPointer(3, GL_FLOAT, XSkinMeshLoader::kVertexComponentCount * sizeof(float), vertexData + XSkinMeshLoader::kPositionOffset);
-		glNormalPointer(GL_FLOAT, XSkinMeshLoader::kVertexComponentCount * sizeof(float), vertexData + XSkinMeshLoader::kNormalOffset);
+		glVertexPointer(3, GL_FLOAT, vertexSize * sizeof(float), vertexData);
+		glNormalPointer(GL_FLOAT, vertexSize * sizeof(float), vertexData + normalOffset);
 		if (textureEnable)
-			glTexCoordPointer(2, GL_FLOAT, XSkinMeshLoader::kVertexComponentCount * sizeof(float), vertexData + XSkinMeshLoader::kTextureCoordOffset);
+			glTexCoordPointer(2, GL_FLOAT, vertexSize * sizeof(float), vertexData + textureOffset);
 
-		glDrawElements(GL_TRIANGLES, attrsTable->_ptr[i]._faceCount * 3, GL_UNSIGNED_SHORT, indexData.data() + attrsTable->_ptr[i]._faceStart * 3);
+		glDrawElements(GL_TRIANGLES, attrsTable->_ptr[i]._faceCount * 3, GL_UNSIGNED_INT, indexData + attrsTable->_ptr[i]._faceStart * 3);
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);

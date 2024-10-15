@@ -28,15 +28,10 @@
 #ifndef WINTERMUTE_SKIN_MESH_HELPER_H
 #define WINTERMUTE_SKIN_MESH_HELPER_H
 
-#include "math/matrix4.h"
-#include "math/vector3d.h"
-#include "math/vector3d.h"
-
 #include "engines/wintermute/base/gfx/xmath.h"
 
 namespace Wintermute {
 
-class XSkinMeshLoader;
 class XMesh;
 class XMeshOpenGL;
 class XMeshOpenGLShader;
@@ -49,20 +44,19 @@ class SkinMeshHelper {
 	friend class XMeshOpenGLShader;
 
 public:
-	SkinMeshHelper(XSkinMeshLoader *meshLoader, DXMesh *mesh, DXSkinInfo *skinInfo);
+	SkinMeshHelper(DXMesh *mesh, DXSkinInfo *skinInfo);
 	virtual ~SkinMeshHelper();
 
 	uint getNumFaces();
 	uint getNumBones();
 	bool getOriginalMesh(DXMesh **mesh);
-	bool generateSkinnedMesh(uint32 options, float minWeight, uint32 *adjacencyOut, DXMesh **mesh);
+	bool generateSkinnedMesh(uint32 *adjacencyOut, DXMesh **mesh);
 	bool updateSkinnedMesh(const DXMatrix *boneTransforms, DXMesh *mesh);
-	const char *getBoneName(uint boneIndex);
-	DXMatrix *getBoneOffsetMatrix(uint boneIndex);
-	
+	const char *getBoneName(uint32 boneIndex);
+	DXMatrix *getBoneOffsetMatrix(uint32 boneIndex);
+
 private:
-	XSkinMeshLoader *_mesh;
-	DXMesh *_dxmesh;
+	DXMesh *_mesh;
 	DXSkinInfo *_skinInfo;
 };
 

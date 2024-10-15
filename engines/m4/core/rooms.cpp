@@ -396,10 +396,14 @@ void Sections::pal_game_task() {
 			if (_G(kernel).camera_pan_instant) {
 				delta = _cameraShiftAmount;
 				_cameraShiftAmount = 0;
-			} else if (_cameraShiftAmount > 0) {
-				delta = imath_min(_cameraShiftAmount, camera_pan_step);
 			} else {
-				delta = imath_max(_cameraShiftAmount, camera_pan_step);
+				if (_cameraShiftAmount > 0) {
+					delta = imath_min(_cameraShiftAmount, camera_pan_step);
+				} else {
+					delta = imath_max(_cameraShiftAmount, -camera_pan_step);
+				}
+
+				_cameraShiftAmount -= delta;
 			}
 
 			MoveScreenDelta(game_buff_ptr, delta, 0);
@@ -409,10 +413,14 @@ void Sections::pal_game_task() {
 			if (_G(kernel).camera_pan_instant) {
 				delta = _cameraShift_vert_Amount;
 				_cameraShift_vert_Amount = 0;
-			} else if (_cameraShift_vert_Amount > 0) {
-				delta = imath_min(_cameraShift_vert_Amount, camera_pan_step);
 			} else {
-				delta = imath_max(_cameraShift_vert_Amount, camera_pan_step);
+				if (_cameraShift_vert_Amount > 0) {
+					delta = imath_min(_cameraShift_vert_Amount, camera_pan_step);
+				} else {
+					delta = imath_max(_cameraShift_vert_Amount, camera_pan_step);
+				}
+
+				_cameraShift_vert_Amount -= delta;
 			}
 		}
 	}
@@ -455,6 +463,10 @@ void Sections::camera_shift_xy(int32 x, int32 y) {
 
 void Sections::adv_camera_pan_step(int32 step) {
 	camera_pan_step = step;
+}
+
+Room *Sections::getRoom(int room) const {
+	return (*_sections[(room / 100) - 1])[room];
 }
 
 /*------------------------------------------------------------------------*/

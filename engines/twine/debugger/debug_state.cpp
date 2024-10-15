@@ -20,6 +20,7 @@
  */
 
 #include "twine/debugger/debug_state.h"
+#include "common/util.h"
 #include "twine/menu/interface.h"
 #include "twine/menu/menu.h"
 #include "twine/renderer/redraw.h"
@@ -134,17 +135,17 @@ void DebugState::changeGridCamera() {
 	Redraw *redraw = _engine->_redraw;
 	Input *input = _engine->_input;
 	if (input->isActionActive(TwinEActionType::DebugGridCameraPressUp)) {
-		grid->_newCamera.z--;
+		grid->_startCube.z--;
 		redraw->_firstTime = true;
 	} else if (input->isActionActive(TwinEActionType::DebugGridCameraPressDown)) {
-		grid->_newCamera.z++;
+		grid->_startCube.z++;
 		redraw->_firstTime = true;
 	}
 	if (input->isActionActive(TwinEActionType::DebugGridCameraPressLeft)) {
-		grid->_newCamera.x--;
+		grid->_startCube.x--;
 		redraw->_firstTime = true;
 	} else if (input->isActionActive(TwinEActionType::DebugGridCameraPressRight)) {
-		grid->_newCamera.x++;
+		grid->_startCube.x++;
 		redraw->_firstTime = true;
 	}
 }
@@ -212,6 +213,13 @@ bool DebugState::displayZones() {
 		state = true;
 	}
 	return state;
+}
+
+void DebugState::addFrameData(uint32 frameTime, int32 waitMillis, uint32 maxDelay) {
+	if (!_frameDataRecording) {
+		return;
+	}
+	_frameData.emplace_back(frameTime, waitMillis, maxDelay);
 }
 
 void DebugState::renderDebugView() {

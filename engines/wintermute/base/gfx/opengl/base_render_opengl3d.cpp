@@ -42,20 +42,20 @@
 #include "engines/wintermute/base/gfx/opengl/shadow_volume_opengl.h"
 
 namespace Wintermute {
+
 BaseRenderer3D *makeOpenGL3DRenderer(BaseGame *inGame) {
 	return new BaseRenderOpenGL3D(inGame);
 }
 
-BaseRenderOpenGL3D::BaseRenderOpenGL3D(BaseGame *inGame) : BaseRenderer3D(inGame),
-                                                           _spriteBatchMode(false) {
+BaseRenderOpenGL3D::BaseRenderOpenGL3D(BaseGame *inGame) : BaseRenderer3D(inGame) {
 	setDefaultAmbientLightColor();
 
 	_lightPositions.resize(maximumLightsCount());
 	_lightDirections.resize(maximumLightsCount());
-	(void)_spriteBatchMode; // silence warning
 }
 
 BaseRenderOpenGL3D::~BaseRenderOpenGL3D() {
+	_camera = nullptr;
 }
 
 void BaseRenderOpenGL3D::setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode) {
@@ -84,7 +84,7 @@ void BaseRenderOpenGL3D::setAmbientLight() {
 	byte g = 0;
 	byte b = 0;
 
-	if (_overrideAmbientLightColor) {
+	if (_ambientLightOverride) {
 		a = RGBCOLGetA(_ambientLightColor);
 		r = RGBCOLGetR(_ambientLightColor);
 		g = RGBCOLGetG(_ambientLightColor);
@@ -176,8 +176,9 @@ void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const Math::Vector3d 
 	scale(1, 1) = 1.0f;
 	scale(2, 2) = object->_shadowSize * object->_scale3D;
 
-	float sinOfAngle = object->_angle.getSine();
-	float cosOfAngle = object->_angle.getCosine();
+	Math::Angle angle = object->_angle;
+	float sinOfAngle = angle.getSine();
+	float cosOfAngle = angle.getCosine();
 	Math::Matrix4 rotation;
 	rotation.setToIdentity();
 	rotation(0, 0) = cosOfAngle;
@@ -339,19 +340,19 @@ bool BaseRenderOpenGL3D::setProjection() {
 
 	float verticalViewAngle = _fov;
 	float aspectRatio = viewportWidth / viewportHeight;
-	float top = _nearPlane * tanf(verticalViewAngle * 0.5f);
+	float top = _nearClipPlane * tanf(verticalViewAngle * 0.5f);
 
 	float scaleMod = _height / viewportHeight;
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glFrustum(-top * aspectRatio, top * aspectRatio, -top, top, _nearPlane, _farPlane);
-	glGetFloatv(GL_PROJECTION_MATRIX, _projectionMatrix3d.getData());
+	glFrustum(-top * aspectRatio, top * aspectRatio, -top, top, _nearClipPlane, _farClipPlane);
+	glGetFloatv(GL_PROJECTION_MATRIX, _projectionMatrix.getData());
 
-	_projectionMatrix3d(0, 0) *= scaleMod;
-	_projectionMatrix3d(1, 1) *= scaleMod;
+	_projectionMatrix(0, 0) *= scaleMod;
+	_projectionMatrix(1, 1) *= scaleMod;
 
-	glLoadMatrixf(_projectionMatrix3d.getData());
+	glLoadMatrixf(_projectionMatrix.getData());
 
 	glMatrixMode(GL_MODELVIEW);
 	return true;
@@ -387,8 +388,8 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 	_width = width;
 	_height = height;
 
-	_nearPlane = 90.0f;
-	_farPlane = 10000.0f;
+	_nearClipPlane = 90.0f;
+	_farClipPlane = 10000.0f;
 
 	setViewport(0, 0, width, height);
 
@@ -451,8 +452,8 @@ bool BaseRenderOpenGL3D::forcedFlip() {
 }
 
 bool BaseRenderOpenGL3D::setup2D(bool force) {
-	if (_renderState != RSTATE_2D || force) {
-		_renderState = RSTATE_2D;
+	if (_state != RSTATE_2D || force) {
+		_state = RSTATE_2D;
 
 		// some states are still missing here
 
@@ -477,8 +478,8 @@ bool BaseRenderOpenGL3D::setup2D(bool force) {
 }
 
 bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
-	if (_renderState != RSTATE_3D || force) {
-		_renderState = RSTATE_3D;
+	if (_state != RSTATE_3D || force) {
+		_state = RSTATE_3D;
 
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
@@ -491,21 +492,23 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 
 		glEnable(GL_NORMALIZE);
 
-		if (camera) {
-			_fov = camera->_fov;
+		if (camera)
+			_camera = camera;
+		if (_camera) {
+			_fov = _camera->_fov;
 
-			if (camera->_nearClipPlane >= 0.0f) {
-				_nearPlane = camera->_nearClipPlane;
+			if (_camera->_nearClipPlane >= 0.0f) {
+				_nearClipPlane = _camera->_nearClipPlane;
 			}
 
-			if (camera->_farClipPlane >= 0.0f) {
-				_farPlane = camera->_farClipPlane;
+			if (_camera->_farClipPlane >= 0.0f) {
+				_farClipPlane = _camera->_farClipPlane;
 			}
 
 			Math::Matrix4 viewMatrix;
-			camera->getViewMatrix(&viewMatrix);
+			_camera->getViewMatrix(&viewMatrix);
 			glLoadMatrixf(viewMatrix.getData());
-			glTranslatef(-camera->_position.x(), -camera->_position.y(), -camera->_position.z());
+			glTranslatef(-_camera->_position.x(), -_camera->_position.y(), -_camera->_position.z());
 			glGetFloatv(GL_MODELVIEW_MATRIX, _lastViewMatrix.getData());
 		} else {
 			glLoadMatrixf(_lastViewMatrix.getData());
@@ -545,8 +548,8 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 }
 
 bool BaseRenderOpenGL3D::setupLines() {
-	if (_renderState != RSTATE_LINES) {
-		_renderState = RSTATE_LINES;
+	if (_state != RSTATE_LINES) {
+		_state = RSTATE_LINES;
 
 		glDisable(GL_LIGHTING);
 		glDisable(GL_DEPTH_TEST);

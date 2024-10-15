@@ -23,8 +23,10 @@
 #include "common/algorithm.h"
 #include "common/debug.h"
 #include "common/memstream.h"
+#include "common/scummsys.h"
 #include "common/stream.h"
 #include "common/types.h"
+#include "graphics/palette.h"
 #include "twine/audio/sound.h"
 #include "twine/menu/interface.h"
 #include "twine/parser/anim.h"
@@ -126,19 +128,20 @@ void HolomapV1::initHoloDatas() {
 	constexpr TwineResource resource(Resources::HQR_RESS_FILE, RESSHQR_HOLOPAL);
 	_engine->_screens->loadCustomPalette(resource);
 
-	int32 j = HOLOMAP_PALETTE_INDEX * 3;
-	const int32 n = NUM_HOLOMAPCOLORS * 3;
-	for (int32 i = 0; i < n; i += 3, j += 3) {
-		_paletteHolomap[i + 0] = _engine->_screens->_palette[j + 0];
-		_paletteHolomap[i + 1] = _engine->_screens->_palette[j + 1];
-		_paletteHolomap[i + 2] = _engine->_screens->_palette[j + 2];
+	for (int32 n = 0; n < NUM_HOLOMAPCOLORS; n++) {
+		byte r, g, b;
+		_engine->_screens->_palettePcx.get(HOLOMAP_PALETTE_INDEX + n, r, g, b);
+		_rotPal[n * 3 + 0] = r;
+		_rotPal[n * 3 + 1] = g;
+		_rotPal[n * 3 + 2] = b;
 	}
 
-	j = HOLOMAP_PALETTE_INDEX * 3;
-	for (int32 i = n; i < 2 * n - 3; i += 3, j += 3) {
-		_paletteHolomap[i + 0] = _engine->_screens->_palette[j + 0];
-		_paletteHolomap[i + 1] = _engine->_screens->_palette[j + 1];
-		_paletteHolomap[i + 2] = _engine->_screens->_palette[j + 2];
+	for (int32 n = 0; n < NUM_HOLOMAPCOLORS - 1; n++) {
+		byte r, g, b;
+		_engine->_screens->_palettePcx.get(HOLOMAP_PALETTE_INDEX + n, r, g, b);
+		_rotPal[(NUM_HOLOMAPCOLORS + n) * 3 + 0] = r;
+		_rotPal[(NUM_HOLOMAPCOLORS + n) * 3 + 1] = g;
+		_rotPal[(NUM_HOLOMAPCOLORS + n) * 3 + 2] = b;
 	}
 
 	computeCoorMapping();
@@ -149,7 +152,7 @@ void HolomapV1::initHoloDatas() {
 	}
 	computeCoorGlobe(surfaceStream);
 	delete surfaceStream;
-	_holomapPaletteIndex = 0;
+	_rotPalPos = 0;
 }
 
 void HolomapV1::computeCoorGlobe(Common::SeekableReadStream *holomapSurfaceStream) {
@@ -185,7 +188,7 @@ void HolomapV1::computeCoorMapping() {
 	int projectedIndex = 0;
 	for (int32 alpha = -LBAAngles::ANGLE_90; alpha <= LBAAngles::ANGLE_90; alpha += LBAAngles::ANGLE_11_25) {
 		for (int32 beta = 0; beta < LBAAngles::ANGLE_360; beta += LBAAngles::ANGLE_11_25) {
-			_projectedSurfacePositions[projectedIndex].x2 = _engine->_screens->lerp(0, 255 * LBAAngles::ANGLE_90 + 255, LBAAngles::ANGLE_360 - 1, beta);
+			_projectedSurfacePositions[projectedIndex].x2 = ruleThree32(0, 255 * LBAAngles::ANGLE_90 + 255, LBAAngles::ANGLE_360 - 1, beta);
 			if (alpha == LBAAngles::ANGLE_90) {
 				_projectedSurfacePositions[projectedIndex].y2 = 255 * LBAAngles::ANGLE_90 + 255;
 			} else {
@@ -281,17 +284,22 @@ void HolomapV1::drawHoloMap(uint8 *holomapImage, uint32 holomapImageSize) {
 	}
 }
 
-void HolomapV1::drawHolomapText(int32 centerx, int32 top, const char *title) {
+void HolomapV1::drawTitle(int32 x, int32 y, const char *title) {
 	const int32 size = _engine->_text->sizeFont(title);
-	const int32 x = centerx - size / 2;
-	const int32 y = top;
+	const int32 textx = x - size / 2;
+	const int32 texty = y - 18;
 	_engine->_text->setFontColor(COLOR_WHITE);
-	_engine->_text->drawText(x, y, title);
+	_engine->_text->drawText(textx, texty, title);
+	int32 x0 = x - 630 / 2;
+	int32 x1 = x + 630 / 2;
+	int32 y0 = y - 40 / 2;
+	int32 y1 = y + 40 / 2;
+	_engine->copyBlockPhys(x0, y0, x1, y1);
 }
 
-void HolomapV1::drawHoloObj(const IVec3 &angle, int32 alpha, int32 beta) {
+void HolomapV1::drawHoloObj(const IVec3 &angle, int32 alpha, int32 beta, int16 size) {
 	_engine->_renderer->setAngleCamera(alpha, beta, 0);
-	const IVec3 &m = _engine->_renderer->worldRotatePoint(IVec3(0, 0, 1000));
+	const IVec3 &m = _engine->_renderer->worldRotatePoint(IVec3(0, 0, 1000 + size));
 	_engine->_renderer->setFollowCamera(0, 0, 0, angle.x, angle.y, angle.z, distance(zDistanceTrajectory));
 	_engine->_interface->unsetClip();
 	Common::Rect dirtyRect;
@@ -299,52 +307,57 @@ void HolomapV1::drawHoloObj(const IVec3 &angle, int32 alpha, int32 beta) {
 	_engine->copyBlockPhys(dirtyRect);
 }
 
-void HolomapV1::renderHolomapVehicle(uint &frameNumber, ActorMoveStruct &move, AnimTimerDataStruct &animTimerData, BodyData &bodyData, AnimData &animData) {
-	const int16 newAngle = move.getRealAngle(_engine->timerRef);
-	if (move.timeValue == 0) {
-		_engine->_movements->initRealAngle(LBAAngles::ANGLE_0, -LBAAngles::ANGLE_90, 500, &move);
+void HolomapV1::renderHolomapVehicle(uint &frameNumber, RealValue &realRot, AnimTimerDataStruct &animTimerData, BodyData &bodyData, AnimData &animData) {
+	const int16 vbeta = realRot.getRealAngle(_engine->timerRef);
+	if (realRot.timeValue == 0) {
+		_engine->_movements->initRealAngle(LBAAngles::ANGLE_0, -LBAAngles::ANGLE_90, 500, &realRot);
 	}
 
-	if (_engine->_animations->doSetInterAnimObjet(frameNumber, animData, bodyData, &animTimerData)) {
+	if (_engine->_animations->setInterAnimObjet(frameNumber, animData, bodyData, &animTimerData)) {
 		frameNumber++;
-		if (frameNumber >= animData.getNumKeyframes()) {
+		if (frameNumber >= animData.getNbFramesAnim()) {
 			frameNumber = animData.getLoopFrame();
 		}
 	}
-	const Common::Rect rect(0, _engine->height() - 280, 200, _engine->height() - 1);
-	_engine->_renderer->setProjection(rect.width() / 2, _engine->height() - 80, 128, 900, 900);
+	_engine->_renderer->setProjection(100, 100 + 300, 128, 900, 900);
 	_engine->_renderer->setFollowCamera(0, 0, 0, 60, 128, 0, distance(30000));
 	_engine->_renderer->setLightVector(-60, 128, 0);
 	// background of the vehicle
+	const Common::Rect rect(0, _engine->height() - 180, 200, _engine->height());
 	_engine->_interface->box(rect, COLOR_BLACK);
 	Common::Rect dummy;
-	_engine->_renderer->affObjetIso(0, 0, 0, LBAAngles::ANGLE_0, newAngle, LBAAngles::ANGLE_0, bodyData, dummy);
+	_engine->_renderer->affObjetIso(0, 0, 0, LBAAngles::ANGLE_0, vbeta, LBAAngles::ANGLE_0, bodyData, dummy);
 	_engine->copyBlockPhys(rect);
 }
 
-void HolomapV1::drawHolomapTrajectory(int32 trajectoryIndex) {
+void HolomapV1::holoTraj(int32 trajectoryIndex) {
 	if (_engine->isDemo()) {
 		return;
 	}
 	debug("Draw trajectory index %i", trajectoryIndex);
 
-	const Trajectory *data = _engine->_resources->getTrajectory(trajectoryIndex);
+	const Trajectory *data = _engine->_resources->giveTrajPtr(trajectoryIndex);
 	if (data == nullptr) {
 		warning("Failed to load trajectory data for index %i", trajectoryIndex);
 		return;
 	}
 
+	_engine->saveTimer(false);
+
+	if (_engine->_screens->_flagPalettePcx)
+		_engine->_screens->fadeToBlack(_engine->_screens->_palettePcx);
+	else
+		_engine->_screens->fadeToBlack(_engine->_screens->_ptrPal);
+
 	_engine->_interface->unsetClip();
 	_engine->_screens->clearScreen();
 
 	initHoloDatas();
-	_engine->setPalette(_engine->_screens->_palettePcx);
 
-	ScopedEngineFreeze timeFreeze(_engine);
 	const int32 cameraPosX = _engine->width() / 2 + 80;
 	const int32 cameraPosY = _engine->height() / 2;
 	_engine->_renderer->setProjection(cameraPosX, cameraPosY, 128, 1024, 1024);
-	_engine->_renderer->setFollowCamera(0, 0, 0, data->pos.x, data->pos.y, data->pos.z, distance(zDistanceTrajectory));
+	_engine->_renderer->setFollowCamera(0, 0, 0, data->angle.x, data->angle.y, data->angle.z, distance(zDistanceTrajectory));
 
 	constexpr TwineResource holomapImageRes(Resources::HQR_RESS_FILE, RESSHQR_HOLOIMG);
 	uint8 *holomapImagePtr = nullptr;
@@ -355,9 +368,9 @@ void HolomapV1::drawHolomapTrajectory(int32 trajectoryIndex) {
 	drawHoloMap(holomapImagePtr, holomapImageSize);
 
 	const Location &loc = _listHoloPos[data->locationIdx];
-	drawHoloObj(data->pos, loc.alpha, loc.beta);
+	drawHoloObj(data->angle, loc.alpha, loc.beta, 0);
 
-	ActorMoveStruct move;
+	RealValue move;
 	AnimTimerDataStruct animTimerData;
 	AnimData animData;
 	animData.loadFromHQR(Resources::HQR_RESS_FILE, data->getAnimation(), _engine->isLBA1());
@@ -367,8 +380,7 @@ void HolomapV1::drawHolomapTrajectory(int32 trajectoryIndex) {
 	int32 frameTime = _engine->timerRef;
 	int16 trajAnimFrameIdx = 0;
 
-	int32 waterPaletteChangeTimer = 0;
-	bool fadeInPalette = true;
+	bool flagpal = true;
 	_engine->_input->enableKeyMap(holomapKeyMapId);
 	for (;;) {
 		FrameMarker frame(_engine);
@@ -377,57 +389,58 @@ void HolomapV1::drawHolomapTrajectory(int32 trajectoryIndex) {
 			break;
 		}
 
-		if (!fadeInPalette && waterPaletteChangeTimer < _engine->timerRef) {
+		if (!flagpal) {
 			// animate the water surface
-			_engine->setPalette(HOLOMAP_PALETTE_INDEX, NUM_HOLOMAPCOLORS, &_paletteHolomap[3 * _holomapPaletteIndex++]);
-			if (_holomapPaletteIndex == NUM_HOLOMAPCOLORS) {
-				_holomapPaletteIndex = 0;
+			_engine->setPalette(HOLOMAP_PALETTE_INDEX, NUM_HOLOMAPCOLORS, &_rotPal[3 * _rotPalPos]);
+			_rotPalPos++;
+			if (_rotPalPos == NUM_HOLOMAPCOLORS) {
+				_rotPalPos = 0;
 			}
-			waterPaletteChangeTimer = _engine->timerRef + 3;
 		}
 
 		renderHolomapVehicle(frameNumber, move, animTimerData, bodyData, animData);
 
 		// now render the holomap path
 		_engine->_renderer->setProjection(cameraPosX, cameraPosY, 128, 1024, 1024);
-		_engine->_renderer->setFollowCamera(0, 0, 0, data->pos.x, data->pos.y, data->pos.z, distance(zDistanceTrajectory));
-		_engine->_renderer->setLightVector(data->pos.x, data->pos.y, 0);
+		_engine->_renderer->setFollowCamera(0, 0, 0, data->angle.x, data->angle.y, data->angle.z, distance(zDistanceTrajectory));
+		_engine->_renderer->setLightVector(data->angle.x, data->angle.y, 0);
 
 		// animate the path from point 1 to point 2 by rendering a point model on each position
 		// on the globe every 40 timeunits
 		if (frameTime + 40 <= _engine->timerRef) {
 			frameTime = _engine->timerRef;
-			int32 modelX;
-			int32 modelY;
+			int32 alpha;
+			int32 beta;
 			if (trajAnimFrameIdx < data->numAnimFrames) {
-				modelX = data->positions[trajAnimFrameIdx].x;
-				modelY = data->positions[trajAnimFrameIdx].y;
+				alpha = data->positions[trajAnimFrameIdx].x;
+				beta = data->positions[trajAnimFrameIdx].y;
 			} else {
 				if (data->numAnimFrames < trajAnimFrameIdx) {
 					break;
 				}
-				modelX = loc.alpha;
-				modelY = loc.beta;
+				alpha = loc.alpha;
+				beta = loc.beta;
 			}
-			drawHoloObj(data->pos, modelX, modelY);
+			drawHoloObj(data->angle, alpha, beta, 0);
 			++trajAnimFrameIdx;
 		}
 
-		if (fadeInPalette) {
-			fadeInPalette = false;
-			//_engine->_screens->fadeToPal(_engine->_screens->_paletteRGBACustom);
+		if (flagpal) {
+			flagpal = false;
+			_engine->_screens->fadeToPal(_engine->_screens->_palettePcx);
 		}
 		++_engine->timerRef;
-		debugC(3, kDebugLevels::kDebugTime, "Holomap time: %i", _engine->timerRef);
+		debugC(3, kDebugLevels::kDebugTimers, "Holomap time: %i", _engine->timerRef);
 	}
 
 	_engine->_screens->clearScreen();
-	_engine->setPalette(_engine->_screens->_ptrPal);
+	_engine->_screens->fadeToBlack(_engine->_screens->_palettePcx);
 	_engine->_gameState->init3DGame();
 	_engine->_interface->restoreClip();
 
 	_engine->_text->initSceneTextBank();
 	_engine->_input->enableKeyMap(mainKeyMapId);
+	_engine->restoreTimer();
 
 	free(holomapImagePtr);
 }
@@ -524,16 +537,18 @@ void HolomapV1::drawListPos(int calpha, int cbeta, int cgamma, bool pos) {
 void HolomapV1::holoMap() {
 	const int32 alphaLightTmp = _engine->_scene->_alphaLight;
 	const int32 betaLightTmp = _engine->_scene->_betaLight;
+	const Graphics::Palette savepalette = _engine->_screens->_palettePcx;
 
-	_engine->_gameState->init3DGame();
+	_engine->saveTimer(false);
 
 	_engine->_screens->fadeToBlack(_engine->_screens->_ptrPal);
 	_engine->_sound->stopSamples();
 	_engine->_interface->unsetClip();
 	_engine->_screens->clearScreen();
-	_engine->_screens->fadeToBlack(_engine->_screens->_ptrPal);
 
 	initHoloDatas();
+
+	drawTitle(_engine->width() / 2, 25, "HoloMap");
 
 	const int32 cameraPosX = _engine->width() / 2;
 	const int32 cameraPosY = scale(190);
@@ -550,8 +565,6 @@ void HolomapV1::holoMap() {
 	}
 
 	int32 current = _engine->_scene->_numCube;
-	_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
-
 	int32 otimer = _engine->timerRef;
 	int32 dalpha = ClampAngle(_listHoloPos[current].alpha);
 	int32 dbeta = ClampAngle(_listHoloPos[current].beta);
@@ -562,7 +575,7 @@ void HolomapV1::holoMap() {
 	int32 obeta = dbeta;
 	bool automove = false;
 	bool flagredraw = true;
-	int waterPaletteChangeTimer = 0;
+	bool dialstat = true;
 	bool flagpal = true;
 	_engine->_input->enableKeyMap(holomapKeyMapId);
 	for (;;) {
@@ -577,7 +590,7 @@ void HolomapV1::holoMap() {
 			if (current == -1) {
 				current = _engine->_scene->_numCube;
 			}
-			_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
+			dialstat = true;
 			oalpha = calpha;
 			obeta = cbeta;
 			otimer = _engine->timerRef;
@@ -590,7 +603,7 @@ void HolomapV1::holoMap() {
 			if (current == -1) {
 				current = _engine->_scene->_numCube;
 			}
-			_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
+			dialstat = true;
 			oalpha = calpha;
 			obeta = cbeta;
 			otimer = _engine->timerRef;
@@ -623,24 +636,24 @@ void HolomapV1::holoMap() {
 
 		if (automove) {
 			const int32 dt = _engine->timerRef - otimer;
-			calpha = _engine->_collision->boundRuleThree(oalpha, dalpha, 75, dt);
-			cbeta = _engine->_collision->boundRuleThree(obeta, dbeta, 75, dt);
+			calpha = boundRuleThree(oalpha, dalpha, 75, dt);
+			cbeta = boundRuleThree(obeta, dbeta, 75, dt);
 			flagredraw = true;
 		}
 
-		if (!flagpal && waterPaletteChangeTimer < _engine->timerRef) {
+		if (!flagpal) {
 			// animate the water surface
-			_engine->setPalette(HOLOMAP_PALETTE_INDEX, NUM_HOLOMAPCOLORS, &_paletteHolomap[3 * _holomapPaletteIndex++]);
-			if (_holomapPaletteIndex == NUM_HOLOMAPCOLORS) {
-				_holomapPaletteIndex = 0;
+			_engine->setPalette(HOLOMAP_PALETTE_INDEX, NUM_HOLOMAPCOLORS, &_rotPal[3 * _rotPalPos]);
+			_rotPalPos++;
+			if (_rotPalPos == NUM_HOLOMAPCOLORS) {
+				_rotPalPos = 0;
 			}
-			waterPaletteChangeTimer = _engine->timerRef + 3;
 			flagredraw = true;
 		}
 
 		if (flagredraw) {
 			flagredraw = false;
-			const Common::Rect &rect = _engine->centerOnScreenX(scale(300), 0, scale(330));
+			const Common::Rect &rect = _engine->centerOnScreenX(scale(300), 50, scale(280));
 			// clip reduces the bad effect of https://bugs.scummvm.org/ticket/12074
 			// but it's not part of the original code
 			_engine->_interface->memoClip();
@@ -654,10 +667,9 @@ void HolomapV1::holoMap() {
 			drawHoloMap(holomapImagePtr, holomapImageSize);
 			drawListPos(calpha, cbeta, cgamma, true);
 			_engine->_interface->restoreClip();
-			drawHolomapText(_engine->width() / 2, 25, "HoloMap");
 			if (automove) {
 				// draw cursor
-				const Common::Rect &targetRect = _engine->centerOnScreen(SIZE_CURSOR * 2, SIZE_CURSOR * 2);
+				const Common::Rect &targetRect = _engine->centerOnScreenX(SIZE_CURSOR * 2, 170, SIZE_CURSOR * 2);
 				_engine->_menu->drawRectBorders(targetRect.left, cameraPosY - 20, targetRect.right, cameraPosY + 20, 15, 15);
 			}
 		}
@@ -666,8 +678,13 @@ void HolomapV1::holoMap() {
 			automove = false;
 		}
 
+		if (dialstat) {
+			_engine->_text->drawHolomapLocation(_listHoloPos[current].mess);
+			dialstat = false;
+		}
+
 		++_engine->timerRef;
-		debugC(3, kDebugLevels::kDebugTime, "Holomap time: %i", _engine->timerRef);
+		debugC(3, kDebugLevels::kDebugTimers, "Holomap time: %i", _engine->timerRef);
 
 		if (flagpal) {
 			flagpal = false;
@@ -675,17 +692,18 @@ void HolomapV1::holoMap() {
 		}
 	}
 
-	_engine->_screens->clearScreen();
 	_engine->_text->_flagMessageShade = true;
-	_engine->setPalette(_engine->_screens->_ptrPal);
+	_engine->_screens->fadeToBlack(_engine->_screens->_palettePcx);
 	_engine->_scene->_alphaLight = alphaLightTmp;
 	_engine->_scene->_betaLight = betaLightTmp;
 
 	_engine->_gameState->init3DGame();
-	_engine->_interface->restoreClip();
 
 	_engine->_input->enableKeyMap(mainKeyMapId);
 	_engine->_text->initSceneTextBank();
+	_engine->restoreTimer();
+
+	_engine->_screens->_palettePcx = savepalette;
 
 	free(holomapImagePtr);
 }

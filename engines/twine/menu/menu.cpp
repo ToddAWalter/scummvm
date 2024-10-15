@@ -298,22 +298,22 @@ void Menu::drawButtonGfx(const MenuSettings *menuSettings, const Common::Rect &r
 			switch (buttonId) {
 			case MenuButtonTypes::kMusicVolume: {
 				const int volume = _engine->_system->getMixer()->getVolumeForSoundType(Audio::Mixer::kMusicSoundType);
-				newWidth = _engine->_screens->lerp(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, volume);
+				newWidth = ruleThree32(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, volume);
 				break;
 			}
 			case MenuButtonTypes::kSoundVolume: {
 				const int volume = _engine->_system->getMixer()->getVolumeForSoundType(Audio::Mixer::kSFXSoundType);
-				newWidth = _engine->_screens->lerp(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, volume);
+				newWidth = ruleThree32(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, volume);
 				break;
 			}
 			case MenuButtonTypes::kCDVolume: {
 				const AudioCDManager::Status status = _engine->_system->getAudioCDManager()->getStatus();
-				newWidth = _engine->_screens->lerp(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, status.volume);
+				newWidth = ruleThree32(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, status.volume);
 				break;
 			}
 			case MenuButtonTypes::kSpeechVolume: {
 				const int volume = _engine->_system->getMixer()->getVolumeForSoundType(Audio::Mixer::kSpeechSoundType);
-				newWidth = _engine->_screens->lerp(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, volume);
+				newWidth = ruleThree32(rect.left, rect.right, Audio::Mixer::kMaxMixerVolume, volume);
 				break;
 			}
 			}
@@ -964,7 +964,7 @@ EngineState Menu::run() {
 	return EngineState::Menu;
 }
 
-int32 Menu::giveupMenu() {
+int32 Menu::quitMenu() {
 	_engine->saveFrontBuffer();
 	_engine->_sound->pauseSamples();
 
@@ -1006,7 +1006,7 @@ int32 Menu::giveupMenu() {
 void Menu::drawHealthBar(int32 left, int32 right, int32 top, int32 barLeftPadding, int32 barHeight) {
 	_engine->_grid->drawSprite(left, top + 3, _engine->_resources->_spriteData[SPRITEHQR_LIFEPOINTS]);
 	const int32 barLeft = left + barLeftPadding;
-	const int32 healthBarRight = _engine->_screens->lerp(barLeft, right, 50, _engine->_scene->_sceneHero->_lifePoint);
+	const int32 healthBarRight = ruleThree32(barLeft, right, 50, _engine->_scene->_sceneHero->_lifePoint);
 	const int32 barBottom = top + barHeight;
 	_engine->_interface->box(Common::Rect(barLeft, top, healthBarRight, barBottom), COLOR_91);
 	_engine->_interface->box(Common::Rect(healthBarRight, top, left + 325, barBottom), COLOR_BLACK);
@@ -1016,13 +1016,13 @@ void Menu::drawHealthBar(int32 left, int32 right, int32 top, int32 barLeftPaddin
 void Menu::drawCloverLeafs(int32 newBoxLeft, int32 boxRight, int32 top) {
 	// Clover leaf boxes
 	for (int32 i = 0; i < _engine->_gameState->_inventoryNumLeafsBox; i++) {
-		const int32 leftSpritePos = _engine->_screens->lerp(newBoxLeft, boxRight, 10, i);
+		const int32 leftSpritePos = ruleThree32(newBoxLeft, boxRight, 10, i);
 		_engine->_grid->drawSprite(leftSpritePos, top + 58, _engine->_resources->_spriteData[SPRITEHQR_CLOVERLEAFBOX]);
 	}
 
 	// Clover leafs
 	for (int32 i = 0; i < _engine->_gameState->_inventoryNumLeafs; i++) {
-		const int32 leftSpritePos = _engine->_screens->lerp(newBoxLeft, boxRight, 10, i);
+		const int32 leftSpritePos = ruleThree32(newBoxLeft, boxRight, 10, i);
 		_engine->_grid->drawSprite(leftSpritePos + 2, top + 60, _engine->_resources->_spriteData[SPRITEHQR_CLOVERLEAF]);
 	}
 }
@@ -1042,16 +1042,16 @@ void Menu::drawMagicPointsBar(int32 left, int32 right, int32 top, int32 barLeftP
 	const int32 barBottom = top + barHeight;
 	// max magic level is 4
 	const int32 maxMagicPoints = 4 * 20;
-	const int32 barRight = _engine->_screens->lerp(barLeft, right, maxMagicPoints, _engine->_gameState->_magicPoint);
+	const int32 barRight = ruleThree32(barLeft, right, maxMagicPoints, _engine->_gameState->_magicPoint);
 	const Common::Rect pointsRect(barLeft, top, barRight, barBottom);
 	_engine->_interface->box(pointsRect, COLOR_75);
 
 	for (int32 l = 0; l < _engine->_gameState->_magicLevelIdx; l++) {
-		const int32 x1 = _engine->_screens->lerp(barLeft, right, 40, _engine->_gameState->_magicLevelIdx * 10);
+		const int32 x1 = ruleThree32(barLeft, right, 40, _engine->_gameState->_magicLevelIdx * 10);
 		_engine->_interface->drawLine(x1, top + barHeight, x1, top + 35 + 15 - 1, 0);
 	}
 
-	const int32 rectRight = _engine->_screens->lerp(barLeft, right, 40, _engine->_gameState->_magicLevelIdx * 10);
+	const int32 rectRight = ruleThree32(barLeft, right, 40, _engine->_gameState->_magicLevelIdx * 10);
 	drawRectBorders(barLeft, top, rectRight, barBottom);
 }
 
@@ -1125,9 +1125,9 @@ void Menu::drawBehaviour(int32 left, int32 top, HeroBehaviourType behaviour, int
 
 	uint currentAnimState = _behaviourAnimState[(byte)behaviour];
 
-	if (_engine->_animations->doSetInterAnimObjet(currentAnimState, currentAnimData, *_behaviourEntity, &_behaviourAnimData[(byte)behaviour])) {
+	if (_engine->_animations->setInterAnimObjet(currentAnimState, currentAnimData, *_behaviourEntity, &_behaviourAnimData[(byte)behaviour])) {
 		currentAnimState++; // keyframe
-		if (currentAnimState >= currentAnimData.getNumKeyframes()) {
+		if (currentAnimState >= currentAnimData.getNbFramesAnim()) {
 			currentAnimState = currentAnimData.getLoopFrame();
 		}
 		_behaviourAnimState[(byte)behaviour] = currentAnimState;
@@ -1204,7 +1204,6 @@ void Menu::drawBehaviourMenu(int32 left, int32 top, int32 angle) {
 }
 
 void Menu::processBehaviourMenu(bool behaviourMenu) {
-	_engine->extInitSvga();
 	if (_engine->_actor->_heroBehaviour == HeroBehaviourType::kProtoPack) {
 		_engine->_sound->stopSamples();
 		_engine->_actor->setBehaviour(HeroBehaviourType::kNormal);
@@ -1289,7 +1288,7 @@ void Menu::processBehaviourMenu(bool behaviourMenu) {
 
 			// increase the timer to play the animations
 			_engine->timerRef++;
-			debugC(3, kDebugLevels::kDebugTime, "Behaviour time: %i", _engine->timerRef);
+			debugC(3, kDebugLevels::kDebugTimers, "Behaviour time: %i", _engine->timerRef);
 		}
 
 		_engine->timerRef = tmpTime;

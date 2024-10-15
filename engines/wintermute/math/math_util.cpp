@@ -53,75 +53,163 @@ float MathUtil::roundUp(float val) {
 }
 
 #ifdef ENABLE_WME3D
-bool lineIntersectsTriangle(const Math::Vector3d &origin, const Math::Vector3d &direction,
-							const Math::Vector3d &v0, const Math::Vector3d &v1, const Math::Vector3d &v2,
-							float &t, float &u, float &v) {
-	const float epsilon = 0.0001f;
 
-	Math::Vector3d edge1 = v1 - v0;
-	Math::Vector3d edge2 = v2 - v0;
+bool intersectTriangle(const Math::Vector3d &origin, const Math::Vector3d &direction,
+                       const Math::Vector3d &vp0, const Math::Vector3d &vp1, const Math::Vector3d &vp2,
+					   float &t, float &u, float &v) {
+	DXVector3 v0 = DXVector3(vp0.x(), vp0.y(), vp0.z());
+	DXVector3 v1 = DXVector3(vp1.x(), vp1.y(), vp1.z());
+	DXVector3 v2 = DXVector3(vp2.x(), vp2.y(), vp2.z());
+	DXVector3 orig = DXVector3(origin.x(), origin.y(), origin.z());
+	DXVector3 dir = DXVector3(direction.x(), direction.y(), direction.z());
 
-	Math::Vector3d pVector = Math::Vector3d::crossProduct(direction, edge2);
+	// Find vectors for two edges sharing vert0
+	DXVector3 edge1 = v1 - v0;
+	DXVector3 edge2 = v2 - v0;
 
-	float det = Math::Vector3d::dotProduct(edge1, pVector);
+	// Begin calculating determinant - also used to calculate U parameter
+	DXVector3 pvec;
+	DXVec3Cross(&pvec, &dir, &edge2);
 
-	if (ABS(det) < epsilon) {
+	// If determinant is near zero, ray lies in plane of triangle
+	float det = DXVec3Dot(&edge1, &pvec);
+	if (det < 0.0001f)
 		return false;
-	}
 
-	Math::Vector3d tVector = origin - v0;
-	u = Math::Vector3d::dotProduct(tVector, pVector) / det;
+	// Calculate distance from vert0 to ray origin
+	DXVector3 tvec = orig - v0;
 
-	if (u < 0.0f || u > 1.0f) {
+	// Calculate U parameter and test bounds
+	u = DXVec3Dot(&tvec, &pvec);
+	if (u < 0.0f || u > det)
 		return false;
-	}
 
-	Math::Vector3d qVector = Math::Vector3d::crossProduct(tVector, edge1);
-	v = Math::Vector3d::dotProduct(direction, qVector) / det;
+	// Prepare to test V parameter
+	DXVector3 qvec;
+	DXVec3Cross(&qvec, &tvec, &edge1);
 
-	if (v < 0.0f || u + v > 1.0f) {
+	// Calculate V parameter and test bounds
+	v = DXVec3Dot(&dir, &qvec);
+	if (v < 0.0f || u + v > det)
 		return false;
-	}
 
-	t = Math::Vector3d::dotProduct(edge2, qVector) / det;
+	// Calculate t, scale parameters, ray intersects triangle
+	t = DXVec3Dot(&edge2, &qvec);
 
-	Math::Vector3d intersectionPoint = origin + direction * t;
-	t = intersectionPoint.x();
-	u = intersectionPoint.y();
-	v = intersectionPoint.z();
+	float fInvDet = 1.0f / det;
+	t *= fInvDet;
+	u *= fInvDet;
+	v *= fInvDet;
+
+	DXVector3 intersection;
+	DXVector3 dest = orig + dir;
+	DXPlane plane;
+	DXPlaneFromPoints(&plane, &v0, &v1, &v2);
+	DXPlaneIntersectLine(&intersection, &plane, &orig, &dest);
+	t = intersection._x;
+	u = intersection._y;
+	v = intersection._z;
+
 	return true;
 }
 
-bool lineSegmentIntersectsTriangle(const Math::Vector3d &lineStart, const Math::Vector3d &lineEnd,
-								   const Math::Vector3d &v0, const Math::Vector3d &v1, const Math::Vector3d &v2,
+bool pickGetIntersect(const Math::Vector3d &lineS, const Math::Vector3d &lineE,
+								   const Math::Vector3d &vp0, const Math::Vector3d &vp1, const Math::Vector3d &vp2,
 								   Math::Vector3d &intersection, float &distance) {
-	const float epsilon = 0.0001f;
+	DXVector3 v0 = DXVector3(vp0.x(), vp0.y(), vp0.z());
+	DXVector3 v1 = DXVector3(vp1.x(), vp1.y(), vp1.z());
+	DXVector3 v2 = DXVector3(vp2.x(), vp2.y(), vp2.z());
+	DXVector3 lineStart = DXVector3(lineS.x(), lineS.y(), lineS.z());
+	DXVector3 lineEnd = DXVector3(lineE.x(), lineE.y(), lineE.z());
 
-	Math::Vector3d edge1 = v1 - v0;
-	Math::Vector3d edge2 = v2 - v1;
+	// compute plane's normal
+	DXVector3 vertex;
+	DXVector3 normal;
 
-	Math::Vector3d planeNormal = Math::Vector3d::crossProduct(edge1, edge2);
-	planeNormal.normalize();
+	DXVector3 edge1 = v1 - v0;
+	DXVector3 edge2 = v2 - v1;
 
-	Math::Vector3d lineDirection = lineEnd - lineStart;
+	DXVec3Cross(&normal, &edge1, &edge2);
+	DXVec3Normalize(&normal, &normal);
 
-	float lineLength = Math::Vector3d::dotProduct(lineDirection, planeNormal);
+	vertex = v0;
 
-	if (ABS(lineLength) < epsilon) {
+	DXVector3 direction, l1;
+	float lineLength, distFromPlane, percentage;
+
+	direction._x = lineEnd._x - lineStart._x; // calculate the lines direction vector
+	direction._y = lineEnd._y - lineStart._y;
+	direction._z = lineEnd._z - lineStart._z;
+
+	lineLength = DXVec3Dot(&direction, &normal); // This gives us the line length (the blue dot L3 + L4 in figure d)
+
+	if (fabsf(lineLength) < 0.00001f)
 		return false;
-	}
 
-	float distFromPlane = Math::Vector3d::dotProduct(v0 - lineStart, planeNormal);
-	float relativeDistance = distFromPlane / lineLength;
+	l1._x = vertex._x - lineStart._x; // calculate vector L1 (the PINK line in figure d)
+	l1._y = vertex._y - lineStart._y;
+	l1._z = vertex._z - lineStart._z;
 
-	if (relativeDistance < 0.0f || relativeDistance > 1.0f) {
+	distFromPlane = DXVec3Dot(&l1, &normal); // gives the distance from the plane (ORANGE Line L3 in figure d)
+	percentage = distFromPlane / lineLength; // How far from Linestart , intersection is as a percentage of 0 to 1
+	if (percentage < 0.0)
 		return false;
-	}
+	else if (percentage > 1.0)
+		return false;
 
-	distance = relativeDistance;
-	intersection = lineStart + lineDirection * relativeDistance;
+	distance = percentage; //record the distance from beginning of ray (0.0 -1.0)
+
+	intersection.x() = lineStart._x + direction._x * percentage; // add the percentage of the line to line start
+	intersection.y() = lineStart._y + direction._y * percentage;
+	intersection.z() = lineStart._z + direction._z * percentage;
 
 	return true;
+}
+
+void decomposeMatrixSimple(const DXMatrix *mat, DXVector3 *transVec, DXVector3 *scaleVec, DXQuaternion *rotQ) {
+	*transVec = DXVector3(mat->matrix._41, mat->matrix._42, mat->matrix._43);
+	*scaleVec = DXVector3(sqrtf(mat->matrix._11 * mat->matrix._11 + mat->matrix._21 * mat->matrix._21 + mat->matrix._31 * mat->matrix._31),
+			sqrtf(mat->matrix._12 * mat->matrix._12 + mat->matrix._22 * mat->matrix._22 + mat->matrix._32 * mat->matrix._32),
+			sqrtf(mat->matrix._13 * mat->matrix._13 + mat->matrix._23 * mat->matrix._23 + mat->matrix._33 * mat->matrix._33));
+
+	DXQuaternion q;
+	DXQuaternionRotationMatrix(&q, mat);
+
+	*rotQ = q;
+}
+
+DXMatrix *matrixSetTranslation(DXMatrix *mat, DXVector3 *vec) {
+	mat->matrix._41 = vec->_x;
+	mat->matrix._42 = vec->_y;
+	mat->matrix._43 = vec->_z;
+
+	return mat;
+}
+
+DXMatrix *matrixSetRotation(DXMatrix *mat, DXVector3 *vec) {
+	double cr = cos(vec->_x);
+	double sr = sin(vec->_x);
+	double cp = cos(vec->_y);
+	double sp = sin(vec->_y);
+	double cy = cos(vec->_z);
+	double sy = sin(vec->_z);
+
+	mat->matrix._11 = (float)(cp * cy);
+	mat->matrix._12 = (float)(cp * sy);
+	mat->matrix._13 = (float)(-sp);
+
+	double srsp = sr * sp;
+	double crsp = cr * sp;
+
+	mat->matrix._21 = (float)(srsp * cy - cr * sy);
+	mat->matrix._22 = (float)(srsp * sy + cr * cy);
+	mat->matrix._23 = (float)(sr * cp);
+
+	mat->matrix._31 = (float)(crsp * cy + sr * sy);
+	mat->matrix._32 = (float)(crsp * sy - sr * cy);
+	mat->matrix._33 = (float)(cr * cp);
+
+	return mat;
 }
 
 #endif

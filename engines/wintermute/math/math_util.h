@@ -30,6 +30,7 @@
 
 #ifdef ENABLE_WME3D
 #include "math/vector3d.h"
+#include "engines/wintermute/base/gfx/xmath.h"
 #endif
 
 namespace Wintermute {
@@ -41,13 +42,21 @@ public:
 };
 
 #ifdef ENABLE_WME3D
-bool lineIntersectsTriangle(const Math::Vector3d &origin, const Math::Vector3d &direction,
+
+#define DX_PI    ((float)3.141592654)
+#define degToRad(_val) (_val * DX_PI * (1.0f / 180.0f))
+#define radToDeg(_val) (_val * (180.0f / DX_PI))
+
+bool intersectTriangle(const Math::Vector3d &origin, const Math::Vector3d &direction,
 							const Math::Vector3d &v0, const Math::Vector3d &v1, const Math::Vector3d &v2,
 							float &t, float &u, float &v);
-
-bool lineSegmentIntersectsTriangle(const Math::Vector3d &lineStart, const Math::Vector3d &lineEnd,
+bool pickGetIntersect(const Math::Vector3d &lineStart, const Math::Vector3d &lineEnd,
 								   const Math::Vector3d &v0, const Math::Vector3d &v1, const Math::Vector3d &v2,
 								   Math::Vector3d &intersection, float &distance);
+DXMatrix *matrixSetTranslation(DXMatrix *mat, DXVector3 *vec);
+DXMatrix *matrixSetRotation(DXMatrix *mat, DXVector3 *vec);
+void decomposeMatrixSimple(const DXMatrix *mat, DXVector3 *transVec, DXVector3 *scaleVec, DXQuaternion *rotQ);
+
 #endif
 
 } // End of namespace Wintermute
