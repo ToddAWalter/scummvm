@@ -38,6 +38,8 @@
 
 #include "graphics/opengl/system_headers.h"
 
+#include "engines/wintermute/base/gfx/xmath.h"
+
 #endif
 
 namespace Wintermute {
@@ -61,65 +63,89 @@ public:
 
 	bool getProjectionParams(float *resWidth, float *resHeight, float *layerWidth, float *layerHeight,
 							 float *modWidth, float *modHeight, bool *customViewport);
+	virtual int getMaxActiveLights() = 0;
+
 	bool setAmbientLightColor(uint32 color);
 	bool setDefaultAmbientLightColor();
-	virtual void setAmbientLight() = 0;
 
 	uint32 _ambientLightColor;
 	bool _ambientLightOverride;
 
-	virtual int maximumLightsCount() = 0;
-	virtual void enableLight(int index) = 0;
-	virtual void disableLight(int index) = 0;
-	virtual void setLightParameters(int index, const Math::Vector3d &position, const Math::Vector3d &direction,
-	                                const Math::Vector4d &diffuse, bool spotlight) = 0;
+	//virtual void DumpData(char* Filename);
+	virtual bool enableShadows() = 0;
+	virtual bool disableShadows() = 0;
+	virtual bool usingStencilBuffer() = 0;
+	virtual void displayShadow(BaseObject *object, const DXVector3 *light, bool lightPosRelative) = 0;
+	//HRESULT InvalidateTexture(LPDIRECT3DTEXTURE Texture);
 
 	virtual void setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode) = 0;
+	// declared in sub class: virtual const char* GetName();
+	// declared in sub class: virtual HRESULT DisplayDebugInfo();
+
+	// declared in sub class: virtual CBImage* TakeScreenshot();
+	// declared in sub class: virtual HRESULT SetViewport(int left, int top, int right, int bottom);
+	// NOT declared in sub class: HRESULT InvalidateDeviceObjects();
+	// NOT declared in sub class: HRESULT RestoreDeviceObjects();
+	void fade(uint16 alpha) override;
+	// declared in sub class: virtual HRESULT FadeToColor(DWORD Color, RECT* rect=NULL);
+	// declared in sub class: virtual HRESULT DrawLine(int X1, int Y1, int X2, int Y2, DWORD Color);
+	// declared in sub class: virtual HRESULT SetProjection();
+	bool drawSprite(BaseSurfaceOpenGL3D &tex, const Rect32 &rect, float zoomX, float zoomY, const Vector2 &pos,
+					uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY);
+	virtual bool drawSpriteEx(BaseSurfaceOpenGL3D &tex, const Rect32 &rect, const Vector2 &pos, const Vector2 &rot, const Vector2 &scale,
+							  float angle, uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY) = 0;
+	// declared in sub class: virtual HRESULT Setup3D(C3DCamera* Camera=NULL, bool Force=false);
+	// NOT declared in sub class: virtual HRESULT Setup3DCustom(D3DXMATRIX* ViewMat, D3DXMATRIX* ProjMat);
+	// declared in sub class: virtual HRESULT Setup2D(bool Force=false);
+	// declared in sub class: virtual HRESULT SetupLines();
+	// declared in sub class: HRESULT ResetDevice();
+	void initLoop() override;
+	// declared in sub class: virtual HRESULT Fill(BYTE r, BYTE g, BYTE b, RECT* rect=NULL);
+	// declared in sub class: virtual HRESULT Flip();
+	// declared in sub class: virtual HRESULT InitRenderer(CHWManager* hwManager);
+	// NOT declared in sub class: virtual HRESULT SwitchFullscreen();
+	// declared in sub class: virtual HRESULT WindowedBlt();
+
+	// declared in sub class: virtual bool UsingStencilBuffer();
+
+	// declared in sub class: virtual HRESULT StartSpriteBatch();
+	// declared in sub class: virtual HRESULT EndSpriteBatch();
+	// NOT declared in sub class: HRESULT CommitSpriteBatch();
+
+	// declared in sub class: virtual HRESULT DrawShaderQuad();
+
+	
+	// ScummVM specific methods -->
+
+	virtual void enableLight(int index) = 0;
+	virtual void disableLight(int index) = 0;
+	virtual void setLightParameters(int index, const DXVector3 &position, const DXVector3 &direction,
+	                                const DXVector4 &diffuse, bool spotlight) = 0;
 
 	virtual void enableCulling() = 0;
 	virtual void disableCulling() = 0;
 
-	virtual bool enableShadows() = 0;
-	virtual bool disableShadows() = 0;
-	virtual void displayShadow(BaseObject *object, const Math::Vector3d &light, bool lightPosRelative) = 0;
-	virtual bool stencilSupported() = 0;
-
 	Rect32 getViewPort() override;
 
 	Graphics::PixelFormat getPixelFormat() const override;
-	void fade(uint16 alpha) override;
-
-	void initLoop() override;
 
 	virtual bool setProjection2D() = 0;
 
-	virtual void setWorldTransform(const Math::Matrix4 &transform) = 0;
-//	void setWorldTransform(const Math::Matrix4 &transform) {
-//		_worldMatrix = transform;
-//	}
+	virtual bool setWorldTransform(const DXMatrix &transform) = 0;
+	virtual bool setViewTransform(const DXMatrix &transform) = 0;
+	virtual bool setProjectionTransform(const DXMatrix &transform) = 0;
 
-	void setViewTransform(const Math::Matrix4 &transform) {
-		_viewMatrix = transform;
+	void getWorldTransform(DXMatrix *transform) {
+		*transform = _worldMatrix;
 	}
 
-	void setProjectionTransform(const Math::Matrix4 &transform) {
-		_projectionMatrix = transform;
+	void getViewTransform(DXMatrix *transform) {
+		*transform = _viewMatrix;
 	}
 
-	void getWorldTransform(Math::Matrix4 &transform) {
-		transform = _worldMatrix;
+	void getProjectionTransform(DXMatrix *transform) {
+		*transform = _projectionMatrix;
 	}
-
-	void getViewTransform(Math::Matrix4 &transform) {
-		transform = _viewMatrix;
-	}
-
-	void getProjectionTransform(Math::Matrix4 &transform) {
-		transform = _projectionMatrix;
-	}
-
-	void project(const Math::Matrix4 &worldMatrix, const Math::Vector3d &point, int32 &x, int32 &y);
-	Math::Ray rayIntoScene(int x, int y);
 
 	Camera3D *_camera;
 
@@ -127,10 +153,6 @@ public:
 	virtual XMesh *createXMesh() = 0;
 	virtual ShadowVolume *createShadowVolume() = 0;
 
-	bool drawSprite(BaseSurfaceOpenGL3D &tex, const Rect32 &rect, float zoomX, float zoomY, const Vector2 &pos,
-	                uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY);
-	virtual bool drawSpriteEx(BaseSurfaceOpenGL3D &tex, const Rect32 &rect, const Vector2 &pos, const Vector2 &rot, const Vector2 &scale,
-	                          float angle, uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY) = 0;
 
 	virtual void renderSceneGeometry(const BaseArray<AdWalkplane *> &planes, const BaseArray<AdBlock *> &blocks,
 	                                 const BaseArray<AdGeneric *> &generics, const BaseArray<Light3D *> &lights, Camera3D *camera) = 0;
@@ -138,12 +160,12 @@ public:
 
 	Math::Matrix3 build2dTransformation(const Vector2 &center, float angle);
 
+	// ScummVM specific methods <--
+
 protected:
-	Math::Matrix4 _lastViewMatrix;
-	Rect32 _viewport3dRect;
-	Math::Matrix4 _worldMatrix;
-	Math::Matrix4 _viewMatrix;
-	Math::Matrix4 _projectionMatrix;
+	DXMatrix _worldMatrix;
+	DXMatrix _viewMatrix;
+	DXMatrix _projectionMatrix;
 	Rect32 _viewport;
 	float _fov;
 	float _nearClipPlane;
@@ -151,6 +173,12 @@ protected:
 	TRendererState _state;
 	bool _spriteBatchMode;
 
+	// NOT declared in sub class: HRESULT CreateShaderQuad();
+	virtual void setAmbientLightRenderState() = 0;
+	// NOT declared in sub class: D3DMATRIX* BuildMatrix(D3DMATRIX* pOut, const D3DXVECTOR2* centre, const D3DXVECTOR2* scaling, float angle);
+	// NOT declared in sub class: void TransformVertices(struct SPRITEVERTEX* vertices, const D3DXVECTOR2* pCentre, const D3DXVECTOR2* pScaling, float angle);
+
+	// ScummVM specific methods:
 	void flipVertical(Graphics::Surface *s);
 };
 

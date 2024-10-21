@@ -73,8 +73,8 @@ public:
 	void setMaxShadowType(TShadowType shadowType);
 
 #ifdef ENABLE_WME3D
-	float _nearPlane;
-	float _farPlane;
+	float _nearClipPlane;
+	float _farClipPlane;
 	float _fov;
 	int32 _editorResolutionWidth;
 	int32 _editorResolutionHeight;
@@ -114,7 +114,7 @@ public:
 	bool sortRotLevels();
 	bool saveAsText(BaseDynamicBuffer *buffer, int indent) override;
 #ifdef ENABLE_WME3D
-	AdSceneGeometry *_sceneGeometry;
+	AdSceneGeometry *_geom;
 	bool _showGeometry;
 #endif
 	uint32 getAlphaAt(int x, int y, bool colorCheck = false);

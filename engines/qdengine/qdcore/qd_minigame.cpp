@@ -31,6 +31,8 @@
 #include "qdengine/qdcore/qd_minigame_interface.h"
 #include "qdengine/qdcore/qd_engine_interface.h"
 
+#include "qdengine/minigames/adv/RunTime.h"
+
 #include "qdengine/minigames/qd_empty_minigame_interface.h"
 
 // maski
@@ -57,6 +59,12 @@
 #include "qdengine/minigames/3mice2_sudoku.h"
 #include "qdengine/minigames/3mice2_states.h"
 #include "qdengine/minigames/3mice2_testo.h"
+#include "qdengine/minigames/3mice2_plate.h"
+#include "qdengine/minigames/3mice2_raskr_all.h"
+#include "qdengine/minigames/3mice2_babochka.h"
+
+// dogncat
+#include "qdengine/minigames/adv/m_triangles.h"
 
 namespace QDEngine {
 
@@ -347,14 +355,29 @@ bool qdMiniGame::load_interface() {
 		} else if (_dll_name == "DLL\\3Mice2_testo.dll") {
 			_interface = new qd3mice2TestoMiniGame();
 			return true;
-		// 3Mice2_babochka.dll
-		// 3Mice2_plate.dll
-		// 3Mice2_raskr1.dll
-		// 3Mice2_raskr2.dll
-		// 3Mice2_raskr3.dll
-		// 3Mice2_raskr4.dll
+		} else if (_dll_name == "DLL\\3Mice2_plate.dll") {
+			_interface = new qd3mice2PlateMiniGame();
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_raskr1.dll") {
+			_interface = new qd3mice2RaskrAllMiniGame(1);
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_raskr2.dll") {
+			_interface = new qd3mice2RaskrAllMiniGame(2);
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_raskr3.dll") {
+			_interface = new qd3mice2RaskrAllMiniGame(3);
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_raskr4.dll") {
+			_interface = new qd3mice2RaskrAllMiniGame(4);
+			return true;
+		} else if (_dll_name == "DLL\\3Mice2_babochka.dll") {
+			_interface = new qd3mice2BabochkaMiniGame();
+			return true;
 
 		// dogncat
+		} else if (_dll_name == "DLL\\triangles.dll") {
+			_interface = create_adv_minigame(_dll_name.c_str(), createMinigameTriangleGame);
+			return true;
 		// scores.dll
 		// triangles.dll
 

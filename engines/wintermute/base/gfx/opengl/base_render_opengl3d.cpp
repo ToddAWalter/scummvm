@@ -50,8 +50,8 @@ BaseRenderer3D *makeOpenGL3DRenderer(BaseGame *inGame) {
 BaseRenderOpenGL3D::BaseRenderOpenGL3D(BaseGame *inGame) : BaseRenderer3D(inGame) {
 	setDefaultAmbientLightColor();
 
-	_lightPositions.resize(maximumLightsCount());
-	_lightDirections.resize(maximumLightsCount());
+	_lightPositions.resize(getMaxActiveLights());
+	_lightDirections.resize(getMaxActiveLights());
 }
 
 BaseRenderOpenGL3D::~BaseRenderOpenGL3D() {
@@ -78,7 +78,7 @@ void BaseRenderOpenGL3D::setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode
 	}
 }
 
-void BaseRenderOpenGL3D::setAmbientLight() {
+void BaseRenderOpenGL3D::setAmbientLightRenderState() {
 	byte a = 0;
 	byte r = 0;
 	byte g = 0;
@@ -102,7 +102,7 @@ void BaseRenderOpenGL3D::setAmbientLight() {
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, value);
 }
 
-int BaseRenderOpenGL3D::maximumLightsCount() {
+int BaseRenderOpenGL3D::getMaxActiveLights() {
 	GLint maxLightCount = 0;
 	glGetIntegerv(GL_MAX_LIGHTS, &maxLightCount);
 	return maxLightCount;
@@ -116,21 +116,21 @@ void BaseRenderOpenGL3D::disableLight(int index) {
 	glDisable(GL_LIGHT0 + index);
 }
 
-void BaseRenderOpenGL3D::setLightParameters(int index, const Math::Vector3d &position, const Math::Vector3d &direction, const Math::Vector4d &diffuse, bool spotlight) {
+void BaseRenderOpenGL3D::setLightParameters(int index, const DXVector3 &position, const DXVector3 &direction, const DXVector4 &diffuse, bool spotlight) {
 	float zero[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	glLightfv(GL_LIGHT0 + index, GL_DIFFUSE, diffuse.getData());
+	glLightfv(GL_LIGHT0 + index, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0 + index, GL_AMBIENT, zero);
 	glLightfv(GL_LIGHT0 + index, GL_SPECULAR, zero);
 
-	_lightPositions[index].x() = position.x();
-	_lightPositions[index].y() = position.y();
-	_lightPositions[index].z() = position.z();
-	_lightPositions[index].w() = 1.0f;
+	_lightPositions[index]._x = position._x;
+	_lightPositions[index]._y = position._y;
+	_lightPositions[index]._z = position._z;
+	_lightPositions[index]._w = 1.0f;
 
 	if (spotlight) {
 		_lightDirections[index] = direction;
-		glLightfv(GL_LIGHT0 + index, GL_SPOT_DIRECTION, direction.getData());
+		glLightfv(GL_LIGHT0 + index, GL_SPOT_DIRECTION, direction);
 
 		glLightf(GL_LIGHT0 + index, GL_SPOT_EXPONENT, 0.0f);
 		// wme sets the phi angle to 1.0 (in radians)
@@ -159,7 +159,7 @@ bool BaseRenderOpenGL3D::disableShadows() {
 	return true;
 }
 
-void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const Math::Vector3d &lightPos, bool lightPosRelative) {
+void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const DXVector3 *lightPos, bool lightPosRelative) {
 	BaseSurface *shadowImage = _gameRef->_shadowImage;
 
 	if (object->_shadowImage) {
@@ -170,30 +170,32 @@ void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const Math::Vector3d 
 		return;
 	}
 
-	Math::Matrix4 scale;
-	scale.setToIdentity();
-	scale(0, 0) = object->_shadowSize * object->_scale3D;
-	scale(1, 1) = 1.0f;
-	scale(2, 2) = object->_shadowSize * object->_scale3D;
+	DXMatrix scale;
+	DXMatrixIdentity(&scale);
+	scale.matrix._11 = object->_shadowSize * object->_scale3D;
+	scale.matrix._22 = 1.0f;
+	scale.matrix._33 = object->_shadowSize * object->_scale3D;
 
 	Math::Angle angle = object->_angle;
 	float sinOfAngle = angle.getSine();
 	float cosOfAngle = angle.getCosine();
-	Math::Matrix4 rotation;
-	rotation.setToIdentity();
-	rotation(0, 0) = cosOfAngle;
-	rotation(0, 2) = sinOfAngle;
-	rotation(2, 0) = -sinOfAngle;
-	rotation(2, 2) = cosOfAngle;
-	Math::Matrix4 translation;
-	translation.setToIdentity();
-	translation.setPosition(object->_posVector);
 
-	Math::Matrix4 worldTransformation = translation * rotation * scale;
-	worldTransformation.transpose();
-	worldTransformation = worldTransformation * _lastViewMatrix;
+	DXMatrix rotation;
+	DXMatrixIdentity(&rotation);
+	rotation.matrix._11 = cosOfAngle;
+	rotation.matrix._13 = sinOfAngle;
+	rotation.matrix._31 = -sinOfAngle;
+	rotation.matrix._33 = cosOfAngle;
 
-	glLoadMatrixf(worldTransformation.getData());
+	DXMatrix translation;
+	DXMatrixTranslation(&translation, object->_posVector._x, object->_posVector._y, object->_posVector._z);
+	DXMatrixTranspose(&translation, &translation);
+
+	DXMatrix worldTransformation = translation * rotation * scale;
+	DXMatrixTranspose(&worldTransformation, &worldTransformation);
+	DXMatrixMultiply(&worldTransformation, &worldTransformation, &_viewMatrix);
+
+	glLoadMatrixf(worldTransformation);
 
 	glDepthMask(GL_FALSE);
 	glEnable(GL_TEXTURE_2D);
@@ -214,10 +216,10 @@ void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const Math::Vector3d 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glDepthMask(GL_TRUE);
-	glLoadMatrixf(_lastViewMatrix.getData());
+	glLoadMatrixf(_viewMatrix);
 }
 
-bool BaseRenderOpenGL3D::stencilSupported() {
+bool BaseRenderOpenGL3D::usingStencilBuffer() {
 	// assume that we have a stencil buffer
 	return true;
 }
@@ -232,7 +234,7 @@ BaseImage *BaseRenderOpenGL3D::takeScreenshot() {
 #endif
 	surface->create(_viewportRect.width(), _viewportRect.height(), format);
 
-	glReadPixels(_viewportRect.left, g_system->getHeight() - _viewportRect.bottom, _viewportRect.width(), _viewportRect.height(),
+	glReadPixels(_viewportRect.left, _viewportRect.height() - _viewportRect.bottom, _viewportRect.width(), _viewportRect.height(),
 	             GL_RGBA, GL_UNSIGNED_BYTE, surface->getPixels());
 	flipVertical(surface);
 	Graphics::Surface *converted = surface->convertTo(getPixelFormat());
@@ -334,28 +336,44 @@ bool BaseRenderOpenGL3D::drawLine(int x1, int y1, int x2, int y2, uint32 color) 
 }
 
 bool BaseRenderOpenGL3D::setProjection() {
-	// is the viewport already set here?
-	float viewportWidth = _viewportRect.right - _viewportRect.left;
-	float viewportHeight = _viewportRect.bottom - _viewportRect.top;
+	DXMatrix matProj;
 
-	float verticalViewAngle = _fov;
-	float aspectRatio = viewportWidth / viewportHeight;
-	float top = _nearClipPlane * tanf(verticalViewAngle * 0.5f);
+	float resWidth, resHeight;
+	float layerWidth, layerHeight;
+	float modWidth, modHeight;
+	bool customViewport;
+	getProjectionParams(&resWidth, &resHeight, &layerWidth, &layerHeight, &modWidth, &modHeight, &customViewport);
 
-	float scaleMod = _height / viewportHeight;
+	Rect32 rc;
+	_gameRef->getCurrentViewportRect(&rc);
+	float viewportWidth = (float)rc.right - (float)rc.left;
+	float viewportHeight = (float)rc.bottom - (float)rc.top;
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glFrustum(-top * aspectRatio, top * aspectRatio, -top, top, _nearClipPlane, _farClipPlane);
-	glGetFloatv(GL_PROJECTION_MATRIX, _projectionMatrix.getData());
+	// margins
+	int mleft = rc.left;
+	int mright = resWidth - viewportWidth - rc.left;
+	int mtop = rc.top;
+	int mbottom = resHeight - viewportHeight - rc.top;
 
-	_projectionMatrix(0, 0) *= scaleMod;
-	_projectionMatrix(1, 1) *= scaleMod;
+	DXMatrixPerspectiveFovRH(&matProj, _fov, viewportWidth / viewportHeight, _nearClipPlane, _farClipPlane);
 
-	glLoadMatrixf(_projectionMatrix.getData());
+	float scaleMod = resHeight / viewportHeight;
+	float scaleRatio = MAX(layerWidth / resWidth, layerHeight / resHeight) /** 1.05*/;
 
-	glMatrixMode(GL_MODELVIEW);
-	return true;
+	float offsetX = (float)_gameRef->_offsetX;
+	float offsetY = (float)_gameRef->_offsetY;
+
+	if (!customViewport) {
+		offsetX -= _drawOffsetX;
+		offsetY -= _drawOffsetY;
+	}
+
+	matProj.matrix._11 *= scaleRatio * scaleMod;
+	matProj.matrix._22 *= scaleRatio * scaleMod;
+	matProj.matrix._31 = -(offsetX + (mleft - mright) / 2 - modWidth) / viewportWidth * 2.0f;
+	matProj.matrix._32 =  (offsetY + (mtop - mbottom) / 2 - modHeight) / viewportHeight * 2.0f;
+
+	return setProjectionTransform(matProj);
 }
 
 bool BaseRenderOpenGL3D::setProjection2D() {
@@ -367,11 +385,27 @@ bool BaseRenderOpenGL3D::setProjection2D() {
 	return true;
 }
 
-void BaseRenderOpenGL3D::setWorldTransform(const Math::Matrix4 &transform) {
-	Math::Matrix4 tmp = transform;
-	tmp.transpose();
-	Math::Matrix4 newModelViewTransform = tmp * _lastViewMatrix;
-	glLoadMatrixf(newModelViewTransform.getData());
+bool BaseRenderOpenGL3D::setWorldTransform(const DXMatrix &transform) {
+	_worldMatrix = transform;
+	DXMatrix newModelViewTransform, world = transform;
+	DXMatrixMultiply(&newModelViewTransform, &world, &_viewMatrix);
+	glLoadMatrixf(newModelViewTransform);
+	return true;
+}
+
+bool BaseRenderOpenGL3D::setViewTransform(const DXMatrix &transform) {
+	_viewMatrix = transform;
+	glLoadMatrixf(transform);
+	return true;
+}
+
+bool BaseRenderOpenGL3D::setProjectionTransform(const DXMatrix &transform) {
+	_projectionMatrix = transform;
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf(transform);
+
+	glMatrixMode(GL_MODELVIEW);
+	return true;
 }
 
 bool BaseRenderOpenGL3D::windowedBlt() {
@@ -488,41 +522,43 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 		// 8 / 255 ~ 0.0313
 		glAlphaFunc(GL_GEQUAL, 0.0313f);
 
-		setAmbientLight();
+		setAmbientLightRenderState();
 
 		glEnable(GL_NORMALIZE);
 
 		if (camera)
 			_camera = camera;
 		if (_camera) {
+			DXMatrix viewMatrix;
+			_camera->getViewMatrix(&viewMatrix);
+			setViewTransform(viewMatrix);
+
 			_fov = _camera->_fov;
 
 			if (_camera->_nearClipPlane >= 0.0f) {
 				_nearClipPlane = _camera->_nearClipPlane;
+			} else {
+				_nearClipPlane = DEFAULT_NEAR_PLANE;
 			}
 
 			if (_camera->_farClipPlane >= 0.0f) {
 				_farClipPlane = _camera->_farClipPlane;
+			} else {
+				_farClipPlane = DEFAULT_FAR_PLANE;
 			}
-
-			Math::Matrix4 viewMatrix;
-			_camera->getViewMatrix(&viewMatrix);
-			glLoadMatrixf(viewMatrix.getData());
-			glTranslatef(-_camera->_position.x(), -_camera->_position.y(), -_camera->_position.z());
-			glGetFloatv(GL_MODELVIEW_MATRIX, _lastViewMatrix.getData());
 		} else {
-			glLoadMatrixf(_lastViewMatrix.getData());
+			_nearClipPlane = DEFAULT_NEAR_PLANE;
+			_farClipPlane = DEFAULT_FAR_PLANE;
 		}
 
-		for (int i = 0; i < maximumLightsCount(); ++i) {
-			glLightfv(GL_LIGHT0 + i, GL_POSITION, _lightPositions[i].getData());
-			glLightfv(GL_LIGHT0 + i, GL_SPOT_DIRECTION, _lightDirections[i].getData());
+		for (int i = 0; i < getMaxActiveLights(); ++i) {
+			glLightfv(GL_LIGHT0 + i, GL_POSITION, _lightPositions[i]);
+			glLightfv(GL_LIGHT0 + i, GL_SPOT_DIRECTION, _lightDirections[i]);
 		}
 
 		bool fogEnabled;
 		uint32 fogColor;
 		float fogStart, fogEnd;
-
 		_gameRef->getFogParams(&fogEnabled, &fogColor, &fogStart, &fogEnd);
 		if (fogEnabled) {
 			glEnable(GL_FOG);
@@ -540,7 +576,6 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 		}
 
 		glViewport(_viewportRect.left, _height - _viewportRect.bottom, _viewportRect.width(), _viewportRect.height());
-		_viewport3dRect = _viewportRect;
 		setProjection();
 	}
 
@@ -746,25 +781,25 @@ void BaseRenderOpenGL3D::renderSceneGeometry(const BaseArray<AdWalkplane *> &pla
 		if (lights[i]->_active) {
 			glBegin(GL_LINES);
 			glColor3f(1.0f, 1.0f, 0.0f);
-			Math::Vector3d right = lights[i]->_position + Math::Vector3d(1000.0f, 0.0f, 0.0f);
-			Math::Vector3d up = lights[i]->_position + Math::Vector3d(0.0f, 1000.0f, 0.0f);
-			Math::Vector3d backward = lights[i]->_position + Math::Vector3d(0.0f, 0.0f, 1000.0f);
-			Math::Vector3d left = lights[i]->_position + Math::Vector3d(-1000.0f, 0.0f, 0.0f);
-			Math::Vector3d down = lights[i]->_position + Math::Vector3d(0.0f, -1000.0f, 0.0f);
-			Math::Vector3d forward = lights[i]->_position + Math::Vector3d(0.0f, 0.0f, -1000.0f);
+			DXVector3 right = lights[i]->_position + DXVector3(1000.0f, 0.0f, 0.0f);
+			DXVector3 up = lights[i]->_position + DXVector3(0.0f, 1000.0f, 0.0f);
+			DXVector3 backward = lights[i]->_position + DXVector3(0.0f, 0.0f, 1000.0f);
+			DXVector3 left = lights[i]->_position + DXVector3(-1000.0f, 0.0f, 0.0f);
+			DXVector3 down = lights[i]->_position + DXVector3(0.0f, -1000.0f, 0.0f);
+			DXVector3 forward = lights[i]->_position + DXVector3(0.0f, 0.0f, -1000.0f);
 
-			glVertex3fv(lights[i]->_position.getData());
-			glVertex3fv(right.getData());
-			glVertex3fv(lights[i]->_position.getData());
-			glVertex3fv(up.getData());
-			glVertex3fv(lights[i]->_position.getData());
-			glVertex3fv(backward.getData());
-			glVertex3fv(lights[i]->_position.getData());
-			glVertex3fv(left.getData());
-			glVertex3fv(lights[i]->_position.getData());
-			glVertex3fv(down.getData());
-			glVertex3fv(lights[i]->_position.getData());
-			glVertex3fv(forward.getData());
+			glVertex3fv(lights[i]->_position);
+			glVertex3fv(right);
+			glVertex3fv(lights[i]->_position);
+			glVertex3fv(up);
+			glVertex3fv(lights[i]->_position);
+			glVertex3fv(backward);
+			glVertex3fv(lights[i]->_position);
+			glVertex3fv(left);
+			glVertex3fv(lights[i]->_position);
+			glVertex3fv(down);
+			glVertex3fv(lights[i]->_position);
+			glVertex3fv(forward);
 			glEnd();
 		}
 	}

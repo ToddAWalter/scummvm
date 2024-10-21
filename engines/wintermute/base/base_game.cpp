@@ -2068,7 +2068,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			break;
 
 		case SHADOW_STENCIL:
-			stack->pushBool(_gameRef->_renderer3D->stencilSupported());
+			stack->pushBool(_gameRef->_renderer3D->usingStencilBuffer());
 			break;
 
 		default:
@@ -2783,7 +2783,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	else if (name == "MaxActiveLights") {
 		if (_useD3D) {
-			_scValue->setInt(_renderer3D->maximumLightsCount());
+			_scValue->setInt(_renderer3D->getMaxActiveLights());
 		} else {
 			_scValue->setInt(0);
 		}

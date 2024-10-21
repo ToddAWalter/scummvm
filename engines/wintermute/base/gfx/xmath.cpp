@@ -240,8 +240,8 @@ DXQuaternion *DXQuaternionRotationMatrix(DXQuaternion *out, const DXMatrix *m) {
 
 DXMatrix *DXMatrixPerspectiveFovLH(DXMatrix *pout,float fovy, float aspect, float zn, float zf) {
 	DXMatrixIdentity(pout);
-	pout->_m[0][0] = 1.0f / (aspect * tanf(fovy/2.0f));
-	pout->_m[1][1] = 1.0f / tanf(fovy/2.0f);
+	pout->_m[0][0] = 1.0f / (aspect * tanf(fovy / 2.0f));
+	pout->_m[1][1] = 1.0f / tanf(fovy / 2.0f);
 	pout->_m[2][2] = zf / (zf - zn);
 	pout->_m[2][3] = 1.0f;
 	pout->_m[3][2] = (zf * zn) / (zn - zf);
@@ -304,6 +304,7 @@ DXMatrix *DXMatrixInverse(DXMatrix *pout, float *pdeterminant, const DXMatrix *p
 	t[1] = pm->_m[3][0] * pm->_m[0][1] - pm->_m[0][0] * pm->_m[3][1];
 	t[2] = pm->_m[1][0] * pm->_m[3][1] - pm->_m[3][0] * pm->_m[1][1];
 	v[10] = pm->_m[3][3] * t[0] + pm->_m[1][3] * t[1] + pm->_m[0][3] * t[2];
+	v[14] = -pm->_m[3][2] * t[0] - pm->_m[1][2] * t[1] - pm->_m[0][2] * t[2];
 
 	t[0] = pm->_m[1][2] * pm->_m[2][3] - pm->_m[1][3] * pm->_m[2][2];
 	t[1] = pm->_m[0][2] * pm->_m[2][3] - pm->_m[0][3] * pm->_m[2][2];
@@ -485,11 +486,6 @@ float DXQuaternionDot(const DXVector4 *pq1, const DXVector4 *pq2) {
 
 DXVector4 *DXVec3Transform(DXVector4 *pout, const DXVector3 *pv, const DXMatrix *pm) {
 	DXVector4 out;
-	DXVector3 vz(0, 0, 0);
-
-	if (!pv) {
-		pv = &vz;
-	}
 
 	out._x = pm->_m[0][0] * pv->_x + pm->_m[1][0] * pv->_y + pm->_m[2][0] * pv->_z + pm->_m[3][0];
 	out._y = pm->_m[0][1] * pv->_x + pm->_m[1][1] * pv->_y + pm->_m[2][1] * pv->_z + pm->_m[3][1];

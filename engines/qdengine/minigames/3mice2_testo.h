@@ -218,7 +218,7 @@ public:
 			if (mouseObj && clickObj) {
 				name = clickObj->name();
 
-				if (strstr(name, "notesto")) {
+				if (strstr(name, "notesto") && num > 0 && num <= 8) {
 					_figures[num - 1]->set_state("base");
 					_figures[num + 15]->set_state("del");
 
@@ -283,6 +283,7 @@ private:
 
 	int hitTest() {
 		mgVect2i pos = _engine->mouse_cursor_position();
+		pos.x += _noDoughX;
 
 		for (int i = 0; i < 8; i++) {
 			if (_figures[i + 8]->hit_test(pos))
@@ -305,7 +306,7 @@ private:
 
 			for (int j = 0; j < 8; j++) {
 				if (j != num) {
-					if (_figures[8 + i]->hit_test(npos))
+					if (_figures[8 + j]->hit_test(npos))
 						return true;
 
 					if (_objNoDoughFake->hit_test(npos))
@@ -333,9 +334,9 @@ private:
 	const qdEngineInterface *_engine = nullptr;
 	qdMinigameSceneInterface *_scene = nullptr;
 
-	qdMinigameObjectInterface *_figures[24];
+	qdMinigameObjectInterface *_figures[24] = { nullptr };
 
-	int _numVerts[8];
+	int _numVerts[8] = { 0 };
 
 	qdMinigameObjectInterface *_objNoDough = nullptr;
 	qdMinigameObjectInterface *_objNoDoughFake = nullptr;

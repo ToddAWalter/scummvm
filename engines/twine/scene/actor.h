@@ -98,10 +98,10 @@ struct DynamicFlagsStruct {
 	uint32 bIsTargetable : 1;            // 0x0200 IS_TARGETABLE (lba1) OK_SUPER_HIT (lba2)
 	uint32 bIsBlinking : 1;              // 0x0400 IS_BLINKING (lba1) FRAME_SHIELD (lba2)
 	uint32 bWasWalkingBeforeFalling : 1; // 0x0800 DRAW_SHADOW (lba2) - bWasWalkingBeforeFalling in lba1
-	uint32 bUnk1000 : 1;                 // 0x1000 ANIM_MASTER_GRAVITY (lba2)
-	uint32 bUnk2000 : 1;                 // 0x2000 SKATING (lba2) Ouch! I slip in a forbidden collision
-	uint32 bUnk4000 : 1;                 // 0x4000 OK_RENVOIE (lba2) ready to send back a projectile
-	uint32 bUnk8000 : 1;                 // 0x8000 LEFT_JUMP (lba2) ready to jump from the left foot
+	uint32 bANIM_MASTER_GRAVITY : 1;     // 0x1000 ANIM_MASTER_GRAVITY (lba2)
+	uint32 bSKATING : 1;                 // 0x2000 SKATING (lba2) Ouch! I slip in a forbidden collision
+	uint32 bOK_RENVOIE : 1;              // 0x4000 OK_RENVOIE (lba2) ready to send back a projectile
+	uint32 bLEFT_JUMP : 1;               // 0x8000 LEFT_JUMP (lba2) ready to jump from the left foot
 	uint32 bRIGHT_JUMP : 1;              // RIGHT_JUMP          (1<<16) // (lba2) ready to jump from the right foot
 	uint32 bWAIT_SUPER_HIT : 1;          // WAIT_SUPER_HIT      (1<<17) // (lba2) waiting for the end of the animation before giving another super hit
 	uint32 bTRACK_MASTER_ROT : 1;        // TRACK_MASTER_ROT    (1<<18) // (lba2) it's the track that manages the direction
@@ -138,7 +138,7 @@ struct BonusParameter {
 /**
  * Actors structure
  *
- * Such as characters, doors, moving plataforms, invisible actors, ...
+ * Such as characters, doors, moving platforms, invisible actors, ...
  */
 class ActorStruct { // T_OBJET
 private:
@@ -194,7 +194,7 @@ public:
 	BonusParameter _bonusParameter;
 	int32 _beta = 0; // facing angle of actor. Minumum is 0 (SW). Going counter clock wise
 	int32 _srot = 40; // speed of rotation
-	ControlMode _controlMode = ControlMode::kNoMove; // Move
+	ControlMode _move = ControlMode::kNoMove; // Move
 	int32 _delayInMillis = 0; // Info
 	int32 _cropLeft = 0;      // Info
 	int32 _cropTop = 0;       // Info1
@@ -245,6 +245,9 @@ public:
 	uint8 SampleVolume = 0; // lba2
 	// SizeSHit contains the number of the brick under the wagon - hack
 	int16 SizeSHit; // lba2 - always square
+
+	// T_OBJ_3D Obj; // lba2
+	// T_GROUP_INFO CurrentFrame[30]; // lba2
 
 	BoundingBox _boundingBox; // Xmin, YMin, Zmin, Xmax, Ymax, Zmax
 	RealValue realAngle;
@@ -326,7 +329,7 @@ public:
 	void setFrame(int32 actorIdx, uint32 frame);
 
 	/** Restart hero variables while opening new scenes */
-	void restartHeroScene();
+	void restartPerso();
 
 	/** Load hero 3D body and animations */
 	void loadHeroEntities();
@@ -368,7 +371,7 @@ public:
 	void hitObj(int32 actorIdx, int32 actorIdxAttacked, int32 strengthOfHit, int32 angle);
 
 	/** Process actor carrier */
-	void checkCarrier(int32 actorIdx); // CheckCarrier
+	void checkCarrier(int32 actorIdx);
 
 	/** Process actor extra bonus */
 	void giveExtraBonus(int32 actorIdx);

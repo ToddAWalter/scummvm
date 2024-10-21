@@ -30,6 +30,7 @@
 
 #include "engines/wintermute/base/base_object.h"
 #include "engines/wintermute/base/base_sprite.h"
+#include "engines/wintermute/base/gfx/xmath.h"
 #include "engines/wintermute/coll_templ.h"
 #include "engines/wintermute/math/rect32.h"
 #include "engines/wintermute/video/video_theora_player.h"
@@ -134,7 +135,7 @@ public:
 	bool renderFlatShadowModel();
 	bool reset();
 
-	bool updateShadowVol(ShadowVolume *shadow, Math::Matrix4 &modelMat, const Math::Vector3d &light, float extrusionDepth);
+	bool updateShadowVol(ShadowVolume *shadow, DXMatrix *modelMat, DXVector3 *light, float extrusionDepth);
 
 	bool playAnim(int channel, const Common::String &anim, uint32 transitionTime = 0, bool forceReset = false, uint32 stopTransitionTime = 0);
 	bool isAnimPending(char *animName = nullptr);
@@ -145,7 +146,6 @@ public:
 	static bool loadName(BaseNamedObject *obj, XFileData *data);
 	static bool loadName(Common::String &targetStr, XFileData *data);
 
-	Math::Matrix4 _lastWorldMat;
 	Rect32 _boundingRect;
 	BaseObject *_owner;
 
@@ -177,15 +177,16 @@ private:
 	bool findBones(bool animOnly = false, XModel *parentModel = nullptr);
 
 	void updateBoundingRect();
-	void static inline updateRect(Rect32 *rc, Math::Vector3d vec);
+	void static inline updateRect(Rect32 *rc, DXVector3 *vec);
 	Rect32 _drawingViewport;
-	Math::Matrix4 _lastViewMat;
-	Math::Matrix4 _lastProjMat;
+	DXMatrix _lastWorldMat;
+	DXMatrix _lastViewMat;
+	DXMatrix _lastProjMat;
 	int32 _lastOffsetX;
 	int32 _lastOffsetY;
 
-	Math::Vector3d _BBoxStart;
-	Math::Vector3d _BBoxEnd;
+	DXVector3 _BBoxStart;
+	DXVector3 _BBoxEnd;
 
 protected:
 	BaseArray<const char*> _mergedModels;

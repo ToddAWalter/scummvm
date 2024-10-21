@@ -42,10 +42,11 @@ BaseRenderer3D::BaseRenderer3D(Wintermute::BaseGame *inGame) : BaseRenderer(inGa
 }
 
 BaseRenderer3D::~BaseRenderer3D() {
+	_camera = nullptr; // ref only
 }
 
 void BaseRenderer3D::initLoop() {
-	deleteRectList();
+	BaseRenderer::initLoop();
 	setup2D();
 }
 
@@ -61,6 +62,11 @@ bool BaseRenderer3D::getProjectionParams(float *resWidth, float *resHeight, floa
 										 float *modWidth, float *modHeight, bool *customViewport) {
 	*resWidth = _width;
 	*resHeight = _height;
+
+	if (_gameRef->_editorResolutionWidth > 0)
+		*resWidth = _gameRef->_editorResolutionWidth;
+	if (_gameRef->_editorResolutionHeight > 0)
+		*resHeight = _gameRef->_editorResolutionHeight;
 
 	int lWidth, lHeight;
 	Rect32 sceneViewport;
@@ -86,43 +92,23 @@ bool BaseRenderer3D::getProjectionParams(float *resWidth, float *resHeight, floa
 	return true;
 }
 
-void BaseRenderer3D::project(const Math::Matrix4 &worldMatrix, const Math::Vector3d &point, int32 &x, int32 &y) {
-	Math::Matrix4 tmp = worldMatrix;
-	tmp.transpose();
-	Math::Vector3d windowCoords;
-	Math::Matrix4 modelMatrix = tmp * _lastViewMatrix;
-	int viewport[4] = { _viewport3dRect.left, _height - _viewport3dRect.bottom, _viewport3dRect.width(), _viewport3dRect.height()};
-	Math::gluMathProject(point, modelMatrix.getData(), _projectionMatrix.getData(), viewport, windowCoords);
-	x = windowCoords.x();
-	// The Wintermute script code will expect a Direct3D viewport
-	y = viewport[3] - windowCoords.y();
-}
-
-Math::Ray BaseRenderer3D::rayIntoScene(int x, int y) {
-	Math::Vector3d direction((((2.0f * x) / _viewport3dRect.width()) - 1) / _projectionMatrix(0, 0),
-	                        -(((2.0f * y) / _viewport3dRect.height()) - 1) / _projectionMatrix(1, 1),
-	                        -1.0f);
-
-	Math::Matrix4 m = _lastViewMatrix;
-	m.inverse();
-	m.transpose();
-	m.transform(&direction, false);
-
-	Math::Vector3d origin = m.getPosition();
-	return Math::Ray(origin, direction);
+void BaseRenderer3D::fade(uint16 alpha) {
+	fadeToColor(0, 0, 0, (byte)(255 - alpha));
 }
 
 bool BaseRenderer3D::setAmbientLightColor(uint32 color) {
 	_ambientLightColor = color;
 	_ambientLightOverride = true;
-	setAmbientLight();
+
+	setAmbientLightRenderState();
 	return true;
 }
 
 bool BaseRenderer3D::setDefaultAmbientLightColor() {
 	_ambientLightColor = 0x00000000;
 	_ambientLightOverride = false;
-	setAmbientLight();
+
+	setAmbientLightRenderState();
 	return true;
 }
 
@@ -132,10 +118,6 @@ Rect32 BaseRenderer3D::getViewPort() {
 
 Graphics::PixelFormat BaseRenderer3D::getPixelFormat() const {
 	return g_system->getScreenFormat();
-}
-
-void BaseRenderer3D::fade(uint16 alpha) {
-	fadeToColor(0, 0, 0, (byte)(255 - alpha));
 }
 
 Math::Matrix3 BaseRenderer3D::build2dTransformation(const Vector2 &center, float angle) {

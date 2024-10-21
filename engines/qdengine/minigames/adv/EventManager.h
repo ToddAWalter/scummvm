@@ -19,27 +19,40 @@
  *
  */
 
-#ifndef DGDS_MUSIC_H
-#define DGDS_MUSIC_H
+#ifndef QDENGINE_MINIGAMES_ADV_EVENT_MANAGER_H
+#define QDENGINE_MINIGAMES_ADV_EVENT_MANAGER_H
 
-#include "audio/midiplayer.h"
+namespace QDEngine {
 
-namespace Dgds {
-
-class DgdsMidiPlayer : public Audio::MidiPlayer {
+class EventManager {
 public:
-	DgdsMidiPlayer(bool isSfx);
+	EventManager();
 
-	void play(byte *data, uint32 size);
-	void stop();
+	void sysEvent(int eventID);
+	void event(int eventID, const mgVect2f& pos, int factor);
+
+	int score() const {
+		return _score;
+	}
+	int addScore(int sc);
 
 private:
-	/** like MidiPlyer::syncVolume, syncs sfx/music volume depending on isSfx */
-	void syncVolumeForChannel();
-	bool _isSfx;
+	int _score;
+	bool _enableNegative;
+
+	struct EventPreset {
+		EventPreset();
+		int score;
+		int fontID;
+		int escapeID;
+		int triggerEventID;
+	};
+	typedef Std::vector<EventPreset> EventPresets;
+	EventPresets _eventPresets;
+
+	QDObjects _triggerEvents;
 };
 
-} // End of namespace Dgds
+} // namespace QDEngine
 
-#endif // DGDS_MUSIC_H
-
+#endif // QDENGINE_MINIGAMES_ADV_EVENT_MANAGER_H

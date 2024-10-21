@@ -47,6 +47,7 @@
 #include "engines/wintermute/base/gfx/3dlight.h"
 #include "engines/wintermute/base/gfx/3dloader_3ds.h"
 #include "engines/wintermute/base/gfx/3dmesh.h"
+#include "engines/wintermute/base/gfx/xmath.h"
 #include "engines/wintermute/math/math_util.h"
 #include "engines/wintermute/system/sys_class_registry.h"
 #include "engines/wintermute/wintermute.h"
@@ -60,7 +61,7 @@ IMPLEMENT_PERSISTENT(AdSceneGeometry, false)
 //////////////////////////////////////////////////////////////////////////
 AdSceneGeometry::AdSceneGeometry(BaseGame *gameRef) : BaseObject(gameRef) {
 	_activeCamera = _activeLight = -1;
-	_viewMatrix.setToIdentity();
+	DXMatrixIdentity(&_viewMatrix);
 	_waypointHeight = 10.0f;
 	_wptMarker = NULL;
 
@@ -69,14 +70,14 @@ AdSceneGeometry::AdSceneGeometry(BaseGame *gameRef) : BaseObject(gameRef) {
 	_PFMaxTime = 15;
 	_PFRerun = false;
 
-	_PFSource = _PFTarget = _PFAlternateTarget = Math::Vector3d(0, 0, 0);
+	_PFSource = _PFTarget = _PFAlternateTarget = DXVector3(0, 0, 0);
 	_PFAlternateDist = FLT_MAX;
 
 	_drawingViewport.setRect(0, 0, 0, 0);
 
-	_lastWorldMat.setToIdentity();
-	_lastViewMat.setToIdentity();
-	_lastProjMat.setToIdentity();
+	DXMatrixIdentity(&_lastWorldMat);
+	DXMatrixIdentity(&_lastViewMat);
+	DXMatrixIdentity(&_lastProjMat);
 
 	_lastOffsetX = _lastOffsetY = 0;
 	_lastScrollX = _lastScrollY = 0;
@@ -116,6 +117,8 @@ void AdSceneGeometry::cleanup() {
 	_waypointGroups.clear();
 
 	for (i = 0; i < _cameras.size(); i++) {
+		if (_gameRef->_renderer3D->_camera == _cameras[i])
+			_gameRef->_renderer3D->_camera = nullptr;
 		delete _cameras[i];
 	}
 	_cameras.clear();
@@ -126,7 +129,7 @@ void AdSceneGeometry::cleanup() {
 	_lights.clear();
 
 	_activeCamera = _activeLight = -1;
-	_viewMatrix.setToIdentity();
+	DXMatrixIdentity(&_viewMatrix);
 
 	for (i = 0; i < _PFPath.size(); i++) {
 		delete _PFPath[i];
@@ -210,7 +213,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 				plane->setName(meshNames[i].c_str());
 				plane->_mesh = meshes[i];
 				plane->_mesh->computeNormals();
-				plane->_mesh->fillVertexBuffer(0xFF0000FF);
+				plane->_mesh->fillVertexBuffer(0xFF0000FF); // original 0x700000FF
 				plane->_receiveShadows = ExtNode->_receiveShadows;
 				_planes.add(plane);
 			}
@@ -221,7 +224,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 				block->setName(meshNames[i].c_str());
 				block->_mesh = meshes[i];
 				block->_mesh->computeNormals();
-				block->_mesh->fillVertexBuffer(0xFFFF0000);
+				block->_mesh->fillVertexBuffer(0xFFFF0000); // original 0x70FF0000
 				block->_receiveShadows = ExtNode->_receiveShadows;
 				_blocks.add(block);
 			}
@@ -242,7 +245,7 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 				generic->setName(meshNames[i].c_str());
 				generic->_mesh = meshes[i];
 				generic->_mesh->computeNormals();
-				generic->_mesh->fillVertexBuffer(0xFF00FF00);
+				generic->_mesh->fillVertexBuffer(0xFF00FF00); // original 0x7000FF00
 				generic->_receiveShadows = ExtNode->_receiveShadows;
 				_generics.add(generic);
 			}
@@ -277,8 +280,8 @@ bool AdSceneGeometry::loadFile(const char *filename) {
 bool AdSceneGeometry::dropWaypoints() {
 	for (uint i = 0; i < _waypointGroups.size(); i++) {
 		for (uint j = 0; j < _waypointGroups[i]->_points.size(); j++) {
-			Math::Vector3d *point = _waypointGroups[i]->_points[j];
-			point->y() = getHeightAt(*point) + _waypointHeight;
+			DXVector3 *point = _waypointGroups[i]->_points[j];
+			point->_y = getHeightAt(*point) + _waypointHeight;
 		}
 	}
 	return true;
@@ -350,18 +353,18 @@ bool AdSceneGeometry::setActiveLight(char *light) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-Math::Matrix4 *AdSceneGeometry::getViewMatrix() {
+DXMatrix *AdSceneGeometry::getViewMatrix() {
 	return &_viewMatrix;
 }
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::storeDrawingParams() {
+	// store values
 	_drawingViewport = _gameRef->_renderer3D->getViewPort();
 
-	// store values
-	//_gameRef->_renderer3D->getWorldTransform(_lastWorldMat);
-	//_gameRef->_renderer3D->getViewTransform(_lastViewMat);
-	//_gameRef->_renderer3D->getProjectionTransform(_lastProjMat);
+	_gameRef->_renderer3D->getWorldTransform(&_lastWorldMat);
+	_gameRef->_renderer3D->getViewTransform(&_lastViewMat);
+	_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
 
 
 	AdScene *scene = ((AdGame *)_gameRef)->_scene;
@@ -410,33 +413,32 @@ bool AdSceneGeometry::renderShadowGeometry() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-float AdSceneGeometry::getHeightAt(Math::Vector3d pos, float tolerance, bool *intFound) {
-	float ret = pos.y();
-	Math::Vector3d intersection;
-	Math::Vector3d dir = Math::Vector3d(0, -1, 0);
+float AdSceneGeometry::getHeightAt(DXVector3 pos, float tolerance, bool *intFound) {
+	float ret = pos._y;
+	DXVector3 intersection;
+	DXVector3 dir = DXVector3(0, -1, 0);
 
-	pos.y() += tolerance;
+	pos._y += tolerance;
 
 	bool intFoundTmp = false;
 
 	for (uint32 i = 0; i < _planes.size(); i++) {
 		for (int j = 0; j < _planes[i]->_mesh->faceCount(); j++) {
 			uint16 *triangle = _planes[i]->_mesh->getFace(j);
-			float *v0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
-			float *v1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
-			float *v2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
+			float *vp0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
+			float *vp1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
+			float *vp2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
+			DXVector3 v0(vp0[0], vp0[1], vp0[2]);
+			DXVector3 v1(vp1[0], vp1[1], vp1[2]);
+			DXVector3 v2(vp2[0], vp2[1], vp2[2]);
 
-			if (intersectTriangle(pos, dir,
-								  Math::Vector3d(v0[0], v0[1], v0[2]),
-								  Math::Vector3d(v1[0], v1[1], v1[2]),
-								  Math::Vector3d(v2[0], v2[1], v2[2]),
-								  intersection.x(), intersection.y(), intersection.z())) {
-				if (intersection.y() > pos.y() + tolerance) {
+			if (intersectTriangle(pos, dir, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
+				if (intersection._y > pos._y + tolerance) {
 					continue; // only fall down
 				}
 
-				if (!intFoundTmp || ABS(ret - pos.y()) > ABS(intersection.y() - pos.y())) {
-					ret = intersection.y();
+				if (!intFoundTmp || ABS(ret - pos._y) > ABS(intersection._y - pos._y)) {
+					ret = intersection._y;
 				}
 
 				intFoundTmp = true;
@@ -452,28 +454,26 @@ float AdSceneGeometry::getHeightAt(Math::Vector3d pos, float tolerance, bool *in
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::directPathExists(Math::Vector3d *p1, Math::Vector3d *p2) {
+bool AdSceneGeometry::directPathExists(DXVector3 *p1, DXVector3 *p2) {
 	// test walkplanes
 	for (uint i = 0; i < _planes.size(); i++) {
 		for (int j = 0; j < _planes[i]->_mesh->faceCount(); j++) {
 			uint16 *triangle = _planes[i]->_mesh->getFace(j);
-			float *v0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
-			float *v1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
-			float *v2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
-			Math::Vector3d intersection;
+			float *vp0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
+			float *vp1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
+			float *vp2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
+			DXVector3 v0(vp0[0], vp0[1], vp0[2]);
+			DXVector3 v1(vp1[0], vp1[1], vp1[2]);
+			DXVector3 v2(vp2[0], vp2[1], vp2[2]);
+			DXVector3 intersection;
 			float dist;
 
-			if (pickGetIntersect(*p1, *p2, Math::Vector3d(v0[0], v0[1], v0[2]),
-								 Math::Vector3d(v1[0], v1[1], v1[2]),
-								 Math::Vector3d(v2[0], v2[1], v2[2]),
-								 intersection, dist)) {
-				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2,
-									  intersection.x(), intersection.y(), intersection.z())) {
+			if (pickGetIntersect(*p1, *p2, v0, v1, v2, &intersection, &dist)) {
+				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 					return false;
 				}
 
-				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2,
-									  intersection.x(), intersection.y(), intersection.z())) {
+				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 					return false;
 				}
 			}
@@ -488,23 +488,23 @@ bool AdSceneGeometry::directPathExists(Math::Vector3d *p1, Math::Vector3d *p2) {
 
 		for (int j = 0; j < _blocks[i]->_mesh->faceCount(); j++) {
 			uint16 *triangle = _blocks[i]->_mesh->getFace(j);
-			float *v0 = _blocks[i]->_mesh->getVertexPosition(triangle[0]);
-			float *v1 = _blocks[i]->_mesh->getVertexPosition(triangle[1]);
-			float *v2 = _blocks[i]->_mesh->getVertexPosition(triangle[2]);
-			Math::Vector3d intersection;
+			float *vp0 = _blocks[i]->_mesh->getVertexPosition(triangle[0]);
+			float *vp1 = _blocks[i]->_mesh->getVertexPosition(triangle[1]);
+			float *vp2 = _blocks[i]->_mesh->getVertexPosition(triangle[2]);
+			DXVector3 v0(vp0[0], vp0[1], vp0[2]);
+			DXVector3 v1(vp1[0], vp1[1], vp1[2]);
+			DXVector3 v2(vp2[0], vp2[1], vp2[2]);
+			DXVector3 intersection;
 			float dist;
 
-			if (pickGetIntersect(*p1, *p2, Math::Vector3d(v0[0], v0[1], v0[2]),
-								 Math::Vector3d(v1[0], v1[1], v1[2]),
-								 Math::Vector3d(v2[0], v2[1], v2[2]),
-								 intersection, dist)) {
+			if (pickGetIntersect(*p1, *p2, v0, v1, v2, &intersection, &dist)) {
 				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2,
-									  intersection.x(), intersection.y(), intersection.z())) {
+				                           &intersection._x, &intersection._y, &intersection._z)) {
 					return false;
 				}
 
 				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2,
-									  intersection.x(), intersection.y(), intersection.z())) {
+				                           &intersection._x, &intersection._y, &intersection._z)) {
 					return false;
 				}
 			}
@@ -515,7 +515,7 @@ bool AdSceneGeometry::directPathExists(Math::Vector3d *p1, Math::Vector3d *p2) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-Math::Vector3d AdSceneGeometry::getBlockIntersection(Math::Vector3d *p1, Math::Vector3d *p2) {
+DXVector3 AdSceneGeometry::getBlockIntersection(DXVector3 *p1, DXVector3 *p2) {
 	// test blocks
 	for (uint i = 0; i < _blocks.size(); i++) {
 		if (!_blocks[i]->_active) {
@@ -524,33 +524,35 @@ Math::Vector3d AdSceneGeometry::getBlockIntersection(Math::Vector3d *p1, Math::V
 
 		for (int j = 0; j < _blocks[i]->_mesh->faceCount(); j++) {
 			uint16 *triangle = _blocks[i]->_mesh->getFace(j);
-			float *v0 = _blocks[i]->_mesh->getVertexPosition(triangle[0]);
-			float *v1 = _blocks[i]->_mesh->getVertexPosition(triangle[1]);
-			float *v2 = _blocks[i]->_mesh->getVertexPosition(triangle[2]);
-
-			Math::Vector3d intersection;
+			float *vp0 = _blocks[i]->_mesh->getVertexPosition(triangle[0]);
+			float *vp1 = _blocks[i]->_mesh->getVertexPosition(triangle[1]);
+			float *vp2 = _blocks[i]->_mesh->getVertexPosition(triangle[2]);
+			DXVector3 v0(vp0[0], vp0[1], vp0[2]);
+			DXVector3 v1(vp1[0], vp1[1], vp1[2]);
+			DXVector3 v2(vp2[0], vp2[1], vp2[2]);
+			DXVector3 intersection;
 			float dist;
 
-			if (pickGetIntersect(*p1, *p2, v0, v1, v2, intersection, dist)) {
-				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2, intersection.x(), intersection.y(), intersection.z())) {
+			if (pickGetIntersect(*p1, *p2, v0, v1, v2, &intersection, &dist)) {
+				if (intersectTriangle(*p1, *p1 - *p2, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 					return intersection;
 				}
 
-				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2, intersection.x(), intersection.y(), intersection.z())) {
+				if (intersectTriangle(*p2, *p2 - *p1, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 					return intersection;
 				}
 			}
 		}
 	}
 
-	return Math::Vector3d(0, 0, 0);
+	return DXVector3(0, 0, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::convert2Dto3DTolerant(int x, int y, Math::Vector3d *pos) {
-	bool Ret = convert2Dto3D(x, y, pos);
-	if (Ret) {
-		return Ret;
+bool AdSceneGeometry::convert2Dto3DTolerant(int x, int y, DXVector3 *pos) {
+	bool ret = convert2Dto3D(x, y, pos);
+	if (ret) {
+		return ret;
 	}
 
 	int lenLeft = 0;
@@ -631,10 +633,10 @@ bool AdSceneGeometry::convert2Dto3DTolerant(int x, int y, Math::Vector3d *pos) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::convert2Dto3D(int x, int y, Math::Vector3d *pos) {
+bool AdSceneGeometry::convert2Dto3D(int x, int y, DXVector3 *pos) {
 	if (!_lastValuesInitialized) {
 		_drawingViewport = _gameRef->_renderer3D->getViewPort();
-		//_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
+		_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
 	}
 
 	float resWidth, resHeight;
@@ -652,32 +654,45 @@ bool AdSceneGeometry::convert2Dto3D(int x, int y, Math::Vector3d *pos) {
 	x -= (mleft + mright) / 2 + modWidth;
 	y -= (mtop + mbottom) / 2 + modHeight;
 
-	Math::Vector3d vPickRayDir;
-	Math::Vector3d vPickRayOrig;
 
-	Math::Ray rayScene = _gameRef->_renderer3D->rayIntoScene(x, y);
-	vPickRayDir = rayScene.getDirection();
-	vPickRayOrig = rayScene.getOrigin();
+	DXVector3 vPickRayDir;
+	DXVector3 vPickRayOrig;
+
+	// Compute the vector of the pick ray in screen space
+	DXVector3 vec;
+	vec._x =  (((2.0f * x) / _drawingViewport.width()) - 1) / _lastProjMat.matrix._11;
+	vec._y = -(((2.0f * y) / _drawingViewport.height()) - 1) / _lastProjMat.matrix._22;
+	vec._z =  -1.0f;
+
+	// Get the inverse view matrix
+	DXMatrix m;
+	DXMatrixInverse(&m, nullptr, &_lastViewMat);
+
+	// Transform the screen space pick ray into 3D space
+	vPickRayDir._x  = vec._x * m.matrix._11 + vec._y * m.matrix._21 + vec._z * m.matrix._31;
+	vPickRayDir._y  = vec._x * m.matrix._12 + vec._y * m.matrix._22 + vec._z * m.matrix._32;
+	vPickRayDir._z  = vec._x * m.matrix._13 + vec._y * m.matrix._23 + vec._z * m.matrix._33;
+	vPickRayOrig._x = m.matrix._41;
+	vPickRayOrig._y = m.matrix._42;
+	vPickRayOrig._z = m.matrix._43;
 
 
 	bool intFound = false;
 	float minDist = FLT_MAX;
-	Math::Vector3d intersection, ray;
-
+	DXVector3 intersection, ray;
 	for (uint32 i = 0; i < _planes.size(); i++) {
 		for (int j = 0; j < _planes[i]->_mesh->faceCount(); j++) {
 			uint16 *triangle = _planes[i]->_mesh->getFace(j);
-			float *v0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
-			float *v1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
-			float *v2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
+			float *vp0 = _planes[i]->_mesh->getVertexPosition(triangle[0]);
+			float *vp1 = _planes[i]->_mesh->getVertexPosition(triangle[1]);
+			float *vp2 = _planes[i]->_mesh->getVertexPosition(triangle[2]);
+			DXVector3 v0(vp0[0], vp0[1], vp0[2]);
+			DXVector3 v1(vp1[0], vp1[1], vp1[2]);
+			DXVector3 v2(vp2[0], vp2[1], vp2[2]);
 
-			if (intersectTriangle(vPickRayOrig, vPickRayDir,
-								  Math::Vector3d(v0[0], v0[1], v0[2]),
-								  Math::Vector3d(v1[0], v1[1], v1[2]),
-								  Math::Vector3d(v2[0], v2[1], v2[2]),
-							      intersection.x(), intersection.y(), intersection.z())) {
+			if (intersectTriangle(vPickRayOrig, vPickRayDir, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 				ray = intersection - vPickRayOrig;
-				float dist = ray.getMagnitude();
+				float dist = DXVec3Length(&ray);
 
 				if (dist < minDist) {
 					*pos = intersection;
@@ -693,18 +708,18 @@ bool AdSceneGeometry::convert2Dto3D(int x, int y, Math::Vector3d *pos) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::getPath(Math::Vector3d source, Math::Vector3d target, AdPath3D *path, bool rerun) {
+bool AdSceneGeometry::getPath(DXVector3 source, DXVector3 target, AdPath3D *path, bool rerun) {
 	if (!_PFReady) {
 		return false;
 	} else {
-		source.y() = getHeightAt(source, _waypointHeight) + _waypointHeight;
-		target.y() = getHeightAt(target, _waypointHeight) + _waypointHeight;
+		source._y = getHeightAt(source, _waypointHeight) + _waypointHeight;
+		target._y = getHeightAt(target, _waypointHeight) + _waypointHeight;
 
 		_PFReady = false;
 		_PFSource = source;
 		_PFTarget = target;
 		_PFTargetPath = path;
-		_PFAlternateTarget = Math::Vector3d(0, 0, 0);
+		_PFAlternateTarget = DXVector3(0, 0, 0);
 		_PFAlternateDist = FLT_MAX;
 
 		_PFTargetPath->reset();
@@ -758,7 +773,7 @@ void AdSceneGeometry::pathFinderStep() {
 		_PFReady = true;
 
 		if (!_PFRerun) {
-			if (_PFAlternateTarget != Math::Vector3d(0, 0, 0)) {
+			if (_PFAlternateTarget != DXVector3(0, 0, 0)) {
 				getPath(_PFSource, _PFAlternateTarget, _PFTargetPath, true);
 			} else {
 				_PFTargetPath->setReady(true);
@@ -775,7 +790,7 @@ void AdSceneGeometry::pathFinderStep() {
 	// target point marked, generate path and terminate
 	if (lowest_pt->_pos == _PFTarget) {
 		while (lowest_pt != NULL) {
-			_PFTargetPath->_points.insert_at(0, new Math::Vector3d(lowest_pt->_pos));
+			_PFTargetPath->_points.insert_at(0, new DXVector3(lowest_pt->_pos));
 			lowest_pt = lowest_pt->_origin;
 		}
 		// remove current position
@@ -798,16 +813,16 @@ void AdSceneGeometry::pathFinderStep() {
 				_PFPath[i]->_origin = lowest_pt;
 			} else {
 				if (!_PFRerun && _PFPath[i]->_pos == _PFTarget) {
-					Math::Vector3d Line = _PFPath[i]->_pos - lowest_pt->_pos;
-					float Len = Line.getMagnitude();
+					DXVector3 line = _PFPath[i]->_pos - lowest_pt->_pos;
+					float len = DXVec3Length(&line);
 
-					if (Len < _PFAlternateDist) {
-						_PFAlternateDist = Len;
+					if (len < _PFAlternateDist) {
+						_PFAlternateDist = len;
 						_PFAlternateTarget = getBlockIntersection(&lowest_pt->_pos, &_PFPath[i]->_pos);
 
-						Math::Vector3d Dir = _PFAlternateTarget - lowest_pt->_pos;
-						Dir.normalize();
-						_PFAlternateTarget -= Dir * 30;
+						DXVector3 dir = _PFAlternateTarget - lowest_pt->_pos;
+						DXVec3Normalize(&dir, &dir);
+						_PFAlternateTarget -= dir * 30;
 					}
 				}
 			}
@@ -816,13 +831,13 @@ void AdSceneGeometry::pathFinderStep() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-float AdSceneGeometry::getPointsDist(Math::Vector3d p1, Math::Vector3d p2) {
+float AdSceneGeometry::getPointsDist(DXVector3 p1, DXVector3 p2) {
 	if (!directPathExists(&p1, &p2)) {
 		return -1;
 	}
 
-	Math::Vector3d vect = p2 - p1;
-	return vect.getMagnitude();
+	DXVector3 vect = p2 - p1;
+	return DXVec3Length(&vect);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -838,11 +853,11 @@ bool AdSceneGeometry::initLoop() {
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::createLights() {
 	// disable all lights
-	for (int i = 0; i < _gameRef->_renderer3D->maximumLightsCount(); i++) {
+	for (int i = 0; i < _gameRef->_renderer3D->getMaxActiveLights(); i++) {
 		_gameRef->_renderer3D->disableLight(i);
 	}
 
-	int lightCount = MIN(static_cast<int>(_lights.size()), _gameRef->_renderer3D->maximumLightsCount());
+	int lightCount = MIN(static_cast<int>(_lights.size()), _gameRef->_renderer3D->getMaxActiveLights());
 
 	for (int i = 0; i < lightCount; i++) {
 		_lights[i]->setLight(i);
@@ -857,24 +872,24 @@ bool compareLights(const Light3D *light1, const Light3D *light2) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::enableLights(Math::Vector3d point, BaseArray<char *> &ignoreLights) {
+bool AdSceneGeometry::enableLights(DXVector3 point, BaseArray<char *> &ignoreLights) {
 	const int maxLightCount = 100;
 
 	int activeLightCount = 0;
 	for (uint i = 0; i < _lights.size(); i++) {
 		_lights[i]->_isAvailable = false;
 		if (_lights[i]->_active) {
-			++activeLightCount;
+			activeLightCount++;
 		}
 	}
 
-	if (activeLightCount <= _gameRef->_renderer3D->maximumLightsCount()) {
+	if (activeLightCount <= _gameRef->_renderer3D->getMaxActiveLights()) {
 		for (uint i = 0; i < _lights.size(); i++) {
 			_lights[i]->_isAvailable = true;
 		}
 	} else {
 		if (!_maxLightsWarning) {
-			_gameRef->LOG(0, "Warning: Using more lights than the hardware supports (%d)", _gameRef->_renderer3D->maximumLightsCount());
+			_gameRef->LOG(0, "Warning: Using more lights than the hardware supports (%d)", _gameRef->_renderer3D->getMaxActiveLights());
 			_maxLightsWarning = true;
 		}
 
@@ -886,16 +901,16 @@ bool AdSceneGeometry::enableLights(Math::Vector3d point, BaseArray<char *> &igno
 				continue;
 			}
 
-			Math::Vector3d dif;
+			DXVector3 dif;
 
 			if (_lights[i]->_isSpotlight) {
-				Math::Vector3d dir = _lights[i]->_target - _lights[i]->_position;
+				DXVector3 dir = _lights[i]->_target - _lights[i]->_position;
 				dif = (_lights[i]->_position + dir * 0.75f) - point;
 			} else {
 				dif = _lights[i]->_position - point;
 			}
 
-			_lights[i]->_distance = dif.getMagnitude();
+			_lights[i]->_distance = fabs(DXVec3Length(&dif));
 
 			activeLights.push_back(_lights[i]);
 		}
@@ -905,7 +920,7 @@ bool AdSceneGeometry::enableLights(Math::Vector3d point, BaseArray<char *> &igno
 			Common::sort(activeLights.begin(), activeLights.end(), compareLights);
 
 			for (uint i = 0; i < activeLights.size(); i++) {
-				activeLights[i]->_isAvailable = static_cast<int>(i) < _gameRef->_renderer3D->maximumLightsCount();
+				activeLights[i]->_isAvailable = static_cast<int>(i) < _gameRef->_renderer3D->getMaxActiveLights();
 			}
 		}
 	}
@@ -918,7 +933,7 @@ bool AdSceneGeometry::enableLights(Math::Vector3d point, BaseArray<char *> &igno
 	activeLightCount = 0;
 
 	for (uint i = 0; i < _lights.size(); i++) {
-		if (activeLightCount >= _gameRef->_renderer3D->maximumLightsCount()) {
+		if (activeLightCount >= _gameRef->_renderer3D->getMaxActiveLights()) {
 			break;
 		}
 
@@ -949,12 +964,12 @@ bool AdSceneGeometry::enableLights(Math::Vector3d point, BaseArray<char *> &igno
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::correctTargetPoint(const Math::Vector3d &source, Math::Vector3d *target) {
+bool AdSceneGeometry::correctTargetPoint(const DXVector3 &source, DXVector3 *target) {
 	// the source parameter is not even used in wme3d
 	int i;
 	int MaxLen = 1000;
 	int Step = 10;
-	Math::Vector3d newTarget;
+	DXVector3 newTarget;
 
 	int lenLeft = 0;
 	int lenRight = 0;
@@ -964,7 +979,7 @@ bool AdSceneGeometry::correctTargetPoint(const Math::Vector3d &source, Math::Vec
 	// left
 	newTarget = *target;
 	for (i = 1; i <= MaxLen; i += Step) {
-		newTarget.x() -= i;
+		newTarget._x -= i;
 		if (!directPathExists(target, &newTarget)) {
 			lenLeft = i;
 			break;
@@ -974,7 +989,7 @@ bool AdSceneGeometry::correctTargetPoint(const Math::Vector3d &source, Math::Vec
 	// right
 	newTarget = *target;
 	for (i = 1; i <= MaxLen; i += Step) {
-		newTarget.x() += i;
+		newTarget._x += i;
 		if (!directPathExists(target, &newTarget)) {
 			lenRight = i;
 			break;
@@ -984,7 +999,7 @@ bool AdSceneGeometry::correctTargetPoint(const Math::Vector3d &source, Math::Vec
 	// up
 	newTarget = *target;
 	for (i = 1; i <= MaxLen; i += Step) {
-		newTarget.z() -= i;
+		newTarget._z -= i;
 		if (!directPathExists(target, &newTarget)) {
 			lenUp = i;
 			break;
@@ -994,7 +1009,7 @@ bool AdSceneGeometry::correctTargetPoint(const Math::Vector3d &source, Math::Vec
 	// down
 	newTarget = *target;
 	for (i = 1; i <= MaxLen; i += Step) {
-		newTarget.z() += i;
+		newTarget._z += i;
 		if (!directPathExists(target, &newTarget)) {
 			lenDown = i;
 			break;
@@ -1033,9 +1048,9 @@ bool AdSceneGeometry::correctTargetPoint(const Math::Vector3d &source, Math::Vec
 	}
 
 	if (abs(offsetX) < abs(offsetZ)) {
-		target->x() += offsetX;
+		target->_x += offsetX;
 	} else {
-		target->z() += offsetZ;
+		target->_z += offsetZ;
 	}
 
 	return true;
@@ -1145,13 +1160,13 @@ uint32 AdSceneGeometry::getLightColor(const char *lightName) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-Math::Vector3d AdSceneGeometry::getLightPos(const char *lightName) {
+DXVector3 AdSceneGeometry::getLightPos(const char *lightName) {
 	for (uint i = 0; i < _lights.size(); i++) {
 		if (scumm_stricmp(lightName, _lights[i]->getName()) == 0) {
 			return _lights[i]->_position;
 		}
 	}
-	return Math::Vector3d(0, 0, 0);
+	return DXVector3(0, 0, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1211,6 +1226,7 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 
 			if (name) {
 				delete[] name;
+				name = nullptr;
 			}
 		}
 	}
@@ -1242,6 +1258,7 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 
 			if (name) {
 				delete[] name;
+				name = nullptr;
 			}
 		}
 	}
@@ -1272,6 +1289,7 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 
 			if (name) {
 				delete[] name;
+				name = nullptr;
 			}
 		}
 	}
@@ -1302,6 +1320,7 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 
 			if (name) {
 				delete[] name;
+				name = nullptr;
 			}
 		}
 	}
@@ -1314,16 +1333,12 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdSceneGeometry::convert3Dto2D(Math::Vector3d *position, int32 *x, int32 *y) {
+bool AdSceneGeometry::convert3Dto2D(DXVector3 *pos, int32 *x, int32 *y) {
 	DXMatrix worldMat;
 	DXMatrixIdentity(&worldMat);
-	DXMatrix projMat = DXMatrix(_lastProjMat.getData());
-	DXMatrixTranspose(&projMat, &projMat);
-	DXMatrix viewMat = DXMatrix(_lastViewMat.getData());
-	DXMatrixTranspose(&viewMat, &viewMat);
 
-	DXVector3 vect2D, pos = DXVector3(position->x(), position->y(), position->z());
-	DXVec3Project(&vect2D, &pos, &_drawingViewport, &projMat, &viewMat, &worldMat);
+	DXVector3 vect2D;
+	DXVec3Project(&vect2D, pos, &_drawingViewport, &_lastProjMat, &_lastViewMat, &worldMat);
 	*x = vect2D._x + _lastScrollX;
 	*y = vect2D._y + _lastScrollY;
 

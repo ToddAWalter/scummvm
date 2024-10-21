@@ -71,7 +71,7 @@ void Animation::setupOtherNspAnimation(int nspAnimIdx, int animId) {
 	case 24:
 	case 25:
 	case 65:
-		_scaleSequence = 1;
+		_scaleSequence = true;
 		break;
 	case 6: // stairs
 		_nsp_sprite_scaling_y_position = 0xbe;
@@ -463,7 +463,7 @@ void Animation::updateAnimation() {
 		// Open doors
 		advanceAnimationFrame(0);
 		if (!_objRestarted) {
-			_player->_frameIdx = _player->_animations.getAnimAt(0)._frameNo[_player->_animations.getAnimAt(0)._frameNo[_animIndexTbl[0]]];
+			_player->_frameIdx = _player->_animations.getAnimAt(0)._frameNo[_animIndexTbl[0]];
 		} else {
 			_player->updateSprite();
 			if (_otherNspAnimationType_maybe == 14) {
@@ -696,10 +696,11 @@ void Animation::updateAnimation() {
 	case 53:
 	case 54:
 	case 55:
-	case 56:
-		advanceAnimationFrame((_otherNspAnimationType_maybe - 53) & 1);
+	case 56: {
+		int stairsIdx = (_otherNspAnimationType_maybe - 53) & 1;
+		advanceAnimationFrame(stairsIdx);
 		if (!_objRestarted) {
-			_player->_frameIdx = _player->_animations.getAnimAt(0)._frameNo[_player->_animations.getAnimAt(0)._frameNo[_animIndexTbl[0]]];
+			_player->_frameIdx = _player->_animations.getAnimAt(stairsIdx)._frameNo[_animIndexTbl[stairsIdx]];
 		} else {
 			switch (_otherNspAnimationType_maybe) {
 			case 53:
@@ -731,6 +732,7 @@ void Animation::updateAnimation() {
 			// PlaySound(1,5,-1);
 		}
 		break;
+	}
 	case 57:
 	case 58:
 		advanceAnimationFrame((_otherNspAnimationType_maybe - 57) & 1);
