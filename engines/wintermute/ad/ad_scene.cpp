@@ -837,6 +837,7 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 			_geom = new AdSceneGeometry(_gameRef);
 			if (_geom == nullptr || !_geom->loadFile(params)) {
 				delete _geom;
+				_geom = nullptr;
 				cmd = PARSERR_GENERIC;
 			}
 			break;
@@ -1212,11 +1213,13 @@ bool AdScene::traverseNodes(bool doUpdate) {
 		}
 
 #ifdef ENABLE_WME3D
+		// render depth info for stencil shadows
 		if (!doUpdate && _geom && _layers[j]->_main) {
 			_gameRef->getOffset(&mainOffsetX, &mainOffsetY);
 
-			if (_gameRef->getMaxShadowType() >= SHADOW_STENCIL) {
-				_geom->renderShadowGeometry();
+			TShadowType shadowType = _gameRef->getMaxShadowType();
+			if (shadowType >= SHADOW_STENCIL) {
+				_gameRef->renderShadowGeometry();
 			}
 		}
 #endif
