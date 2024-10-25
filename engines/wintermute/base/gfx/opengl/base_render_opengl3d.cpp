@@ -109,12 +109,11 @@ int BaseRenderOpenGL3D::getMaxActiveLights() {
 	return maxLightCount;
 }
 
-void BaseRenderOpenGL3D::enableLight(int index) {
-	glEnable(GL_LIGHT0 + index);
-}
-
-void BaseRenderOpenGL3D::disableLight(int index) {
-	glDisable(GL_LIGHT0 + index);
+void BaseRenderOpenGL3D::lightEnable(int index, bool enable) {
+	if (enable)
+		glEnable(GL_LIGHT0 + index);
+	else
+		glDisable(GL_LIGHT0 + index);
 }
 
 void BaseRenderOpenGL3D::setLightParameters(int index, const DXVector3 &position, const DXVector3 &direction, const DXVector4 &diffuse, bool spotlight) {
@@ -143,6 +142,7 @@ void BaseRenderOpenGL3D::setLightParameters(int index, const DXVector3 &position
 }
 
 void BaseRenderOpenGL3D::enableCulling() {
+	glFrontFace(GL_CW);
 	glEnable(GL_CULL_FACE);
 }
 
@@ -202,7 +202,7 @@ void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const DXVector3 *ligh
 	glDepthMask(GL_TRUE);
 }
 
-bool BaseRenderOpenGL3D::usingStencilBuffer() {
+bool BaseRenderOpenGL3D::stencilSupported() {
 	// assume that we have a stencil buffer
 	return true;
 }
@@ -338,7 +338,7 @@ bool BaseRenderOpenGL3D::setProjection() {
 	int mtop = rc.top;
 	int mbottom = resHeight - viewportHeight - rc.top;
 
-	DXMatrixPerspectiveFovRH(&matProj, _fov, viewportWidth / viewportHeight, _nearClipPlane, _farClipPlane);
+	DXMatrixPerspectiveFovLH(&matProj, _fov, viewportWidth / viewportHeight, _nearClipPlane, _farClipPlane);
 
 	float scaleMod = resHeight / viewportHeight;
 	float scaleRatio = MAX(layerWidth / resWidth, layerHeight / resHeight) /** 1.05*/;
@@ -372,12 +372,14 @@ bool BaseRenderOpenGL3D::setWorldTransform(const DXMatrix &transform) {
 	_worldMatrix = transform;
 	DXMatrix newModelViewTransform, world = transform;
 	DXMatrixMultiply(&newModelViewTransform, &world, &_viewMatrix);
+	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(newModelViewTransform);
 	return true;
 }
 
 bool BaseRenderOpenGL3D::setViewTransform(const DXMatrix &transform) {
 	_viewMatrix = transform;
+	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(transform);
 	return true;
 }
@@ -386,8 +388,6 @@ bool BaseRenderOpenGL3D::setProjectionTransform(const DXMatrix &transform) {
 	_projectionMatrix = transform;
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(transform);
-
-	glMatrixMode(GL_MODELVIEW);
 	return true;
 }
 
@@ -416,7 +416,7 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 
 	_simpleShadow[0].x = -1.0f;
 	_simpleShadow[0].y = 0.0f;
-	_simpleShadow[0].z = -1.0f;
+	_simpleShadow[0].z = 1.0f;
 	_simpleShadow[0].nx = 0.0f;
 	_simpleShadow[0].ny = 1.0f;
 	_simpleShadow[0].nz = 0.0f;
@@ -425,7 +425,7 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 
 	_simpleShadow[1].x = -1.0f;
 	_simpleShadow[1].y = 0.0f;
-	_simpleShadow[1].z = 1.0f;
+	_simpleShadow[1].z = -1.0f;
 	_simpleShadow[1].nx = 0.0f;
 	_simpleShadow[1].ny = 1.0f;
 	_simpleShadow[1].nz = 0.0f;
@@ -434,7 +434,7 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 
 	_simpleShadow[2].x = 1.0f;
 	_simpleShadow[2].y = 0.0f;
-	_simpleShadow[2].z = -1.0f;
+	_simpleShadow[2].z = 1.0f;
 	_simpleShadow[2].nx = 0.0f;
 	_simpleShadow[2].ny = 1.0f;
 	_simpleShadow[2].nz = 0.0f;
@@ -443,7 +443,7 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 
 	_simpleShadow[3].x = 1.0f;
 	_simpleShadow[3].y = 0.0f;
-	_simpleShadow[3].z = 1.0f;
+	_simpleShadow[3].z = -1.0f;
 	_simpleShadow[3].nx = 0.0f;
 	_simpleShadow[3].ny = 1.0f;
 	_simpleShadow[3].nz = 0.0f;
@@ -737,7 +737,7 @@ void BaseRenderOpenGL3D::renderSceneGeometry(const BaseArray<AdWalkplane *> &pla
 
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
-	glFrontFace(GL_CCW);
+	glFrontFace(GL_CW);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 	glEnable(GL_COLOR_MATERIAL);
@@ -811,21 +811,21 @@ void BaseRenderOpenGL3D::renderShadowGeometry(const BaseArray<AdWalkplane *> &pl
 	// disable color write
 	glBlendFunc(GL_ZERO, GL_ONE);
 
-	glFrontFace(GL_CCW);
+	glFrontFace(GL_CW);
 	glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// render walk planes
-	for (uint i = 0; i < planes.size(); i++) {
-		if (planes[i]->_active && planes[i]->_receiveShadows) {
-			planes[i]->_mesh->render();
-		}
-	}
 
 	// render blocks
 	for (uint i = 0; i < blocks.size(); i++) {
 		if (blocks[i]->_active && blocks[i]->_receiveShadows) {
 			blocks[i]->_mesh->render();
+		}
+	}
+
+	// render walk planes
+	for (uint i = 0; i < planes.size(); i++) {
+		if (planes[i]->_active && planes[i]->_receiveShadows) {
+			planes[i]->_mesh->render();
 		}
 	}
 
