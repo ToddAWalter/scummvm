@@ -100,10 +100,6 @@ public:
 #endif
 #endif
 
-private:
-	bool checkPathSetting(const char *setting, Common::String const &defaultPath, bool isDirectory = true);
-	void setLibretroDir(const char *path, Common::String &var);
-
 	/* Events */
 public:
 	bool pollEvent(Common::Event &event) override;
@@ -128,6 +124,8 @@ public:
 	void applyBackendSettings() override;
 private:
 	bool parseGameName(const Common::String &gameName, Common::String &engineId, Common::String &gameId);
+	bool checkPathSetting(const char *setting, Common::String const &defaultPath, bool isDirectory = true);
+	void setLibretroDir(const char *path, Common::String &var);
 
 	/* Inputs */
 public:
