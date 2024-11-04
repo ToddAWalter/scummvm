@@ -67,6 +67,21 @@ static const ADGameDescription gameDescriptions[] = {
 		GUIO1(GUIO_NONE)
 	},
 
+	// Rise of the Dragon (PC) German
+	{
+		"rise",
+		0,
+		{
+			{"volume.vga", 0, "f4e9cdc69d3177e8eae81ab43ef2e490", 8992},
+			{"volume.001", 0, "0ae4a3512c2fd9b90d1670ed7c351ad6", 1168096},
+			AD_LISTEND
+		},
+		Common::DE_DEU,
+		Common::kPlatformDOS,
+		ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
 	// Rise of the Dragon (PC) 16 Color, 1.2MB disks
 	{
 		"rise",
@@ -92,6 +107,20 @@ static const ADGameDescription gameDescriptions[] = {
 			AD_LISTEND
 		},
 		Common::EN_ANY,
+		Common::kPlatformAmiga,
+		ADGF_UNSTABLE,
+		GUIO1(GUIO_NONE)
+	},
+
+	// Rise of the Dragon (Amiga) German (reported by gabberhead, #15453)
+	{
+		"rise",
+		0,
+		{
+			{"volume.rmf", 0, "7737489a8c452f0c497956eead46e4f0", 8964},
+			{"volume.001", 0, "4e693c2748ccd71a633b76abe2ed6f12", 525920},
+		},
+		Common::DE_DEU,
 		Common::kPlatformAmiga,
 		ADGF_UNSTABLE,
 		GUIO1(GUIO_NONE)
@@ -244,7 +273,7 @@ static const ADGameDescription gameDescriptions[] = {
 		},
 		Common::EN_ANY,
 		Common::kPlatformDOS,
-		ADGF_TESTING,
+		ADGF_UNSTABLE,
 		GUIO1(GUIO_NONE)
 	},
 
@@ -259,7 +288,7 @@ static const ADGameDescription gameDescriptions[] = {
 		},
 		Common::EN_ANY,
 		Common::kPlatformDOS,
-		ADGF_TESTING,
+		ADGF_UNSTABLE,
 		GUIO1(GUIO_NONE)
 	},
 
@@ -274,7 +303,7 @@ static const ADGameDescription gameDescriptions[] = {
 		},
 		Common::EN_ANY,
 		Common::kPlatformDOS,
-		ADGF_TESTING,
+		ADGF_UNSTABLE,
 		GUIO1(GUIO_NONE)
 	},
 
@@ -289,7 +318,7 @@ static const ADGameDescription gameDescriptions[] = {
 		},
 		Common::DE_DEU,
 		Common::kPlatformDOS,
-		ADGF_TESTING,
+		ADGF_UNSTABLE,
 		GUIO1(GUIO_NONE)
 	},
 
@@ -373,4 +402,3 @@ static const ADGameDescription gameDescriptions[] = {
 };
 
 } // End of namespace Dgds
-

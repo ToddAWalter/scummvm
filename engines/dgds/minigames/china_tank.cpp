@@ -19,17 +19,25 @@
  *
  */
 
-#ifndef AGS_ENGINE_GUI_GUI_DIALOG_INTERNAL_DEFS_H
-#define AGS_ENGINE_GUI_GUI_DIALOG_INTERNAL_DEFS_H
+#include "common/system.h"
 
-#include "ags/engine/gui/gui_dialog_defines.h"
-#include "ags/globals.h"
+#include "dgds/dgds.h"
+#include "dgds/minigames/china_tank.h"
 
-#define _export
-#ifdef WINAPI
-#undef WINAPI
-#endif
-#define WINAPI
-#define TEXT_HT _GP(usetup).textheight
+namespace Dgds {
 
-#endif
+ChinaTank::ChinaTank() {
+}
+
+void ChinaTank::init() {
+}
+
+void ChinaTank::tick() {
+	g_system->displayMessageOnOSD(Common::U32String("Tank minigame not implemented yet!"));
+	DgdsEngine::getInstance()->setMenuToTrigger(kMenuSkipArcade);
+}
+
+void ChinaTank::end() {
+}
+
+} // end namespace Dgds

@@ -19,16 +19,22 @@
  *
  */
 
-#ifndef AGS_PLUGINS_PLUGIN_OBJECT_READER_H
-#define AGS_PLUGINS_PLUGIN_OBJECT_READER_H
+//=============================================================================
+//
+// Wrapper around script "GameState" struct, managing access to its variables.
+//
+//=============================================================================
+
+#ifndef AGS_ENGINE_AC_DYNOBJ_AGS_SCRIPT_GAME_H
+#define AGS_ENGINE_AC_DYNOBJ_AGS_SCRIPT_GAME_H
+
+#include "ags/engine/ac/dynobj/cc_ags_dynamic_object.h"
 
 namespace AGS3 {
 
-class IAGSManagedObjectReader;
-
-struct PluginObjectReader {
-	IAGSManagedObjectReader *reader;
-	const char *type;
+struct CCScriptGame : public AGSCCStaticObject {
+	int32_t ReadInt32(void *address, intptr_t offset) override;
+	void WriteInt32(void *address, intptr_t offset, int32_t val) override;
 };
 
 } // namespace AGS3

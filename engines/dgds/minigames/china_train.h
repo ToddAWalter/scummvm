@@ -19,18 +19,25 @@
  *
  */
 
-#ifndef AGS_ENGINE_AC_DYNOBJ_ADDR_AND_MANAGER_H
-#define AGS_ENGINE_AC_DYNOBJ_ADDR_AND_MANAGER_H
+#ifndef DGDS_MINIGAMES_CHINA_TRAIN_H
+#define DGDS_MINIGAMES_CHINA_TRAIN_H
 
-#include "ags/engine/script/runtime_script_value.h"
-#include "ags/engine/ac/dynobj/cc_dynamic_object.h"
+namespace Dgds {
 
-namespace AGS3 {
+/** Train fight mini-game for Heart of China */
+class ChinaTrain {
+public:
+	ChinaTrain();
 
-extern ScriptValueType ccGetObjectAddressAndManagerFromHandle(
-    int32_t handle, void *&object, ICCDynamicObject *&manager);
+	void init();
+	void tick();
+	void end();
 
-} // namespace AGS3
+private:
+	// TODO add private members
 
-#endif
+};
 
+} // end namespace Dgds
+
+#endif // DGDS_MINIGAMES_CHINA_TRAIN_H

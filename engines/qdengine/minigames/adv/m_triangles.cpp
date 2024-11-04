@@ -41,20 +41,20 @@ enum {
 };
 
 MinigameTriangle::Node::Node(int number, int rot) {
-	number_ = number;
-	rotation_ = rot;
-	isBack_ = false;
-	highlight_ = false;
-	animated_ = false;
-	flip = 0;
+	_number = number;
+	_rotation = rot;
+	_isBack = false;
+	_highlight = false;
+	_animated = false;
+	_flip = 0;
 }
 
 void MinigameTriangle::Node::release() {
-	for (auto &it : face_)
+	for (auto &it : _face)
 		g_runtime->release(it);
 }
 
-bool MinigameTriangle::Node::hit(const mgVect2f& pos) const {
+bool MinigameTriangle::Node::hit(const mgVect2f &pos) const {
 	return obj().hit(pos);
 }
 
@@ -65,98 +65,98 @@ MinigameTriangle::MinigameTriangle() {
 
 	switch (type) {
 	case 1:
-		gameType_ = RECTANGLE;
+		_gameType = RECTANGLE;
 		break;
 	case 2:
-		gameType_ = HEXAGON;
+		_gameType = HEXAGON;
 		break;
 	default:
-		gameType_ = TRIANGLE;
+		_gameType = TRIANGLE;
 	}
 
-	fieldLines_ = fieldWidth_ = 0;
+	_fieldLines = _fieldWidth = 0;
 
-	if (!getParameter("size", fieldLines_, true))
+	if (!getParameter("size", _fieldLines, true))
 		return;
-	if (fieldLines_ < 2)
+	if (_fieldLines < 2)
 		return;
 
-	if (gameType_ == RECTANGLE) {
-		if (!getParameter("width", fieldWidth_, true))
+	if (_gameType == RECTANGLE) {
+		if (!getParameter("width", _fieldWidth, true))
 			return;
-		if (fieldWidth_ < 2)
+		if (_fieldWidth < 2)
 			return;
 	}
 
-	switch (gameType_) {
+	switch (_gameType) {
 	case TRIANGLE:
-		fieldSize_ = sqr(fieldLines_);
+		fieldSize_ = sqr(_fieldLines);
 		break;
 	case RECTANGLE:
-		fieldSize_ = fieldLines_ * fieldWidth_;
+		fieldSize_ = _fieldLines * _fieldWidth;
 		break;
 	case HEXAGON:
-		assert(fieldLines_ % 2 == 0);
-		if (fieldLines_ % 2 != 0)
+		assert(_fieldLines % 2 == 0);
+		if (_fieldLines % 2 != 0)
 			return;
-		fieldSize_ = 3 * sqr(fieldLines_) / 2;
+		fieldSize_ = 3 * sqr(_fieldLines) / 2;
 		break;
 	}
 
-	if (!getParameter("animation_time", animationTime_, true))
+	if (!getParameter("animation_time", _animationTime, true))
 		return;
 
 	const char *faceNameBegin = g_runtime->parameter("object_name_begin", "obj_");
-	const char *backNameBegin = g_runtime->parameter("backg_name_begin", "element_back_");
+	const char *backNameBegin = g_runtime->parameter("backg_name_begin", "element__back");
 	const char *selectNameBegin = g_runtime->parameter("select_name_begin", "element_select_");
 
 	char name[64];
 	name[63] = 0;
 	for (int num = 0; num < fieldSize_; ++num) {
-		nodes_.push_back(Node(num, 0));
-		Node& node = nodes_.back();
+		_nodes.push_back(Node(num, 0));
+		Node &node = _nodes.back();
 		for (int angle = 1; angle <= 3; ++angle) {
 			snprintf(name, 63, "%s%02d_%1d", faceNameBegin, num + 1, angle);
 			QDObject obj = g_runtime->getObject(name);
-			node.face_.push_back(obj);
-			positions_.push_back(obj->R());
+			node._face.push_back(obj);
+			_positions.push_back(obj->R());
 		}
 	}
 
 	Common::MemoryReadWriteStream gameData(DisposeAfterUse::YES);
 
-	for (auto &it : positions_)
+	for (auto &it : _positions)
 		it.write(gameData);
 
 	if (!g_runtime->processGameData(gameData))
 		return;
 
-	for (auto &it : positions_)
+	for (auto &it : _positions)
 		it.read(gameData);
 
 	for (int num = 1; num <= 2; ++num) {
 		for (int angle = 1; angle <= 3; ++angle) {
 			snprintf(name, 63, "%s%1d_%1d", backNameBegin, num, angle);
-			if (!backSides_[(num - 1) * 3 + angle - 1].load(name))
+			if (!_backSides[(num - 1) * 3 + angle - 1].load(name))
 				return;
 		}
 		snprintf(name, 63, "%s%1d", selectNameBegin, num);
-		if (!selectBorders_[num - 1].load(name))
+		if (!_selectBorders[num - 1].load(name))
 			return;
 	}
 
-	selectDepth_ = nodes_[0].face_[0].depth() - 1000;
+	_selectDepth = _nodes[0]._face[0].depth() - 1000;
 
-	selected_ = -1;
-	hovered_ = -1;
+	_selected = -1;
+	_hovered = -1;
 
-	animationState_ = NO_ANIMATION;
+	_animationState = NO_ANIMATION;
 	animatedNodes_[0] = animatedNodes_[1] = -1;
-	animationTimer_ = 0.f;
+	_animationTimer = 0.f;
 
 	if (!g_runtime->debugMode())
 		for (int i = 0; i < 150; ++i) {
-			int pos1 = g_runtime->rnd(0, nodes_.size() - 1);
+			int pos1 = g_runtime->rnd(0, _nodes.size() - 1);
 			for (int j = 0; j < 20; ++j) {
 				int pos2 = g_runtime->rnd(pos1 - 10, pos1 + 10);
 				if (compatible(pos1, pos2)) {
@@ -167,24 +167,24 @@ MinigameTriangle::MinigameTriangle() {
 		}
 
 	for (int idx = 0; idx < fieldSize_; ++idx)
-		updateNode(nodes_[idx], idx);
+		updateNode(_nodes[idx], idx);
 
 	setState(RUNNING);
 }
 
 MinigameTriangle::~MinigameTriangle() {
-	for (auto &it : nodes_)
+	for (auto &it : _nodes)
 		it.release();
 
 	for (int idx = 0; idx < 2; ++idx)
-		selectBorders_[idx].release();
+		_selectBorders[idx].release();
 
 	for (int idx = 0; idx < 6; ++idx)
-		backSides_[idx].release();
+		_backSides[idx].release();
 }
 
 void MinigameTriangle::Node::debugInfo() const {
-	debugC(5, kDebugMinigames, "name:\"%s\" state:\"%s\" number:%d rotation:%d flip:%d isBack:%d highlight:%d animated:%d", obj().getName(), obj()->current_state_name(), number_, rotation_, flip, isBack_, highlight_, animated_);
+	debugC(5, kDebugMinigames, "name:\"%s\" state:\"%s\" number:%d rotation:%d flip:%d isBack:%d highlight:%d animated:%d", obj().getName(), obj()->current_state_name(), _number, _rotation, _flip, _isBack, _highlight, _animated);
 }
 
 const char *MinigameTriangle::Node::getFaceStateName(int angle, bool selected, bool animated, bool instantaneous) {
@@ -212,41 +212,41 @@ const char *MinigameTriangle::Node::getBorderStateName(bool selected) {
 	return selected ? "01" : "02";
 }
 
-void MinigameTriangle::releaseNodeBack(Node& node) {
-	if (node.back_) {
-		node.back_.setState(Node::getBackStateName(false, false, false));
+void MinigameTriangle::releaseNodeBack(Node &node) {
+	if (node._back) {
+		node._back.setState(Node::getBackStateName(false, false, false));
 		for (int type = 0; type < 6; ++type)
-			backSides_[type].releaseObject(node.back_);
+			_backSides[type].releaseObject(node._back);
 	}
 }
 
-void MinigameTriangle::updateNode(Node& node, int position, int flip, bool quick) {
-	for (auto &fit : node.face_)
+void MinigameTriangle::updateNode(Node &node, int position, int flip, bool quick) {
+	for (auto &fit : node._face)
 		g_runtime->hide(fit);
 
-	node.flip = flip;
+	node._flip = flip;
 
-	if (node.isBack_) {
-		if (!node.back_)
-			node.back_ = backSides_[orientation(position) * 3 + flip].getObject();
-		node.back_->set_R(slotCoord(position, flip));
-		node.back_->update_screen_R();
-		node.back_.setState(Node::getBackStateName(node.highlight_, node.animated_, quick));
+	if (node._isBack) {
+		if (!node._back)
+			node._back = _backSides[orientation(position) * 3 + flip].getObject();
+		node._back->set_R(slotCoord(position, flip));
+		node._back->update_screen_R();
+		node._back.setState(Node::getBackStateName(node._highlight, node._animated, quick));
 	} else {
 		releaseNodeBack(node);
 
-		QDObject& face = node.face_[flip];
+		QDObject &face = node._face[flip];
 		face->set_R(slotCoord(position, flip));
 		face->update_screen_R();
-		face.setState(Node::getFaceStateName(node.rotation_, node.highlight_, node.animated_, quick));
+		face.setState(Node::getFaceStateName(node._rotation, node._highlight, node._animated, quick));
 	}
 }
 
 void MinigameTriangle::highlight(int idx, bool hl) {
 	if (idx >= 0) {
-		assert(idx < (int)nodes_.size());
-		nodes_[idx].highlight_ = hl;
-		updateNode(nodes_[idx], idx);
+		assert(idx < (int)_nodes.size());
+		_nodes[idx]._highlight = hl;
+		updateNode(_nodes[idx], idx);
 	}
 }
 
@@ -256,17 +256,17 @@ void MinigameTriangle::beginSwapNodes(int pos1, int pos2) {
 	if (pos1 > pos2)
 		SWAP(pos1, pos2);
 
-	animationState_ = FIRST_PHASE;
-	animationTimer_ = animationTime_;
+	_animationState = FIRST_PHASE;
+	_animationTimer = _animationTime;
 
 	animatedNodes_[0] = pos1;
 	animatedNodes_[1] = pos2;
 
-	Node& node1 = nodes_[pos1];
-	Node& node2 = nodes_[pos2];
+	Node &node1 = _nodes[pos1];
+	Node &node2 = _nodes[pos2];
 
-	node1.animated_ = true;
-	node2.animated_ = true;
+	node1._animated = true;
+	node2._animated = true;
 
 	releaseNodeBack(node1);
 	releaseNodeBack(node2);
@@ -275,35 +275,35 @@ void MinigameTriangle::beginSwapNodes(int pos1, int pos2) {
 	updateNode(node2, pos2, destination(pos1, pos2));
 
 	debugC(5, kDebugMinigames, ">>>>>>>>>>>>>>>>>>>>>>>>>>> change %d <> %d, 1st phase <<<<<<<<<<<<<<<<<<<<<<<<<<<<", pos1, pos2);
-	nodes_[pos1].debugInfo();
-	nodes_[pos2].debugInfo();
+	_nodes[pos1].debugInfo();
+	_nodes[pos2].debugInfo();
 }
 
 void MinigameTriangle::endSwapNodes(int pos1, int pos2) {
-	Node& node1 = nodes_[pos1];
-	Node& node2 = nodes_[pos2];
+	Node &node1 = _nodes[pos1];
+	Node &node2 = _nodes[pos2];
 
 	bool counted = false;
-	if (node1.number_ == pos1) { // поставили на свое место
-		assert(!node1.isBack_);
+	if (node1._number == pos1) { // поставили на свое место
+		assert(!node1._isBack);
 		counted = true;
 		g_runtime->event(EVENT_PUT_RIGHT, node1.obj()->screen_R());
 	}
 
-	if (node2.number_ == pos1) { // сняли со своего места
-		assert(node2.isBack_);
+	if (node2._number == pos1) { // сняли со своего места
+		assert(node2._isBack);
 		counted = true;
 		g_runtime->event(EVENT_GET_RIGHT, node1.obj()->screen_R());
 	}
 
-	if (node2.number_ == pos2) { // поставили на свое место
-		assert(!node2.isBack_);
+	if (node2._number == pos2) { // поставили на свое место
+		assert(!node2._isBack);
 		counted = true;
 		g_runtime->event(EVENT_PUT_RIGHT, node2.obj()->screen_R());
 	}
 
-	if (node1.number_ == pos2) { // сняли со своего места
-		assert(node1.isBack_);
+	if (node1._number == pos2) { // сняли со своего места
+		assert(node1._isBack);
 		counted = true;
 		g_runtime->event(EVENT_GET_RIGHT, node2.obj()->screen_R());
 	}
@@ -318,8 +318,8 @@ void MinigameTriangle::endSwapNodes(int pos1, int pos2) {
 	bool isWin = true;
 	int position = 0;
 
-	for (auto &it : nodes_) {
-		if (it.number_ != position++) {
+	for (auto &it : _nodes) {
+		if (it._number != position++) {
 			isWin = false;
 			break;
 		}
@@ -332,38 +332,38 @@ void MinigameTriangle::endSwapNodes(int pos1, int pos2) {
 }
 
 bool MinigameTriangle::animate(float dt) {
-	if (animationState_ == NO_ANIMATION)
+	if (_animationState == NO_ANIMATION)
 		return false;
 
-	animationTimer_ -= dt;
-	if (animationTimer_ > 0)
+	_animationTimer -= dt;
+	if (_animationTimer > 0)
 		return true;
 
-	Node& node1 = nodes_[animatedNodes_[0]];
-	Node& node2 = nodes_[animatedNodes_[1]];
+	Node &node1 = _nodes[animatedNodes_[0]];
+	Node &node2 = _nodes[animatedNodes_[1]];
 
-	switch (animationState_) {
+	switch (_animationState) {
 	case FIRST_PHASE: {
-		node1.rotation_ = getRotate(animatedNodes_[0], animatedNodes_[1]);
-		node2.rotation_ = getRotate(animatedNodes_[1], animatedNodes_[0]);
+		node1._rotation = getRotate(animatedNodes_[0], animatedNodes_[1]);
+		node2._rotation = getRotate(animatedNodes_[1], animatedNodes_[0]);
 
-		node1.isBack_ = !node1.isBack_;
-		node2.isBack_ = !node2.isBack_;
+		node1._isBack = !node1._isBack;
+		node2._isBack = !node2._isBack;
 
 		releaseNodeBack(node1);
 		releaseNodeBack(node2);
 
-		for (auto &it : node1.face_)
+		for (auto &it : node1._face)
 			it.setState(Node::getFaceStateName(0, false, false, false));
 
-		for (auto &it : node2.face_)
+		for (auto &it : node2._face)
 			it.setState(Node::getFaceStateName(0, false, false, false));
 
 		updateNode(node1, animatedNodes_[1], destination(animatedNodes_[0], animatedNodes_[1]), true);
 		updateNode(node2, animatedNodes_[0], destination(animatedNodes_[1], animatedNodes_[0]), true);
 
-		animationTimer_ = 0.f;
-		animationState_ = SECOND_PHASE;
+		_animationTimer = 0.f;
+		_animationState = SECOND_PHASE;
 
 		debugC(5, kDebugMinigames, ">>>>>>>>>>>>>>>>>>>>>>>>>>> change %d <> %d, 2nd phase 1 <<<<<<<<<<<<<<<<<<<<<<<<<<<<", animatedNodes_[0], animatedNodes_[1]);
 		node1.debugInfo();
@@ -372,16 +372,16 @@ bool MinigameTriangle::animate(float dt) {
 		return true;
 	}
 	case SECOND_PHASE:
-		node1.animated_ = false;
-		node2.animated_ = false;
+		node1._animated = false;
+		node2._animated = false;
 
 		updateNode(node1, animatedNodes_[1], destination(animatedNodes_[0], animatedNodes_[1]));
 		updateNode(node2, animatedNodes_[0], destination(animatedNodes_[1], animatedNodes_[0]));
 
 		SWAP(node1, node2);
 
-		animationTimer_ = animationTime_;
-		animationState_ = FIRD_PHASE;
+		_animationTimer = _animationTime;
+		_animationState = FIRD_PHASE;
 
 		debugC(5, kDebugMinigames, ">>>>>>>>>>>>>>>>>>>>>>>>>>> change %d <> %d, 2nd phase 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<", animatedNodes_[0], animatedNodes_[1]);
 		node2.debugInfo();
@@ -390,8 +390,8 @@ bool MinigameTriangle::animate(float dt) {
 		return true;
 
 	case FIRD_PHASE:
-		animationTimer_ = 0.f;
-		animationState_ = NO_ANIMATION;
+		_animationTimer = 0.f;
+		_animationState = NO_ANIMATION;
 
 		releaseNodeBack(node1);
 		releaseNodeBack(node2);
@@ -416,14 +416,14 @@ bool MinigameTriangle::animate(float dt) {
 
 void MinigameTriangle::swapNodes(int pos1, int pos2, bool silentQuick) {
 	if (silentQuick) {
-		Node& node1 = nodes_[pos1];
-		Node& node2 = nodes_[pos2];
+		Node &node1 = _nodes[pos1];
+		Node &node2 = _nodes[pos2];
 
-		node1.rotation_ = getRotate(pos1, pos2);
-		node2.rotation_ = getRotate(pos2, pos1);
+		node1._rotation = getRotate(pos1, pos2);
+		node2._rotation = getRotate(pos2, pos1);
 
-		node1.isBack_ = !node1.isBack_;
-		node2.isBack_ = !node2.isBack_;
+		node1._isBack = !node1._isBack;
+		node2._isBack = !node2._isBack;
 
 		releaseNodeBack(node1);
 		releaseNodeBack(node2);
@@ -437,7 +437,7 @@ void MinigameTriangle::swapNodes(int pos1, int pos2, bool silentQuick) {
 }
 
 void MinigameTriangle::quant(float dt) {
-	if (selected_ >= 0)
+	if (_selected >= 0)
 		g_runtime->setGameHelpVariant(0);
 	else
 		g_runtime->setGameHelpVariant(1);
@@ -447,117 +447,117 @@ void MinigameTriangle::quant(float dt) {
 
 	int mousePos = -1;
 	for (int idx = 0; idx < fieldSize_; ++idx)
-		if (nodes_[idx].hit(g_runtime->mousePosition())) {
+		if (_nodes[idx].hit(g_runtime->mousePosition())) {
 			mousePos = idx;
 			break;
 		}
 
 	int startAnimation = -1;
-	int lastSelected = selected_;
+	int lastSelected = _selected;
 
 	if (g_runtime->mouseLeftPressed()) {
 		if (mousePos < 0)                       // кликнули мимо - снимаем выделение
-			selected_ = -1;
-		else if (selected_ < 0)                 // ничего выделено небыло, просто выделяем
-			selected_ = mousePos;
-		else if (selected_ == mousePos)         // кликнули на выделенном - снимаем выделение
-			selected_ = -1;
-		else if (compatible(selected_, mousePos)) { // поменять фишки местами
-			startAnimation = selected_;
-			selected_ = -1;
+			_selected = -1;
+		else if (_selected < 0)                 // ничего выделено небыло, просто выделяем
+			_selected = mousePos;
+		else if (_selected == mousePos)         // кликнули на выделенном - снимаем выделение
+			_selected = -1;
+		else if (compatible(_selected, mousePos)) { // поменять фишки местами
+			startAnimation = _selected;
+			_selected = -1;
 		} else
-			selected_ = -1;
+			_selected = -1;
 	}
 
-	if (selected_ != lastSelected) {
+	if (_selected != lastSelected) {
 		for (int idx = 0; idx < fieldSize_; ++idx) {
-			Node& node = nodes_[idx];
-			if (idx == selected_ || compatible(selected_, idx)) { // с этой фишкой можно поменяться
-				if (!node.border_)
-					node.border_ = selectBorders_[orientation(idx)].getObject();
-				node.border_.setState(Node::getBorderStateName(idx == selected_));
-				node.border_->set_R(slotCoord(idx));
-				node.border_->update_screen_R();
-				g_runtime->setDepth(node.border_, selectDepth_);
-			} else if (node.border_) {
-				selectBorders_[0].releaseObject(node.border_);
-				selectBorders_[1].releaseObject(node.border_);
+			Node &node = _nodes[idx];
+			if (idx == _selected || compatible(_selected, idx)) { // с этой фишкой можно поменяться
+				if (!node._border)
+					node._border = _selectBorders[orientation(idx)].getObject();
+				node._border.setState(Node::getBorderStateName(idx == _selected));
+				node._border->set_R(slotCoord(idx));
+				node._border->update_screen_R();
+				g_runtime->setDepth(node._border, _selectDepth);
+			} else if (node._border) {
+				_selectBorders[0].releaseObject(node._border);
+				_selectBorders[1].releaseObject(node._border);
 			}
 		}
 	}
 
-	if (hovered_ != mousePos || selected_ != lastSelected) {
-		highlight(hovered_, false);
-		highlight(selected_ >= 0 ? selected_ : lastSelected, false);
+	if (_hovered != mousePos || _selected != lastSelected) {
+		highlight(_hovered, false);
+		highlight(_selected >= 0 ? _selected : lastSelected, false);
 
-		hovered_ = mousePos;
+		_hovered = mousePos;
 
-		if (hovered_ >= 0 && startAnimation < 0) {
-			if (selected_ >= 0) {
-				if (compatible(selected_, hovered_)) {
-					highlight(hovered_, true);
-					highlight(selected_, true);
+		if (_hovered >= 0 && startAnimation < 0) {
+			if (_selected >= 0) {
+				if (compatible(_selected, _hovered)) {
+					highlight(_hovered, true);
+					highlight(_selected, true);
 				}
 			} else
-				highlight(hovered_, true);
+				highlight(_hovered, true);
 		}
 	}
 
 	if (startAnimation >= 0) {
-		hovered_ = -1;
+		_hovered = -1;
 		swapNodes(startAnimation, mousePos, false);
 	}
 
 	if (g_runtime->mouseRightPressed() && mousePos >= 0) {
 		debugC(2, kDebugMinigames, "----- DUBUG INFO FOR %d POSITION --------------------", mousePos);
 		debugC(2, kDebugMinigames, "row = %d, begin = %d, orientation = %d", rowByNum(mousePos), rowBegin(rowByNum(mousePos)), orientation(mousePos));
-		nodes_[mousePos].debugInfo();
+		_nodes[mousePos].debugInfo();
 	}
 }
 
 int MinigameTriangle::rowBegin(int row) const {
-	if (row == fieldLines_)
+	if (row == _fieldLines)
 		return fieldSize_;
 
-	switch (gameType_) {
+	switch (_gameType) {
 	case TRIANGLE:
 		return sqr(row);
 	case RECTANGLE:
-		return row * fieldWidth_;
+		return row * _fieldWidth;
 	default:
 		break;
 	}
 	//case HEXAGON:
-	assert(row >= 0 && row < fieldLines_);
-	if (row >= fieldLines_ / 2) {
-		row -= fieldLines_ / 2;
-		return fieldSize_ / 2 + (2 * fieldLines_ - row) * row;
+	assert(row >= 0 && row < _fieldLines);
+	if (row >= _fieldLines / 2) {
+		row -= _fieldLines / 2;
+		return fieldSize_ / 2 + (2 * _fieldLines - row) * row;
 	}
-	return (fieldLines_ + row) * row;
+	return (_fieldLines + row) * row;
 
 }
 
 int MinigameTriangle::rowByNum(int num) const {
 	if (num >= fieldSize_)
-		return fieldLines_;
+		return _fieldLines;
 
-	switch (gameType_) {
+	switch (_gameType) {
 	case TRIANGLE:
 		return floor(sqrt((float)num));
 	case RECTANGLE:
-		return num / fieldWidth_;
+		return num / _fieldWidth;
 	default:
 		break;
 	}
 	//case HEXAGON:
-	int row = num < fieldSize_ / 2 ? 0 : fieldLines_ / 2;
-	while (row < fieldLines_ && num >= rowBegin(row))
+	int row = num < fieldSize_ / 2 ? 0 : _fieldLines / 2;
+	while (row < _fieldLines && num >= rowBegin(row))
 		++row;
 	return row > 0 ? row - 1 : 0;
 }
 
 int MinigameTriangle::orientation(int num) const {
-	switch (gameType_) {
+	switch (_gameType) {
 	case TRIANGLE:
 		return (rowByNum(num) + num) % 2;
 	case RECTANGLE:
@@ -579,7 +579,7 @@ bool MinigameTriangle::compatible(int num1, int num2) const {
 	int row1 = rowByNum(num1);
 	int row2 = rowByNum(num2);
 
-	if (row2 >= fieldLines_)
+	if (row2 >= _fieldLines)
 		return false;
 
 	if (row1 == row2) // в одном слое
@@ -603,7 +603,7 @@ int MinigameTriangle::getRotate(int num1, int num2) const {
 	};
 	assert(compatible(num1, num2));
 	return solves[rowByNum(num1) != rowByNum(num2) ? 0 : (num2 < num1 ? 1 : 2)]
-	       [orientation(num1)][nodes_[num1].rotation_];
+	       [orientation(num1)][_nodes[num1]._rotation];
 }
 
 int MinigameTriangle::destination(int num1, int num2) const {
@@ -614,8 +614,8 @@ int MinigameTriangle::destination(int num1, int num2) const {
 }
 
 mgVect3f MinigameTriangle::slotCoord(int pos, int angle) const {
-	assert(pos * 3 + angle < (int)positions_.size());
-	return positions_[pos * 3 + angle];
+	assert(pos * 3 + angle < (int)_positions.size());
+	return _positions[pos * 3 + angle];
 }
 
 } // namespace QDEngine

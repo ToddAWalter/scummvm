@@ -51,20 +51,20 @@ class MinigameTriangle : public MinigameInterface {
 		void debugInfo() const;
 
 		const QDObject &obj() const {
-			return isBack_ ? back_ : face_[flip];
+			return _isBack ? _back : _face[_flip];
 		}
 
-		bool hit(const mgVect2f& pos) const;
+		bool hit(const mgVect2f &pos) const;
 
-		int number_; // правильная позиция (номер слота)
-		int rotation_; // текущий угол поворота (правильный угол = 0)
-		int flip;
-		QDObjects face_; // набор возможных углов переворота для лицевой стороны
-		QDObject back_; // обратная сторона
-		QDObject border_; // рамка
-		bool isBack_; // повернут лицом (true) или рубашкой (false)
-		bool highlight_;
-		bool animated_;
+		int _number; // правильная позиция (номер слота)
+		int _rotation; // текущий угол поворота (правильный угол = 0)
+		int _flip;
+		QDObjects _face; // набор возможных углов переворота для лицевой стороны
+		QDObject _back; // обратная сторона
+		QDObject _border; // рамка
+		bool _isBack; // повернут лицом (true) или рубашкой (false)
+		bool _highlight;
+		bool _animated;
 
 		static const char *getFaceStateName(int angle, bool selected, bool animated, bool instantaneous);
 		static const char *getBackStateName(bool selected, bool animated, bool instantaneous);
@@ -78,28 +78,28 @@ public:
 	void quant(float dt);
 
 private:
-	GameType gameType_ = TRIANGLE;
-	Coords positions_;
-	int selectDepth_ = 0;
+	GameType _gameType = TRIANGLE;
+	Coords _positions;
+	int _selectDepth = 0;
 
-	int fieldLines_ = 0;
-	int fieldWidth_ = 0;
+	int _fieldLines = 0;
+	int _fieldWidth = 0;
 	int fieldSize_ = 0;
-	Nodes nodes_;
-	ObjectContainer selectBorders_[2];
-	ObjectContainer backSides_[6];
-	int selected_ = 0;
-	int hovered_ = 0;
+	Nodes _nodes;
+	ObjectContainer _selectBorders[2];
+	ObjectContainer _backSides[6];
+	int _selected = 0;
+	int _hovered = 0;
 
-	AnimationState animationState_ = NO_ANIMATION;
+	AnimationState _animationState = NO_ANIMATION;
 	int animatedNodes_[2] =  { 0 };
-	float animationTime_ = 0.0;
-	float animationTimer_ = 0.0;
+	float _animationTime = 0.0;
+	float _animationTimer = 0.0;
 
 	/// очистить рубашку фишки
-	void releaseNodeBack(Node& node);
+	void releaseNodeBack(Node &node);
 	/// выставить графические состояния соответствующие текущему логическому
-	void updateNode(Node& node, int position, int flip = 0, bool quick = false);
+	void updateNode(Node &node, int position, int flip = 0, bool quick = false);
 	/// подсветить/потушить фрагмент
 	void highlight(int idx, bool hl);
 

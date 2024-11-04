@@ -19,29 +19,25 @@
  *
  */
 
-#include "ags/engine/debugging/console_output_target.h"
-#include "ags/engine/debugging/debug_log.h"
-#include "ags/globals.h"
+#ifndef DGDS_MINIGAMES_CHINA_TANK_H
+#define DGDS_MINIGAMES_CHINA_TANK_H
 
-namespace AGS3 {
-namespace AGS {
-namespace Engine {
+namespace Dgds {
 
-ConsoleOutputTarget::ConsoleOutputTarget() {
-}
+/** Tank mini-game for Heart of China */
+class ChinaTank {
+public:
+	ChinaTank();
 
-ConsoleOutputTarget::~ConsoleOutputTarget() {}
+	void init();
+	void tick();
+	void end();
 
-void ConsoleOutputTarget::PrintMessage(const DebugMessage &msg) {
-	// limit number of characters for console
-	// TODO: is there a way to find out how many characters can fit in?
-	_G(debug_line)[_G(last_debug_line)] = msg.Text.Left(99);
+private:
+	// TODO add private members
 
-	_G(last_debug_line) = (_G(last_debug_line) + 1) % DEBUG_CONSOLE_NUMLINES;
-	if (_G(last_debug_line) == _G(first_debug_line))
-		_G(first_debug_line) = (_G(first_debug_line) + 1) % DEBUG_CONSOLE_NUMLINES;
-}
+};
 
-} // namespace Engine
-} // namespace AGS
-} // namespace AGS3
+} // end namespace Dgds
+
+#endif // DGDS_MINIGAMES_CHINA_TANK_H

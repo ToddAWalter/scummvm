@@ -40,6 +40,10 @@
 #include "qdengine/qdcore/qd_animation.h"
 #include "qdengine/qdcore/qd_animation_frame.h"
 #include "qdengine/qdcore/qd_file_manager.h"
+#include "qdengine/qdcore/qd_game_dispatcher.h"
+#include "qdengine/qdcore/qd_game_object.h"
+#include "qdengine/qdcore/qd_game_object_moving.h"
+#include "qdengine/qdcore/qd_game_scene.h"
 #include "qdengine/qdengine.h"
 #include "qdengine/system/graphics/gr_dispatcher.h"
 
@@ -404,6 +408,95 @@ void showArchives() {
 	ImGui::End();
 }
 
+void showSceneObjects() {
+	if (!_state->_showSceneObjects)
+		return;
+
+	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(300, 250), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Scene Objects", &_state->_showSceneObjects)) {
+		qdGameScene *scene;
+		qdGameDispatcher *dp = qdGameDispatcher::get_dispatcher();
+		if (dp && ((scene = dp->get_active_scene()))) {
+			if (!scene->object_list().empty()) {
+				for (auto &it : g_engine->_visible_objects) {
+					if (ImGui::Selectable((char *)transCyrillic(it->name()), _state->_objectToDisplay == it->name())) {
+						_state->_objectToDisplay = it->name();
+					}
+				}
+			}
+		}
+	}
+	ImGui::End();
+}
+
+void showScenePersonages() {
+	if (!_state->_showScenePersonages)
+		return;
+
+	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(300, 250), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Scene Personages", &_state->_showScenePersonages)) {
+		qdGameScene *scene;
+		qdGameDispatcher *dp = qdGameDispatcher::get_dispatcher();
+		if (dp && ((scene = dp->get_active_scene()))) {
+			if (!scene->getPersonages()->empty()) {
+				if (ImGui::BeginTable("Personages", 8, ImGuiTableFlags_Borders)) {
+					ImGuiTableFlags flags = ImGuiTableColumnFlags_WidthFixed;
+					ImGui::TableSetupColumn("Name", flags);
+					ImGui::TableSetupColumn("Flags", flags);
+					ImGui::TableSetupColumn("Control", flags);
+					ImGui::TableSetupColumn("Movement", flags);
+
+					ImGui::TableSetupColumn("Frame", flags);
+					ImGui::TableSetupColumn("Time", flags);
+					ImGui::TableSetupColumn("Anim Flags", flags);
+					ImGui::TableSetupColumn("Anim Status", flags);
+
+					ImGui::TableHeadersRow();
+
+					for (auto &it : *scene->getPersonages()) {
+						ImGui::TableNextRow();
+
+						ImGui::TableNextColumn();
+						ImGui::Text((char *)transCyrillic(it->name()));
+
+						qdGameObjectState *st = it->get_state(it->cur_state());
+						ImGui::TableNextColumn();
+						ImGui::Text("%s", st ? qdGameObjectState::flag2str(st->flags(), true, true).c_str() : "<none>");
+						ImGui::SetItemTooltip("%s", st ? qdGameObjectState::flag2str(st->flags(), true).c_str() : "<none>");
+
+						ImGui::TableNextColumn();
+						ImGui::Text(qdGameObjectMoving::control2str(it->get_control_types(), true).c_str());
+
+						ImGui::TableNextColumn();
+						ImGui::Text(qdGameObjectMoving::movement2str(it->get_movement_mode(), true).c_str());
+
+						qdAnimation *anim = it->get_animation();
+						ImGui::TableNextColumn();
+						ImGui::Text("%d / %d", anim->get_cur_frame_number(), anim->num_frames());
+
+						ImGui::TableNextColumn();
+						ImGui::Text("%f / %f", anim->cur_time(), anim->length());
+
+						ImGui::TableNextColumn();
+						ImGui::Text(qdAnimation::flag2str(anim->flags(), true, true).c_str());
+						ImGui::SetItemTooltip(qdAnimation::flag2str(anim->flags(), true).c_str());
+
+						ImGui::TableNextColumn();
+						ImGui::Text(qdAnimation::status2str(anim->status(), true).c_str());
+					}
+
+					ImGui::EndTable();
+				}
+			}
+		}
+	}
+	ImGui::End();
+}
+
 void onImGuiInit() {
 	ImGuiIO &io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
@@ -452,12 +545,16 @@ void onImGuiRender() {
 			ImGui::SeparatorText("Windows");
 
 			ImGui::MenuItem("Archives", NULL, &_state->_showArchives);
+			ImGui::MenuItem("Scene Objects", NULL, &_state->_showSceneObjects);
+			ImGui::MenuItem("Scene Personages", NULL, &_state->_showScenePersonages);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
 
 	showArchives();
+	showSceneObjects();
+	showScenePersonages();
 }
 
 void onImGuiCleanup() {

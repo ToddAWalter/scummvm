@@ -358,9 +358,6 @@ bool Console::cmdScriptDump(int argc, const char **argv) {
 			if (adsData._tags.contains(tag))
 				debugPrintf("\n%d: %s\n", segno, adsData._tags[tag].c_str());
 			continue;
-		case 0x0003:
-			printOp(indent, "unknown");
-			break;
 		case 0x0005:
 			printOp(indent, "init");
 			break;
@@ -392,10 +389,10 @@ bool Console::cmdScriptDump(int argc, const char **argv) {
 			printOp(indent++, "WHILE ??");
 			break;
 		case 0x1310:
-			printOp(indent++, "IF runtype 5");
+			printOp(indent++, "IF PAUSED");
 			break;
 		case 0x1320:
-			printOp(indent++, "IF not runtype 5");
+			printOp(indent++, "IF NOT_PAUSED");
 			break;
 		case 0x1330:
 			printOp(indent++, "IF NOT_PLAYED");
@@ -428,16 +425,16 @@ bool Console::cmdScriptDump(int argc, const char **argv) {
 			printOp(--indent, "END WHILE");
 			break;
 		case 0x2000:
-			printOp(indent, "ADD sequence");
+			printOp(indent, "ADD sequence (restart)");
 			break;
 		case 0x2005:
-			printOp(indent, "ADD sequence");
+			printOp(indent, "ADD sequence (continue)");
 			break;
 		case 0x2010:
 			printOp(indent, "STOP SCENE");
 			break;
 		case 0x2015:
-			printOp(indent, "SET RUNFLAG 5");
+			printOp(indent, "PAUSE SEQ");
 			break;
 		case 0x2020:
 			printOp(indent, "RESET SEQ");
@@ -467,7 +464,7 @@ bool Console::cmdScriptDump(int argc, const char **argv) {
 			printOp(indent, "RUN_SCRIPT");
 			break;
 		case 0xF210:
-			printOp(indent, "RUN_SCRIPT");
+			printOp(indent, "RESTART_SCRIPT");
 			break;
 		case 0x1420:
 			printOp(--indent, "AND");

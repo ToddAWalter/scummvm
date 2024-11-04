@@ -142,13 +142,15 @@ Graphics::ManagedSurface *CastleEngine::loadFrameWithHeaderDOS(Common::SeekableR
 	return frame;
 }
 
+void CastleEngine::initDOS() {
+	_viewArea = Common::Rect(40, 33 - 2, 280, 152);
+}
+
 void CastleEngine::loadAssetsDOSFullGame() {
 	Common::File file;
 	Common::SeekableReadStream *stream = nullptr;
 
 	if (_renderMode == Common::kRenderEGA) {
-		_viewArea = Common::Rect(40, 33, 280, 152);
-
 		file.open("CME.EXE");
 		stream = unpackEXE(file);
 		if (stream) {
@@ -194,7 +196,7 @@ void CastleEngine::loadAssetsDOSFullGame() {
 			_strenghtWeightsFrames = loadFramesWithHeaderDOS(stream, 4);
 			_spiritsMeterIndicatorBackgroundFrame = loadFrameWithHeaderDOS(stream);
 			_spiritsMeterIndicatorFrame = loadFrameWithHeaderDOS(stream);
-			loadFrameWithHeaderDOS(stream); // side
+			_spiritsMeterIndicatorSideFrame = loadFrameWithHeaderDOS(stream); // side
 			loadFrameWithHeaderDOS(stream); // ???
 
 			/*for (int i = 0; i < 6; i++)
@@ -269,7 +271,7 @@ void CastleEngine::loadAssetsDOSFullGame() {
 		switch (_language) {
 			case Common::ES_ESP:
 				stream = decryptFile("CMLS");
-				loadRiddles(stream, 0xaae - 2 - 21 * 2, 21);
+				loadRiddles(stream, 0xaae - 2 - 22 * 2, 22);
 				break;
 			case Common::FR_FRA:
 				stream = decryptFile("CMLF");
@@ -296,14 +298,6 @@ void CastleEngine::loadAssetsDOSFullGame() {
 	} else
 		error("Not implemented yet");
 
-	addGhosts();
-	// Discard the first three global conditions
-	// It is unclear why they hide/unhide objects that formed the spirits
-	for (int i = 0; i < 3; i++) {
-		debugC(kFreescapeDebugParser, "Discarding condition %s", _conditionSources[1].c_str());
-		_conditions.remove_at(1);
-		_conditionSources.remove_at(1);
-	}
 
 	// CPC
 	// file = gameDir.createReadStreamForMember("cm.bin");
@@ -317,8 +311,6 @@ void CastleEngine::loadAssetsDOSDemo() {
 	Common::SeekableReadStream *stream = nullptr;
 
 	if (_renderMode == Common::kRenderEGA) {
-		_viewArea = Common::Rect(40, 33, 280, 152);
-
 		file.open("CMDE.EXE");
 		stream = unpackEXE(file);
 		if (stream) {
@@ -429,6 +421,7 @@ void CastleEngine::loadAssetsDOSDemo() {
 		delete stream;
 	} else
 		error("Not implemented yet");
+
 }
 
 void CastleEngine::drawDOSUI(Graphics::Surface *surface) {
@@ -448,14 +441,20 @@ void CastleEngine::drawDOSUI(Graphics::Surface *surface) {
 	surface->fillRect(backRect, back);
 
 	Common::String message;
-	int deadline;
+	int deadline = -1;
 	getLatestMessages(message, deadline);
-	if (deadline <= _countdown) {
+	if (deadline > 0 && deadline <= _countdown) {
 		drawStringInSurface(message, 97, 182, front, back, surface);
 		_temporaryMessages.push_back(message);
 		_temporaryMessageDeadlines.push_back(deadline);
-	} else
-		drawStringInSurface(_currentArea->_name, 97, 182, front, back, surface);
+	} else {
+		if (_gameStateControl == kFreescapeGameStatePlaying) {
+			if (ghostInArea())
+				drawStringInSurface(_messagesList[116], 97, 182, front, back, surface);
+			else
+				drawStringInSurface(_currentArea->_name, 97, 182, front, back, surface);
+		}
+	}
 
 	for (int k = 0; k < int(_keysCollected.size()); k++) {
 		surface->copyRectToSurfaceWithKey((const Graphics::Surface)*_keysBorderFrames[k], 76 - k * 3, 179, Common::Rect(0, 0, 6, 14), black);
@@ -466,7 +465,8 @@ void CastleEngine::drawDOSUI(Graphics::Surface *surface) {
 	surface->copyRectToSurface(*_flagFrames[flagFrameIndex], 285, 5, Common::Rect(0, 0, _flagFrames[flagFrameIndex]->w, _flagFrames[flagFrameIndex]->h));
 
 	surface->copyRectToSurface((const Graphics::Surface)*_spiritsMeterIndicatorBackgroundFrame, 136, 162, Common::Rect(0, 0, _spiritsMeterIndicatorBackgroundFrame->w, _spiritsMeterIndicatorBackgroundFrame->h));
-	surface->copyRectToSurfaceWithKey((const Graphics::Surface)*_spiritsMeterIndicatorFrame, 125 + _spiritsMeterPosition, 161, Common::Rect(0, 0, _spiritsMeterIndicatorFrame->w, _spiritsMeterIndicatorFrame->h), black);
+	surface->copyRectToSurfaceWithKey((const Graphics::Surface)*_spiritsMeterIndicatorFrame, 125 + 6 + _spiritsMeterPosition, 161, Common::Rect(0, 0, _spiritsMeterIndicatorFrame->w, _spiritsMeterIndicatorFrame->h), black);
+	surface->copyRectToSurface((const Graphics::Surface)*_spiritsMeterIndicatorSideFrame, 122 + 5 + 1, 157 + 5 - 1, Common::Rect(0, 0, _spiritsMeterIndicatorSideFrame->w / 2, _spiritsMeterIndicatorSideFrame->h));
 	//surface->copyRectToSurface(*_spiritsMeterIndicatorFrame, 100, 50, Common::Rect(0, 0, _spiritsMeterIndicatorFrame->w, _spiritsMeterIndicatorFrame->h));
 }
 

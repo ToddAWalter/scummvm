@@ -85,8 +85,10 @@ static uint8 video_hw_mode = 0;
 
 static unsigned base_width = RES_W_OVERLAY;
 static unsigned base_height = RES_H_OVERLAY;
-static unsigned max_width = RES_W_OVERLAY;
-static unsigned max_height = RES_H_OVERLAY;
+static unsigned gui_width = RES_W_OVERLAY;
+static unsigned gui_height = RES_H_OVERLAY;
+static unsigned max_width = RES_INIT_MAX_W;
+static unsigned max_height = RES_INIT_MAX_H;
 
 static uint32 current_frame = 0;
 static uint8 frameskip_no;
@@ -94,7 +96,7 @@ static uint8 frameskip_type;
 static uint8 frameskip_threshold;
 static uint32 frameskip_counter = 0;
 
-static uint8 audio_status = AUDIO_STATUS_MUTE;
+static uint16 av_status = AUDIO_STATUS_MUTE;
 
 static unsigned retro_audio_buff_occupancy = 0;
 static uint8 retro_audio_buff_underrun_threshold = 25;
@@ -130,6 +132,16 @@ uintptr_t retro_get_hw_fb(void) {
 
 void *retro_get_proc_address(const char *name) {
 	return (void *)(hw_render.get_proc_address(name));
+}
+#endif
+
+#ifdef USE_HIGHRES
+static void retro_gui_res_reset() {
+	if (retro_emu_thread_started()) {
+		LIBRETRO_G_SYSTEM->beginGFXTransaction();
+		LIBRETRO_G_SYSTEM->initSize(0, 0, nullptr);
+		LIBRETRO_G_SYSTEM->endGFXTransaction();
+	}
 }
 #endif
 
@@ -225,9 +237,9 @@ static void audio_run(void) {
 	}
 
 	if (samples_produced)
-		audio_status &= ~AUDIO_STATUS_MUTE;
+		av_status &= ~AUDIO_STATUS_MUTE;
 	else {
-		audio_status |= AUDIO_STATUS_MUTE;
+		av_status |= AUDIO_STATUS_MUTE;
 		return;
 	}
 
@@ -248,14 +260,14 @@ static void audio_run(void) {
 
 static void retro_audio_buff_status_cb(bool active, unsigned occupancy, bool underrun_likely) {
 	if (active)
-		audio_status |= AUDIO_STATUS_BUFFER_ACTIVE;
+		av_status |= AUDIO_STATUS_BUFFER_ACTIVE;
 	else
-		audio_status &= ~AUDIO_STATUS_BUFFER_ACTIVE;
+		av_status &= ~AUDIO_STATUS_BUFFER_ACTIVE;
 
 	if (occupancy < retro_audio_buff_underrun_threshold)
-		audio_status |= AUDIO_STATUS_BUFFER_UNDERRUN;
+		av_status |= AUDIO_STATUS_BUFFER_UNDERRUN;
 	else if (occupancy > (retro_audio_buff_underrun_threshold << 2))
-		audio_status &= ~AUDIO_STATUS_BUFFER_UNDERRUN;
+		av_status &= ~AUDIO_STATUS_BUFFER_UNDERRUN;
 
 	retro_audio_buff_occupancy = occupancy;
 }
@@ -549,7 +561,31 @@ static void update_variables(void) {
 		}
 	}
 
-	if (!(audio_status & AUDIO_STATUS_BUFFER_SUPPORT)) {
+#ifdef USE_HIGHRES
+	var.key = "scummvm_gui_h_res";
+	var.value = NULL;
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+		uint16 new_gui_height = (int)atoi(var.value);
+		av_status |= new_gui_height != gui_height && LIBRETRO_G_SYSTEM->inLauncher() ? AV_STATUS_UPDATE_GUI : 0;
+		gui_height = new_gui_height;
+	}
+
+	var.key = "scummvm_gui_aspect_ratio";
+	var.value = NULL;
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+		uint8 num = 4;
+		uint8 den = 3;
+		if (atoi(var.value)) {
+			num = 16;
+			den = 9;
+		}
+		uint16 new_gui_width = gui_height * num / den + (gui_height * num % den != 0);
+		av_status |= (new_gui_width != gui_width) && LIBRETRO_G_SYSTEM->inLauncher() ? AV_STATUS_UPDATE_GUI : 0;
+		gui_width = new_gui_width;
+	}
+#endif
+
+	if (!(av_status & AUDIO_STATUS_BUFFER_SUPPORT)) {
 		if (frameskip_type > 1) {
 			retro_log_cb(RETRO_LOG_WARN, "Selected frameskip mode not available.\n");
 			retro_osd_notification("Selected frameskip mode not available");
@@ -558,11 +594,11 @@ static void update_variables(void) {
 	}
 
 	if (old_frameskip_type != frameskip_type || old_frame_rate != frame_rate || old_sample_rate != sample_rate) {
-		audio_status |= AUDIO_STATUS_UPDATE_LATENCY;
+		av_status |= AUDIO_STATUS_UPDATE_LATENCY;
 		if (old_frame_rate != frame_rate || old_sample_rate != sample_rate) {
 			audio_buffer_init(sample_rate, (uint16) frame_rate);
 			if (g_system)
-				audio_status |= (AUDIO_STATUS_UPDATE_AV_INFO & AUDIO_STATUS_RESET_PENDING);
+				av_status |= (AV_STATUS_UPDATE_AV_INFO & AV_STATUS_RESET_PENDING);
 		}
 	}
 
@@ -638,6 +674,14 @@ float retro_setting_get_gamepad_acceleration_time(void) {
 
 float retro_setting_get_frame_rate(void) {
 	return frame_rate;
+}
+
+int retro_setting_get_gui_res_w(void) {
+	return gui_width;
+}
+
+int retro_setting_get_gui_res_h(void) {
+	return gui_height;
 }
 
 bool retro_get_input_bitmask_supported(void) {
@@ -828,9 +872,9 @@ void retro_set_size(unsigned width, unsigned height) {
 	} else if (width > max_width || height > max_height) {
 		max_width = width;
 		max_height = height;
-		audio_status |= AUDIO_STATUS_UPDATE_AV_INFO;
+		av_status |= AV_STATUS_UPDATE_AV_INFO;
 	} else
-		audio_status |= AUDIO_STATUS_UPDATE_GEOMETRY;
+		av_status |= AV_STATUS_UPDATE_GEOMETRY;
 
 	base_width = width;
 	base_height = height;
@@ -889,9 +933,11 @@ void retro_init(void) {
 
 	struct retro_audio_buffer_status_callback buf_status_cb;
 	buf_status_cb.callback = retro_audio_buff_status_cb;
-	audio_status = environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, &buf_status_cb) ? (audio_status | AUDIO_STATUS_BUFFER_SUPPORT) : (audio_status & ~AUDIO_STATUS_BUFFER_SUPPORT);
+	av_status = environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, &buf_status_cb) ? (av_status | AUDIO_STATUS_BUFFER_SUPPORT) : (av_status & ~AUDIO_STATUS_BUFFER_SUPPORT);
 
 	update_variables();
+	max_width = gui_width > max_width ? gui_width : max_width;
+	max_height = gui_height > max_height ? gui_height : max_height;
 
 	retro_set_options_display();
 
@@ -1059,22 +1105,28 @@ void retro_run(void) {
 	except in case of core options reset to defaults, for which the following call is needed*/
 	retro_update_options_display();
 
-	if (audio_status & (AUDIO_STATUS_UPDATE_AV_INFO | AUDIO_STATUS_UPDATE_GEOMETRY)) {
+#ifdef USE_HIGHRES
+		if (av_status & AV_STATUS_UPDATE_GUI) {
+			retro_gui_res_reset();
+			av_status &= ~AV_STATUS_UPDATE_GUI;
+		}
+#endif
+
+	if (av_status & (AV_STATUS_UPDATE_AV_INFO | AV_STATUS_UPDATE_GEOMETRY)) {
 		struct retro_system_av_info info;
 		retro_get_system_av_info(&info);
-		if (audio_status & AUDIO_STATUS_UPDATE_GEOMETRY) {
-			environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &info);
-			audio_status &= ~AUDIO_STATUS_UPDATE_GEOMETRY;
-		} else {
+		if (av_status & AV_STATUS_UPDATE_AV_INFO)
 			environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &info);
-			audio_status &= ~AUDIO_STATUS_UPDATE_AV_INFO;
-		}
+		else
+			environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &info);
+
+		av_status &= ~(AV_STATUS_UPDATE_AV_INFO | AV_STATUS_UPDATE_GEOMETRY);
 #ifdef USE_OPENGL
-			context_reset();
+		context_reset();
 #endif
 	}
 
-	if (audio_status & AUDIO_STATUS_UPDATE_LATENCY) {
+	if (av_status & AUDIO_STATUS_UPDATE_LATENCY) {
 		uint32 audio_latency;
 		float frame_time_msec = 1000.0f / frame_rate;
 
@@ -1085,11 +1137,11 @@ void retro_run(void) {
 
 		/* This can only be called from within retro_run() */
 		environ_cb(RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY, &audio_latency);
-		audio_status &= ~AUDIO_STATUS_UPDATE_LATENCY;
+		av_status &= ~AUDIO_STATUS_UPDATE_LATENCY;
 	}
 
-	if (audio_status & AUDIO_STATUS_RESET_PENDING) {
-		audio_status &= ~AUDIO_STATUS_RESET_PENDING;
+	if (av_status & AV_STATUS_RESET_PENDING) {
+		av_status &= ~AV_STATUS_RESET_PENDING;
 		retro_reset();
 		return;
 	}
@@ -1104,7 +1156,7 @@ void retro_run(void) {
 
 		/* Determine frameskip need based on settings */
 		if (frameskip_type == 2)
-			skip_frame = ((audio_status & (AUDIO_STATUS_BUFFER_UNDERRUN | AUDIO_STATUS_BUFFER_ACTIVE)) == (AUDIO_STATUS_BUFFER_UNDERRUN | AUDIO_STATUS_BUFFER_ACTIVE));
+			skip_frame = ((av_status & (AUDIO_STATUS_BUFFER_UNDERRUN | AUDIO_STATUS_BUFFER_ACTIVE)) == (AUDIO_STATUS_BUFFER_UNDERRUN | AUDIO_STATUS_BUFFER_ACTIVE));
 		else if (frameskip_type == 1)
 			skip_frame = !(current_frame % frameskip_no == 0);
 		else if (frameskip_type == 3)
@@ -1113,7 +1165,7 @@ void retro_run(void) {
 		/* No frame skipping if
 		- no incoming audio (e.g. GUI)
 		- doing a THREAD_SWITCH_UPDATE loop */
-		skip_frame = skip_frame && !(audio_status & AUDIO_STATUS_MUTE);
+		skip_frame = skip_frame && !(av_status & AUDIO_STATUS_MUTE);
 
 		/* Reset frameskip counter if not flagged */
 		if ((!skip_frame && frameskip_counter) || frameskip_counter >= FRAMESKIP_MAX) {

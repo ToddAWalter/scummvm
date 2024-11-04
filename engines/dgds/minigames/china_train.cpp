@@ -19,35 +19,25 @@
  *
  */
 
-//=============================================================================
-//
-// ConsoleOutputTarget prints messages onto in-game console GUI (available
-// only if the game was compiled in debug mode).
-//
-//=============================================================================
+#include "common/system.h"
 
-#ifndef AGS_ENGINE_DEBUGGING_CONSOLE_OUTPUT_TARGET_H
-#define AGS_ENGINE_DEBUGGING_CONSOLE_OUTPUT_TARGET_H
+#include "dgds/dgds.h"
+#include "dgds/minigames/china_train.h"
 
-#include "ags/shared/debugging/output_handler.h"
+namespace Dgds {
 
-namespace AGS3 {
-namespace AGS {
-namespace Engine {
+ChinaTrain::ChinaTrain() {
+}
 
-using Shared::String;
-using Shared::DebugMessage;
+void ChinaTrain::init() {
+}
 
-class ConsoleOutputTarget : public AGS::Shared::IOutputHandler {
-public:
-	ConsoleOutputTarget();
-	virtual ~ConsoleOutputTarget();
+void ChinaTrain::tick() {
+	g_system->displayMessageOnOSD(Common::U32String("Train minigame not implemented yet!"));
+	DgdsEngine::getInstance()->setMenuToTrigger(kMenuSkipArcade);
+}
 
-	void PrintMessage(const DebugMessage &msg) override;
-};
+void ChinaTrain::end() {
+}
 
-} // namespace Engine
-} // namespace AGS
-} // namespace AGS3
-
-#endif
+} // end namespace Dgds

@@ -40,23 +40,37 @@ namespace Wintermute {
 
 class BaseSurfaceOpenGL3D;
 
-struct SimpleShadowVertex {
-	float u;
-	float v;
-	float nx;
-	float ny;
-	float nz;
-	float x;
-	float y;
-	float z;
-};
-
 class BaseRenderOpenGL3D : public BaseRenderer3D {
+	struct SpriteVertex {
+		float x;
+		float y;
+		float z;
+		float u;
+		float v;
+		uint8 r;
+		uint8 g;
+		uint8 b;
+		uint8 a;
+	};
+
+	struct SimpleShadowVertex {
+		float u;
+		float v;
+		float nx;
+		float ny;
+		float nz;
+		float x;
+		float y;
+		float z;
+	};
+
 public:
 	BaseRenderOpenGL3D(BaseGame *inGame = nullptr);
 	~BaseRenderOpenGL3D() override;
 
-	void setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode) override;
+	bool invalidateTexture(BaseSurfaceOpenGL3D *texture) override;
+
+	void setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode, bool forceChange = false) override;
 
 	void setAmbientLightRenderState() override;
 
@@ -74,27 +88,24 @@ public:
 
 	void dumpData(const char *filename) override {}
 	BaseImage *takeScreenshot() override;
-	void setWindowed(bool windowed) override;
 	void fadeToColor(byte r, byte g, byte b, byte a) override;
 
+	bool flip() override;
 	bool fill(byte r, byte g, byte b, Common::Rect *rect = nullptr) override;
 
 	bool setViewport(int left, int top, int right, int bottom) override;
 	bool drawLine(int x1, int y1, int x2, int y2, uint32 color) override;
 
+	DXMatrix *buildMatrix(DXMatrix* out, const DXVector2 *centre, const DXVector2 *scaling, float angle);
+	void transformVertices(struct SpriteVertex *vertices, const DXVector2 *centre, const DXVector2 *scaling, float angle);
+
 	bool setProjection() override;
-	bool setProjection2D() override;
+	bool setProjection2D();
 	bool setWorldTransform(const DXMatrix &transform) override;
 	bool setViewTransform(const DXMatrix &transform) override;
 	bool setProjectionTransform(const DXMatrix &transform) override;
 
-	bool windowedBlt() override;
-
-	void onWindowChange() override;
 	bool initRenderer(int width, int height, bool windowed) override;
-	bool flip() override;
-	bool indicatorFlip() override;
-	bool forcedFlip() override;
 	bool setup2D(bool force = false) override;
 	bool setup3D(Camera3D *camera, bool force = false) override;
 	bool setupLines() override;
@@ -118,14 +129,11 @@ public:
 	
 	BaseSurface *createSurface() override;
 	
-	bool startSpriteBatch() override {
-		return STATUS_OK;
-	};
-	bool endSpriteBatch() override {
-		return STATUS_OK;
-	};
+	bool startSpriteBatch() override;
+	bool endSpriteBatch() override;
+	bool commitSpriteBatch() override;
 
-	bool drawSpriteEx(BaseSurfaceOpenGL3D &tex, const Rect32 &rect, const Vector2 &pos, const Vector2 &rot, const Vector2 &scale,
+	bool drawSpriteEx(BaseSurface *texture, const Rect32 &rect, const Vector2 &pos, const Vector2 &rot, const Vector2 &scale,
 					  float angle, uint32 color, bool alphaDisable, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY) override;
 
 	void renderSceneGeometry(const BaseArray<AdWalkplane *> &planes, const BaseArray<AdBlock *> &blocks,
