@@ -321,7 +321,7 @@ void Animation::updateAnimation() {
 					_objectVar[47] = 1;
 					g_engine->_console->printTosText(922);
 				}
-				g_engine->_sound->waitForSpeech();
+				g_engine->waitForSpeech();
 				setupOtherNspAnimation(1, 9);
 			}
 		}
@@ -971,6 +971,39 @@ void Animation::sargoAnim() {
 	}
 	g_engine->removeFullscreenPic();
 	g_engine->_cursor.showCursor(true);
+}
+
+void Animation::gancAnim() {
+	g_engine->_cursor.showCursor(false);
+	_player->loadAnimations("ganc.nsp");
+	g_engine->showFullscreenPic("ganc.pic");
+	_animIndexTbl[0] = 0;
+	_spriteAnimCountdownTimer[0] = _player->_animations.getAnimAt(0)._frameDuration[0];
+
+	g_engine->_sound->playMusic(MusicId::kDth);
+	g_engine->playSound(0, 6, -1);
+	g_engine->_console->printTosText(0);
+	g_engine->_console->draw();
+
+	while (!_objRestarted) {
+		g_engine->_sprites.clearSpriteDrawList();
+
+		g_engine->drawFullscreenPic();
+
+		advanceAnimationFrame(0);
+		const Sprite &sargoSprite = _player->_animations.getSpriteAt(_player->_animations.getAnimAt(0)._frameNo[_animIndexTbl[0]]);
+		g_engine->_sprites.addSpriteToDrawList(303, 122, &sargoSprite, 255, sargoSprite._width, sargoSprite._height, false);
+		g_engine->_sprites.drawSprites();
+
+
+		g_engine->_screen->makeAllDirty();
+		g_engine->_screen->update();
+
+		g_system->delayMillis(20);
+	}
+	g_engine->removeFullscreenPic();
+	g_engine->_cursor.showCursor(true);
+	stuffPlayer();
 }
 
 static constexpr uint8 keeperList[250] = {
