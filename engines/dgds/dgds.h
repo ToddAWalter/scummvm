@@ -175,8 +175,10 @@ private:
 	const char *_rstFileName;
 
 	bool _isDemo;
+	bool _isEGA;
 	bool _flipMode;
 	bool _skipNextFrame;
+	uint32 _thisFrameMs;
 
 public:
 	DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc);
@@ -242,6 +244,7 @@ public:
 
 	bool hasFeature(EngineFeature f) const override {
 		return
+			(f == kSupportsReturnToLauncher) ||
 			(f == kSupportsLoadingDuringRuntime) ||
 			(f == kSupportsSavingDuringRuntime);
 	};
@@ -256,9 +259,12 @@ public:
 	ChinaTank *getChinaTank() { return _chinaTank; }
 	DragonArcade *getDragonArcade() { return _dragonArcade; }
 	void setSkipNextFrame() { _skipNextFrame = true; }
+	uint32 getThisFrameMs() const { return _thisFrameMs; }
 
 	static DgdsEngine *getInstance() { return static_cast<DgdsEngine *>(g_engine); }
 	void setFlipMode(bool mode) { _flipMode = mode; }
+
+	bool isEGA() const { return _isEGA; }
 
 	void enableKeymapper();
 	void disableKeymapper();

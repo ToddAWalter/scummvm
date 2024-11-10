@@ -25,7 +25,7 @@
 #include "m4/adv_r/other.h"
 #include "m4/graphics/gr_series.h"
 #include "m4/gui/gui_vmng_screen.h"
-#include "m4/m4.h"
+#include "m4/riddle/riddle.h"
 
 namespace M4 {
 namespace Riddle {
@@ -49,11 +49,6 @@ const int16 SNORMAL2_DIRS[] = { 240, -1 };
 const char *SNORMAL2_NAMES[] = { "203s02" };
 const int16 SSHADOW2_DIRS[] = { 250, -1 };
 const char *SSHADOW2_NAMES[] = { "203ssh02" };
-
-const int16 PEASANT_NORMAL_DIRS[] = { 240, -1 };
-const char *PEASANT_NORMAL_NAMES[] = { "pesky walk pos3" };
-const int16 PEASANT_SHADOW_DIRS[] = { 250, -1 };
-const char *PEASANT_SHADOW_NAMES[] = { "shadow pesky walk pos3" };
 
 
 void Room203::init() {
@@ -220,7 +215,7 @@ void Room203::init() {
 				_peasantRocksShadow, 1, 1, 0);
 
 			digi_preload("203p02");
-			_flag1 = true;
+			_yellThiefFlag = true;
 			_officialMode = 2001;
 			_officialShould = 2010;
 
@@ -328,6 +323,9 @@ void Room203::init() {
 
 void Room203::daemon() {
 	int frame;
+
+	if (_G(kernel).trigger < 9999)
+		warning("%d", _G(kernel).trigger);
 
 	if (keyCheck() && _gkShould == 0 && _G(game_buff_ptr)->x1 >= 380) {
 		_gkShould = 1;
@@ -484,6 +482,7 @@ void Room203::daemon() {
 		break;
 
 	case 26:
+		sendWSMessage_150000(-1);
 		setGlobals1(_ripLooksAtHeads, 1, 21, 21, 21, 1, 21, 1, 1, 1, 1);
 		sendWSMessage_110000(-1);
 		digi_play("203r05", 1, 255, 27);
@@ -763,13 +762,13 @@ void Room203::daemon() {
 			_peskyYellsThief, 19, 19, 0);
 		sendWSMessage_10000(1, _peasantShadow, _peasantRocksShadow, 1, 1, -1,
 			_peasantRocksShadow, 1, 1, 0);
-		_flag1 = true;
+		_yellThiefFlag = true;
 		kernel_timing_trigger(100, 92);
 		digi_preload("203p02");
 		break;
 
 	case 92:
-		if (_flag1)
+		if (_yellThiefFlag)
 			digi_play("203p02", 1, 255, 93);
 		else
 			digi_unload("203p02");
@@ -780,7 +779,7 @@ void Room203::daemon() {
 		break;
 
 	case 94:
-		if (_flag1) {
+		if (_yellThiefFlag) {
 			sendWSMessage_10000(1, _peasant, _peskyYellsThief, 19, 21, 95,
 				_peskyYellsThief, 21, 21, 0);
 		} else {
@@ -790,7 +789,7 @@ void Room203::daemon() {
 		break;
 
 	case 95:
-		if (_flag1) {
+		if (_yellThiefFlag) {
 			sendWSMessage_10000(1, _peasant, _peskyYellsThief, 21, 19, 94,
 				_peskyYellsThief, 19, 19, 0);
 		} else {
@@ -824,7 +823,7 @@ void Room203::daemon() {
 		break;
 
 	case 99:
-		_flag1 = false;
+		_yellThiefFlag = false;
 		_officialTurn9_11_pointGun = series_load("official turn 9-11 point gun");
 		setGlobals1(_officialTurn9_11_pointGun, 1, 31, 31, 31, 0, 31, 13, 13, 13, 0, 13, 1, 1, 1);
 		sendWSMessage_110000(_official, 100);
@@ -1077,7 +1076,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS,
 					763, 325, 3, triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 1200, 332, 2, 120, 1);
 				_peasantMode = 4054;
@@ -1116,7 +1115,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS,
 					763, 325, 3, triggerMachineByHashCallback3000, "pp_walk");
 				sendWSMessage_10000(_peasant, 932, 325, 3, 121, 1);
 				_peasantShould = 4115;
@@ -1166,7 +1165,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS,
 					727, 325, 9, triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 436, 332, 9, 121, 1);
 				_peasantShould = 4119;
@@ -1227,7 +1226,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS, 436, 332, 3,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS, 436, 332, 3,
 					triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 727, 325, 3, 121, 1);
 				_peasantShould = 4177;
@@ -1287,7 +1286,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS, 932, 325, 9,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS, 932, 325, 9,
 					triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 763, 325, 9, 121, 1);
 				_peasantShould = 4164;
@@ -1335,7 +1334,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS, 968, 325, 3,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS, 968, 325, 3,
 					triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 1082, 322, 3, 121, 1);
 				_peasantShould = 4168;
@@ -1398,7 +1397,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS, 1082, 322, 9,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS, 1082, 322, 9,
 					triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 968, 325, 9, 121, 1);
 				_peasantShould = 4144;
@@ -1449,7 +1448,7 @@ void Room203::daemon() {
 				terminateMachineAndNull(_peasant);
 				terminateMachineAndNull(_peasantShadow);
 				_peasant = triggerMachineByHash_3000(8, 6,
-					*PEASANT_NORMAL_DIRS, *PEASANT_SHADOW_DIRS, 1118, 322, 3,
+					*S2_PEASANT_NORMAL_DIRS, *S2_PEASANT_SHADOW_DIRS, 1118, 322, 3,
 					triggerMachineByHashCallback3000, "pp_walking");
 				sendWSMessage_10000(_peasant, 1200, 332, 2, 121, 1);
 				_peasantShould = 4148;
@@ -2267,8 +2266,8 @@ void Room203::daemon() {
 			hotspot_set_active("PEASANT", false);
 			hotspot_set_active("SOLDIER'S HELMET", false);
 		} else {
-			ws_walk_load_walker_series(PEASANT_NORMAL_DIRS, PEASANT_NORMAL_NAMES);
-			ws_walk_load_shadow_series(PEASANT_SHADOW_DIRS, PEASANT_SHADOW_NAMES);
+			ws_walk_load_walker_series(S2_PEASANT_NORMAL_DIRS, S2_PEASANT_NORMAL_NAMES);
+			ws_walk_load_shadow_series(S2_PEASANT_SHADOW_DIRS, S2_PEASANT_SHADOW_NAMES);
 			_peasantRocks = series_load("peasant rocks 5frames");
 			_peasantRocksShadow = series_load("shadow pesky rock loop");
 			_peasantSquat3 = series_load("peasant 3 to squat");
@@ -2315,7 +2314,7 @@ void Room203::daemon() {
 		break;
 
 	case 352:
-		if (_flag1)
+		if (_yellThiefFlag)
 			digi_play("203p02", 1, 255, 93);
 		else
 			digi_unload("203p02");
@@ -2326,7 +2325,7 @@ void Room203::daemon() {
 		break;
 
 	case 354:
-		if (_flag1) {
+		if (_yellThiefFlag) {
 			sendWSMessage_10000(1, _peasant, _peskyYellsThief, 17, 21, 355,
 				_peskyYellsThief, 21, 21, 0);
 		} else {
@@ -2336,12 +2335,12 @@ void Room203::daemon() {
 		break;
 
 	case 355:
-		if (_flag1) {
-			sendWSMessage_10000(1, _peasant, _peskyYellsThief, 21, 1, -1,
-				_peskyYellsThief, 1, 1, 0);
-		} else {
+		if (_yellThiefFlag) {
 			sendWSMessage_10000(1, _peasant, _peskyYellsThief, 21, 17, 354,
 				_peskyYellsThief, 17, 17, 0);
+		} else {
+			sendWSMessage_10000(1, _peasant, _peskyYellsThief, 21, 1, -1,
+				_peskyYellsThief, 1, 1, 0);
 		}
 		break;
 
@@ -2350,10 +2349,11 @@ void Room203::daemon() {
 		_official = triggerMachineByHash_3000(8, 5, *OFFICIAL_NORMAL_DIRS,
 			*OFFICIAL_SHADOW_DIRS, 1436, 362, 9, triggerMachineByHashCallback3000,
 			"official arresting");
+		sendWSMessage_10000(_official, 1065, 355, 9, 357, 1);
 		break;
 
 	case 357:
-		_flag1 = false;
+		_yellThiefFlag = false;
 		setGlobals1(_officialTurn9_11, 1, 19, 19, 19);
 		sendWSMessage_110000(_official, 358);
 		break;
@@ -2376,7 +2376,7 @@ void Room203::daemon() {
 
 	case 363:
 		ws_demand_location(1100, 290, 9);
-		ws_walk(1060, 290, nullptr, 36, 7);
+		ws_walk(1060, 290, nullptr, 364, 7);
 		break;
 
 	case 364:
@@ -2446,8 +2446,8 @@ void Room203::daemon() {
 
 		_peasantRocks = series_load("peasant rocks 5frames");
 		_peasantRocksShadow = series_load("shadow pesky rock loop");
-		ws_walk_load_walker_series(PEASANT_NORMAL_DIRS, PEASANT_NORMAL_NAMES);
-		ws_walk_load_shadow_series(PEASANT_SHADOW_DIRS, PEASANT_SHADOW_NAMES);
+		ws_walk_load_walker_series(S2_PEASANT_NORMAL_DIRS, S2_PEASANT_NORMAL_NAMES);
+		ws_walk_load_shadow_series(S2_PEASANT_SHADOW_DIRS, S2_PEASANT_SHADOW_NAMES);
 
 		_peasantMode = 4050;
 		_peasantShould = 4091;
@@ -2585,6 +2585,7 @@ void Room203::pre_parser() {
 
 	if (lookFlag && player_said("ALLEY WALL") && _G(kernel).trigger == -1) {
 		_G(player).resetWalk();
+		_G(kernel).trigger_mode = KT_PARSE;
 		ws_walk(710, 300, nullptr, 230, 11);
 		_G(kernel).trigger_mode = KT_PREPARSE;
 	}
@@ -2654,7 +2655,7 @@ void Room203::parser() {
 		default:
 			break;
 		}
-	} else if (player_said("gatekeeper")) {
+	} else if (player_said("pass", "gatekeeper")) {
 		switch (_G(kernel).trigger) {
 		case -1:
 			player_set_commands_allowed(false);
@@ -2706,7 +2707,8 @@ void Room203::parser() {
 		playSound("203r07", _G(kernel).trigger);
 	} else if (lookFlag && player_said("SOLDIER'S HELMET ")) {
 		digi_play("203r09a", 1);
-	} else if (lookFlag && HAS("SOLDIER'S HELMET") && !_G(flags)[V060]) {
+	} else if (lookFlag && player_said("SOLDIER'S HELMET") &&
+			!inv_player_has("SOLDIER'S HELMET") && !_G(flags)[V060]) {
 		_G(flags)[V051] = 1;
 		player_set_commands_allowed(false);
 		playSound("203r09", _G(kernel).trigger);
@@ -3075,6 +3077,7 @@ void Room203::parser() {
 				triggerMachineByHashCallback, "rip throws bucket");
 			sendWSMessage_10000(1, _ripley, _ripTossesBucket, 1, 47, 1,
 				_ripTossesBucket, 47, 47, 0);
+			break;
 		case 1:
 			terminateMachineAndNull(_ripley);
 			ws_unhide_walker();
@@ -3133,9 +3136,9 @@ void Room203::parser() {
 				_G(flags)[kChinshiCartoon] = 1;
 			}
 
-			sendWSMessage_multi("203r53");
+			sketchInJournal("203r53");
 		}
-	} else if (lookFlag && inv_player_has(_G(player).noun)) {
+	} else if (lookFlag && !inv_player_has(_G(player).noun)) {
 		switch (_G(kernel).trigger) {
 		case -1:
 			if (_G(flags)[V050]) {

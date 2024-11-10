@@ -574,7 +574,7 @@ void SliderGadget::draw(Graphics::ManagedSurface *dst) const {
 
 	// Draw the slider control in the right spot
 	const Image *uiCorners = RequestData::getCorners();
-	uiCorners->drawBitmap(SLIDER_HANDLE_FRAME, x + _handleX, y, Common::Rect(0, 0, 320, 200), *dst);
+	uiCorners->drawBitmap(SLIDER_HANDLE_FRAME, x + _handleX, y, Common::Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), *dst);
 }
 
 SliderGadget::SliderGadget() : _lock(false), _steps(0), _gadget2_i1(0),
@@ -883,7 +883,7 @@ void RequestData::drawBackgroundNoSliders(Graphics::ManagedSurface *dst, const C
 void RequestData::fillBackground(Graphics::ManagedSurface *dst, uint16 x, uint16 y, uint16 width, uint16 height, int16 startoffset) {
 	DgdsEngine *engine = DgdsEngine::getInstance();
 
-	if (engine->getGameId() == GID_DRAGON && engine->getDetailLevel() == kDgdsDetailHigh) {
+	if (engine->getGameId() == GID_DRAGON && engine->getDetailLevel() == kDgdsDetailHigh && !engine->isEGA()) {
 		Graphics::Surface area = dst->getSubArea(Common::Rect(Common::Point(x, y), width, height));
 		while (startoffset < 0)
 			startoffset += ARRAYSIZE(MenuBackgroundColors);

@@ -205,6 +205,8 @@ Sound::~Sound() {
 
 	for (auto &data: _sfxData)
 		delete [] data._data;
+
+	delete _music;
 }
 
 void Sound::playAmigaSfx(const Common::String &filename, byte channel, byte volume) {
@@ -300,25 +302,18 @@ static void _readStrings(Common::SeekableReadStream *stream) {
 	}
 }
 
-bool Sound::loadMacMusic(const Common::String &filename) {
-	if (filename.hasSuffixIgnoreCase(".sng")) {
-		Common::String macFileName = filename.substr(0, filename.find(".")) + ".sx";
-		return loadMacMusic(macFileName);
-	}
-
+bool Sound::loadSXSoundData(const Common::String &filename, Common::Array<SoundData> &dataArray, Common::HashMap<uint16, uint16> &idMap) {
 	if (!filename.hasSuffixIgnoreCase(".sx"))
-		error("Unhandled music file type: %s", filename.c_str());
+		error("Unhandled SX file type: %s", filename.c_str());
 
-	if (filename == _currentMusic)
-		return false;
+	Common::SeekableReadStream *resStream = _resource->getResource(filename);
 
-	Common::SeekableReadStream *musicStream = _resource->getResource(filename);
-	if (!musicStream) {
-		warning("Music file %s not found", filename.c_str());
+	if (!resStream) {
+		warning("SX file %s not found", filename.c_str());
 		return false;
 	}
 
-	DgdsChunkReader chunk(musicStream);
+	DgdsChunkReader chunk(resStream);
 
 	while (chunk.readNextHeader(EX_SX, filename)) {
 		if (chunk.isContainer()) {
@@ -336,7 +331,7 @@ bool Sound::loadMacMusic(const Common::String &filename) {
 			for (uint16 k = 0; k < count; k++) {
 				uint16 idx = stream->readUint16LE();
 				debug("        %2u: %u", k, idx);
-				_musicIdMap[idx] = k;
+				idMap[idx] = k;
 			}
 		} else if (chunk.isSection(ID_TAG) || chunk.isSection(ID_FNM)) {
 			_readStrings(stream);
@@ -346,20 +341,28 @@ bool Sound::loadMacMusic(const Common::String &filename) {
 			/*uint16 type = */ stream->readUint16LE();
 			SoundData soundData;
 			soundData._data = _decompressor->decompress(stream, stream->size() - stream->pos(), soundData._size);
-			_musicData.push_back(soundData);
+			dataArray.push_back(soundData);
 		}
 	}
 
-	delete musicStream;
-	_currentMusic = filename;
+	delete resStream;
 	return true;
 }
 
 bool Sound::loadMusic(const Common::String &filename) {
 	if (filename == _currentMusic)
 		return false;
+
 	unloadMusic();
-	loadPCSound(filename, _musicData);
+	if (filename.hasSuffixIgnoreCase(".sx")) {
+		loadSXSoundData(filename, _musicData, _musicIdMap);
+	} else if (filename.hasSuffixIgnoreCase(".sng")) {
+		_musicIdMap.clear();
+		loadSNGSoundData(filename, _musicData);
+	} else {
+		error("Unhandled music file type: %s", filename.c_str());
+	}
+
 	_currentMusic = filename;
 	debug("Sound: Loaded music %s with %d entries", filename.c_str(), _musicData.size());
 	return true;
@@ -368,18 +371,26 @@ bool Sound::loadMusic(const Common::String &filename) {
 void Sound::loadSFX(const Common::String &filename) {
 	if (_sfxData.size())
 		error("Sound: SFX data should only be loaded once");
-	loadPCSound(filename, _sfxData);
+	if (filename.hasSuffixIgnoreCase(".sx")) {
+		loadSXSoundData(filename, _sfxData, _sfxIdMap);
+	} else if (filename.hasSuffixIgnoreCase(".sng")) {
+		loadSNGSoundData(filename, _sfxData);
+	} else {
+		error("Unhandled SFX file type: %s", filename.c_str());
+	}
+
+	debug("Sound: Loaded sfx %s with %d entries", filename.c_str(), _sfxData.size());
 }
 
-void Sound::loadPCSound(const Common::String &filename, Common::Array<SoundData> &dataArray) {
+void Sound::loadSNGSoundData(const Common::String &filename, Common::Array<SoundData> &dataArray) {
 	if (!filename.hasSuffixIgnoreCase(".sng"))
-		error("Unhandled music file type: %s", filename.c_str());
+		error("Unhandled SNG file type: %s", filename.c_str());
 
-	Common::SeekableReadStream *musicStream = _resource->getResource(filename);
-	if (!musicStream)
+	Common::SeekableReadStream *resStream = _resource->getResource(filename);
+	if (!resStream)
 		error("Music file %s not found", filename.c_str());
 
-	DgdsChunkReader chunk(musicStream);
+	DgdsChunkReader chunk(resStream);
 
 	while (chunk.readNextHeader(EX_SNG, filename)) {
 		if (chunk.isContainer()) {
@@ -411,13 +422,21 @@ void Sound::loadPCSound(const Common::String &filename, Common::Array<SoundData>
 		}
 	}
 
-	delete musicStream;
+	delete resStream;
 }
 
 int Sound::mapSfxNum(int num) const {
 	// Fixed offset in Dragon and HoC?
 	if (DgdsEngine::getInstance()->getGameId() == GID_DRAGON || DgdsEngine::getInstance()->getGameId() == GID_HOC)
 		return num - 24;
+	else if (_sfxIdMap.contains(num))
+		return _sfxIdMap[num];
+	return num;
+}
+
+int Sound::mapMusicNum(int num) const {
+	if (_musicIdMap.contains(num))
+		return _musicIdMap[num];
 	return num;
 }
 
@@ -443,8 +462,25 @@ void Sound::stopSfxByNum(int num) {
 }
 
 void Sound::playMusic(int num) {
-	debug("Sound: Play music %d (%s), have %d entries", num, _currentMusic.c_str(), _musicData.size());
-	playPCSound(num, _musicData, Audio::Mixer::kMusicSoundType);
+	int mappedNum = mapMusicNum(num);
+	debug("Sound: Play music %d (-> %d, %s), have %d entries", num, mappedNum, _currentMusic.c_str(), _musicData.size());
+	playPCSound(mappedNum, _musicData, Audio::Mixer::kMusicSoundType);
+}
+
+void Sound::playMusicOrSFX(int num) {
+	if (_musicIdMap.contains(num)) {
+		playMusic(num);
+	} else {
+		playSFX(num);
+	}
+}
+
+void Sound::stopMusicOrSFX(int num) {
+	if (_musicIdMap.contains(num)) {
+		stopMusic();
+	} else {
+		stopSfxByNum(num);
+	}
 }
 
 void Sound::processInitSound(uint32 obj, const SoundData &data, Audio::Mixer::SoundType soundType) {
@@ -463,7 +499,7 @@ void Sound::processInitSound(uint32 obj, const SoundData &data, Audio::Mixer::So
 	newSound->volume = MUSIC_VOLUME_DEFAULT;
 	newSound->reverb = -1;	// initialize to SCI invalid, it'll be set correctly in soundInitSnd() below
 
-	debug("processInitSound: %08x number %d, loop %d, prio %d, vol %d", obj,
+	debug(10, "processInitSound: %08x number %d, loop %d, prio %d, vol %d", obj,
 			obj, newSound->loop, newSound->priority, newSound->volume);
 
 	initSoundResource(newSound, data, soundType);
@@ -562,7 +598,7 @@ void Sound::processPlaySound(uint32 obj, bool playBed, bool restoring, const Sou
 	musicSlot->playBed = playBed;
 	musicSlot->volume = MUSIC_VOLUME_DEFAULT;
 
-	debug("processPlaySound: %08x number %d, sz %d, loop %d, prio %d, vol %d, bed %d", obj,
+	debug(10, "processPlaySound: %08x number %d, sz %d, loop %d, prio %d, vol %d, bed %d", obj,
 			resourceId, data._size, musicSlot->loop, musicSlot->priority, musicSlot->volume, playBed ? 1 : 0);
 
 	_music->soundPlay(musicSlot, restoring);
@@ -573,10 +609,6 @@ void Sound::processPlaySound(uint32 obj, bool playBed, bool restoring, const Sou
 }
 
 void Sound::playPCSound(int num, const Common::Array<SoundData> &dataArray, Audio::Mixer::SoundType soundType) {
-	if (_musicIdMap.size()) {
-		num = _musicIdMap[num];
-	}
-
 	if (num >= 0 && num < (int)dataArray.size()) {
 		const SoundData &data = dataArray[num];
 		uint32 tracks = _availableSndTracks(data._data, data._size);

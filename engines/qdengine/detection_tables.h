@@ -36,7 +36,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "shveik", "The Adventures of the Good Soldier Schweik" }, // Похождения бравого солдата Швейка
 	{ "klepa", "Klepa: Symbolic Rivets" },  // Клёпа: Символические Заклепки
 	{ "3mice2", "Marvellous Mice Adventures: Sea Rat's Birthday" }, // Три маленькие белые мышки. День рождения морской крысы
-	{ "dogncat", "Dog-n-cat: Island of Dr Rattardy" }, // Агентство "КотоПес": Остров доктора Крысарди
+	{ "dogncat", "Dog-n-cat: Island of Dr Ratiarty" }, // Агентство "КотоПес": Остров доктора Крысарди
 	{ "dogncat2", "Dog-n-cat: In the Footsteps of Unprecedented Beasts" }, // Агентство "КотоПес": По следам невиданных зверей
 
 	{ 0, 0 }
@@ -76,6 +76,12 @@ const ADGameDescription GAME_DESCRIPTIONS[] = {
 	// Na, palauk! Zuikio dainos
 	GAMEl("nupogodi3", "3fbcdd27bf0a3defb6195c92b9b0a95f", 1675036,
 			"qd_game.exe", "18b4260f3f25ac0f394a8c618203dcba", 1855208, Common::LT_LTU),
+	// Jen počkej a Píseň pro zajíce
+	GAMEl("nupogodi3", "c0fab62fe6f3a339e96b1dd4a034e40a", 1674743,
+			"qd_game.exe", "d5e942e1d588fbd127c812551c0b67ef", 909312, Common::CS_CZE),
+	// No počkaj! 3: Pieseň pre zajaca
+	//GAMEl("nupogodi3", "???", 1674743,
+	//		"qd_game.exe", "???", 909312, Common::SK_SVK),
 
 #undef SUPPORT_STATUS
 #define SUPPORT_STATUS ADGF_UNSTABLE
@@ -129,6 +135,10 @@ const ADGameDescription GAME_DESCRIPTIONS[] = {
 	GAMEl("3mice1", "a6060f3d17ea2e50a03216332e517817", 10022470,
 			"qd_game.exe", "b8b3545b022f8e0975a8a948c03ad76e", 917504, Common::CS_CZE),
 
+	// Były Sobie Myszki Trzy: Na Spotkanie Cioci Myszy
+	//GAMEl("3mice1", "???", 10022470,
+	//		"qd_game.exe", "???", 917504, Common::PL_POL),
+
 	// Похождения бравого солдата Швейка
 	// 2007/09/07. Lazy Games
 	GAME("shveik", "3877afbb780996a5608a5b358dd59726", 30233418,
@@ -152,6 +162,10 @@ const ADGameDescription GAME_DESCRIPTIONS[] = {
 	//GAMEl("3mice2", "???", 8176962, Common::CZ_CZE),
 	GAMEd("3mice2", "dfd98feb2e7d3345a7babdeb3ed3e9a7", 800666, // Demo1
 			"demo1.exe", "ffe20c2dbb131b01fccc1211a41e76e7", 962560),
+
+	// Były Sobie Myszki Trzy: Urodzinowe Śledztwo
+	//GAMEl("3mice2", "???", 10022470,
+	//		"qd_game.exe", "???", 917504, Common::PL_POL),
 
 	{ // Demo2, original
 	  // Video is in MP4 format which is not supported

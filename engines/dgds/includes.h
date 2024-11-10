@@ -29,6 +29,7 @@ namespace Dgds {
 #define ID_BIN MKTAG24('B', 'I', 'N')
 #define ID_CGA MKTAG24('C', 'G', 'A')
 #define ID_DAT MKTAG24('D', 'A', 'T')
+#define ID_DIM MKTAG24('D', 'I', 'M')
 #define ID_EGA MKTAG24('E', 'G', 'A')
 #define ID_FNM MKTAG24('F', 'N', 'M')
 #define ID_FNT MKTAG24('F', 'N', 'T')
@@ -86,8 +87,9 @@ namespace Dgds {
 
 #define EX_OVL MKTAG24('O', 'V', 'L')
 
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 200
+#define SCREEN_WIDTH (DgdsEngine::getInstance()->getGameId() != GID_CASTAWAY ? 320 : 640)
+#define SCREEN_HEIGHT (DgdsEngine::getInstance()->getGameId() != GID_CASTAWAY ? 200 : 480)
+#define SCREEN_HEIGHT_FIXED 200
 
 } // End of namespace Dgds
 

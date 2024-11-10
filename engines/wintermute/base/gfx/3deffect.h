@@ -19,23 +19,36 @@
  *
  */
 
-#ifndef DIRECTOR_LINGO_XLIBS_PORTAXCMD_H
-#define DIRECTOR_LINGO_XLIBS_PORTAXCMD_H
+/*
+ * This file is based on WME.
+ * http://dead-code.org/redir.php?target=wme
+ * Copyright (c) 2003-2013 Jan Nedoma and contributors
+ */
 
-namespace Director {
+#ifndef WINTERMUTE_3D_EFFECT_H
+#define WINTERMUTE_3D_EFFECT_H
 
-namespace PortaXCMD {
+#include "engines/wintermute/base/base_named_object.h"
 
-extern const char *xlibName;
-extern const XlibFileDesc fileNames[];
+namespace Wintermute {
 
-void open(ObjectType type, const Common::Path &path);
-void close(ObjectType type);
+//////////////////////////////////////////////////////////////////////////
+class Effect3D : public BaseClass {
+public:
+	Effect3D(BaseGame *inGame);
+	~Effect3D();
 
-void m_Porta(int nargs);
+	bool createFromFile(const Common::String &filename);
+	uint32 getEffectHash() { return _effectHash; }
+	bool invalidateDeviceObjects();
+	bool restoreDeviceObjects();
+	const char *getFileName() { return _filename.c_str(); }
 
-} // End of namespace PortaXCMD
+private:
+	Common::String _filename;
+	uint32 _effectHash;
+};
 
-} // End of namespace Director
+} // namespace Wintermute
 
 #endif

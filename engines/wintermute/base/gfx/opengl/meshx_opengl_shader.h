@@ -30,6 +30,9 @@
 
 #include "engines/wintermute/base/gfx/xmesh.h"
 
+class Effect3D;
+class Effect3DParams;
+
 #if defined(USE_OPENGL_SHADERS)
 
 #include "graphics/opengl/shader.h"
@@ -45,6 +48,9 @@ public:
 	bool render(XModel *model) override;
 	bool renderFlatShadowModel() override;
 	bool update(FrameNode *parentFrame) override;
+
+private:
+	void renderEffect(Material *material);
 
 protected:
 	GLuint _vertexBuffer;

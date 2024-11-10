@@ -137,7 +137,7 @@ static const uint16 ADS_SEQ_OPCODES[] = {
 
 bool ADSInterpreter::updateSeqTimeAndFrame(const TTMEnviro *env, Common::SharedPtr<TTMSeq> seq) {
 	if (seq->_timeInterval != 0) {
-		uint32 now = g_engine->getTotalPlayTime();
+		uint32 now = DgdsEngine::getInstance()->getThisFrameMs();
 		if (now < seq->_timeNext) {
 			debug(10, "env %d seq %d (%s) not advancing from frame %d (now %d timeNext %d interval %d)", seq->_enviro,
 					seq->_seqNum, env->_tags.getValOrDefault(seq->_seqNum).c_str(), seq->_currentFrame, now, seq->_timeNext, seq->_timeInterval);
@@ -186,7 +186,7 @@ void ADSInterpreter::findUsedSequencesForSegment(int idx) {
 						}
 					}
 					if (!already_added) {
-						debug("ADS seg no %d (idx %d) uses seq %d %d", segno, idx, envno, seqno);
+						debug(10, "ADS seg no %d (idx %d) uses seq %d %d", segno, idx, envno, seqno);
 						_adsData->_usedSeqs[idx].push_back(seq);
 					}
 				}
@@ -365,9 +365,12 @@ bool ADSInterpreter::logicOpResult(uint16 code, const TTMEnviro *env, const TTMS
 		debugN(10, "ADS 0x%04x: %s finished env %d seq %d (%s)", code, optype, envNum, seqNum, tag);
 		return seq->_runFlag == kRunTypeFinished;
 	case 0x1060: // WHILE NOT RUNNING
-	case 0x1360: // IF_NOT_RUNNING, 2 params
+	case 0x1360: { // IF_NOT_RUNNING, 2 params
 		debugN(10, "ADS 0x%04x: %s not running env %d seq %d (%s)", code, optype, envNum, seqNum, tag);
-		return seq->_runFlag == kRunTypeStopped;
+		// Dragon only checks kRunTypeStopped, HoC onward also check for kRunTypeFinished
+		bool isDragon = _vm->getGameId() == GID_DRAGON;
+		return seq->_runFlag == kRunTypeStopped || (!isDragon && seq->_runFlag == kRunTypeFinished);
+	}
 	case 0x1070: // WHILE RUNNING
 	case 0x1370: // IF_RUNNING, 2 params
 		debugN(10, "ADS 0x%04x: %s running env %d seq %d (%s)", code, optype, envNum, seqNum, tag);
@@ -529,7 +532,7 @@ bool ADSInterpreter::handleOperation(uint16 code, Common::SeekableReadStream *sc
 	case 0x1050: // WHILE finished, 2 params
 	case 0x1060: // WHILE not running, 2 params
 	case 0x1070: // WHILE running, 2 params
-	case 0x1080: // WHILE count?, 1 param (HOC+ only)
+	case 0x1080: // WHILE countdown <= , 1 param (HOC+ only)
 	case 0x1090: // WHILE ??, 1 param (HOC+ only)
 	case 0x1310: // IF paused, 2 params
 	case 0x1320: // IF not paused, 2 params
@@ -564,8 +567,11 @@ bool ADSInterpreter::handleOperation(uint16 code, Common::SeekableReadStream *sc
 
 		Common::SharedPtr<TTMSeq> seq = findTTMSeq(enviro, seqnum);
 		TTMEnviro *env = findTTMEnviro(enviro);
-		if (!seq || !env)
-			error("ADS invalid seq requested %d %d", enviro, seqnum);
+		if (!seq || !env) {
+			// This happens in Willy Beamish FDD scene 24
+			warning("ADS op %04x invalid env + seq requested %d %d", code, enviro, seqnum);
+			break;
+		}
 
 		debug(10, "ADS 0x%04x: add scene - env %d seq %d (%s) runCount %d prop %d", code,
 					enviro, seqnum, env->_tags.getValOrDefault(seqnum).c_str(), runCount, unk);
@@ -578,7 +584,7 @@ bool ADSInterpreter::handleOperation(uint16 code, Common::SeekableReadStream *sc
 			seq->_runFlag = kRunType1;
 		} else if (runCount < 0) {
 			// Negative run count sets the cut time
-			seq->_timeCut = g_engine->getTotalPlayTime() + (-runCount * MS_PER_FRAME);
+			seq->_timeCut = DgdsEngine::getInstance()->getThisFrameMs() + (-runCount * MS_PER_FRAME);
 			seq->_runFlag = kRunTypeTimeLimited;
 		} else {
 			seq->_runFlag = kRunTypeMulti;
@@ -684,6 +690,11 @@ bool ADSInterpreter::handleOperation(uint16 code, Common::SeekableReadStream *sc
 		break;
 	}
 
+	case 0x1420: // AND, 0 params - should not hit this here.
+	case 0x1430: // OR, 0 params - should not hit this here.
+		warning("ADS: Unexpected logic opcode 0x%04x - should be after IF/WHILE", code);
+		break;
+
 	case 0xF000:
 		debug(10, "ADS 0x%04x: set state 2, current idx (%d)", code, _adsData->_runningSegmentIdx);
 		if (_adsData->_runningSegmentIdx != -1)
@@ -731,8 +742,14 @@ bool ADSInterpreter::handleOperation(uint16 code, Common::SeekableReadStream *sc
 		return false;
 
 	//// unknown / to-be-implemented
-	case 0x1420: // AND, 0 params
-	case 0x1430: // OR, 0 params
+	// The next 6 are in HoC code but maybe never used?
+	case 0x13A0: // IF some_ads_variable[0] <=
+	case 0x13A1: // IF some_ads_variable[1] <=
+	case 0x13B0: // IF some_ads_variable[0] >
+	case 0x13B1: // IF some_ads_variable[1] >
+	case 0x13C0: // IF some_ads_variable[0] ==
+	case 0x13C1: // IF some_ads_variable[1] ==
+
 	case 0xFF10:
 	case 0xFFF0: // END_IF, 0 params
 	default: {
@@ -788,9 +805,14 @@ bool ADSInterpreter::run() {
 		int16 flag = _adsData->_state[idx] & 0xfff7;
 		for (auto seq : _adsData->_usedSeqs[idx]) {
 			if (flag == 3) {
+				debug(10, "ADS: Segment idx %d, Reset seq %d", idx, seq->_seqNum);
 				seq->reset();
 			} else {
-				seq->_scriptFlag = flag;
+				if (flag != seq->_scriptFlag) {
+					//debug(10, "ADS: Segment idx %d, update seq %d scriptflag %d -> %d",
+					//	idx, seq->_seqNum, seq->_scriptFlag, flag);
+					seq->_scriptFlag = flag;
+				}
 			}
 		}
 	}
@@ -854,7 +876,7 @@ bool ADSInterpreter::run() {
 				seq->_lastFrame = seq->_currentFrame;
 				result = true;
 				if (_adsData->_scriptDelay != -1 && seq->_timeInterval != _adsData->_scriptDelay) {
-					uint32 now = g_engine->getTotalPlayTime();
+					uint32 now = DgdsEngine::getInstance()->getThisFrameMs();
 					seq->_timeNext = now + _adsData->_scriptDelay;
 					seq->_timeInterval = _adsData->_scriptDelay;
 				}
@@ -890,7 +912,7 @@ bool ADSInterpreter::run() {
 			}
 		}
 
-		if (rflag == kRunTypeTimeLimited && seq->_timeCut <= g_engine->getTotalPlayTime()) {
+		if (rflag == kRunTypeTimeLimited && seq->_timeCut <= DgdsEngine::getInstance()->getThisFrameMs()) {
 			seq->_runFlag = kRunTypeFinished;
 		}
 	}

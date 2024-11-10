@@ -88,10 +88,12 @@ DgdsEngine::DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	_detailLevel(kDgdsDetailHigh), _textSpeed(1), _justChangedScene1(false), _justChangedScene2(false),
 	_random("dgds"), _currentCursor(-1), _menuToTrigger(kMenuNone), _isLoading(true), _flipMode(false),
 	_rstFileName(nullptr), _difficulty(1), _menu(nullptr), _adsInterp(nullptr), _isDemo(false),
-_dragonArcade(nullptr), _chinaTank(nullptr), _chinaTrain(nullptr), _skipNextFrame(false), _gameId(GID_INVALID) {
+	_dragonArcade(nullptr), _chinaTank(nullptr), _chinaTrain(nullptr), _skipNextFrame(false),
+	_gameId(GID_INVALID), _thisFrameMs(0) {
 
 	_platform = gameDesc->platform;
 	_gameLang = gameDesc->language;
+	_isEGA = (gameDesc->flags & ADGF_DGDS_EGA);
 
 	if (!strcmp(gameDesc->gameId, "rise")) {
 		_gameId = GID_DRAGON;
@@ -127,9 +129,11 @@ DgdsEngine::~DgdsEngine() {
 	delete _resource;
 	delete _scene;
 	delete _gdsScene;
+	delete _gameGlobals;
 	delete _soundPlayer;
 	delete _fontManager;
 	delete _menu;
+	delete _adsInterp;
 	delete _inventory;
 	delete _shellGame;
 	delete _hocIntro;
@@ -396,6 +400,9 @@ void DgdsEngine::loadGameFiles() {
 		break;
 	case GID_WILLY:
 		_gameGlobals = new WillyGlobals(_clock);
+		_soundPlayer->loadSFX("WILLYSND.SX");
+		_soundPlayer->loadMusic("WILLYMUS.SX");
+
 		if (_resource->hasResource("WILLY.GDS")) {
 			_gdsScene->load("WILLY.GDS", _resource, _decompressor);
 			_rstFileName = "WILLY.RST";
@@ -470,7 +477,7 @@ static void _dumpFrame(const Graphics::ManagedSurface &surf, const char *name) {
 #ifdef DUMP_FRAME_DATA
 	/* For debugging, dump the frame contents.. */
 	Common::DumpFile outf;
-	uint32 now = g_engine->getTotalPlayTime();
+	uint32 now = DgdsEngine::getInstance()->getThisFrameMs();
 
 	byte palbuf[768];
 	g_system->getPaletteManager()->grabPalette(palbuf, 0, 256);
@@ -503,6 +510,8 @@ Common::Error DgdsEngine::run() {
 	uint32 frameCount = 0;
 
 	while (!shouldQuit()) {
+		_thisFrameMs = getTotalPlayTime();
+
 		Common::EventType mouseEvent = Common::EVENT_INVALID;
 		while (eventMan->pollEvent(ev)) {
 			if (ev.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START) {
@@ -605,6 +614,7 @@ Common::Error DgdsEngine::run() {
 			}
 			_clock.update(false);
 		} else {
+			debug(10, "****  Starting frame %d time %d ****", frameCount, _thisFrameMs);
 
 			_scene->checkForClearedDialogs();
 
@@ -710,20 +720,20 @@ Common::Error DgdsEngine::run() {
 		g_system->updateScreen();
 
 		// Limit to 30 FPS
-		const uint32 thisFrameMillis = g_system->getMillis();
 		frameCount++;
 		if (_skipNextFrame) {
 			frameCount++;
 			_skipNextFrame = false;
 		}
-		const uint32 elapsedMillis = thisFrameMillis - startMillis;
+		const uint32 thisFrameEndMillis = g_system->getMillis();
+		const uint32 elapsedMillis = thisFrameEndMillis - startMillis;
 		const uint32 targetMillis = (frameCount * 1000 / 30);
 		if (targetMillis > elapsedMillis) {
 			// too fast, delay
 			g_system->delayMillis(targetMillis - elapsedMillis);
 		} else if (targetMillis < elapsedMillis) {
 			// too slow.. adjust expectations? :)
-			startMillis = g_system->getMillis();
+			startMillis = thisFrameEndMillis;
 			frameCount = 0;
 		}
 
@@ -844,9 +854,9 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 	s.syncAsByte(_justChangedScene2);
 
 	// sync engine play time to ensure various events run correctly.
-	uint32 playtime = g_engine->getTotalPlayTime();
+	uint32 playtime = DgdsEngine::getInstance()->getThisFrameMs();
 	s.syncAsUint32LE(playtime);
-	g_engine->setTotalPlayTime(playtime);
+	setTotalPlayTime(playtime);
 
 	s.syncString(_backgroundFile);
 	if (s.isLoading()) {

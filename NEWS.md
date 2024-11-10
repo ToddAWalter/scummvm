@@ -4,117 +4,161 @@ For a more comprehensive changelog of the latest experimental code, see:
 #### 2.9.0 (XXXX-XX-XX)
 
  New games:
-  - Added support for Orion Burger.
-  - Added support for Total Eclipse and Total Eclipse 2.
-  - Added support for Thimbleweed Park.
-  - Added support for The Space Bar.
-  - Added support for Moonbase Commander.
-  - Added support for Backyard Basketball.
-  - Added support for Unrest.
-  - Added support for Rise of the Dragon.
-  - Added support for Castle Master.
+   - Added support for Orion Burger.
+   - Added support for Total Eclipse and Total Eclipse 2.
+   - Added support for Thimbleweed Park.
+   - Added support for The Space Bar.
+   - Added support for Moonbase Commander.
+   - Added support for Backyard Basketball.
+   - Added support for Unrest.
+   - Added support for Rise of the Dragon.
+   - Added support for Castle Master.
+   - Added support for Wait for it! Issue 3. Song for a Hare.
+   - Added support for Mask Show.
+   - Added support for Marvellous Mice Adventures: Meeting Sea Rat.
+   - Added support for The Adventures of the Good Soldier Schweik.
+   - Added support for Marvellous Mice Adventures: Sea Rat's Birthday.
 
  New platforms:
-  - Added SailfishOS port.
+   - Added SailfishOS port.
 
  General:
-  - Fixed GLSL version parsing on some OpenGL ES2 platforms.
-  - Added optional dependency for libopenmpt for sound.
-  - The "Aspect ratio correction" option within the Global Options section
-    is now active by default.
-  - Added optional dependency for libmpcdec (musepack) for sound.
+   - Fixed GLSL version parsing on some OpenGL ES2 platforms.
+   - Added optional dependency for libopenmpt for sound.
+   - The "Aspect ratio correction" option within the Global Options section
+     is now active by default.
+   - Added optional dependency for libmpcdec (musepack) for sound.
+   - There is now a checkbox for the --copy-protection command-line option.
+
+ ADL:
+   - Added Apple II checkerboard cursor as a visual option.
 
  AGI:
-  - Fixed duration of timed text boxes. They were shown only half as long as
-    they should be, making e.g. the King's Quest III intro hard to read.
+   - Fixed duration of timed text boxes. They were shown only half as long as
+     they should be, making e.g. the King's Quest III intro hard to read.
+   - The predictive input dialog popup when clicking on the prompt line or in an input field
+     is now an optional game setting, disabled by default.
 
  AGOS:
-  - Added keymapper support.
+   - Added keymapper support.
 
  AGS:
-  - Syncronized with upstream AGS 3.6.0.58.
-  - Fixed glitchy staircase in old Maniac Mansion Mania episodes, caused by
-    imperfect pathfinding.
+   - Syncronized with upstream AGS 3.6.0.58.
+   - Fixed glitchy staircase in old Maniac Mansion Mania episodes, caused by
+     imperfect pathfinding.
+
+ Asylum:
+   - Implemented moving with the arrow keys.
 
  BBVS:
-  - Added keymapper support.
+   - Added keymapper support.
+
+ Bladerunner:
+   - Fixed a soft-lock case for Izo at Hawker's Circle.
+   - The "Designers cut" setting can be set in advance and persist for a new game.
+   - Improved, reliable application of custom random seeds.
 
  Cine:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Composer:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Cruise:
-  - Added support for Russian fan-translation.
-  - Added keymapper support.
+   - Added support for Russian fan-translation.
+   - Added keymapper support.
 
  Draci:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Dreamweb:
-  - Fixed crash when changing scenes, while holding some non-essential game
-    items.
+   - Fixed crash when changing scenes, while holding some non-essential game
+     items.
+
+ EFH:
+   - Fixed various crashes when exiting in the middle of an interaction.
 
  Freescape:
-  - Added support for Atari/Amiga releases of Dark Side.
-  - Improved handling of close colinear surfaces.
-  - Added "authentic graphics" mode.
-  - Fixed several glitches in the different render modes.
-  - Refactored sound handling for different games.
-  - Refactored font handling to use common classes.
-  - Improved keymapper support coverage.
-  - Correctly implement aspect ratio correction following dosbox implementation.
-  - More precise perspective matrix computation to match the original.
+   - Added support for Atari/Amiga releases of Dark Side.
+   - Added "authentic graphics" mode.
+   - Fixed several glitches in the different render modes.
+   - Improved keymapper support coverage.
+   - Correctly implement aspect ratio correction following dosbox implementation.
+
+ GLK/ADVSYS:
+   - Fixed parsing for input commands.
 
  Groovie:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Hopkins:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Hugo:
-  - Added keymapper support.
+   - Added keymapper support.
+
+ Hypno:
+   - Fixed lagging cursor on some platforms.
 
  Illusions:
-  - Added keymapper support.
+   - Added keymapper support.
 
- KYRA:
-  - (EOB) Added a "Faithful AD&D rules" checkbox, to enable improvements and
-    fixes to original Eye of the Beholder I and II game code.
-  - (EOB) Fixed an issue where multi-class characters might gain incorrect HP
-    due to round-off errors.
-  - (EOB) Corrected projectile weapon damage (as per AD&D 2nd Edition rules).
-  - (EOB) Elves get +1 to hit with swords and bows (according to the official
-    game manual).
-  - Fixed NPCs Ileria (female) and Beohram (paladin) in Eye of the Beholder I.
-  - (EOB) Fixed a few small bugs.
+ Kyra:
+   - (EOB) Added a "Faithful AD&D rules" checkbox, to enable improvements and
+     fixes to original Eye of the Beholder I and II game code.
+   - (EOB) Fixed an issue where multi-class characters might gain incorrect HP
+     due to round-off errors.
+   - (EOB) Corrected projectile weapon damage (as per AD&D 2nd Edition rules).
+   - (EOB) Elves get +1 to hit with swords and bows (according to the official
+     game manual).
+   - Fixed NPCs Ileria (female) and Beohram (paladin) in Eye of the Beholder I.
+   - (EOB) Fixed a few small bugs.
 
  Lure:
-  - Added keymapper support.
+   - Added keymapper support.
 
  MADE:
-  - Added keymapper support.
+   - Added keymapper support.
 
  MADS:
-  - Added keymapper support.
+   - Added keymapper support.
 
  MM:
    - Added MT32/LAPC-1 support for Xeen engine.
    - Fixed Xeen regression which caused some sound effects to stop abruptly.
-   - Fixed spell SP/gem requirements in MM1 enhanced mode, and actually remove spell points & gems when spells are cast.
+   - Fixed spell SP/gem requirements in MM1 enhanced mode, and actually remove
+     spell points & gems when spells are cast.
+
+ NGI:
+   - Added support for Lithuanian version of fullpipe.
 
  SAGA:
-  - Added keymapper support.
+   - Added keymapper support.
 
  SCI:
+   - Added CGA (4 colors and black/white) and Hercules render modes for most
+     SCI 0 DOS games. Also added an EGA dithering mode and a VGA gray scale
+     mode for many SCI 1 DOS games, a 16 colors mode for KQ6 Windows and
+     8 colors modes for all PC-98 games.
+   - Improved PCjr audio.
+   - Better support for Mac KQ6.
+   - Implemented KQ5 FM Towns save/restore UI.
+   - Numerous script fixes to different games.
+   - Added support for German KQ5.
+   - Added support for Spanish SQ3.
+   - Added support for Russian Camelot, Laura Bow, PQ2
    - Added support for Russian fan-translation of QFG3.
 
  SCUMM:
    - Added map generator from Moonbase Console for Moonbase Commander.
+   - Improved graphics support for Macintosh MI1, MI2 and Fate of Atlantis.
+   - Improved audio support for Macintosh Loom, Last Crusade, and MI1.
+
+ Sherlock:
+   - Added support for Russian translation of Rose Tattoo.
 
  Stark:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Sword1:
    - Added a "Windows audio engine" mode available within the ScummVM game
@@ -125,10 +169,20 @@ For a more comprehensive changelog of the latest experimental code, see:
      music volume attenuation for when speech is playing. By default the setting
      is off, since the game was developed with DOS and AIL sound drivers in mind,
      and it is also not available for Macintosh and PSX versions.
-  - Added keymapper support.
+   - Added keymapper support.
+   - Improved support on big-endian systems.
+   - Added more game variants.
+   - Restored the ability to choose language of subtitles on PC versions.
+
+ Teenagent:
+   - Added support for Polish floppy version.
 
  Tinsel:
-  - Added keymapper support.
+   - Added keymapper support.
+   - Added support for Discworld 1 Mac Japanese.
+
+ Titanic:
+   - Fixed crash if the word 'that' was used in a conversation.
 
  Tony:
    - Fix crash with rapid cursor switching.
@@ -139,19 +193,20 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added support for Russian CD fan-translation for Blue Force.
 
  Toon:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Touche:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Trecision:
-  - Added keymapper support.
+   - Added keymapper support.
 
  Tucker:
-  - Added keymapper support.
+   - Added keymapper support.
+   - Fixed being unable to enter the Lower Hall in 2nd Chapter.
 
  TwinE:
-  - Several collision related fixes
+   - Several collision related fixes
 
  Ultima:
    - Alter Ultima VIII default gamepad bindings.
@@ -160,6 +215,12 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Alter Ultima VIII minimap to use game palette.
    - Fixed Ultima VIII item splitting & merging on game map.
    - Fixed Ultima VIII animation, audio, and scene transition issues.
+
+ Voyeur:
+   - Added Interplay logo animation.
+
+ ZVision:
+   - Improved support of RTL languages.
 
  macOS port:
    - Autoupdates now use Sparkle 2.x.
@@ -218,11 +279,21 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Virtual keyboard now correctly triggers on/off wherever text input is needed.
 
  SCUMM:
-   - Fix screen corruption (and sometimes even crashes) in Mac Loom and
+   - Fixed screen corruption (and sometimes even crashes) in Mac Loom and
      Indiana Jones and the Last Crusade, most noticeably when using menu
      shortcut keys.
-   - Fix enabling/disabling of Open and Save in Mac Indiana Jones and the Last
+   - Fixed enabling/disabling of Open and Save in Mac Indiana Jones and the Last
      Crusade.
+   - Implemented old-style Macintosh GUI for: Monkey Island 1, Monkey Island 2
+     and Indiana Jones and the Fate of Atlantis.
+   - Implemented EPX graphics smoothing on Macintosh versions of the games.
+   - Restored correct autosaving behavior when using the original GUI option.
+   - Implemented more accurate sound drivers for the following Macintosh games:
+     Indiana Jones and the Last Crusade, Loom and Monkey Island 1.
+   - Made several accuracy fixes on the MIDI iMUSE system.
+   - The graphics system for Humongous Entertainment games has been completely
+     rewritten, leading to a more accurate visual experience on those titles.
+   - Made many more accuracy improvements throughout the engine.
 
  TWINE:
    - Fix ladder climbing regression.
