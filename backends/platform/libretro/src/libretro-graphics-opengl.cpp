@@ -55,7 +55,7 @@ void LibretroOpenGLGraphics::overrideCursorScaling(){
 	OpenGL::OpenGLGraphicsManager::recalculateCursorScaling();
 
 	if (_cursor){
-		const frac_t screenScaleFactor = _cursorDontScale ? intToFrac(1) : intToFrac(getWindowHeight()) / 200; /* hard coded as base resolution 320x200 is hard coded upstream */
+		const frac_t screenScaleFactor = (_cursorDontScale || ! _overlayVisible) ? intToFrac(1) : intToFrac(getWindowHeight()) / 200; /* hard coded as base resolution 320x200 is hard coded upstream */
 
 		_cursorHotspotXScaled = fracToInt(_cursorHotspotX * screenScaleFactor);
 		_cursorWidthScaled    = fracToDouble(_cursor->getWidth() * screenScaleFactor);
@@ -66,8 +66,11 @@ void LibretroOpenGLGraphics::overrideCursorScaling(){
 }
 
 void LibretroOpenGLGraphics::initSize(uint width, uint height, const Graphics::PixelFormat *format) {
+	bool force_gui_redraw = false;
 	/* Override for ScummVM Launcher */
 	if (nullptr == ConfMan.getActiveDomain()){
+		/* 0 w/h is used to notify libretro gui res settings is changed */
+		force_gui_redraw = (width == 0);
 		width = retro_setting_get_gui_res_w();
 		height = retro_setting_get_gui_res_h();
 	}
@@ -79,6 +82,9 @@ void LibretroOpenGLGraphics::initSize(uint width, uint height, const Graphics::P
 	handleResize(width, height);
 	OpenGL::OpenGLGraphicsManager::initSize(width, height, format);
 	LIBRETRO_G_SYSTEM->refreshRetroSettings();
+
+	if (force_gui_redraw)
+		g_gui.checkScreenChange();
 }
 
 OSystem::TransactionError LibretroOpenGLGraphics::endGFXTransaction() {

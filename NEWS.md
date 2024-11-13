@@ -41,11 +41,21 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  AGOS:
    - Added keymapper support.
+   - Fixed timer handling in savegames, addressing issues such as crashing in
+     Waxworks Egypt Level 3 and Power Points not regenerating in Elvira 2.
 
  AGS:
-   - Syncronized with upstream AGS 3.6.0.58.
+   - Syncronized with upstream AGS 3.6.1.29.
+   - Added commandline --language option to specify the game language overriding the GUI.
    - Fixed glitchy staircase in old Maniac Mansion Mania episodes, caused by
      imperfect pathfinding.
+   - Fixed savescreen not accepting keyboard input in a few games (e.g. An English Haunting).
+   - Fixed colorless texts in games using the SpriteFont plugin (e.g. Detective Gallo).
+   - Updated .mod playback and fixed looping not working in rare occasions.
+   - Fixed misbehaving legacy upscaler in old games.
+   - Fixed rare incorrect tinting when using AVX2 optimizations.
+   - Added a few checks for unsupported videos to prevent crashes.
+   - Multiple updates to the detection tables.
 
  Asylum:
    - Implemented moving with the arrow keys.
@@ -57,6 +67,15 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed a soft-lock case for Izo at Hawker's Circle.
    - The "Designers cut" setting can be set in advance and persist for a new game.
    - Improved, reliable application of custom random seeds.
+
+ Chewy:
+   - Fixed cyber crown state before Surimy attack.
+   - Fixed changing hotspot subtexts.
+   - Fixed keyboard handling in the inventory screen.
+   - Fixed unlocked cutscenes in cinema screen.
+   - Fixed music in harbor during the second visit.
+   - Fixed movement of Chewy's boat during the boat race.
+   - Fixed room placement of Nichelle after Kong attack.
 
  Cine:
    - Added keymapper support.
@@ -134,6 +153,8 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  SAGA:
    - Added keymapper support.
+   - Prevent reaching an unwinnable state when not performing key actions in
+     Nimdok's chapter in IHNM.
 
  SCI:
    - Added CGA (4 colors and black/white) and Hercules render modes for most

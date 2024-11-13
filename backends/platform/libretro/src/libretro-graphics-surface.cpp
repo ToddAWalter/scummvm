@@ -126,7 +126,7 @@ void LibretroGraphics::updateScreen() {
 }
 
 void LibretroGraphics::realUpdateScreen(void) {
-	const Graphics::Surface &srcSurface = (_overlayInGUI) ? _overlay : _gameScreen;
+	const Graphics::Surface &srcSurface = (_overlayVisible) ? _overlay : _gameScreen;
 
 	if (srcSurface.w && srcSurface.h)
 		_screen.blitFrom(srcSurface, Common::Rect(srcSurface.w,srcSurface.h),Common::Rect(_screen.w,_screen.h),&_gamePalette);
@@ -169,7 +169,7 @@ void LibretroGraphics::warpMouse(int x, int y) {
 }
 
 void LibretroGraphics::overrideCursorScaling(){
-	const frac_t screenScaleFactor = _cursorDontScale ? intToFrac(1) : intToFrac(getWindowHeight()) / 200; /* hard coded as base resolution 320x200 is hard coded upstream */
+	const frac_t screenScaleFactor = (_cursorDontScale || ! _overlayVisible) ? intToFrac(1) : intToFrac(getWindowHeight()) / 200; /* hard coded as base resolution 320x200 is hard coded upstream */
 
 	_cursorHotspotXScaled = fracToInt(_cursorHotspotX * screenScaleFactor);
 	_cursorWidthScaled    = fracToDouble(_cursor.w * screenScaleFactor);

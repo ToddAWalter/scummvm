@@ -1182,13 +1182,30 @@ static const MohawkGameDescription gameDescriptions[] = {
 		0
 	},
 
+	// Harry and the Haunted House 1.0
+	// Bugreport #15042
+	{
+		{
+			"harryhh",
+			"v1.0",
+			AD_ENTRY1s("HARRY.512", "d1d33d3c02897bbcc798cd162c5c8fce", 2381),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			GUIO1(GUIO_NOASPECT)
+		},
+		GType_LIVINGBOOKSV1,
+		0,
+		"HARRY.EXE"
+	},
+
 	// Harry and the Haunted House 1.1
 	// From pacifist
 	{
 		{
 			"harryhh",
 			"v1.1",
-			AD_ENTRY1("HARRY.512", "8d786f0998f27e44603a2202d6786c25"),
+			AD_ENTRY1s("HARRY.512", "8d786f0998f27e44603a2202d6786c25", 2381),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
 			ADGF_NO_FLAGS,
