@@ -226,7 +226,7 @@ protected:
 
 	bool runOkCancelDialog(Common::String text);
 
-	void readStrings();
+	bool readStrings();
 	void parseSTRSBlock(uint8 *strsData, MacSTRSParsingEntry *parsingTable, int parsingTableSize);
 
 	// These are non interactable, no point in having them as widgets for now...
@@ -468,10 +468,10 @@ public:
 	class MacSlider : public MacSliderBase {
 	private:
 		Common::Point _clickPos;
-		uint32 _nextRepeat;
+		uint32 _nextRepeat = 0;
 
-		int _pageSize;
-		int _paging;
+		int _pageSize = 0;
+		int _paging = 0;
 
 		bool _upArrowPressed = false;
 		bool _downArrowPressed = false;
@@ -708,7 +708,7 @@ public:
 	virtual bool handleEvent(Common::Event event);
 
 	static void menuCallback(int id, Common::String &name, void *data);
-	virtual void initialize();
+	virtual bool initialize();
 	void updateWindowManager();
 
 	const Graphics::Font *getFont(FontId fontId);

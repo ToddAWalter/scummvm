@@ -89,7 +89,7 @@ DgdsEngine::DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	_random("dgds"), _currentCursor(-1), _menuToTrigger(kMenuNone), _isLoading(true), _flipMode(false),
 	_rstFileName(nullptr), _difficulty(1), _menu(nullptr), _adsInterp(nullptr), _isDemo(false),
 	_dragonArcade(nullptr), _chinaTank(nullptr), _chinaTrain(nullptr), _skipNextFrame(false),
-	_gameId(GID_INVALID), _thisFrameMs(0) {
+	_gameId(GID_INVALID), _thisFrameMs(0), _lastGlobalFade(-1), _lastGlobalFadedPal(0) {
 
 	_platform = gameDesc->platform;
 	_gameLang = gameDesc->language;
@@ -168,7 +168,7 @@ void DgdsEngine::loadIcons() {
 bool DgdsEngine::changeScene(int sceneNum) {
 	assert(_scene && _adsInterp);
 
-	debug("CHANGE SCENE %d -> %d (clock %s)", _scene->getNum(), sceneNum, _clock.dump().c_str());
+	debug(1, "CHANGE SCENE %d -> %d (clock %s)", _scene->getNum(), sceneNum, _clock.dump().c_str());
 
 	if (sceneNum == _scene->getNum()) {
 		warning("Tried to change from scene %d to itself, doing nothing.", sceneNum);
@@ -235,7 +235,7 @@ bool DgdsEngine::changeScene(int sceneNum) {
 	else
 		_adsInterp->unload();
 
-	debug("%s", _scene->dump("").c_str());
+	debug(1, "%s", _scene->dump("").c_str());
 	_scene->runEnterSceneOps();
 
 	_justChangedScene1 = true;
@@ -379,7 +379,7 @@ void DgdsEngine::loadGameFiles() {
 		_gdsScene->load("DRAGON.GDS", _resource, _decompressor);
 		_rstFileName = "DRAGON.RST";
 
-		debug("%s", _gdsScene->dump("").c_str());
+		debug(1, "%s", _gdsScene->dump("").c_str());
 
 		loadCorners("DCORNERS.BMP");
 		reqParser.parse(&invRequestData, "DINV.REQ");
@@ -392,7 +392,7 @@ void DgdsEngine::loadGameFiles() {
 		_gdsScene->load("HOC.GDS", _resource, _decompressor);
 		_rstFileName = "HOC.RST";
 
-		debug("%s", _gdsScene->dump("").c_str());
+		debug(1, "%s", _gdsScene->dump("").c_str());
 
 		loadCorners("HCORNERS.BMP");
 		reqParser.parse(&invRequestData, "HINV.REQ");
@@ -415,7 +415,7 @@ void DgdsEngine::loadGameFiles() {
 			loadCorners("SOWCORNERS.BMP");
 		}
 
-		debug("%s", _gdsScene->dump("").c_str());
+		debug(1, "%s", _gdsScene->dump("").c_str());
 
 		reqParser.parse(&invRequestData, "WINV.REQ");
 		reqParser.parse(&vcrRequestData, "WVCR.REQ");
@@ -426,7 +426,7 @@ void DgdsEngine::loadGameFiles() {
 		_gamePals->loadPalette("MRALLY.PAL");
 		_gdsScene->load("MRALLY.GDS", _resource, _decompressor);
 
-		debug("%s", _gdsScene->dump("").c_str());
+		debug(1, "%s", _gdsScene->dump("").c_str());
 
 		loadCorners("MCORNERS.BMP");
 		reqParser.parse(&invRequestData, "TOOLINFO.REQ");
@@ -462,8 +462,8 @@ void DgdsEngine::loadGameFiles() {
 	_inventory->setRequestData(invRequestData);
 	_menu->setRequestData(vcrRequestData);
 
-	debug("Parsed Inv Request:\n%s", invRequestData.dump().c_str());
-	debug("Parsed VCR Request:\n%s", vcrRequestData.dump().c_str());
+	debug(1, "Parsed Inv Request:\n%s", invRequestData.dump().c_str());
+	debug(1, "Parsed VCR Request:\n%s", vcrRequestData.dump().c_str());
 }
 
 void DgdsEngine::loadRestartFile() {
@@ -704,8 +704,13 @@ Common::Error DgdsEngine::run() {
 
 			bool haveActiveDialog = _scene->checkDialogActive();
 
-			_scene->drawAndUpdateDialogs(&_compositionBuffer);
-			_scene->drawVisibleHeads(&_compositionBuffer);
+			if (getGameId() == GID_WILLY) {
+				_scene->drawVisibleHeads(&_compositionBuffer);
+				_scene->drawAndUpdateDialogs(&_compositionBuffer);
+			} else {
+				_scene->drawAndUpdateDialogs(&_compositionBuffer);
+				_scene->drawVisibleHeads(&_compositionBuffer);
+			}
 
 			_dumpFrame(_compositionBuffer, "comp-with-dlg");
 
@@ -715,6 +720,29 @@ Common::Error DgdsEngine::run() {
 			g_system->copyRectToScreen(_compositionBuffer.getPixels(), SCREEN_WIDTH, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 			_justChangedScene1 = false;
 			_justChangedScene2 = false;
+		}
+
+		// Willy Beamish dims the palette of the screen while dialogs are active
+		if (_gameId == GID_WILLY) {
+			WillyGlobals *globals = static_cast<WillyGlobals *>(_gameGlobals);
+			int16 fade = globals->getPalFade();
+			fade = CLIP(fade, (int16)0, (int16)255);
+
+			// TODO: Same constants are in globals.cpp
+			static const int FADE_STARTCOL = 0x40;
+			static const int FADE_NUMCOLS = 0xC0;
+
+			if (_scene->hasVisibleHead()) {
+				fade = 0x80;
+			} else {
+				fade = 0;
+			}
+
+			if (_lastGlobalFade != fade || _lastGlobalFadedPal != _gamePals->getCurPalNum()) {
+				_gamePals->setFade(FADE_STARTCOL, FADE_NUMCOLS, 0, fade);
+				_lastGlobalFade = fade;
+				_lastGlobalFadedPal = _gamePals->getCurPalNum();
+			}
 		}
 
 		g_system->updateScreen();
@@ -864,7 +892,7 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 		_storedAreaBuffer.fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
 	}
 
-	debug("%s", _scene->dump("").c_str());
+	debug(1, "%s", _scene->dump("").c_str());
 	_scene->runEnterSceneOps();
 
 	return Common::kNoError;

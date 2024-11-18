@@ -366,18 +366,13 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 		break;
 	}
 
-	// Steam Win and Mac versions share the same DOS data files.
-	bool isSteamVersion = Common::String(_game.preferredTag).equalsIgnoreCase("steam");
-
 	// defaults
 	_screenWidth = 320;
 	_screenHeight = 200;
 
-	if (_game.platform == Common::kPlatformFMTowns && _game.version == 3) {	// FM-TOWNS V3 games originally use 320x240, and we have an option to trim to 200
-		_screenWidth = 320;
-		if (ConfMan.getBool("trim_fmtowns_to_200_pixels"))
-			_screenHeight = 200;
-		else
+	if (_game.platform == Common::kPlatformFMTowns && _game.version == 3) {
+		// FM-TOWNS V3 games originally use 320x240, and we have an option to trim to 200
+		if (!ConfMan.getBool("trim_fmtowns_to_200_pixels"))
 			_screenHeight = 240;
 	} else if (_game.version == 8 || _game.heversion >= 71) {
 		// COMI uses 640x480. Likewise starting from version 7.1, HE games use
@@ -387,9 +382,6 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	} else if (_game.platform == Common::kPlatformNES) {
 		_screenWidth = 256;
 		_screenHeight = 240;
-	} else if (!isSteamVersion && _useMacScreenCorrectHeight && _game.platform == Common::kPlatformMacintosh && _game.version >= 3) {
-		_screenWidth = 320;
-		_screenHeight = 200;
 	}
 
 #ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
@@ -1186,11 +1178,14 @@ Common::Error ScummEngine::init() {
 
 	Common::Path macResourceFile;
 
-	if (_game.platform == Common::kPlatformMacintosh) {
+	if (_game.platform == Common::kPlatformMacintosh && _game.heversion == 0) {
 		Common::MacResManager resource;
 
-		_macScreen = new Graphics::Surface();
-		_macScreen->create(640, _useMacScreenCorrectHeight ? 480 : 400, Graphics::PixelFormat::createFormatCLUT8());
+		// Indy3 and LOOM *must* use the _macScreen
+		if (isUsingOriginalGUI() || _game.version == 3) {
+			_macScreen = new Graphics::Surface();
+			_macScreen->create(640, _useMacScreenCorrectHeight ? 480 : 400, Graphics::PixelFormat::createFormatCLUT8());
+		}
 
 		// \xAA is a trademark glyph in Mac OS Roman. We try that, but
 		// also the Windows version, the UTF-8 version, and just plain
@@ -1210,6 +1205,11 @@ Common::Error ScummEngine::init() {
 					macResourceFile = indyFileNames[i];
 
 					_textSurfaceMultiplier = 2;
+					// FIXME: THIS IS A TEMPORARY WORKAROUND!
+					// The reason why we are initializing the Mac GUI even without original GUI active
+					// is because the engine will attempt to load Mac fonts from resources... using the
+					// _macGui object. This is not optimal, ideally we would want to decouple resource
+					// handling from the responsibilities of a simulated OS interface.
 					_macGui = new MacGui(this, macResourceFile);
 					break;
 				}
@@ -1232,6 +1232,11 @@ Common::Error ScummEngine::init() {
 					macResourceFile = loomFileNames[i];
 
 					_textSurfaceMultiplier = 2;
+					// FIXME: THIS IS A TEMPORARY WORKAROUND!
+					// The reason why we are initializing the Mac GUI even without original GUI active
+					// is because the engine will attempt to load Mac fonts from resources... using the
+					// _macGui object. This is not optimal, ideally we would want to decouple resource
+					// handling from the responsibilities of a simulated OS interface.
 					_macGui = new MacGui(this, macResourceFile);
 					break;
 				}
@@ -1261,7 +1266,7 @@ Common::Error ScummEngine::init() {
 				GUI::MessageDialog dialog(_("Could not find the 'Monkey Island' Macintosh executable to read resources\n"
 											"and instruments from. Music and Mac GUI will be disabled."), _("OK"));
 				dialog.runModal();
-			} else {
+			} else if (isUsingOriginalGUI()) {
 				_macGui = new MacGui(this, macResourceFile);
 			}
 		} else if (_game.id == GID_INDY4 && _language != Common::JA_JPN) {
@@ -1275,8 +1280,12 @@ Common::Error ScummEngine::init() {
 				"fate_v1.5",
 				"Indy 12/15/92",
 				"Indy_12/15/92",
+				"Indy 12-15-92",
+				"Indy_12-15-92",
 				"Fate of Atlantis v1.5",
-				"Fate_of_Atlantis_v1.5"
+				"Fate_of_Atlantis_v1.5",
+				"Fate of Atlantis v.1.5",
+				"Fate_of_Atlantis_v.1.5"
 			};
 
 			for (int i = 0; i < ARRAYSIZE(indy4FileNames); i++) {
@@ -1291,7 +1300,7 @@ Common::Error ScummEngine::init() {
 											"Mac GUI will not be shown."),
 										_("OK"));
 				dialog.runModal();
-			} else {
+			} else if (isUsingOriginalGUI()) {
 				_macGui = new MacGui(this, macResourceFile);
 			}
 		} else if (_game.id == GID_MONKEY2) {
@@ -1311,7 +1320,7 @@ Common::Error ScummEngine::init() {
 											"Mac GUI will not be shown."),
 										  _("OK"));
 				dialog.runModal();
-			} else {
+			} else if (isUsingOriginalGUI()) {
 				_macGui = new MacGui(this, macResourceFile);
 			}
 		}
@@ -1331,8 +1340,12 @@ Common::Error ScummEngine::init() {
 
 		memset(_completeScreenBuffer, 0, 320 * 200);
 
-		if (_macGui)
-			_macGui->initialize();
+		if (_macGui) {
+			if (!_macGui->initialize()) {
+				delete _macGui;
+				_macGui = nullptr;
+			}
+		}
 	}
 
 	// Initialize backend

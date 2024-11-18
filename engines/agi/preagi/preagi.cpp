@@ -184,10 +184,13 @@ int PreAgiEngine::getSelection(SelectionTypes type) {
 			case Common::EVENT_RBUTTONUP:
 				return 0;
 			case Common::EVENT_LBUTTONUP:
-				if (type == kSelYesNo || type == kSelAnyKey)
+				if (type == kSelYesNo || type == kSelAnyKey || type == kSelBackspace)
 					return 1;
 				break;
 			case Common::EVENT_KEYDOWN:
+				if (event.kbd.flags & Common::KBD_NON_STICKY) {
+					break;
+				}
 				switch (event.kbd.keycode) {
 				case Common::KEYCODE_y:
 					if (type == kSelYesNo)
@@ -222,15 +225,14 @@ int PreAgiEngine::getSelection(SelectionTypes type) {
 						return 0;
 					break;
 				default:
-					if (event.kbd.flags & Common::KBD_CTRL)
-						break;
-					if (type == kSelYesNo) {
-						return 2;
-					} else if (type == kSelNumber) {
-						return 10;
-					} else if (type == kSelAnyKey || type == kSelBackspace) {
-						return 1;
-					}
+					break;
+				}
+				if (type == kSelYesNo) {
+					return 2;
+				} else if (type == kSelNumber) {
+					return 10;
+				} else if (type == kSelAnyKey || type == kSelBackspace) {
+					return 1;
 				}
 				break;
 			default:

@@ -145,17 +145,15 @@ public:
 
 	void playDayChangeCutscene();
 
-	void wonGame();
-
 	void removeFullscreenPic();
 
 	void wait();
 
 	void waitForSpeech();
+	void waitForSpeechOrSfx();
 
 	void syncSoundSettings() override;
 
-public:
 	DarkseedEngine(OSystem *syst, const ADGameDescription *gameDesc);
 	~DarkseedEngine() override;
 
@@ -173,8 +171,16 @@ public:
 		return _randomSource.getRandomNumber(maxNum);
 	}
 
+	bool isDosVersion() const {
+		return _gameDescription->platform == Common::kPlatformDOS;
+	}
+
 	bool isCdVersion() const {
 		return getFeatures() & ADGF_CD;
+	}
+
+	bool isDosFloppy() const {
+		return isDosVersion() && !isCdVersion();
 	}
 
 	bool hasFeature(EngineFeature f) const override {
@@ -238,6 +244,8 @@ public:
 	void changeToRoom(int newRoomNumber, bool placeDirectly = false);
 	void waitxticks(int ticks);
 
+	void doCircles();
+
 private:
 	void updateBaseSprites();
 	void gameLoop();
@@ -254,6 +262,7 @@ private:
 	void movePlayerToDelbert();
 	void delbertThrowStick(int16 spriteNum);
 	void leavePackage();
+	void copyLine(const Graphics::Surface &surface, int16 x1, int16 x2, int16 y);
 };
 
 extern DarkseedEngine *g_engine;

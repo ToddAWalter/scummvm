@@ -114,17 +114,12 @@ void Room402::init() {
 			_val13 = 2300;
 			ws_demand_facing(11);
 
-			if (_G(kittyScreaming)) {
+			if (!_G(kittyScreaming)) {
+				ws_demand_location(660, 290);
+				digi_play("402_S03", 1, 255, 19);
+			} else {
 				ws_demand_location(425, 285);
 				player_set_commands_allowed(true);
-			} else {
-				digi_preload("950_s22");
-				_ripDownStairs = series_load("RIP DOWN STAIRS");
-				ws_hide_walker();
-				_ripEnterLeave = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x600, 0,
-					triggerMachineByHashCallback, "rip leaving castle");
-				sendWSMessage_10000(1, _ripEnterLeave, _ripDownStairs, 1, 27, 55,
-					_ripDownStairs, 27, 27, 0);
 			}
 
 		} else if (_G(flags)[V131] != 402) {
@@ -154,7 +149,7 @@ void Room402::init() {
 
 			case 408:
 				ws_demand_location(517, 239, 3);
-				ws_walk(510, 260, 0, 50, 8);
+				ws_walk(510, 260, nullptr, 50, 8);
 				break;
 
 			default:
@@ -347,17 +342,17 @@ void Room402::daemon() {
 		sendWSMessage_110000(32);
 		break;
 
-	case 31:
+	case 32:
 		digi_play("402r29", 1, 255, 33);
 		sendWSMessage_120000(-1);
 		break;
 
-	case 32:
+	case 33:
 		sendWSMessage_110000(-1);
 		digi_play("402w09", 1, 255, 34);
 		break;
 
-	case 33:
+	case 34:
 		sendWSMessage_150000(35);
 		break;
 
@@ -382,10 +377,11 @@ void Room402::daemon() {
 	case 55:
 		terminateMachineAndNull(_ripEnterLeave);
 		series_unload(_ripDownStairs);
+		ws_unhide_walker();
 		ws_demand_location(345, 275, 3);
 		ws_walk(375, 279, nullptr,
 			(_G(flags)[V131] == 402) ? 56 : 50,
-			1);
+			4);
 		break;
 
 	case 56:
@@ -1406,30 +1402,22 @@ void Room402::pre_parser() {
 	bool takeFlag = player_said("take");
 	bool lookFlag = player_said_any("look", "look at");
 
-	if (lookFlag && player_said(" ")) {
-		_G(player).need_to_walk = false;
-		_G(player).ready_to_walk = true;
-		_G(player).waiting_for_walk = false;
-	}
+	if (lookFlag && player_said(" "))
+		_G(player).resetWalk();
 
-	if (player_said("journal") && !takeFlag && !lookFlag && _G(kernel).trigger == -1) {
-		_G(player).need_to_walk = false;
-		_G(player).ready_to_walk = true;
-		_G(player).waiting_for_walk = false;
-	}
+	if (player_said("journal") && !takeFlag && !lookFlag && _G(kernel).trigger == -1)
+		_G(player).resetWalk();
 
-	if (player_said("DANZIG") && !player_said("ENTER", "DANZIG")) {
-		_G(player).need_to_walk = false;
-		_G(player).ready_to_walk = true;
-		_G(player).waiting_for_walk = false;
-	}
+	if (player_said("DANZIG") && !player_said("ENTER", "DANZIG"))
+		_G(player).resetWalk();
 
 	if (!_G(flags)[V112] && !player_said("WALK TO") &&
 		(!talkFlag || !player_said("WOLF")) &&
 		!player_said("POMERANIAN MARKS", "WOLF"))
 		_G(flags)[V112] = 1;
 
-	_val6 = 0;
+	if (_val6 == 0)
+		return;
 
 	if (player_said("POMERANIAN MARKS", "WOLF") && inv_player_has("POMERANIAN MARKS")) {
 		player_set_commands_allowed(false);
@@ -1438,32 +1426,25 @@ void Room402::pre_parser() {
 		_val12 = 2000;
 		_val13 = 2240;
 
-		_G(kernel).trigger_mode = KT_DAEMON;
 		_G(flags)[V111]++;
-		kernel_timing_trigger(1, 110);
-	} else if (_G(flags)[V116] || !player_said("WOLF") || (
-		(!player_said("US DOLLARS") || !inv_player_has("US DOLLARS")) &&
-		(!player_said("CHINESE YUAN") || !inv_player_has("CHINESE YUAN")) &&
-		(!player_said("PERUVIAN INTI") || !inv_player_has("PERUVIAN INTI")) &&
-		(!player_said("SIKKIMESE RUPEE") || !inv_player_has("SIKKIMESE RUPEE"))
-	)) {
+		kernel_timing_trigger(1, 110, KT_DAEMON, KT_PREPARSE);
+
+	} else if (!_G(flags)[V116] && player_said("WOLF") && (
+			HAS("US DOLLARS") || HAS("CHINESE YUAN") ||
+			HAS("PERUVIAN INTI") || HAS("SIKKIMESE RUPEE"))) {
+		player_set_commands_allowed(false);
+		_G(flags)[V116] = 1;
+		intr_cancel_sentence();
+		kernel_timing_trigger(1, 230, KT_DAEMON, KT_PREPARSE);
+	} else {
 		if (talkFlag && player_said("WOLF"))
 			intr_cancel_sentence();
 
 		player_set_commands_allowed(false);
 		_val12 = 2000;
 		_val13 = 2250;
-		_G(kernel).trigger_mode = KT_DAEMON;
-		kernel_timing_trigger(1, 110);
-	} else {
-		player_set_commands_allowed(false);
-		_G(flags)[V116] = 1;
-		intr_cancel_sentence();
-		_G(kernel).trigger_mode = KT_DAEMON;
-		kernel_timing_trigger(1, 230);
+		kernel_timing_trigger(1, 110, KT_DAEMON, KT_PREPARSE);
 	}
-
-	_G(kernel).trigger_mode = KT_PREPARSE;
 }
 
 void Room402::parser() {

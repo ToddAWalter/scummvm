@@ -70,7 +70,7 @@ void Room405::init() {
 		_val9 = 0;
 	}
 
-	if (!_G(flags)[V338] || !inv_object_is_here("GERMAN BANKNOTE"))
+	if (!_G(flags)[kGermanBanknoteFound] || !inv_object_is_here("GERMAN BANKNOTE"))
 		hotspot_set_active("GERMAN BANKNOTE", false);
 
 	_safariShadow = series_load("SAFARI SHADOW 3");
@@ -137,8 +137,9 @@ void Room405::daemon() {
 
 	case 22:
 		ws_demand_location(286, 324, 7);
-		ws_hide_walker();
+		ws_hide_walker(_baron);
 		sendWSMessage_150000(-1);
+		ws_hide_walker(_G(my_walker));
 		_baronWalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, -53, 100, 0x600, 0,
 			triggerMachineByHashCallback, "BARON talks rip");
 		sendWSMessage_10000(1, _baronWalker, _baronShakeSit, 1, 48, 23,
@@ -202,6 +203,7 @@ void Room405::daemon() {
 	case 31:
 		sendWSMessage_10000(1, _ripTalksBaron, _ripHandLetter, 30, 84, -1,
 			_ripHandLetter, 84, 84, 0);
+		kernel_timing_trigger(45, 32);
 		break;
 
 	case 32:
@@ -525,6 +527,7 @@ void Room405::daemon() {
 				sendWSMessage_10000(1, _baronWalker, _baronLeanForward, 11, 11, 111,
 					_baronLeanForward, 11, 11, 0);
 				_val8 = 2162;
+				conv_resume();
 				break;
 
 			case 2150:
@@ -672,6 +675,14 @@ void Room405::parser() {
 				break;
 			}
 		}
+	} else if (lookFlag && player_said("SOFA")) {
+		if (!_G(flags)[kGermanBanknoteFound] && inv_object_is_here("GERMAN BANKNOTE")) {
+			_G(flags)[kGermanBanknoteFound] = 1;
+			doAction("405r15");
+			hotspot_set_active("GERMAN BANKNOTE", true);
+		} else {
+			doAction("405r12");
+		}
 	} else if (lookFlag && player_said("GERMAN BAKNOTE") && inv_object_is_here("GERMAN BAKNOTE")) {
 		doAction("405r17");
 	} else if (lookFlag && player_said(" ")) {
@@ -782,14 +793,18 @@ void Room405::conv405a() {
 				if (entry == 1) {
 					_val6 = 1230;
 					_sound2 = sound;
-				} else if (entry == 5) {
-					_val8 = 2171;
+				} else {
+					if (entry == 5)
+						_val8 = 2171;
+
 					_val6 = 1102;
 					digi_play(sound, 1, 255, 1);
 				}
 				break;
 
 			default:
+				_val6 = 1102;
+				digi_play(sound, 1, 255, 1);
 				break;
 			}
 		}

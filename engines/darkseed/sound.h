@@ -73,19 +73,22 @@ public:
 	Common::Error sync(Common::Serializer &s);
 
 	void playTosSpeech(int tosIdx);
+	void stopSpeech();
 	bool isPlayingSpeech() const;
 	bool isPlayingSfx() const;
 	bool isPlayingMusic();
 	void resetSpeech();
-	void playMusic(MusicId musicId);
+	void playMusic(MusicId musicId, bool loop = true);
 	void playMusic(StartMusicId musicId);
 	void playMusic(Common::String const &filename, bool loop = false);
 	void stopMusic();
 	void playSfx(uint8 sfxId, int unk1, int unk2);
+	void stopSfx();
 	void syncSoundSettings();
 	void killAllSound();
 private:
 	void playDosCDSfx(int sfxId);
+	void playFloppySpeech(int tosIdx);
 };
 
 } // namespace Darkseed
