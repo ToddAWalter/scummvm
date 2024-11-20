@@ -29,6 +29,7 @@
 #include "common/random.h"
 #include "common/serializer.h"
 #include "common/util.h"
+#include "common/keyboard.h"
 #include "engines/engine.h"
 #include "graphics/screen.h"
 
@@ -90,6 +91,7 @@ public:
 	bool _ct_voice_status = false;
 	bool _isRightMouseClicked = false;
 	bool _isLeftMouseClicked = false;
+	Common::KeyCode _lastKeyPressed = Common::KeyCode::KEYCODE_INVALID;
 
 	Sound *_sound = nullptr;
 	Nsp _baseSprites;
@@ -140,6 +142,7 @@ public:
 	int16 _soundTimer = 0;
 	bool _printedcomeheredawson = false;
 	void zeroMouseButtons();
+	void updateEvents();
 
 	void gotoNextMorning();
 
@@ -249,7 +252,7 @@ public:
 private:
 	void updateBaseSprites();
 	void gameLoop();
-	void updateEvents();
+
 	void handleInput();
 	void handlePointerAction();
 	void loadRoom(int roomNumber);

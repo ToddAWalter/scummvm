@@ -30,8 +30,6 @@
 
 #include "common/config-manager.h"
 
-#include "math/glmath.h"
-
 #if defined(USE_OPENGL_SHADERS)
 
 #include "engines/wintermute/base/gfx/3dutils.h"
@@ -899,7 +897,10 @@ bool BaseRenderOpenGL3DShader::setProjectionTransform(const DXMatrix &transform)
 	return true;
 }
 
-BaseSurface *Wintermute::BaseRenderOpenGL3DShader::createSurface() {
+void BaseRenderOpenGL3DShader::postfilter() {
+}
+
+BaseSurface *BaseRenderOpenGL3DShader::createSurface() {
 	return new BaseSurfaceOpenGL3D(_gameRef, this);
 }
 

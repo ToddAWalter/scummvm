@@ -38,21 +38,21 @@ public:
 	void pre_parser() override;
 	void parser() override;
 	void daemon() override;
+	void syncGame(Common::Serializer &s) override;
 
 private:
 	void addLookMalletHotspot();
 	void addMovingMeiHotspot();
+	void conv204a();
 	void deleteMalletHotspot();
 	void deleteMeiCheiHotspot();
+	void gameSetScale(int32 frontY, int32 backY, int32 frontS, int32 backS);
+	void handleRipBangsBong();
 	void initWalkerSeries();
 	void initPriestWalker();
 	void killMcMach();
 	void killPriestWalkerMach();
 	void setWalkerDestX();
-
-	void subParser_1F42C();
-	void subParser_1F71D();
-	void game_set_scale(int32 frontY, int32 backY, int32 frontS, int32 backS);
 
 	int32 _dword1A189C = 0;
 	int32 _dword1A1898 = 0;
@@ -71,7 +71,7 @@ private:
 	int32 _field44_triggerNum = 0;
 	int32 _field48_triggerNum = 0;
 	int32 _field68 = 0;
-	int32 _field78_series = 0;
+	int32 _ripBangsBongSeries = 0;
 	int32 _fieldBC_trigger = 0;
 	int32 _fieldC0_trigger = 0;
 	int32 _fieldC4 = 0;
