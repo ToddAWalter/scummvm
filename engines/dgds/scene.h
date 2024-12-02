@@ -35,6 +35,7 @@ namespace Dgds {
 class ResourceManager;
 class Decompressor;
 class DgdsFont;
+class SoundRaw;
 
 enum SceneCondition {
 	kSceneCondNone = 0,
@@ -70,7 +71,7 @@ public:
 	uint16 _cursorNum;
 
 	// Used in Willy Beamish
-	uint16 _otherCursorNum;
+	uint16 _cursorNum2;
 	uint16 _objInteractionRectNum;
 
 	Common::Array<SceneConditions> enableConditions;
@@ -401,9 +402,11 @@ public:
 	void initIconSizes();
 	GameItem *getActiveItem();
 
-	uint16 getDefaultMouseCursor() const { return _defaultMouseCursor; }
+	int16 getDefaultMouseCursor() const { return _defaultMouseCursor; }
+	int16 getDefaultMouseCursor2() const { return _defaultMouseCursor2; }
+	int16 getOtherDefaultMouseCursor() const { return _defaultOtherMouseCursor; }
 	uint16 getInvIconNum() const { return _invIconNum; }
-	uint16 getInvIconMouseCursor() const { return _invIconMouseCursor; }
+	int16 getInvIconMouseCursor() const { return _invIconMouseCursor; }
 
 private:
 	Common::String _iconFile;
@@ -417,11 +420,11 @@ private:
 	Common::Array<ObjectInteraction> _objInteractions1;
 
 	// Additional fields that appear in Willy Beamish (unused in others)
-	uint16 _defaultMouseCursor;
-	uint16 _field3a;
+	int16 _defaultMouseCursor;
+	int16 _defaultMouseCursor2;
 	uint16 _invIconNum;
-	uint16 _invIconMouseCursor;
-	uint16 _field40;
+	int16 _invIconMouseCursor;
+	int16 _defaultOtherMouseCursor;
 };
 
 class SDSScene : public Scene {
@@ -479,6 +482,7 @@ public:
 	void loadTalkDataAndSetFlags(uint16 talknum, uint16 headnum);
 	void drawVisibleHeads(Graphics::ManagedSurface *dst);
 	bool hasVisibleHead() const;
+	bool loadCDSData(uint16 num, uint16 num2, int16 sub);
 
 	// dragon-specific scene ops
 	void addAndShowTiredDialog();
@@ -527,6 +531,7 @@ private:
 	// From here on is mutable stuff that might need saving
 	Common::Array<Dialog> _dialogs;
 	Common::Array<SceneTrigger> _triggers;
+	Common::SharedPtr<SoundRaw> _dlgSound;
 
 	GameItem *_dragItem;
 	bool _shouldClearDlg;

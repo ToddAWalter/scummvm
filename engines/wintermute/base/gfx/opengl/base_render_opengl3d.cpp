@@ -118,11 +118,14 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 bool BaseRenderOpenGL3D::flip() {
 	_lastTexture = nullptr;
 	postfilter();
-	// Disable blend mode to prevent interfere with backend renderer
-	bool prevStateBlend = glIsEnabled(GL_BLEND);
+
+	// Disable blend mode and cull face to prevent interfere with backend renderer
 	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+
 	g_system->updateScreen();
-	prevStateBlend ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+
+	_state = RSTATE_NONE;
 	return true;
 }
 
@@ -193,6 +196,11 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+		// Disable blending for 3d rendering, it seems no need to enable it.
+		// It will be enabled in other places when needed.
+		// This is delta compared to original sources.
+		glDisable(GL_BLEND);
 
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
@@ -674,16 +682,29 @@ BaseImage *BaseRenderOpenGL3D::takeScreenshot() {
 }
 
 bool BaseRenderOpenGL3D::enableShadows() {
-	warning("BaseRenderOpenGL3D::enableShadows not implemented yet");
+	_gameRef->_supportsRealTimeShadows = false;
 	return true;
 }
 
 bool BaseRenderOpenGL3D::disableShadows() {
-	warning("BaseRenderOpenGL3D::disableShadows not implemented yet");
 	return true;
 }
 
 void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const DXVector3 *lightPos, bool lightPosRelative) {
+	if (!_ready || !object || !lightPos)
+		return;
+
+	// redirect simple shadow if needed
+	bool simpleShadow = _gameRef->getMaxShadowType(object) <= SHADOW_SIMPLE;
+	if (!_gameRef->_supportsRealTimeShadows)
+		simpleShadow = true;
+	if (simpleShadow)
+		return renderSimpleShadow(object);
+
+	// TODO: to be implemented
+}
+
+void BaseRenderOpenGL3D::renderSimpleShadow(BaseObject *object) {
 	BaseSurface *shadowImage;
 	if (object->_shadowImage) {
 		shadowImage = object->_shadowImage;
@@ -694,7 +715,6 @@ void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const DXVector3 *ligh
 	if (!shadowImage) {
 		return;
 	}
-
 
 	DXMatrix scale, trans, rot, finalm;
 	DXMatrixScaling(&scale, object->_shadowSize * object->_scale3D, 1.0f, object->_shadowSize * object->_scale3D);
@@ -883,6 +903,9 @@ void BaseRenderOpenGL3D::renderSceneGeometry(const BaseArray<AdWalkplane *> &pla
 		}
 	}
 
+	// This is delta compared to original sources.
+	glDisable(GL_BLEND);
+
 	glDisable(GL_COLOR_MATERIAL);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
@@ -1023,7 +1046,6 @@ void BaseRenderOpenGL3D::postfilter() {
 		return;
 
 	setup2D();
-	_state = RSTATE_NONE;
 	glViewport(0, 0, _width, _height);
 
 	glMatrixMode(GL_PROJECTION);

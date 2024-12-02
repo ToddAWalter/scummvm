@@ -70,7 +70,7 @@ struct SaveInfoSection {
 
 #define SaveInfoSectionSize (4+4+4 + 4+4 + 4+2)
 
-#define CURRENT_VER 121
+#define CURRENT_VER 123
 #define INFOSECTION_VERSION 2
 
 #pragma mark -
@@ -1537,7 +1537,7 @@ void ScummEngine::saveLoadWithSerializer(Common::Serializer &s) {
 
 	// Don't restore the mouse position when using
 	// the original GUI, since the originals didn't
-	if (isUsingOriginalGUI()) {
+	if (s.isLoading() && isUsingOriginalGUI()) {
 		s.skip(2);
 		s.skip(2);
 	} else {
@@ -1658,7 +1658,6 @@ void ScummEngine::saveLoadWithSerializer(Common::Serializer &s) {
 			x *= 2;
 			y *= 2;
 		} else if (_macScreen) {
-			y += _macScreenDrawOffset;
 			x *= 2;
 			y *= 2;
 		}
@@ -1954,7 +1953,7 @@ void ScummEngine::saveLoadWithSerializer(Common::Serializer &s) {
 			const char *soundCards[] = {
 				"PC Speaker", "IBM PCjr/Tandy", "Creative Music System", "AdLib", "Roland MT-32/CM-32L"
 			};
-			
+
 			GUI::MessageDialog dialog(
 				Common::U32String::format(_("Warning: incompatible sound settings detected between the current configuration and this saved game.\n\n"
 					"Current music device: %s (id %d)\nSave file music device: %s (id %d)\n\n"
@@ -1968,7 +1967,7 @@ void ScummEngine::saveLoadWithSerializer(Common::Serializer &s) {
 	}
 
 	// This is again from disasm...
-	if (_game.id == GID_TENTACLE) {	
+	if (_game.id == GID_TENTACLE) {
 		for (int j = 0; j < 5; j++)
 			_scummVars[120 + j] = dottVarsBackup[j];
 
@@ -2168,6 +2167,12 @@ void ScummEngine_v5::saveLoadWithSerializer(Common::Serializer &s) {
 
 	if (s.isLoading() && _game.platform == Common::kPlatformMacintosh) {
 		if ((_game.id == GID_LOOM && !_macCursorFile.empty()) || _macGui) {
+			setBuiltinCursor(0);
+		}
+
+		// Also reset Mac cursors if the original GUI isn't enabled for games
+		// which replace cursors that override the default cursor palette - bug #15520.
+		if (_game.version == 5 && !_macGui) {
 			setBuiltinCursor(0);
 		}
 	}

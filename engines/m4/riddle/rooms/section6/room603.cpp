@@ -69,13 +69,13 @@ void Room603::init() {
 		_val5 = 0;
 	}
 
-	_val6 = 0;
+	_showingNoteCloseup = false;
 
 	if (_G(game).previous_room != 604 && _G(game).previous_room != KERNEL_RESTORING_GAME &&
 			inv_player_has("PULL CORD") && !inv_object_is_here("POLE") &&
 			_G(flags)[V203] == 4) {
 		_G(flags)[V203] = 5;
-		_G(flags)[GLB_TEMP_5] = 0;
+		_G(flags)[V011] = 0;
 	}
 
 	if (_G(flags)[V191]) {
@@ -276,7 +276,7 @@ void Room603::init() {
 		break;
 	}
 
-	if (_G(flags)[GLB_TEMP_5])
+	if (_G(flags)[V011])
 		digi_play_loop("genrun", 3, 140, -1, 604);
 	else
 		digi_play_loop("950_s28a", 3, 90, -1, -1);
@@ -549,6 +549,7 @@ void Room603::daemon() {
 				break;
 			case 2:
 			case 8:
+			case 13:
 			case 14:
 				sendWSMessage_10000(1, _ripley, _ripHandsBehindBack, 1, 15, 300,
 					_ripHandsBehindBack, 15, 15, 0);
@@ -723,7 +724,7 @@ void Room603::daemon() {
 
 	case 303:
 		if (_ttShould == 22)
-			kernel_timing_trigger(1, 22);
+			kernel_timing_trigger(1, 202);
 		else
 			_ttShould = 5;
 		break;
@@ -779,7 +780,7 @@ void Room603::daemon() {
 
 	case 320:
 		terminateMachineAndNull(_ripley);
-		_treesGoneHome = series_show("603rp02a", 0x100, 16);
+		_ttNote = series_show("603rp02a", 0x100, 16);
 		_tt = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x200, 0,
 			triggerMachineByHashCallback, "tt");
 		sendWSMessage_10000(1, _tt, _tt03, 1, 39, 322, _tt03, 39, 39, 0);
@@ -797,7 +798,7 @@ void Room603::daemon() {
 
 	case 325:
 		sendWSMessage_10000(1, _tt, _tt03, 83, 122, 326, _tt03, 122, 122, 0);
-		terminateMachineAndNull(_treesGoneHome);
+		terminateMachineAndNull(_ttNote);
 		terminateMachineAndNull(_shadow);
 		ws_unhide_walker();
 		ws_demand_facing(4);
@@ -867,8 +868,8 @@ void Room603::daemon() {
 				break;
 
 			case 16:
-				ws_walk_load_walker_series(SECTION6_NORMAL_DIRS, SECTION6_NORMAL_NAMES);
-				ws_walk_load_shadow_series(SECTION6_SHADOW_DIRS, SECTION6_SHADOW_NAMES);
+				ws_walk_load_walker_series(TT_NORMAL_DIRS, TT_NORMAL_NAMES);
+				ws_walk_load_shadow_series(TT_SHADOW_DIRS, TT_SHADOW_NAMES);
 				sendWSMessage_10000(1, _tt, _tt03, 122, 112, 402, _tt03, 112, 112, 0);
 				break;
 
@@ -888,8 +889,8 @@ void Room603::daemon() {
 				break;
 
 			case 20:
-				ws_walk_load_walker_series(SECTION6_NORMAL_DIRS, SECTION6_NORMAL_NAMES);
-				ws_walk_load_shadow_series(SECTION6_SHADOW_DIRS, SECTION6_SHADOW_NAMES);
+				ws_walk_load_walker_series(TT_NORMAL_DIRS, TT_NORMAL_NAMES);
+				ws_walk_load_shadow_series(TT_SHADOW_DIRS, TT_SHADOW_NAMES);
 				sendWSMessage_10000(1, _tt, _tt03, 122, 112, 410, _tt03, 112, 112, 0);
 				break;
 
@@ -926,6 +927,7 @@ void Room603::daemon() {
 
 			default:
 				sendWSMessage_10000(1, _tt, _ttD01, 76, 61, 400, _ttD01, 1, 1, 0);
+				_ttMode = 6;
 				break;
 			}
 			break;
@@ -958,7 +960,7 @@ void Room603::daemon() {
 		_trigger1 = 0;
 		terminateMachineAndNull(_ttShadow);
 
-		_tt = triggerMachineByHash_3000(8, 9, *SECTION6_NORMAL_DIRS, *SECTION6_SHADOW_DIRS,
+		_tt = triggerMachineByHash_3000(8, 9, *TT_NORMAL_DIRS, *TT_SHADOW_DIRS,
 			291, 293, 4, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 357, 283, 1, 405, 0);
 		conv_resume();
@@ -980,7 +982,7 @@ void Room603::daemon() {
 	case 410:
 		terminateMachineAndNull(_tt);
 		terminateMachineAndNull(_ttShadow);
-		_tt = triggerMachineByHash_3000(8, 9, *SECTION6_NORMAL_DIRS, *SECTION6_SHADOW_DIRS,
+		_tt = triggerMachineByHash_3000(8, 9, *TT_NORMAL_DIRS, *TT_SHADOW_DIRS,
 			291, 293, 4, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 397, 286, 2, 415, 0);
 		kernel_timing_trigger(200, 411);
@@ -1093,14 +1095,14 @@ void Room603::daemon() {
 				break;
 
 			case 20:
-				ws_walk_load_walker_series(SECTION6_NORMAL_DIRS, SECTION6_NORMAL_NAMES);
-				ws_walk_load_shadow_series(SECTION6_SHADOW_DIRS, SECTION6_SHADOW_NAMES);
+				ws_walk_load_walker_series(TT_NORMAL_DIRS, TT_NORMAL_NAMES);
+				ws_walk_load_shadow_series(TT_SHADOW_DIRS, TT_SHADOW_NAMES);
 				sendWSMessage_10000(1, _tt, _tt03, 83, 111, 510, _tt03, 111, 111, 0);
 				break;
 
 			case 21:
-				ws_walk_load_walker_series(SECTION6_NORMAL_DIRS, SECTION6_NORMAL_NAMES);
-				ws_walk_load_shadow_series(SECTION6_SHADOW_DIRS, SECTION6_SHADOW_NAMES);
+				ws_walk_load_walker_series(TT_NORMAL_DIRS, TT_NORMAL_NAMES);
+				ws_walk_load_shadow_series(TT_SHADOW_DIRS, TT_SHADOW_NAMES);
 				sendWSMessage_10000(1, _tt, _tt03, 83, 112, 530, _tt03, 112, 112, 1);
 				break;
 
@@ -1175,7 +1177,7 @@ void Room603::daemon() {
 	case 510:
 		terminateMachineAndNull(_tt);
 		_trigger1 = 0;
-		_tt = triggerMachineByHash_3000(8, 9, *SECTION6_NORMAL_DIRS, *SECTION6_SHADOW_DIRS,
+		_tt = triggerMachineByHash_3000(8, 9, *TT_NORMAL_DIRS, *TT_SHADOW_DIRS,
 			291, 293, 4, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 357, 283, 3, 0x200, 0);
 		kernel_timing_trigger(100, 511);
@@ -1201,7 +1203,7 @@ void Room603::daemon() {
 	case 530:
 		terminateMachineAndNull(_tt);
 		_trigger1 = 0;
-		_tt = triggerMachineByHash_3000(8, 9, *SECTION6_NORMAL_DIRS, *SECTION6_SHADOW_DIRS,
+		_tt = triggerMachineByHash_3000(8, 9, *TT_NORMAL_DIRS, *TT_SHADOW_DIRS,
 			291, 293, 4, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 397, 286, 2, 533, 0);
 		kernel_timing_trigger(70, 531);
@@ -1245,7 +1247,7 @@ void Room603::pre_parser() {
 	if (_G(flags)[V202] && !player_said("talk to", "twelvetrees"))
 		_G(flags)[V204] = 1;
 
-	if (_val6) {
+	if (_showingNoteCloseup) {
 		Common::strcpy_s(_G(player).noun, "remove note");
 		_G(player).resetWalk();
 	}
@@ -1268,9 +1270,18 @@ void Room603::parser() {
 	} else if (_G(kernel).trigger == 747) {
 		if (_ttShould != 20) {
 			unloadSeries();
+			_G(player).disable_hyperwalk = false;
+			_G(flags)[V204] = 0;
+			_G(flags)[V205] = 0;
+
 			_val9 = 1000;
 			_ripleyShould = 11;
 			_ttShould = 17;
+
+			// FIXME: The _ripTalk series triggered by case 301, mode 0 should 5
+			// finishes too quickly, and triggers case 301 before should = 11 is set above.
+			// To fix this, manually trigger case 301
+			kernel_timing_trigger(1, 301, KT_DAEMON, KT_PARSE);
 		}
 	} else if (_G(kernel).trigger == 748) {
 		if (_ttShould == 21) {
@@ -1466,31 +1477,31 @@ void Room603::parser() {
 			digi_play("603r02", 1);
 		}
 	} else if (lookFlag && player_said("note ")) {
-		_val6 = 1;
+		_showingNoteCloseup = true;
 		hotspot_hide_all();
-		_treesGoneHome = series_show("603 12TREES GONE HOME NOTE", 0, 16);
+		_ttNote = series_show("603 12TREES GONE HOME NOTE", 0, 16);
 		hotspot_add_dynamic("LOOK AT", " ", 0, 0, 640, 480, 0);
 		digi_play("603r44", 1);
 		interface_hide();
 	} else if (lookFlag && player_said("note") &&
 			inv_object_is_here("TWELVETREES' NOTE")) {
-		_val6 = 1;
+		_showingNoteCloseup = true;
 		hotspot_hide_all();
-		_treesGoneHome = series_show("603 tt map popup", 0, 16);
+		_ttNote = series_show("603 tt map popup", 0, 16);
 		hotspot_add_dynamic("LOOK AT", " ", 0, 0, 640, 480, 0);
 		_G(flags)[V046] = 1;
 		digi_play("603r28", 1);
 		interface_hide();
-	} else if (player_said("remote note")) {
-		_val6 = 0;
+	} else if (player_said("remove note")) {
+		_showingNoteCloseup = false;
 		hotspot_restore_all();
-		terminateMachineAndNull(_treesGoneHome);
+		terminateMachineAndNull(_ttNote);
 		interface_show();
 	} else if (_G(kernel).trigger == 555) {
 		if (_G(flags)[V038])
 			_G(flags)[V039] = 1;
 
-		_G(flags)[GLB_TEMP_5] = 0;
+		_G(flags)[V011] = 0;
 		_G(game).setRoom(495);
 		_G(flags)[kTravelDest] = 4;
 	} else if (_G(kernel).trigger == 556) {
@@ -1501,7 +1512,7 @@ void Room603::parser() {
 		digi_unload("603_S02b");
 		digi_unload("603_S02c");
 
-		if (_G(flags)[GLB_TEMP_5]) {
+		if (_G(flags)[V011]) {
 			digi_stop(3);
 			digi_unload("genrun");
 			digi_preload("950_s28a");
@@ -1790,6 +1801,7 @@ void Room603::conv603a() {
 					digi_preload("17_04n99");
 					_pu01 = series_stream("603pu01", 5, 0, 10);
 					series_stream_break_on_frame(_pu01, 6, 2);
+					return;
 				} else {
 					_ttShould = 8;
 				}
@@ -2157,7 +2169,7 @@ void Room603::enter() {
 			_G(game).setRoom(604);
 			digi_stop(1);
 
-			if (_G(flags)[GLB_TEMP_5]) {
+			if (_G(flags)[V011]) {
 				adv_kill_digi_between_rooms(false);
 				digi_play_loop("genrun", 3, 140, -1, 604);
 			}
@@ -2214,7 +2226,7 @@ void Room603::syncGame(Common::Serializer &s) {
 	s.syncAsSint32LE(_val3);
 	s.syncAsSint32LE(_val4);
 	s.syncAsSint32LE(_val5);
-	s.syncAsSint32LE(_val6);
+	s.syncAsSint32LE(_showingNoteCloseup);
 	s.syncAsSint32LE(_val9);
 	s.syncAsSint32LE(_val10);
 	s.syncAsSint32LE(_ripleyMode);

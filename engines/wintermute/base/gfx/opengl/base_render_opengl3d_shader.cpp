@@ -139,11 +139,14 @@ bool BaseRenderOpenGL3DShader::initRenderer(int width, int height, bool windowed
 
 bool BaseRenderOpenGL3DShader::flip() {
 	_lastTexture = nullptr;
-	// Disable blend mode to prevent interfere with backend renderer
-	bool prevStateBlend = glIsEnabled(GL_BLEND);
+
+	// Disable blend mode and cull face to prevent interfere with backend renderer
 	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	
 	g_system->updateScreen();
-	prevStateBlend ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+	
+	_state = RSTATE_NONE;
 	return true;
 }
 
@@ -188,6 +191,11 @@ bool BaseRenderOpenGL3DShader::setup3D(Camera3D *camera, bool force) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
+		// Disable blending for 3d rendering, it seems no need to enable it.
+		// It will be enabled in other places when needed.
+		// This is delta compared to original sources.
+		glDisable(GL_BLEND);
+		
 		glEnable(GL_DEPTH_TEST);
 		// WME uses 8 as a reference value and Direct3D expects it to be in the range [0, 255]
 		_alphaRef = 8 / 255.0f;
@@ -648,20 +656,32 @@ BaseImage *BaseRenderOpenGL3DShader::takeScreenshot() {
 }
 
 bool BaseRenderOpenGL3DShader::enableShadows() {
-	warning("BaseRenderOpenGL3DShader::disableShadows not implemented yet");
+	_gameRef->_supportsRealTimeShadows = false;
 	return true;
 }
 
 bool BaseRenderOpenGL3DShader::disableShadows() {
-	warning("BaseRenderOpenGL3DShader::disableShadows not implemented yet");
 	return true;
 }
 
 void BaseRenderOpenGL3DShader::displayShadow(BaseObject *object, const DXVector3 *lightPos, bool lightPosRelative) {
+	if (!_ready || !object || !lightPos)
+		return;
+
+	// redirect simple shadow if needed
+	bool simpleShadow = _gameRef->getMaxShadowType(object) <= SHADOW_SIMPLE;
+	if (!_gameRef->_supportsRealTimeShadows)
+		simpleShadow = true;
+	if (simpleShadow)
+		return renderSimpleShadow(object);
+
 	// TODO: to be implemented
 	return;
 }
 
+void BaseRenderOpenGL3DShader::renderSimpleShadow(BaseObject *object) {
+	// TODO: to be implemented
+}
 
 void BaseRenderOpenGL3DShader::setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode, bool forceChange) {
 	if (blendMode == _blendMode && !forceChange)

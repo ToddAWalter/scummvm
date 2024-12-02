@@ -74,8 +74,9 @@ void WinnieEngine::parseObjHeader(WTP_OBJ_HDR *objHdr, byte *buffer, int len) {
 
 	Common::MemoryReadStreamEndian readS(buffer, len, _isBigEndian);
 
-	objHdr->fileLen = readS.readUint16();
-	objHdr->objId = readS.readUint16();
+	// these two values are always little endian, even on Amiga
+	objHdr->fileLen = readS.readUint16LE();
+	objHdr->objId = readS.readUint16LE();
 
 	for (i = 0; i < IDI_WTP_MAX_OBJ_STR_END; i++)
 		objHdr->ofsEndStr[i] = readS.readUint16();
@@ -158,7 +159,7 @@ void WinnieEngine::randomize() {
 		done = false;
 
 		while (!done) {
-			iObj = rnd(IDI_WTP_MAX_OBJ - 1);
+			iObj = rnd(IDI_WTP_MAX_OBJ); // 1-40
 			done = true;
 
 			for (int j = 0; j < IDI_WTP_MAX_OBJ_MISSING; j++) {
@@ -173,7 +174,7 @@ void WinnieEngine::randomize() {
 
 		done = false;
 		while (!done) {
-			iRoom = rnd(IDI_WTP_MAX_ROOM_NORMAL);
+			iRoom = rnd(IDI_WTP_MAX_ROOM_NORMAL); // 1-57
 			done = true;
 
 			for (int j = 0; j < IDI_WTP_MAX_ROOM_OBJ; j++) {
@@ -314,20 +315,19 @@ int WinnieEngine::parser(int pc, int index, uint8 *buffer) {
 			// get menu selection
 			getMenuSel(szMenu, &iSel, fCanSel);
 
-			if (++_gameStateWinnie.nMoves == IDI_WTP_MAX_MOVES_UNTIL_WIND)
-				_doWind = true;
-
-			if (_winnieEvent && (_room <= IDI_WTP_MAX_ROOM_TELEPORT)) {
-				if (!_tiggerMist) {
-					_tiggerMist = 1;
+			if (iSel == IDI_WTP_SEL_TIMER_EVENT) {
+				stopTimer();
+				if (!_tiggerOrMist) {
 					tigger();
 				} else {
-					_tiggerMist = 0;
 					mist();
 				}
-				_winnieEvent = false;
+				_tiggerOrMist = !_tiggerOrMist;
 				return IDI_WTP_PAR_GOTO;
 			}
+
+			if (++_gameStateWinnie.nMoves == IDI_WTP_MAX_MOVES_UNTIL_WIND)
+				_doWind = true;
 
 			// process selection
 			switch (iSel) {
@@ -394,6 +394,16 @@ int WinnieEngine::parser(int pc, int index, uint8 *buffer) {
 			case IDO_WTP_GOTO_ROOM:
 				opcode = *(buffer + pc++);
 				iNewRoom = opcode;
+
+				// Apple II is missing a zero terminator in one script block of
+				// Christopher Robin's tree house. The room file was fixed in
+				// later versions, and the Apple II version behaves correctly,
+				// so the code must contain a workaround to prevent executing
+				// the next script block before exiting the room.
+				if (_room == 38 && getPlatform() == Common::kPlatformApple2) {
+					_room = iNewRoom; 
+					return IDI_WTP_PAR_GOTO; // change rooms immediately
+				}
 				break;
 			case IDO_WTP_PRINT_MSG:
 				opcode = *(buffer + pc++);
@@ -423,7 +433,8 @@ int WinnieEngine::parser(int pc, int index, uint8 *buffer) {
 			case IDO_WTP_WALK_MIST:
 				_mist--;
 				if (!_mist) {
-					_room = rnd(IDI_WTP_MAX_ROOM_TELEPORT) + 1;
+					startTimer();
+					_room = rnd(IDI_WTP_MAX_ROOM_TELEPORT); // 1-30
 					return IDI_WTP_PAR_GOTO;
 				}
 				break;
@@ -451,7 +462,8 @@ int WinnieEngine::parser(int pc, int index, uint8 *buffer) {
 					showAmigaHelp();
 					break;
 				}
-				_room = rnd(IDI_WTP_MAX_ROOM_TELEPORT) + 1;
+				startTimer();
+				_room = rnd(IDI_WTP_MAX_ROOM_TELEPORT); // 1-30
 				return IDI_WTP_PAR_GOTO;
 			default:
 				opcode = 0;
@@ -461,6 +473,13 @@ int WinnieEngine::parser(int pc, int index, uint8 *buffer) {
 
 		if (iNewRoom) {
 			_room = iNewRoom;
+			return IDI_WTP_PAR_GOTO;
+		}
+
+		if (_room == IDI_WTP_ROOM_TIGGER && getPlatform() == Common::kPlatformAmiga) {
+			// Amiga removed Tigger's opcode that goes to a random room
+			startTimer();
+			_room = rnd(IDI_WTP_MAX_ROOM_TELEPORT); // 1-30
 			return IDI_WTP_PAR_GOTO;
 		}
 
@@ -651,7 +670,7 @@ void WinnieEngine::dropObjRnd() {
 	bool done = false;
 
 	while (!done) {
-		iRoom = rnd(IDI_WTP_MAX_ROOM_NORMAL);
+		iRoom = rnd(IDI_WTP_MAX_ROOM_NORMAL); // 1-57
 		done = true;
 		if (iRoom == _room)
 			done = false;
@@ -683,14 +702,16 @@ void WinnieEngine::wind() {
 	playSound(IDI_WTP_SND_WIND_0);
 	getSelection(kSelAnyKey);
 
-	dropObjRnd();
-
 	// randomize positions of objects at large
 	for (int i = 0; i < IDI_WTP_MAX_OBJ_MISSING; i++) {
 		if (!(_gameStateWinnie.iUsedObj[i] & IDI_XOR_KEY)) {
+			if (_gameStateWinnie.iUsedObj[i] == _gameStateWinnie.iObjHave) {
+				continue; // skip inventory object
+			}
+
 			done = false;
 			while (!done) {
-				iRoom = rnd(IDI_WTP_MAX_ROOM_NORMAL);
+				iRoom = rnd(IDI_WTP_MAX_ROOM_NORMAL); // 1-57
 				done = true;
 
 				for (int j = 0; j < IDI_WTP_MAX_ROOM_OBJ; j++) {
@@ -705,22 +726,32 @@ void WinnieEngine::wind() {
 }
 
 void WinnieEngine::mist() {
-	// mist length in turns is (2-5)
-	_mist = rnd(4) + 2;
+	_mist = 1 + rnd(4); // 2-5 walks through the mist
+
+	printStr(IDS_WTP_MIST);
+	getSelection(kSelAnyKey);
 
 	_room = IDI_WTP_ROOM_MIST;
 	drawRoomPic();
-
-	printStr(IDS_WTP_MIST);
 }
 
 void WinnieEngine::tigger() {
-	_room = IDI_WTP_ROOM_TIGGER;
-
-	drawRoomPic();
 	printStr(IDS_WTP_TIGGER);
+	getSelection(kSelAnyKey);
+
+	_room = IDI_WTP_ROOM_TIGGER;
+	drawRoomPic();
 
 	dropObjRnd();
+}
+
+void WinnieEngine::startTimer() {
+	_timerEnabled = true;
+	_timerStart = _system->getMillis();
+}
+
+void WinnieEngine::stopTimer() {
+	_timerEnabled = false;
 }
 
 void WinnieEngine::showOwlHelp() {
@@ -1067,6 +1098,15 @@ void WinnieEngine::getMenuSel(char *szMenu, int *iSel, int fCanSel[]) {
 
 			drawMenu(szMenu, *iSel, fCanSel);
 		}
+
+		_system->delayMillis(10);
+		
+		if (_timerEnabled &&
+			_system->getMillis() - _timerStart >= IDI_WTP_TIMER_INTERVAL &&
+			_room <= IDI_WTP_MAX_ROOM_TELEPORT) {
+			*iSel = IDI_WTP_SEL_TIMER_EVENT;
+			return;
+		}
 	}
 }
 
@@ -1076,10 +1116,14 @@ void WinnieEngine::gameLoop() {
 	int iBlock;
 	uint8 decodePhase = 0;
 
+	startTimer();
+
 	while (!shouldQuit()) {
 		if (decodePhase == 0) {
-			if (!_gameStateWinnie.nObjMiss && (_room == IDI_WTP_ROOM_PICNIC))
+			if (!_gameStateWinnie.nObjMiss && (_room == IDI_WTP_ROOM_PICNIC)) {
 				_room = IDI_WTP_ROOM_PARTY;
+				stopTimer();
+			}
 
 			readRoom(_room, roomdata, hdr);
 			drawRoomPic();
@@ -1436,7 +1480,8 @@ void WinnieEngine::init() {
 
 	_mist = -1;
 	_doWind = false;
-	_winnieEvent = false;
+	_tiggerOrMist = false; // tigger appears first
+	stopTimer(); // timer starts after intro
 
 	if (getPlatform() != Common::kPlatformAmiga) {
 		_isBigEndian = false;

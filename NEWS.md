@@ -29,15 +29,30 @@ For a more comprehensive changelog of the latest experimental code, see:
      is now active by default.
    - Added optional dependency for libmpcdec (musepack) for sound.
    - There is now a checkbox for the --copy-protection command-line option.
+   - Reduced memory usage on platforms with dynamic detection plugins.
+   - Improved GUI usability on small screens.
 
  ADL:
    - Added Apple II checkerboard cursor as a visual option.
+   - Removed broken strings in Time Zone.
+   - Fixed picking up all items via "GET ALL" from a scene.
+   - Fixed restoring the state of unvisited rooms.
 
  AGI:
+   - Apple II games are now detected. Although not supported yet, most can be started.
    - Fixed duration of timed text boxes. They were shown only half as long as
      they should be, making e.g. the King's Quest III intro hard to read.
    - The predictive input dialog popup when clicking on the prompt line or in an input field
      is now an optional game setting, disabled by default.
+   - Fixed Black Cauldron witches not disappearing at end of game.
+   - Fixed King's Quest III mice event not occurring after listening to fish.
+   - Fixed Mixed-Up Mother Goose crash after nursery rhyme on certain platforms.
+   - Fixed Gold Rush game clock in Apple IIgs version.
+   - Fixed Donald Duck's Playground audio bugs in PC booter version.
+   - Improved detection for PC booter games.
+   - Added support for sound in CoCo3 games.
+   - Fixed many bugs in Winnie The Pooh In The Hundred Acre Wood, including
+     Tigger never appearing and Eeyore not accepting his balloon.
 
  AGOS:
    - Added keymapper support.
@@ -45,7 +60,7 @@ For a more comprehensive changelog of the latest experimental code, see:
      Waxworks Egypt Level 3 and Power Points not regenerating in Elvira 2.
 
  AGS:
-   - Syncronized with upstream AGS 3.6.1.29.
+   - Syncronized with upstream AGS 3.6.1.30.
    - Added commandline --language option to specify the game language overriding the GUI.
    - Fixed glitchy staircase in old Maniac Mansion Mania episodes, caused by
      imperfect pathfinding.
@@ -107,6 +122,10 @@ For a more comprehensive changelog of the latest experimental code, see:
  GLK/ADVSYS:
    - Fixed parsing for input commands.
 
+ Gob:
+   - Fixed Blount becoming inactive in the Gob3 brain level.
+   - Fixed flickering cursor during some videos in Gob3 and Lost in Time.
+
  Groovie:
    - Added keymapper support.
 
@@ -135,6 +154,9 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  Lure:
    - Added keymapper support.
+
+ M4:
+   - Fixed restoring conversation state.
 
  MADE:
    - Added keymapper support.
@@ -165,10 +187,12 @@ For a more comprehensive changelog of the latest experimental code, see:
      mode for many SCI 1 DOS games, a 16 colors mode for KQ6 Windows and
      8 colors modes for all PC-98 games.
    - Improved PCjr audio.
+   - Improved KQ6 CD settings. The DOS platform now defaults to DOS behavior.
    - Better support for Mac KQ6.
    - Implemented KQ5 FM Towns save/restore UI.
    - Numerous script fixes to different games.
-   - Added support for German KQ5.
+   - Fixed SCI1.1 picture scaling inaccuracies.
+   - Fixed fallback detection for unknown fan games.
    - Added support for Spanish SQ3.
    - Added support for Russian Camelot, Laura Bow, PQ2
    - Added support for Russian fan-translation of QFG3.
@@ -198,12 +222,15 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added more game variants.
    - Restored the ability to choose language of subtitles on PC versions.
 
+ Sword25:
+   - Fixed looping scene background sounds.
+   - Fixed actor lighting when walking.
+
  Teenagent:
    - Added support for Polish floppy version.
 
  Tinsel:
    - Added keymapper support.
-   - Added support for Discworld 1 Mac Japanese.
 
  Titanic:
    - Fixed crash if the word 'that' was used in a conversation.
@@ -212,8 +239,8 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fix crash with rapid cursor switching.
 
  TsAGE:
-   - Added support for Russian CD fan-translation for Ringworld.
    - Added keymapper support.
+   - Added support for Russian CD fan-translation for Ringworld.
    - Added support for Russian CD fan-translation for Blue Force.
 
  Toon:
@@ -233,6 +260,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Several collision related fixes
 
  Ultima:
+   - Fix pathfinding not detecting some doors in Ultima VI.
    - Alter Ultima VIII default gamepad bindings.
    - Improved Ultima VIII keybind player movement.
    - Alter Ultima VIII target gump to no longer pause game.
@@ -248,6 +276,11 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  macOS port:
    - Autoupdates now use Sparkle 2.x.
+
+ 3DS port:
+   - Integrated the port-specific options dialog with the main GUI.
+   - Increased available memory on the Old 3DS.
+   - Fixed crashes in new 3DS models due to different memory handling.
 
 
 #### 2.8.1 (2024-03-31)

@@ -46,6 +46,7 @@
 #include "dgds/minigames/dragon_arcade.h"
 #include "dgds/dragon_native.h"
 #include "dgds/hoc_intro.h"
+#include "dgds/sound_raw.h"
 
 namespace Dgds {
 
@@ -101,7 +102,7 @@ Common::String SceneConditions::dump(const Common::String &indent) const {
 
 Common::String HotArea::dump(const Common::String &indent) const {
 	Common::String str = Common::String::format("%sHotArea<%s num %d cursor %d cursor2 %d interactionRectNum %d",
-			indent.c_str(), _rect.dump("").c_str(), _num, _cursorNum, _otherCursorNum, _objInteractionRectNum);
+			indent.c_str(), _rect.dump("").c_str(), _num, _cursorNum, _cursorNum2, _objInteractionRectNum);
 	str += _dumpStructList(indent, "enableConditions", enableConditions);
 	str += _dumpStructList(indent, "onRClickOps", onRClickOps);
 	str += _dumpStructList(indent, "onLDownOps", onLDownOps);
@@ -304,9 +305,9 @@ bool Scene::readHotArea(Common::SeekableReadStream *s, HotArea &dst) const {
 	dst._num = s->readUint16LE();
 	dst._cursorNum = s->readUint16LE();
 	if (isVersionOver(" 1.217"))
-		dst._otherCursorNum = s->readUint16LE();
+		dst._cursorNum2 = s->readUint16LE();
 	else
-		dst._otherCursorNum = 0;
+		dst._cursorNum2 = 0;
 
 	if (isVersionOver(" 1.218")) {
 		dst._objInteractionRectNum = s->readUint16LE();
@@ -526,10 +527,11 @@ bool Scene::readDialogActionList(Common::SeekableReadStream *s, Common::Array<Di
 	// if (!list.empty())
 	//	list[0].val = 1;
 
-	for (DialogAction &dst : list) {
-		dst.strStart = s->readUint16LE();
-		dst.strEnd = s->readUint16LE();
-		readOpList(s, dst.sceneOpList);
+	for (uint i = 0; i < list.size(); i++) {
+		list[i].num = i;
+		list[i].strStart = s->readUint16LE();
+		list[i].strEnd = s->readUint16LE();
+		readOpList(s, list[i].sceneOpList);
 	}
 
 	return !s->err();
@@ -1063,6 +1065,10 @@ void SDSScene::unload() {
 	_triggers.clear();
 	_talkData.clear();
 	_dynamicRects.clear();
+	if (_dlgSound) {
+		_dlgSound->stop();
+		_dlgSound.reset();
+	}
 	_sceneDialogFlags = kDlgFlagNone;
 }
 
@@ -1217,8 +1223,13 @@ bool SDSScene::readTalkData(Common::SeekableReadStream *s, TalkData &dst) {
 			h._bmpFile = s->readString();
 			if (!h._bmpFile.empty()) {
 				DgdsEngine *engine = DgdsEngine::getInstance();
-				h._shape.reset(new Image(engine->getResourceManager(), engine->getDecompressor()));
-				h._shape->loadBitmap(h._bmpFile);
+				ResourceManager *resMan = engine->getResourceManager();
+				if (resMan->hasResource(h._bmpFile)) {
+					h._shape.reset(new Image(resMan, engine->getDecompressor()));
+					h._shape->loadBitmap(h._bmpFile);
+				} else {
+					warning("Couldn't load talkdata %d head %d BMP: %s", dst._num, h._num, h._bmpFile.c_str());
+				}
 			}
 		}
 		uint16 nsub = s->readUint16LE();
@@ -1280,10 +1291,15 @@ bool SDSScene::loadTalkData(uint16 num) {
 			_talkData.front()._num = num;
 			_version = oldVer;
 
-			if (!_talkData.front()._bmpFile.empty()) {
-				Image *img = new Image(resourceManager, decompressor);
-				img->loadBitmap(_talkData.front()._bmpFile);
-				_talkData.front()._shape.reset(img);
+			const Common::String &bmpFile = _talkData.front()._bmpFile;
+			if (!bmpFile.empty()) {
+				if (resourceManager->hasResource(bmpFile)) {
+					Image *img = new Image(resourceManager, decompressor);
+					img->loadBitmap(bmpFile);
+					_talkData.front()._shape.reset(img);
+				} else {
+					warning("Couldn't load talkdata %d head BMP: %s", num, bmpFile.c_str());
+				}
 			}
 		}
 	}
@@ -1292,6 +1308,7 @@ bool SDSScene::loadTalkData(uint16 num) {
 
 	return result;
 }
+
 
 void SDSScene::freeTalkData(uint16 num) {
 	for (int i = 0; i < (int)_talkData.size(); i++) {
@@ -1311,6 +1328,57 @@ void SDSScene::updateVisibleTalkers() {
 	}
 }
 
+
+bool SDSScene::loadCDSData(uint16 dlgFileNum, uint16 dlgNum, int16 sub) {
+	if (_dlgSound) {
+		_dlgSound->stop();
+		_dlgSound.reset();
+	}
+
+	Common::String fname;
+	if (sub >= 0) {
+		assert(sub < 26);
+		fname = Common::String::format("F%dB%d%c.CDS", dlgFileNum, dlgNum, 'A' + sub);
+	} else {
+		fname = Common::String::format("F%dB%d.CDS", dlgFileNum, dlgNum);
+	}
+
+	DgdsEngine *engine = DgdsEngine::getInstance();
+	ResourceManager *resourceManager = engine->getResourceManager();
+	Common::SeekableReadStream *cdsFile = resourceManager->getResource(fname);
+	if (!cdsFile)
+		return false;
+
+	DgdsChunkReader chunk(cdsFile);
+	Decompressor *decompressor = engine->getDecompressor();
+
+	bool result = false;
+
+	while (chunk.readNextHeader(EX_CDS, fname)) {
+		if (chunk.isContainer()) {
+			continue;
+		}
+
+		chunk.readContent(decompressor);
+		Common::SeekableReadStream *stream = chunk.getContent();
+
+		//
+		// All CDS files contain TT3 sections with little scripts that load
+		// and play a RAW sound file (eg F1B13.CDS loads CSCR013.RAW), but
+		// they also have RAW sections with the sound data, embedded and the named
+		// RAW files don't exist.
+		//
+		if (chunk.isSection(ID_RAW)) {
+			_dlgSound.reset(new SoundRaw(resourceManager, decompressor));
+			_dlgSound->loadFromStream(stream, chunk.getSize());
+			_dlgSound->play();
+			result = true;
+		}
+	}
+
+	delete cdsFile;
+	return result;
+}
 
 void SDSScene::drawHead(Graphics::ManagedSurface *dst, const TalkData &data, const TalkDataHead &head) {
 	uint drawtype = head._drawType ? head._drawType : 1;
@@ -1520,6 +1588,8 @@ void SDSScene::showDialog(uint16 fileNum, uint16 dlgNum) {
 				loadTalkDataAndSetFlags(dialog._talkDataNum, dialog._talkDataHeadNum);
 			}
 
+			loadCDSData(fileNum, dlgNum, -1);
+
 			// hide time gets set the first time it's drawn.
 			if (_dlgWithFlagLo8IsClosing && dialog.hasFlag(kDlgFlagLo8)) {
 				_sceneDialogFlags = static_cast<DialogFlags>(_sceneDialogFlags | kDlgFlagLo8 | kDlgFlagVisible);
@@ -1580,8 +1650,16 @@ bool SDSScene::checkDialogActive() {
 			if (action || dlg._action.empty()) {
 				dlg.setFlag(kDlgFlagHiFinished);
 				if (action) {
+					// TODO: We can load selected item voice acting here, but it generally
+					// immediately starts another dialog or changes scene, so the sound
+					// doesn't end up playing.
+					// Need to work out how to correctly delay until the sound finishes?
+					loadCDSData(dlg._fileNum, dlg._num, action->num);
+
 					// Take a copy of the dialog because the actions might change the scene
 					Dialog dlgCopy = dlg;
+					if (dlgCopy._state)
+						dlgCopy._state->_selectedAction = nullptr;
 					debug(1, "Dialog %d closing: run action (%d ops)", dlg._num, action->sceneOpList.size());
 					if (!runOps(action->sceneOpList)) {
 						// HACK: the scene changed, but we haven't yet drawn the foreground for the
@@ -1720,6 +1798,12 @@ void SDSScene::mouseMoved(const Common::Point &pt) {
 
 	int16 cursorNum = (!dlg && area) ? area->_cursorNum : 0;
 	if (_dragItem) {
+		if (area && area->_objInteractionRectNum == 1) {
+			// drag over Willy Beamish
+			engine->getInventory()->open();
+			return;
+		}
+
 		cursorNum = _dragItem->_iconNum;
 	} else if (_rbuttonDown) {
 		GameItem *activeItem = engine->getGDSScene()->getActiveItem();
@@ -1743,9 +1827,9 @@ void SDSScene::mouseLDown(const Common::Point &pt) {
 	if (!area)
 		return;
 
-	debug(9, "Mouse LDown on area %d (%d,%d,%d,%d) cursor %d. Run %d ops", area->_num,
+	debug(9, "Mouse LDown on area %d (%d,%d,%d,%d) cursor %d cursor2 %d. Run %d ops", area->_num,
 			area->_rect.x, area->_rect.y, area->_rect.width, area->_rect.height,
-			area->_cursorNum, area->onLDownOps.size());
+			area->_cursorNum, area->_cursorNum2, area->onLDownOps.size());
 
 	DgdsEngine *engine = DgdsEngine::getInstance();
 	int16 addmins = engine->getGameGlobals()->getGameMinsToAddOnStartDrag();
@@ -1789,8 +1873,8 @@ void SDSScene::mouseLUp(const Common::Point &pt) {
 	if (!area)
 		return;
 
-	debug(9, "Mouse LUp on area %d (%d,%d,%d,%d) cursor %d", area->_num, area->_rect.x, area->_rect.y,
-			area->_rect.width, area->_rect.height, area->_cursorNum);
+	debug(9, "Mouse LUp on area %d (%d,%d,%d,%d) cursor %d cursor2 %d", area->_num, area->_rect.x, area->_rect.y,
+		  area->_rect.width, area->_rect.height, area->_cursorNum, area->_cursorNum2);
 
 	DgdsEngine *engine = DgdsEngine::getInstance();
 	if (!_rbuttonDown)
@@ -2049,7 +2133,7 @@ void SDSScene::addInvButtonToHotAreaList() {
 	area._rect.height = icons->height(invButtonIcon);
 	area._rect.x = SCREEN_WIDTH - area._rect.width;
 	area._rect.y = SCREEN_HEIGHT - area._rect.height;
-	area._otherCursorNum = 0;
+	area._cursorNum2 = 0;
 	area._objInteractionRectNum = 0;
 
 	// Add swap character button for HoC
@@ -2063,7 +2147,7 @@ void SDSScene::addInvButtonToHotAreaList() {
 		area2._rect.height = icons->height(iconNum);
 		area2._rect.x = 5;
 		area2._rect.y = SCREEN_HEIGHT - area2._rect.height - 5;
-		area2._otherCursorNum = 0;
+		area2._cursorNum2 = 0;
 		area2._objInteractionRectNum = 0;
 
 		_hotAreaList.push_front(area2);
@@ -2136,7 +2220,7 @@ void SDSScene::activateChoice() {
 }
 
 
-GDSScene::GDSScene() : _defaultMouseCursor(0), _field3a(0), _invIconNum(0), _invIconMouseCursor(0), _field40(0) {
+GDSScene::GDSScene() : _defaultMouseCursor(0), _defaultMouseCursor2(0), _invIconNum(0), _invIconMouseCursor(0), _defaultOtherMouseCursor(0) {
 }
 
 bool GDSScene::load(const Common::String &filename, ResourceManager *resourceManager, Decompressor *decompressor) {
@@ -2310,17 +2394,17 @@ bool GDSScene::parse(Common::SeekableReadStream *stream) {
 		readObjInteractionList(stream, _objInteractions2);
 
 	if (isVersionOver(" 1.218")) {
-		_defaultMouseCursor = stream->readUint16LE();
-		_field3a = stream->readUint16LE();
+		_defaultMouseCursor = stream->readSint16LE();
+		_defaultMouseCursor2 = stream->readUint16LE();
 		_invIconNum = stream->readUint16LE();
-		_invIconMouseCursor = stream->readUint16LE();
-		_field40 = stream->readUint16LE();
+		_invIconMouseCursor = stream->readSint16LE();
+		_defaultOtherMouseCursor = stream->readSint16LE();
 	} else {
 		_defaultMouseCursor = 0;
-		_field3a = 1;
+		_defaultMouseCursor2 = 1;
 		_invIconNum = 2;
 		_invIconMouseCursor = 0;
-		_field40 = 6;
+		_defaultOtherMouseCursor = 6;
 	}
 
 	return !stream->err();
