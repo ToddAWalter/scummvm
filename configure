@@ -2641,14 +2641,17 @@ __attribute__ ((used)) unsigned short ebcdic_mm[] = { 0xC2C9, 0xC785, 0x95C4, 0x
 const char * _ebcdic() { char* s = (char*) ebcdic_mm; s = (char*) ebcdic_ii; return s; }
 int main() { _ascii (); _ebcdic (); return 0; }
 EOF
-$CXX $LDFLAGS $CXXFLAGS -o $TMPO$HOSTEXEEXT tmp_endianness_check.cpp >> "$TMPLOG" 2>&1
+# Make sure that this particular object always has regular machine code content,
+# so that the checks below can be done, even with LTO on.
+test "$have_gcc" = yes && no_lto_regular_machine_code_removal=-ffat-lto-objects
+$CXX $LDFLAGS $CXXFLAGS $no_lto_regular_machine_code_removal -o $TMPO$HOSTEXEEXT tmp_endianness_check.cpp >> "$TMPLOG" 2>&1
 if $_strings $TMPO$HOSTEXEEXT 2>> "$TMPLOG"| grep BIGenDianSyS >/dev/null; then
 	_endian=big
 elif $_strings $TMPO$HOSTEXEEXT 2>> "$TMPLOG" | grep LiTTleEnDian >/dev/null; then
 	_endian=little
 fi
-echo $_endian;
-cc_check_clean tmp_endianness_check.cpp $TMPO-tmp_endianness_check.dwo
+echo $_endian
+cc_check_clean tmp_endianness_check.cpp $TMPO-tmp_endianness_check.dwo tmp_endianness_check.dwo
 
 case $_endian in
 	big)
@@ -3056,6 +3059,13 @@ EOF
 			# When building for MacOS X 10.5 or below
 			if test "$_macos_min_version" -lt 1060 ; then
 				add_line_to_config_mk 'MACOSX_LEOPARD_OR_BELOW = 1'
+
+				# OSX 10.4/10.5 has no native C++11 support, thus we need to
+				# embed an updated libstdc++ in the bundle, and fix its
+				# dynamic references with install_name_tool(1), which requires
+				# linking with a bit of padding for the updated references.
+				append_var LDFLAGS "-Wl,-headerpad_max_install_names"
+
 				if test "$_debug_build" != no ; then
 					# Prefer DWARF over stabs on older OSX; this requires a
 					# newer GDB, but we need it for the updated toolchain
@@ -3072,9 +3082,17 @@ EOF
 				add_line_to_config_mk 'MACOSX_64_BITS_ONLY = 1'
 			fi
 		fi
-		if test "$_host_cpu" = "aarch64" ; then
+
+		case $_host_cpu in
+		powerpc*)
+			# We use -force_cpusubtype_ALL to ensure the binary runs on every
+			# PowerPC machine.
+			append_var LDFLAGS "-force_cpusubtype_ALL"
+			;;
+		aarch64)
 			add_line_to_config_mk 'MACOSX_ARM64 = 1'
-		fi
+			;;
+		esac
 
 		# Avoid "file has no symbols" noise from ranlib, if it's new enough
 		ranlib_version=`$_ranlib -V 2>/dev/null`
@@ -3626,6 +3644,7 @@ if test -n "$_host"; then
 
 			FREETYPE2_STATIC_LIBS="-lfreetype"
 			FREETYPE2_CFLAGS="-I${KOS32_SDK_DIR}/sources/freetype/include"
+			_freetypeconfig=
 			_freetype_found="true"
 
 			SDL_CFLAGS="-I${KOS32_SDK_DIR}/sources/SDL-1.2.2_newlib/include"

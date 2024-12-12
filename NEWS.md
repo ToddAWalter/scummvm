@@ -1,7 +1,7 @@
 For a more comprehensive changelog of the latest experimental code, see:
         https://github.com/scummvm/scummvm/commits/
 
-#### 2.9.0 (XXXX-XX-XX)
+#### 2.9.0 (2024-12-22)
 
  New games:
    - Added support for Orion Burger.
@@ -24,13 +24,13 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  General:
    - Fixed GLSL version parsing on some OpenGL ES2 platforms.
-   - Added optional dependency for libopenmpt for sound.
    - The "Aspect ratio correction" option within the Global Options section
      is now active by default.
-   - Added optional dependency for libmpcdec (musepack) for sound.
    - There is now a checkbox for the --copy-protection command-line option.
    - Reduced memory usage on platforms with dynamic detection plugins.
    - Improved GUI usability on small screens.
+   - Added optional dependency for libopenmpt for sound.
+   - Added optional dependency for libmpcdec (musepack) for sound.
 
  ADL:
    - Added Apple II checkerboard cursor as a visual option.
@@ -170,6 +170,11 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed spell SP/gem requirements in MM1 enhanced mode, and actually remove
      spell points & gems when spells are cast.
 
+
+ NANCY:
+   - Fixed a startup crash and some broken puzzles in The Vampire Diaries.
+   - Fixed a crash when trying to play the Russian versions of early Nancy Drew games.
+
  NGI:
    - Added support for Lithuanian version of fullpipe.
 
@@ -186,6 +191,8 @@ For a more comprehensive changelog of the latest experimental code, see:
      SCI 0 DOS games. Also added an EGA dithering mode and a VGA gray scale
      mode for many SCI 1 DOS games, a 16 colors mode for KQ6 Windows and
      8 colors modes for all PC-98 games.
+   - Added Gabriel Knight 1 CD speech repair by AllTinker.
+     Fixes the majority of pops and clicks in the DPCM8 speech audio.
    - Improved PCjr audio.
    - Improved KQ6 CD settings. The DOS platform now defaults to DOS behavior.
    - Better support for Mac KQ6.
@@ -194,7 +201,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed SCI1.1 picture scaling inaccuracies.
    - Fixed fallback detection for unknown fan games.
    - Added support for Spanish SQ3.
-   - Added support for Russian Camelot, Laura Bow, PQ2
+   - Added support for Russian Camelot, Laura Bow, PQ2.
    - Added support for Russian fan-translation of QFG3.
 
  SCUMM:
@@ -257,7 +264,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed being unable to enter the Lower Hall in 2nd Chapter.
 
  TwinE:
-   - Several collision related fixes
+   - Several collision related fixes.
 
  Ultima:
    - Fix pathfinding not detecting some doors in Ultima VI.
@@ -274,13 +281,27 @@ For a more comprehensive changelog of the latest experimental code, see:
  ZVision:
    - Improved support of RTL languages.
 
+ Android port:
+   - Add support for Android 15.
+   - Add game shortcuts support on Android home screen either from a long press
+     on the ScummVM icon or from the launcher widgets selector.
+   - Rework the gamepad input mode with an improved UI. Add more virtual buttons.
+   - Scale UI according to display density.
+   - Various stability fixes.
+
  macOS port:
    - Autoupdates now use Sparkle 2.x.
+   - Changed default savegame path to use the Application Support folder.
 
  3DS port:
    - Integrated the port-specific options dialog with the main GUI.
    - Increased available memory on the Old 3DS.
    - Fixed crashes in new 3DS models due to different memory handling.
+
+ iOS/iPadOS port:
+   - Add Apple Pencil support.
+   - Add app icons for “Dark” and “Tinted” modes.
+   - Various stability fixes.
 
 
 #### 2.8.1 (2024-03-31)
