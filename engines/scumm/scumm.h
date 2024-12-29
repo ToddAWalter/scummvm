@@ -40,6 +40,7 @@
 #include "graphics/sjis.h"
 #include "graphics/palette.h"
 
+#include "scumm/file.h"
 #include "scumm/gfx.h"
 #include "scumm/detection.h"
 #include "scumm/script.h"
@@ -114,21 +115,6 @@ enum {
 
 /* SCUMM Debug Channels */
 void debugC(int level, MSVC_PRINTF const char *s, ...) GCC_PRINTF(2, 3);
-
-enum {
-	DEBUG_GENERAL	=	1 << 0,		// General debug
-	DEBUG_SCRIPTS	=	1 << 2,		// Track script execution (start/stop/pause)
-	DEBUG_OPCODES	=	1 << 3,		// Track opcode invocations
-	DEBUG_VARS	=	1 << 4,		// Track variable changes
-	DEBUG_RESOURCE	=	1 << 5,		// Track resource loading / allocation
-	DEBUG_IMUSE	=	1 << 6,		// Track iMUSE events
-	DEBUG_SOUND	=	1 << 7,		// General Sound Debug
-	DEBUG_ACTORS	=	1 << 8,		// General Actor Debug
-	DEBUG_INSANE	=	1 << 9,		// Track INSANE
-	DEBUG_SMUSH	=	1 << 10,		// Track SMUSH
-	DEBUG_MOONBASE_AI = 1 << 11,		// Moonbase AI
-	DEBUG_NETWORK = 1 << 12		// Track Networking
-};
 
 struct VerbSlot;
 struct ObjectData;
@@ -882,6 +868,7 @@ protected:
 	int _numTalkies = 0;
 	int _numUnk = 0;
 	int _HEHeapSize = 0;
+
 public:
 	int _numLocalScripts = 60, _numImages = 0, _numRooms = 0, _numScripts = 0, _numSounds = 0;	// Used by HE games
 	int _numCostumes = 0;	// FIXME - should be protected, used by Actor::remapActorPalette
@@ -898,6 +885,11 @@ public:
 	byte _NESBaseTiles = 0;
 
 	int _NESStartStrip = 0;
+
+	/* MI SE injected speech */
+	int32 _currentScriptSavedForSpeechMI = 0;
+	int32 _currentScriptOffsetSavedForSpeechMI = 0;
+	int32 _currentSpeechIndexMI = 0;
 
 protected:
 	int _curPalIndex = 0;
@@ -992,7 +984,6 @@ protected:
 	void saveInfos(Common::WriteStream *file);
 	static bool loadInfos(Common::SeekableReadStream *file, SaveStateMetaInfos *stuff);
 
-protected:
 	/* Script VM - should be in Script class */
 	uint32 _localScriptOffsets[1024];
 	const byte *_scriptPointer = nullptr;
@@ -1089,6 +1080,7 @@ public:
 	Common::Path _macCursorFile;
 
 	bool openFile(BaseScummFile &file, const Common::Path &filename, bool resourceFile = false);
+	ScummFile *instantiateScummFile(bool indexPAKFiles = true);
 
 protected:
 	int _resourceHeaderSize = 8;

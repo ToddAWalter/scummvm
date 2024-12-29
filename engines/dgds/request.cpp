@@ -432,7 +432,8 @@ byte ButtonGadget::drawWillyBg(Graphics::ManagedSurface *dst, bool enabled) cons
 	uint16 cornerFrame = enabled ? 8 : 16;
 	RequestData::drawCorners(dst, cornerFrame, pt.x, pt.y, _width, _height);
 	int16 fillHeight = enabled ? _height - 8 : _height - 6;
-	dst->fillRect(Common::Rect(Common::Point(pt.x + 8, pt.y + 3), _width - 16, fillHeight), WillyButtonColor);
+	if (_width > 16 && fillHeight > 0)
+		dst->fillRect(Common::Rect(Common::Point(pt.x + 8, pt.y + 3), _width - 16, fillHeight), WillyButtonColor);
 	return 0;
 }
 
@@ -475,7 +476,7 @@ void ButtonGadget::draw(Graphics::ManagedSurface *dst) const {
 
 		yoffset = y + yoffset / 2;
 		if (gameId == GID_WILLY)
-			yoffset--;
+			yoffset -= 2;
 
 		int lineWidth = font->getStringWidth(line1);
 		font->drawString(dst, line1, x + (_width - lineWidth) / 2 + 1, yoffset + 2, lineWidth, textCol);
@@ -822,18 +823,27 @@ void ImageGadget::draw(Graphics::ManagedSurface *dst) const {
 	if (!xstep || !ystep)
 		return;
 
+	const DgdsGameId gameId = DgdsEngine::getInstance()->getGameId();
+
 	int xoff = _x + _parentX;
 	int yoff = _y + _parentY;
-	Common::Rect drawRect(Common::Point(xoff, yoff), _width, _height);
+	int fillHeight = _height;
+	if (gameId == GID_WILLY)
+		fillHeight++;
+
+	Common::Rect drawRect(Common::Point(xoff, yoff), _width, fillHeight);
 	dst->fillRect(drawRect, _col1);
 	// Note: not quite the same as the original logic here, but gets the same result.
 	_drawFrame(dst, xoff, yoff, _width, _height, _sval1I, _sval1I);
 
-	// NOTE: This only done in inventory in originals
-	if (DgdsEngine::getInstance()->getGameId() == GID_DRAGON)
+	// NOTE: This only done in inventory in originals, but no other
+	// Request uses the ImageGadget.
+	if (gameId == GID_DRAGON)
 		RequestData::drawCorners(dst, 19, xoff - 2, yoff - 2, _width + 4, _height + 4);
-	else
+	else if (gameId == GID_HOC)
 		RequestData::drawCorners(dst, 19, xoff - 4, yoff - 4, _width + 8, _height + 8);
+	else if (gameId == GID_WILLY)
+		RequestData::drawCorners(dst, 25, xoff - 4, yoff - 4, _width + 8, _height + 8);
 }
 
 Common::String RequestData::dump() const {

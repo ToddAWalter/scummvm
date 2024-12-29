@@ -334,8 +334,6 @@ int Room::checkCursorAndMoveableObjects() {
 			if (_roomObj[i].objNum == 25) {
 				if (g_engine->_objectVar.getVar(80) < 3) {
 					hasObject = false;
-				} else {
-					hasObject = true;
 				}
 			}
 
@@ -381,11 +379,9 @@ int Room::checkCursorAndStaticObjects(int x, int y) {
 				}
 			}
 
-			if (_roomObj[i].objNum == 0x19 && hasObject) {
+			if (_roomObj[i].objNum == 25 && hasObject) {
 				if (g_engine->_objectVar.getVar(80) < 2) {
 					hasObject = false;
-				} else {
-					hasObject = true;
 				}
 			}
 
@@ -1010,7 +1006,7 @@ void Room::runRoomObjects() {
 					   _roomNumber == 64 || _roomNumber == 65 || _roomNumber == 63 ||
 					   _roomNumber == 66 ||
 					   _roomNumber == 67 || _roomNumber == 28 || _roomNumber == 37 ||
-					   _roomNumber == 39 || _roomNumber == 32 || _roomNumber == 57 ||
+					   _roomNumber == 39 || _roomNumber == 57 ||
 					   _roomNumber == 60 || _roomNumber == 44 ||
 					   _roomNumber == 38 || _roomNumber == 25) {
 				const Sprite &sprite = _locationSprites.getSpriteAt(spriteNum);

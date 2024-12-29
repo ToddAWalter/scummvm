@@ -164,6 +164,9 @@ public:
 	int16 getNativeGameState() const { return _nativeGameState; }
 	void setNativeGameState(int16 state) { _nativeGameState = state; }
 
+	int16 getTrainState() const { return _trainState; }
+	void setTrainState(int16 state) { _trainState = state; }
+
 	int16 getIntroState() const { return _introState; }
 	void setIntroState(int16 state) { _introState = state; }
 
@@ -212,8 +215,8 @@ private:
 	int16 _unk75;
 	int16 _palFade;
 	int16 _droppedItemNum;
-	int16 _unk79;
-	int16 _unk80;
+	int16 _characterStance;
+	int16 _characterPos;
 	int16 _unk81;
 	int16 _unk82;
 

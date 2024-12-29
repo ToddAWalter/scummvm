@@ -89,7 +89,8 @@ DgdsEngine::DgdsEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	_random("dgds"), _currentCursor(-1), _menuToTrigger(kMenuNone), _isLoading(true), _flipMode(false),
 	_rstFileName(nullptr), _difficulty(1), _menu(nullptr), _adsInterp(nullptr), _isDemo(false),
 	_dragonArcade(nullptr), _chinaTank(nullptr), _chinaTrain(nullptr), _skipNextFrame(false),
-	_gameId(GID_INVALID), _thisFrameMs(0), _lastGlobalFade(-1), _lastGlobalFadedPal(0) {
+	_gameId(GID_INVALID), _thisFrameMs(0), _lastGlobalFade(-1), _lastGlobalFadedPal(0),
+	_debugShowHotAreas(false) {
 
 	_platform = gameDesc->platform;
 	_gameLang = gameDesc->language;
@@ -186,6 +187,11 @@ bool DgdsEngine::changeScene(int sceneNum) {
 	if (!haveSceneFile && sceneNum != 2) {
 		warning("Tried to switch to non-existent scene %d", sceneNum);
 		return false;
+	} else if (!haveSceneFile && getGameId() == GID_WILLY) {
+		// Willy does not have a separate scene file for inventory.
+		// Leave the currenty scene data loaded and just show the inventory.
+		_inventory->open();
+		return true;
 	}
 
 	_gameGlobals->setLastSceneNum(sceneNum);
@@ -226,9 +232,9 @@ bool DgdsEngine::changeScene(int sceneNum) {
 		_scene->setSceneNum(sceneNum);
 
 	// These are done inside the load function in the original.. cleaner here..
-	if (!_isDemo)
+	if (!_isDemo && getGameId() != GID_WILLY)
 		_scene->addInvButtonToHotAreaList();
-	if (_gameId == GID_DRAGON)
+	if (getGameId() == GID_DRAGON)
 		_clock.setVisibleScript(true);
 
 	if (_scene->getMagic() != _gdsScene->getMagic())
@@ -260,8 +266,10 @@ void DgdsEngine::setMouseCursor(int num) {
 	if (!_icons || num >= _icons->loadedFrameCount())
 		return;
 
-	if ((int)num == _currentCursor)
+	if (num == _currentCursor) {
+		CursorMan.showMouse(true);
 		return;
+	}
 
 	const Common::Array<MouseCursor> &cursors = _gdsScene->getCursorList();
 
@@ -360,9 +368,9 @@ void DgdsEngine::init(bool restarting) {
 	_menu = new Menu();
 	_adsInterp = new ADSInterpreter(this);
 	_inventory = new Inventory();
-	if (_gameId == GID_DRAGON)
+	if (getGameId() == GID_DRAGON)
 		_dragonArcade = new DragonArcade();
-	else if (_gameId == GID_HOC) {
+	else if (getGameId() == GID_HOC) {
 		_shellGame = new ShellGame();
 		_hocIntro = new HocIntro();
 		_chinaTank = new ChinaTank();
@@ -588,9 +596,13 @@ Common::Error DgdsEngine::run() {
 			} else if (ev.type == Common::EVENT_KEYDOWN) {
 				if (_dragonArcade)
 					_dragonArcade->onKeyDown(ev.kbd);
+				if (_chinaTrain)
+					_chinaTrain->onKeyDown(ev.kbd);
 			} else if (ev.type == Common::EVENT_KEYUP) {
 				if (_dragonArcade)
 					_dragonArcade->onKeyUp(ev.kbd);
+				if (_chinaTrain)
+					_chinaTrain->onKeyUp(ev.kbd);
 			}
 		}
 
@@ -635,12 +647,14 @@ Common::Error DgdsEngine::run() {
 
 			_compositionBuffer.blitFrom(_backgroundBuffer);
 
-			if (_inventory->isOpen() && _scene->getNum() == 2) {
+			if (_inventory->isOpen() && (_scene->getNum() == 2 || getGameId() == GID_WILLY)) {
 				int invCount = _gdsScene->countItemsInInventory();
 				_inventory->draw(_compositionBuffer, invCount);
 			}
 
-			_compositionBuffer.transBlitFrom(_storedAreaBuffer);
+			// Don't draw stored buffer over Willy Beamish inventory
+			if (!(_inventory->isOpen() && getGameId() == GID_WILLY))
+				_compositionBuffer.transBlitFrom(_storedAreaBuffer);
 
 			//
 			// The originals do something about drawing the background of dialogs here
@@ -651,7 +665,7 @@ Common::Error DgdsEngine::run() {
 			//
 			//_scene->drawActiveDialogBgs(&_compositionBuffer);
 
-			if (_scene->getNum() != 2 || _inventory->isZoomVisible())
+			if (!_inventory->isOpen() || _inventory->isZoomVisible())
 				_adsInterp->run();
 
 			if (mouseEvent != Common::EVENT_INVALID) {
@@ -716,6 +730,9 @@ Common::Error DgdsEngine::run() {
 
 			bool haveActiveDialog = _scene->checkDialogActive();
 
+			if (_debugShowHotAreas)
+				_scene->drawDebugHotAreas(&_compositionBuffer);
+
 			if (getGameId() == GID_WILLY) {
 				_scene->drawVisibleHeads(&_compositionBuffer);
 				_scene->drawAndUpdateDialogs(&_compositionBuffer);
@@ -737,7 +754,7 @@ Common::Error DgdsEngine::run() {
 		}
 
 		// Willy Beamish dims the palette of the screen while dialogs are active
-		if (_gameId == GID_WILLY) {
+		if (getGameId() == GID_WILLY) {
 			WillyGlobals *globals = static_cast<WillyGlobals *>(_gameGlobals);
 			int16 fade = globals->getPalFade();
 			fade = CLIP(fade, (int16)0, (int16)255);
@@ -882,7 +899,7 @@ Common::Error DgdsEngine::syncGame(Common::Serializer &s) {
 
 	// Add inv button - we deferred this to now to make sure globals etc
 	// are in the right state.
-	if (s.isLoading())
+	if (s.isLoading() && getGameId() != GID_WILLY)
 		_scene->addInvButtonToHotAreaList();
 
 	if (s.getVersion() < 4) {

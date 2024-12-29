@@ -50,13 +50,19 @@ enum SelectionTypes {
 	kSelBackspace
 };
 
+// Options for controlling behavior during waits and sound playback
+enum WaitOptions {
+	kWaitBlock          = 0x00, // no event processing, cannot be interrupted
+	kWaitProcessEvents  = 0x01, // process events, stops on quit
+	kWaitAllowInterrupt = 0x03  // process events, stops on input or quit
+};
+
 class PreAgiEngine : public AgiBase {
 	int _gameId;
 
 protected:
 	void initialize() override;
 
-	void pollTimer() {}
 	int getKeypress() override { return 0; }
 	bool isKeypress() override { return false; }
 	void clearKeyQueue() override {}
@@ -83,6 +89,7 @@ protected:
 	void clearScreen(int attr, bool overrideDefault = true);
 	void clearGfxScreen(int attr);
 	void setDefaultTextColor(int attr) { _defaultColor = attr; }
+	byte getWhite() const;
 
 	// Keyboard
 	int getSelection(SelectionTypes type);
@@ -101,8 +108,8 @@ protected:
 	// Saved Games
 	Common::SaveFileManager *getSaveFileMan() { return _saveFileMan; }
 
-	void playNote(int16 frequency, int32 length);
-	void waitForTimer(int msec_delay);
+	bool playSpeakerNote(int16 frequency, int32 length, WaitOptions options);
+	bool wait(uint32 delay, WaitOptions options = kWaitProcessEvents);
 
 private:
 	int _defaultColor;

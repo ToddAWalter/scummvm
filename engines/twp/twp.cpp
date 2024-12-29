@@ -349,7 +349,6 @@ void TwpEngine::clickedAt(const Math::Vector2d &scrPos) {
 		if (!_hud->_active && _cursor.doubleClick) {
 			walkFast(true);
 			_holdToMove = true;
-			return;
 		}
 
 		if (_cursor.isLeftDown()) {
@@ -587,7 +586,7 @@ void TwpEngine::update(float elapsed) {
 			Common::String cText = !_noun1 ? "" : _textDb->getText(_noun1->getName());
 			_sentence.setText(cText);
 			_inputState.setCursorShape(CursorShape::Normal);
-			if (_cursor.leftDown)
+			if (_cursor.isLeftDown() || _cursor.isRightDown())
 				clickedAt(scrPos);
 		}
 	}
@@ -846,7 +845,7 @@ static void moveCursorTo(const Math::Vector2d &pos) {
 }
 
 static void gotoObject(bool next) {
-	if (!g_twp->_room || !g_twp->_inputState._inputActive || !g_twp->_inputState._showCursor)
+	if (!g_twp->_room || !g_twp->_actor || !g_twp->_inputState._inputActive || !g_twp->_inputState._showCursor)
 		return;
 
 	// get all objects touchable and on screen and get their distance to the actor

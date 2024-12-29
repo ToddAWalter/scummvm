@@ -182,17 +182,20 @@ public:
 
 static StringResource *getStrings(ScummEngine *vm, const char *file, bool is_encoded) {
 	debugC(DEBUG_SMUSH, "trying to read text resources from %s", file);
-	ScummFile theFile(vm);
+	ScummFile *theFile = vm->instantiateScummFile();
 
-	vm->openFile(theFile, file);
-	if (!theFile.isOpen()) {
+	vm->openFile(*theFile, file);
+	if (!theFile->isOpen()) {
+		delete theFile;
 		return 0;
 	}
-	int32 length = theFile.size();
+	int32 length = theFile->size();
 	char *filebuffer = new char [length + 1];
 	assert(filebuffer);
-	theFile.read(filebuffer, length);
+	theFile->read(filebuffer, length);
 	filebuffer[length] = 0;
+	theFile->close();
+	delete theFile;
 
 	if (is_encoded && READ_BE_UINT32(filebuffer) == MKTAG('E','T','R','S')) {
 		assert(length > ETRS_HEADER_LENGTH);
@@ -663,7 +666,7 @@ void SmushPlayer::handleTextResource(uint32 subType, int32 subSize, Common::Seek
 		Common::Rect clipRect(MAX<int>(0, left), MAX<int>(0, top), MIN<int>(left + width, _width), MIN<int>(top + height, _height));
 		sf->drawStringWrap(str, _dst, clipRect, pos_x, pos_y, color, flg);
 	} else {
-		// Similiar to the wrapped text, COMI will pass on rect coords here, which will later be lost. Unlike with the wrapped text, it will
+		// Similar to the wrapped text, COMI will pass on rect coords here, which will later be lost. Unlike with the wrapped text, it will
 		// finally use the full screen dimenstions. SCUMM7 renders directly from here (see comment above), but also with the full screen.
 		Common::Rect clipRect(0, 0, _width, _height);
 		sf->drawString(str, _dst, clipRect, pos_x, pos_y, color, flg);
@@ -1023,8 +1026,8 @@ void SmushPlayer::parseNextFrame() {
 		if (_seekFile.size() > 0) {
 			delete _base;
 
-			ScummFile *tmp = new ScummFile(_vm);
-			if (!g_scumm->openFile(*tmp, Common::Path(_seekFile)))
+			ScummFile *tmp = _vm->instantiateScummFile();
+			if (!_vm->openFile(*tmp, Common::Path(_seekFile)))
 				error("SmushPlayer: Unable to open file %s", _seekFile.c_str());
 			_base = tmp;
 			_base->readUint32BE();
@@ -1190,13 +1193,15 @@ void SmushPlayer::unpause() {
 
 void SmushPlayer::play(const char *filename, int32 speed, int32 offset, int32 startFrame) {
 	// Verify the specified file exists
-	ScummFile f(_vm);
-	_vm->openFile(f, filename);
-	if (!f.isOpen()) {
+	ScummFile *file = _vm->instantiateScummFile();
+
+	_vm->openFile(*file, filename);
+	if (!file->isOpen()) {
 		warning("SmushPlayer::play() File not found %s", filename);
 		return;
 	}
-	f.close();
+	file->close();
+	delete file;
 
 	_updateNeeded = false;
 	_warpNeeded = false;
@@ -1238,7 +1243,7 @@ void SmushPlayer::play(const char *filename, int32 speed, int32 offset, int32 st
 
 		if (_insanity) {
 			// Seeking makes a mess of trying to sync the audio to
-			// the sound. Synt to time instead.
+			// the sound. Sync to time instead.
 			now = _vm->_system->getMillis() - _pauseTime;
 			elapsed = now - _startTime;
 		} else if (_vm->_mixer->isSoundHandleActive(*_compressedFileSoundHandle)) {

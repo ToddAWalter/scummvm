@@ -1942,6 +1942,37 @@ void ScummEngine_v5::o5_pickupObject() {
 	runInventoryScript(1);
 }
 
+// Inject the speech from the SE version in the classic one, for MI1SE
+void ScummEngine_v5::injectMISESpeech() {
+	// TODOs:
+	// - Correctly calculate the local script offset for all scripts
+	//   (e.g. object scripts, such as Elaine's poster in the second screen)
+	// - Add handling for speech delay
+	if (_game.id == GID_MONKEY && (_game.features & GF_DOUBLEFINE_PAK) && _sound->useRemasteredAudio()) {
+		_currentScriptSavedForSpeechMI = vm.slot[_currentScript].number;
+		uint16 localScriptOffset;
+
+		int numGlobalScripts = _numGlobalScripts - 1; // It has to be 199 instead of 200
+
+		if (_currentScriptSavedForSpeechMI >= numGlobalScripts) {
+			int16 localScriptNumber = _currentScriptSavedForSpeechMI - numGlobalScripts;
+			if (localScriptNumber > 56)
+				localScriptOffset = 0;
+			else
+				localScriptOffset = _localScriptOffsets[localScriptNumber];
+		} else {
+			localScriptOffset = 8;
+		}
+
+		// TODO: This doesn't work for all scripts, e.g. object scripts
+		//_currentScriptOffsetSavedForSpeechMI = _scriptPointer - _scriptOrgPointer - 1 - localScriptOffset;
+		_currentScriptOffsetSavedForSpeechMI = vm.slot[_currentScript].offs - localScriptOffset; // from disasm
+		_currentSpeechIndexMI = 0;
+
+		// debug("injectMISESpeech: room %d, script %d, offset %d", _currentRoom, _currentScriptSavedForSpeechMI, _currentScriptOffsetSavedForSpeechMI);
+	}
+}
+
 void ScummEngine_v5::o5_print() {
 	// WORKAROUND bug #13374: The patched script for the Ultimate Talkie
 	// is missing a WaitForMessage() after Lemonhead says "Oooh, that's
@@ -1956,11 +1987,15 @@ void ScummEngine_v5::o5_print() {
 		return;
 	}
 
+	injectMISESpeech();
+
 	_actorToPrintStrFor = getVarOrDirectByte(PARAM_1);
 	decodeParseString();
 }
 
 void ScummEngine_v5::o5_printEgo() {
+	injectMISESpeech();
+
 	_actorToPrintStrFor = (byte)VAR(VAR_EGO);
 	decodeParseString();
 }

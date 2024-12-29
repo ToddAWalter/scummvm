@@ -338,11 +338,15 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 		break;
 
 	case Common::kRenderAmiga:
-		// Allow v2 games to be rendered in forced Amiga mode; this works, and
-		// doing this to avoid the "sunburn effect" in MM/Zak is popular.
-		// Also allow this for Indy3 EGA.
-		if (_game.platform != Common::kPlatformAmiga && _game.version != 2 &&
-(_game.version != 3 || _game.id != GID_INDY3 || _game.platform == Common::kPlatformMacintosh))
+		// Allow V2-V4 DOS/EGA games to be rendered with the Amiga palette; doing
+		// so to avoid the "sunburnt" effect is popular to the point of being
+		// suggested in some online guides, and ScummVM < 2.7.0 allowed it. One
+		// may say that LucasArts made this option "canon" anyway, if you read
+		// the `Common::kRenderEGA` case above.
+		if (Common::String(_game.guioptions).contains(GUIO_RENDERAMIGA))
+			break;
+
+		if (_game.platform != Common::kPlatformAmiga)
 			_renderMode = Common::kRenderDefault;
 		break;
 
@@ -976,6 +980,11 @@ Common::Error ScummEngine::init() {
 		SearchMan.addSubDirectoryMatching(gameDataDir, "rooms");
 	}
 
+	if ((_game.id == GID_MONKEY || _game.id == GID_MONKEY2) && (_game.features & GF_DOUBLEFINE_PAK)) {
+		// This is for the DoubleFine SE versions of Monkey Island 1 and 2
+		SearchMan.addSubDirectoryMatching(gameDataDir, "audio");
+	}
+
 	if ((_game.platform == Common::kPlatformMacintosh) && (_game.version == 3)) {
 		// This is for the Mac version of Indy3/Loom
 		SearchMan.addSubDirectoryMatching(gameDataDir, "rooms 1");
@@ -1041,12 +1050,39 @@ Common::Error ScummEngine::init() {
 
 	// The	kGenUnchanged method is only used for 'container files', i.e. files
 	// that contain the real game files bundled together in an archive format.
-	// This is the case of the NES, v0 and Mac versions of certain games.
+	// This is the case of the DoubleFine, NES, v0 and Mac versions of certain games.
 	// Note: All of these can also occur in 'extracted' form, in which case they
 	// are treated like any other SCUMM game.
 	if (_filenamePattern.genMethod == kGenUnchanged) {
+		if (_game.platform == Common::kPlatformDOS && (_game.features & GF_DOUBLEFINE_PAK)) {
+			// Container files used in remastered/SE versions
+			_containerFile = _filenamePattern.pattern; // needs to be set before instantiating ScummPAKFile
+			if (_game.id == GID_MANIAC)
+				_containerFile = "tenta.cle";
+			_fileHandle = new ScummPAKFile(this);
+			_filenamePattern.genMethod = kGenDiskNum;
 
-		if (_game.platform == Common::kPlatformNES) {
+			switch (_game.id) {
+			case GID_MONKEY:
+				_filenamePattern.pattern = "monkey1.%03d";
+				break;
+			case GID_MONKEY2:
+				_filenamePattern.pattern = "monkey2.%03d";
+				break;
+			case GID_TENTACLE:
+				_filenamePattern.pattern = "tentacle.%03d";
+				break;
+			case GID_FT:
+				_filenamePattern.pattern = "ft.la%d";
+				break;
+			case GID_MANIAC:
+				_filenamePattern.pattern = "%.2d.LFL";
+				_filenamePattern.genMethod = kGenRoomNum;
+				break;
+			default:
+				error("Unsupported Doublefine packed game");
+			}
+		} else if (_game.platform == Common::kPlatformNES) {
 			// We read data directly from NES ROM instead of extracting it with
 			// external tool
 			assert(_game.id == GID_MANIAC);
@@ -1530,7 +1566,8 @@ void ScummEngine::setupScumm(const Common::Path &macResourceFile) {
 		// fallback with MIDI music when CD tracks are not found.
 		if (!existExtractedCDAudioFiles(track)
 		    && !isDataAndCDAudioReadFromSameCD()
-			&& !(_game.id == GID_MONKEY && _game.features & GF_ULTIMATE_TALKIE)) {
+			&& !(_game.id == GID_MONKEY && _game.features & GF_ULTIMATE_TALKIE)
+			&& !(_game.id == GID_MONKEY && _game.features & GF_DOUBLEFINE_PAK)) {
 			warnMissingExtractedCDAudio();
 		}
 		_system->getAudioCDManager()->open();
@@ -2273,7 +2310,7 @@ void ScummEngine::setupMusic(int midi) {
 	} else if (_game.platform == Common::kPlatformApple2GS && _game.version == 0){
 		_musicEngine = new Player_AppleII(this, _mixer);
 	} else if (_game.platform == Common::kPlatformC64 && _game.version <= 1) {
-#ifndef DISABLE_SID
+#ifdef USE_SID_AUDIO
 		_musicEngine = new Player_SID(this, _mixer);
 #endif
 	} else if (_game.platform == Common::kPlatformNES && _game.version == 1) {
@@ -2854,21 +2891,7 @@ void ScummEngine::scummLoop(int delta) {
 
 	scummLoop_updateScummVars();
 
-	if (_game.features & GF_AUDIOTRACKS) {
-		VAR(VAR_MUSIC_TIMER) = _sound->getCDMusicTimer();
-	} else if (VAR_MUSIC_TIMER != 0xFF) {
-		if (_sound->useReplacementAudio() && _sound->getCurrentCDSound()) {
-			// The replacement music timer operates on real time, adjusted to
-			// the expected length of the Loom Overture (since there are so
-			// many different recordings of it). It's completely independent of
-			// the SCUMM engine's timer frequency.
-			_sound->updateMusicTimer();
-			VAR(VAR_MUSIC_TIMER) = _sound->getMusicTimer();
-		} else if (_musicEngine) {
-			// The music engine generates the timer data for us.
-			VAR(VAR_MUSIC_TIMER) = _musicEngine->getMusicTimer() * getTimerFrequency() / 240.0;
-		}
-	}
+	_sound->updateMusicTimer();
 
 	// Another v8 quirk: runAllScripts() is called here; after that we can
 	// finally restore the blastTexts/blastObject rects...
@@ -3986,11 +4009,13 @@ void ScummEngine_v90he::runBootscript() {
 
 bool ScummEngine::startManiac() {
 	Common::Path currentPath = ConfMan.getPath("path");
+	Common::String gameId = ConfMan.get("gameid");
 	Common::String maniacTarget;
 
 	if (!ConfMan.hasKey("easter_egg")) {
 		// Look for a game with a game path pointing to a 'Maniac' directory
-		// as a subdirectory to the current game.
+		// as a subdirectory to the current game. For the Double Fine SE version,
+		// we'll look for a game with the same path as the current game.
 		Common::ConfigManager::DomainMap::iterator iter = ConfMan.beginGameDomains();
 		for (; iter != ConfMan.endGameDomains(); ++iter) {
 			Common::ConfigManager::Domain &dom = iter->_value;
@@ -4001,6 +4026,16 @@ bool ScummEngine::startManiac() {
 				if (path.baseName().equalsIgnoreCase("maniac")) {
 					maniacTarget = iter->_key;
 					break;
+				}
+
+				// Since DOTT and MM are enclosed in the same PAK file, find
+				// a target with the same path as the current game and a game
+				// ID containing "maniac".
+				if (path.empty() && (_game.features & GF_DOUBLEFINE_PAK)) {
+					if (iter->_key != gameId && iter->_key.contains("maniac")) {
+						maniacTarget = iter->_key;
+						break;
+					}
 				}
 			}
 		}
@@ -4014,7 +4049,7 @@ bool ScummEngine::startManiac() {
 		_saveLoadSlot = 100;
 		_saveTemporaryState = true;
 
-		// Set up the chanined games to Maniac Mansion, and then back
+		// Set up the chained games to Maniac Mansion, and then back
 		// to the current game again with that save slot.
 		ChainedGamesMan.push(Common::move(maniacTarget));
 		ChainedGamesMan.push(ConfMan.getActiveDomainName(), 100);
