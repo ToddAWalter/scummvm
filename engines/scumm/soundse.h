@@ -47,6 +47,25 @@ enum SoundSEType {
 class SoundSE {
 
 protected:
+	// Used in MI1 + MI2
+	struct AudioEntryMI {
+		uint32 hash;
+		uint16 room;
+		uint16 script;
+		uint16 localScriptOffset;
+		uint16 messageIndex;        // message index, used in messages split with wait()
+		uint16 isEgoTalking;        // 1 if ego is talking, 0 otherwise
+		uint16 wait;                // wait time in ms
+		Common::String textEnglish; // 256 bytes, English text
+		Common::String textFrench;  // 256 bytes, French text
+		Common::String textItalian; // 256 bytes, Italian text
+		Common::String textGerman;  // 256 bytes, German text
+		Common::String textSpanish; // 256 bytes, Spanish text
+		Common::String speechFile;  // 32 bytes
+
+		int32 hashFourCharString; // Hash calculated on a four char string, from disasm
+	};
+
 	ScummEngine *_vm;
 	Audio::Mixer *_mixer;
 
@@ -56,7 +75,22 @@ public:
 
 	Audio::SeekableAudioStream *getXWBTrack(int track);
 	Audio::AudioStream *getAudioStream(uint32 offset, SoundSEType type);
-	uint32 getAudioOffsetForMI(int32 room, int32 script, int32 localScriptOffset, int32 messageIndex);
+
+	int32 handleRemasteredSpeech(const char *msgString,
+								const char *speechFilenameSubstitution,
+								uint16 roomNumber,
+								uint16 actorTalking,
+								uint16 scriptNum,
+								uint16 scriptOffset,
+								uint16 numWaits);
+
+	AudioEntryMI *getAppropriateSpeechCue(const char *msgString,
+										  const char *speechFilenameSubstitution,
+										  uint16 roomNumber,
+										  uint16 actorTalking,
+										  uint16 scriptNum,
+										  uint16 scriptOffset,
+										  uint16 numWaits);
 
 private:
 	enum AudioCodec {
@@ -86,12 +120,14 @@ private:
 		Common::String name;
 	};
 
-	Common::HashMap<Common::String, uint32> _audioNameToOriginalOffsetMap;
-
 	typedef Common::Array<AudioEntry> AudioIndex;
 	typedef Common::HashMap<uint32, uint32> OffsetToIndexMap;
+	typedef Common::HashMap<Common::String, int32> NameToIndexMap;
+	typedef Common::HashMap<Common::String, uint32> NameToOffsetMap;
 
-	OffsetToIndexMap _offsetToIndex;
+	OffsetToIndexMap _offsetToIndexDOTTAndFT;
+	NameToOffsetMap _nameToOffsetDOTTAndFT;
+	NameToIndexMap _nameToIndex;
 
 	AudioIndex _musicEntries;
 	Common::String _musicFilename;
@@ -100,34 +136,22 @@ private:
 	AudioIndex _sfxEntries;
 	Common::String _sfxFilename;
 
-	// Used in MI1 + MI2
-	struct AudioEntryMI {
-		uint32 hash;
-		uint16 room;
-		uint16 script;
-		uint16 localScriptOffset;
-		uint16 messageIndex;        // message index, used in messages split with wait()
-		uint16 isEgoTalking;        // 1 if ego is talking, 0 otherwise
-		uint16 wait;                // wait time in ms
-		Common::String textEnglish; // 256 bytes, English text
-		Common::String textFrench;  // 256 bytes, French text
-		Common::String textItalian; // 256 bytes, Italian text
-		Common::String textGerman;  // 256 bytes, German text
-		Common::String textSpanish; // 256 bytes, Spanish text
-		Common::String speechFile;  // 32 bytes
-	};
-
-	//typedef Common::Array<AudioEntryMI> AudioIndexMI;
-	//AudioIndexMI _audioEntriesMI;
+	typedef Common::Array<AudioEntryMI> AudioIndexMI;
+	AudioIndexMI _audioEntriesMI;
 
 	int32 getSoundIndexFromOffset(uint32 offset);
 
 	void initAudioMappingMI();
-	void initAudioMapping();
+	void initAudioMappingDOTTAndFT();
 	void initSoundFiles();
+
+	// Index XWB audio files - used in MI1SE and MI2SE
 	void indexXWBFile(const Common::String &filename, AudioIndex *audioIndex);
-	Audio::SeekableAudioStream *createSoundStream(Common::SeekableSubReadStream *stream, AudioEntry entry);
+
+	// Index FSB audio files - used in DOTT and FT
 	void indexFSBFile(const Common::String &filename, AudioIndex *audioIndex);
+
+	Audio::SeekableAudioStream *createSoundStream(Common::SeekableSubReadStream *stream, AudioEntry entry);
 };
 
 

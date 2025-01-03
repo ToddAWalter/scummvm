@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2024-12-28 17:53+0000\n"
+"POT-Creation-Date: 2025-01-02 17:01+0000\n"
 "PO-Revision-Date: 2024-12-06 09:18+0000\n"
 "Last-Translator: VAN-Gluon <van.gluonp@gmail.com>\n"
 "Language-Team: Japanese <https://translations.scummvm.org/projects/scummvm/"
@@ -308,27 +308,27 @@ msgstr "すでに別のストレージが使用されています。切断しま
 
 #: gui/cloudconnectionwizard.cpp:499 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:209 gui/launcher.cpp:421 gui/launcher.cpp:474
-#: gui/launcher.cpp:526 gui/options.cpp:3528 gui/options.cpp:3911
+#: gui/fluidsynth-dialog.cpp:209 gui/launcher.cpp:421 gui/launcher.cpp:450
+#: gui/launcher.cpp:502 gui/options.cpp:3528 gui/options.cpp:3911
 #: base/main.cpp:585 backends/events/default/default-events.cpp:193
 #: engines/buried/buried.cpp:590 engines/director/events.cpp:100
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:143
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4171
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4164
 #: engines/toon/toon.cpp:1543
 msgid "Yes"
 msgstr "はい"
 
 #: gui/cloudconnectionwizard.cpp:499 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:209 gui/launcher.cpp:421 gui/launcher.cpp:474
-#: gui/launcher.cpp:526 gui/options.cpp:3528 gui/options.cpp:3911
+#: gui/fluidsynth-dialog.cpp:209 gui/launcher.cpp:421 gui/launcher.cpp:450
+#: gui/launcher.cpp:502 gui/options.cpp:3528 gui/options.cpp:3911
 #: engines/buried/buried.cpp:590 engines/director/events.cpp:100
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:149
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4171
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4164
 #: engines/toon/toon.cpp:1543
 msgid "No"
 msgstr "いいえ"
@@ -345,7 +345,7 @@ msgstr "JSONコードの内容が不正です。"
 #: gui/cloudconnectionwizard.cpp:557 gui/downloaddialog.cpp:146
 #: gui/editgamedialog.cpp:341 gui/editrecorddialog.cpp:67
 #: gui/integrity-dialog.cpp:176 gui/fluidsynth-dialog.cpp:153
-#: gui/launcher.cpp:582 gui/launcher.cpp:586 gui/massadd.cpp:90
+#: gui/launcher.cpp:558 gui/launcher.cpp:562 gui/massadd.cpp:90
 #: gui/options.cpp:2429 gui/predictivedialog.cpp:69
 #: gui/saveload-dialog.cpp:1244 dists/android.strings.xml.cpp:33
 #: engines/engine.cpp:586 engines/engine.cpp:609
@@ -357,10 +357,9 @@ msgstr "JSONコードの内容が不正です。"
 #: engines/groovie/script.cpp:665 engines/mtropolis/mtropolis.cpp:114
 #: engines/mtropolis/mtropolis.cpp:124 engines/parallaction/saveload.cpp:270
 #: engines/saga/music.cpp:102 engines/sci/engine/kgraphics.cpp:76
-#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1303
-#: engines/scumm/scumm.cpp:1337 engines/scumm/scumm.cpp:1357
-#: engines/scumm/scumm.cpp:1753 engines/scumm/scumm.cpp:2243
-#: engines/scumm/scumm.cpp:2259 engines/sky/compact.cpp:140
+#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1329
+#: engines/scumm/scumm.cpp:1733 engines/scumm/scumm.cpp:2223
+#: engines/scumm/scumm.cpp:2239 engines/sky/compact.cpp:140
 #: engines/sword1/animation.cpp:532 engines/sword1/animation.cpp:563
 #: engines/sword1/animation.cpp:571 engines/sword1/control.cpp:2813
 #: engines/sword1/logic.cpp:1732 engines/sword2/animation.cpp:426
@@ -452,7 +451,7 @@ msgid ""
 "files with it?"
 msgstr "接続が制限されているようです。ダウンロードしてもよろしいですか?"
 
-#: gui/downloaddialog.cpp:136 gui/launcher.cpp:686
+#: gui/downloaddialog.cpp:136 gui/launcher.cpp:662
 msgid "ScummVM couldn't open the specified directory!"
 msgstr "指定されたディレクトリーが開けませんでした!"
 
@@ -553,7 +552,7 @@ msgstr "アイコンパック"
 msgid "shader packs"
 msgstr "シェーダーパック"
 
-#: gui/dump-all-dialogs.cpp:126 gui/launcher.cpp:737
+#: gui/dump-all-dialogs.cpp:126 gui/launcher.cpp:713
 msgid "Pick the game:"
 msgstr "ゲームを選択してください："
 
@@ -566,7 +565,7 @@ msgid "GFX"
 msgstr "GFX"
 
 #: gui/editgamedialog.cpp:164 gui/options.cpp:2082 gui/options.cpp:2263
-#: backends/graphics/atari/atari-graphics.cpp:1003
+#: backends/graphics/atari/atari-graphics.cpp:1033
 #: backends/graphics/sdl/sdl-graphics.cpp:485
 msgid "Graphics"
 msgstr "画像"
@@ -1329,7 +1328,7 @@ msgstr "年"
 msgid "Select Group by"
 msgstr "グループを選択"
 
-#: gui/launcher.cpp:234 gui/launcher.cpp:922
+#: gui/launcher.cpp:234 gui/launcher.cpp:898
 msgid "Group:"
 msgstr "グループ:"
 
@@ -1420,12 +1419,12 @@ msgctxt "lowres"
 msgid "Mass Add..."
 msgstr "一括に追加..."
 
-#: gui/launcher.cpp:302 gui/launcher.cpp:892 gui/shaderbrowser-dialog.cpp:61
+#: gui/launcher.cpp:302 gui/launcher.cpp:868 gui/shaderbrowser-dialog.cpp:61
 #: gui/shaderbrowser-dialog.cpp:97
 msgid "Search in game list"
 msgstr "ゲームリストを検索する"
 
-#: gui/launcher.cpp:306 gui/launcher.cpp:913 gui/shaderbrowser-dialog.cpp:65
+#: gui/launcher.cpp:306 gui/launcher.cpp:889 gui/shaderbrowser-dialog.cpp:65
 #: gui/shaderbrowser-dialog.cpp:107
 msgid "Search:"
 msgstr "検索："
@@ -1447,23 +1446,23 @@ msgid ""
 "a huge number of games."
 msgstr "一括にゲームを追加してもよろしいですか？大量に追加することもあります。"
 
-#: gui/launcher.cpp:474
+#: gui/launcher.cpp:450
 msgid "Do you really want to remove this game configuration?"
 msgstr "このゲームはリストから削除してもよろしいですか？"
 
-#: gui/launcher.cpp:525
+#: gui/launcher.cpp:501
 msgid "Do you want to load saved game?"
 msgstr "セーブデータをロードしますか？"
 
-#: gui/launcher.cpp:582
+#: gui/launcher.cpp:558
 msgid "This game does not support loading games from the launcher."
 msgstr "このゲームはランチャーからロードができません。"
 
-#: gui/launcher.cpp:586
+#: gui/launcher.cpp:562
 msgid "ScummVM could not find any engine capable of running the selected game!"
 msgstr "選択されたゲームを実行できるエンジンは見つかりませんでした！"
 
-#: gui/launcher.cpp:689 gui/launcher.cpp:713
+#: gui/launcher.cpp:665 gui/launcher.cpp:689
 msgid ""
 "Have you given ScummVM access rights to this directory? Press the help "
 "button [?] on the top for detailed instructions"
@@ -1471,94 +1470,94 @@ msgstr ""
 "ScummVMにこのフォルダーへのアクセス権を与えていますか? 上部のヘルプボタン "
 "[?] で詳細が表示されます"
 
-#: gui/launcher.cpp:710
+#: gui/launcher.cpp:686
 msgid "ScummVM could not find any game in the specified directory!"
 msgstr "選択されたフォルダー内ゲームが認識できませんでした！"
 
 #. I18N: Unknown game variant
-#: gui/launcher.cpp:731
+#: gui/launcher.cpp:707
 msgid "Unknown variant"
 msgstr "未認識バージョン"
 
-#: gui/launcher.cpp:962 gui/saveload-dialog.cpp:381
+#: gui/launcher.cpp:938 gui/saveload-dialog.cpp:381
 msgid "List view"
 msgstr "リストで表示"
 
-#: gui/launcher.cpp:963 gui/saveload-dialog.cpp:382
+#: gui/launcher.cpp:939 gui/saveload-dialog.cpp:382
 msgid "Grid view"
 msgstr "グリッドで表示"
 
-#: gui/launcher.cpp:1127
+#: gui/launcher.cpp:1103
 msgid "~S~tart"
 msgstr "開始(~S~)"
 
-#: gui/launcher.cpp:1127
+#: gui/launcher.cpp:1103
 msgid "Start selected game"
 msgstr "選択したゲームを開始する"
 
-#: gui/launcher.cpp:1130
+#: gui/launcher.cpp:1106
 msgid "~L~oad..."
 msgstr "ロード(~L~)..."
 
-#: gui/launcher.cpp:1130
+#: gui/launcher.cpp:1106
 msgid "Load saved game for selected game"
 msgstr "選択されたゲームのセーブデータをロードする"
 
-#: gui/launcher.cpp:1132
+#: gui/launcher.cpp:1108
 msgid "Record..."
 msgstr "記録..."
 
-#: gui/launcher.cpp:1138
+#: gui/launcher.cpp:1114
 msgid "~G~ame Options..."
 msgstr "ゲーム設定(~G~)..."
 
-#: gui/launcher.cpp:1138
+#: gui/launcher.cpp:1114
 msgid "Change game options"
 msgstr "ゲームの設定を変える"
 
-#: gui/launcher.cpp:1138
+#: gui/launcher.cpp:1114
 msgctxt "lowres"
 msgid "~G~ame Opts..."
 msgstr "ゲーム設定(~G~)..."
 
 #. I18N: List grouping when no engine is specified
-#: gui/launcher.cpp:1236 gui/launcher.cpp:1432
+#: gui/launcher.cpp:1212 gui/launcher.cpp:1408
 msgid "Unknown Engine"
 msgstr "不明なエンジン"
 
 #. I18N: List grouping when no publisher is specified
 #. I18N: List group when no publisher is specified
-#: gui/launcher.cpp:1253 gui/launcher.cpp:1449
+#: gui/launcher.cpp:1229 gui/launcher.cpp:1425
 msgid "Unknown Publisher"
 msgstr "不明な販売元"
 
 #. I18N: List group when no game series is specified
 #. I18N: List grouping when no game series is specified
-#: gui/launcher.cpp:1270 gui/launcher.cpp:1466
+#: gui/launcher.cpp:1246 gui/launcher.cpp:1442
 msgid "No Series"
 msgstr "シリーズなし"
 
 #. I18N: List group when no language is specified
-#: gui/launcher.cpp:1284 gui/launcher.cpp:1480
+#: gui/launcher.cpp:1260 gui/launcher.cpp:1456
 msgid "Language not detected"
 msgstr "検出されない言語"
 
 #. I18N: List group when no platform is specified
-#: gui/launcher.cpp:1298 gui/launcher.cpp:1494
+#: gui/launcher.cpp:1274 gui/launcher.cpp:1470
 msgid "Platform not detected"
 msgstr "検出されない機種"
 
 #. I18N: List group when no year is specified
-#: gui/launcher.cpp:1315 gui/launcher.cpp:1511
+#: gui/launcher.cpp:1291 gui/launcher.cpp:1487
 msgid "Unknown Year"
 msgstr "年(不明)"
 
 #. I18N: Group for All items
-#: gui/launcher.cpp:1518 gui/widgets/groupedlist.cpp:81
+#: gui/launcher.cpp:1494 gui/widgets/groupedlist.cpp:81
 msgid "All"
 msgstr "すべて"
 
-#: gui/launcher.cpp:1673
+#: gui/launcher.cpp:1649
 msgid "Icons per row:"
 msgstr "1行のアイコン："
 
@@ -2658,7 +2657,7 @@ msgstr "記録"
 msgid "Playback"
 msgstr "再生"
 
-#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:294
+#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:291
 msgid "Edit"
 msgstr "編集"
 
@@ -2848,11 +2847,11 @@ msgstr ""
 msgid "Clear value"
 msgstr "クリア"
 
-#: gui/widgets/grid.cpp:286
+#: gui/widgets/grid.cpp:285
 msgid "Play"
 msgstr "再生"
 
-#: gui/widgets/grid.cpp:289
+#: gui/widgets/grid.cpp:288
 msgid "Saves"
 msgstr "セーブ"
 
@@ -3401,9 +3400,9 @@ msgstr "メインメニューに戻る(~R~)"
 #: engines/avalanche/parser.cpp:1918 engines/cine/various.cpp:349
 #: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:382
 #: engines/dreamweb/saveload.cpp:261 engines/glk/streams.cpp:1432
-#: engines/gnap/menu.cpp:465 engines/groovie/script.cpp:859
-#: engines/groovie/script.cpp:2253 engines/groovie/script.cpp:2280
-#: engines/groovie/script.cpp:2321 engines/hugo/file.cpp:297
+#: engines/gnap/menu.cpp:465 engines/groovie/script.cpp:858
+#: engines/groovie/script.cpp:2256 engines/groovie/script.cpp:2283
+#: engines/groovie/script.cpp:2324 engines/hugo/file.cpp:297
 #: engines/illusions/menusystem.cpp:702 engines/kingdom/kingdom.cpp:731
 #: engines/lab/savegame.cpp:242 engines/mads/nebular/dialogs_nebular.cpp:358
 #: engines/mm/xeen/saves.cpp:280 engines/mtropolis/saveload.cpp:76
@@ -3421,9 +3420,9 @@ msgstr "ゲームをセーブ："
 #: engines/avalanche/parser.cpp:1918 engines/cine/various.cpp:349
 #: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:382
 #: engines/dreamweb/saveload.cpp:261 engines/glk/streams.cpp:1432
-#: engines/gnap/menu.cpp:465 engines/groovie/script.cpp:854
-#: engines/groovie/script.cpp:859 engines/groovie/script.cpp:2253
-#: engines/groovie/script.cpp:2280 engines/groovie/script.cpp:2321
+#: engines/gnap/menu.cpp:465 engines/groovie/script.cpp:853
+#: engines/groovie/script.cpp:858 engines/groovie/script.cpp:2256
+#: engines/groovie/script.cpp:2283 engines/groovie/script.cpp:2324
 #: engines/hugo/file.cpp:297 engines/illusions/menusystem.cpp:702
 #: engines/kingdom/kingdom.cpp:731 engines/lab/savegame.cpp:237
 #: engines/lab/savegame.cpp:242 engines/mads/nebular/dialogs_nebular.cpp:358
@@ -4009,7 +4008,7 @@ msgstr "新規フォルダー作成"
 msgid "Choose a new folder"
 msgstr "新規フォルダー選択"
 
-#: backends/graphics/atari/atari-graphics.cpp:1007
+#: backends/graphics/atari/atari-graphics.cpp:1037
 #: backends/graphics/sdl/sdl-graphics.cpp:507
 msgid "Toggle aspect ratio correction"
 msgstr "縦横比修正の切替"
@@ -6076,9 +6075,9 @@ msgstr "このゲームはセーブ非対応です"
 #: engines/cine/various.cpp:360 engines/dm/dm.cpp:271
 #: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:395
 #: engines/dreamweb/saveload.cpp:169 engines/glk/streams.cpp:1441
-#: engines/gnap/menu.cpp:474 engines/groovie/script.cpp:836
-#: engines/groovie/script.cpp:871 engines/groovie/script.cpp:2240
-#: engines/groovie/script.cpp:2267 engines/groovie/script.cpp:2337
+#: engines/gnap/menu.cpp:474 engines/groovie/script.cpp:835
+#: engines/groovie/script.cpp:870 engines/groovie/script.cpp:2243
+#: engines/groovie/script.cpp:2270 engines/groovie/script.cpp:2340
 #: engines/hugo/file.cpp:399 engines/illusions/menusystem.cpp:679
 #: engines/kingdom/kingdom.cpp:741 engines/lab/savegame.cpp:257
 #: engines/mads/nebular/dialogs_nebular.cpp:385
@@ -6095,10 +6094,10 @@ msgstr "ゲームを復元する:"
 #: engines/cine/various.cpp:360 engines/dm/dm.cpp:271
 #: engines/dm/loadsave.cpp:187 engines/drascula/saveload.cpp:395
 #: engines/dreamweb/saveload.cpp:169 engines/glk/streams.cpp:1441
-#: engines/gnap/menu.cpp:474 engines/groovie/script.cpp:836
-#: engines/groovie/script.cpp:854 engines/groovie/script.cpp:871
-#: engines/groovie/script.cpp:2240 engines/groovie/script.cpp:2267
-#: engines/groovie/script.cpp:2337 engines/hugo/file.cpp:399
+#: engines/gnap/menu.cpp:474 engines/groovie/script.cpp:835
+#: engines/groovie/script.cpp:853 engines/groovie/script.cpp:870
+#: engines/groovie/script.cpp:2243 engines/groovie/script.cpp:2270
+#: engines/groovie/script.cpp:2340 engines/hugo/file.cpp:399
 #: engines/illusions/menusystem.cpp:679 engines/kingdom/kingdom.cpp:741
 #: engines/lab/savegame.cpp:237 engines/lab/savegame.cpp:257
 #: engines/mads/nebular/dialogs_nebular.cpp:385
@@ -6116,7 +6115,7 @@ msgid "Quick load or save game isn't supported in this location"
 msgstr ""
 "このロケーションでは、セーブまたはクイックロードはサポートされていません"
 
-#: engines/agos/saveload.cpp:161 engines/scumm/scumm.cpp:3126
+#: engines/agos/saveload.cpp:161 engines/scumm/scumm.cpp:3119
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -6127,7 +6126,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:196 engines/scumm/scumm.cpp:3113
+#: engines/agos/saveload.cpp:196 engines/scumm/scumm.cpp:3106
 #, c-format
 msgid ""
 "Failed to save game to file:\n"
@@ -6138,7 +6137,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:204 engines/scumm/scumm.cpp:3146
+#: engines/agos/saveload.cpp:204 engines/scumm/scumm.cpp:3139
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -8064,7 +8063,7 @@ msgstr "予約済み"
 msgid "Failed to save game"
 msgstr "セーブできませんでした"
 
-#: engines/groovie/script.cpp:854 engines/lab/savegame.cpp:237
+#: engines/groovie/script.cpp:853 engines/lab/savegame.cpp:237
 msgid "Would you like to save or restore a game?"
 msgstr "ゲームをセーブまたは復元してもよろしいですか?"
 
@@ -10123,7 +10122,7 @@ msgstr "(自動セーブ)"
 msgid "Please use an external viewer to open the game's help file: %s"
 msgstr "ゲームのヘルプファイル%sを開くには、外部のビューアーを使用してください"
 
-#: engines/sci/engine/kmisc.cpp:895
+#: engines/sci/engine/kmisc.cpp:928
 msgid ""
 "The Poker logic is hardcoded in an external DLL, and is not implemented yet. "
 "There exists some dummy logic for now, where opponent actions are chosen "
@@ -10315,7 +10314,7 @@ msgid "Your Name:"
 msgstr "ユーザー名："
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4177
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4170
 msgid "Host"
 msgstr "ホスト"
 
@@ -10325,7 +10324,7 @@ msgid "Querying games..."
 msgstr "ゲームに照会中..."
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4177
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4170
 msgid "Join"
 msgstr "参加"
 
@@ -11281,65 +11280,45 @@ msgstr ""
 "アスペクト比の補正は、[エンジン]タブで解像度を320x200にトリミングすることで実"
 "現できます。"
 
-#: engines/scumm/scumm.cpp:1255
-msgid "This game requires the 'Indy' Macintosh executable for its fonts."
+#: engines/scumm/scumm.cpp:1321
+#, fuzzy, c-format
+#| msgid "This game requires the 'Indy' Macintosh executable for its fonts."
+msgid "This game requires the '%s' Macintosh executable for its fonts."
 msgstr "このゲームのフォントにMacintoshの実行ファイル「Indy」が必要です。"
 
-#: engines/scumm/scumm.cpp:1282
+#: engines/scumm/scumm.cpp:1325
+#, fuzzy, c-format
+#| msgid ""
+#| "This game requires the 'Loom' Macintosh executable for its music and "
+#| "fonts."
 msgid ""
-"This game requires the 'Loom' Macintosh executable for its music and fonts."
+"This game requires the '%s' Macintosh executable for its music and fonts."
 msgstr "このゲームのBGM・フォントにMacintoshの実行ファイル「Loom」が必要です。"
 
-#: engines/scumm/scumm.cpp:1302
-#, fuzzy
+#: engines/scumm/scumm.cpp:1329
+#, fuzzy, c-format
 #| msgid ""
 #| "Could not find the 'Monkey Island' Macintosh executable to read the\n"
 #| "instruments from. Music will be disabled."
 msgid ""
-"Could not find the 'Monkey Island' Macintosh executable to read resources\n"
-"and instruments from. Music and Mac GUI will be disabled."
+"Could not find the '%s' Macintosh executable to read resources from. Music "
+"and Mac GUI will be disabled"
 msgstr ""
 "楽器をロードするためのMacintoshの実行ファイル「Monkey Island」が見つかりませ"
 "ん。\n"
 "音楽は無効になります。"
 
-#: engines/scumm/scumm.cpp:1335
-#, fuzzy
-#| msgid ""
-#| "Could not find the 'Indy' Macintosh executable. High-resolution fonts "
-#| "will\n"
-#| "be disabled."
-msgid ""
-"Could not find the 'Fate of Atlantis' Macintosh executable.\n"
-"Mac GUI will not be shown."
-msgstr ""
-"「Indy」のMacintosh用実行ファイルが見つかりません。\n"
-"高解像度のフォントは使用できません。"
-
-#: engines/scumm/scumm.cpp:1355
-#, fuzzy
-#| msgid ""
-#| "Could not find the 'Indy' Macintosh executable. High-resolution fonts "
-#| "will\n"
-#| "be disabled."
-msgid ""
-"Could not find the 'LeChuck's Revenge' Macintosh executable.\n"
-"Mac GUI will not be shown."
-msgstr ""
-"「Indy」のMacintosh用実行ファイルが見つかりません。\n"
-"高解像度のフォントは使用できません。"
-
-#: engines/scumm/scumm.cpp:1366
+#: engines/scumm/scumm.cpp:1346
 #, c-format
 msgid "Could not open Macintosh resource file %s"
 msgstr "Macintoshのリソース %s を開けません"
 
-#: engines/scumm/scumm.cpp:1369
+#: engines/scumm/scumm.cpp:1349
 #, c-format
 msgid "Could not find resource fork in Macintosh resource file %s"
 msgstr "Macintoshのリソース %s でフォークが見つかりません"
 
-#: engines/scumm/scumm.cpp:1750
+#: engines/scumm/scumm.cpp:1730
 msgid ""
 "Audio files compressed with ScummVM Tools were detected; *.BUN/*.SOU\n"
 "compression is not supported anymore for this game, audio will be disabled.\n"
@@ -11349,7 +11328,7 @@ msgstr ""
 "このゲームではサポートされていないため、オーディオは無効になります。\n"
 "オリジナルのメディアから、圧縮せずにコピーしてください。"
 
-#: engines/scumm/scumm.cpp:2241
+#: engines/scumm/scumm.cpp:2221
 #, c-format
 msgid ""
 "Native MIDI support requires the Roland Upgrade from LucasArts,\n"
@@ -11358,7 +11337,7 @@ msgstr ""
 "ネイティブMIDIのサポートには、LucasArts提供のthe Roland Upgradeが必要です。\n"
 "しかし%sがありません。代わりにAdLibを使用します。"
 
-#: engines/scumm/scumm.cpp:2257
+#: engines/scumm/scumm.cpp:2237
 msgid ""
 "This particular version of Monkey Island 1 is known to miss some\n"
 "required resources for MT-32. Using AdLib instead."
@@ -11366,7 +11345,7 @@ msgstr ""
 "このMonkey Island 1の特定のバージョンは、MT-32に必要な\n"
 "リソースが欠落しています。AdLibを代用します。"
 
-#: engines/scumm/scumm.cpp:4065
+#: engines/scumm/scumm.cpp:4058
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -11376,7 +11355,7 @@ msgstr ""
 "ディレクトリーの「Maniac」フォルダー内にゲームファイルを配置し、ゲームが"
 "ScummVMに追加されていなければなりません。"
 
-#: engines/scumm/scumm.cpp:4177
+#: engines/scumm/scumm.cpp:4170
 msgid "Would you like to host or join a network play session?"
 msgstr "セッションを開催、または参加しますか?"
 
@@ -13522,6 +13501,30 @@ msgstr ""
 "Arialが必要です。LiberationFontsを使用する場合、LiberationMono、"
 "LiberationSans、LiberationSerifが必要です。GNUFreeFontを使用する場合、"
 "FreeMono、FreeSans、FreeSerifが必要です。"
+
+#, fuzzy
+#~| msgid ""
+#~| "Could not find the 'Indy' Macintosh executable. High-resolution fonts "
+#~| "will\n"
+#~| "be disabled."
+#~ msgid ""
+#~ "Could not find the 'Fate of Atlantis' Macintosh executable.\n"
+#~ "Mac GUI will not be shown."
+#~ msgstr ""
+#~ "「Indy」のMacintosh用実行ファイルが見つかりません。\n"
+#~ "高解像度のフォントは使用できません。"
+
+#, fuzzy
+#~| msgid ""
+#~| "Could not find the 'Indy' Macintosh executable. High-resolution fonts "
+#~| "will\n"
+#~| "be disabled."
+#~ msgid ""
+#~ "Could not find the 'LeChuck's Revenge' Macintosh executable.\n"
+#~ "Mac GUI will not be shown."
+#~ msgstr ""
+#~ "「Indy」のMacintosh用実行ファイルが見つかりません。\n"
+#~ "高解像度のフォントは使用できません。"
 
 #, fuzzy
 #~| msgid ""

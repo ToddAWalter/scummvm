@@ -22,6 +22,7 @@
 #ifndef DARKSEED_CONSOLE_H
 #define DARKSEED_CONSOLE_H
 
+#include "graphics/big5.h"
 #include "darkseed/gamefont.h"
 #include "darkseed/sound.h"
 #include "darkseed/tostext.h"
@@ -32,12 +33,14 @@ namespace Darkseed {
 class Console  {
 private:
 	TosText *_tosText;
-	GameFont _font;
+	Graphics::Font *_font;
+	bool _isBig5 = false;
 	Sound *_sound;
 
 	Common::StringArray _text;
 	int _startIdx = 0;
 	bool _redrawRequired = false;
+	int _numLines = 4;
 
 public:
 	Console(TosText *tostext, Sound *sound);
@@ -53,6 +56,7 @@ public:
 
 private:
 	void addLine(const Common::String &line);
+	void big5WordWrap(const Common::String &str, int maxWidth, Common::StringArray &lines);
 };
 
 } // End of namespace Darkseed
