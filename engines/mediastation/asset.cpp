@@ -19,8 +19,8 @@
  *
  */
 
+#include "mediastation/debugchannels.h"
 #include "mediastation/asset.h"
-#include "mediastation/assetheader.h"
 
 namespace MediaStation {
 
@@ -30,19 +30,39 @@ Asset::~Asset() {
 }
 
 void Asset::readChunk(Chunk &chunk) {
-	error("Asset::readChunk(): Chunk reading for asset type 0x%x is not implemented", _header->_type);
+	error("Asset::readChunk(): Chunk reading for asset type 0x%x is not implemented", static_cast<uint>(_header->_type));
 }
 
 void Asset::readSubfile(Subfile &subfile, Chunk &chunk) {
-	error("Asset::readSubfile(): Subfile reading for asset type 0x%x is not implemented", _header->_type);
+	error("Asset::readSubfile(): Subfile reading for asset type 0x%x is not implemented", static_cast<uint>(_header->_type));
 }
 
 AssetType Asset::type() const {
 	return _header->_type;
 }
 
-uint Asset::zIndex() const {
+int Asset::zIndex() const {
 	return _header->_zIndex;
+}
+
+void Asset::runEventHandlerIfExists(EventType eventType) {
+	EventHandler *eventHandler = _header->_eventHandlers.getValOrDefault(eventType);
+	if (eventHandler != nullptr) {
+		debugC(5, kDebugScript, "Executing handler for event type %d on asset %d", static_cast<uint>(eventType), _header->_id);
+		eventHandler->execute(_header->_id);
+	} else {
+		debugC(5, kDebugScript, "No event handler for event type %d on asset %d", static_cast<uint>(eventType), _header->_id);
+	}
+}
+
+void Asset::runKeyDownEventHandlerIfExists(Common::KeyState keyState) {
+	EventHandler *keyDownEvent = _header->_keyDownHandlers.getValOrDefault(keyState.ascii);
+	if (keyDownEvent != nullptr) {
+		debugC(5, kDebugScript, "Executing keydown event handler for ASCII code %d on asset %d", keyState.ascii, _header->_id);
+		keyDownEvent->execute(_header->_id);
+	} else {
+		debugC(5, kDebugScript, "No keydown event handler for ASCII code %d on asset %d", keyState.ascii, _header->_id);
+	}
 }
 
 } // End of namespace MediaStation

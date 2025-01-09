@@ -52,7 +52,7 @@ Context::Context(const Common::Path &path) :
 		readNewStyleHeaderSections(subfile, chunk);
 	}
 	// Then, read any asset data.
-	chunk = subfile.currentChunk;
+	chunk = subfile._currentChunk;
 	while (!subfile.atEnd()) {
 		readAssetInFirstSubfile(chunk);
 		if (!subfile.atEnd()) {
@@ -61,7 +61,7 @@ Context::Context(const Common::Path &path) :
 	}
 
 	// Then, assets in the rest of the subfiles.
-	for (uint i = 1; i < subfile_count; i++) {
+	for (uint i = 1; i < _subfileCount; i++) {
 		subfile = Subfile(_stream);
 		readAssetFromLaterSubfile(subfile);
 	}
@@ -83,13 +83,13 @@ bool Context::readPreamble() {
 	}
 	_stream->skip(2); // 0x00 0x00
 
-	unk1 = _stream->readUint32LE();
-	debugC(5, kDebugLoading, "Context::openFile(): unk1 = 0x%x", unk1);
+	_unk1 = _stream->readUint32LE();
+	debugC(5, kDebugLoading, "Context::openFile(): _unk1 = 0x%x", _unk1);
 
-	subfile_count = _stream->readUint32LE();
+	_subfileCount = _stream->readUint32LE();
 	// The total size of this file, including this header.
 	// (Basically the true file size shown on the filesystem.)
-	file_size = _stream->readUint32LE();
+	_fileSize = _stream->readUint32LE();
 	return true;
 }
 
@@ -99,7 +99,7 @@ void Context::readOldStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 
 void Context::readNewStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 	// READ THE PALETTE.
-	bool moreSectionsToRead = (chunk.id == MKTAG('i', 'g', 'o', 'd'));
+	bool moreSectionsToRead = (chunk._id == MKTAG('i', 'g', 'o', 'd'));
 	if (!moreSectionsToRead) {
 		warning("Context::readNewStyleHeaderSections(): Got no header sections (@0x%llx)", static_cast<long long int>(chunk.pos()));
 	}
@@ -107,11 +107,11 @@ void Context::readNewStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 	while (moreSectionsToRead) {
 		// VERIFY THIS CHUNK IS A HEADER.
 		// TODO: What are the situations when it's not?
-		uint16 sectionType = Datum(chunk, DatumType::UINT16_1).u.i;
-		debugC(5, kDebugLoading, "Context::readNewStyleHeaderSections(): sectionType = 0x%x (@0x%llx)", sectionType, static_cast<long long int>(chunk.pos()));
+		uint16 sectionType = Datum(chunk, kDatumTypeUint16_1).u.i;
+		debugC(5, kDebugLoading, "Context::readNewStyleHeaderSections(): sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
 		bool chunkIsHeader = (sectionType == 0x000d);
 		if (!chunkIsHeader) {
-			error("Context::readNewStyleHeaderSections(): Expected header chunk, got %s (@0x%llx)", tag2str(chunk.id), static_cast<long long int>(chunk.pos()));
+			error("Context::readNewStyleHeaderSections(): Expected header chunk, got %s (@0x%llx)", tag2str(chunk._id), static_cast<long long int>(chunk.pos()));
 		}
 
 		// READ THIS HEADER SECTION.
@@ -121,43 +121,43 @@ void Context::readNewStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 		} else {
 			debugC(5, kDebugLoading, "\nContext::readNewStyleHeaderSections(): Getting next chunk (@0x%llx)", static_cast<long long int>(chunk.pos()));
 			chunk = subfile.nextChunk();
-			moreSectionsToRead = (chunk.id == MKTAG('i', 'g', 'o', 'd'));
+			moreSectionsToRead = (chunk._id == MKTAG('i', 'g', 'o', 'd'));
 		}
 	}
 	debugC(5, kDebugLoading, "Context::readNewStyleHeaderSections(): Finished reading sections (@0x%llx)", static_cast<long long int>(chunk.pos()));
 }
 
 void Context::readAssetInFirstSubfile(Chunk &chunk) {
-	if (chunk.id == MKTAG('i', 'g', 'o', 'd')) {
+	if (chunk._id == MKTAG('i', 'g', 'o', 'd')) {
 		warning("Context::readAssetInFirstSubfile(): Skippping \"igod\" asset link chunk");
 		chunk.skip(chunk.bytesRemaining());
 		return;
 	}
 
 	// TODO: Make sure this is not an asset link.
-	Asset *asset = g_engine->_assetsByChunkReference.getValOrDefault(chunk.id);
+	Asset *asset = g_engine->_assetsByChunkReference.getValOrDefault(chunk._id);
 	if (asset == nullptr) {
-		error("Context::readAssetInFirstSubfile(): Asset for chunk \"%s\" (0x%x) does not exist or has not been read yet in this title. (@0x%llx)", tag2str(chunk.id), chunk.id, static_cast<long long int>(chunk.pos()));
+		error("Context::readAssetInFirstSubfile(): Asset for chunk \"%s\" (0x%x) does not exist or has not been read yet in this title. (@0x%llx)", tag2str(chunk._id), chunk._id, static_cast<long long int>(chunk.pos()));
 	}
-	debugC(5, kDebugLoading, "\nContext::readAssetInFirstSubfile(): Got asset with chunk ID %s in first subfile (type: 0x%x) (@0x%llx)", tag2str(chunk.id), asset->type(), static_cast<long long int>(chunk.pos()));
+	debugC(5, kDebugLoading, "\nContext::readAssetInFirstSubfile(): Got asset with chunk ID %s in first subfile (type: 0x%x) (@0x%llx)", tag2str(chunk._id), static_cast<uint>(asset->type()), static_cast<long long int>(chunk.pos()));
 	asset->readChunk(chunk);
 }
 
 void Context::readAssetFromLaterSubfile(Subfile &subfile) {
 	Chunk chunk = subfile.nextChunk();
-	Asset *asset = g_engine->_assetsByChunkReference.getValOrDefault(chunk.id);
+	Asset *asset = g_engine->_assetsByChunkReference.getValOrDefault(chunk._id);
 	if (asset == nullptr) {
-		error("Context::readAssetFromLaterSubfile(): Asset for chunk \"%s\" (0x%x) does not exist or has not been read yet in this title. (@0x%llx)", tag2str(chunk.id), chunk.id, static_cast<long long int>(chunk.pos()));
+		error("Context::readAssetFromLaterSubfile(): Asset for chunk \"%s\" (0x%x) does not exist or has not been read yet in this title. (@0x%llx)", tag2str(chunk._id), chunk._id, static_cast<long long int>(chunk.pos()));
 	}
-	debugC(5, kDebugLoading, "\nContext::readAssetFromLaterSubfile(): Got asset with chunk ID %s in later subfile (type: 0x%x) (@0x%llx)", tag2str(chunk.id), asset->type(), static_cast<long long int>(chunk.pos()));
+	debugC(5, kDebugLoading, "\nContext::readAssetFromLaterSubfile(): Got asset with chunk ID %s in later subfile (type: 0x%x) (@0x%llx)", tag2str(chunk._id), asset->type(), static_cast<long long int>(chunk.pos()));
 	asset->readSubfile(subfile, chunk);
 }
 
 bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
-	uint16 sectionType = Datum(chunk, DatumType::UINT16_1).u.i;
-	debugC(5, kDebugLoading, "Context::readHeaderSection(): sectionType = 0x%x (@0x%llx)", sectionType, static_cast<long long int>(chunk.pos()));
-	switch ((SectionType)sectionType) {
-	case SectionType::PARAMETERS: {
+	uint16 sectionType = Datum(chunk, kDatumTypeUint16_1).u.i;
+	debugC(5, kDebugLoading, "Context::readHeaderSection(): sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
+	switch (sectionType) {
+	case kContextParametersSection: {
 		if (_parameters != nullptr) {
 			error("Context::readHeaderSection(): Got multiple parameters (@0x%llx)", static_cast<long long int>(chunk.pos()));
 		}
@@ -165,12 +165,12 @@ bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
 		break;
 	}
 
-	case SectionType::ASSET_LINK: {
+	case kContextAssetLinkSection: {
 		warning("Context::readHeaderSection(): ASSET_LINK not implemented yet");
 		break;
 	}
 
-	case SectionType::PALETTE: {
+	case kContextPaletteSection: {
 		if (_palette != nullptr) {
 			error("Context::readHeaderSection(): Got multiple palettes (@0x%llx)", static_cast<long long int>(chunk.pos()));
 		}
@@ -183,51 +183,54 @@ bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
 		delete[] buffer;
 		debugC(5, kDebugLoading, "Context::readHeaderSection(): Read palette");
 		// This is likely just an ending flag that we expect to be zero.
-		Datum(chunk, DatumType::UINT16_1).u.i;
+		uint endingFlag = Datum(chunk, kDatumTypeUint16_1).u.i;
+		if (endingFlag != 0) {
+			warning("Context::readHeaderSection(): Got non-zero ending flag 0x%x", endingFlag);
+		}
 		break;
 	}
 
-	case SectionType::ASSET_HEADER: {
+	case kContextAssetHeaderSection: {
 		Asset *asset = nullptr;
 		AssetHeader *header = new AssetHeader(chunk);
 		switch (header->_type) {
-		case AssetType::IMAGE:
+		case kAssetTypeImage:
 			asset = new Image(header);
 			break;
 
-		case AssetType::MOVIE:
+		case kAssetTypeMovie:
 			asset = new Movie(header);
 			break;
 
-		case AssetType::SOUND:
+		case kAssetTypeSound:
 			asset = new Sound(header);
 			break;
 
-		case AssetType::PALETTE:
+		case kAssetTypePalette:
 			asset = new Palette(header);
 			break;
 
-		case AssetType::PATH:
+		case kAssetTypePath:
 			asset = new Path(header);
 			break;
 
-		case AssetType::TIMER:
+		case kAssetTypeTimer:
 			asset = new Timer(header);
 			break;
 
-		case AssetType::HOTSPOT:
+		case kAssetTypeHotspot:
 			asset = new Hotspot(header);
 			break;
 
-		case AssetType::SPRITE:
+		case kAssetTypeSprite:
 			asset = new Sprite(header);
 			break;
 
-		case AssetType::CANVAS:
+		case kAssetTypeCanvas:
 			asset = new Canvas(header);
 			break;
 
-		case AssetType::SCREEN:
+		case kAssetTypeScreen:
 			if (_screenAsset != nullptr) {
 				error("Context::readHeaderSection(): Got multiple screen assets in the same context");
 			}
@@ -235,7 +238,7 @@ bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
 			break;
 
 		default:
-			error("Context::readHeaderSection(): No class for asset type 0x%x (@0x%llx)", header->_type, static_cast<long long int>(chunk.pos()));
+			error("Context::readHeaderSection(): No class for asset type 0x%x (@0x%llx)", static_cast<uint>(header->_type), static_cast<long long int>(chunk.pos()));
 		}
 
 		if (g_engine->_assets.contains(header->_id)) {
@@ -254,53 +257,44 @@ bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
 			g_engine->_assetsByChunkReference.setVal(header->_animationChunkReference, asset);
 		}
 		// TODO: This datum only appears sometimes.
-		Datum(chunk).u.i;
+		uint unk2 = Datum(chunk).u.i;
+		debugC(5, kDebugLoading, "Context::readHeaderSection(): Got unknown value at end of asset header section 0x%x", unk2);
 		break;
 	}
 
-	case SectionType::FUNCTION: {
+	case kContextFunctionSection: {
 		Function *function = new Function(chunk);
 		g_engine->_functions.setVal(function->_id, function);
 		if (!g_engine->isFirstGenerationEngine()) {
-			Datum(chunk).u.i; // Should be zero.
+			uint endingFlag = Datum(chunk).u.i;
+			if (endingFlag != 0) {
+				warning("Context::readHeaderSection(): Got non-zero ending flag 0x%x in function section", endingFlag);
+			}
 		}
 		break;
 	}
 
-	case SectionType::END: {
+	case kContextEndSection: {
 		error("Context::readHeaderSection(): END Not implemented yet");
 		return false;
 	}
 
-	case SectionType::EMPTY: {
+	case kContextEmptySection: {
 		error("Context::readHeaderSection(): EMPTY Not implemented yet");
 		break;
 	}
 
-	case SectionType::POOH: {
+	case kContextPoohSection: {
 		error("Context::readHeaderSection(): POOH Not implemented yet");
 		break;
 	}
 
 	default: {
-		error("Context::readHeaderSection(): Unknown section type 0x%x (@0x%llx)", sectionType, static_cast<long long int>(chunk.pos()));
+		error("Context::readHeaderSection(): Unknown section type 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
 	}
 	}
 
 	return true;
-}
-
-void Context::play() {
-	// FIND AND EXECUTE THE ENTRY SCRIPT.
-	// The entry script is stored in the asset with the same ID as the context.
-	// It's the asset that has a SCREEN asset type.
-	if (_screenAsset == nullptr) {
-		error("Context::play(): No entry script exists for this context, cannot play it");
-	}
-	//EventHandler *entryHandler = nullptr; //_screenAsset->_eventHandlers.getVal(uint32(EventHandler::Type::Entry));
-	// So how can we actually execute this script?
-
-	// FIND AND EXECUTE THE EXIT SCRIPT.
 }
 
 } // End of namespace MediaStation

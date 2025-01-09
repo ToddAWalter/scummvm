@@ -574,7 +574,7 @@ void TTMInterpreter::doDrawDialogForStrings(const TTMEnviro &env, const TTMSeq &
 }
 
 
-bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byte count, const int16 *ivals, const Common::String &sval, const Common::Array<Common::Point> &pts) {
+void TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byte count, const int16 *ivals, const Common::String &sval, const Common::Array<Common::Point> &pts) {
 	switch (op) {
 	case 0x0000: // FINISH:	void
 		break;
@@ -594,6 +594,7 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		//
 		if (DgdsEngine::getInstance()->getGameId() == GID_WILLY) {
 			_vm->getStoredAreaBuffer().blitFrom(_vm->_compositionBuffer);
+			_vm->getBackgroundBuffer().fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
 		} else {
 			_vm->getStoredAreaBuffer().fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
 			_vm->getBackgroundBuffer().blitFrom(_vm->_compositionBuffer);
@@ -679,6 +680,8 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		seq._currentPalId = ivals[0];
 		if (seq._executed) // this is a mostly on-shot op.
 			break;
+		if (env._cdsSeqNum >= 0) // don't change global pal for CDS scripts.
+			break;
 		_vm->getGamePals()->selectPalNum(env._scriptPals[ivals[0]]);
 		break;
 	case 0x1070: // SELECT FONT  i:int
@@ -711,8 +714,8 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		_vm->_soundPlayer->stopSfxByNum(ivals[0]);
 		break;
 	case 0x2000: // SET (DRAW) COLORS: fgcol,bgcol:int [0..255]
-		seq._drawColFG = static_cast<byte>(ivals[0]);
-		seq._drawColBG = static_cast<byte>(ivals[1]);
+		seq._drawColFG = static_cast<byte>(ivals[0]); // aka Line Color
+		seq._drawColBG = static_cast<byte>(ivals[1]); // aka Fill Color
 		break;
 	case 0x2020: { // SET RANDOM SLEEP: min,max: int (eg, 60,300)
 		if (seq._executed) // this is a one-shot op.
@@ -791,15 +794,19 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		_vm->_compositionBuffer.blitFrom(_vm->getBackgroundBuffer());
 		break;
 	}
-	case 0x3200:
+	case 0x3200: // CDS FIND GOTO TARGET frameno
 		env._cdsSeqNum = findGOTOTarget(env, seq, ivals[0]);
 		break;
-	case 0x3300:
+	case 0x3300: // CDS GOSUB
 		if (!env._cdsJumped && env._frameOffsets[env._cdsSeqNum] != seq._currentFrame) {
 			env._cdsJumped = true;
 			int64 prevPos = env.scr->pos();
+			env._xOff += ivals[0];
+			env._yOff += ivals[1];
 			env.scr->seek(env._frameOffsets[env._cdsSeqNum]);
 			run(env, seq);
+			env._xOff -= ivals[0];
+			env._yOff -= ivals[1];
 			env.scr->seek(prevPos);
 			env._cdsJumped = false;
 		}
@@ -826,16 +833,23 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 				g_system->delayMillis(5);
 			}
 		}
-		if (ivals[1] == 256) {
-			// Clear the background only if we faded everything??
+
+		// Logic here is different in Dragon + HOC.  They clear all buffers after fade
+		if (_vm->getGameId() == GID_DRAGON || _vm->getGameId() == GID_HOC) {
+			_vm->_compositionBuffer.fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
 			_vm->getBackgroundBuffer().fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
+		} else {
+			// In Willy Beamish, copy comp->screen and comp->back
+			g_system->copyRectToScreen(_vm->_compositionBuffer.getPixels(), SCREEN_WIDTH, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+			g_system->updateScreen();
+			_vm->getBackgroundBuffer().blitFrom(_vm->_compositionBuffer);
 		}
-		// Other buffers are always cleared.
+		// Stored area is cleared in all games.
 		_vm->getStoredAreaBuffer().fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
-		_vm->_compositionBuffer.fillRect(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT), 0);
-		// Reset to previous palette - except in Willy Beamish?
-		if (_vm->getGameId() != GID_WILLY)
-			_vm->getGamePals()->setFade(ivals[0], ivals[1], ivals[2], 0);
+
+		// Reset to previous palette.
+		_vm->getGamePals()->setPalette();
+
 		break;
 	case 0x4120: { // FADE IN:	colorno,ncolors,targetcol,speed:byte
 		if (seq._executed) // this is a one-shot op.
@@ -844,10 +858,10 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		if (ivals[3] == 0) {
 			_vm->getGamePals()->setPalette();
 		} else {
-			for (int i = SCREEN_WIDTH; i > 0; i -= ivals[3]) {
+			for (int i = 320; i > 0; i -= ivals[3]) {
 				int fade = MAX(0, MIN(i / 5, 63));
 				_vm->getGamePals()->setFade(ivals[0], ivals[1], ivals[2], fade * 4);
-				if (i == SCREEN_WIDTH) {
+				if (i == 320) {
 					// update screen first to make the initial fade-in work
 					g_system->copyRectToScreen(_vm->_compositionBuffer.getPixels(), SCREEN_WIDTH, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 				}
@@ -905,17 +919,17 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		break;
 	}
 	case 0xa100: { // DRAW FILLED RECT x,y,w,h:int	[0..320,0..200]
+		// Draw fill first
 		Common::Rect r(Common::Point(ivals[0], ivals[1]), ivals[2], ivals[3]);
+		r.grow(-1);
 		r.clip(seq._drawWin);
-		_vm->_compositionBuffer.fillRect(r, seq._drawColFG);
-		break;
+		_vm->_compositionBuffer.fillRect(r, seq._drawColBG);
 	}
+	// then to draw the border, we (drum roll)...
+	// FALL THROUGH
 	case 0xa110: { // DRAW EMPTY RECT  x1,y1,x2,y2:int
-		const Common::Rect r(Common::Point(ivals[0], ivals[1]), ivals[2] - 1, ivals[3] - 1);
-		_vm->_compositionBuffer.drawLine(r.left, r.top, r.right, r.top, seq._drawColFG);
-		_vm->_compositionBuffer.drawLine(r.left, r.bottom, r.right, r.bottom, seq._drawColFG);
-		_vm->_compositionBuffer.drawLine(r.left, r.top, r.left, r.bottom, seq._drawColFG);
-		_vm->_compositionBuffer.drawLine(r.right, r.top, r.right, r.bottom, seq._drawColFG);
+		const Common::Rect r(Common::Point(ivals[0], ivals[1]), ivals[2], ivals[3]);
+		Drawing::rectClipped(r, seq._drawWin, &_vm->_compositionBuffer, seq._drawColFG);
 		break;
 	}
 	case 0xa200: // 0xa2n0 DRAW STRING n: x,y,w,h:int - draw the nth string from the string table
@@ -949,12 +963,14 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		break;
 
 	case 0xa400: { // DRAW FILLED CIRCLE
+		// FIXME: This should honor seq._drawWin
 		int16 xr = ivals[2] / 2;
 		int16 yr = ivals[3] / 2;
 		Drawing::filledCircle(ivals[0] + xr, ivals[1] + yr, xr, yr, &_vm->_compositionBuffer, seq._drawColFG, seq._drawColBG);
 		break;
 	}
 	case 0xa420: { // DRAW EMPTY CIRCLE
+		// FIXME: This should honor seq._drawWin
 		int16 xr = ivals[2] / 2;
 		int16 yr = ivals[3] / 2;
 		Drawing::emptyCircle(ivals[0] + xr, ivals[1] + yr, xr, yr, &_vm->_compositionBuffer, seq._drawColFG);
@@ -1028,7 +1044,9 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 		break;
 	}
 	case 0xaf00: { // FLOOD FILL x,y
-		Graphics::FloodFill f(_vm->_compositionBuffer.surfacePtr(), 0, seq._drawColFG);
+		Graphics::Surface *surf = _vm->_compositionBuffer.surfacePtr();
+		byte oldCol = surf->getPixel(ivals[0], ivals[1]);
+		Graphics::FloodFill f(surf, oldCol, seq._drawColFG);
 		f.addSeed(ivals[0], ivals[1]);
 		f.fill();
 		break;
@@ -1114,6 +1132,9 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 	case 0xc210: {  // LOAD RAW SFX filename:str
 		if (seq._executed) // this is a one-shot op
 			break;
+		// Stop existing raw sound before we deallocate it.
+		if (env._soundRaw)
+			env._soundRaw->stop();
 		if (_vm->getResourceManager()->hasResource(sval)) {
 			SoundRaw *snd = new SoundRaw(_vm->getResourceManager(), _vm->getDecompressor());
 			snd->load(sval);
@@ -1236,7 +1257,6 @@ bool TTMInterpreter::handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byt
 					ttmOpName(op), sval.c_str());
 		break;
 	}
-	return true;
 }
 
 Common::String TTMInterpreter::readTTMStringVal(Common::SeekableReadStream *scr) {
@@ -1305,9 +1325,7 @@ bool TTMInterpreter::run(TTMEnviro &env, TTMSeq &seq) {
 		}
 		debug(10, " (%s)", ttmOpName(op));
 
-		bool opResult = handleOperation(env, seq, op, count, ivals, sval, pts);
-		if (!opResult)
-			break;
+		handleOperation(env, seq, op, count, ivals, sval, pts);
 	}
 
 	return true;

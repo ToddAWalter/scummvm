@@ -19,10 +19,10 @@
  *
  */
 
-#include "common/file.h"
-
 #ifndef MEDIASTATION_CHUNK_H
 #define MEDIASTATION_CHUNK_H
+
+#include "common/file.h"
 
 namespace MediaStation {
 
@@ -33,8 +33,8 @@ private:
 	uint32 _dataEndOffset = 0;
 
 public:
-	uint32 id = 0;
-	uint32 length = 0;
+	uint32 _id = 0;
+	uint32 _length = 0;
 
 	Chunk() = default;
 	Chunk(Common::SeekableReadStream *stream);

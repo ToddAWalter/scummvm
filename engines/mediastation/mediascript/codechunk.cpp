@@ -31,7 +31,7 @@
 namespace MediaStation {
 
 CodeChunk::CodeChunk(Common::SeekableReadStream &chunk) : _args(nullptr) {
-	uint lengthInBytes = Datum(chunk, DatumType::UINT32_1).u.i;
+	uint lengthInBytes = Datum(chunk, kDatumTypeUint32_1).u.i;
 	debugC(5, kDebugLoading, "CodeChunk::CodeChunk(): Length 0x%x (@0x%llx)", lengthInBytes, static_cast<long long int>(chunk.pos()));
 	_bytecode = chunk.readStream(lengthInBytes);
 }
@@ -59,27 +59,27 @@ Operand CodeChunk::executeNextStatement() {
 	}
 
 	InstructionType instructionType = InstructionType(Datum(*_bytecode).u.i);
-	debugC(8, kDebugScript, " instructionType = %d", (uint)instructionType);
+	debugC(8, kDebugScript, " instructionType = %d", static_cast<uint>(instructionType));
 	switch (instructionType) {
-	case InstructionType::EMPTY: {
+	case kInstructionTypeEmpty: {
 		return Operand();
 	}
 
-	case InstructionType::FUNCTION_CALL: {
+	case kInstructionTypeFunctionCall: {
 		Opcode opcode = Opcode(Datum(*_bytecode).u.i);
-		debugC(8, kDebugScript, "  *** Opcode %d ***", (uint)opcode);
+		debugC(8, kDebugScript, "  *** Opcode %d ***", static_cast<uint>(opcode));
 		switch (opcode) {
-		case Opcode::AssignVariable: {
+		case kOpcodeAssignVariable: {
 			uint32 id = Datum(*_bytecode).u.i;
 			VariableScope scope = VariableScope(Datum(*_bytecode).u.i);
 			Operand newValue = executeNextStatement();
 			// TODO: Print the new variable value for easier debugging.
-			debugC(5, kDebugScript, "SCRIPT: [ %d (scope: %d) ] = [ ? (showing value assigned to var not implemented yet) ]", (uint)scope, id);
+			debugC(5, kDebugScript, "SCRIPT: [ %d (scope: %d) ] = [ ? (showing value assigned to var not implemented yet) ]", static_cast<uint>(scope), id);
 			putVariable(id, scope, newValue);
 			return Operand();
 		}
 
-		case Opcode::CallRoutine: {
+		case kOpcodeCallRoutine: {
 			uint functionId = Datum(*_bytecode).u.i;
 			uint32 parameterCount = Datum(*_bytecode).u.i;
 			Common::Array<Operand> args;
@@ -94,19 +94,20 @@ Operand CodeChunk::executeNextStatement() {
 			Operand returnValue;
 			Function *function = g_engine->_functions.getValOrDefault(functionId);
 			if (function != nullptr) {
+				// This is a title-defined function.
 				returnValue = function->execute(args);
 			} else {
-				returnValue = callBuiltInFunction(functionId, args);
+				returnValue = callBuiltInFunction(static_cast<BuiltInFunction>(functionId), args);
 			}
 			return returnValue;
 		}
 
-		case Opcode::CallMethod: {
-			uint32 methodId = Datum(*_bytecode).u.i;
+		case kOpcodeCallMethod: {
+			BuiltInMethod methodId = static_cast<BuiltInMethod>(Datum(*_bytecode).u.i);
 			uint32 parameterCount = Datum(*_bytecode).u.i;
 			Operand selfObject = executeNextStatement();
-			if (selfObject.getType() != Operand::Type::AssetId) {
-				error("CodeChunk::executeNextStatement(): (Opcode::CallMethod) Attempt to call method on operand that is not an asset (type 0x%x)", selfObject.getType());
+			if (selfObject.getType() != kOperandTypeAssetId) {
+				error("CodeChunk::executeNextStatement(): (Opcode::CallMethod) Attempt to call method on operand that is not an asset (type 0x%x)", static_cast<uint>(selfObject.getType()));
 			}
 			Common::Array<Operand> args;
 			for (uint i = 0; i < parameterCount; i++) {
@@ -126,14 +127,14 @@ Operand CodeChunk::executeNextStatement() {
 			return returnValue;
 		}
 
-		case Opcode::DeclareVariables: {
+		case kOpcodeDeclareVariables: {
 			uint32 localVariableCount = Datum(*_bytecode).u.i;
 			debugC(5, kDebugScript, "   Declaring %d local variables", localVariableCount);
 			_locals.resize(localVariableCount);
 			return Operand();
 		}
 
-		case Opcode::Subtract: {
+		case kOpcodeSubtract: {
 			Operand value1 = executeNextStatement();
 			Operand value2 = executeNextStatement();
 
@@ -148,28 +149,28 @@ Operand CodeChunk::executeNextStatement() {
 		break;
 	}
 
-	case (InstructionType::OPERAND): {
-		Operand::Type operandType = Operand::Type(Datum(*_bytecode).u.i);
-		debugC(8, kDebugScript, "  *** Operand %d ***", (uint)operandType);
+	case (kInstructionTypeOperand): {
+		OperandType operandType = OperandType(Datum(*_bytecode).u.i);
+		debugC(8, kDebugScript, "  *** Operand %d ***", static_cast<uint>(operandType));
 		Operand operand(operandType);
 		switch (operandType) {
 		// TODO: Add clearer debugging printouts for these.
-		case Operand::Type::AssetId: {
+		case kOperandTypeAssetId: {
 			uint32 assetId = Datum(*_bytecode).u.i;
 			operand.putAsset(assetId);
 			return operand;
 		}
 
-		case Operand::Type::Literal1:
-		case Operand::Type::Literal2:
-		case Operand::Type::DollarSignVariable: {
+		case kOperandTypeLiteral1:
+		case kOperandTypeLiteral2:
+		case kOperandTypeDollarSignVariable: {
 			int literal = Datum(*_bytecode).u.i;
 			operand.putInteger(literal);
 			return operand;
 		}
 
-		case Operand::Type::Float1:
-		case Operand::Type::Float2: {
+		case kOperandTypeFloat1:
+		case kOperandTypeFloat2: {
 			double d = Datum(*_bytecode).u.f;
 			operand.putDouble(d);
 			return operand;
@@ -182,7 +183,7 @@ Operand CodeChunk::executeNextStatement() {
 		break;
 	}
 
-	case (InstructionType::VARIABLE_REF): {
+	case (kInstructionTypeVariableRef): {
 		// TODO: Add debug printout for this.
 		uint32 id = Datum(*_bytecode).u.i;
 		VariableScope scope = VariableScope(Datum(*_bytecode).u.i);
@@ -191,27 +192,27 @@ Operand CodeChunk::executeNextStatement() {
 	}
 
 	default: {
-		error("CodeChunk::getNextStatement(): Got unknown instruction type 0x%x", instructionType);
+		error("CodeChunk::getNextStatement(): Got unknown instruction type 0x%x", static_cast<uint>(instructionType));
 	}
 	}
 }
 
 Operand CodeChunk::getVariable(uint32 id, VariableScope scope) {
 	switch (scope) {
-	case VariableScope::Global: {
-		Operand returnValue(Operand::Type::VariableDeclaration);
+	case kVariableScopeGlobal: {
+		Operand returnValue(kOperandTypeVariableDeclaration);
 		Variable *variable = g_engine->_variables.getVal(id);
 		returnValue.putVariable(variable);
 		return returnValue;
 	}
 
-	case VariableScope::Local: {
+	case kVariableScopeLocal: {
 		uint index = id - 1;
 		return _locals.operator[](index);
 		break;
 	}
 
-	case VariableScope::Parameter: {
+	case kVariableScopeParameter: {
 		uint32 index = id - 1;
 		if (_args == nullptr) {
 			error("CodeChunk::getVariable(): Requested a parameter in a code chunk that has no parameters.");
@@ -228,36 +229,36 @@ Operand CodeChunk::getVariable(uint32 id, VariableScope scope) {
 
 void CodeChunk::putVariable(uint32 id, VariableScope scope, Operand value) {
 	switch (scope) {
-	case VariableScope::Global: {
+	case kVariableScopeGlobal: {
 		Variable *variable = g_engine->_variables.getVal(id);
 		if (variable == nullptr) {
 			error("CodeChunk::putVariable(): Attempted to assign to a non-existent global variable %d", id);
 		}
 
 		switch (value.getType()) {
-		case Operand::Type::Literal1:
-		case Operand::Type::Literal2: {
-			variable->value.i = value.getInteger();
+		case kOperandTypeLiteral1:
+		case kOperandTypeLiteral2: {
+			variable->_value.i = value.getInteger();
 			break;
 		}
 
-		case Operand::Type::Float1:
-		case Operand::Type::Float2: {
-			variable->value.d = value.getDouble();
+		case kOperandTypeFloat1:
+		case kOperandTypeFloat2: {
+			variable->_value.d = value.getDouble();
 			break;
 		}
 
-		case Operand::Type::String: {
-			variable->value.string = value.getString();
+		case kOperandTypeString: {
+			variable->_value.string = value.getString();
 			break;
 		}
 
-		case Operand::Type::AssetId: {
-			variable->value.assetId = value.getAssetId();
+		case kOperandTypeAssetId: {
+			variable->_value.assetId = value.getAssetId();
 			break;
 		}
 
-		case Operand::Type::VariableDeclaration: {
+		case kOperandTypeVariableDeclaration: {
 			// TODO: Will this cause a memory leak?
 			// variable = value.u.variable;
 			error("Assigning variable to another variable not supported yet");
@@ -271,13 +272,13 @@ void CodeChunk::putVariable(uint32 id, VariableScope scope, Operand value) {
 		break;
 	}
 
-	case VariableScope::Local: {
+	case kVariableScopeLocal: {
 		uint index = id - 1;
 		_locals[index] = value;
 		break;
 	}
 
-	case VariableScope::Parameter: {
+	case kVariableScopeParameter: {
 		error("CodeChunk::putVariable(): Attempted to assign to a parameter");
 		break;
 	}
@@ -288,9 +289,9 @@ void CodeChunk::putVariable(uint32 id, VariableScope scope, Operand value) {
 	}
 }
 
-Operand CodeChunk::callBuiltInFunction(uint32 id, Common::Array<Operand> &args) {
-	switch ((BuiltInFunction)id) {
-	case BuiltInFunction::effectTransition: {
+Operand CodeChunk::callBuiltInFunction(BuiltInFunction id, Common::Array<Operand> &args) {
+	switch (id) {
+	case kEffectTransitionFunction: {
 		switch (args.size()) {
 		// TODO: Discover and handle the different ways
 		// effectTransition can be called.
@@ -325,11 +326,22 @@ Operand CodeChunk::callBuiltInFunction(uint32 id, Common::Array<Operand> &args) 
 	}
 }
 
-Operand CodeChunk::callBuiltInMethod(uint32 id, Operand self, Common::Array<Operand> &args) {
-	Asset *selfAsset = self.getAsset();
-	assert(selfAsset != nullptr);
-	Operand returnValue = selfAsset->callMethod((BuiltInMethod)id, args);
-	return returnValue;
+Operand CodeChunk::callBuiltInMethod(BuiltInMethod method, Operand self, Common::Array<Operand> &args) {
+	if (self.getAssetId() == 1) {
+		// This is a "document" method that we need to handle specially.
+		// The document (@doc) accepts engine-level methods like changing the
+		// active screen.
+		// HACK: This is so we don't have to implement a separate document class
+		// just to house these methods. Rather, we just call in the engine.
+		Operand returnValue = g_engine->callMethod(method, args);
+		return returnValue;
+	} else {
+		// This is a regular asset that we can process directly.
+		Asset *selfAsset = self.getAsset();
+		assert(selfAsset != nullptr);
+		Operand returnValue = selfAsset->callMethod(method, args);
+		return returnValue;
+	}
 }
 
 CodeChunk::~CodeChunk() {

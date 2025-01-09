@@ -28,16 +28,15 @@
 
 namespace MediaStation {
 
-class ContextParameters {
-private:
-	enum class SectionType {
-		EMPTY = 0x0000,
-		VARIABLE = 0x0014,
-		NAME = 0x0bb9,
-		FILE_NUMBER = 0x0011,
-		BYTECODE = 0x0017
-	};
+enum ContextParametersSectionType {
+	kContextParametersEmptySection = 0x0000,
+	kContextParametersVariable = 0x0014,
+	kContextParametersName = 0x0bb9,
+	kContextParametersFileNumber = 0x0011,
+	kContextParametersBytecode = 0x0017
+};
 
+class ContextParameters {
 public:
 	ContextParameters(Chunk &chunk);
 	~ContextParameters();
@@ -45,8 +44,8 @@ public:
 	// This is not an internal file ID, but the number of the file
 	// as it appears in the filename. For instance, the context in
 	// "100.cxt" would have file number 100.
-	uint fileNumber;
-	Common::String *contextName;
+	uint _fileNumber;
+	Common::String *_contextName;
 	Common::HashMap<uint32, Function *> _functions;
 };
 

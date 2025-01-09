@@ -115,6 +115,8 @@ bool MacGuiImpl::handleEvent(Common::Event event) {
 	// The situation we're trying to avoid here is the user opening e.g.
 	// the save dialog using keyboard shortcuts while the game is paused.
 
+	// TODO: We need something for Maniac Mansion here
+
 	if (_bannerWindow || _vm->_messageBannerActive)
 		return false;
 
@@ -488,19 +490,6 @@ void MacGuiImpl::updateWindowManager() {
 
 	if (_vm->_game.version > 3 && _vm->_game.version < 6) {
 		Graphics::MacMenuItem *windowMenu = menu->getMenuItem("Window");
-		Graphics::MacMenuItem *hideDesktopMenu = menu->getSubMenuItem(windowMenu, 0);
-		Graphics::MacMenuItem *hideBarMenu = menu->getSubMenuItem(windowMenu, 1);
-
-		hideDesktopMenu->enabled = false;
-		hideBarMenu->enabled = false;
-
-		// "Fix color map"
-		menu->getSubMenuItem(gameMenu, 5)->enabled = false;
-
-		// Window mode
-		menu->getSubMenuItem(windowMenu, 3)->enabled = false;
-		menu->getSubMenuItem(windowMenu, 4)->enabled = false;
-		menu->getSubMenuItem(windowMenu, 5)->enabled = false;
 
 		if (menu->numberOfMenuItems(windowMenu) >= 8)
 			menu->getSubMenuItem(windowMenu, 7)->checked = _vm->_useMacGraphicsSmoothing;
@@ -527,17 +516,17 @@ void MacGuiImpl::updateWindowManager() {
 				break;
 			}
 		}
-	} else if (_vm->_game.version >= 6) {
+	} else if (_vm->_game.version >= 6 || _vm->_game.id == GID_MANIAC) {
 		// We can't use the name of the menus here, because there are
 		// non-English versions. Let's hope the menu positions are
 		// always the same, at least!
 
 		Graphics::MacMenuItem *videoMenu = menu->getMenuItem(3);
 
-		menu->getSubMenuItem(videoMenu, 0)->enabled = false;
-		menu->getSubMenuItem(videoMenu, 1)->enabled = false;
 		menu->getSubMenuItem(videoMenu, 2)->checked = true;
-		menu->getSubMenuItem(videoMenu, 3)->checked = _vm->_useMacGraphicsSmoothing;
+
+		if (_vm->_game.id != GID_MANIAC)
+			menu->getSubMenuItem(videoMenu, 3)->checked = _vm->_useMacGraphicsSmoothing;
 
 		Graphics::MacMenuItem *soundMenu = menu->getMenuItem(4);
 
@@ -549,6 +538,7 @@ void MacGuiImpl::updateWindowManager() {
 
 		switch (_vm->_voiceMode) {
 		case 0:	// Voice Only
+
 			menu->getSubMenuItem(soundMenu, 6)->checked = true;
 			break;
 		case 1: // Voice and Text
@@ -833,7 +823,7 @@ MacGuiImpl::MacDialogWindow *MacGuiImpl::createDialog(int dialogId) {
 
 	// Default dialog sizes for dialogs without a DITL resource.
 
-	if (_vm->_game.version < 6) {
+	if (_vm->_game.version < 6 && _vm->_game.id != GID_MANIAC) {
 		bounds.top = 0;
 		bounds.left = 0;
 		bounds.bottom = 86;

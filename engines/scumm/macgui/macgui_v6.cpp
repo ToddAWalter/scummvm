@@ -80,6 +80,34 @@ MacV6Gui::~MacV6Gui() {
 	delete[] _backupPalette;
 }
 
+bool MacV6Gui::initialize() {
+	if (!MacGuiImpl::initialize())
+		return false;
+
+	// We can't use the name of the menus here, because there are
+	// non-English versions. Let's hope the menu positions are always the
+	// same, at least!
+
+	Graphics::MacMenu *menu = _windowManager->getMenu();
+	Graphics::MacMenuItem *videoMenu = menu->getMenuItem(3);
+
+	menu->getSubMenuItem(videoMenu, 0)->enabled = false; // Small
+	menu->getSubMenuItem(videoMenu, 1)->enabled = false; // Interlaced
+
+	if (_vm->_game.id == GID_MANIAC) {
+		Graphics::MacMenuItem *soundMenu = menu->getMenuItem(4);
+
+		menu->getSubMenuItem(soundMenu, 0)->enabled = false; // Music
+		menu->getSubMenuItem(soundMenu, 1)->enabled = false; // Effects
+		menu->getSubMenuItem(soundMenu, 3)->enabled = false; // Toggle Text & Voice
+		menu->getSubMenuItem(soundMenu, 5)->enabled = false; // Text Only
+		menu->getSubMenuItem(soundMenu, 6)->enabled = false; // Voice Only
+		menu->getSubMenuItem(soundMenu, 7)->enabled = false; // Text & Voice
+	}
+
+	return true;
+}
+
 bool MacV6Gui::readStrings() {
 	_strsStrings.clear();
 	_strsStrings.reserve(128);
@@ -95,6 +123,37 @@ const Graphics::Font *MacV6Gui::getFontByScummId(int32 id) {
 
 bool MacV6Gui::getFontParams(FontId fontId, int &id, int &size, int &slant) const {
 	return false;
+}
+
+void MacV6Gui::setupCursor(int &width, int &height, int &hotspotX, int &hotspotY, int &animate) {
+	if (_vm->_game.id != GID_MANIAC)
+		return;
+
+	byte invertedMacArrow[] = {
+		0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0xFF, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0xFF,
+		0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x0F, 0x0F, 0x00, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+		0x00, 0x0F, 0x00, 0xFF, 0x00, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF,
+		0x00, 0x00, 0xFF, 0xFF, 0x00, 0x0F, 0x0F, 0x00, 0xFF, 0xFF, 0xFF,
+		0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x0F, 0x0F, 0x00, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x0F, 0x0F, 0x00, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF
+	};
+
+	memcpy(_vm->_grabbedCursor, invertedMacArrow, sizeof(invertedMacArrow));
+
+	width = 11;
+	height = 16;
+	hotspotX = 1;
+	hotspotY = 1;
 }
 
 bool MacV6Gui::handleMenu(int id, Common::String &name) {
@@ -190,7 +249,8 @@ bool MacV6Gui::handleMenu(int id, Common::String &name) {
 		return true;
 
 	case 403:	// Graphics Smoothing
-		_vm->mac_toggleSmoothing();
+		if (_vm->_game.id != GID_MANIAC)
+			_vm->mac_toggleSmoothing();
 		return true;
 
 	case 500:	// Music
@@ -400,6 +460,15 @@ MacGuiImpl::MacImageSlider *MacV6Gui::addSlider(MacDialogWindow *window, int x, 
 }
 
 void MacV6Gui::runAboutDialog() {
+	// While there is a menu item for a Maniac Mansion credits screen, it
+	// doesn't do anything.
+	//
+	// "I was probably exhausted from hand-placing all the letters on the
+	// DOTT credits screen to make one for Maniac." -- Aaron Giles,
+	// December 30, 2024.
+	if (_vm->_game.id == GID_MANIAC)
+		return;
+
 	if (_vm->_game.features & GF_DEMO) {
 		// HACK: Use the largest bounds as default for unknown demos
 		// It would be nice if we could figure these out automatically

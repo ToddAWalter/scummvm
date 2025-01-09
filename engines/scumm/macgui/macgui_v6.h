@@ -43,6 +43,7 @@ public:
 	MacV6Gui(ScummEngine *vm, const Common::Path &resourceFile);
 	~MacV6Gui();
 
+	bool initialize() override;
 	bool readStrings() override;
 
 	const Common::String name() const override { return _gameName; }
@@ -56,7 +57,7 @@ public:
 
 	const Graphics::Font *getFontByScummId(int32 id) override;
 
-	void setupCursor(int &width, int &height, int &hotspotX, int &hotspotY, int &animate) override {};
+	void setupCursor(int &width, int &height, int &hotspotX, int &hotspotY, int &animate) override;
 
 	void resetAfterLoad() override;
 	void update(int delta) override {}

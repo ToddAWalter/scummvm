@@ -82,7 +82,8 @@ enum TTMRunType {
 
 // Note: this object needs to be safely copy-able - ADS opcodes 0x4000 and 0x4010 require it.
 struct TTMSeq {
-	TTMSeq() : _enviro(0), _seqNum(0), _startFrame(0), _lastFrame(0), _timeCut(0) {
+	TTMSeq() : _enviro(0), _seqNum(0), _startFrame(0), _lastFrame(0), _timeCut(0),
+		_currentBmpId(0), _currentGetPutId(0) {
 		// Other members are initialized in the reset function.
 		reset();
 	}
@@ -129,7 +130,7 @@ public:
 	static Common::String readTTMStringVal(Common::SeekableReadStream *scr);
 
 protected:
-	bool handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byte count, const int16 *ivals, const Common::String &sval, const Common::Array<Common::Point> &pts);
+	void handleOperation(TTMEnviro &env, TTMSeq &seq, uint16 op, byte count, const int16 *ivals, const Common::String &sval, const Common::Array<Common::Point> &pts);
 	int32 findGOTOTarget(const TTMEnviro &env, const TTMSeq &seq, int16 frame);
 	void doWipeOp(uint16 code, const TTMEnviro &env, const TTMSeq &seq, const Common::Rect &r);
 	int16 doOpInitCreditScroll(const Image *img);

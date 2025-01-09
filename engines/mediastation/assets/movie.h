@@ -19,14 +19,14 @@
  *
  */
 
+#ifndef MEDIASTATION_MOVIE_H
+#define MEDIASTATION_MOVIE_H
+
 #include "audio/audiostream.h"
 
 #include "mediastation/assetheader.h"
 #include "mediastation/bitmap.h"
 #include "mediastation/mediascript/builtins.h"
-
-#ifndef MEDIASTATION_MOVIE_H
-#define MEDIASTATION_MOVIE_H
 
 namespace MediaStation {
 
@@ -83,14 +83,13 @@ private:
 	MovieFrameFooter *_footer;
 };
 
-class Movie : public Asset {
-private:
-	enum class SectionType {
-		ROOT = 0x06a8,
-		FRAME = 0x06a9,
-		FOOTER = 0x06aa
-	};
+enum MovieSectionType {
+	kMovieRootSection = 0x06a8,
+	kMovieFrameSection = 0x06a9,
+	kMovieFooterSection = 0x06aa
+};
 
+class Movie : public Asset {
 public:
 	Movie(AssetHeader *header) : Asset(header) {};
 	virtual ~Movie() override;

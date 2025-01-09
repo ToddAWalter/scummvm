@@ -19,32 +19,32 @@
  *
  */
 
+#ifndef MEDIASTATION_BITMAP_H
+#define MEDIASTATION_BITMAP_H
+
 #include "graphics/managed_surface.h"
 
 #include "mediastation/chunk.h"
 #include "mediastation/assetheader.h"
 
-#ifndef MEDIASTATION_BITMAP_H
-#define MEDIASTATION_BITMAP_H
-
 namespace MediaStation {
+
+enum BitmapCompressionType {
+	kUncompressedBitmap1 = 0,
+	kRleCompressedBitmap = 1,
+	kUnk1CompressedBitmap = 6,
+	kUncompressedBitmap2 = 7,
+};
 
 class BitmapHeader {
 public:
-	enum class CompressionType {
-		UNCOMPRESSED = 0,
-		RLE_COMPRESSED = 1,
-		UNK1 = 6,
-		UNCOMPRESSED_2 = 7,
-	};
-
 	BitmapHeader(Chunk &chunk);
 	~BitmapHeader();
 
 	bool isCompressed();
 
-	Common::Point *dimensions = nullptr;
-	CompressionType compression_type;
+	Common::Point *_dimensions = nullptr;
+	BitmapCompressionType _compressionType;
 	uint unk2;
 };
 
@@ -57,7 +57,7 @@ public:
 
 	uint16 width();
 	uint16 height();
-	Graphics::ManagedSurface surface;
+	Graphics::ManagedSurface _surface;
 
 private:
 	void decompress(Chunk &chunk);

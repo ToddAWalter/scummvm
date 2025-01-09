@@ -54,18 +54,18 @@ void Sound::process() {
 
 void Sound::readChunk(Chunk &chunk) {
 	// TODO: Can we read the chunk directly into the audio stream?
-	debugC(5, kDebugLoading, "Sound::readChunk(): (encoding = 0x%x) Reading audio chunk (@0x%llx)", (uint)_encoding, static_cast<long long int>(chunk.pos()));
-	byte *buffer = (byte *)malloc(chunk.length);
-	chunk.read((void *)buffer, chunk.length);
+	debugC(5, kDebugLoading, "Sound::readChunk(): (encoding = 0x%x) Reading audio chunk (@0x%llx)", static_cast<uint>(_encoding), static_cast<long long int>(chunk.pos()));
+	byte *buffer = (byte *)malloc(chunk._length);
+	chunk.read((void *)buffer, chunk._length);
 
 	switch (_encoding) {
-	case AssetHeader::SoundEncoding::PCM_S16LE_MONO_22050: {
+	case SoundEncoding::PCM_S16LE_MONO_22050: {
 		// Audio::SeekableAudioStream *stream = Audio::makeRawStream(buffer, chunk.length, Sound::RATE, Sound::FLAGS, DisposeAfterUse::NO);
 		//_streams.push_back(stream);
 		break;
 	}
 
-	case AssetHeader::SoundEncoding::IMA_ADPCM_S16LE_MONO_22050: {
+	case SoundEncoding::IMA_ADPCM_S16LE_MONO_22050: {
 		// TODO: Support ADPCM decoding.
 		// Audio::SeekableAudioStream *stream = nullptr; // Audio::makeADPCMStream(buffer, chunk.length, DisposeAfterUse::NO, Audio::ADPCMType::kADPCMMSIma, Sound::RATE, 1, 4);
 		//_streams.push_back(stream);
@@ -85,14 +85,14 @@ void Sound::readSubfile(Subfile &subfile, Chunk &chunk) {
 	//    warning("Sound::readSubfile(): Some audio has already been read.");
 	//}
 	uint32 totalChunks = _header->_chunkCount;
-	uint32 expectedChunkId = chunk.id;
+	uint32 expectedChunkId = chunk._id;
 
 	readChunk(chunk);
 	for (uint i = 0; i < totalChunks; i++) {
 		chunk = subfile.nextChunk();
-		if (chunk.id != expectedChunkId) {
+		if (chunk._id != expectedChunkId) {
 			// TODO: Make this show the chunk IDs as strings, not numbers.
-			error("Sound::readSubfile(): Expected chunk %s, got %s", tag2str(expectedChunkId), tag2str(chunk.id));
+			error("Sound::readSubfile(): Expected chunk %s, got %s", tag2str(expectedChunkId), tag2str(chunk._id));
 		}
 		readChunk(chunk);
 	}

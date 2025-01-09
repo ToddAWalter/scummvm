@@ -19,19 +19,17 @@
  *
  */
 
-#include "common/file.h"
-
-#include "mediastation/chunk.h"
-
 #ifndef MEDIASTATION_SUBFILE_H
 #define MEDIASTATION_SUBFILE_H
+
+#include "mediastation/chunk.h"
 
 namespace MediaStation {
 
 class Subfile {
 public:
-	Chunk rootChunk;
-	Chunk currentChunk;
+	Chunk _rootChunk;
+	Chunk _currentChunk;
 
 	Subfile();
 	Subfile(Common::SeekableReadStream *stream);
@@ -39,7 +37,7 @@ public:
 	Chunk nextChunk();
 	bool atEnd();
 
-	uint32 rate;
+	uint32 _rate;
 
 private:
 	Common::SeekableReadStream *_stream;

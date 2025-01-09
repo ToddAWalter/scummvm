@@ -27,63 +27,66 @@
 
 namespace MediaStation {
 
-ContextParameters::ContextParameters(Chunk &chunk) : contextName(nullptr) {
-	fileNumber = Datum(chunk, DatumType::UINT16_1).u.i;
-	uint sectionType = Datum(chunk, DatumType::UINT16_1).u.i;
-	while ((SectionType)sectionType != SectionType::EMPTY) {
-		debugC(5, kDebugLoading, "ContextParameters::ContextParameters: sectionType = 0x%x (@0x%llx)", sectionType, static_cast<long long int>(chunk.pos()));
-		switch ((SectionType)sectionType) {
-		case SectionType::NAME: {
-			uint repeatedFileNumber = Datum(chunk, DatumType::UINT16_1).u.i;
-			if (repeatedFileNumber != fileNumber) {
-				warning("ContextParameters::ContextParameters(): Repeated file number didn't match: %d != %d", repeatedFileNumber, fileNumber);
+ContextParameters::ContextParameters(Chunk &chunk) : _contextName(nullptr) {
+	_fileNumber = Datum(chunk, kDatumTypeUint16_1).u.i;
+	uint sectionType = static_cast<ContextParametersSectionType>(Datum(chunk, kDatumTypeUint16_1).u.i);
+	while (sectionType != kContextParametersEmptySection) {
+		debugC(5, kDebugLoading, "ContextParameters::ContextParameters: sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
+		switch (sectionType) {
+		case kContextParametersName: {
+			uint repeatedFileNumber = Datum(chunk, kDatumTypeUint16_1).u.i;
+			if (repeatedFileNumber != _fileNumber) {
+				warning("ContextParameters::ContextParameters(): Repeated file number didn't match: %d != %d", repeatedFileNumber, _fileNumber);
 			}
-			contextName = Datum(chunk, DatumType::STRING).u.string;
+			_contextName = Datum(chunk, kDatumTypeString).u.string;
 			// TODO: This is likely just an end flag.
-			/*uint unk1 =*/ Datum(chunk, DatumType::UINT16_1).u.i;
+			uint endingFlag = Datum(chunk, kDatumTypeUint16_1).u.i;
+			if (endingFlag != 0) {
+				warning("ContextParameters::ContextParameters(): Got non-zero ending flag 0x%x", endingFlag);
+			}
 			break;
 		}
 
-		case SectionType::FILE_NUMBER: {
+		case kContextParametersFileNumber: {
 			error("ContextParameters::ContextParameters(): Section type FILE_NUMBER not implemented yet");
 			break;
 		}
 
-		case SectionType::VARIABLE: {
-			uint repeatedFileNumber = Datum(chunk, DatumType::UINT16_1).u.i;
-			if (repeatedFileNumber != fileNumber) {
-				warning("ContextParameters::ContextParameters(): Repeated file number didn't match: %d != %d", repeatedFileNumber, fileNumber);
+		case kContextParametersVariable: {
+			uint repeatedFileNumber = Datum(chunk, kDatumTypeUint16_1).u.i;
+			if (repeatedFileNumber != _fileNumber) {
+				warning("ContextParameters::ContextParameters(): Repeated file number didn't match: %d != %d", repeatedFileNumber, _fileNumber);
 			}
 			// The trouble here is converting the variable to an operand.
 			// They are two totally separate types!
 			Variable *variable = new Variable(chunk);
 			Operand operand;
-			if (g_engine->_variables.contains(variable->id)) {
-				error("ContextParameters::ContextParameters(): Variable with ID 0x%x already exists", variable->id);
+			if (g_engine->_variables.contains(variable->_id)) {
+				error("ContextParameters::ContextParameters(): Variable with ID 0x%x already exists", variable->_id);
 			} else {
-				g_engine->_variables.setVal(variable->id, variable);
-				debugC(5, kDebugScript, "ContextParameters::ContextParameters(): Created global variable %d", variable->id);
+				g_engine->_variables.setVal(variable->_id, variable);
+				debugC(5, kDebugScript, "ContextParameters::ContextParameters(): Created global variable %d", variable->_id);
 			}
 			break;
 		}
 
-		case SectionType::BYTECODE: {
+		case kContextParametersBytecode: {
 			Function *function = new Function(chunk);
 			_functions.setVal(function->_id, function);
 			break;
 		}
 
 		default: {
-			error("ContextParameters::ContextParameters(): Unknown section type 0x%x", sectionType);
+			error("ContextParameters::ContextParameters(): Unknown section type 0x%x", static_cast<uint>(sectionType));
 		}
 		}
-		sectionType = Datum(chunk, DatumType::UINT16_1).u.i;
+		sectionType = Datum(chunk, kDatumTypeUint16_1).u.i;
 	}
 }
 
 ContextParameters::~ContextParameters() {
-	delete contextName;
-	contextName = nullptr;
+	delete _contextName;
+	_contextName = nullptr;
 
 	for (auto it = _functions.begin(); it != _functions.end(); ++it) {
 		delete it->_value;

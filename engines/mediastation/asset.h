@@ -22,16 +22,16 @@
 #ifndef MEDIASTATION_ASSET_H
 #define MEDIASTATION_ASSET_H
 
-#include "common/func.h"
+#include "common/keyboard.h"
 
 #include "mediastation/subfile.h"
 #include "mediastation/chunk.h"
 #include "mediastation/mediascript/builtins.h"
 #include "mediastation/mediascript/operand.h"
+#include "mediastation/assetheader.h"
 
 namespace MediaStation {
 
-enum class AssetType;
 class AssetHeader;
 
 class Asset {
@@ -57,8 +57,11 @@ public:
 	virtual void readChunk(Chunk &chunk);
 	virtual void readSubfile(Subfile &subfile, Chunk &chunk);
 
+	void runEventHandlerIfExists(EventType eventType);
+	void runKeyDownEventHandlerIfExists(Common::KeyState keyState);
+
 	AssetType type() const;
-	uint zIndex() const;
+	int zIndex() const;
 	AssetHeader *getHeader() const {
 		return _header;
 	}
