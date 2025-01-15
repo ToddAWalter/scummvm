@@ -23,17 +23,23 @@
 
 namespace MediaStation {
 
+Hotspot::Hotspot(AssetHeader *header) : Asset(header) {
+	if (header->_startup == kAssetStartupActive) {
+		_isActive = true;
+	}
+}
+
 Operand Hotspot::callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) {
 	switch (methodId) {
 	case kMouseActivateMethod: {
 		assert(args.empty());
-		warning("Hotspot::callMethod(): BuiltInFunction::mouseActivate is not implemented");
+		_isActive = true;
 		return Operand();
 	}
 
 	case kMouseDeactivateMethod: {
 		assert(args.empty());
-		warning("Hotspot::callMethod(): BuiltInFunction::mouseDeactivate is not implemented");
+		_isActive = false;
 		return Operand();
 	}
 

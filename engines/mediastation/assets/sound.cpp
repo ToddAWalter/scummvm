@@ -81,17 +81,15 @@ void Sound::readChunk(Chunk &chunk) {
 }
 
 void Sound::readSubfile(Subfile &subfile, Chunk &chunk) {
-	//if (_streams.size() != 0) {
-	//    warning("Sound::readSubfile(): Some audio has already been read.");
-	//}
 	uint32 totalChunks = _header->_chunkCount;
 	uint32 expectedChunkId = chunk._id;
 
+	debugC(5, kDebugLoading, "Sound::readSubfile(): Reading %d chunks", totalChunks);
 	readChunk(chunk);
-	for (uint i = 0; i < totalChunks; i++) {
+	for (uint i = 1; i < totalChunks; i++) {
+		debugC(5, kDebugLoading, "Sound::readSubfile(): Reading chunk %d of %d", i, totalChunks);
 		chunk = subfile.nextChunk();
 		if (chunk._id != expectedChunkId) {
-			// TODO: Make this show the chunk IDs as strings, not numbers.
 			error("Sound::readSubfile(): Expected chunk %s, got %s", tag2str(expectedChunkId), tag2str(chunk._id));
 		}
 		readChunk(chunk);

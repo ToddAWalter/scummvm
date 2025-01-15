@@ -21,8 +21,6 @@
 
 #include "mediastation/boot.h"
 #include "mediastation/datum.h"
-#include "mediastation/subfile.h"
-#include "mediastation/chunk.h"
 #include "mediastation/debugchannels.h"
 
 namespace MediaStation {
@@ -331,6 +329,9 @@ Boot::Boot(const Common::Path &path) : Datafile(path) {
 				_contextDeclarations.setVal(contextDeclaration->_fileNumber, contextDeclaration);
 				contextDeclaration = new ContextDeclaration(chunk);
 			}
+			// The very last declaration is just an empty flag, so delete it
+			// since it's not put in the map.
+			delete contextDeclaration;
 			break;
 		}
 
@@ -340,6 +341,9 @@ Boot::Boot(const Common::Path &path) : Datafile(path) {
 				_unknownDeclarations.push_back(unknownDeclaration);
 				unknownDeclaration = new UnknownDeclaration(chunk);
 			}
+			// The very last declaration is just an empty flag, so delete it
+			// since it's not put in the map.
+			delete unknownDeclaration;
 			break;
 		}
 
@@ -349,6 +353,9 @@ Boot::Boot(const Common::Path &path) : Datafile(path) {
 				_fileDeclarations.setVal(fileDeclaration->_id, fileDeclaration);
 				fileDeclaration = new FileDeclaration(chunk);
 			}
+			// The very last declaration is just an empty flag, so delete it
+			// since it's not put in the map.
+			delete fileDeclaration;
 			break;
 		}
 
@@ -358,6 +365,9 @@ Boot::Boot(const Common::Path &path) : Datafile(path) {
 				_subfileDeclarations.setVal(subfileDeclaration->_assetId, subfileDeclaration);
 				subfileDeclaration = new SubfileDeclaration(chunk);
 			}
+			// The very last declaration is just an empty flag, so delete it
+			// since it's not put in the map.
+			delete subfileDeclaration;
 			break;
 		}
 
@@ -430,6 +440,9 @@ uint32 Boot::getRootContextId() {
 Boot::~Boot() {
 	delete _gameTitle;
 	_gameTitle = nullptr;
+
+	delete _versionInfo;
+	_versionInfo = nullptr;
 
 	_contextDeclarations.clear();
 	_subfileDeclarations.clear();

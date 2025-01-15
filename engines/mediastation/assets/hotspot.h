@@ -25,12 +25,13 @@
 #include "mediastation/asset.h"
 #include "mediastation/assetheader.h"
 #include "mediastation/mediascript/operand.h"
+#include "mediastation/mediascript/builtins.h"
 
 namespace MediaStation {
 
 class Hotspot : public Asset {
 public:
-	Hotspot(AssetHeader *header) : Asset(header) {};
+	Hotspot(AssetHeader *header);
 	virtual ~Hotspot() override = default;
 
 	virtual Operand callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) override;

@@ -35,6 +35,7 @@
 #include "mediastation/context.h"
 #include "mediastation/asset.h"
 #include "mediastation/assets/movie.h"
+#include "mediastation/mediascript/builtins.h"
 
 namespace MediaStation {
 
@@ -63,24 +64,45 @@ MediaStationEngine::~MediaStationEngine() {
 	delete _boot;
 	_boot = nullptr;
 
-	for (auto it = _assets.begin(); it != _assets.end(); ++it) {
+	for (auto it = _loadedContexts.begin(); it != _loadedContexts.end(); ++it) {
 		delete it->_value;
 	}
-	_assets.clear();
-	_assetsByChunkReference.clear();
-
-	for (auto it = _functions.begin(); it != _functions.end(); ++it) {
-		delete it->_value;
-	}
-	_functions.clear();
+	_loadedContexts.clear();
 
 	for (auto it = _variables.begin(); it != _variables.end(); ++it) {
 		delete it->_value;
 	}
 	_variables.clear();
+}
 
-	delete _root;
-	_root = nullptr;
+Asset *MediaStationEngine::getAssetById(uint assetId) {
+	for (auto it = _loadedContexts.begin(); it != _loadedContexts.end(); ++it) {
+		Asset *asset = it->_value->getAssetById(assetId);
+		if (asset != nullptr) {
+			return asset;
+		}
+	}
+	return nullptr;
+}
+
+Asset *MediaStationEngine::getAssetByChunkReference(uint chunkReference) {
+	for (auto it = _loadedContexts.begin(); it != _loadedContexts.end(); ++it) {
+		Asset *asset = it->_value->getAssetByChunkReference(chunkReference);
+		if (asset != nullptr) {
+			return asset;
+		}
+	}
+	return nullptr;
+}
+
+Function *MediaStationEngine::getFunctionById(uint functionId) {
+	for (auto it = _loadedContexts.begin(); it != _loadedContexts.end(); ++it) {
+		Function *function = it->_value->getFunctionById(functionId);
+		if (function != nullptr) {
+			return function;
+		}
+	}
+	return nullptr;
 }
 
 uint32 MediaStationEngine::getFeatures() const {
@@ -116,7 +138,7 @@ Common::Error MediaStationEngine::run() {
 	//Context *root = nullptr;
 	uint32 rootContextId = _boot->getRootContextId();
 	if (rootContextId != 0) {
-		_root = loadContext(rootContextId);
+		loadContext(rootContextId);
 	} else {
 		warning("MediaStation::run(): Title has no root context");
 	}
@@ -171,10 +193,23 @@ void MediaStationEngine::processEvents() {
 		}
 
 		case Common::EVENT_KEYDOWN: {
+			// TODO: Reading the current mouse position for hotspots might not
+			// be right, need to verify.
+			Common::Point mousePos = g_system->getEventManager()->getMousePos();
+			Asset *hotspot = findAssetToAcceptMouseEvents(mousePos);
+			if (hotspot != nullptr) {
+				debugC(1, kDebugEvents, "EVENT_KEYDOWN (%d): Sent to hotspot %d", e.kbd.ascii, hotspot->getHeader()->_id);
+				hotspot->runKeyDownEventHandlerIfExists(e.kbd);
+			}
 			break;
 		}
 
 		case Common::EVENT_LBUTTONDOWN: {
+			Asset *hotspot = findAssetToAcceptMouseEvents(e.mouse);
+			if (hotspot != nullptr) {
+				debugC(1, kDebugEvents, "EVENT_LBUTTONDOWN (%d, %d): Sent to hotspot %d", e.mouse.x, e.mouse.y, hotspot->getHeader()->_id);
+				hotspot->runEventHandlerIfExists(kMouseDownEvent);
+			}
 			break;
 		}
 
@@ -195,6 +230,11 @@ void MediaStationEngine::processEvents() {
 Context *MediaStationEngine::loadContext(uint32 contextId) {
 	if (_boot == nullptr) {
 		error("Cannot load contexts before BOOT.STM is read");
+	}
+
+	if (_loadedContexts.contains(contextId)) {
+		warning("MediaStationEngine::loadContext(): Context 0x%x already loaded, returning existing context", contextId);
+		return _loadedContexts.getVal(contextId);
 	}
 
 	// GET THE FILE ID.
@@ -221,8 +261,7 @@ Context *MediaStationEngine::loadContext(uint32 contextId) {
 	// LOAD THE CONTEXT.
 	Common::Path entryCxtFilepath = Common::Path(*fileName);
 	Context *context = new Context(entryCxtFilepath);
-
-	// SET THE VARIABLES.
+	_loadedContexts.setVal(contextId, context);
 	return context;
 }
 
@@ -281,7 +320,36 @@ void MediaStationEngine::branchToScreen(uint32 contextId) {
 			debugC(5, kDebugScript, "No context entry event handler");
 		}
 	}
-	_currentContext = context;
+}
+
+Asset *MediaStationEngine::findAssetToAcceptMouseEvents(Common::Point point) {
+	Asset *intersectingAsset = nullptr;
+	// The z-indices seem to be reversed, so the highest z-index number is
+	// actually the lowest asset.
+	int lowestZIndex = INT_MAX;
+
+	for (Asset *asset : _assetsPlaying) {
+		// TODO: Currently only hotspots are found, but other asset types can
+		// likely get mouse events too.
+		if (asset->type() == kAssetTypeHotspot) {
+			Common::Rect *boundingBox = asset->getHeader()->_boundingBox;
+			if (boundingBox == nullptr) {
+				error("Hotspot %d has no bounding box", asset->getHeader()->_id);
+			}
+
+			if (!asset->isActive()) {
+				continue;
+			}
+
+			if (boundingBox->contains(point)) {
+				if (asset->zIndex() < lowestZIndex) {
+					lowestZIndex = asset->zIndex();
+					intersectingAsset = asset;
+				}
+			}
+		}
+	}
+	return intersectingAsset;
 }
 
 } // End of namespace MediaStation

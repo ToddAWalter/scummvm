@@ -22,8 +22,10 @@
 #ifndef MEDIASTATION_TIMER_H
 #define MEDIASTATION_TIMER_H
 
+#include "mediastation/asset.h"
 #include "mediastation/assetheader.h"
 #include "mediastation/mediascript/operand.h"
+#include "mediastation/mediascript/builtins.h"
 
 namespace MediaStation {
 

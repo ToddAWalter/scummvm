@@ -22,34 +22,14 @@
 #ifndef MEDIASTATION_MEDIASCRIPT_OPERAND_H
 #define MEDIASTATION_MEDIASCRIPT_OPERAND_H
 
-#include "common/array.h"
+#include "common/str.h"
 
+#include "mediastation/mediascript/builtins.h"
 #include "mediastation/mediascript/variable.h"
 
 namespace MediaStation {
 
-class Function;
 class Asset;
-
-enum OperandType {
-	kOperandTypeEmpty = 0, // a flag for C++ code, not real operand type.
-	// TODO: Figure out the difference between these two.
-	kOperandTypeLiteral1 = 151,
-	kOperandTypeLiteral2 = 153,
-	// TODO: Figure out the difference between these two.
-	kOperandTypeFloat1 = 152,
-	kOperandTypeFloat2 = 157,
-	kOperandTypeString = 154,
-	// TODO: This only seems to be used in effectTransition:
-	//  effectTransition ( $FadeToPalette )
-	// compiles to:
-	//  [219, 102, 1]
-	//  [155, 301]
-	kOperandTypeDollarSignVariable = 155,
-	kOperandTypeAssetId = 156,
-	kOperandTypeVariableDeclaration = 158,
-	kOperandTypeFunction = 160
-};
 
 class Operand {
 public:
@@ -72,22 +52,26 @@ public:
 	void putVariable(Variable *variable);
 	Variable *getVariable();
 
-	void putFunction(Function *function);
-	Function *getFunction();
+	void putFunction(uint functionId);
+	uint getFunctionId();
 
 	void putAsset(uint32 assetId);
 	Asset *getAsset();
 	uint32 getAssetId();
 
+	Operand getLiteralValue();
+
+	bool operator==(Operand &other);
+	bool operator>=(Operand &other);
 	Operand operator-(const Operand &other) const;
 
 private:
 	OperandType _type = kOperandTypeEmpty;
 	union {
 		uint assetId = 0;
+		uint functionId;
 		Common::String *string;
 		Variable *variable;
-		Function *function;
 		int i;
 		double d;
 	} _u;

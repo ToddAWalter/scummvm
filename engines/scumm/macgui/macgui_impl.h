@@ -347,7 +347,7 @@ public:
 
 		void draw(bool drawFocused = false) override;
 
-		bool handleMouseUp(Common::Event &event) { return true; }
+		bool handleMouseUp(Common::Event &event) override { return true; }
 	};
 
 	class MacCheckbox : public MacWidget {
@@ -781,7 +781,6 @@ public:
 	virtual ~MacGuiImpl();
 
 	Graphics::MacWindowManager *_windowManager = nullptr;
-	bool _forceMenuClosed = false;
 
 	virtual int getNumColors() const = 0;
 
@@ -807,6 +806,7 @@ public:
 	static void menuCallback(int id, Common::String &name, void *data);
 	virtual bool initialize();
 	void updateWindowManager();
+	virtual void updateMenus();
 
 	const Graphics::Font *getFont(FontId fontId);
 	virtual const Graphics::Font *getFontByScummId(int32 id) = 0;

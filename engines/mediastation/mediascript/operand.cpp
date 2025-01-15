@@ -162,10 +162,10 @@ Variable *Operand::getVariable() {
 	}
 }
 
-void Operand::putFunction(Function *function) {
+void Operand::putFunction(uint functionId) {
 	switch (_type) {
 	case kOperandTypeFunction: {
-		_u.function = function;
+		_u.functionId = functionId;
 		break;
 	}
 
@@ -175,10 +175,10 @@ void Operand::putFunction(Function *function) {
 	}
 }
 
-Function *Operand::getFunction() {
+uint Operand::getFunctionId() {
 	switch (_type) {
 	case kOperandTypeFunction: {
-		return _u.function;
+		return _u.functionId;
 	}
 
 	default: {
@@ -212,13 +212,13 @@ Asset *Operand::getAsset() {
 		if (_u.assetId == 0) {
 			return nullptr;
 		} else {
-			return g_engine->_assets.getVal(_u.assetId);
+			return g_engine->getAssetById(_u.assetId);
 		}
 	}
 
 	case kOperandTypeVariableDeclaration: {
 		assert(_u.variable->_type == kVariableTypeAssetId);
-		return g_engine->_assets.getVal(_u.variable->_value.assetId);
+		return g_engine->getAssetById(_u.variable->_value.assetId);
 	}
 
 	default: {
@@ -241,6 +241,58 @@ uint32 Operand::getAssetId() {
 	default: {
 		error("Operand::getAssetId(): Attempt to get asset ID from operand that is not an asset (type 0x%x)", static_cast<uint>(_type));
 	}
+	}
+}
+
+Operand Operand::getLiteralValue() {
+	// This function dereferences any variable to get the actual
+	// "direct" value (a literal asset ID or otherwise).
+	if (_type == kOperandTypeVariableDeclaration) {
+		return _u.variable->getValue();
+	} else {
+		return *this;
+	}
+}
+
+bool Operand::operator==(Operand &other) {
+	Operand lhs = getLiteralValue();
+	Operand rhs = getLiteralValue();
+	// TODO: Maybe some better type checking here. If the types being compared end up being incompatible, the respective get
+	// method on the rhs will raise the error. But better might be checking
+	// both before we try getting values to report a more descriptive error.
+	switch (lhs.getType()) {
+	case kOperandTypeLiteral1: 
+	case kOperandTypeLiteral2:
+		return lhs.getInteger() == rhs.getInteger();
+
+	case kOperandTypeFloat1:
+	case kOperandTypeFloat2:
+		return lhs.getDouble() == rhs.getDouble();
+
+	case kOperandTypeString:
+		return *lhs.getString() == *rhs.getString();
+
+	default:
+		error("Operand::operator==(): Unsupported operand types %d and %d", static_cast<uint>(lhs.getType()), static_cast<uint>(rhs.getType()));
+	}
+}
+
+bool Operand::operator>=(Operand &other) {
+	Operand lhs = getLiteralValue();
+	Operand rhs = getLiteralValue();
+	// If the types being compared end up being incompatible, the respective get
+	// method on the rhs will raise the error.
+	switch (lhs.getType()) {
+	case kOperandTypeLiteral1: 
+	case kOperandTypeLiteral2:
+		return lhs.getInteger() >= rhs.getInteger();
+
+	case kOperandTypeFloat1:
+	case kOperandTypeFloat2:
+		return lhs.getDouble() >= rhs.getDouble();
+
+	default:
+		error("Operand::operator>=(): Unsupported operand types %d and %d", static_cast<uint>(lhs.getType()), static_cast<uint>(rhs.getType()));
 	}
 }
 

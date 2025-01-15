@@ -40,9 +40,12 @@ class ScummEngine;
 
 enum SoundSEType {
 	kSoundSETypeMusic,
+	kSoundSETypeCDAudio,
 	kSoundSETypeSpeech,
 	kSoundSETypeSFX,
-	kSoundSETypeCDAudio
+	kSoundSETypeAmbience,
+	kSoundSETypeCommentary,
+	kSoundSETypePatch
 };
 
 class SoundSE {
@@ -51,7 +54,8 @@ public:
 	SoundSE(ScummEngine *parent, Audio::Mixer *mixer);
 	~SoundSE() = default;
 
-	Audio::SeekableAudioStream *getAudioStream(uint32 offset, SoundSEType type);
+	Audio::SeekableAudioStream *getAudioStreamFromIndex(int32 index, SoundSEType type);
+	Audio::SeekableAudioStream *getAudioStreamFromOffset(uint32 offset, SoundSEType type);
 
 	int32 handleMISESpeech(const char *msgString,
 								const char *speechFilenameSubstitution,
@@ -109,6 +113,7 @@ private:
 		uint16 align;
 		byte bits;
 		Common::String name;
+		bool isPatched;
 	};
 
 	ScummEngine *_vm;
@@ -122,13 +127,14 @@ private:
 	OffsetToIndexMap _offsetToIndexDOTTAndFT;
 	NameToOffsetMap _nameToOffsetDOTTAndFT;
 	NameToIndexMap _nameToIndex;
+	NameToIndexMap _nameToIndexPatched;
 
 	AudioIndex _musicEntries;
-	Common::String _musicFilename;
 	AudioIndex _speechEntries;
-	Common::String _speechFilename;
 	AudioIndex _sfxEntries;
-	Common::String _sfxFilename;
+	AudioIndex _ambienceEntries;
+	AudioIndex _commentaryEntries;
+	AudioIndex _patchEntries;
 
 	typedef Common::Array<AudioEntryMI> AudioIndexMI;
 	AudioIndexMI _audioEntriesMI;
@@ -151,11 +157,16 @@ private:
 	void initSoundFiles();
 
 	// Index XWB audio files and XSB cue files - used in MI1SE and MI2SE
-	void indexXWBFile(const Common::String &filename, AudioIndex *audioIndex);
-	void indexXSBFile(const Common::String &filename, AudioIndex *audioIndex);
+	void indexXWBFile(SoundSEType type);
+	void indexSpeechXSBFile();
 
 	// Index FSB audio files - used in DOTT and FT
-	void indexFSBFile(const Common::String &filename, AudioIndex *audioIndex);
+	void indexFSBFile(SoundSEType type);
+
+	Common::String getAudioFilename(SoundSEType type);
+	Common::SeekableReadStream *getAudioFile(const Common::String &filename);
+	Common::SeekableReadStream *getAudioFile(SoundSEType type);
+	AudioIndex *getAudioEntries(SoundSEType type);
 
 	Audio::SeekableAudioStream *createSoundStream(Common::SeekableSubReadStream *stream, AudioEntry entry, DisposeAfterUse::Flag disposeAfterUse = DisposeAfterUse::YES);
 };

@@ -45,11 +45,12 @@ AssetHeader::AssetHeader(Chunk &chunk) {
 
 AssetHeader::~AssetHeader() {
 	delete _boundingBox;
-	delete _mouseActiveArea;
+	_mouseActiveArea.clear();
 	delete _palette;
 	delete _name;
 	delete _startPoint;
 	delete _endPoint;
+	delete _text;
 }
 
 void AssetHeader::readSection(AssetHeaderSectionType sectionType, Chunk& chunk) {
@@ -148,7 +149,11 @@ void AssetHeader::readSection(AssetHeaderSectionType sectionType, Chunk& chunk) 
 	}
 
 	case kAssetHeaderMouseActiveArea: {
-		_mouseActiveArea = Datum(chunk, kDatumTypePolygon).u.polygon;
+		uint16 total_points = Datum(chunk, kDatumTypeUint16_1).u.i;
+		for (int i = 0; i < total_points; i++) {
+			Common::Point *point = Datum(chunk, kDatumTypePoint2).u.point;
+			_mouseActiveArea.push_back(point);
+		}
 		break;
 	}
 
@@ -254,6 +259,54 @@ void AssetHeader::readSection(AssetHeaderSectionType sectionType, Chunk& chunk) 
 		// These are stored in the file as fractional seconds,
 		// but we want milliseconds.
 		_duration = (uint32)(Datum(chunk).u.f * 1000);
+		break;
+	}
+
+	case kAssetHeaderX: {
+		_x = Datum(chunk).u.i;
+		break;
+	}
+
+	case kAssetHeaderY: {
+		_y = Datum(chunk).u.i;
+		break;
+	}
+
+	case kAssetHeaderEditable: {
+		_editable = Datum(chunk).u.i;
+		break;
+	}
+
+	case kAssetHeaderFontId: {
+		_fontAssetId = Datum(chunk).u.i;
+		break;
+	}
+
+	case kAssetHeaderTextMaxLength: {
+		_maxTextLength = Datum(chunk).u.i;
+		break;
+	}
+
+	case kAssetHeaderInitialText: {
+		_text = Datum(chunk).u.string;
+		break;
+	}
+
+	case kAssetHeaderTextJustification: {
+		_justification = static_cast<TextJustification>(Datum(chunk).u.i);
+		break;
+	}
+
+	case kAssetHeaderTextPosition: {
+		_position = static_cast<TextPosition>(Datum(chunk).u.i);
+		break;
+	}
+
+	case kAssetHeaderTextCharacterClass: {
+		CharacterClass characterClass;
+		characterClass.firstAsciiCode = Datum(chunk).u.i;
+		characterClass.lastAsciiCode = Datum(chunk).u.i;
+		_acceptedInput.push_back(characterClass);
 		break;
 	}
 

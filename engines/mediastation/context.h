@@ -22,6 +22,10 @@
 #ifndef MEDIASTATION_CONTEXT_H
 #define MEDIASTATION_CONTEXT_H
 
+#include "graphics/palette.h"
+#include "common/path.h"
+#include "common/hashmap.h"
+
 #include "mediastation/datafile.h"
 #include "mediastation/contextparameters.h"
 #include "mediastation/assetheader.h"
@@ -53,9 +57,19 @@ public:
 	uint32 _fileSize;
 	Graphics::Palette *_palette = nullptr;
 	ContextParameters *_parameters = nullptr;
+	// TODO: Eliminate this screenAsset because the screen that this context
+	// represents is now an asset in itself.
 	AssetHeader *_screenAsset = nullptr;
 
+	Asset *getAssetById(uint assetId);
+	Asset *getAssetByChunkReference(uint chunkReference);
+	Function *getFunctionById(uint functionId);
+
 private:
+	Common::HashMap<uint, Asset *> _assets;
+	Common::HashMap<uint, Function *> _functions;
+	Common::HashMap<uint, Asset *> _assetsByChunkReference;
+
 	void readOldStyleHeaderSections(Subfile &subfile, Chunk &chunk);
 	void readNewStyleHeaderSections(Subfile &subfile, Chunk &chunk);
 	bool readHeaderSection(Subfile &subfile, Chunk &chunk);

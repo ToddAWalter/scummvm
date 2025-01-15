@@ -22,14 +22,12 @@
 #ifndef MEDIASTATION_IMAGE_H
 #define MEDIASTATION_IMAGE_H
 
-#include "graphics/managed_surface.h"
-
 #include "mediastation/asset.h"
 #include "mediastation/chunk.h"
-#include "mediastation/subfile.h"
 #include "mediastation/bitmap.h"
 #include "mediastation/assetheader.h"
 #include "mediastation/mediascript/operand.h"
+#include "mediastation/mediascript/builtins.h"
 
 namespace MediaStation {
 

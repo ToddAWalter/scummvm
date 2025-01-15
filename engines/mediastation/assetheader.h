@@ -22,6 +22,8 @@
 #ifndef MEDIASTATION_ASSET_HEADER_H
 #define MEDIASTATION_ASSET_HEADER_H
 
+#include "common/str.h"
+#include "common/rect.h"
 #include "common/hashmap.h"
 #include "graphics/palette.h"
 
@@ -69,6 +71,11 @@ enum AssetType {
 	kAssetTypeFunction = 0x0069 // FUN
 };
 
+enum AssetStartupType {
+	kAssetStartupInactive = 0,
+	kAssetStartupActive = 1
+};
+
 enum AssetHeaderSectionType {
 	kAssetHeaderEmptySection = 0x0000,
 	kAssetHeaderSoundEncoding1 = 0x0001,
@@ -114,6 +121,34 @@ enum AssetHeaderSectionType {
 	kAssetHeaderCylindricalX = 0x0772,
 	kAssetHeaderCylindricalY = 0x0773,
 	kAssetHeaderAssetName = 0x0bb8,
+
+	// TEXT FIELDS.
+	kAssetHeaderEditable = 0x03eb,
+	kAssetHeaderFontId = 0x0258,
+	kAssetHeaderInitialText = 0x0259,
+	kAssetHeaderTextMaxLength = 0x25a,
+	kAssetHeaderTextJustification = 0x025b,
+	kAssetHeaderTextPosition = 0x25f,
+	kAssetHeaderTextUnk1 = 0x262,
+	kAssetHeaderTextUnk2 = 0x263,
+	kAssetHeaderTextCharacterClass = 0x0266
+};
+
+enum TextJustification {
+    kTextJustificationLeft = 0x25c,
+    kTextJustificationRight = 0x25d,
+    kTextJustificationCenter = 0x25e
+};
+
+enum TextPosition {
+    kTextPositionMiddle = 0x25e,
+    kTextPositionTop = 0x260,
+    kTextPositionBotom = 0x261
+};
+
+struct CharacterClass {
+    uint firstAsciiCode = 0;
+    uint lastAsciiCode = 0;
 };
 
 enum SoundEncoding {
@@ -135,7 +170,7 @@ public:
 	ChunkReference _audioChunkReference = 0;
 	ChunkReference _animationChunkReference = 0;
 	Common::Rect *_boundingBox = nullptr;
-	Common::Array<Common::Point *> *_mouseActiveArea = nullptr;
+	Common::Array<Common::Point *> _mouseActiveArea;
 	int _zIndex = 0;
 	uint32 _assetReference = 0;
 	uint32 _startup = 0;
@@ -168,6 +203,14 @@ public:
 	Common::HashMap<uint, EventHandler *> _keyDownHandlers;
 	Common::Array<EventHandler *> _inputHandlers;
 	Common::Array<EventHandler *> _loadCompleteHandlers;
+
+	// TEXT FIELDS.
+    Common::String *_text = nullptr;
+    uint _maxTextLength = 0;
+    uint _fontAssetId = 0;
+    TextJustification _justification;
+    TextPosition _position;
+    Common::Array<CharacterClass> _acceptedInput;
 
 private:
 	void readSection(AssetHeaderSectionType sectionType, Chunk &chunk);

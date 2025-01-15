@@ -24,6 +24,7 @@
 #include "mediastation/datum.h"
 #include "mediastation/datafile.h"
 #include "mediastation/debugchannels.h"
+#include "mediastation/mediascript/operand.h"
 
 namespace MediaStation {
 
@@ -77,8 +78,15 @@ Variable::Variable(Chunk &chunk, bool readId) {
 		break;
 	}
 
+	case kVariableTypeUnk1: {
+		_value.i = Datum(chunk).u.i;
+		debugC(7, kDebugLoading, "Variable::Variable(): UNK1: %d", _value.i);
+		warning("Variable::Variable(): Got unknown variable value type 0x%x (0x%llx)", static_cast<uint>(_type), static_cast<long long int>(chunk.pos()));
+		break;
+	}
+
 	default: {
-		warning("Variable::Variable(): Got unknown variable value type 0x%x", static_cast<uint>(_type));
+		error("Variable::Variable(): Got unknown variable value type 0x%x", static_cast<uint>(_type));
 		_value.datum = new Datum(chunk);
 	}
 	}
@@ -109,6 +117,72 @@ Variable::~Variable() {
 	default: {
 		delete _value.datum;
 		break;
+	}
+	}
+}
+
+Operand Variable::getValue() {	
+	switch (_type) {
+	case kVariableTypeEmpty: {
+		error("Variable::getValue(): Attempt to get value from an empty variable");
+	}
+
+	case kVariableTypeCollection: {
+		// TODO: Determine if any scripts actually try to do this.
+		error("Variable::getValue(): Returning a collection is not implemented");
+		break;
+	}
+
+	case kVariableTypeString: {
+		Operand returnValue(kOperandTypeString);
+		returnValue.putString(_value.string);
+		return returnValue;
+	}
+
+	case kVariableTypeAssetId: {
+		Operand returnValue(kOperandTypeAssetId);
+		returnValue.putAsset(_value.assetId);
+		return returnValue;
+	}
+
+	case kVariableTypeBoolean: {
+		// TODO: Is this value type correct?
+		// Shouldn't matter too much, though, since it's still an integer type.
+		Operand returnValue(kOperandTypeLiteral1);
+		returnValue.putInteger(_value.b);
+		return returnValue;
+	}
+
+	case kVariableTypeLiteral: {
+		// Shouldn't matter too much, though, since it's still an integer type.
+		Operand returnValue(kOperandTypeLiteral1);
+		returnValue.putInteger(_value.datum->u.i);
+		return returnValue;
+	}
+
+	default: {
+		error("Variable::getValue(): Attempt to get value from unknown variable type 0x%x", static_cast<uint>(_type));
+	}
+	}
+}
+
+Operand Variable::callMethod(BuiltInMethod method, Common::Array<Operand> &args) {
+	switch (_type) {
+	case kVariableTypeAssetId: {
+		error("Variable::callMethod(): Calling method on an asset in a variable not implemented yet");
+		break;
+	}
+
+	case kVariableTypeCollection: {
+		// TODO: This is just a warning for now so we can get past the
+		// IBM/Crayola opening screen.
+		warning("Variable::callMethod(): Calling method on a collection not implemented yet");
+		return Operand();
+		break;
+	}
+
+	default: {
+		error("Variable::callMethod(): Calling method on unknown variable type 0x%x", static_cast<uint>(_type));
 	}
 	}
 }
