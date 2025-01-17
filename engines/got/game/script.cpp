@@ -102,7 +102,7 @@ Scripts::~Scripts() {
 void Scripts::execute_script(long index, const Gfx::Pics &speakerIcon, ScriptEndFn endFn) {
 	// Firstly disable any on-screen actors
 	for (int i = 0; i < MAX_ACTORS; i++)
-		_G(actor[i]).show = 0;
+		_G(actor[i])._show = 0;
 
 	_endFn = endFn;
 	_scrIndex = index;
@@ -140,7 +140,7 @@ void Scripts::runScript(bool firstTime) {
 }
 
 void Scripts::scriptLoop() {
-	while (!_paused) {
+	while (_paused == SCRIPT_READY) {
 		if (_G(cheat) && _G(key_flag[_B]))
 			break;
 
@@ -167,7 +167,7 @@ void Scripts::scriptLoop() {
 		}
 	}
 
-	if (!_paused)
+	if (_paused == SCRIPT_READY)
 		script_exit();
 }
 
@@ -196,7 +196,7 @@ int Scripts::get_command() {
 		return -1;
 
 	int i = 0;
-	while (1) {
+	while (true) {
 		if (!SCR_COMMAND[i])
 			break; // Lookup command
 
@@ -286,8 +286,7 @@ nextstr:
 	return 0;
 
 strdone:
-	if (strlen(varstr) > 255)
-		return -1;
+
 	Common::strcpy_s(_tempS, (char *)varstr);
 	return 1;
 }
@@ -391,7 +390,7 @@ int Scripts::get_next_val() {
 
 int Scripts::get_internal_variable() {
 	int i = 0;
-	while (1) {
+	while (true) {
 		if (!INTERNAL_VARIABLE[i])
 			return 0; // Lookup internal variable
 		int len = strlen(INTERNAL_VARIABLE[i]);
@@ -406,7 +405,7 @@ int Scripts::get_internal_variable() {
 		_lTemp = _G(thor_info).jewels;
 		break;
 	case 1:
-		_lTemp = _G(thor)->health;
+		_lTemp = _G(thor)->_health;
 		break;
 	case 2:
 		_lTemp = _G(thor_info).magic;
@@ -454,10 +453,10 @@ int Scripts::get_internal_variable() {
 			_lTemp = 0;
 		break;
 	case 24:
-		_lTemp = _G(scrn).icon[(_G(thor)->y + 8) / 16][(_G(thor)->x + 7) / 16];
+		_lTemp = _G(scrn).icon[(_G(thor)->_y + 8) / 16][(_G(thor)->_x + 7) / 16];
 		break;
 	case 25:
-		_lTemp = (((_G(thor)->y + 8) / 16) * 20) + ((_G(thor)->x + 7) / 16);
+		_lTemp = (((_G(thor)->_y + 8) / 16) * 20) + ((_G(thor)->_x + 7) / 16);
 		break;
 	default:
 		return 0;
@@ -468,6 +467,9 @@ int Scripts::get_internal_variable() {
 
 int Scripts::get_line(char *src, char *dst) {
 	int cnt = 0;
+	if (!src)
+		return cnt;
+	
 	while (*src != 13) {
 		if (*src != 10) {
 			*dst = *src;
@@ -502,7 +504,7 @@ int Scripts::read_script_file() {
 
 	sbuff = (char *)malloc(25000l);
 	sb = sbuff;
-	if (!sbuff) {
+	if (!sb) {
 		ret = 1;
 		goto done;
 	};
@@ -837,9 +839,24 @@ int Scripts::cmd_ask() {
 	return 0;
 }
 
+void Scripts::pause() {
+	_paused = SCRIPT_PAUSED;
+}
+
+void Scripts::resume() {
+	_paused = SCRIPT_RESUMING;
+}
+
 void Scripts::setAskResponse(int option) {
 	_numVar[_askVar] = option;
 	resume();
+}
+
+void Scripts::runIfResuming() {
+	if (_paused == SCRIPT_RESUMING) {
+		_paused = SCRIPT_READY;
+		scriptLoop();
+	}
 }
 
 int Scripts::cmd_sound() {
@@ -1002,14 +1019,14 @@ void Scripts::scr_func1() {
 
 	_G(new_level) = 109;
 	_G(new_level_tile) = 215;
-	_G(thor)->x = (_G(new_level_tile) % 20) * 16;
-	_G(thor)->y = ((_G(new_level_tile) / 20) * 16) - 2;
+	_G(thor)->_x = (_G(new_level_tile) % 20) * 16;
+	_G(thor)->_y = ((_G(new_level_tile) / 20) * 16) - 2;
 
-	_G(thor)->last_x[0] = _G(thor)->x;
-	_G(thor)->last_x[1] = _G(thor)->x;
-	_G(thor)->last_y[0] = _G(thor)->y;
-	_G(thor)->last_y[1] = _G(thor)->y;
-	_G(thor)->show = 2;
+	_G(thor)->_lastX[0] = _G(thor)->_x;
+	_G(thor)->_lastX[1] = _G(thor)->_x;
+	_G(thor)->_lastY[0] = _G(thor)->_y;
+	_G(thor)->_lastY[1] = _G(thor)->_y;
+	_G(thor)->_show = 2;
 }
 
 void Scripts::scr_func2() {
@@ -1019,7 +1036,7 @@ void Scripts::scr_func2() {
 }
 
 void Scripts::scr_func3() {
-	int p = (((_G(thor)->y + 8) / 16) * 20) + ((_G(thor)->x + 7) / 16);
+	int p = (((_G(thor)->_y + 8) / 16) * 20) + ((_G(thor)->_x + 7) / 16);
 	int y = p / 20;
 	int x = p % 20;
 
@@ -1067,7 +1084,7 @@ void Scripts::scr_func5() {
 	_G(scrn).actor_loc[1] -= 2;
 	_G(scrn).actor_loc[2] -= 2;
 	_G(scrn).actor_loc[3] -= 2;
-	_G(actor[3]).i1 = 16;
+	_G(actor[3])._i1 = 16;
 }
 
 int Scripts::cmd_exec() {
@@ -1077,6 +1094,10 @@ int Scripts::cmd_exec() {
 	if (_lValue < 1 || _lValue > 10)
 		return 6;
 
+	if (_lValue > 5) {
+		error("cmd_exec - unhandled lValue %d", _lValue);
+	}
+	
 	(this->*scr_func[_lValue - 1])();
 	return 0;
 }
