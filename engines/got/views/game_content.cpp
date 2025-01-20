@@ -142,20 +142,20 @@ bool GameContent::tick() {
 		checkSwitchFlag();
 		checkForItem();
 		moveActors();
-		use_item();
+		useItem();
 		updateActors();
 		checkForBossDead();
 		checkForCheats();
 
 		if (_G(endgame))
-			endgame_movement();
+			endGameMovement();
 		break;
 
 	case MODE_THOR_DIES:
 		if (_deathCtr < DEATH_THRESHOLD) {
 			spinThor();
 		} else if (_deathCtr < DEATH_THRESHOLD + 60) {
-			_G(thor)->_active = 0;
+			_G(thor)->_active = false;
 			++_deathCtr;
 		} else {
 			thorDead();
@@ -183,14 +183,14 @@ bool GameContent::tick() {
 				add_health(-1);
 				add_score(10);
 
-			} else if (_G(thor_info).magic > 0) {
-				_G(thor_info).magic--;
+			} else if (_G(thor_info)._magic > 0) {
+				_G(thor_info)._magic--;
 				play_sound(WOOP, 1);
 				add_magic(-1);
 				add_score(10);
 
-			} else if (_G(thor_info).jewels) {
-				_G(thor_info).jewels--;
+			} else if (_G(thor_info)._jewels) {
+				_G(thor_info)._jewels--;
 				play_sound(WOOP, 1);
 				add_jewels(-1);
 				add_score(10);
@@ -215,7 +215,7 @@ bool GameContent::tick() {
 		Gfx::fade_out();
 
 		// Add name to high scores list if necessary, and then show it
-		_G(highScores).add(_G(area), _G(playerName), _G(thor_info).score);
+		_G(highScores).add(_G(area), _G(playerName), _G(thor_info)._score);
 		g_events->send("HighScores", GameMessage("HIGH_SCORES", _G(area)));
 	}
 
@@ -225,11 +225,11 @@ bool GameContent::tick() {
 void GameContent::drawBackground(GfxSurface &s) {
 	for (int y = 0; y < TILES_Y; y++) {
 		for (int x = 0; x < TILES_X; x++) {
-			if (_G(scrn).icon[y][x] != 0) {
+			if (_G(scrn)._iconGrid[y][x] != 0) {
 				const Common::Point pt(x * TILE_SIZE, y * TILE_SIZE);
-				const LEVEL &screen = _G(scrn);
-				s.simpleBlitFrom(_G(bgPics[screen.bg_color]), pt);
-				s.simpleBlitFrom(_G(bgPics[screen.icon[y][x]]), pt);
+				const Level &screen = _G(scrn);
+				s.simpleBlitFrom(_G(bgPics[screen._backgroundColor]), pt);
+				s.simpleBlitFrom(_G(bgPics[screen._iconGrid[y][x]]), pt);
 			}
 		}
 	}
@@ -315,7 +315,7 @@ void GameContent::checkThunderShake() {
 			int thunderFl = _G(thunder_flag);
 			if (_G(actor[thunderFl])._active) {
 				_G(actor[thunderFl])._vulnerableCountdown = 0;
-				actor_damaged(&_G(actor[thunderFl]), 20);
+				actorDamaged(&_G(actor[thunderFl]), 20);
 			}
 		}
 
@@ -332,10 +332,10 @@ void GameContent::checkSwitchFlag() {
 	if (_G(switch_flag)) {
 		switch (_G(switch_flag)) {
 		case 1:
-			switch_icons();
+			switchIcons();
 			break;
 		case 2:
-			rotate_arrows();
+			rotateArrows();
 			break;
 		default:
 			break;
@@ -348,7 +348,7 @@ void GameContent::checkSwitchFlag() {
 void GameContent::checkForItem() {
 	int thor_pos = _G(thor)->getPos();
 	if (_G(object_map[thor_pos]))
-		pick_up_object(thor_pos);
+		pickUpObject(thor_pos);
 }
 
 void GameContent::moveActors() {
@@ -360,10 +360,10 @@ void GameContent::moveActors() {
 
 			_G(actor[i])._moveCount = _G(actor[i])._numMoves;
 			while (_G(actor[i])._moveCount--)
-				move_actor(&_G(actor[i]));
+				moveActor(&_G(actor[i]));
 
 			if (i == 0)
-				set_thor_vars();
+				setThorVars();
 
 			if (_G(new_level) != _G(current_level))
 				return;
@@ -400,13 +400,13 @@ void GameContent::checkForBossDead() {
 			if (_G(boss_active)) {
 				switch (_G(area)) {
 				case 1:
-					closing_sequence1();
+					boss1ClosingSequence1();
 					break;
 				case 2:
-					closing_sequence2();
+					boss2ClosingSequence1();
 					break;
 				case 3:
-					closing_sequence3();
+					boss3ClosingSequence1();
 					break;
 				default:
 					break;
@@ -460,14 +460,14 @@ void GameContent::checkForAreaChange() {
 
 		if (_G(gameMode) == MODE_NORMAL) {
 			_transitionPos = 0;
-			show_level_done();
+			showLevelDone();
 		}
 
 	} else if (_G(new_level) != _G(current_level)) {
 		// Area transition beginning
 		_G(thor)->_show = 0;
-		_G(thor)->_active = 0;
-		_G(hammer)->_active = 0;
+		_G(thor)->_active = false;
+		_G(hammer)->_active = false;
 		_G(tornado_used) = false;
 
 		// Draws the old area without Thor, and then save a copy of it.
@@ -476,8 +476,8 @@ void GameContent::checkForAreaChange() {
 		_surface.copyFrom(getSurface());
 
 		// Set up new level
-		_G(thor)->_active = 1;
-		show_level(_G(new_level));
+		_G(thor)->_active = true;
+		showLevel(_G(new_level));
 	}
 }
 
@@ -488,7 +488,7 @@ void GameContent::thorDies() {
 	// Stop any actors on-screen from moving
 	for (int li = 0; li < MAX_ACTORS; li++)
 		_G(actor[li])._show = 0;
-	_G(actor[2])._active = 0;
+	_G(actor[2])._active = false;
 
 	// Set the state for showing death animation
 	_G(gameMode) = MODE_THOR_DIES;
@@ -508,12 +508,12 @@ void GameContent::spinThor() {
 }
 
 void GameContent::thorDead() {
-	int li = _G(thor_info).item;
-	int ln = _G(thor_info).inventory;
+	int li = _G(thor_info)._selectedItem;
+	int ln = _G(thor_info)._inventory;
 
-	_G(new_level) = _G(thor_info).last_screen;
-	_G(thor)->_x = (_G(thor_info).last_icon % 20) * 16;
-	_G(thor)->_y = ((_G(thor_info).last_icon / 20) * 16) - 1;
+	_G(new_level) = _G(thor_info)._lastScreen;
+	_G(thor)->_x = (_G(thor_info)._lastIcon % 20) * 16;
+	_G(thor)->_y = ((_G(thor_info)._lastIcon / 20) * 16) - 1;
 	if (_G(thor)->_x < 1)
 		_G(thor)->_x = 1;
 	if (_G(thor)->_y < 0)
@@ -522,21 +522,21 @@ void GameContent::thorDead() {
 	_G(thor)->_lastX[1] = _G(thor)->_x;
 	_G(thor)->_lastY[0] = _G(thor)->_y;
 	_G(thor)->_lastY[1] = _G(thor)->_y;
-	_G(thor)->_dir = _G(thor_info).last_dir;
-	_G(thor)->_lastDir = _G(thor_info).last_dir;
-	_G(thor)->_health = _G(thor_info).last_health;
-	_G(thor_info).magic = _G(thor_info).last_magic;
-	_G(thor_info).jewels = _G(thor_info).last_jewels;
-	_G(thor_info).keys = _G(thor_info).last_keys;
-	_G(thor_info).score = _G(thor_info).last_score;
-	_G(thor_info).object = _G(thor_info).last_object;
-	_G(thor_info).object_name = _G(thor_info).last_object_name;
+	_G(thor)->_dir = _G(thor_info)._lastDir;
+	_G(thor)->_lastDir = _G(thor_info)._lastDir;
+	_G(thor)->_health = _G(thor_info)._lastHealth;
+	_G(thor_info)._magic = _G(thor_info)._lastMagic;
+	_G(thor_info)._jewels = _G(thor_info)._lastJewels;
+	_G(thor_info)._keys = _G(thor_info)._lastKeys;
+	_G(thor_info)._score = _G(thor_info)._lastScore;
+	_G(thor_info)._object = _G(thor_info)._lastObject;
+	_G(thor_info)._objectName = _G(thor_info)._lastObjectName;
 
-	if (ln == _G(thor_info).last_inventory) {
-		_G(thor_info).item = li;
+	if (ln == _G(thor_info)._lastInventory) {
+		_G(thor_info)._selectedItem = li;
 	} else {
-		_G(thor_info).item = _G(thor_info).last_item;
-		_G(thor_info).inventory = _G(thor_info).last_inventory;
+		_G(thor_info)._selectedItem = _G(thor_info)._lastItem;
+		_G(thor_info)._inventory = _G(thor_info)._lastInventory;
 	}
 
 	_G(setup) = _G(last_setup);
@@ -552,10 +552,10 @@ void GameContent::thorDead() {
 	_G(tornado_used) = false;
 	_G(shield_on) = false;
 	music_resume();
-	_G(actor[1])._active = 0;
-	_G(actor[2])._active = 0;
+	_G(actor[1])._active = false;
+	_G(actor[2])._active = false;
 	_G(thor)->_moveCountdown = 6;
-	_G(thor)->_active = 1;
+	_G(thor)->_active = true;
 
 	// Load saved data for new level back into scrn
 	_G(scrn).load(_G(new_level));
@@ -563,17 +563,17 @@ void GameContent::thorDead() {
 	_G(gameMode) = MODE_NORMAL;
 	_deathCtr = 0;
 
-	show_level(_G(new_level));
-	set_thor_vars();
+	showLevel(_G(new_level));
+	setThorVars();
 }
 
 void GameContent::checkForCheats() {
 	if (_G(cheats).freezeHealth)
 		_G(thor)->_health = 150;
 	if (_G(cheats).freezeMagic)
-		_G(thor_info).magic = 150;
+		_G(thor_info)._magic = 150;
 	if (_G(cheats).freezeJewels)
-		_G(thor_info).jewels = 999;
+		_G(thor_info)._jewels = 999;
 }
 
 void GameContent::placePixel(GfxSurface &s, int dir, int num) {
@@ -635,7 +635,7 @@ void GameContent::placePixel(GfxSurface &s, int dir, int num) {
 		return;
 	}
 
-	if (point_within(_pixelX[dir][num], _pixelY[dir][num], 0, 0, 319, 191)) {
+	if (pointWithin(_pixelX[dir][num], _pixelY[dir][num], 0, 0, 319, 191)) {
 		byte *pixel = (byte *)s.getBasePtr(_pixelX[dir][num],
 										   _pixelY[dir][num]);
 		*pixel = _pixelC[dir];
@@ -682,7 +682,7 @@ void GameContent::lightningCountdownDone() {
 		if ((ABS(ax - x) < 30) && (ABS(ay - y) < 30)) {
 			_G(actor[i])._magicHit = 1;
 			_G(actor[i])._vulnerableCountdown = 0;
-			actor_damaged(&_G(actor[i]), 254);
+			actorDamaged(&_G(actor[i]), 254);
 		}
 	}
 }
@@ -699,13 +699,13 @@ void GameContent::closingSequence() {
 	case 2:
 		switch (area) {
 		case 1:
-			closing_sequence1_2();
+			boss1ClosingSequence2();
 			break;
 		case 2:
-			closing_sequence2_2();
+			boss2ClosingSequence2();
 			break;
 		case 3:
-			closing_sequence3_2();
+			boss3ClosingSequence2();
 			break;
 		default:
 			break;
@@ -715,13 +715,13 @@ void GameContent::closingSequence() {
 	case 3:
 		switch (area) {
 		case 1:
-			closing_sequence1_3();
+			boss1ClosingSequence3();
 			break;
 		case 2:
-			closing_sequence2_3();
+			boss2ClosingSequence3();
 			break;
 		case 3:
-			closing_sequence3_3();
+			boss3ClosingSequence3();
 			break;
 		default:
 			break;
@@ -733,10 +733,10 @@ void GameContent::closingSequence() {
 
 		switch (area) {
 		case 1:
-			closing_sequence1_4();
+			boss1ClosingSequence4();
 			break;
 		case 2:
-			closing_sequence2_4();
+			boss2ClosingSequence4();
 			break;
 		default:
 			break;

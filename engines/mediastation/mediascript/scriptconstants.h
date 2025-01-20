@@ -30,6 +30,7 @@ enum InstructionType {
 	kInstructionTypeOperand = 0x0066,
 	kInstructionTypeVariableRef = 0x0065
 };
+const char *instructionTypeToStr(InstructionType type);
 
 enum Opcode {
 	kOpcodeIfElse = 202,
@@ -47,11 +48,8 @@ enum Opcode {
 	kOpcodeMultiply = 215,
 	kOpcodeDivide = 216,
 	kOpcodeModulo = 217,
-	kOpcodeUnk2 = 218, // TODO: Likely something with ## constants like ##DOWN?
+	kOpcodeNegate = 218,
 	kOpcodeCallRoutine = 219,
-	// Method calls are like routine calls, but they have an implicit "self"
-	// parameter that is always the first. For example:
-	//  @self . mouseActivate ( TRUE ) ;
 	kOpcodeCallMethod = 220,
 	// This seems to appear at the start of a function to declare the number of
 	// local variables used in the function. It seems to be the `Declare`
@@ -63,12 +61,14 @@ enum Opcode {
 	kOpcodeReturn = 222,
 	kOpcodeUnk1 = 223
 };
+const char *opcodeToStr(Opcode opcode);
 
 enum VariableScope {
 	kVariableScopeLocal = 1,
 	kVariableScopeParameter = 2,
 	kVariableScopeGlobal = 4
 };
+const char *variableScopeToStr(VariableScope scope);
 
 enum BuiltInFunction {
 	// TODO: Figure out if effectTransitionOnSync = 13 is consistent across titles?
@@ -79,6 +79,7 @@ enum BuiltInFunction {
 	// TODO: Figure out code for DebugPrint.
 	// TODO: Figure out code for Quit.
 };
+const char *builtInFunctionToStr(BuiltInFunction function);
 
 enum BuiltInMethod {
 	// TODO: What object types does CursorSet apply to?
@@ -159,6 +160,7 @@ enum BuiltInMethod {
 	kOpenLensMethod = 346, // PARAMS: 0
 	kCloseLensMethod = 347, // PARAMS: 0
 };
+const char *builtInMethodToStr(BuiltInMethod method);
 
 enum EventType {
     // TIMER EVENTS.
@@ -210,17 +212,24 @@ enum EventType {
     kPathStoppedEvent = 33,
     kPathEndEvent = 16
 };
+const char *eventTypeToStr(EventType type);
 
 enum EventHandlerArgumentType {
     kNullEventHandlerArgument = 0,
-    kAsciiCodeEventHandlerArgument = 1, // TODO: Why is this datum type a float?
+    kAsciiCodeEventHandlerArgument = 1,
     kTimeEventHandlerArgument = 3,
-    kUnk1EventHandlerArgument = 4, // Appars to happen with MovieStart?
+	// TODO: This argument type Appears to happen with MovieStart
+	// and nowhere else. However, this event handler shouldn't even need an
+	// argument...
+    kUnk1EventHandlerArgument = 4, 
     kContextEventHandlerArgument = 5
 };
+const char *eventHandlerArgumentTypeToStr(EventHandlerArgumentType type);
 
 enum OperandType {
-	kOperandTypeEmpty = 0, // a flag for C++ code, not real operand type.
+	// This is an invalid type used for initialization only.
+	kOperandTypeEmpty = 0,
+
 	// TODO: Figure out the difference between these two.
 	kOperandTypeLiteral1 = 151,
 	kOperandTypeLiteral2 = 153,
@@ -228,29 +237,23 @@ enum OperandType {
 	kOperandTypeFloat1 = 152,
 	kOperandTypeFloat2 = 157,
 	kOperandTypeString = 154,
-	// TODO: This only seems to be used in effectTransition:
-	//  effectTransition ( $FadeToPalette )
-	// compiles to:
-	//  [219, 102, 1]
-	//  [155, 301]
+	// TODO: This only seems to be used in effectTransition,
+	// as in effectTransition ( $FadeToPalette )
 	kOperandTypeDollarSignVariable = 155,
 	kOperandTypeAssetId = 156,
 	kOperandTypeVariableDeclaration = 158,
 	kOperandTypeFunction = 160
 };
+const char *operandTypeToStr(OperandType type);
 
 enum VariableType {
 	// This is an invalid type used for initialization only.
 	kVariableTypeEmpty = 0x0000,
 
-	// This is an "array", but the IMT sources
-	// use the term "collection".
 	kVariableTypeCollection = 0x0007,
 	kVariableTypeString = 0x0006,
 	kVariableTypeAssetId = 0x0005,
-	// These seem to be used in Dalmatians, but I don't know what they are
-	// used for.
-	kVariableTypeUnk1 = 0x0004,
+	kVariableTypeInt = 0x0004,
 	// These seem to be constants of some sort? This is what some of these
 	// IDs look like in PROFILE._ST:
 	//  - $downEar 10026
@@ -260,8 +263,9 @@ enum VariableType {
 	//  - var_6c14_NextEncouragementSound 316
 	kVariableTypeUnk2 = 0x0003,
 	kVariableTypeBoolean = 0x0002,
-	kVariableTypeLiteral = 0x0001
+	kVariableTypeFloat = 0x0001
 };
+const char *variableTypeToStr(VariableType type);
 
 } // End of namespace MediaStation
 

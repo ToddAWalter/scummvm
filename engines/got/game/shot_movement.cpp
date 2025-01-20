@@ -81,7 +81,7 @@ void next_shot_frame(Actor *actr) {
 int shot_movement_none(Actor *actr) {
 	actr->_temp3--;
 	if (!actr->_temp3) {
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
 	}
@@ -117,8 +117,8 @@ int shot_movement_one(Actor *actr) {
 		break;
 	}
 
-	if (!check_move3(x1, y1, actr)) {
-		actor_destroyed(actr);
+	if (!checkMove3(x1, y1, actr)) {
+		actorDestroyed(actr);
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
 	} else {
@@ -157,8 +157,8 @@ int shot_movement_two(Actor *actr) {
 		y1 = actr->_y;
 		break;
 	}
-	if (!check_move4(x1, y1, actr)) {
-		actor_destroyed(actr);
+	if (!checkMove4(x1, y1, actr)) {
+		actorDestroyed(actr);
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
 	} else {
@@ -184,7 +184,7 @@ int shot_movement_three(Actor *actr) {
 				actr->_x, actr->_y, actr->_x + 15, actr->_y + 15)) {
 		actr->_moveType = 0;
 		actr->_speed = 6;
-		thor_damaged(actr);
+		thorDamaged(actr);
 		actr->_x += 2;
 	}
 	if (!actr->_temp4) {
@@ -194,7 +194,7 @@ int shot_movement_three(Actor *actr) {
 			actr->_moveType = 0;
 	}
 	if (!actr->_temp3) {
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
 	} else {
@@ -211,22 +211,22 @@ int shot_movement_four(Actor *actr) {
 	if (actr->_temp1) {
 		actr->_temp1--;
 		if (!actr->_temp1) {
-			actor_destroyed(actr);
+			actorDestroyed(actr);
 			_G(apple_drop++);
 			if (_G(apple_drop) == 4) {
-				if (_drop_obj(actr, 5))
+				if (dropObject(actr, 5))
 					_G(apple_drop) = 0;
 				else
 					_G(apple_drop) = 3;
 			} else
-				_drop_obj(actr, 3);
+				dropObject(actr, 3);
 			return 0;
 		}
 	}
 	if (overlap(_G(thor)->_x - 1, _G(thor)->_y - 1, _G(thor_x2) + 1, _G(thor_y2) + 1,
 				actr->_x, actr->_y, actr->_x + 15, actr->_y + 15)) {
-		thor_damaged(actr);
-		actor_destroyed(actr);
+		thorDamaged(actr);
+		actorDestroyed(actr);
 		return 0;
 	}
 
@@ -264,8 +264,8 @@ int shot_movement_four(Actor *actr) {
 			d = 3;
 		x1 += xd;
 		y1 += yd;
-		if (check_move3(x1, y1, actr)) {
-			next_frame(actr);
+		if (checkMove3(x1, y1, actr)) {
+			nextFrame(actr);
 			actr->_lastDir = d;
 			if (actr->_directions == 1)
 				return 0;
@@ -287,12 +287,12 @@ int shot_movement_four(Actor *actr) {
 	if (actr->_toggle) {
 		if (xd) {
 			x1 += xd;
-			if (check_move3(x1, y1, actr)) {
+			if (checkMove3(x1, y1, actr)) {
 				if (xd > 0)
 					d = 3;
 				else
 					d = 2;
-				next_frame(actr);
+				nextFrame(actr);
 				actr->_lastDir = d;
 				if (actr->_directions == 1)
 					return 0;
@@ -302,12 +302,12 @@ int shot_movement_four(Actor *actr) {
 		}
 		if (yd) {
 			y1 += yd;
-			if (check_move3(x1, y1, actr)) {
+			if (checkMove3(x1, y1, actr)) {
 				if (yd > 0)
 					d = 1;
 				else
 					d = 0;
-				next_frame(actr);
+				nextFrame(actr);
 				actr->_lastDir = d;
 				if (actr->_directions == 1)
 					return 0;
@@ -317,12 +317,12 @@ int shot_movement_four(Actor *actr) {
 	} else {
 		if (yd) {
 			y1 += yd;
-			if (check_move3(x1, y1, actr)) {
+			if (checkMove3(x1, y1, actr)) {
 				if (yd > 0)
 					d = 1;
 				else
 					d = 0;
-				next_frame(actr);
+				nextFrame(actr);
 				actr->_lastDir = d;
 				if (actr->_directions == 1)
 					return 0;
@@ -332,12 +332,12 @@ int shot_movement_four(Actor *actr) {
 		}
 		if (xd) {
 			x1 += xd;
-			if (check_move3(x1, y1, actr)) {
+			if (checkMove3(x1, y1, actr)) {
 				if (xd > 0)
 					d = 3;
 				else
 					d = 2;
-				next_frame(actr);
+				nextFrame(actr);
 				actr->_lastDir = d;
 				if (actr->_directions == 1)
 					return 0;
@@ -345,8 +345,8 @@ int shot_movement_four(Actor *actr) {
 			}
 		}
 	}
-	check_move3(actr->_x, actr->_y, actr);
-	next_frame(actr);
+	checkMove3(actr->_x, actr->_y, actr);
+	nextFrame(actr);
 	actr->_lastDir = d;
 	if (actr->_directions == 1)
 		return 0;
@@ -365,7 +365,7 @@ int shot_movement_five(Actor *actr) {
 int shot_movement_six(Actor *actr) {
 	actr->_temp1--;
 	if (!actr->_temp1) {
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
 	} else
@@ -392,7 +392,7 @@ int shot_movement_seven(Actor *actr) {
 	}
 	if (overlap(actr->_x, actr->_y, actr->_x + actr->_sizeX, actr->_y + actr->_sizeY,
 				_G(thor)->_x, _G(thor)->_y + 4, _G(thor)->_x + 15, _G(thor)->_y + 15))
-		thor_damaged(actr);
+		thorDamaged(actr);
 
 	actr->_temp2++;
 	if (actr->_temp2 > 2) {
@@ -473,11 +473,11 @@ int shot_movement_eight(Actor *actr) {
 		if (!actr->_dead)
 			if (_G(actor[actr->_creator])._currNumShots)
 				_G(actor[actr->_creator])._currNumShots--;
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 	}
 	if (overlap(actr->_x, actr->_y, actr->_x + actr->_sizeX, actr->_y + actr->_sizeY,
 				_G(thor)->_x, _G(thor)->_y + 4, _G(thor)->_x + 15, _G(thor)->_y + 15))
-		thor_damaged(actr);
+		thorDamaged(actr);
 	actr->_x = x;
 	actr->_y = y;
 
@@ -493,7 +493,7 @@ int shot_movement_nine(Actor *actr) {
 	actr->_nextFrame++;
 	if (actr->_nextFrame == 3) {
 		_G(actor[actr->_creator])._currNumShots--;
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 		return 0;
 	}
 	if (actr->_directions == 1)
@@ -508,13 +508,13 @@ int shot_movement_ten(Actor *actr) {
 
 	if (overlap(actr->_x, actr->_y, actr->_x + actr->_sizeX, actr->_y + actr->_sizeY,
 				_G(thor)->_x, _G(thor)->_y + 4, _G(thor)->_x + 15, _G(thor)->_y + 15)) {
-		thor_damaged(actr);
+		thorDamaged(actr);
 		f = 1;
 	}
 	if ((actr->_y > 160) || f) {
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 	}
 
 	return 0;
@@ -585,12 +585,12 @@ int shot_movement_eleven(Actor *actr) {
 		}
 	}
 
-	if (!check_move3(x1, y1, actr)) {
+	if (!checkMove3(x1, y1, actr)) {
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 	} else
-		next_frame(actr);
+		nextFrame(actr);
 
 	if (actr->_directions == 1)
 		return 0;
@@ -631,7 +631,7 @@ int shot_movement_twelve(Actor *actr) {
 		actr->_nextFrame = 2;
 	} else {
 		if (overlap(x1 + 2, y1 + 2, x1 + 14, y1 + 14, _G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2))) {
-			thor_damaged(actr);
+			thorDamaged(actr);
 		}
 		actr->_x = x1;
 		actr->_y = y1;
@@ -683,15 +683,15 @@ int shot_movement_thirteen(Actor *actr) {
 	if (!actr->_temp4) {
 		if (_G(actor[actr->_creator])._currNumShots)
 			_G(actor[actr->_creator])._currNumShots--;
-		actor_destroyed(actr);
+		actorDestroyed(actr);
 		_G(apple_drop++);
 		if (_G(apple_drop) > 4) {
-			if (_drop_obj(actr, 5))
+			if (dropObject(actr, 5))
 				_G(apple_drop) = 0;
 			else
 				_G(apple_drop) = 4;
 		} else
-			_drop_obj(actr, 4);
+			dropObject(actr, 4);
 		return 0;
 	}
 
@@ -702,7 +702,7 @@ int shot_movement_thirteen(Actor *actr) {
 			YA = 0 - YA;
 	} else {
 		if (overlap(x1 + 4, y1 + 4, x1 + 12, y1 + 12, _G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2))) {
-			thor_damaged(actr);
+			thorDamaged(actr);
 		}
 		actr->_x = x1;
 		actr->_y = y1;

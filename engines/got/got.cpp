@@ -21,7 +21,6 @@
 
 #include "got/got.h"
 #include "common/config-manager.h"
-#include "common/debug-channels.h"
 #include "common/events.h"
 #include "common/scummsys.h"
 #include "common/system.h"
@@ -77,7 +76,7 @@ Common::Error GotEngine::run() {
 
 	// General initialization
 	if (_G(demo))
-		initialize_game();
+		initGame();
 	syncSoundSettings();
 
 	runGame();
@@ -118,9 +117,9 @@ Common::Error GotEngine::syncGame(Common::Serializer &s) {
 		// For savegames loaded directly from the ScummVM launcher,
 		// take care of initializing game defaults before rest of loading
 		if (!firstView() || firstView()->getName() != "Game")
-			initialize_game();
+			initGame();
 
-		int area = _G(setup).area;
+		int area = _G(setup)._areaNum;
 		if (area == 0)
 			area = 1;
 
@@ -137,17 +136,17 @@ Common::Error GotEngine::syncGame(Common::Serializer &s) {
 }
 
 void GotEngine::savegameLoaded() {
-	_G(current_area) = _G(thor_info).last_screen;
+	_G(current_area) = _G(thor_info)._lastScreen;
 
-	_G(thor)->_x = (_G(thor_info).last_icon % 20) * 16;
-	_G(thor)->_y = ((_G(thor_info).last_icon / 20) * 16) - 1;
+	_G(thor)->_x = (_G(thor_info)._lastIcon % 20) * 16;
+	_G(thor)->_y = ((_G(thor_info)._lastIcon / 20) * 16) - 1;
 	if (_G(thor)->_x < 1)
 		_G(thor)->_x = 1;
 	if (_G(thor)->_y < 0)
 		_G(thor)->_y = 0;
-	_G(thor)->_dir = _G(thor_info).last_dir;
-	_G(thor)->_lastDir = _G(thor_info).last_dir;
-	_G(thor)->_health = _G(thor_info).last_health;
+	_G(thor)->_dir = _G(thor_info)._lastDir;
+	_G(thor)->_lastDir = _G(thor_info)._lastDir;
+	_G(thor)->_health = _G(thor_info)._lastHealth;
 	_G(thor)->_numMoves = 1;
 	_G(thor)->_vulnerableCountdown = 60;
 	_G(thor)->_show = 60;
@@ -156,27 +155,26 @@ void GotEngine::savegameLoaded() {
 
 	g_vars->resetEndgameFlags();
 
-	if (!_G(music_flag))
-		_G(setup).music = 0;
-	if (!_G(sound_flag))
-		_G(setup).dig_sound = 0;
-	if (_G(setup).music == 1) {
+	_G(setup)._musicEnabled = _G(music_flag);
+	_G(setup)._digitalSound = _G(sound_flag);
+
+	if (_G(setup)._musicEnabled) {
 		if (GAME1 && _G(current_area) == 59) {
 			music_play(5, true);
 		} else {
-			music_play(_G(level_type), true);
+			music_play(_G(levelMusic), true);
 		}
 	} else {
-		_G(setup).music = 1;
+		_G(setup)._musicEnabled = true;
 		music_pause();
-		_G(setup).music = 0;
+		_G(setup)._musicEnabled = false;
 	}
 
-	_G(game_over) = _G(setup).game_over != 0;
-	_G(slow_mode) = _G(setup).speed != 0;
+	_G(game_over) = _G(setup)._gameOver != 0;
+	_G(slow_mode) = _G(setup)._slowMode != 0;
 
 	g_events->replaceView("Game", true);
-	setup_load();
+	setupLoad();
 }
 
 bool GotEngine::canLoadGameStateCurrently(Common::U32String *msg) {
@@ -221,12 +219,12 @@ void GotEngine::pauseEngineIntern(bool pause) {
 
 	if (_G(tornado_used)) {
 		_G(tornado_used) = false;
-		actor_destroyed(&_G(actor[2]));
+		actorDestroyed(&_G(actor[2]));
 	}
 
 	if (_G(shield_on)) {
 		_G(actor[2])._dead = 2;
-		_G(actor[2])._active = 0;
+		_G(actor[2])._active = false;
 		_G(shield_on) = false;
 	}
 

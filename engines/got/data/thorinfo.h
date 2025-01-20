@@ -19,26 +19,43 @@
  *
  */
 
-#include "got/views/dialogs/select_scroll.h"
-#include "got/got.h"
+#ifndef GOT_DATA_THOR_INFO_H
+#define GOT_DATA_THOR_INFO_H
+
+#include "common/serializer.h"
 
 namespace Got {
-namespace Views {
-namespace Dialogs {
 
-SelectScroll::SelectScroll() : SelectOption("SelectScroll", "Scroll Between Screens?", YES_NO) {
-}
+struct ThorInfo {
+	byte _magic = 0;
+	byte _keys = 0;
+	int _jewels = 0;
+	byte _lastArea = 0;
+	byte _lastScreen = 0;
+	byte _lastIcon = 0;
+	byte _lastDir = 0;
+	int _inventory = 0;
+	byte _selectedItem = 0; //currently selected item
+	byte _lastHealth = 0;
+	byte _lastMagic = 0;
+	int _lastJewels = 0;
+	byte _lastKeys = 0;
+	byte _lastItem = 0;
+	int _lastInventory = 0;
+	byte _level = 0; //current level (1,2,3)
+	long _score = 0;
+	long _lastScore = 0;
+	byte _object = 0;
+	const char *_objectName = nullptr;
+	byte _lastObject = 0;
+	const char *_lastObjectName = nullptr;
+	byte _armor = 0;
+	byte _filler[65] = {};
 
-bool SelectScroll::msgFocus(const FocusMessage &msg) {
-	_selectedItem = 1 - (_G(setup)._scrollFlag ? 1 : 0);
-	return true;
-}
+	void clear();
+	void sync(Common::Serializer &s);
+};
 
-void SelectScroll::selected() {
-	_G(setup)._scrollFlag = (_selectedItem == 0);
-	_G(last_setup) = _G(setup);
-}
-
-} // namespace Dialogs
-} // namespace Views
 } // namespace Got
+
+#endif

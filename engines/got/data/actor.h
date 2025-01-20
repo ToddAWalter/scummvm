@@ -19,11 +19,11 @@
  *
  */
 
-#include "common/stream.h"
-#include "graphics/managed_surface.h"
-
 #ifndef GOT_DATA_ACTOR_H
 #define GOT_DATA_ACTOR_H
+
+#include "common/stream.h"
+#include "graphics/managed_surface.h"
 
 namespace Got {
 
@@ -35,7 +35,7 @@ struct Actor {
 	byte _moveType = 0;           // Movement pattern (0=none)
 	byte _width = 0;              // Physical width
 	byte _height = 0;             // Physical height
-	byte _directions = 0;         // 1,2 or 4 (1=uni-directional)
+	byte _directions = 0;         // 1, 2 or 4 (1=uni-directional)
 	byte _framesPerDirection = 0; // # frames per direction
 	byte _frameSpeed = 0;         // # cycles between frame changes
 	byte _frameSequence[4] = {};  // Sequence
@@ -51,7 +51,7 @@ struct Actor {
 	byte _solid = 0;              // 1=solid (not ghost,etc)
 	bool _flying = false;         //
 	byte _dropRating = 0;         // rnd(100) < _dropRating = jewel
-	byte _type = 0;               // Actor (0=thor,1=hammer,2=enemy,3=shot)
+	byte _type = 0;               // Actor (0 = thor, 1 = hammer, 2 = enemy, 3 = shot)
 	char _name[9] = {};           // Actors name
 	byte _funcNum = 0;            // Special function when thor touches
 	byte _funcPass = 0;           // Value to pass to func
@@ -69,7 +69,7 @@ struct Actor {
 	int _center = 0;                // Center of object
 	int _lastX[2] = {};             // Last X coordinate on each page
 	int _lastY[2] = {};             // Last Y coordinate on each page
-	byte _active = 0; //boolean     // 1=active, 0=not active
+	bool _active = false;           // true=active, false=not active
 	byte _nextFrame = 0;            // Next frame to be shown
 	byte _moveCountdown = 0;        // Count down to movement
 	byte _vulnerableCountdown = 0;  // Count down to vulnerability
@@ -92,7 +92,7 @@ struct Actor {
 	byte _temp3 = 0;
 	byte _temp4 = 0;
 	byte _temp5 = 0;
-	byte _hitThor = 0; // boolean
+	bool _hitThor = false;
 	int _rand = 0;
 	byte _initDir = 0;
 	byte _passValue = 0;
@@ -102,7 +102,6 @@ struct Actor {
 	int _i1 = 0, _i2 = 0, _i3 = 0, _i4 = 0, _i5 = 0, _i6 = 0;
 	byte _initHealth = 0;
 	byte _talkCounter = 0;
-	byte _eType = 0; // unused
 
 	void loadFixed(Common::SeekableReadStream *src);
 	void loadFixed(const byte *src);

@@ -25,11 +25,11 @@
 #include "common/events.h"
 #include "common/queue.h"
 #include "got/data/defines.h"
-#include "got/data/high_scores.h"
+#include "got/data/highscores.h"
 #include "got/data/level.h"
 #include "got/data/sd_data.h"
 #include "got/data/setup.h"
-#include "got/data/thor_info.h"
+#include "got/data/thorinfo.h"
 #include "got/game/script.h"
 #include "got/gfx/font.h"
 #include "got/gfx/gfx_chunks.h"
@@ -135,17 +135,17 @@ public:
 	byte _object_map[TILES_COUNT] = {};
 	byte _object_index[TILES_COUNT] = {};
 	int8 _thor_icon1 = 0, _thor_icon2 = 0, _thor_icon3 = 0, _thor_icon4 = 0;
-	int8 _level_type = 0;
+	int8 _levelMusic = 0;
 	int8 _music_current = -1;
 	int8 _boss_loaded = 0;
 	int8 _apple_drop = 0;
 	bool _cheat = false;
 	int8 _area = 1;
 
-	LEVEL _scrn;
+	Level _scrn;
 
-	SETUP _setup;
-	SETUP _last_setup;
+	Setup _setup;
+	Setup _last_setup;
 	byte *_tmp_buff = nullptr;
 
 	Actor _actor[MAX_ACTORS] = {};  //current actors
@@ -162,7 +162,7 @@ public:
 	Actor *_hammer = nullptr;
 	Actor _explosion;
 	Actor _sparkle;
-	THOR_INFO _thor_info;
+	ThorInfo _thor_info;
 	bool _boss_dead = false;
 	byte _endgame = 0;
 
@@ -184,7 +184,7 @@ public:
 	int _switch_flag = 0;
 
 	byte _res_file[16] = {};
-	bool _music_flag = false, _sound_flag = false, _pcsound_flag = false;
+	bool _music_flag = false, _sound_flag = false;
 	bool _cash1_inform = false;
 	bool _cash2_inform = false;
 	bool _door_inform = false;

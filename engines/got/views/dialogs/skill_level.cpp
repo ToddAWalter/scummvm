@@ -19,23 +19,27 @@
  *
  */
 
-#include "got/views/dialogs/select_scroll.h"
+#include "got/views/dialogs/skill_level.h"
 #include "got/got.h"
 
 namespace Got {
 namespace Views {
 namespace Dialogs {
 
-SelectScroll::SelectScroll() : SelectOption("SelectScroll", "Scroll Between Screens?", YES_NO) {
+static const char *OPTIONS[] = {
+	"Easy Enemies", "Normal Enemies", "Tough Enemies", nullptr
+};
+
+SkillLevel::SkillLevel() : SelectOption("SkillLevel", "Set Skill Level", OPTIONS) {
 }
 
-bool SelectScroll::msgFocus(const FocusMessage &msg) {
-	_selectedItem = 1 - (_G(setup)._scrollFlag ? 1 : 0);
+bool SkillLevel::msgFocus(const FocusMessage &msg) {
+	_selectedItem = _G(setup)._difficultyLevel;
 	return true;
 }
 
-void SelectScroll::selected() {
-	_G(setup)._scrollFlag = (_selectedItem == 0);
+void SkillLevel::selected() {
+	_G(setup)._difficultyLevel = _selectedItem;
 	_G(last_setup) = _G(setup);
 }
 
