@@ -225,7 +225,7 @@ int checkMove0(const int x, const int y, Actor *actor) {
 	int x2 = (_G(thor)->_dir > 1) ? (x + 12) >> 4 : (x + 10) >> 4;
 	int y2 = (y + 15) >> 4;
 
-	_G(slip_flag) = false;
+	_G(slipFlag) = false;
 
 	// Check for cheat flying mode
 	if (!actor->_flying) {
@@ -259,7 +259,7 @@ int checkMove0(const int x, const int y, Actor *actor) {
 			return 0;
 
 		if (icn1 > TILE_SPECIAL) {
-			if (!special_tile_thor(y1, x1, icn1))
+			if (!specialTileThor(y1, x1, icn1))
 				return 0;
 			icn2 = _G(scrn)._iconGrid[y2][x1];
 			icn3 = _G(scrn)._iconGrid[y1][x2];
@@ -267,34 +267,34 @@ int checkMove0(const int x, const int y, Actor *actor) {
 		}
 
 		if (icn2 > TILE_SPECIAL) {
-			if (!special_tile_thor(y2, x1, icn2))
+			if (!specialTileThor(y2, x1, icn2))
 				return 0;
 			icn3 = _G(scrn)._iconGrid[y1][x2];
 			icn4 = _G(scrn)._iconGrid[y2][x2];
 		}
 
 		if (icn3 > TILE_SPECIAL) {
-			if (!special_tile_thor(y1, x2, icn3))
+			if (!specialTileThor(y1, x2, icn3))
 				return 0;
 			icn4 = _G(scrn)._iconGrid[y2][x2];
 		}
 
-		if (icn4 > TILE_SPECIAL && !special_tile_thor(y2, x2, icn4))
+		if (icn4 > TILE_SPECIAL && !specialTileThor(y2, x2, icn4))
 			return 0;
 	}
 
-	if (!_G(slip_flag)) {
+	if (!_G(slipFlag)) {
 		_G(slipping) = false;
 		_G(slip_cnt) = 0;
 	}
 	
-	if (_G(slip_flag) && !_G(slipping))
+	if (_G(slipFlag) && !_G(slipping))
 		_G(slip_cnt++);
 	
 	if (_G(slip_cnt) > 8)
 		_G(slipping) = true;
 	
-	_G(slip_flag) = false;
+	_G(slipFlag) = false;
 
 	x1 = x + 1;
 	y1 = y + 8;
@@ -331,7 +331,7 @@ int checkMove0(const int x, const int y, Actor *actor) {
 			thorDamaged(act);
 			if (act->_solid < 2) {
 				if (!act->_vulnerableCountdown && (!(act->_type & 1)))
-					play_sound(PUNCH1, false);
+					playSound(PUNCH1, false);
 
 				if (!_G(hammer)->_active && _G(key_flag[key_fire]))
 					actorDamaged(act, _G(hammer)->_hitStrength);
@@ -367,21 +367,21 @@ int checkMove1(const int x, const int y, Actor *actor) {
 	const byte icn4 = _G(scrn)._iconGrid[y2][x2];
 	if (icn1 < icn || icn2 < icn || icn3 < icn || icn4 < icn) {
 		if (actor->_actorNum == 1 && actor->_moveType == 2)
-			play_sound(CLANG, false);
+			playSound(CLANG, false);
 
 		return 0;
 	}
 
-	if (icn1 > TILE_SPECIAL && !special_tile(actor, y1, x1, icn1))
+	if (icn1 > TILE_SPECIAL && !specialTile(actor, y1, x1, icn1))
 		return 0;
 
-	if (icn2 > TILE_SPECIAL && !special_tile(actor, y2, x1, icn2))
+	if (icn2 > TILE_SPECIAL && !specialTile(actor, y2, x1, icn2))
 		return 0;
 
-	if (icn3 > TILE_SPECIAL && !special_tile(actor, y1, x2, icn3))
+	if (icn3 > TILE_SPECIAL && !specialTile(actor, y1, x2, icn3))
 		return 0;
 
-	if (icn4 > TILE_SPECIAL && !special_tile(actor, y2, x2, icn4))
+	if (icn4 > TILE_SPECIAL && !specialTile(actor, y2, x2, icn4))
 		return 0;
 
 	x1 = x + 1;
@@ -465,16 +465,16 @@ int checkMove2(const int x, const int y, Actor *actor) {
 		return 0;
 
 	if (icn1 > TILE_SPECIAL)
-		if (!special_tile(actor, y1, x1, icn1))
+		if (!specialTile(actor, y1, x1, icn1))
 			return 0;
 	if (icn2 > TILE_SPECIAL)
-		if (!special_tile(actor, y2, x1, icn2))
+		if (!specialTile(actor, y2, x1, icn2))
 			return 0;
 	if (icn3 > TILE_SPECIAL)
-		if (!special_tile(actor, y1, x2, icn3))
+		if (!specialTile(actor, y1, x2, icn3))
 			return 0;
 	if (icn4 > TILE_SPECIAL)
-		if (!special_tile(actor, y2, x2, icn4))
+		if (!specialTile(actor, y2, x2, icn4))
 			return 0;
 
 	x1 = x + 1;
@@ -542,13 +542,13 @@ int checkMove3(const int x, const int y, Actor *actor) {
 	if (icn1 < icn || icn2 < icn || icn3 < icn || icn4 < icn)
 		return 0;
 
-	if (icn1 > TILE_SPECIAL && !special_tile(actor, y1, x1, icn1))
+	if (icn1 > TILE_SPECIAL && !specialTile(actor, y1, x1, icn1))
 		return 0;
-	if (icn2 > TILE_SPECIAL && !special_tile(actor, y2, x1, icn2))
+	if (icn2 > TILE_SPECIAL && !specialTile(actor, y2, x1, icn2))
 		return 0;
-	if (icn3 > TILE_SPECIAL && !special_tile(actor, y1, x2, icn3))
+	if (icn3 > TILE_SPECIAL && !specialTile(actor, y1, x2, icn3))
 		return 0;
-	if (icn4 > TILE_SPECIAL && !special_tile(actor, y2, x2, icn4))
+	if (icn4 > TILE_SPECIAL && !specialTile(actor, y2, x2, icn4))
 		return 0;
 
 	// Check for solid or fly over
@@ -703,7 +703,7 @@ int movementZero(Actor *actor) {
 
 	if (_G(slipping)) {
 		if (_G(slip_cnt) == 8)
-			play_sound(FALL, true);
+			playSound(FALL, true);
 
 		y += 2;
 		_G(slip_cnt--);
@@ -828,13 +828,13 @@ int checkSpecialMove1(const int x, const int y, Actor *actor) {
 	if (icn1 < icn || icn2 < icn || icn3 < icn || icn4 < icn)
 		return 0;
 
-	if (icn1 > TILE_SPECIAL && !special_tile(actor, y1, x1, icn1))
+	if (icn1 > TILE_SPECIAL && !specialTile(actor, y1, x1, icn1))
 		return 0;
-	if (icn2 > TILE_SPECIAL && !special_tile(actor, y2, x1, icn2))
+	if (icn2 > TILE_SPECIAL && !specialTile(actor, y2, x1, icn2))
 		return 0;
-	if (icn3 > TILE_SPECIAL && !special_tile(actor, y1, x2, icn3))
+	if (icn3 > TILE_SPECIAL && !specialTile(actor, y1, x2, icn3))
 		return 0;
-	if (icn4 > TILE_SPECIAL && !special_tile(actor, y2, x2, icn4))
+	if (icn4 > TILE_SPECIAL && !specialTile(actor, y2, x2, icn4))
 		return 0;
 
 	x1 = x;
@@ -965,13 +965,13 @@ int specialMovementTwo(Actor *actor) {
 	}
 	if (!actor->_funcPass) {
 		if (_G(thor)->_health < 150) {
-			if (!sound_playing())
-				play_sound(ANGEL, false);
+			if (!soundPlaying())
+				playSound(ANGEL, false);
 			_G(thor)->_health += 1;
 		}
 	} else if (_G(thor_info)._magic < 150) {
-		if (!sound_playing())
-			play_sound(ANGEL, false);
+		if (!soundPlaying())
+			playSound(ANGEL, false);
 		_G(thor_info)._magic += 1;
 	}
 
@@ -1385,7 +1385,7 @@ int movementSix(Actor *actor) {
 		if (actor->_nextFrame > 2) {
 			actor->_nextFrame = 0;
 			if (_G(boss_dead))
-				play_sound(EXPLODE, false);
+				playSound(EXPLODE, false);
 		}
 		actor->_currNumShots--;
 	} else {

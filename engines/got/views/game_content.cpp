@@ -179,21 +179,21 @@ bool GameContent::tick() {
 
 			if (_G(thor)->_health > 0) {
 				_G(thor)->_health--;
-				play_sound(WOOP, 1);
-				add_health(-1);
-				add_score(10);
+				playSound(WOOP, true);
+				addHealth(-1);
+				addScore(10);
 
 			} else if (_G(thor_info)._magic > 0) {
 				_G(thor_info)._magic--;
-				play_sound(WOOP, 1);
-				add_magic(-1);
-				add_score(10);
+				playSound(WOOP, true);
+				addMagic(-1);
+				addScore(10);
 
 			} else if (_G(thor_info)._jewels) {
 				_G(thor_info)._jewels--;
-				play_sound(WOOP, 1);
-				add_jewels(-1);
-				add_score(10);
+				playSound(WOOP, true);
+				addJewels(-1);
+				addScore(10);
 
 			} else {
 				_G(gameMode) = MODE_NORMAL;
@@ -212,7 +212,7 @@ bool GameContent::tick() {
 	// Check for end of game area
 	if (_G(end_tile)) {
 		_G(end_tile) = false;
-		Gfx::fade_out();
+		Gfx::fadeOut();
 
 		// Add name to high scores list if necessary, and then show it
 		_G(highScores).add(_G(area), _G(playerName), _G(thor_info)._score);
@@ -495,7 +495,7 @@ void GameContent::thorDies() {
 	_deathCtr = 0;
 	_G(shield_on) = false;
 
-	play_sound(DEAD, 1);
+	playSound(DEAD, true);
 }
 
 void GameContent::spinThor() {
@@ -551,7 +551,7 @@ void GameContent::thorDead() {
 	_G(lightning_used) = false;
 	_G(tornado_used) = false;
 	_G(shield_on) = false;
-	music_resume();
+	musicResume();
 	_G(actor[1])._active = false;
 	_G(actor[2])._active = false;
 	_G(thor)->_moveCountdown = 6;
@@ -568,11 +568,11 @@ void GameContent::thorDead() {
 }
 
 void GameContent::checkForCheats() {
-	if (_G(cheats).freezeHealth)
+	if (_G(cheats)._freezeHealth)
 		_G(thor)->_health = 150;
-	if (_G(cheats).freezeMagic)
+	if (_G(cheats)._freezeMagic)
 		_G(thor_info)._magic = 150;
-	if (_G(cheats).freezeJewels)
+	if (_G(cheats)._freezeJewels)
 		_G(thor_info)._jewels = 999;
 }
 
@@ -649,7 +649,7 @@ void GameContent::throwLightning() {
 	for (int i = 0; i < MAX_ACTORS; i++)
 		_G(actor[i])._show = 0;
 
-	play_sound(ELECTRIC, 1);
+	playSound(ELECTRIC, true);
 }
 
 void GameContent::drawLightning(GfxSurface &s) {

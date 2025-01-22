@@ -44,7 +44,7 @@ void Vars::load() {
 	_hampic.load();
 	_objects.load();
 	_odin.load();
-	_sd_data.load();
+	_sdData.load();
 	_sound.load();
 	_status.load();
 	_highScores.load();
@@ -69,9 +69,9 @@ void Vars::load() {
 
 	_tmp_buff = new byte[TMP_SIZE];
 
-	res_read("RANDOM", _rnd_array);
+	resourceRead("RANDOM", _rnd_array);
 
-	Gfx::load_palette();
+	Gfx::loadPalette();
 }
 
 Vars::~Vars() {
@@ -84,7 +84,7 @@ void Vars::setArea(int areaNum) {
 	if (areaNum != _area) {
 		_area = areaNum;
 		_setup._areaNum = areaNum;
-		_sd_data.setArea(areaNum);
+		_sdData.setArea(areaNum);
 		_bgPics.setArea(areaNum);
 
 		switch (areaNum) {

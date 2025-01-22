@@ -80,7 +80,7 @@ int reverseDirection(Actor *actor) {
 
 void thorShoots() {
 	if (!_G(hammer)->_active && (!_G(hammer)->_dead) && (!_G(thor)->_shotCountdown)) {
-		play_sound(SWISH, false);
+		playSound(SWISH, false);
 		_G(thor)->_shotCountdown = 20;
 		_G(hammer)->_active = true;
 		_G(hammer)->_dir = _G(thor)->_dir;
@@ -102,7 +102,7 @@ int killGoodGuy() {
 		_G(killgg_inform) = true;
 	}
 
-	add_score(-1000);
+	addScore(-1000);
 	return 0;
 }
 
@@ -116,7 +116,7 @@ void actorDamaged(Actor *actor, int damage) {
 		actor->_vulnerableCountdown = STAMINA;
 		if (damage >= actor->_health) {
 			if (actor->_type != 4) {
-				add_score(actor->_initHealth * 10);
+				addScore(actor->_initHealth * 10);
 
 			} else {
 				killGoodGuy();
@@ -144,7 +144,7 @@ void thorDamaged(Actor *actor) {
 	actor->_hitThor = true;
 
 	// If we're invincible, ignore any damage
-	if (_G(cheats).freezeHealth)
+	if (_G(cheats)._freezeHealth)
 		return;
 
 	if (GAME3 && actor->_funcNum == 11) {
@@ -177,7 +177,7 @@ void thorDamaged(Actor *actor) {
 			g_events->send(GameMessage("THOR_DIES"));
 		} else if (damage) {
 			_G(thor)->_vulnerableCountdown = 40;
-			_G(sound).play_sound(OW, false);
+			_G(sound).playSound(OW, false);
 			_G(thor)->_show = 10;
 			_G(thor)->_health -= damage;
 		}
@@ -340,7 +340,7 @@ void moveActor(Actor *actor) {
 	if (!actor->_shotCountdown && _G(shot_ok)) {
 		if (actor->_numShotsAllowed) {
 			if (actor->_currNumShots < actor->_numShotsAllowed) {
-				shot_pattern_func[actor->_shotPattern](actor);
+				shotPatternFunc[actor->_shotPattern](actor);
 			}
 		}
 	}
@@ -355,7 +355,7 @@ void moveActor(Actor *actor) {
 		int i;
 
 		if (actor->_type == 3)
-			i = shot_movement_func[actor->_moveType](actor);
+			i = shotMovementFunc[actor->_moveType](actor);
 		else
 			i = _movementFunc[actor->_moveType](actor);
 		

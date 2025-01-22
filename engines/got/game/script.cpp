@@ -120,9 +120,9 @@ void Scripts::runScript(bool firstTime) {
 	Common::fill(_gosubStack, _gosubStack + 32, (char *)nullptr);
 	_gosubPtr = 0;
 
-	Common::fill(_forVar, _forVar + 10, 0);
-	Common::fill(_forVal, _forVal + 10, 0);
-	Common::fill(_forStack, _forStack + 10, (char *)nullptr);
+	Common::fill(_forVar, _forVar + 11, 0);
+	Common::fill(_forVal, _forVal + 11, 0);
+	Common::fill(_forStack, _forStack + 11, (char *)nullptr);
 	_forPtr = 0;
 
 	int i = readScriptFile();
@@ -154,7 +154,7 @@ void Scripts::scriptLoop() {
 		}
 
 		if (ret > 0) {
-			ret = exec_command(ret);
+			ret = execCommand(ret);
 			if (ret == -100) { // RUN command
 				if (_buffer)
 					free(_buffer);
@@ -517,7 +517,7 @@ int Scripts::readScriptFile() {
 	};
 
 	str = Common::String::format("SPEAK%d", _G(area));
-	if (res_read(str.c_str(), sb) < 0) {
+	if (resourceRead(str.c_str(), sb) < 0) {
 		ret = 6;
 		goto done;
 	}
@@ -720,7 +720,7 @@ int Scripts::cmd_addJewels() {
 
 	_buffPtr++;
 
-	add_jewels(_lValue);
+	addJewels(_lValue);
 	return 0;
 }
 
@@ -729,7 +729,7 @@ int Scripts::cmd_addHealth() {
 		return 5;
 
 	_buffPtr++;
-	add_health((int)_lValue);
+	addHealth((int)_lValue);
 	return 0;
 }
 
@@ -738,7 +738,7 @@ int Scripts::cmd_addMagic() {
 		return 5;
 
 	_buffPtr++;
-	add_magic((int)_lValue);
+	addMagic((int)_lValue);
 	return 0;
 }
 
@@ -747,7 +747,7 @@ int Scripts::cmd_addKeys() {
 		return 5;
 
 	_buffPtr++;
-	add_keys((int)_lValue);
+	addKeys((int)_lValue);
 	return 0;
 }
 
@@ -756,7 +756,7 @@ int Scripts::cmd_addScore() {
 		return 5;
 
 	_buffPtr++;
-	add_score((int)_lValue);
+	addScore((int)_lValue);
 	return 0;
 }
 
@@ -874,7 +874,7 @@ int Scripts::cmd_sound() {
 	if (_lValue < 1 || _lValue > 16)
 		return 6;
 	
-	play_sound((int)_lValue - 1, true);
+	playSound((int)_lValue - 1, true);
 	return 0;
 }
 
@@ -992,7 +992,7 @@ int Scripts::cmd_visible() {
 	if (_lValue < 1 || _lValue > 16)
 		return 6;
 
-	actor_visible((int)_lValue);
+	actorVisible((int)_lValue);
 	return 0;
 }
 
@@ -1022,7 +1022,7 @@ int Scripts::cmd_random() {
 }
 
 void Scripts::scr_func1() {
-	play_sound(FALL, true);
+	playSound(FALL, true);
 
 	_G(new_level) = 109;
 	_G(new_level_tile) = 215;
@@ -1048,18 +1048,18 @@ void Scripts::scr_func3() {
 	int x = p % 20;
 
 	if (y < 0 || x < 0 || y > 11) {
-		play_sound(BRAAPP, true);
+		playSound(BRAAPP, true);
 		_G(key_flag[key_magic]) = false;
 		return;
 	}
 	if (_G(scrn)._iconGrid[y][x] < 174 || _G(scrn)._iconGrid[y][x] > 178) {
-		play_sound(BRAAPP, true);
+		playSound(BRAAPP, true);
 		_G(key_flag[key_magic]) = false;
 		return;
 	}
 
 	_numVar[0] = 1;
-	play_sound(WOOP, true);
+	playSound(WOOP, true);
 	if (_G(current_level) == 106 && p == 69) {
 		placeTile(x, y, 220);
 		_G(key_flag[key_magic]) = false;
@@ -1109,7 +1109,7 @@ int Scripts::cmd_exec() {
 	return 0;
 }
 
-int Scripts::exec_command(int num) {
+int Scripts::execCommand(int num) {
 	char ch;
 
 	int ret = 0;

@@ -53,56 +53,56 @@ void pickUpObject(int p) {
 			cannotCarryMore();
 			return;
 		}
-		add_jewels(10);
+		addJewels(10);
 		break;
 	case 2: // Blue jewel
 		if (_G(thor_info)._jewels >= 999) {
 			cannotCarryMore();
 			return;
 		}
-		add_jewels(1);
+		addJewels(1);
 		break;
 	case 3: // Red potion
 		if (_G(thor_info)._magic >= 150) {
 			cannotCarryMore();
 			return;
 		}
-		add_magic(10);
+		addMagic(10);
 		break;
 	case 4: // Blue potion
 		if (_G(thor_info)._magic >= 150) {
 			cannotCarryMore();
 			return;
 		}
-		add_magic(3);
+		addMagic(3);
 		break;
 	case 5: // Good apple
 		if (_G(thor)->_health >= 150) {
 			cannotCarryMore();
 			return;
 		}
-		play_sound(GULP, false);
-		add_health(5);
+		playSound(GULP, false);
+		addHealth(5);
 		break;
 	case 6: // Bad apple
-		play_sound(OW, false);
-		add_health(-10);
+		playSound(OW, false);
+		addHealth(-10);
 		break;
 	case 7: // Key (reset on exit)
-		add_keys(1);
+		addKeys(1);
 		break;
 	case 8: // Treasure
 		if (_G(thor_info)._jewels >= 999) {
 			cannotCarryMore();
 			return;
 		}
-		add_jewels(50);
+		addJewels(50);
 		break;
 	case 9: // Trophy
-		add_score(100);
+		addScore(100);
 		break;
 	case 10: // Crown
-		add_score(1000);
+		addScore(1000);
 		break;
 	case 12:
 	case 13:
@@ -150,8 +150,8 @@ void pickUpObject(int p) {
 		_G(thor_info)._inventory |= s;
 		odinSpeaks((_G(object_map[p]) - 27) + 516, _G(object_map[p]) - 1);
 		_G(thor_info)._selectedItem = _G(object_map[p]) - 26;
-		add_magic(150);
-		fill_score(5);
+		addMagic(150);
+		fillScore(5);
 		}
 		break;
 
@@ -165,7 +165,7 @@ void pickUpObject(int p) {
 	_G(oy) = y * 16;
 	_G(of) = 1;
 
-	play_sound(YAH, false);
+	playSound(YAH, false);
 	_G(object_map[p]) = 0;
 
 	// Reset so it doesn't reappear on reentry to screen
@@ -219,15 +219,15 @@ bool useApple(int flag) {
 	if (flag && _G(thor_info)._magic > 0) {
 		if (!_G(apple_flag)) {
 			_G(magic_cnt) = 0;
-			add_magic(-2);
-			add_health(1);
-			play_sound(ANGEL, false);
+			addMagic(-2);
+			addHealth(1);
+			playSound(ANGEL, false);
 		} else if (_G(magic_cnt) > 8) {
 			_G(magic_cnt) = 0;
-			add_magic(-2);
-			add_health(1);
-			if (!sound_playing())
-				play_sound(ANGEL, false);
+			addMagic(-2);
+			addHealth(1);
+			if (!soundPlaying())
+				playSound(ANGEL, false);
 		}
 		_G(apple_flag) = true;
 		return true;
@@ -243,8 +243,8 @@ bool useApple(int flag) {
 bool useThunder(int flag) {
 	if (flag && _G(thor_info)._magic > 29) {
 		if (!_G(thunder_flag)) {
-			add_magic(-30);
-			play_sound(THUNDER, false);
+			addMagic(-30);
+			playSound(THUNDER, false);
 			_G(thunder_flag) = 60;
 		}
 		return true;
@@ -264,10 +264,10 @@ bool useBoots(int flag) {
 		if (_G(thor_info)._magic > 0) {
 			if (_G(thor)->_numMoves == 1) {
 				_G(magic_cnt) = 0;
-				add_magic(-1);
+				addMagic(-1);
 			} else if (_G(magic_cnt) > 8) {
 				_G(magic_cnt) = 0;
-				add_magic(-1);
+				addMagic(-1);
 			}
 			_G(thor)->_numMoves = 2;
 			_G(hammer)->_numMoves = 3;
@@ -290,17 +290,17 @@ bool useShield(int flag) {
 		if (_G(thor_info)._magic) {
 			if (!_G(shield_on)) {
 				_G(magic_cnt) = 0;
-				add_magic(-1);
-				setup_magic_item(1);
+				addMagic(-1);
+				setupMagicItem(1);
 
 				_G(actor[2]) = _G(magic_item[1]);
-				setup_actor(&_G(actor[2]), 2, 0, _G(thor)->_x, _G(thor)->_y);
+				setupActor(&_G(actor[2]), 2, 0, _G(thor)->_x, _G(thor)->_y);
 				_G(actor[2])._moveCountdown = 1;
 				_G(actor[2])._speed = 1;
 				_G(shield_on) = true;
 			} else if (_G(magic_cnt) > 8) {
 				_G(magic_cnt) = 0;
-				add_magic(-1);
+				addMagic(-1);
 			}
 
 			return true;
@@ -321,7 +321,7 @@ bool useShield(int flag) {
 bool useLightning(int flag) {
 	if (flag) {
 		if (_G(thor_info)._magic > 14) {
-			add_magic(-15);
+			addMagic(-15);
 			g_events->send("Game", GameMessage("THROW_LIGHTNING"));
 		} else {
 			notEnoughMagic();
@@ -336,15 +336,15 @@ bool useTornado(int flag) {
 		if (_G(thor_info)._magic > 10) {
 			if (!_G(tornado_used) && !_G(actor[2])._dead && _G(magic_cnt) > 20) {
 				_G(magic_cnt) = 0;
-				add_magic(-10);
-				setup_magic_item(0);
+				addMagic(-10);
+				setupMagicItem(0);
 				_G(actor[2]) = _G(magic_item[0]);
 
-				setup_actor(&_G(actor[2]), 2, 0, _G(thor)->_x, _G(thor)->_y);
+				setupActor(&_G(actor[2]), 2, 0, _G(thor)->_x, _G(thor)->_y);
 				_G(actor[2])._lastDir = _G(thor)->_dir;
 				_G(actor[2])._moveType = 16;
 				_G(tornado_used) = true;
-				play_sound(WIND, false);
+				playSound(WIND, false);
 			}
 		} else if (!_G(tornado_used)) {
 			notEnoughMagic();
@@ -353,7 +353,7 @@ bool useTornado(int flag) {
 		if (_G(magic_cnt) > 8) {
 			if (_G(tornado_used)) {
 				_G(magic_cnt) = 0;
-				add_magic(-1);
+				addMagic(-1);
 			}
 		}
 		if (_G(thor_info)._magic < 1) {
@@ -415,7 +415,7 @@ void useItem() {
 	if (kf) {
 		if (!ret && !_G(useItemFlag)) {
 			if (mf)
-				play_sound(BRAAPP, false);
+				playSound(BRAAPP, false);
 			_G(useItemFlag) = true;
 		}
 	} else {

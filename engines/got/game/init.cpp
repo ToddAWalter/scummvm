@@ -74,7 +74,7 @@ void setupPlayer() {
 }
 
 void initGame() {
-	load_standard_actors();
+	loadStandardActors();
 	setupPlayer();
 
 	if (_G(demo)) {
@@ -108,7 +108,7 @@ void initGame() {
 	showLevel(_G(current_level));
 
 	if (!_G(auto_load)) {
-		_G(sound).music_play(_G(levelMusic), true);
+		_G(sound).musicPlay(_G(levelMusic), true);
 	}
 
 	g_vars->resetEndgameFlags();
@@ -129,26 +129,26 @@ int setupBoss(const int num) {
 	}
 
 	Common::String ressourceName = Common::String::format("BOSSV%d1", num);
-	_G(boss_sound[0]) = (byte *)res_falloc_read(ressourceName);
+	_G(boss_sound[0]) = (byte *)resourceAllocRead(ressourceName);
 	if (!_G(boss_sound[0]))
 		return 0;
 	_G(dig_sound[NUM_SOUNDS - 3]) = _G(boss_sound[0]);
 
 	ressourceName = Common::String::format("BOSSV%d2", num);
-	_G(boss_sound[1]) = (byte *)res_falloc_read(ressourceName);
+	_G(boss_sound[1]) = (byte *)resourceAllocRead(ressourceName);
 	if (!_G(boss_sound[1]))
 		return 0;
 	_G(dig_sound[NUM_SOUNDS - 2]) = _G(boss_sound[1]);
 
 	ressourceName = Common::String::format("BOSSV%d3", num);
-	_G(boss_sound[2]) = (byte *)res_falloc_read(ressourceName);
+	_G(boss_sound[2]) = (byte *)resourceAllocRead(ressourceName);
 	if (!_G(boss_sound[2]))
 		return 0;
 	_G(dig_sound[NUM_SOUNDS - 1]) = _G(boss_sound[2]);
 
 	Common::String prefix = (num == 2) ? "BOSSP1" : Common::String::format("BOSSP%d", num);
 	ressourceName = prefix + "1";
-	_G(boss_pcsound[0]) = (byte *)res_falloc_read(ressourceName);
+	_G(boss_pcsound[0]) = (byte *)resourceAllocRead(ressourceName);
 	if (!_G(boss_pcsound[0]))
 		return 0;
 
@@ -163,7 +163,7 @@ int setupBoss(const int num) {
 	f.close();
 
 	ressourceName = prefix + "2";
-	_G(boss_pcsound[1]) = (byte *)res_falloc_read(ressourceName);
+	_G(boss_pcsound[1]) = (byte *)resourceAllocRead(ressourceName);
 	if (!_G(boss_pcsound[1]))
 		return 0;
 
@@ -177,7 +177,7 @@ int setupBoss(const int num) {
 	f.close();
 
 	ressourceName = prefix + "3";
-	_G(boss_pcsound[2]) = (byte *)res_falloc_read(ressourceName);
+	_G(boss_pcsound[2]) = (byte *)resourceAllocRead(ressourceName);
 	if (!_G(boss_pcsound[2]))
 		return 0;
 	_G(pc_sound[NUM_SOUNDS - 1]) = _G(boss_pcsound[2]);

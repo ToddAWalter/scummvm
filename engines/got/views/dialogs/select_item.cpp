@@ -48,13 +48,13 @@ void SelectItem::draw() {
 		return;
 	}
 
-	int b = 1;
+	uint b = 1;
 	for (int l = 0; l < 7; l++, b = b << 1) {
 		if (_G(thor_info)._inventory & b) {
 			if (l < 6)
 				s.simpleBlitFrom(_G(objects[l + 26]), Common::Point(82 - 56 + (l * _HRZSP), 72 - 48));
 			else {
-				int objId = _G(thor_info)._object + 10;
+				const int objId = _G(thor_info)._object + 10;
 				s.simpleBlitFrom(_G(objects[objId]), Common::Point(82 - 56 + (l * _HRZSP), 72 - 48));
 			}
 		}
@@ -80,7 +80,7 @@ bool SelectItem::msgFocus(const FocusMessage &msg) {
 		if (_selectedItem < 1)
 			_selectedItem = 0;
 
-		int b = 1 << _selectedItem;
+		uint b = 1 << _selectedItem;
 		for (;;) {
 			if (_G(thor_info)._inventory & b)
 				break;
@@ -97,7 +97,7 @@ bool SelectItem::msgFocus(const FocusMessage &msg) {
 }
 
 bool SelectItem::msgAction(const ActionMessage &msg) {
-	int b;
+	uint b;
 
 	if (_G(thor_info)._inventory == 0) {
 		close();
@@ -127,7 +127,7 @@ bool SelectItem::msgAction(const ActionMessage &msg) {
 				break;
 		}
 
-		play_sound(WOOP, 1);
+		playSound(WOOP, true);
 		redraw();
 		break;
 
@@ -143,7 +143,7 @@ bool SelectItem::msgAction(const ActionMessage &msg) {
 				break;
 		}
 
-		play_sound(WOOP, 1);
+		playSound(WOOP, true);
 		redraw();
 		break;
 
