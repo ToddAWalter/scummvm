@@ -36,6 +36,7 @@ enum Opcode {
 	kOpcodeIfElse = 202,
 	kOpcodeAssignVariable = 203,
 	kOpcodeOr = 204,
+	kOpcodeNot = 205,
 	kOpcodeAnd = 206,
 	kOpcodeEquals = 207,
 	kOpcodeNotEquals = 208,
@@ -73,6 +74,7 @@ const char *variableScopeToStr(VariableScope scope);
 enum BuiltInFunction {
 	// TODO: Figure out if effectTransitionOnSync = 13 is consistent across titles?
 	kEffectTransitionFunction = 12, // PARAMS: 1
+	kEffectTransitionOnSyncFunction = 13,
 	kDrawingFunction = 37, // PARAMS: 5
 	// TODO: Figure out if TimeOfDay = 101 is consistent across titles.
 	kDebugPrintFunction = 180, // PARAMS: 1+
@@ -155,6 +157,8 @@ enum BuiltInMethod {
 	kSeekMethod = 256, // PARAMS: 1
 	kSortMethod = 266, // PARAMS: 0
 	kDeleteAtMethod = 258, // PARAMS: 1
+	kJumbleMethod = 255, // PARAMS: 0
+	kDeleteFirstMethod = 250, // PARAMS: 0
 
 	// PRINTER METHODS.
 	kOpenLensMethod = 346, // PARAMS: 0
@@ -163,66 +167,66 @@ enum BuiltInMethod {
 const char *builtInMethodToStr(BuiltInMethod method);
 
 enum EventType {
-    // TIMER EVENTS.
-    kTimerEvent = 5,
+	// TIMER EVENTS.
+	kTimerEvent = 5,
 
-    // HOTSPOT EVENTS.
-    kMouseDownEvent = 6,
-    kMouseUpEvent = 7,
-    kMouseMovedEvent = 8,
-    kMouseEnteredEvent = 9,
-    kMouseExitedEvent = 10,
-    kKeyDownEvent = 13, // PARAMS: 1 - ASCII code.
+	// HOTSPOT EVENTS.
+	kMouseDownEvent = 6,
+	kMouseUpEvent = 7,
+	kMouseMovedEvent = 8,
+	kMouseEnteredEvent = 9,
+	kMouseExitedEvent = 10,
+	kKeyDownEvent = 13, // PARAMS: 1 - ASCII code.
 
-    // SOUND EVENTS.
-    kSoundEndEvent = 14,
-    kSoundAbortEvent = 19,
-    kSoundFailureEvent = 20,
-    kSoundStoppedEvent = 29,
-    kSoundBeginEvent = 30,
+	// SOUND EVENTS.
+	kSoundEndEvent = 14,
+	kSoundAbortEvent = 19,
+	kSoundFailureEvent = 20,
+	kSoundStoppedEvent = 29,
+	kSoundBeginEvent = 30,
 
-    // MOVIE EVENTS.
-    kMovieEndEvent = 15,
-    kMovieAbortEvent = 21,
-    kMovieFailureEvent = 22,
-    kMovieStoppedEvent = 31,
-    kMovieBeginEvent = 32,
+	// MOVIE EVENTS.
+	kMovieEndEvent = 15,
+	kMovieAbortEvent = 21,
+	kMovieFailureEvent = 22,
+	kMovieStoppedEvent = 31,
+	kMovieBeginEvent = 32,
 
-    //SPRITE EVENTS.
-    // Just "MovieEnd" in source.
-    kSpriteMovieEndEvent = 23,
+	//SPRITE EVENTS.
+	// Just "MovieEnd" in source.
+	kSpriteMovieEndEvent = 23,
 
-    // SCREEN EVENTS.
-    kEntryEvent = 17,
-    kExitEvent = 27,
+	// SCREEN EVENTS.
+	kEntryEvent = 17,
+	kExitEvent = 27,
 
-    // CONTEXT EVENTS.
-    kLoadCompleteEvent = 44, // PARAMS: 1 - Context ID
+	// CONTEXT EVENTS.
+	kLoadCompleteEvent = 44, // PARAMS: 1 - Context ID
 
-    // TEXT EVENTS.
-    kInputEvent = 37,
-    kErrorEvent = 38,
+	// TEXT EVENTS.
+	kInputEvent = 37,
+	kErrorEvent = 38,
 
-    // CAMERA EVENTS.
-    kPanAbortEvent = 43,
-    kPanEndEvent = 42,
+	// CAMERA EVENTS.
+	kPanAbortEvent = 43,
+	kPanEndEvent = 42,
 
-    // PATH EVENTS.
-    kStepEvent = 28,
-    kPathStoppedEvent = 33,
-    kPathEndEvent = 16
+	// PATH EVENTS.
+	kStepEvent = 28,
+	kPathStoppedEvent = 33,
+	kPathEndEvent = 16
 };
 const char *eventTypeToStr(EventType type);
 
 enum EventHandlerArgumentType {
-    kNullEventHandlerArgument = 0,
-    kAsciiCodeEventHandlerArgument = 1,
-    kTimeEventHandlerArgument = 3,
+	kNullEventHandlerArgument = 0,
+	kAsciiCodeEventHandlerArgument = 1,
+	kTimeEventHandlerArgument = 3,
 	// TODO: This argument type Appears to happen with MovieStart
 	// and nowhere else. However, this event handler shouldn't even need an
 	// argument...
-    kUnk1EventHandlerArgument = 4, 
-    kContextEventHandlerArgument = 5
+	kUnk1EventHandlerArgument = 4,
+	kContextEventHandlerArgument = 5
 };
 const char *eventHandlerArgumentTypeToStr(EventHandlerArgumentType type);
 
@@ -242,6 +246,7 @@ enum OperandType {
 	kOperandTypeDollarSignVariable = 155,
 	kOperandTypeAssetId = 156,
 	kOperandTypeVariableDeclaration = 158,
+	kOperandTypeCollection = 159,
 	kOperandTypeFunction = 160
 };
 const char *operandTypeToStr(OperandType type);

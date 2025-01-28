@@ -22,7 +22,6 @@
 #include "got/game/boss1.h"
 #include "got/events.h"
 #include "got/game/back.h"
-#include "got/game/init.h"
 #include "got/game/move.h"
 #include "got/game/move_patterns.h"
 #include "got/game/status.h"
@@ -37,7 +36,7 @@ static int boss1_dead();
 int boss1Movement(Actor *actor) {
 	bool f = false;
 	
-	if (_G(boss_dead))
+	if (_G(bossDead))
 		return boss1_dead();
 
 	int d = actor->_lastDir;
@@ -59,10 +58,7 @@ int boss1Movement(Actor *actor) {
 		if (!actor->_temp3)
 			playSound(BOSS11, false);
 
-		if (_G(hourglass_flag))
-			actor->_numMoves = 3;
-		else
-			actor->_numMoves = 6;
+		actor->_numMoves = 6;
 
 		goto done0;
 	}
@@ -70,7 +66,7 @@ int boss1Movement(Actor *actor) {
 	// Strike
 	if (actor->_temp1) {
 		actor->_temp1--;
-		if (actor->_x < (_G(thor_x1) + 12))
+		if (actor->_x < (_G(thorX1) + 12))
 			actor->_temp1 = 0;
 		actor->_temp2 = 1;
 		d = 2;
@@ -102,7 +98,7 @@ int boss1Movement(Actor *actor) {
 		actor->_temp2 = 0;
 	}
 
-	if (actor->_x > _G(thor_x1) && ABS((_G(thor_y1)) - (actor->_y + 20)) < 8) {
+	if (actor->_x > _G(thorX1) && ABS((_G(thorY1)) - (actor->_y + 20)) < 8) {
 		actor->_temp3 = 75;
 		actor->_temp1 = 130;
 		actor->_temp2 = 0;
@@ -178,12 +174,12 @@ done1:
 	return d;
 }
 
-void boss1CheckHit(const Actor *actor, int x1, int y1, int x2, int y2, int act_num) {
-	if (actor->_moveType == 15 && act_num == 4) {
+void boss1CheckHit(const Actor *actor, const int x1, const int y1, const int x2, const int y2, const int actorNum) {
+	if (actor->_moveType == 15 && actorNum == 4) {
 		if ((!_G(actor[3])._vulnerableCountdown) && (_G(actor[3])._nextFrame != 3) &&
 			overlap(x1, y1, x2, y2, actor->_x + 6, actor->_y + 4, actor->_x + 14, actor->_y + 20)) {
 			actorDamaged(&_G(actor[3]), _G(hammer)->_hitStrength);
-			if (_G(cheat) && _G(key_flag[_Z]))
+			if (_G(cheat) && _G(keyFlag[_Z]))
 				_G(actor[3])._health = 0;
 			else
 				_G(actor[3])._health -= 10;
@@ -199,14 +195,14 @@ void boss1CheckHit(const Actor *actor, int x1, int y1, int x2, int y2, int act_n
 			}
 
 			if (_G(actor[3])._health == 0)
-				_G(boss_dead) = true;
+				_G(bossDead) = true;
 		}
 	}
 }
 
 void boss1SetupLevel() {
 	setupBoss(1);
-	_G(boss_active) = true;
+	_G(bossActive) = true;
 	musicPause();
 	playSound(BOSS11, true);
 	g_events->send("Game", GameMessage("PAUSE", 40));
@@ -214,8 +210,7 @@ void boss1SetupLevel() {
 }
 
 static int boss1_dead() {
-	_G(hourglass_flag) = 0;
-	if (_G(boss_dead)) {
+	if (_G(bossDead)) {
 		for (int rep = 0; rep < 4; rep++) {
 			const int x1 = _G(actor[3 + rep])._lastX[_G(pge)];
 			const int y1 = _G(actor[3 + rep])._lastY[_G(pge)];
@@ -242,7 +237,7 @@ static int boss1_dead() {
 			_G(actor[3 + rep])._moveCountdown = _G(actor[3 + rep])._speed;
 		}
 		playSound(EXPLODE, true);
-		_G(boss_dead) = true;
+		_G(bossDead) = true;
 
 		for (int rep = 7; rep < MAX_ACTORS; rep++) {
 			if (_G(actor[rep])._active)
@@ -254,13 +249,13 @@ static int boss1_dead() {
 }
 
 void boss1ClosingSequence1() {
-	_G(game_over) = true;
+	_G(gameOver) = true;
 	musicPlay(4, true);
 	odinSpeaks(1001, 13, "CLOSING");
 }
 
 void boss1ClosingSequence2() {
-	_G(thor_info)._armor = 1;
+	_G(thorInfo)._armor = 1;
 	loadNewThor();
 	_G(thor)->_dir = 1;
 	_G(thor)->_nextFrame = 0;
@@ -277,9 +272,9 @@ void boss1ClosingSequence4() {
 	for (int rep = 0; rep < 16; rep++)
 		_G(scrn)._actorType[rep] = 0;
 
-	_G(boss_dead) = false;
+	_G(bossDead) = false;
 	_G(setup)._bossDead[0] = true;
-	_G(boss_active) = false;
+	_G(bossActive) = false;
 	_G(scrn)._music = 4;
 	showLevel(BOSS_LEVEL1);
 

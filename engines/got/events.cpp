@@ -104,8 +104,8 @@ void Events::nextFrame() {
 	_G(rand1) = getRandomNumber(99);
 	_G(rand2) = getRandomNumber(99);
 	_G(pge) = _G(pge) ^ 1;
-	_G(shot_ok) = true;
-	_G(magic_cnt++);
+	_G(shotOk) = true;
+	_G(magicCounter++);
 
 	// In demo mode, handle the next key
 	if (_G(demo) && focusedView()->getName() == "Game") {
@@ -173,7 +173,7 @@ void Events::processEvent(Common::Event &ev) {
 	case Common::EVENT_KEYDOWN:
 		if (!_G(demo)) {
 			if (ev.kbd.keycode < 100)
-				_G(key_flag[ev.kbd.keycode]) = true;
+				_G(keyFlag[ev.kbd.keycode]) = true;
 
 			if (ev.kbd.keycode < Common::KEYCODE_NUMLOCK)
 				msgKeypress(KeypressMessage(ev.kbd));
@@ -181,11 +181,11 @@ void Events::processEvent(Common::Event &ev) {
 		break;
 	case Common::EVENT_KEYUP:
 		if (!_G(demo) && ev.kbd.keycode < 100)
-			_G(key_flag[ev.kbd.keycode]) = false;
+			_G(keyFlag[ev.kbd.keycode]) = false;
 		break;
 	case Common::EVENT_CUSTOM_ENGINE_ACTION_START:
 		if (!_G(demo)) {
-			_G(key_flag[actionToKeyFlag(ev.customType)]) = true;
+			_G(keyFlag[actionToKeyFlag(ev.customType)]) = true;
 			msgAction(ActionMessage(ev.customType));
 		} else if (ev.customType == KEYBIND_ESCAPE) {
 			// The Escape action will return to main menu from demo
@@ -195,7 +195,7 @@ void Events::processEvent(Common::Event &ev) {
 		break;
 	case Common::EVENT_CUSTOM_ENGINE_ACTION_END:
 		if (!_G(demo))
-			_G(key_flag[actionToKeyFlag(ev.customType)]) = false;
+			_G(keyFlag[actionToKeyFlag(ev.customType)]) = false;
 		break;
 	case Common::EVENT_LBUTTONDOWN:
 	case Common::EVENT_RBUTTONDOWN:
@@ -256,7 +256,7 @@ void Events::processDemoEvent(byte ev) {
 		break;
 	}
 
-	_G(key_flag[ev]) = flag;
+	_G(keyFlag[ev]) = flag;
 
 	if (flag && action != -1)
 		msgAction(ActionMessage(action));

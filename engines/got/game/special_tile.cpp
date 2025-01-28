@@ -41,8 +41,8 @@ int specialTileThor(const int x, const int y, const int icon) {
 		return openDoor1(x, y);
 	case 202:
 		if (GAME3) {
-			if (_G(thor_info)._inventory & 64) {
-				if (_G(thor_info)._object == 4) {
+			if (_G(thorInfo)._inventory & 64) {
+				if (_G(thorInfo)._object == 4) {
 					eraseDoor(y, x);
 					deleteObject();
 					return 1;
@@ -53,11 +53,11 @@ int specialTileThor(const int x, const int y, const int icon) {
 
 		if (_G(thor)->_x > 300)
 			// Ending bridge
-			_G(end_tile) = true;
+			_G(endTile) = true;
 		return 1;
 	case 203:
 		if (!GAME1) {
-			if ((_G(thor_info)._inventory & 64) && _G(thor_info)._object == 5) {
+			if ((_G(thorInfo)._inventory & 64) && _G(thorInfo)._object == 5) {
 				odinSpeaks(2012, 0);
 				deleteObject();
 				_G(setup).f10 = true;
@@ -77,7 +77,7 @@ int specialTileThor(const int x, const int y, const int icon) {
 
 		if (GAME3) {
 			if (_G(thor)->_x < 4)
-				_G(end_tile) = true;
+				_G(endTile) = true;
 			return 1;
 		}
 		return 0;
@@ -104,7 +104,7 @@ int specialTileThor(const int x, const int y, const int icon) {
 	case 211:
 		if (GAME1) {
 			placeTile(y, x, 79);
-			_G(exit_flag) = 2;
+			_G(exitFlag) = 2;
 		} else if (GAME2) {
 			if (_G(thor)->_dir == 0 && _G(setup).f29 && _G(setup).f21 && !_G(setup).f22) {
 				actorVisible(1);
@@ -113,7 +113,7 @@ int specialTileThor(const int x, const int y, const int icon) {
 				actorVisible(4);
 				actorVisible(5);
 				Common::fill(_G(scrn)._actorInvis, _G(scrn)._actorInvis + 16, 0);
-				_G(thunder_flag) = 60;
+				_G(thunderSnakeCounter) = 60;
 				playSound(THUNDER, true);
 				_G(setup).f22 = true;
 			}
@@ -130,8 +130,8 @@ int specialTileThor(const int x, const int y, const int icon) {
 	case 216:
 	case 217:
 		if ((GAME2 && icon == 217) || GAME3) {
-			cx = (_G(thor_x1) + 7) / 16;
-			cy = (_G(thor_real_y1) + 8) / 16;
+			cx = (_G(thorX1) + 7) / 16;
+			cy = (_G(thorRealY1) + 8) / 16;
 			if (_G(scrn)._iconGrid[cy][cx] == icon) {
 				_G(thor)->_vulnerableCountdown = STAMINA;
 				playSound(WOOP, false);
@@ -167,24 +167,24 @@ int specialTileThor(const int x, const int y, const int icon) {
 	case 228:
 	case 229:
 		// Hole tiles
-		cx = (_G(thor_x1) + 7) / 16;
-		cy = (_G(thor_real_y1) + 8) / 16;
+		cx = (_G(thorX1) + 7) / 16;
+		cy = (_G(thorRealY1) + 8) / 16;
 		if (_G(scrn)._iconGrid[cy][cx] == icon) {
 			_G(thor)->_vulnerableCountdown = STAMINA;
 			if (icon < 224 && icon > 219)
 				playSound(FALL, false);
 
-			_G(new_level) = _G(scrn)._newLevel[icon - 220 + (f * 6)];
-			_G(warp_scroll) = false;
-			if (_G(new_level) > 119) {
-				_G(warp_scroll) = true;
-				_G(new_level) -= 128;
+			_G(newLevel) = _G(scrn)._newLevel[icon - 220 + (f * 6)];
+			_G(warpScroll) = false;
+			if (_G(newLevel) > 119) {
+				_G(warpScroll) = true;
+				_G(newLevel) -= 128;
 			}
 
-			_G(new_level_tile) = _G(scrn)._newLevelLocation[icon - 220 + (f * 6)];
-			_G(warp_flag) = true;
+			_G(newLevelTile) = _G(scrn)._newLevelLocation[icon - 220 + (f * 6)];
+			_G(warpFlag) = true;
 
-			if (_G(warp_scroll)) {
+			if (_G(warpScroll)) {
 				if (_G(thor)->_dir == 0)
 					_G(thor)->_y = 175;
 				else if (_G(thor)->_dir == 1)
@@ -194,8 +194,8 @@ int specialTileThor(const int x, const int y, const int icon) {
 				else if (_G(thor)->_dir == 3)
 					_G(thor)->_x = 0;
 			} else {
-				_G(thor)->_x = (_G(new_level_tile) % 20) * 16;
-				_G(thor)->_y = ((_G(new_level_tile) / 20) * 16) - 2;
+				_G(thor)->_x = (_G(newLevelTile) % 20) * 16;
+				_G(thor)->_y = ((_G(newLevelTile) / 20) * 16) - 2;
 			}
 			_G(thor)->_lastX[0] = _G(thor)->_x;
 			_G(thor)->_lastX[1] = _G(thor)->_x;
@@ -251,37 +251,37 @@ void eraseDoor(const int x, const int y) {
 }
 
 int openDoor1(const int y, const int x) {
-	if (_G(thor_info)._keys > 0) {
+	if (_G(thorInfo)._keys > 0) {
 		eraseDoor(x, y);
-		_G(thor_info)._keys--;
+		_G(thorInfo)._keys--;
 
 		return 1;
 	}
 
-	if (!_G(door_inform)) {
+	if (!_G(keyDoorInform)) {
 		odinSpeaks(2003, 0);
-		_G(door_inform) = true;
+		_G(keyDoorInform) = true;
 	}
 
 	return 0;
 }
 
 int cashDoor1(const int y, const int x, const int amount) {
-	if (_G(thor_info)._jewels >= amount) {
+	if (_G(thorInfo)._jewels >= amount) {
 		eraseDoor(x, y);
-		_G(thor_info)._jewels -= amount;
+		_G(thorInfo)._jewels -= amount;
 
 		return 1;
 	}
 
-	if (amount == 10 && !_G(cash1_inform)) {
+	if (amount == 10 && !_G(cashDoor1Inform)) {
 		odinSpeaks(2005, 0);
-		_G(cash1_inform) = true;
+		_G(cashDoor1Inform) = true;
 	}
 
-	if (amount == 100 && !_G(cash2_inform)) {
+	if (amount == 100 && !_G(cashDoor2Inform)) {
 		odinSpeaks(2004, 0);
-		_G(cash2_inform) = true;
+		_G(cashDoor2Inform) = true;
 	}
 
 	return 0;

@@ -66,6 +66,12 @@ uint32 SpriteFrame::index() {
 	return _bitmapHeader->_index;
 }
 
+Sprite::Sprite(AssetHeader *header) : Asset(header) {
+	if (header->_startup == kAssetStartupActive) {
+		_isActive = true;
+	}
+}
+
 Sprite::~Sprite() {
 	for (SpriteFrame *frame : _frames) {
 		delete frame;
@@ -78,6 +84,18 @@ Operand Sprite::callMethod(BuiltInMethod methodId, Common::Array<Operand> &args)
 	case kSpatialShowMethod: {
 		assert(args.size() == 0);
 		spatialShow();
+		return Operand();
+	}
+
+	case kSpatialHideMethod: {
+		assert(args.empty());
+		_isActive = false;
+		return Operand();
+	}
+
+	case kTimeStopMethod: {
+		assert(args.empty());
+		_isActive = false;
 		return Operand();
 	}
 

@@ -54,9 +54,9 @@ void GameContent::draw() {
 	drawObjects(s);
 	drawActors(s);
 
-	if ((GAME1 && _G(current_level) == BOSS_LEVEL1) ||
-		(GAME2 && _G(current_level) == BOSS_LEVEL2) ||
-		(GAME3 && _G(current_level) == BOSS_LEVEL3))
+	if ((GAME1 && _G(currentLevel) == BOSS_LEVEL1) ||
+		(GAME2 && _G(currentLevel) == BOSS_LEVEL2) ||
+		(GAME3 && _G(currentLevel) == BOSS_LEVEL3))
 		drawBossHealth(s);
 
 	// If we're shaking the screen, render the content with the shake X/Y
@@ -147,7 +147,7 @@ bool GameContent::tick() {
 		checkForBossDead();
 		checkForCheats();
 
-		if (_G(endgame))
+		if (_G(endGame))
 			endGameMovement();
 		break;
 
@@ -183,14 +183,14 @@ bool GameContent::tick() {
 				addHealth(-1);
 				addScore(10);
 
-			} else if (_G(thor_info)._magic > 0) {
-				_G(thor_info)._magic--;
+			} else if (_G(thorInfo)._magic > 0) {
+				_G(thorInfo)._magic--;
 				playSound(WOOP, true);
 				addMagic(-1);
 				addScore(10);
 
-			} else if (_G(thor_info)._jewels) {
-				_G(thor_info)._jewels--;
+			} else if (_G(thorInfo)._jewels) {
+				_G(thorInfo)._jewels--;
 				playSound(WOOP, true);
 				addJewels(-1);
 				addScore(10);
@@ -210,12 +210,12 @@ bool GameContent::tick() {
 	checkForAreaChange();
 
 	// Check for end of game area
-	if (_G(end_tile)) {
-		_G(end_tile) = false;
+	if (_G(endTile)) {
+		_G(endTile) = false;
 		Gfx::fadeOut();
 
 		// Add name to high scores list if necessary, and then show it
-		_G(highScores).add(_G(area), _G(playerName), _G(thor_info)._score);
+		_G(highScores).add(_G(area), _G(playerName), _G(thorInfo)._score);
 		g_events->send("HighScores", GameMessage("HIGH_SCORES", _G(area)));
 	}
 
@@ -240,7 +240,7 @@ void GameContent::drawObjects(GfxSurface &s) {
 		for (int x = 0; x < TILES_X; ++x) {
 			int p = (y * TILES_X) + x;
 
-			byte currObjId = _G(object_map[p]);
+			byte currObjId = _G(objectMap[p]);
 			if (currObjId) {
 				s.simpleBlitFrom(_G(objects[currObjId - 1]), Common::Point(x * TILE_SIZE, y * TILE_SIZE));
 			}
@@ -299,7 +299,7 @@ void GameContent::drawBossHealth(GfxSurface &s) {
 }
 
 void GameContent::checkThunderShake() {
-	if (_G(thunder_flag)) {
+	if (_G(thunderSnakeCounter)) {
 		_G(gameMode) = MODE_THUNDER;
 
 		// Introduce a random screen shake by rendering screen 1 pixel offset randomly
@@ -310,16 +310,16 @@ void GameContent::checkThunderShake() {
 		_moveDelta.x = DELTA_X[delta];
 		_moveDelta.y = DELTA_Y[delta];
 
-		_G(thunder_flag--);
-		if ((_G(thunder_flag) < MAX_ACTORS) && _G(thunder_flag) > 2) {
-			int thunderFl = _G(thunder_flag);
+		_G(thunderSnakeCounter--);
+		if ((_G(thunderSnakeCounter) < MAX_ACTORS) && _G(thunderSnakeCounter) > 2) {
+			int thunderFl = _G(thunderSnakeCounter);
 			if (_G(actor[thunderFl])._active) {
 				_G(actor[thunderFl])._vulnerableCountdown = 0;
 				actorDamaged(&_G(actor[thunderFl]), 20);
 			}
 		}
 
-		if (!_G(thunder_flag)) {
+		if (!_G(thunderSnakeCounter)) {
 			_G(gameMode) = MODE_NORMAL;
 			_moveDelta = Common::Point(0, 0);
 		}
@@ -329,35 +329,32 @@ void GameContent::checkThunderShake() {
 }
 
 void GameContent::checkSwitchFlag() {
-	if (_G(switch_flag)) {
-		switch (_G(switch_flag)) {
-		case 1:
-			switchIcons();
-			break;
-		case 2:
-			rotateArrows();
-			break;
-		default:
-			break;
-		}
-
-		_G(switch_flag) = 0;
+	if (!_G(switchUsed))
+		return;
+	
+	switch (_G(switchUsed)) {
+	case 1:
+		switchIcons();
+		break;
+	case 2:
+		rotateArrows();
+		break;
+	default:
+		break;
 	}
+
+	_G(switchUsed) = 0;
 }
 
 void GameContent::checkForItem() {
 	int thor_pos = _G(thor)->getPos();
-	if (_G(object_map[thor_pos]))
+	if (_G(objectMap[thor_pos]))
 		pickUpObject(thor_pos);
 }
 
 void GameContent::moveActors() {
 	for (int i = 0; i < MAX_ACTORS; i++) {
 		if (_G(actor[i])._active) {
-			if (_G(hourglass_flag))
-				if ((i > 2) && (!_G(pge)) && (!(_G(actor[i])._magicHurts & LIGHTNING_MAGIC)))
-					continue;
-
 			_G(actor[i])._moveCount = _G(actor[i])._numMoves;
 			while (_G(actor[i])._moveCount--)
 				moveActor(&_G(actor[i]));
@@ -365,7 +362,7 @@ void GameContent::moveActors() {
 			if (i == 0)
 				setThorVars();
 
-			if (_G(new_level) != _G(current_level))
+			if (_G(newLevel) != _G(currentLevel))
 				return;
 		}
 	}
@@ -385,7 +382,7 @@ void GameContent::updateActors() {
 }
 
 void GameContent::checkForBossDead() {
-	if (_G(boss_dead)) {
+	if (_G(bossDead)) {
 		int loop;
 		for (loop = 3; loop < 7; loop++) {
 			if (_G(actor[loop])._active)
@@ -393,11 +390,11 @@ void GameContent::checkForBossDead() {
 		}
 
 		if (loop == 7) {
-			_G(boss_dead) = false;
+			_G(bossDead) = false;
 
-			_G(exit_flag) = 0;
+			_G(exitFlag) = 0;
 
-			if (_G(boss_active)) {
+			if (_G(bossActive)) {
 				switch (_G(area)) {
 				case 1:
 					boss1ClosingSequence1();
@@ -412,7 +409,7 @@ void GameContent::checkForBossDead() {
 					break;
 				}
 
-				_G(boss_active) = false;
+				_G(bossActive) = false;
 			}
 		}
 	}
@@ -463,12 +460,12 @@ void GameContent::checkForAreaChange() {
 			showLevelDone();
 		}
 
-	} else if (_G(new_level) != _G(current_level)) {
+	} else if (_G(newLevel) != _G(currentLevel)) {
 		// Area transition beginning
 		_G(thor)->_show = 0;
 		_G(thor)->_active = false;
 		_G(hammer)->_active = false;
-		_G(tornado_used) = false;
+		_G(tornadoUsed) = false;
 
 		// Draws the old area without Thor, and then save a copy of it.
 		// This will be used to scroll old area off-screen as new area scrolls in
@@ -477,7 +474,7 @@ void GameContent::checkForAreaChange() {
 
 		// Set up new level
 		_G(thor)->_active = true;
-		showLevel(_G(new_level));
+		showLevel(_G(newLevel));
 	}
 }
 
@@ -493,7 +490,7 @@ void GameContent::thorDies() {
 	// Set the state for showing death animation
 	_G(gameMode) = MODE_THOR_DIES;
 	_deathCtr = 0;
-	_G(shield_on) = false;
+	_G(shieldOn) = false;
 
 	playSound(DEAD, true);
 }
@@ -508,12 +505,12 @@ void GameContent::spinThor() {
 }
 
 void GameContent::thorDead() {
-	int li = _G(thor_info)._selectedItem;
-	int ln = _G(thor_info)._inventory;
+	int li = _G(thorInfo)._selectedItem;
+	int ln = _G(thorInfo)._inventory;
 
-	_G(new_level) = _G(thor_info)._lastScreen;
-	_G(thor)->_x = (_G(thor_info)._lastIcon % 20) * 16;
-	_G(thor)->_y = ((_G(thor_info)._lastIcon / 20) * 16) - 1;
+	_G(newLevel) = _G(thorInfo)._lastScreen;
+	_G(thor)->_x = (_G(thorInfo)._lastIcon % 20) * 16;
+	_G(thor)->_y = ((_G(thorInfo)._lastIcon / 20) * 16) - 1;
 	if (_G(thor)->_x < 1)
 		_G(thor)->_x = 1;
 	if (_G(thor)->_y < 0)
@@ -522,35 +519,32 @@ void GameContent::thorDead() {
 	_G(thor)->_lastX[1] = _G(thor)->_x;
 	_G(thor)->_lastY[0] = _G(thor)->_y;
 	_G(thor)->_lastY[1] = _G(thor)->_y;
-	_G(thor)->_dir = _G(thor_info)._lastDir;
-	_G(thor)->_lastDir = _G(thor_info)._lastDir;
-	_G(thor)->_health = _G(thor_info)._lastHealth;
-	_G(thor_info)._magic = _G(thor_info)._lastMagic;
-	_G(thor_info)._jewels = _G(thor_info)._lastJewels;
-	_G(thor_info)._keys = _G(thor_info)._lastKeys;
-	_G(thor_info)._score = _G(thor_info)._lastScore;
-	_G(thor_info)._object = _G(thor_info)._lastObject;
-	_G(thor_info)._objectName = _G(thor_info)._lastObjectName;
+	_G(thor)->_dir = _G(thorInfo)._lastDir;
+	_G(thor)->_lastDir = _G(thorInfo)._lastDir;
+	_G(thor)->_health = _G(thorInfo)._lastHealth;
+	_G(thorInfo)._magic = _G(thorInfo)._lastMagic;
+	_G(thorInfo)._jewels = _G(thorInfo)._lastJewels;
+	_G(thorInfo)._keys = _G(thorInfo)._lastKeys;
+	_G(thorInfo)._score = _G(thorInfo)._lastScore;
+	_G(thorInfo)._object = _G(thorInfo)._lastObject;
+	_G(thorInfo)._objectName = _G(thorInfo)._lastObjectName;
 
-	if (ln == _G(thor_info)._lastInventory) {
-		_G(thor_info)._selectedItem = li;
+	if (ln == _G(thorInfo)._lastInventory) {
+		_G(thorInfo)._selectedItem = li;
 	} else {
-		_G(thor_info)._selectedItem = _G(thor_info)._lastItem;
-		_G(thor_info)._inventory = _G(thor_info)._lastInventory;
+		_G(thorInfo)._selectedItem = _G(thorInfo)._lastItem;
+		_G(thorInfo)._inventory = _G(thorInfo)._lastInventory;
 	}
 
-	_G(setup) = _G(last_setup);
+	_G(setup) = _G(lastSetup);
 
 	_G(thor)->_numMoves = 1;
 	_G(thor)->_vulnerableCountdown = 60;
 	_G(thor)->_show = 60;
-	_G(hourglass_flag) = 0;
-	_G(apple_flag) = false;
-	_G(bomb_flag) = false;
-	_G(thunder_flag) = 0;
-	_G(lightning_used) = false;
-	_G(tornado_used) = false;
-	_G(shield_on) = false;
+	_G(appleFlag) = false;
+	_G(thunderSnakeCounter) = 0;
+	_G(tornadoUsed) = false;
+	_G(shieldOn) = false;
 	musicResume();
 	_G(actor[1])._active = false;
 	_G(actor[2])._active = false;
@@ -558,12 +552,12 @@ void GameContent::thorDead() {
 	_G(thor)->_active = true;
 
 	// Load saved data for new level back into scrn
-	_G(scrn).load(_G(new_level));
+	_G(scrn).load(_G(newLevel));
 
 	_G(gameMode) = MODE_NORMAL;
 	_deathCtr = 0;
 
-	showLevel(_G(new_level));
+	showLevel(_G(newLevel));
 	setThorVars();
 }
 
@@ -571,9 +565,9 @@ void GameContent::checkForCheats() {
 	if (_G(cheats)._freezeHealth)
 		_G(thor)->_health = 150;
 	if (_G(cheats)._freezeMagic)
-		_G(thor_info)._magic = 150;
+		_G(thorInfo)._magic = 150;
 	if (_G(cheats)._freezeJewels)
-		_G(thor_info)._jewels = 999;
+		_G(thorInfo)._jewels = 999;
 }
 
 void GameContent::placePixel(GfxSurface &s, int dir, int num) {

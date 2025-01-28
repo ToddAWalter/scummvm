@@ -19,14 +19,8 @@
  *
  */
 
-#include "graphics/framelimiter.h"
-#include "common/scummsys.h"
 #include "common/config-manager.h"
-#include "common/debug-channels.h"
-#include "common/events.h"
-#include "common/system.h"
 #include "engines/util.h"
-#include "graphics/paletteman.h"
 
 #include "mediastation/mediastation.h"
 #include "mediastation/debugchannels.h"
@@ -34,6 +28,7 @@
 #include "mediastation/boot.h"
 #include "mediastation/context.h"
 #include "mediastation/asset.h"
+#include "mediastation/assets/hotspot.h"
 #include "mediastation/assets/movie.h"
 #include "mediastation/mediascript/scriptconstants.h"
 
@@ -192,9 +187,31 @@ void MediaStationEngine::processEvents() {
 			return;
 		}
 
+		case Common::EVENT_MOUSEMOVE: {
+			Asset *hotspot = findAssetToAcceptMouseEvents(e.mouse);
+			if (hotspot != nullptr) {
+				if (_currentHotspot == nullptr) {
+					_currentHotspot = hotspot;
+					debugC(5, kDebugEvents, "EVENT_MOUSEMOVE (%d, %d): Entered hotspot %d", e.mouse.x, e.mouse.y, hotspot->getHeader()->_id);
+					hotspot->runEventHandlerIfExists(kMouseEnteredEvent);
+				} else if (_currentHotspot == hotspot) {
+					// We are still in the same hotspot.
+				} else {
+					_currentHotspot->runEventHandlerIfExists(kMouseExitedEvent);
+					_currentHotspot = hotspot;
+					debugC(5, kDebugEvents, "EVENT_MOUSEMOVE (%d, %d): Exited hotspot %d", e.mouse.x, e.mouse.y, hotspot->getHeader()->_id);
+					hotspot->runEventHandlerIfExists(kMouseEnteredEvent);
+				}
+				debugC(5, kDebugEvents, "EVENT_MOUSEMOVE (%d, %d): Sent to hotspot %d", e.mouse.x, e.mouse.y, hotspot->getHeader()->_id);
+				hotspot->runEventHandlerIfExists(kMouseMovedEvent);
+			} else {
+				_currentHotspot = nullptr;
+			}
+			break;
+		}
+
 		case Common::EVENT_KEYDOWN: {
-			// TODO: Reading the current mouse position for hotspots might not
-			// be right, need to verify.
+			// Even though this is a keydown event, we need to look at the mouse position.
 			Common::Point mousePos = g_system->getEventManager()->getMousePos();
 			Asset *hotspot = findAssetToAcceptMouseEvents(mousePos);
 			if (hotspot != nullptr) {
@@ -256,7 +273,7 @@ Context *MediaStationEngine::loadContext(uint32 contextId) {
 		warning("MediaStationEngine::loadContext(): Couldn't find file declaration with ID 0x%x", fileId);
 		return nullptr;
 	}
-	Common::String *fileName = fileDeclaration->_name;
+	Common::Path entryCxtFilepath(*fileDeclaration->_name);
 
 	// Load any child contexts before we actually load this one. The child
 	// contexts must be unloaded explicitly later.
@@ -269,10 +286,16 @@ Context *MediaStationEngine::loadContext(uint32 contextId) {
 			loadContext(childContextId);
 		}
 	}
-
-	// LOAD THE CONTEXT.
-	Common::Path entryCxtFilepath = Common::Path(*fileName);
 	Context *context = new Context(entryCxtFilepath);
+
+	// Some contexts have a built-in palette that becomes active when the
+	// context is loaded, and some rely on scripts to set
+	// the palette later.
+	if (context->_palette != nullptr) {
+		_screen->setPalette(*context->_palette);
+	}
+
+	context->registerActiveAssets();
 	_loadedContexts.setVal(contextId, context);
 	return context;
 }
@@ -304,24 +327,41 @@ void MediaStationEngine::addPlayingAsset(Asset *assetToAdd) {
 
 Operand MediaStationEngine::callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) {
 	switch (methodId) {
-		case kBranchToScreenMethod: {
-			assert(args.size() == 1);
-			uint32 contextId = args[0].getAssetId();
-			branchToScreen(contextId);
-			return Operand();
-		}
+	case kBranchToScreenMethod: {
+		assert(args.size() == 1);
+		uint32 contextId = args[0].getAssetId();
+		branchToScreen(contextId);
+		return Operand();
+	}
 
-		default: {
-			error("MediaStationEngine::callMethod(): Got unimplemented method ID %d", static_cast<uint>(methodId));
-		}
+	case kReleaseContextMethod: {
+		assert(args.size() == 1);
+		uint32 contextId = args[0].getAssetId();
+		releaseContext(contextId);
+		return Operand();
+	}
+
+	default: {
+		error("MediaStationEngine::callMethod(): Got unimplemented method ID %d", static_cast<uint>(methodId));
+	}
 	}
 }
 
 void MediaStationEngine::branchToScreen(uint32 contextId) {
+	if (_currentContext != nullptr) {
+		EventHandler *exitEvent = _currentContext->_screenAsset->_eventHandlers.getValOrDefault(kExitEvent);
+		if (exitEvent != nullptr) {
+			debugC(5, kDebugScript, "Executing context exit event handler");
+			exitEvent->execute(_currentContext->_screenAsset->_id);
+		} else {
+			debugC(5, kDebugScript, "No context exit event handler");
+		}
+	}
+
 	Context *context = loadContext(contextId);
+	_currentContext = context;
+
 	if (context->_screenAsset != nullptr) {
-		setPaletteFromHeader(context->_screenAsset);
-		
 		// TODO: Make the screen an asset just like everything else so we can
 		// run event handlers with runEventHandlerIfExists.
 		EventHandler *entryEvent = context->_screenAsset->_eventHandlers.getValOrDefault(MediaStation::kEntryEvent);
@@ -334,6 +374,29 @@ void MediaStationEngine::branchToScreen(uint32 contextId) {
 	}
 }
 
+void MediaStationEngine::releaseContext(uint32 contextId) {
+	debugC(5, kDebugScript, "MediaStationEngine::releaseContext(): Releasing context %d", contextId);
+	Context *context = _loadedContexts.getValOrDefault(contextId);
+	if (context == nullptr) {
+		error("MediaStationEngine::releaseContext(): Attempted to unload context %d that is not currently loaded", contextId);
+	}
+
+	// Unload any assets currently playing from this context. They should have
+	// already been stopped by scripts, but this is a last check.
+	for (auto it = _assetsPlaying.begin(); it != _assetsPlaying.end();) {
+		uint assetId = (*it)->getHeader()->_id;
+		Asset *asset = context->getAssetById(assetId);
+		if (asset != nullptr) {
+			it = _assetsPlaying.erase(it);
+		} else {
+			++it;
+		}
+	}
+
+	delete context;
+	_loadedContexts.erase(contextId);
+}
+
 Asset *MediaStationEngine::findAssetToAcceptMouseEvents(Common::Point point) {
 	Asset *intersectingAsset = nullptr;
 	// The z-indices seem to be reversed, so the highest z-index number is
@@ -341,19 +404,8 @@ Asset *MediaStationEngine::findAssetToAcceptMouseEvents(Common::Point point) {
 	int lowestZIndex = INT_MAX;
 
 	for (Asset *asset : _assetsPlaying) {
-		// TODO: Currently only hotspots are found, but other asset types can
-		// likely get mouse events too.
 		if (asset->type() == kAssetTypeHotspot) {
-			Common::Rect *boundingBox = asset->getHeader()->_boundingBox;
-			if (boundingBox == nullptr) {
-				error("Hotspot %d has no bounding box", asset->getHeader()->_id);
-			}
-
-			if (!asset->isActive()) {
-				continue;
-			}
-
-			if (boundingBox->contains(point)) {
+			if (asset->isActive() && static_cast<Hotspot *>(asset)->isInside(point)) {
 				if (asset->zIndex() < lowestZIndex) {
 					lowestZIndex = asset->zIndex();
 					intersectingAsset = asset;
@@ -362,6 +414,28 @@ Asset *MediaStationEngine::findAssetToAcceptMouseEvents(Common::Point point) {
 		}
 	}
 	return intersectingAsset;
+}
+
+Operand MediaStationEngine::callBuiltInFunction(BuiltInFunction function, Common::Array<Operand> &args) {
+	switch (function) {
+	case kEffectTransitionFunction:
+	case kEffectTransitionOnSyncFunction: {
+		// TODO: effectTransitionOnSync should be split out into its own function.
+		effectTransition(args);
+		return Operand();
+	}
+
+	case kDrawingFunction: {
+		// Not entirely sure what this function does, but it seems like a way to
+		// call into some drawing functions built into the IBM/Crayola executable.
+		warning("MediaStationEngine::callBuiltInFunction(): Built-in drawing function not implemented");
+		return Operand();
+	}
+
+	default: {
+		error("MediaStationEngine::callBuiltInFunction(): Got unknown built-in function %s (%d)", builtInFunctionToStr(function), function);
+	}
+	}
 }
 
 } // End of namespace MediaStation

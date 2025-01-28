@@ -118,11 +118,7 @@ Common::Rect MovieFrame::boundingBox() {
 }
 
 uint32 MovieFrame::index() {
-	if (_footer != nullptr) {
-		return _footer->_index;
-	} else {
-		error("MovieFrame::index(): Cannot get the index of a keyframe");
-	}
+	return _bitmapHeader->_index;
 }
 
 uint32 MovieFrame::startInMilliseconds() {
@@ -154,9 +150,9 @@ uint32 MovieFrame::keyframeEndInMilliseconds() {
 }
 
 MovieFrame::~MovieFrame() {
-	// The base class destructor takes care of deleting the bitmap header, so 
+	// The base class destructor takes care of deleting the bitmap header, so
 	// we don't need to delete that here.
-	delete _footer;
+	// The movie will delete the footer.
 	_footer = nullptr;
 }
 
@@ -187,6 +183,24 @@ Operand Movie::callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) 
 	case kTimePlayMethod: {
 		assert(args.empty());
 		timePlay();
+		return Operand();
+	}
+
+	case kSpatialShowMethod: {
+		assert(args.empty());
+		warning("Movie::callMethod(): spatialShow not implemented");
+		return Operand();
+	}
+
+	case kTimeStopMethod: {
+		assert(args.empty());
+		timeStop();
+		return Operand();
+	}
+
+	case kSpatialHideMethod: {
+		assert(args.empty());
+		warning("Movie::callMethod(): spatialHide not implemented");
 		return Operand();
 	}
 
@@ -248,31 +262,11 @@ void Movie::process() {
 	drawNextFrame();
 }
 
-void Movie::processTimeEventHandlers() {
-	if (!_isActive) {
-		warning("Movie::processTimeEventHandlers(): Attempted to process time event handlers while movie is not playing");
-		return;
-	}
-
-	uint currentTime = g_system->getMillis();
-	for (EventHandler *timeEvent : _header->_timeHandlers) {
-		double timeEventInFractionalSeconds = timeEvent->_argumentValue.u.f;
-		uint timeEventInMilliseconds = timeEventInFractionalSeconds * 1000;
-		bool timeEventAlreadyProcessed = timeEventInMilliseconds < _lastProcessedTime;
-		bool timeEventNeedsToBeProcessed = timeEventInMilliseconds <= currentTime - _startTime;
-		if (!timeEventAlreadyProcessed && timeEventNeedsToBeProcessed) {
-			debugC(5, kDebugScript, "Movie::processTimeEventHandlers(): Running On Time handler for movie time %d ms (real movie time: %d ms)", timeEventInMilliseconds, currentTime - _startTime);
-			timeEvent->execute(_header->_id);
-		}
-	}
-	_lastProcessedTime = currentTime - _startTime;
-}
-
 bool Movie::drawNextFrame() {
 	// TODO: We'll need to support persistent frames in movies too. Do movies
 	// have the same distinction between spatialShow and timePlay that sprites
 	// do?
-	
+
 	uint currentTime = g_system->getMillis();
 	uint movieTime = currentTime - _startTime;
 	debugC(5, kDebugGraphics, "GRAPHICS (Movie %d): Starting blitting (movie time: %d)", _header->_id, movieTime);
@@ -366,33 +360,20 @@ void Movie::readSubfile(Subfile &subfile, Chunk &chunk) {
 		if (!isAnimationChunk) {
 			warning("Movie::readSubfile(): (Frameset %d of %d) No animation chunks found (@0x%llx)", i, chunkCount, static_cast<long long int>(chunk.pos()));
 		}
-		MovieFrameHeader *header = nullptr;
-		MovieFrame *frame = nullptr;
 		while (isAnimationChunk) {
 			uint sectionType = Datum(chunk).u.i;
 			debugC(5, kDebugLoading, "Movie::readSubfile(): sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
 			switch (MovieSectionType(sectionType)) {
 			case kMovieFrameSection: {
-				header = new MovieFrameHeader(chunk);
-				frame = new MovieFrame(chunk, header);
+				MovieFrameHeader *header = new MovieFrameHeader(chunk);
+				MovieFrame *frame = new MovieFrame(chunk, header);
 				_frames.push_back(frame);
 				break;
 			}
 
 			case kMovieFooterSection: {
 				MovieFrameFooter *footer = new MovieFrameFooter(chunk);
-				// _footers.push_back(footer);
-				// TODO: This does NOT handle the case where there are
-				// keyframes. We need to match the footer to an arbitrary
-				// frame, since some keyframes don't have footers, sigh.
-				if (header == nullptr) {
-					error("Movie::readSubfile(): No frame to match footer to");
-				}
-				if (header->_index == footer->_index) {
-					frame->setFooter(footer);
-				} else {
-					error("Movie::readSubfile(): Footer index does not match frame index: %d != %d", header->_index, footer->_index);
-				}
+				_footers.push_back(footer);
 				break;
 			}
 
@@ -428,7 +409,7 @@ void Movie::readSubfile(Subfile &subfile, Chunk &chunk) {
 				break;
 
 			default:
-				error("Sound::readChunk(): Unknown audio encoding 0x%x", (uint)_header->_soundEncoding);
+				error("Movie::readSubfile(): Unknown audio encoding 0x%x", static_cast<uint>(_header->_soundEncoding));
 			}
 			_audioStreams.push_back(stream);
 			chunk = subfile.nextChunk();
@@ -450,7 +431,13 @@ void Movie::readSubfile(Subfile &subfile, Chunk &chunk) {
 	}
 
 	// SET THE MOVIE FRAME FOOTERS.
-	// TODO: We donʻt do anything with this yet!
+	for (MovieFrame *frame : _frames) {
+		for (MovieFrameFooter *footer : _footers) {
+			if (frame->index() == footer->_index) {
+				frame->setFooter(footer);
+			}
+		}
+	}
 }
 
 } // End of namespace MediaStation

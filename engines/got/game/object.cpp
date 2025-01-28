@@ -34,43 +34,43 @@ void notEnoughMagic();
 void cannotCarryMore();
 
 void showObjects() {
-	Common::fill(_G(object_map), _G(object_map) + TILES_COUNT, 0);
-	Common::fill(_G(object_index), _G(object_index) + TILES_COUNT, 0);
+	Common::fill(_G(objectMap), _G(objectMap) + TILES_COUNT, 0);
+	Common::fill(_G(objectIndex), _G(objectIndex) + TILES_COUNT, 0);
 
 	for (int i = 0; i < OBJECTS_COUNT; i++) {
 		if (_G(scrn)._staticObject[i]) {
 			const int p = _G(scrn)._staticX[i] + (_G(scrn)._staticY[i] * TILES_X);
-			_G(object_index[p]) = i;
-			_G(object_map[p]) = _G(scrn)._staticObject[i];
+			_G(objectIndex[p]) = i;
+			_G(objectMap[p]) = _G(scrn)._staticObject[i];
 		}
 	}
 }
 
 void pickUpObject(int p) {
-	switch (_G(object_map[p])) {
+	switch (_G(objectMap[p])) {
 	case 1: // Red jewel
-		if (_G(thor_info)._jewels >= 999) {
+		if (_G(thorInfo)._jewels >= 999) {
 			cannotCarryMore();
 			return;
 		}
 		addJewels(10);
 		break;
 	case 2: // Blue jewel
-		if (_G(thor_info)._jewels >= 999) {
+		if (_G(thorInfo)._jewels >= 999) {
 			cannotCarryMore();
 			return;
 		}
 		addJewels(1);
 		break;
 	case 3: // Red potion
-		if (_G(thor_info)._magic >= 150) {
+		if (_G(thorInfo)._magic >= 150) {
 			cannotCarryMore();
 			return;
 		}
 		addMagic(10);
 		break;
 	case 4: // Blue potion
-		if (_G(thor_info)._magic >= 150) {
+		if (_G(thorInfo)._magic >= 150) {
 			cannotCarryMore();
 			return;
 		}
@@ -92,7 +92,7 @@ void pickUpObject(int p) {
 		addKeys(1);
 		break;
 	case 8: // Treasure
-		if (_G(thor_info)._jewels >= 999) {
+		if (_G(thorInfo)._jewels >= 999) {
 			cannotCarryMore();
 			return;
 		}
@@ -119,18 +119,18 @@ void pickUpObject(int p) {
 	case 24:
 	case 25:
 	case 26:
-		if (_G(object_map[p]) == 13 && HERMIT_HAS_DOLL)
+		if (_G(objectMap[p]) == 13 && HERMIT_HAS_DOLL)
 			return;
 		_G(thor)->_numMoves = 1;
 		_G(hammer)->_numMoves = 2;
 		_G(actor[2])._active = false;
-		_G(shield_on) = false;
-		_G(tornado_used) = false;
-		_G(thor_info)._inventory |= 64;
-		_G(thor_info)._selectedItem = 7;
-		_G(thor_info)._object = _G(object_map[p]) - 11;
-		_G(thor_info)._objectName = OBJECT_NAMES[_G(thor_info)._object - 1];
-		odinSpeaks((_G(object_map[p]) - 12) + 501, _G(object_map[p]) - 1);
+		_G(shieldOn) = false;
+		_G(tornadoUsed) = false;
+		_G(thorInfo)._inventory |= 64;
+		_G(thorInfo)._selectedItem = 7;
+		_G(thorInfo)._object = _G(objectMap[p]) - 11;
+		_G(thorInfo)._objectName = OBJECT_NAMES[_G(thorInfo)._object - 1];
+		odinSpeaks((_G(objectMap[p]) - 12) + 501, _G(objectMap[p]) - 1);
 		break;
 	case 27:
 	case 28:
@@ -138,18 +138,16 @@ void pickUpObject(int p) {
 	case 30:
 	case 31:
 	case 32: {
-		_G(hourglass_flag) = 0;
-		_G(thunder_flag) = 0;
-		_G(shield_on) = false;
-		_G(lightning_used) = false;
-		_G(tornado_used) = false;
+		_G(thunderSnakeCounter) = 0;
+		_G(shieldOn) = false;
+		_G(tornadoUsed) = false;
 		_G(hammer)->_numMoves = 2;
 		_G(thor)->_numMoves = 1;
 		_G(actor[2])._active = false;
-		const int s = 1 << (_G(object_map[p]) - 27);
-		_G(thor_info)._inventory |= s;
-		odinSpeaks((_G(object_map[p]) - 27) + 516, _G(object_map[p]) - 1);
-		_G(thor_info)._selectedItem = _G(object_map[p]) - 26;
+		const int s = 1 << (_G(objectMap[p]) - 27);
+		_G(thorInfo)._inventory |= s;
+		odinSpeaks((_G(objectMap[p]) - 27) + 516, _G(objectMap[p]) - 1);
+		_G(thorInfo)._selectedItem = _G(objectMap[p]) - 26;
 		addMagic(150);
 		fillScore(5);
 		}
@@ -158,21 +156,15 @@ void pickUpObject(int p) {
 	default:
 		break;
 	}
-	const int x = p % 20;
-	const int y = p / 20;
-
-	_G(ox) = x * 16;
-	_G(oy) = y * 16;
-	_G(of) = 1;
 
 	playSound(YAH, false);
-	_G(object_map[p]) = 0;
+	_G(objectMap[p]) = 0;
 
 	// Reset so it doesn't reappear on reentry to screen
-	if (_G(object_index[p]) < 30)
-		_G(scrn)._staticObject[_G(object_index[p])] = 0;
+	if (_G(objectIndex[p]) < 30)
+		_G(scrn)._staticObject[_G(objectIndex[p])] = 0;
 	
-	_G(object_index[p]) = 0;
+	_G(objectIndex[p]) = 0;
 }
 
 void dropRandomObject(Actor *actor) {
@@ -202,9 +194,9 @@ void dropRandomObject(Actor *actor) {
 
 bool dropObject(Actor *actor, const int objId) {
 	const int p = (actor->_x + (actor->_sizeX / 2)) / 16 + (((actor->_y + (actor->_sizeY / 2)) / 16) * 20);
-	if (!_G(object_map[p]) && _G(scrn)._iconGrid[p / 20][p % 20] >= 140) { //nothing there and solid
-		_G(object_map[p]) = objId;
-		_G(object_index[p]) = 27 + actor->_actorNum; //actor is 3-15
+	if (!_G(objectMap[p]) && _G(scrn)._iconGrid[p / 20][p % 20] >= 140) { //nothing there and solid
+		_G(objectMap[p]) = objId;
+		_G(objectIndex[p]) = 27 + actor->_actorNum; //actor is 3-15
 
 		return true;
 	}
@@ -216,24 +208,24 @@ bool useApple(int flag) {
 	if (_G(thor)->_health == 150)
 		return false;
 
-	if (flag && _G(thor_info)._magic > 0) {
-		if (!_G(apple_flag)) {
-			_G(magic_cnt) = 0;
+	if (flag && _G(thorInfo)._magic > 0) {
+		if (!_G(appleFlag)) {
+			_G(magicCounter) = 0;
 			addMagic(-2);
 			addHealth(1);
 			playSound(ANGEL, false);
-		} else if (_G(magic_cnt) > 8) {
-			_G(magic_cnt) = 0;
+		} else if (_G(magicCounter) > 8) {
+			_G(magicCounter) = 0;
 			addMagic(-2);
 			addHealth(1);
 			if (!soundPlaying())
 				playSound(ANGEL, false);
 		}
-		_G(apple_flag) = true;
+		_G(appleFlag) = true;
 		return true;
 	}
 
-	_G(apple_flag) = false;
+	_G(appleFlag) = false;
 	if (flag)
 		notEnoughMagic();
 
@@ -241,19 +233,19 @@ bool useApple(int flag) {
 }
 
 bool useThunder(int flag) {
-	if (flag && _G(thor_info)._magic > 29) {
-		if (!_G(thunder_flag)) {
+	if (flag && _G(thorInfo)._magic > 29) {
+		if (!_G(thunderSnakeCounter)) {
 			addMagic(-30);
 			playSound(THUNDER, false);
-			_G(thunder_flag) = 60;
+			_G(thunderSnakeCounter) = 60;
 		}
 		return true;
 	}
 
-	if (flag && !_G(thunder_flag))
+	if (flag && !_G(thunderSnakeCounter))
 		notEnoughMagic();
 
-	if (_G(thunder_flag))
+	if (_G(thunderSnakeCounter))
 		return true;
 	
 	return false;
@@ -261,14 +253,12 @@ bool useThunder(int flag) {
 
 bool useBoots(int flag) {
 	if (flag) {
-		if (_G(thor_info)._magic > 0) {
-			if (_G(thor)->_numMoves == 1) {
-				_G(magic_cnt) = 0;
-				addMagic(-1);
-			} else if (_G(magic_cnt) > 8) {
-				_G(magic_cnt) = 0;
+		if (_G(thorInfo)._magic > 0) {
+			if (_G(thor)->_numMoves == 1 || _G(magicCounter) > 8) {
+				_G(magicCounter) = 0;
 				addMagic(-1);
 			}
+			
 			_G(thor)->_numMoves = 2;
 			_G(hammer)->_numMoves = 3;
 			return true;
@@ -287,19 +277,19 @@ bool useBoots(int flag) {
 
 bool useShield(int flag) {
 	if (flag) {
-		if (_G(thor_info)._magic) {
-			if (!_G(shield_on)) {
-				_G(magic_cnt) = 0;
+		if (_G(thorInfo)._magic) {
+			if (!_G(shieldOn)) {
+				_G(magicCounter) = 0;
 				addMagic(-1);
 				setupMagicItem(1);
 
-				_G(actor[2]) = _G(magic_item[1]);
+				_G(actor[2]) = _G(magicItem[1]);
 				setupActor(&_G(actor[2]), 2, 0, _G(thor)->_x, _G(thor)->_y);
 				_G(actor[2])._moveCountdown = 1;
 				_G(actor[2])._speed = 1;
-				_G(shield_on) = true;
-			} else if (_G(magic_cnt) > 8) {
-				_G(magic_cnt) = 0;
+				_G(shieldOn) = true;
+			} else if (_G(magicCounter) > 8) {
+				_G(magicCounter) = 0;
 				addMagic(-1);
 			}
 
@@ -309,10 +299,10 @@ bool useShield(int flag) {
 		notEnoughMagic();
 	}
 
-	if (_G(shield_on)) {
+	if (_G(shieldOn)) {
 		_G(actor[2])._dead = 2;
 		_G(actor[2])._active = false;
-		_G(shield_on) = false;
+		_G(shieldOn) = false;
 	}
 
 	return false;
@@ -320,7 +310,7 @@ bool useShield(int flag) {
 
 bool useLightning(int flag) {
 	if (flag) {
-		if (_G(thor_info)._magic > 14) {
+		if (_G(thorInfo)._magic > 14) {
 			addMagic(-15);
 			g_events->send("Game", GameMessage("THROW_LIGHTNING"));
 		} else {
@@ -333,32 +323,32 @@ bool useLightning(int flag) {
 
 bool useTornado(int flag) {
 	if (flag) {
-		if (_G(thor_info)._magic > 10) {
-			if (!_G(tornado_used) && !_G(actor[2])._dead && _G(magic_cnt) > 20) {
-				_G(magic_cnt) = 0;
+		if (_G(thorInfo)._magic > 10) {
+			if (!_G(tornadoUsed) && !_G(actor[2])._dead && _G(magicCounter) > 20) {
+				_G(magicCounter) = 0;
 				addMagic(-10);
 				setupMagicItem(0);
-				_G(actor[2]) = _G(magic_item[0]);
+				_G(actor[2]) = _G(magicItem[0]);
 
 				setupActor(&_G(actor[2]), 2, 0, _G(thor)->_x, _G(thor)->_y);
 				_G(actor[2])._lastDir = _G(thor)->_dir;
 				_G(actor[2])._moveType = 16;
-				_G(tornado_used) = true;
+				_G(tornadoUsed) = true;
 				playSound(WIND, false);
 			}
-		} else if (!_G(tornado_used)) {
+		} else if (!_G(tornadoUsed)) {
 			notEnoughMagic();
 			return false;
 		}
-		if (_G(magic_cnt) > 8) {
-			if (_G(tornado_used)) {
-				_G(magic_cnt) = 0;
+		if (_G(magicCounter) > 8) {
+			if (_G(tornadoUsed)) {
+				_G(magicCounter) = 0;
 				addMagic(-1);
 			}
 		}
-		if (_G(thor_info)._magic < 1) {
+		if (_G(thorInfo)._magic < 1) {
 			actorDestroyed(&_G(actor[2]));
-			_G(tornado_used) = false;
+			_G(tornadoUsed) = false;
 			notEnoughMagic();
 			return false;
 		}
@@ -368,25 +358,25 @@ bool useTornado(int flag) {
 }
 
 bool useObject(int flag) {
-	if (!flag || !(_G(thor_info)._inventory & 64))
+	if (!flag || !(_G(thorInfo)._inventory & 64))
 		return false;
 
-	odinSpeaks((_G(thor_info)._object - 1) + 5501, _G(thor_info)._object - 1);
+	odinSpeaks((_G(thorInfo)._object - 1) + 5501, _G(thorInfo)._object - 1);
 	return true;
 }
 
 void useItem() {
 	bool ret = false;
 
-	int kf = _G(key_flag[key_magic]);
+	const int kf = _G(keyFlag[key_magic]);
 
-	if (!kf && _G(tornado_used)) {
+	if (!kf && _G(tornadoUsed)) {
 		actorDestroyed(&_G(actor[2]));
-		_G(tornado_used) = false;
+		_G(tornadoUsed) = false;
 	}
 
-	bool mf = _G(magic_inform);
-	switch (_G(thor_info)._selectedItem) {
+	const bool mf = _G(magicMissingInform);
+	switch (_G(thorInfo)._selectedItem) {
 	case 1:
 		ret = useApple(kf);
 		break;
@@ -424,21 +414,24 @@ void useItem() {
 }
 
 void notEnoughMagic() {
-	if (!_G(magic_inform))
-		odinSpeaks(2006, 0);
+	if (_G(magicMissingInform))
+		return;
 
-	_G(magic_inform) = true;
+	odinSpeaks(2006, 0);
+	_G(magicMissingInform) = true;
 }
 
 void cannotCarryMore() {
-	if (!_G(carry_inform))
-		odinSpeaks(2007, 0);
-	_G(carry_inform) = true;
+	if (_G(cantCarryInform))
+		return;
+
+	odinSpeaks(2007, 0);
+	_G(cantCarryInform) = true;
 }
 
 void deleteObject() {
-	_G(thor_info)._inventory &= 0xbf;
-	_G(thor_info)._selectedItem = 1;
+	_G(thorInfo)._inventory &= 0xbf;
+	_G(thorInfo)._selectedItem = 1;
 }
 
 } // namespace Got

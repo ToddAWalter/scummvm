@@ -80,11 +80,13 @@ public:
 	Asset *getAssetByChunkReference(uint chunkReference);
 	Function *getFunctionById(uint functionId);
 
-    Operand callMethod(BuiltInMethod methodId, Common::Array<Operand> &args);
+	Operand callMethod(BuiltInMethod methodId, Common::Array<Operand> &args);
+	Operand callBuiltInFunction(BuiltInFunction function, Common::Array<Operand> &args);
 	Common::HashMap<uint32, Variable *> _variables;
 
 	Graphics::Screen *_screen = nullptr;
 	Audio::Mixer *_mixer = nullptr;
+	Context *_currentContext = nullptr;
 
 	// All Media Station titles run at 640x480.
 	const uint16 SCREEN_WIDTH = 640;
@@ -101,11 +103,15 @@ private:
 	Boot *_boot = nullptr;
 	Common::Array<Asset *> _assetsPlaying;
 	Common::HashMap<uint, Context *> _loadedContexts;
+	Asset *_currentHotspot = nullptr;
 
 	Context *loadContext(uint32 contextId);
 	void setPaletteFromHeader(AssetHeader *header);
 	void branchToScreen(uint32 contextId);
+	void releaseContext(uint32 contextId);
 	Asset *findAssetToAcceptMouseEvents(Common::Point point);
+
+	void effectTransition(Common::Array<Operand> &args);
 };
 
 extern MediaStationEngine *g_engine;

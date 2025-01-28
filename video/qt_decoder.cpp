@@ -32,11 +32,17 @@
 
 #include "audio/audiostream.h"
 
+#include "common/archive.h"
 #include "common/debug.h"
 #include "common/memstream.h"
 #include "common/system.h"
 #include "common/textconsole.h"
 #include "common/util.h"
+
+#include "common/compression/unzip.h"
+
+#include "graphics/cursorman.h"
+#include "image/icocur.h"
 
 // Video codecs
 #include "image/codecs/codec.h"
@@ -85,10 +91,15 @@ void QuickTimeDecoder::close() {
 		delete _scaledSurface;
 		_scaledSurface = 0;
 	}
+
+	closeQTVR();
 }
 
 const Graphics::Surface *QuickTimeDecoder::decodeNextFrame() {
 	const Graphics::Surface *frame = VideoDecoder::decodeNextFrame();
+
+	if (isVR())
+		updateAngles();
 
 	// Update audio buffers too
 	// (needs to be done after we find the next track)
@@ -207,6 +218,8 @@ Common::QuickTimeParser::SampleDesc *QuickTimeDecoder::readSampleDesc(Common::Qu
 		}
 
 		return entry;
+	} else if (track->codecType == CODEC_TYPE_PANO) {
+		return readPanoSampleDesc(track, format, descSize);
 	}
 
 	// Pass it on up
@@ -307,6 +320,7 @@ QuickTimeDecoder::VideoTrackHandler::VideoTrackHandler(QuickTimeDecoder *decoder
 	_curFrame = -1;
 	_delayedFrameToBufferTo = -1;
 	enterNewEditListEntry(true, true); // might set _curFrame
+
 	if (decoder->_qtvrType == QTVRType::OBJECT)
 		_curFrame = getFrameCount() / 2;
 
@@ -318,13 +332,6 @@ QuickTimeDecoder::VideoTrackHandler::VideoTrackHandler(QuickTimeDecoder *decoder
 	_forcedDitherPalette = 0;
 	_ditherTable = 0;
 	_ditherFrame = 0;
-	_isPanoConstructed = false;
-
-	_constructedPano = nullptr;
-	_projectedPano = nullptr;
-
-	if (decoder->_qtvrType == QTVRType::PANORAMA)
-		constructPanorama();
 }
 
 // FIXME: This check breaks valid QuickTime movies, such as the KQ6 Mac opening.
@@ -376,16 +383,6 @@ QuickTimeDecoder::VideoTrackHandler::~VideoTrackHandler() {
 	if (_ditherFrame) {
 		_ditherFrame->free();
 		delete _ditherFrame;
-	}
-
-	if (_isPanoConstructed) {
-		_constructedPano->free();
-		delete _constructedPano;
-	}
-
-	if (_projectedPano) {
-		_projectedPano->free();
-		delete _projectedPano;
 	}
 }
 
@@ -523,19 +520,6 @@ uint32 QuickTimeDecoder::VideoTrackHandler::getNextFrameStartTime() const {
 }
 
 const Graphics::Surface *QuickTimeDecoder::VideoTrackHandler::decodeNextFrame() {
-	if (_decoder->_qtvrType == QTVRType::PANORAMA) {
-		if (!_isPanoConstructed)
-			return nullptr;
-
-		if (_projectedPano) {
-			_projectedPano->free();
-			delete _projectedPano;
-		}
-
-		projectPanorama();
-		return _projectedPano;
-	}
-
 	if (endOfTrack())
 		return 0;
 
@@ -616,130 +600,6 @@ Common::String QuickTimeDecoder::getAliasPath() {
 			return tracks[i]->path;
 	}
 	return Common::String();
-}
-
-void QuickTimeDecoder::handleMouseMove(int16 x, int16 y) {
-	if (_qtvrType != QTVRType::OBJECT || !_isMouseButtonDown )
-		return;
-
-	VideoTrackHandler *track = (VideoTrackHandler *)_nextVideoTrack;
-
-	// HACK: FIXME: Hard coded for now
-	const int sensitivity = 10;
-	const float speedFactor = 0.1f; 
-
-	int16 mouseDeltaX = x - _prevMouseX;
-	int16 mouseDeltaY = y - _prevMouseY;
-
-	float speedX = (float)mouseDeltaX * speedFactor;
-	float speedY = (float)mouseDeltaY * speedFactor;
-
-	bool changed = false;
-
-	if (ABS(mouseDeltaY) >= sensitivity) {
-		int newFrame = track->getCurFrame() - round(speedY) * _nav.columns;
-
-		if (newFrame >= 0 && newFrame < track->getFrameCount())
-			track->setCurFrame(newFrame);
-
-		changed = true;
-	}
-
-	if (ABS(mouseDeltaX) >= sensitivity) {
-		int currentRow = track->getCurFrame() / _nav.columns;
-		int currentRowStart = currentRow * _nav.columns;
-
-		int newFrame = (track->getCurFrame() - (int)roundf(speedX) - currentRowStart) % _nav.columns + currentRowStart;
-
-		track->setCurFrame(newFrame);
-
-		changed = true;
-	}
-
-	if (changed) {
-		_prevMouseX = x;
-		_prevMouseY = y;
-	}
-}
-
-void QuickTimeDecoder::handleMouseButton(bool isDown, int16 x, int16 y) {
-	_isMouseButtonDown = isDown;
-
-	if (isDown) {
-		_prevMouseX = x;
-		_prevMouseY = y;
-	}
-}
-
-void QuickTimeDecoder::setCurrentRow(int row) {
-	VideoTrackHandler *track = (VideoTrackHandler *)_nextVideoTrack;
-
-	int currentColumn = track->getCurFrame() % _nav.columns;
-	int newFrame = row * _nav.columns + currentColumn;
-
-	if (newFrame >= 0 && newFrame < track->getFrameCount()) {
-		track->setCurFrame(newFrame);
-	}
-}
-
-void QuickTimeDecoder::setCurrentColumn(int column) {
-	VideoTrackHandler *track = (VideoTrackHandler *)_nextVideoTrack;
-
-	int currentRow = track->getCurFrame() / _nav.columns;
-	int newFrame = currentRow * _nav.columns + column;
-
-	if (newFrame >= 0 && newFrame < track->getFrameCount()) {
-		track->setCurFrame(newFrame);
-	}
-}
-
-void QuickTimeDecoder::nudge(const Common::String &direction) {
-	VideoTrackHandler *track = (VideoTrackHandler *)_nextVideoTrack;
-
-	int curFrame = track->getCurFrame();
-	int currentRow = curFrame / _nav.columns;
-	int currentRowStart = currentRow * _nav.columns;
-	int newFrame = curFrame;
-
-	if (direction.equalsIgnoreCase("left")) {
-		newFrame = (curFrame - 1 - currentRowStart) % _nav.columns + currentRowStart;
-	} else if (direction.equalsIgnoreCase("right")) {
-		newFrame = (curFrame + 1 - currentRowStart) % _nav.columns + currentRowStart;
-	} else if (direction.equalsIgnoreCase("top")) {
-		newFrame = curFrame - _nav.columns;
-		if (newFrame < 0)
-			return;
-	} else if (direction.equalsIgnoreCase("bottom")) {
-		newFrame = curFrame + _nav.columns;
-		if (newFrame >= track->getFrameCount())
-			return;
-	} else {
-		error("QuickTimeDecoder::nudge(): Invald direction: ('%s')!", direction.c_str());
-	}
-
-	track->setCurFrame(newFrame);
-}
-
-QuickTimeDecoder::NodeData QuickTimeDecoder::getNodeData(uint32 nodeID) {
-	for (const auto &sample : _panoTrack->panoSamples) {
-		if (sample.hdr.nodeID == nodeID) {
-			return {
-				nodeID,
-				sample.hdr.defHPan,
-				sample.hdr.defVPan,
-				sample.hdr.defZoom,
-				sample.hdr.minHPan,
-				sample.hdr.minVPan,
-				sample.hdr.maxHPan,
-				sample.hdr.maxVPan,
-				sample.hdr.minZoom,
-				sample.strTable.getString(sample.hdr.nameStrOffset)};
-		}
-	}
-
-	error("QuickTimeDecoder::getNodeData(): Node with nodeID %d not found!", nodeID);
-
-	return {};
 }
 
 Audio::Timestamp QuickTimeDecoder::VideoTrackHandler::getFrameTime(uint frame) const {
@@ -1142,65 +1002,6 @@ void ditherFrame(const Graphics::Surface &src, Graphics::Surface &dst, const byt
 }
 
 } // End of anonymous namespace
-
-void QuickTimeDecoder::VideoTrackHandler::constructPanorama() {
-	int16 totalWidth = getHeight() * _parent->frameCount;
-	int16 totalHeight = getWidth();
-
-	if (totalWidth <= 0 || totalHeight <= 0)
-		return;
-
-	_constructedPano = new Graphics::Surface();
-	_constructedPano->create(totalWidth, totalHeight, getPixelFormat());
-
-	for (uint32 frameIndex = 0; frameIndex < _parent->frameCount; frameIndex++) {
-		const Graphics::Surface *frame = bufferNextFrame();
-
-		for (int16 y = 0; y < frame->h; y++) {
-			for (int16 x = 0; x < frame->w; x++) {
-
-				int setX = (totalWidth - 1) - (frameIndex * _parent->height + y);
-				int setY = x;
-
-				if (setX >= 0 && setX < _constructedPano->w && setY >= 0 && setY < _constructedPano->h) {
-					uint32 pixel = frame->getPixel(x, y);
-					_constructedPano->setPixel(setX, setY, pixel);
-				}
-			}
-		}
-	}
-
-	_isPanoConstructed = true;
-}
-
-void QuickTimeDecoder::VideoTrackHandler::projectPanorama() {
-	if (!_isPanoConstructed)
-		return;
-
-	_projectedPano = new Graphics::Surface();
-	_projectedPano->create(_constructedPano->w, _constructedPano->h, _constructedPano->format);
-
-	const float c = _projectedPano->w;
-	const float r = c / (2 * M_PI);
-
-	// HACK: FIXME: Hard coded for now
-	const float d = 500.0f;
-
-	for (int16 y = 0; y < _projectedPano->h; y++) {
-		for (int16 x = 0; x < _projectedPano->w; x++) {
-			double u = atan(x / d) / (2.0 * M_PI);
-			double v = y * r * cos(u) / d;
-
-			int setX = round(u * _constructedPano->w);
-			int setY = round(v);
-
-			if (setX >= 0 && setX < _constructedPano->w && setY >= 0 && setY < _constructedPano->h) {
-				uint32 pixel = _constructedPano->getPixel(setX, setY);
-				_projectedPano->setPixel(x, y, pixel);
-			}
-		}
-	}
-}
 
 const Graphics::Surface *QuickTimeDecoder::VideoTrackHandler::forceDither(const Graphics::Surface &frame) {
 	if (frame.format.bytesPerPixel == 1) {

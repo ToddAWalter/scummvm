@@ -107,7 +107,7 @@ bool Console::cmdSave(int argc, const char **argv) {
 }
 
 bool Console::cmdMagic(int argc, const char **argv) {
-	_G(thor_info)._magic = (argc == 2) ? CLIP(atoi(argv[1]), 0, 150) : 150;
+	_G(thorInfo)._magic = (argc == 2) ? CLIP(atoi(argv[1]), 0, 150) : 150;
 
 	return false;
 }
@@ -135,12 +135,12 @@ bool Console::cmdFreeze(int argc, const char **argv) {
 
 bool Console::cmdLevel(int argc, const char **argv) {
 	if (argc != 2) {
-		debugPrintf("Current level = %d\n", _G(current_level));
+		debugPrintf("Current level = %d\n", _G(currentLevel));
 		return true;
 	}
 
-	_G(new_level) = atoi(argv[1]);
-	_G(warp_flag) = true;
+	_G(newLevel) = atoi(argv[1]);
+	_G(warpFlag) = true;
 	return false;
 }
 

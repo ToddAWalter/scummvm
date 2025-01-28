@@ -22,7 +22,6 @@
 #include "got/game/boss2.h"
 #include "got/events.h"
 #include "got/game/back.h"
-#include "got/game/init.h"
 #include "got/game/move.h"
 #include "got/game/status.h"
 #include "got/gfx/image.h"
@@ -71,7 +70,7 @@ int boss2Movement(Actor *actor) {
 	default:
 		break;
 	}
-	if (_G(boss_dead))
+	if (_G(bossDead))
 		return boss2Die();
 
 	if (actor->_i1) {
@@ -152,7 +151,7 @@ int boss2Movement(Actor *actor) {
 	return d;
 }
 
-static void bossSet(byte d, int x, int y) {
+static void bossSet(const byte d, const int x, const int y) {
 	_G(actor[4])._nextFrame = _G(actor[3])._nextFrame;
 	_G(actor[5])._nextFrame = _G(actor[3])._nextFrame;
 	_G(actor[6])._nextFrame = _G(actor[3])._nextFrame;
@@ -168,8 +167,8 @@ static void bossSet(byte d, int x, int y) {
 	_G(actor[6])._y = y + 16;
 }
 
-void boss2CheckHit(Actor *actor, int x1, int y1, int x2, int y2, int act_num) {
-	if ((!_G(actor[3])._vulnerableCountdown)) {
+void boss2CheckHit(Actor *actor) {
+	if (!_G(actor[3])._vulnerableCountdown) {
 		actorDamaged(&_G(actor[3]), _G(hammer)->_hitStrength);
 		_G(actor[3])._health -= 10;
 		if (_G(actor[3])._health == 50) {
@@ -199,7 +198,7 @@ void boss2CheckHit(Actor *actor, int x1, int y1, int x2, int y2, int act_num) {
 		}
 		
 		if (_G(actor[3])._health == 0) {
-			_G(boss_dead) = true;
+			_G(bossDead) = true;
 			for (int rep = 7; rep < MAX_ACTORS; rep++) {
 				if (_G(actor[rep])._active)
 					actorDestroyed(&_G(actor[rep]));
@@ -210,10 +209,9 @@ void boss2CheckHit(Actor *actor, int x1, int y1, int x2, int y2, int act_num) {
 
 void boss2SetupLevel() {
 	setupBoss(2);
-	_G(boss_active) = true;
+	_G(bossActive) = true;
 	musicPause();
 	playSound(BOSS11, true);
-	_G(timer_cnt) = 0;
 
 	dropFlag = false;
 	Common::fill(su, su + 18, 0);
@@ -223,9 +221,8 @@ void boss2SetupLevel() {
 }
 
 static int boss2Die() {
-	_G(hourglass_flag) = 0;
-	_G(thunder_flag) = 0;
-	if (_G(boss_dead)) {
+	_G(thunderSnakeCounter) = 0;
+	if (_G(bossDead)) {
 		for (int rep = 0; rep < 4; rep++) {
 			const int x1 = _G(actor[3 + rep])._lastX[_G(pge)];
 			const int y1 = _G(actor[3 + rep])._lastY[_G(pge)];
@@ -254,7 +251,7 @@ static int boss2Die() {
 		}
 
 		playSound(EXPLODE, true);
-		_G(boss_dead) = true;
+		_G(bossDead) = true;
 	}
 
 	return _G(actor[3])._lastDir;
@@ -302,7 +299,7 @@ static int boss2MovementExplode(Actor *actor) {
 
 // Boss - skull - shake
 static int boss2MovementShake(Actor *actor) {
-	int rep, an, hx;
+	int rep, hx;
 
 	if (_G(hammer)->_active && _G(hammer)->_moveType != 5) {
 		hx = _G(hammer)->_x;
@@ -322,7 +319,7 @@ static int boss2MovementShake(Actor *actor) {
 	if (actor->_i4) {
 		actor->_i4--;
 		if (!actor->_i4)
-			_G(thunder_flag) = 0;
+			_G(thunderSnakeCounter) = 0;
 	}
 	if (!actor->_i2) {
 		if (actor->_x < 144)
@@ -348,14 +345,14 @@ static int boss2MovementShake(Actor *actor) {
 		actor->_x += 2;
 
 	if (actor->_x < 20 || actor->_x > 270) {
-		_G(thunder_flag) = 100;
+		_G(thunderSnakeCounter) = 100;
 		actor->_i4 = 50;
 		playSound(EXPLODE, true);
 		actor->_i2 = 0;
 
 		Common::fill(su, su + 18, 0);
 		actorAlwaysShoots(&_G(actor[4]), 1);
-		an = _G(actor[4])._shotActor;
+		int an = _G(actor[4])._shotActor;
 		hx = (_G(thor)->_x / 16);
 		_G(actor[an])._x = _G(thor)->_x; //hx*16;
 		_G(actor[an])._y = g_events->getRandomNumber(15);
@@ -389,7 +386,7 @@ void boss2ClosingSequence1() {
 }
 
 void boss2ClosingSequence2() {
-	_G(thor_info)._armor = 10;
+	_G(thorInfo)._armor = 10;
 	loadNewThor();
 	_G(thor)->_dir = 1;
 	_G(thor)->_nextFrame = 0;
@@ -407,10 +404,10 @@ void boss2ClosingSequence4() {
 	for (int rep = 0; rep < 16; rep++)
 		_G(scrn)._actorType[rep] = 0;
 
-	_G(boss_dead) = false;
+	_G(bossDead) = false;
 	_G(setup)._bossDead[1] = true;
-	_G(game_over) = true;
-	_G(boss_active) = false;
+	_G(gameOver) = true;
+	_G(bossActive) = false;
 	_G(scrn)._music = 6;
 
 	showLevel(BOSS_LEVEL2);

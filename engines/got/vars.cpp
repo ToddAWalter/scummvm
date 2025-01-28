@@ -49,27 +49,24 @@ void Vars::load() {
 	_status.load();
 	_highScores.load();
 
-	_music_flag = !ConfMan.getBool("music_mute");
-	_sound_flag = !ConfMan.getBool("sfx_mute");
+	_musicFlag = !ConfMan.getBool("music_mute");
+	_soundFlag = !ConfMan.getBool("sfx_mute");
 
 	if (g_engine->isDemo()) {
 		_demo = _cheat = true;
-		_rdemo = ConfMan.getBool("rdemo");
 	}
 
-	if (_current_level != 23)
-		_story_flag = false;
+	if (_currentLevel != 23)
+		_storyFlag = false;
 
-	_setup._musicEnabled = _music_flag;
-	_setup._digitalSound = _sound_flag;
+	_setup._musicEnabled = _musicFlag;
+	_setup._digitalSound = _soundFlag;
 	_setup._speakerSound = false;
 	_setup._scrollFlag = true;
-	_setup._slowMode = _slow_mode ? 1 : 0;
+	_setup._slowMode = _slowMode;
 	_setup._difficultyLevel = 1;
 
-	_tmp_buff = new byte[TMP_SIZE];
-
-	resourceRead("RANDOM", _rnd_array);
+	_tmpBuff = new byte[TMP_SIZE];
 
 	Gfx::loadPalette();
 }
@@ -77,7 +74,7 @@ void Vars::load() {
 Vars::~Vars() {
 	g_vars = nullptr;
 
-	delete[] _tmp_buff;
+	delete[] _tmpBuff;
 }
 
 void Vars::setArea(int areaNum) {
@@ -89,15 +86,15 @@ void Vars::setArea(int areaNum) {
 
 		switch (areaNum) {
 		case 1:
-			_current_level = 23;
+			_currentLevel = 23;
 			break;
 
 		case 2:
-			_current_level = 51;
+			_currentLevel = 51;
 			break;
 
 		case 3:
-			_current_level = 33;
+			_currentLevel = 33;
 			break;
 
 		default:
@@ -107,16 +104,15 @@ void Vars::setArea(int areaNum) {
 }
 
 void Vars::clearKeyFlags() {
-	Common::fill(_key_flag, _key_flag + 100, 0);
+	Common::fill(_keyFlag, _keyFlag + 100, 0);
 }
 
-void Vars::resetEndgameFlags() {
+void Vars::resetEndGameFlags() {
 	_gameMode = MODE_NORMAL;
-	_auto_load = false;
-	_end_tile = false;
-	_boss_dead = false;
-	_game_over = false;
-	_boss_intro1 = _boss_intro2 = false;
+	_endTile = false;
+	_bossDead = false;
+	_gameOver = false;
+	_bossIntro1 = _bossIntro2 = false;
 }
 
 } // namespace Got

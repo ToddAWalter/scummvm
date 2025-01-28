@@ -46,10 +46,9 @@ const char *ITEM_NAMES[] = {
 static const char *odinEndMessage;
 
 void showLevel(const int newLevel) {
-	_G(boss_active) = false;
-	if (!_G(shield_on))
+	_G(bossActive) = false;
+	if (!_G(shieldOn))
 		_G(actor[2])._active = false;
-	_G(bomb_flag) = false;
 	_G(slipping) = false;
 
 	if (_G(scrn)._iconGrid[_G(thor)->_centerY][_G(thor)->_centerX] == 154)
@@ -59,8 +58,8 @@ void showLevel(const int newLevel) {
 	// This doesn't make sense, because that would put the ending in the middle of _staticY.
 	// Plus, it follows with an entire copy of scrn into sd_data anyway, so the first
 	// move seems entirely redundant.
-	_G(scrn).save(_G(current_level));
-	_G(scrn).load(_G(new_level));
+	_G(scrn).save(_G(currentLevel));
+	_G(scrn).load(_G(newLevel));
 
 	_G(levelMusic) = _G(scrn)._music;
 
@@ -74,29 +73,29 @@ void showLevel(const int newLevel) {
 	if (_G(scrn)._iconGrid[_G(thor)->_centerY][_G(thor)->_centerX] == 154)
 		warning("showLevel - Potential short move missing");
 
-	if (_G(warp_flag))
-		_G(current_level) = newLevel - 5; // Force phase
-	_G(warp_flag) = false;
+	if (_G(warpFlag))
+		_G(currentLevel) = newLevel - 5; // Force phase
+	_G(warpFlag) = false;
 
-	if (_G(warp_scroll)) {
-		_G(warp_scroll) = false;
+	if (_G(warpScroll)) {
+		_G(warpScroll) = false;
 		if (_G(thor)->_dir == 0)
-			_G(current_level) = newLevel + 10;
+			_G(currentLevel) = newLevel + 10;
 		else if (_G(thor)->_dir == 1)
-			_G(current_level) = newLevel - 10;
+			_G(currentLevel) = newLevel - 10;
 		else if (_G(thor)->_dir == 2)
-			_G(current_level) = newLevel + 1;
+			_G(currentLevel) = newLevel + 1;
 		else if (_G(thor)->_dir == 3)
-			_G(current_level) = newLevel - 1;
+			_G(currentLevel) = newLevel - 1;
 	}
 
 	if (!_G(setup)._scrollFlag)
-		_G(current_level) = newLevel; // Force no scroll
+		_G(currentLevel) = newLevel; // Force no scroll
 
-	if (_G(music_current) != _G(levelMusic))
+	if (_G(currentMusic) != _G(levelMusic))
 		_G(sound).musicPause();
 
-	switch (_G(new_level) - _G(current_level)) {
+	switch (_G(newLevel) - _G(currentLevel)) {
 	case 0:
 		// Nothing to do
 		showLevelDone();
@@ -125,47 +124,41 @@ void showLevel(const int newLevel) {
 }
 
 void showLevelDone() {
-	_G(current_level) = _G(new_level);
+	_G(currentLevel) = _G(newLevel);
 
-	_G(thor_info)._lastHealth = _G(thor)->_health;
-	_G(thor_info)._lastMagic = _G(thor_info)._magic;
-	_G(thor_info)._lastJewels = _G(thor_info)._jewels;
-	_G(thor_info)._lastKeys = _G(thor_info)._keys;
-	_G(thor_info)._lastScore = _G(thor_info)._score;
-	_G(thor_info)._lastItem = _G(thor_info)._selectedItem;
-	_G(thor_info)._lastScreen = _G(current_level);
-	_G(thor_info)._lastIcon = ((_G(thor)->_x + 8) / 16) + (((_G(thor)->_y + 14) / 16) * 20);
-	_G(thor_info)._lastDir = _G(thor)->_dir;
-	_G(thor_info)._lastInventory = _G(thor_info)._inventory;
-	_G(thor_info)._lastObject = _G(thor_info)._object;
-	_G(thor_info)._lastObjectName = _G(thor_info)._objectName;
+	_G(thorInfo)._lastHealth = _G(thor)->_health;
+	_G(thorInfo)._lastMagic = _G(thorInfo)._magic;
+	_G(thorInfo)._lastJewels = _G(thorInfo)._jewels;
+	_G(thorInfo)._lastKeys = _G(thorInfo)._keys;
+	_G(thorInfo)._lastScore = _G(thorInfo)._score;
+	_G(thorInfo)._lastItem = _G(thorInfo)._selectedItem;
+	_G(thorInfo)._lastScreen = _G(currentLevel);
+	_G(thorInfo)._lastIcon = ((_G(thor)->_x + 8) / 16) + (((_G(thor)->_y + 14) / 16) * 20);
+	_G(thorInfo)._lastDir = _G(thor)->_dir;
+	_G(thorInfo)._lastInventory = _G(thorInfo)._inventory;
+	_G(thorInfo)._lastObject = _G(thorInfo)._object;
+	_G(thorInfo)._lastObjectName = _G(thorInfo)._objectName;
 
-	_G(last_setup) = _G(setup);
+	_G(lastSetup) = _G(setup);
 
 	bool f = true;
-	if (GAME1 && _G(new_level) == BOSS_LEVEL1) {
-		if (!_G(setup)._bossDead[0]) {
-			if (!_G(auto_load))
-				boss1SetupLevel();
-			f = false;
-		}
+	if (GAME1 && _G(newLevel) == BOSS_LEVEL1 && !_G(setup)._bossDead[0]) {
+		boss1SetupLevel();
+		f = false;
 	}
-	if (GAME2 && _G(new_level) == BOSS_LEVEL2) {
-		if (!_G(setup)._bossDead[1]) {
-			if (!_G(auto_load))
-				boss2SetupLevel();
-			f = false;
-		}
+
+	if (GAME2 && _G(newLevel) == BOSS_LEVEL2 && !_G(setup)._bossDead[1]) {
+		boss2SetupLevel();
+		f = false;
 	}
+
 	if (GAME3) {
-		if (_G(new_level) == BOSS_LEVEL3) {
-			if (!_G(setup)._bossDead[2]) {
-				if (!_G(auto_load))
-					boss3SetupLevel();
-				f = false;
-			}
+		if (_G(newLevel) == BOSS_LEVEL3 && !_G(setup)._bossDead[2]) {
+			boss3SetupLevel();
+			f = false;
 		}
-		if (_G(current_level) == ENDING_SCREEN) {
+
+		if (_G(currentLevel) == ENDING_SCREEN) {
 			endingScreen();
 			f = false;
 		}
@@ -182,7 +175,7 @@ static void odin_speaks_end() {
 	// In case Thor is now dead, flag as such
 	if (!_G(thor)->_health) {
 		_G(thor)->_show = 0;
-		_G(exit_flag) = 2;
+		_G(exitFlag) = 2;
 	}
 
 	// If there's an end message, pass it on to the view hierarchy.
@@ -253,13 +246,8 @@ void killEnemies(const int iy, const int ix) {
 			x2 = (_G(actor[i])._x + _G(actor[i])._sizeX);
 			y2 = _G(actor[i])._y + _G(actor[i])._sizeY - 1;
 
-			if (pointWithin(x1, y1, ix, iy, ix + 15, iy + 15))
-				actorDestroyed(&_G(actor[i]));
-			else if (pointWithin(x2, y1, ix, iy, ix + 15, iy + 15))
-				actorDestroyed(&_G(actor[i]));
-			else if (pointWithin(x1, y2, ix, iy, ix + 15, iy + 15))
-				actorDestroyed(&_G(actor[i]));
-			else if (pointWithin(x2, y2, ix, iy, ix + 15, iy + 15))
+			if (pointWithin(x1, y1, ix, iy, ix + 15, iy + 15) || pointWithin(x2, y1, ix, iy, ix + 15, iy + 15)
+				|| pointWithin(x1, y2, ix, iy, ix + 15, iy + 15) || pointWithin(x2, y2, ix, iy, ix + 15, iy + 15))
 				actorDestroyed(&_G(actor[i]));
 		}
 	}
@@ -269,7 +257,8 @@ void killEnemies(const int iy, const int ix) {
 	x2 = x1 + 13;
 	y2 = y1 + 5;
 
-	if (pointWithin(x1, y1, ix, iy, ix + 15, iy + 15) || pointWithin(x2, y1, ix, iy, ix + 15, iy + 15) || pointWithin(x1, y2, ix, iy, ix + 15, iy + 15) || pointWithin(x2, y2, ix, iy, ix + 15, iy + 15)) {
+	if (pointWithin(x1, y1, ix, iy, ix + 15, iy + 15) || pointWithin(x2, y1, ix, iy, ix + 15, iy + 15)
+		|| pointWithin(x1, y2, ix, iy, ix + 15, iy + 15) || pointWithin(x2, y2, ix, iy, ix + 15, iy + 15)) {
 		if (!_G(cheats)._freezeHealth) {
 			_G(thor)->_health = 0;
 			g_events->send(GameMessage("THOR_DIES"));
@@ -280,9 +269,9 @@ void killEnemies(const int iy, const int ix) {
 void removeObjects(const int y, const int x) {
 	const int p = (y * 20) + x;
 
-	if (_G(object_map[p]) > 0) {
-		_G(object_map[p]) = 0;
-		_G(object_index[p]) = 0;
+	if (_G(objectMap[p]) > 0) {
+		_G(objectMap[p]) = 0;
+		_G(objectIndex[p]) = 0;
 	}
 }
 
@@ -316,7 +305,7 @@ void actorSpeaks(const Actor *actor, int index, int item) {
 	if (v < 1 || v > 20)
 		return;
 
-	long lind = (long)_G(current_level);
+	long lind = (long)_G(currentLevel);
 	lind = lind * 1000;
 	lind += (long)actor->_actorNum;
 
@@ -330,7 +319,7 @@ void actorSpeaks(const Actor *actor, int index, int item) {
 
 	if (!_G(thor)->_health) {
 		_G(thor)->_show = 0;
-		_G(exit_flag) = 2;
+		_G(exitFlag) = 2;
 	}
 }
 

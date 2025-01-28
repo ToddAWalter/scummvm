@@ -155,14 +155,14 @@ int (*specialMovementFunc[])(Actor *actor) = {
 
 // Check Thor move
 int checkMove0(const int x, const int y, Actor *actor) {
-	_G(thor_icon1) = 0;
-	_G(thor_icon2) = 0;
-	_G(thor_icon3) = 0;
-	_G(thor_icon4) = 0;
+	_G(thorIcon1) = 0;
+	_G(thorIcon2) = 0;
+	_G(thorIcon3) = 0;
+	_G(thorIcon4) = 0;
 
 	if (x < 0) {
-		if (_G(current_level) > 0) {
-			_G(new_level) = _G(current_level) - 1;
+		if (_G(currentLevel) > 0) {
+			_G(newLevel) = _G(currentLevel) - 1;
 			actor->_x = 304;
 			actor->_lastX[0] = 304;
 			actor->_lastX[1] = 304;
@@ -176,8 +176,8 @@ int checkMove0(const int x, const int y, Actor *actor) {
 	}
 	
 	if (x > 306) {
-		if (_G(current_level) < 119) {
-			_G(new_level) = _G(current_level) + 1;
+		if (_G(currentLevel) < 119) {
+			_G(newLevel) = _G(currentLevel) + 1;
 			actor->_x = 0;
 			actor->_lastX[0] = 0;
 			actor->_lastX[1] = 0;
@@ -191,8 +191,8 @@ int checkMove0(const int x, const int y, Actor *actor) {
 	}
 	
 	if (y < 0) {
-		if (_G(current_level) > 9) {
-			_G(new_level) = _G(current_level) - 10;
+		if (_G(currentLevel) > 9) {
+			_G(newLevel) = _G(currentLevel) - 10;
 			actor->_y = 175;
 			actor->_lastY[0] = 175;
 			actor->_show = 0;
@@ -206,8 +206,8 @@ int checkMove0(const int x, const int y, Actor *actor) {
 	}
 	
 	if (y > 175) {
-		if (_G(current_level) < 110) {
-			_G(new_level) = _G(current_level) + 10;
+		if (_G(currentLevel) < 110) {
+			_G(newLevel) = _G(currentLevel) + 10;
 			actor->_y = 0;
 			actor->_lastY[0] = 0;
 			actor->_lastY[1] = 0;
@@ -236,22 +236,22 @@ int checkMove0(const int x, const int y, Actor *actor) {
 		int ti = 0;
 
 		if (icn1 < TILE_FLY) {
-			_G(thor_icon1) = 1;
+			_G(thorIcon1) = 1;
 			ti = 1;
 		}
 		
 		if (icn2 < TILE_FLY) {
-			_G(thor_icon2) = 1;
+			_G(thorIcon2) = 1;
 			ti = 1;
 		}
 		
 		if (icn3 < TILE_FLY) {
-			_G(thor_icon3) = 1;
+			_G(thorIcon3) = 1;
 			ti = 1;
 		}
 		
 		if (icn4 < TILE_FLY) {
-			_G(thor_icon4) = 1;
+			_G(thorIcon4) = 1;
 			ti = 1;
 		}
 		
@@ -285,13 +285,13 @@ int checkMove0(const int x, const int y, Actor *actor) {
 
 	if (!_G(slipFlag)) {
 		_G(slipping) = false;
-		_G(slip_cnt) = 0;
+		_G(slipCount) = 0;
 	}
 	
 	if (_G(slipFlag) && !_G(slipping))
-		_G(slip_cnt++);
+		_G(slipCount++);
 	
-	if (_G(slip_cnt) > 8)
+	if (_G(slipCount) > 8)
 		_G(slipping) = true;
 	
 	_G(slipFlag) = false;
@@ -302,7 +302,7 @@ int checkMove0(const int x, const int y, Actor *actor) {
 	x2 = x + 12;	
 	y2 = y + 15;
 
-	_G(thor_special_flag) = false;
+	_G(thorSpecialFlag) = false;
 	for (int i = 3; i < MAX_ACTORS; i++) {
 		Actor *act = &_G(actor[i]);
 		if ((act->_solid & 128) || !act->_active)
@@ -322,18 +322,18 @@ int checkMove0(const int x, const int y, Actor *actor) {
 					return 0;
 				act->_temp1 = x;
 				act->_temp2 = y;
-				_G(thor_special_flag) = true;
+				_G(thorSpecialFlag) = true;
 				
 				return specialMovementFunc[act->_funcNum](act);
 			}
 
-			_G(thor_special_flag) = false;
+			_G(thorSpecialFlag) = false;
 			thorDamaged(act);
 			if (act->_solid < 2) {
 				if (!act->_vulnerableCountdown && (!(act->_type & 1)))
 					playSound(PUNCH1, false);
 
-				if (!_G(hammer)->_active && _G(key_flag[key_fire]))
+				if (!_G(hammer)->_active && _G(keyFlag[key_fire]))
 					actorDamaged(act, _G(hammer)->_hitStrength);
 				else
 					actorDamaged(act, _G(thor)->_hitStrength);
@@ -405,13 +405,13 @@ int checkMove1(const int x, const int y, Actor *actor) {
 		const int y4 = act->_y + act->_sizeY - 1;
 
 		if (overlap(x1, y1, x2, y2, x3, y3, x4, y4)) {
-			if (_G(boss_active) && !GAME3) {
+			if (_G(bossActive) && !GAME3) {
 				switch (_G(area)) {
 				case 1:
 					boss1CheckHit(act, x1, y1, x2, y2, i);
 					break;
 				case 2:
-					boss2CheckHit(act, x1, y1, x2, y2, i);
+					boss2CheckHit(act);
 					break;
 				default:
 					// Area 3 boss Loki isn't checked here
@@ -490,7 +490,7 @@ int checkMove2(const int x, const int y, Actor *actor) {
 			continue; // Shot
 
 		if (i == 0) {
-			if (overlap(x1, y1, x2, y2, _G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2))) {
+			if (overlap(x1, y1, x2, y2, _G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2))) {
 				thorDamaged(actor);
 				return 0;
 			}
@@ -506,9 +506,9 @@ int checkMove2(const int x, const int y, Actor *actor) {
 			if (overlap(x1, y1, x2, y2, x3, y3, x4, y4)) {
 				if (actor->_moveType == 38) {
 					if (act->_funcNum == 4)
-						_G(switch_flag) = 1;
+						_G(switchUsed) = 1;
 					else if (act->_funcNum == 7)
-						_G(switch_flag) = 2;
+						_G(switchUsed) = 2;
 				}
 				return 0;
 			}
@@ -557,7 +557,7 @@ int checkMove3(const int x, const int y, Actor *actor) {
 	x2 = (x + actor->_sizeX) - 1;
 	y2 = (y + actor->_sizeY) - 1;
 
-	if (overlap(x1, y1, x2, y2, _G(thor_x1), _G(thor_real_y1), _G(thor_x2), _G(thor_y2))) {
+	if (overlap(x1, y1, x2, y2, _G(thorX1), _G(thorRealY1), _G(thorX2), _G(thorY2))) {
 		thorDamaged(actor);
 		return 0;
 	}
@@ -597,7 +597,7 @@ int checkMove4(const int x, const int y, Actor *actor) {
 	if (x < 0 || x > (319 - actor->_sizeX) || y < 0 || y > 175)
 		return 0;
 	if (overlap(x, y, x + actor->_sizeX - 1, y + actor->_sizeY - 1,
-				_G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2))) {
+				_G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2))) {
 		if (actor->_type == 3)
 			thorDamaged(actor);
 		return 0;
@@ -614,21 +614,21 @@ int check_thor_move(const int x, const int y, Actor *actor) {
 	if (checkMove0(x, y, actor))
 		return 1;
 	
-	if (_G(diag_flag) || _G(thor_special_flag))
+	if (_G(diagFlag) || _G(thorSpecialFlag))
 		return 0;
 
-	if (_G(thor_icon1) + _G(thor_icon2) + _G(thor_icon3) + _G(thor_icon4) > 1)
+	if (_G(thorIcon1) + _G(thorIcon2) + _G(thorIcon3) + _G(thorIcon4) > 1)
 		return 0;
 
 	switch (actor->_dir) {
 	case 0:
-		if (_G(thor_icon1)) {
+		if (_G(thorIcon1)) {
 			actor->_dir = 3;
 			if (checkMove0(x + THOR_PAD1, y + 2, actor)) {
 				actor->_dir = 0;
 				return 1;
 			}
-		} else if (_G(thor_icon3)) {
+		} else if (_G(thorIcon3)) {
 			actor->_dir = 2;
 			if (checkMove0(x - THOR_PAD1, y + 2, actor)) {
 				actor->_dir = 0;
@@ -639,13 +639,13 @@ int check_thor_move(const int x, const int y, Actor *actor) {
 		break;
 		
 	case 1:
-		if (_G(thor_icon2)) {
+		if (_G(thorIcon2)) {
 			actor->_dir = 3;
 			if (checkMove0(x + THOR_PAD1, y - 2, actor)) {
 				actor->_dir = 1;
 				return 1;
 			}
-		} else if (_G(thor_icon4)) {
+		} else if (_G(thorIcon4)) {
 			actor->_dir = 2;
 			if (checkMove0(x - THOR_PAD1, y - 2, actor)) {
 				actor->_dir = 1;
@@ -656,20 +656,20 @@ int check_thor_move(const int x, const int y, Actor *actor) {
 		break;
 		
 	case 2:
-		if (_G(thor_icon1)) {
+		if (_G(thorIcon1)) {
 			if (checkMove0(x + 2, y + THOR_PAD1, actor))
 				return 1;
-		} else if (_G(thor_icon2)) {
+		} else if (_G(thorIcon2)) {
 			if (checkMove0(x + 2, y - THOR_PAD1, actor))
 				return 1;
 		}
 		break;
 		
 	case 3:
-		if (_G(thor_icon3)) {
+		if (_G(thorIcon3)) {
 			if (checkMove0(x - 2, y + THOR_PAD1, actor))
 				return 1;
-		} else if (_G(thor_icon4)) {
+		} else if (_G(thorIcon4)) {
 			if (checkMove0(x - 2, y - THOR_PAD1, actor))
 				return 1;
 		}
@@ -690,24 +690,24 @@ int movementZero(Actor *actor) {
 	setThorVars();
 
 	if (_G(hammer)->_active && _G(hammer)->_moveType == 5) {
-		if (overlap(_G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2),
+		if (overlap(_G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2),
 					_G(hammer)->_x, _G(hammer)->_y, _G(hammer)->_x + 13, _G(hammer)->_y + 13)) {
 			actorDestroyed(_G(hammer));
 		}
 	}
 	int x = actor->_x;
 	int y = actor->_y;
-	_G(diag_flag) = false;
+	_G(diagFlag) = false;
 	if (actor->_moveCounter)
 		actor->_moveCounter--;
 
 	if (_G(slipping)) {
-		if (_G(slip_cnt) == 8)
+		if (_G(slipCount) == 8)
 			playSound(FALL, true);
 
 		y += 2;
-		_G(slip_cnt--);
-		if (!_G(slip_cnt))
+		_G(slipCount--);
+		if (!_G(slipCount))
 			_G(slipping) = false;
 
 		check_thor_move(x, y, actor);
@@ -715,84 +715,80 @@ int movementZero(Actor *actor) {
 		return d;
 	}
 
-	if (_G(key_flag[key_up]) && _G(key_flag[key_left])) {
+	if (_G(keyFlag[key_up]) && _G(keyFlag[key_left])) {
 		d = 2;
 		actor->_dir = d;
 		_G(diag) = 1;
-		_G(diag_flag) = true;
+		_G(diagFlag) = true;
 		if (check_thor_move(x - 2, y - 2, actor)) {
 			nextFrame(actor);
 			return d;
 		}
-	} else if (_G(key_flag[key_up]) && _G(key_flag[key_right])) {
+	} else if (_G(keyFlag[key_up]) && _G(keyFlag[key_right])) {
 		d = 3;
 		actor->_dir = d;
 		_G(diag) = 2;
-		_G(diag_flag) = true;
+		_G(diagFlag) = true;
 		if (check_thor_move(x + 2, y - 2, actor)) {
 			nextFrame(actor);
 			return d;
 		}
-	} else if (_G(key_flag[key_down]) && _G(key_flag[key_left])) {
+	} else if (_G(keyFlag[key_down]) && _G(keyFlag[key_left])) {
 		d = 2;
 		actor->_dir = d;
 		_G(diag) = 4;
-		_G(diag_flag) = true;
+		_G(diagFlag) = true;
 		if (check_thor_move(x - 2, y + 2, actor)) {
 			nextFrame(actor);
 			return d;
 		}
-	} else if (_G(key_flag[key_down]) && _G(key_flag[key_right])) {
+	} else if (_G(keyFlag[key_down]) && _G(keyFlag[key_right])) {
 		d = 3;
 		actor->_dir = d;
 		_G(diag) = 3;
-		_G(diag_flag) = true;
+		_G(diagFlag) = true;
 		if (check_thor_move(x + 2, y + 2, actor)) {
 			nextFrame(actor);
 			return d;
 		}
 	}
 	_G(diag) = 0;
-	if (_G(key_flag[key_right])) {
-		if (!_G(key_flag[key_left])) {
-			d = 3;
-			actor->_dir = d;
-			if (check_thor_move(x + 2, y, actor)) {
-				nextFrame(actor);
-				return d;
-			}
+	if (_G(keyFlag[key_right]) && !_G(keyFlag[key_left])) {
+		d = 3;
+		actor->_dir = d;
+		if (check_thor_move(x + 2, y, actor)) {
+			nextFrame(actor);
+			return d;
 		}
 	}
-	if (_G(key_flag[key_left])) {
-		if (!_G(key_flag[key_right])) {
-			d = 2;
-			actor->_dir = d;
-			if (check_thor_move(x - 2, y, actor)) {
-				nextFrame(actor);
-				return d;
-			}
+
+	if (_G(keyFlag[key_left]) && !_G(keyFlag[key_right])) {
+		d = 2;
+		actor->_dir = d;
+		if (check_thor_move(x - 2, y, actor)) {
+			nextFrame(actor);
+			return d;
 		}
 	}
-	if (_G(key_flag[key_down])) {
-		if (!_G(key_flag[key_up])) {
-			d = 1;
-			actor->_dir = d;
-			if (check_thor_move(x, y + 2, actor)) {
-				nextFrame(actor);
-				return d;
-			}
+
+	if (_G(keyFlag[key_down]) && !_G(keyFlag[key_up])) {
+		d = 1;
+		actor->_dir = d;
+		if (check_thor_move(x, y + 2, actor)) {
+			nextFrame(actor);
+			return d;
 		}
 	}
-	if (_G(key_flag[key_up])) {
-		if (!_G(key_flag[key_down])) {
-			d = 0;
-			actor->_dir = d;
-			if (check_thor_move(x, y - 2, actor)) {
-				nextFrame(actor);
-				return d;
-			}
+
+	if (_G(keyFlag[key_up]) && !_G(keyFlag[key_down])) {
+		d = 0;
+		actor->_dir = d;
+		if (check_thor_move(x, y - 2, actor)) {
+			nextFrame(actor);
+			return d;
 		}
 	}
+
 	actor->_moveCounter = 5;
 	actor->_nextFrame = 0;
 	actor->_dir = oldDir;
@@ -877,7 +873,7 @@ int checkSpecialMove1(const int x, const int y, Actor *actor) {
 			continue;
 		x4 = act->_x + act->_sizeX;
 		y4 = act->_y + act->_sizeY;
-		if (overlap(_G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2), x3, y3, x4, y4))
+		if (overlap(_G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2), x3, y3, x4, y4))
 			return 0;
 	}
 	actor->_x = x;
@@ -889,7 +885,7 @@ int checkSpecialMove1(const int x, const int y, Actor *actor) {
 
 // Block
 int specialMovementOne(Actor *actor) {
-	if (_G(diag_flag))
+	if (_G(diagFlag))
 		return 0;
 
 	const int d = _G(thor)->_dir;
@@ -969,10 +965,10 @@ int specialMovementTwo(Actor *actor) {
 				playSound(ANGEL, false);
 			_G(thor)->_health += 1;
 		}
-	} else if (_G(thor_info)._magic < 150) {
+	} else if (_G(thorInfo)._magic < 150) {
 		if (!soundPlaying())
 			playSound(ANGEL, false);
-		_G(thor_info)._magic += 1;
+		_G(thorInfo)._magic += 1;
 	}
 
 	return 1;
@@ -980,10 +976,10 @@ int specialMovementTwo(Actor *actor) {
 
 // Yellow globe
 int specialMovementThree(Actor *actor) {
-	if (_G(thunder_flag))
+	if (_G(thunderSnakeCounter))
 		return 0;
 
-	long lind = (long)_G(current_level);
+	long lind = (long)_G(currentLevel);
 	lind *= 1000;
 	lind += (long)actor->_actorNum;
 	executeScript(lind, _G(odin));
@@ -997,7 +993,7 @@ int specialMovementFour(Actor *actor) {
 		return 0;
 	actor->_shotCountdown = 30;
 
-	_G(switch_flag) = 1;
+	_G(switchUsed) = 1;
 	return 0;
 }
 
@@ -1005,31 +1001,31 @@ int specialMovementFour(Actor *actor) {
 int specialMovementFive(Actor *actor) {
 	int d = _G(thor)->_dir;
 
-	if (_G(diag_flag)) {
+	if (_G(diagFlag)) {
 		switch (_G(diag)) {
 		case 1:
-			if (_G(thor_x1) < (actor->_x + 15))
+			if (_G(thorX1) < (actor->_x + 15))
 				d = 0;
 			else
 				d = 2;
 			break;
 			
 		case 2:
-			if (_G(thor_x2) < actor->_x)
+			if (_G(thorX2) < actor->_x)
 				d = 3;
 			else
 				d = 0;
 			break;
 			
 		case 3:
-			if (_G(thor_x2) > (actor->_x))
+			if (_G(thorX2) > (actor->_x))
 				d = 1;
 			else
 				d = 3;
 			break;
 			
 		case 4:
-			if (_G(thor_x1) > (actor->_x + 15))
+			if (_G(thorX1) > (actor->_x + 15))
 				d = 2;
 			else
 				d = 1;
@@ -1056,12 +1052,12 @@ int specialMovementSeven(Actor *actor) {
 
 	actor->_shotCountdown = 30;
 
-	_G(switch_flag) = 2;
+	_G(switchUsed) = 2;
 	return 0;
 }
 
 int specialMovementEight(Actor *actor) {
-	if (_G(thor)->_dir < 2 || _G(diag_flag))
+	if (_G(thor)->_dir < 2 || _G(diagFlag))
 		return 0;
 
 	actor->_lastDir = _G(thor)->_dir;
@@ -1070,7 +1066,7 @@ int specialMovementEight(Actor *actor) {
 }
 
 int specialMovementNine(Actor *actor) {
-	if (_G(thor)->_dir > 1 || _G(diag_flag))
+	if (_G(thor)->_dir > 1 || _G(diagFlag))
 		return 0;
 
 	actor->_lastDir = _G(thor)->_dir;
@@ -1086,7 +1082,7 @@ int specialMovementTen(Actor *actor) {
 		return 0;
 	}
 
-	if (_G(thunder_flag))
+	if (_G(thunderSnakeCounter))
 		return 0;
 
 	actor_ctr = 10;
@@ -1151,8 +1147,7 @@ int movementTwo(Actor *actor) {
 		if (actor->_actorNum == 2) {
 			actor->_active = false;
 			actor->_dead = 2;
-			_G(lightning_used) = false;
-			_G(tornado_used) = false;
+			_G(tornadoUsed) = false;
 		}
 	}
 	nextFrame(actor);
@@ -1215,11 +1210,11 @@ int movementFour(Actor *actor) {
 	int y1 = actor->_y;
 
 	int f = 0;
-	if (x1 > _G(thor_x1) - 1) {
+	if (x1 > _G(thorX1) - 1) {
 		x1 -= 2;
 		d = 2;
 		f = 1;
-	} else if (x1 < _G(thor_x1) - 1) {
+	} else if (x1 < _G(thorX1) - 1) {
 		x1 += 2;
 		d = 3;
 		f = 1;
@@ -1229,15 +1224,15 @@ int movementFour(Actor *actor) {
 		f = checkMove2(x1, y1, actor);
 
 	if (!f) {
-		if (y1 < (_G(thor_real_y1))) {
-			d = (_G(thor_real_y1)) - y1;
+		if (y1 < (_G(thorRealY1))) {
+			d = (_G(thorRealY1)) - y1;
 			if (d > 2)
 				d = 2;
 			y1 += d;
 			d = 1;
 			f = 1;
-		} else if (y1 > (_G(thor_real_y1))) {
-			d = y1 - (_G(thor_real_y1));
+		} else if (y1 > (_G(thorRealY1))) {
+			d = y1 - (_G(thorRealY1));
 			if (d > 2)
 				d = 2;
 			y1 -= d;
@@ -1269,14 +1264,14 @@ int movementFive(Actor *actor) {
 		xd = 2;
 
 	if (actor->_actorNum == 1) {
-		if (y1 < (_G(thor_y1) - 6))
+		if (y1 < (_G(thorY1) - 6))
 			yd = 2;
-		else if (y1 > (_G(thor_y1) - 6))
+		else if (y1 > (_G(thorY1) - 6))
 			yd = -2;
 	} else {
-		if (y1 < (_G(thor_real_y1) - 1))
+		if (y1 < (_G(thorRealY1) - 1))
 			yd = 2;
-		else if (y1 > (_G(thor_real_y1) + 1))
+		else if (y1 > (_G(thorRealY1) + 1))
 			yd = -2;
 	}
 
@@ -1384,14 +1379,14 @@ int movementSix(Actor *actor) {
 		actor->_nextFrame++;
 		if (actor->_nextFrame > 2) {
 			actor->_nextFrame = 0;
-			if (_G(boss_dead))
+			if (_G(bossDead))
 				playSound(EXPLODE, false);
 		}
 		actor->_currNumShots--;
 	} else {
 		actor->_dead = 2;
 		actor->_active = false;
-		if (!_G(boss_dead) && !_G(endgame)) {
+		if (!_G(bossDead) && !_G(endGame)) {
 			if (actor->_type == 2)
 				dropRandomObject(actor);
 		}
@@ -2183,12 +2178,12 @@ int movementTwentySeven(Actor *actor) {
 }
 
 void setThorVars() {
-	_G(thor_x1) = _G(thor)->_x + 1;
-	_G(thor_y1) = _G(thor)->_y + 8;
+	_G(thorX1) = _G(thor)->_x + 1;
+	_G(thorY1) = _G(thor)->_y + 8;
 
-	_G(thor_real_y1) = _G(thor)->_y;
-	_G(thor_x2) = (_G(thor)->_x + 12);
-	_G(thor_y2) = _G(thor)->_y + 15;
+	_G(thorRealY1) = _G(thor)->_y;
+	_G(thorX2) = (_G(thor)->_x + 12);
+	_G(thorY2) = _G(thor)->_y + 15;
 }
 
 // Fish
@@ -2325,7 +2320,7 @@ int movementThirtyOne(Actor *actor) {
 		y1 += 2;
 		if (!checkMove2(x1, y1, actor))
 			actorDestroyed(actor);
-	} else if (_G(thor_y1) > y1 && ABS(x1 - _G(thor_x1)) < 16) {
+	} else if (_G(thorY1) > y1 && ABS(x1 - _G(thorX1)) < 16) {
 		const int cx = (actor->_x + (actor->_sizeX / 2)) >> 4;
 		const int cy = ((actor->_y + actor->_sizeY) - 2) >> 4;
 		const int ty = _G(thor)->_centerY;
@@ -2547,7 +2542,7 @@ int movementThirtyNine(Actor *actor) {
 	
 	if (actor->_passValue == 10) {
 		if (overlap(actor->_x + 1, actor->_y + 1, actor->_x + actor->_sizeX - 1,
-					actor->_y + actor->_sizeY - 1, _G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2))) {
+					actor->_y + actor->_sizeY - 1, _G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2))) {
 			actor->_hitStrength = 255;
 			thorDamaged(actor);
 		}
@@ -2576,7 +2571,7 @@ int movementThirtyNine(Actor *actor) {
 // Troll 2
 int movementForty(Actor *actor) {
 	if (overlap(actor->_x + 1, actor->_y + 1, actor->_x + actor->_sizeX + 3,
-				actor->_y + actor->_sizeY - 1, _G(thor_x1), _G(thor_y1), _G(thor_x2), _G(thor_y2))) {
+				actor->_y + actor->_sizeY - 1, _G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2))) {
 		actor->_hitStrength = 150;
 		thorDamaged(actor);
 	}

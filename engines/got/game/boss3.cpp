@@ -22,7 +22,6 @@
 #include "got/game/boss3.h"
 #include "got/events.h"
 #include "got/game/back.h"
-#include "got/game/init.h"
 #include "got/game/move.h"
 #include "got/game/move_patterns.h"
 #include "got/game/status.h"
@@ -43,8 +42,8 @@ static const byte EXPLOSION[4][8] = {
 static int bossMode;
 static int numPods1;
 static byte podSpeed;
-static bool expf[4][8];
-static byte expCounter;
+static bool explosionFlag[4][8];
+static byte explosionCounter;
 
 static int bossDie();
 static void boss3CheckHit();
@@ -137,8 +136,7 @@ static int boss3Movement1(Actor *actor) {
 		while (true) {
 			rx = g_events->getRandomNumber(255) + 16;
 			ry = g_events->getRandomNumber(143);
-			if (!overlap(rx, ry, rx + 32, ry + 32, _G(thor_x1), _G(thor_y1),
-						 _G(thor_x2), _G(thor_y2)))
+			if (!overlap(rx, ry, rx + 32, ry + 32, _G(thorX1), _G(thorY1), _G(thorX2), _G(thorY2)))
 				break;
 		}
 
@@ -225,7 +223,7 @@ int boss3Movement(Actor *actor) {
 
 	if (actor->_temp2)
 		actor->_temp2--;
-	if (_G(boss_dead))
+	if (_G(bossDead))
 		return bossDie();
 	boss3CheckHit();
 
@@ -420,7 +418,7 @@ static void boss3CheckHit() {
 		if (!_G(actor[3])._temp2) {
 			actorDamaged(&_G(actor[3]), 10);
 
-			if (_G(cheat) && _G(key_flag[_Z]))
+			if (_G(cheat) && _G(keyFlag[_Z]))
 				_G(actor[3])._health -= 50;
 			else
 				_G(actor[3])._health -= 10;
@@ -437,7 +435,7 @@ static void boss3CheckHit() {
 			}
 
 			if (_G(actor[3])._health == 0) {
-				_G(boss_dead) = true;
+				_G(bossDead) = true;
 				for (int rep = 7; rep < MAX_ACTORS; rep++) {
 					if (_G(actor[rep])._active)
 						actorDestroyed(&_G(actor[rep]));
@@ -463,10 +461,10 @@ static void boss3CheckHit() {
 }
 
 static void bossChangeMode() {
-	if (!_G(boss_intro2)) {
+	if (!_G(bossIntro2)) {
 		Gfx::Pics loki("FACE18", 262);
 		executeScript(1003, loki);
-		_G(boss_intro2) = true;
+		_G(bossIntro2) = true;
 	}
 	
 	bossMode = 0;
@@ -474,26 +472,25 @@ static void bossChangeMode() {
 
 void boss3SetupLevel() {
 	setupBoss(3);
-	_G(boss_active) = true;
+	_G(bossActive) = true;
 	musicPause();
 	playSound(BOSS11, true);
-	_G(timer_cnt) = 0;
 
 	g_events->send("Game", GameMessage("PAUSE", 40));
 
-	if (!_G(boss_intro1)) {
+	if (!_G(bossIntro1)) {
 		Gfx::Pics loki("FACE18", 262);
 		executeScript(1002, loki);
-		_G(boss_intro1) = true;
+		_G(bossIntro1) = true;
 	}
 
 	musicPlay(7, true);
-	_G(apple_drop) = 0;
+	_G(appleDropCounter) = 0;
 	bossMode = 1;
 }
 
 static int bossDie() {
-	if (_G(boss_dead)) {
+	if (_G(bossDead)) {
 		for (int rep = 0; rep < 4; rep++) {
 			const int x1 = _G(actor[3 + rep])._lastX[_G(pge)];
 			const int y1 = _G(actor[3 + rep])._lastY[_G(pge)];
@@ -522,7 +519,7 @@ static int bossDie() {
 		}
 
 		playSound(EXPLODE, true);
-		_G(boss_dead) = true;
+		_G(bossDead) = true;
 	}
 
 	return _G(actor[3])._lastDir;
@@ -544,17 +541,17 @@ void boss3ClosingSequence3() {
 	for (int rep = 0; rep < 16; rep++)
 		_G(scrn)._actorType[rep] = 0;
 
-	_G(boss_dead) = false;
+	_G(bossDead) = false;
 	_G(setup)._bossDead[2] = true;
-	_G(game_over) = true;
-	_G(boss_active) = false;
+	_G(gameOver) = true;
+	_G(bossActive) = false;
 	_G(scrn)._music = 6;
 	showLevel(BOSS_LEVEL3);
 
-	_G(exit_flag) = 0;
+	_G(exitFlag) = 0;
 	musicPause();
 
-	_G(new_level) = ENDING_SCREEN;
+	_G(newLevel) = ENDING_SCREEN;
 	_G(thor)->_x = 152;
 	_G(thor)->_y = 160;
 	_G(thor)->_dir = 1;
@@ -565,13 +562,12 @@ void endingScreen() {
 		_G(actor[i])._moveType = 1;
 	
 	musicPlay(6, true);
-	_G(timer_cnt) = 0;
 
-	memset(expf, 0, 4 * 8);
-	_G(endgame) = 1;
+	memset(explosionFlag, 0, 4 * 8);
+	_G(endGame) = 1;
 
-	_G(exprow) = 0;
-	expCounter = 0;
+	_G(explosionRow) = 0;
+	explosionCounter = 0;
 
 	_G(actor[34]) = _G(explosion);
 	_G(actor[34])._active = false;
@@ -593,12 +589,12 @@ int endgame_one() {
 	playSound(EXPLODE, true);
 
 	int r = _G(rand1) % 32;
-	while (expf[r / 8][r % 8]) {
+	while (explosionFlag[r / 8][r % 8]) {
 		r++;
 		if (r > 31)
 			r = 0;
 	}
-	expf[r / 8][r % 8] = true;
+	explosionFlag[r / 8][r % 8] = true;
 	int x = (EXPLOSION[r / 8][r % 8] % 20) * 16;
 	int y = (EXPLOSION[r / 8][r % 8] / 20) * 16;
 	_G(actor[34])._x = x;
@@ -609,19 +605,19 @@ int endgame_one() {
 
 	_G(scrn)._iconGrid[y / 16][x / 16] = _G(scrn)._backgroundColor;
 
-	_G(endgame++);
-	if (_G(endgame) > 32) {
+	_G(endGame++);
+	if (_G(endGame) > 32) {
 		_G(actor[34])._active = false;
-		_G(endgame) = 0;
+		_G(endGame) = 0;
 	}
 	return 1;
 }
 
 // Explode
 int endGameMovement() {
-	if (!_G(endgame))
+	if (!_G(endGame))
 		return 0;
-	if (expCounter > 3) {
+	if (explosionCounter > 3) {
 		endgame_one();
 		return 0;
 	}
@@ -633,14 +629,14 @@ int endGameMovement() {
 	playSound(EXPLODE, true);
 
 	int r = _G(rand1) % 8;
-	while (expf[_G(exprow)][r]) {
+	while (explosionFlag[_G(explosionRow)][r]) {
 		r++;
 		if (r > 7)
 			r = 0;
 	}
-	expf[_G(exprow)][r] = true;
-	const int x = (EXPLOSION[_G(exprow)][r] % 20) * 16;
-	const int y = (EXPLOSION[_G(exprow)][r] / 20) * 16;
+	explosionFlag[_G(explosionRow)][r] = true;
+	const int x = (EXPLOSION[_G(explosionRow)][r] % 20) * 16;
+	const int y = (EXPLOSION[_G(explosionRow)][r] / 20) * 16;
 	_G(actor[34])._x = x;
 	_G(actor[34])._y = y;
 	_G(actor[34])._active = true;
@@ -650,13 +646,13 @@ int endGameMovement() {
 	_G(scrn)._iconGrid[y / 16][x / 16] = _G(scrn)._backgroundColor;
 	_G(scrn)._iconGrid[(y / 16) - 4][x / 16] = _G(scrn)._backgroundColor;
 
-	_G(endgame++);
-	if (_G(endgame) > 8) {
-		_G(endgame) = 1;
-		_G(exprow++);
-		expCounter++;
-		if (expCounter > 3) {
-			memset(expf, 0, 32);
+	_G(endGame++);
+	if (_G(endGame) > 8) {
+		_G(endGame) = 1;
+		_G(explosionRow++);
+		explosionCounter++;
+		if (explosionCounter > 3) {
+			memset(explosionFlag, 0, 32);
 		}
 	}
 

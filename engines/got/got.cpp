@@ -125,7 +125,7 @@ Common::Error GotEngine::syncGame(Common::Serializer &s) {
 		g_vars->setArea(area);
 	}
 
-	_G(thor_info).sync(s);
+	_G(thorInfo).sync(s);
 	_G(sdData).sync(s);
 
 	if (s.isLoading())
@@ -135,30 +135,30 @@ Common::Error GotEngine::syncGame(Common::Serializer &s) {
 }
 
 void GotEngine::savegameLoaded() {
-	_G(current_area) = _G(thor_info)._lastScreen;
+	_G(currentArea) = _G(thorInfo)._lastScreen;
 
-	_G(thor)->_x = (_G(thor_info)._lastIcon % 20) * 16;
-	_G(thor)->_y = ((_G(thor_info)._lastIcon / 20) * 16) - 1;
+	_G(thor)->_x = (_G(thorInfo)._lastIcon % 20) * 16;
+	_G(thor)->_y = ((_G(thorInfo)._lastIcon / 20) * 16) - 1;
 	if (_G(thor)->_x < 1)
 		_G(thor)->_x = 1;
 	if (_G(thor)->_y < 0)
 		_G(thor)->_y = 0;
-	_G(thor)->_dir = _G(thor_info)._lastDir;
-	_G(thor)->_lastDir = _G(thor_info)._lastDir;
-	_G(thor)->_health = _G(thor_info)._lastHealth;
+	_G(thor)->_dir = _G(thorInfo)._lastDir;
+	_G(thor)->_lastDir = _G(thorInfo)._lastDir;
+	_G(thor)->_health = _G(thorInfo)._lastHealth;
 	_G(thor)->_numMoves = 1;
 	_G(thor)->_vulnerableCountdown = 60;
 	_G(thor)->_show = 60;
 	_G(thor)->_moveCountdown = 6;
 	loadNewThor();
 
-	g_vars->resetEndgameFlags();
+	g_vars->resetEndGameFlags();
 
-	_G(setup)._musicEnabled = _G(music_flag);
-	_G(setup)._digitalSound = _G(sound_flag);
+	_G(setup)._musicEnabled = _G(musicFlag);
+	_G(setup)._digitalSound = _G(soundFlag);
 
 	if (_G(setup)._musicEnabled) {
-		if (GAME1 && _G(current_area) == 59) {
+		if (GAME1 && _G(currentArea) == 59) {
 			musicPlay(5, true);
 		} else {
 			musicPlay(_G(levelMusic), true);
@@ -169,8 +169,8 @@ void GotEngine::savegameLoaded() {
 		_G(setup)._musicEnabled = false;
 	}
 
-	_G(game_over) = _G(setup)._gameOver != 0;
-	_G(slow_mode) = _G(setup)._slowMode != 0;
+	_G(gameOver) = _G(setup)._gameOver != 0;
+	_G(slowMode) = _G(setup)._slowMode;
 
 	g_events->replaceView("Game", true);
 	setupLoad();
@@ -193,7 +193,7 @@ bool GotEngine::canSaveGameStateCurrently(Common::U32String *msg) {
 	}
 
 	// Don't allowing saving when not in-game
-	if (!firstView() || firstView()->getName() != "Game" || _G(game_over))
+	if (!firstView() || firstView()->getName() != "Game" || _G(gameOver))
 		return false;
 
 	// Only allow if not in the middle of area transition, dying, etc.
@@ -203,12 +203,10 @@ bool GotEngine::canSaveGameStateCurrently(Common::U32String *msg) {
 void GotEngine::syncSoundSettings() {
 	Engine::syncSoundSettings();
 
-	bool allSoundIsMuted = ConfMan.getBool("mute");
+	const bool allSoundIsMuted = ConfMan.getBool("mute");
 
-	_mixer->muteSoundType(Audio::Mixer::kSFXSoundType,
-						  ConfMan.getBool("sfx_mute") || allSoundIsMuted);
-	_mixer->muteSoundType(Audio::Mixer::kMusicSoundType,
-						  ConfMan.getBool("music_mute") || allSoundIsMuted);
+	_mixer->muteSoundType(Audio::Mixer::kSFXSoundType, ConfMan.getBool("sfx_mute") || allSoundIsMuted);
+	_mixer->muteSoundType(Audio::Mixer::kMusicSoundType, ConfMan.getBool("music_mute") || allSoundIsMuted);
 }
 
 void GotEngine::pauseEngineIntern(bool pause) {
@@ -216,20 +214,18 @@ void GotEngine::pauseEngineIntern(bool pause) {
 	if (_G(gameMode) == MODE_LIGHTNING)
 		_G(gameMode) = MODE_NORMAL;
 
-	if (_G(tornado_used)) {
-		_G(tornado_used) = false;
+	if (_G(tornadoUsed)) {
+		_G(tornadoUsed) = false;
 		actorDestroyed(&_G(actor[2]));
 	}
 
-	if (_G(shield_on)) {
+	if (_G(shieldOn)) {
 		_G(actor[2])._dead = 2;
 		_G(actor[2])._active = false;
-		_G(shield_on) = false;
+		_G(shieldOn) = false;
 	}
 
-	_G(lightning_used) = false;
-	_G(thunder_flag) = 0;
-	_G(hourglass_flag) = 0;
+	_G(thunderSnakeCounter) = 0;
 
 	Engine::pauseEngineIntern(pause);
 }

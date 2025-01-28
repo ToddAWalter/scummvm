@@ -38,7 +38,7 @@ Operand Path::callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) {
 
 	case kSetDurationMethod: {
 		assert(args.size() == 1);
-		uint durationInMilliseconds = (uint)(args[0].getDouble() * 1000);
+		uint durationInMilliseconds = static_cast<uint>(args[0].getDouble() * 1000);
 		setDuration(durationInMilliseconds);
 		return Operand();
 	}
@@ -48,6 +48,12 @@ Operand Path::callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) {
 		Operand returnValue(kOperandTypeFloat1);
 		returnValue.putDouble(percentComplete());
 		return returnValue;
+	}
+
+	case kSetDissolveFactorMethod: {
+		assert(args.size() == 1);
+		warning("Path::callMethod(): setDissolveFactor not implemented yet");
+		return Operand();
 	}
 
 	default: {

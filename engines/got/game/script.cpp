@@ -141,7 +141,7 @@ void Scripts::runScript(bool firstTime) {
 
 void Scripts::scriptLoop() {
 	while (_paused == SCRIPT_READY) {
-		if (_G(cheat) && _G(key_flag[_B]))
+		if (_G(cheat) && _G(keyFlag[_B]))
 			break;
 
 		int ret = getCommand();
@@ -400,7 +400,7 @@ int Scripts::getInternalVariable() {
 	while (true) {
 		if (!INTERNAL_VARIABLE[i])
 			return 0; // Lookup internal variable
-		int len = strlen(INTERNAL_VARIABLE[i]);
+		const int len = strlen(INTERNAL_VARIABLE[i]);
 		if (!strncmp(_buffPtr, INTERNAL_VARIABLE[i], len)) {
 			_buffPtr += len;
 			break;
@@ -409,22 +409,22 @@ int Scripts::getInternalVariable() {
 	}
 	switch (i) {
 	case 0:
-		_lTemp = _G(thor_info)._jewels;
+		_lTemp = _G(thorInfo)._jewels;
 		break;
 	case 1:
 		_lTemp = _G(thor)->_health;
 		break;
 	case 2:
-		_lTemp = _G(thor_info)._magic;
+		_lTemp = _G(thorInfo)._magic;
 		break;
 	case 3:
-		_lTemp = _G(thor_info)._score;
+		_lTemp = _G(thorInfo)._score;
 		break;
 	case 4:
-		_lTemp = _G(current_level);
+		_lTemp = _G(currentLevel);
 		break;
 	case 5:
-		_lTemp = _G(thor_info)._keys;
+		_lTemp = _G(thorInfo)._keys;
 		break;
 	case 6:
 	case 7:
@@ -454,8 +454,8 @@ int Scripts::getInternalVariable() {
 		_lTemp = _G(setup)._flags[i - 1] ? 1 : 0;
 		break;
 	case 23:
-		if (_G(thor_info)._inventory & 64)
-			_lTemp = _G(thor_info)._object;
+		if (_G(thorInfo)._inventory & 64)
+			_lTemp = _G(thorInfo)._object;
 		else
 			_lTemp = 0;
 		break;
@@ -563,12 +563,15 @@ int Scripts::readScriptFile() {
 			else if (ch == 13 || ch == 10) { // Check for CR
 				tmpBuffer[p] = 0;
 				break;
-			} else if ((ch == 39 || ch == 96) && !quoteFlag) {
+			}
+
+			if ((ch == 39 || ch == 96) && !quoteFlag) {
 				tmpBuffer[p] = 0;
 				break;
 			}
 			if (!quoteFlag)
 				ch = toupper(ch);
+			
 			if (quoteFlag || ch > 32) {
 				tmpBuffer[p++] = ch;
 			}
@@ -775,8 +778,8 @@ int Scripts::cmd_say(int mode, int type) {
 			obj += 10;
 	}
 	
-	Common::fill(_G(tmp_buff), _G(tmp_buff) + TMP_SIZE, 0);
-	char *p = (char *)_G(tmp_buff);
+	Common::fill(_G(tmpBuff), _G(tmpBuff) + TMP_SIZE, 0);
+	char *p = (char *)_G(tmpBuff);
 
 	while (calcString(0)) {
 		Common::strcpy_s(p, TMP_SIZE, _tempS);
@@ -797,7 +800,7 @@ int Scripts::cmd_ask() {
 	char title[41], opt[41];
 	Common::StringArray opts;
 
-	memset(_G(tmp_buff), 0, TMP_SIZE);
+	memset(_G(tmpBuff), 0, TMP_SIZE);
 
 	if (!skipColon())
 		return 5;
@@ -903,7 +906,7 @@ int Scripts::cmd_setTile() {
 	if (tile < 0 || tile > 230)
 		return 6;
 
-	if (screen == _G(current_level)) {
+	if (screen == _G(currentLevel)) {
 		placeTile(pos % 20, pos / 20, tile);
 	} else {
 		Level tmp;
@@ -923,10 +926,10 @@ int Scripts::cmd_itemGive() {
 	if (i < 1 || i > 15)
 		return 6;
 
-	_G(thor_info)._inventory |= 64;
-	_G(thor_info)._selectedItem = 7;
-	_G(thor_info)._object = i;
-	_G(thor_info)._objectName = OBJECT_NAMES[_G(thor_info)._object - 1];
+	_G(thorInfo)._inventory |= 64;
+	_G(thorInfo)._selectedItem = 7;
+	_G(thorInfo)._object = i;
+	_G(thorInfo)._objectName = OBJECT_NAMES[_G(thorInfo)._object - 1];
 
 	return 0;
 }
@@ -1024,10 +1027,10 @@ int Scripts::cmd_random() {
 void Scripts::scr_func1() {
 	playSound(FALL, true);
 
-	_G(new_level) = 109;
-	_G(new_level_tile) = 215;
-	_G(thor)->_x = (_G(new_level_tile) % 20) * 16;
-	_G(thor)->_y = ((_G(new_level_tile) / 20) * 16) - 2;
+	_G(newLevel) = 109;
+	_G(newLevelTile) = 215;
+	_G(thor)->_x = (_G(newLevelTile) % 20) * 16;
+	_G(thor)->_y = ((_G(newLevelTile) / 20) * 16) - 2;
 
 	_G(thor)->_lastX[0] = _G(thor)->_x;
 	_G(thor)->_lastX[1] = _G(thor)->_x;
@@ -1049,41 +1052,41 @@ void Scripts::scr_func3() {
 
 	if (y < 0 || x < 0 || y > 11) {
 		playSound(BRAAPP, true);
-		_G(key_flag[key_magic]) = false;
+		_G(keyFlag[key_magic]) = false;
 		return;
 	}
 	if (_G(scrn)._iconGrid[y][x] < 174 || _G(scrn)._iconGrid[y][x] > 178) {
 		playSound(BRAAPP, true);
-		_G(key_flag[key_magic]) = false;
+		_G(keyFlag[key_magic]) = false;
 		return;
 	}
 
 	_numVar[0] = 1;
 	playSound(WOOP, true);
-	if (_G(current_level) == 106 && p == 69) {
+	if (_G(currentLevel) == 106 && p == 69) {
 		placeTile(x, y, 220);
-		_G(key_flag[key_magic]) = false;
+		_G(keyFlag[key_magic]) = false;
 		return;
 	}
 
-	_G(key_flag[key_magic]) = false;
+	_G(keyFlag[key_magic]) = false;
 	placeTile(x, y, 191);
 
 	if ((g_events->getRandomNumber(99)) < 25 ||
-		(_G(current_level) == 13 && p == 150 && !_G(setup).f26 && _G(setup).f28)) {
-		if (!_G(object_map[p]) && _G(scrn)._iconGrid[y][x] >= 140) { // nothing there and solid
+		(_G(currentLevel) == 13 && p == 150 && !_G(setup).f26 && _G(setup).f28)) {
+		if (!_G(objectMap[p]) && _G(scrn)._iconGrid[y][x] >= 140) { // nothing there and solid
 			int o = g_events->getRandomNumber(1, 5);
-			if (_G(current_level) == 13 && p == 150 && !_G(setup).f26 && _G(setup).f28)
+			if (_G(currentLevel) == 13 && p == 150 && !_G(setup).f26 && _G(setup).f28)
 				o = 20;
 
-			_G(object_map[p]) = o;
-			_G(object_index[p]) = 31; // actor is 3-15
+			_G(objectMap[p]) = o;
+			_G(objectIndex[p]) = 31; // actor is 3-15
 		}
 	}
 }
 
 void Scripts::scr_func4() {
-	_G(thunder_flag) = 60;
+	_G(thunderSnakeCounter) = 60;
 }
 
 void Scripts::scr_func5() {

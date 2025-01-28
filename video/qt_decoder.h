@@ -36,10 +36,12 @@
 #include "video/video_decoder.h"
 
 namespace Common {
+class Archive;
 class Rational;
 }
 
 namespace Graphics {
+class Cursor;
 struct PixelFormat;
 }
 
@@ -76,12 +78,12 @@ public:
 	void handleMouseMove(int16 x, int16 y);
 	void handleMouseButton(bool isDown, int16 x = -1, int16 y = -1);
 
-	float getPanAngle() const { return ((VideoTrackHandler *)_nextVideoTrack)->getPanAngle(); }
-	void setPanAngle(float panAngle) { ((VideoTrackHandler *)_nextVideoTrack)->setPanAngle(panAngle); }
-	float getTiltAngle() const { return ((VideoTrackHandler *)_nextVideoTrack)->getTiltAngle(); }
-	void setTiltAngle(float tiltAngle) { ((VideoTrackHandler *)_nextVideoTrack)->setTiltAngle(tiltAngle); }
-	float getFOV() const { return ((VideoTrackHandler *)_nextVideoTrack)->getFOV(); }
-	void setFOV(float fov) { ((VideoTrackHandler *)_nextVideoTrack)->setFOV(fov); }
+	float getPanAngle() const { return _panAngle; }
+	void setPanAngle(float panAngle) { _panAngle = panAngle; }
+	float getTiltAngle() const { return _tiltAngle; }
+	void setTiltAngle(float tiltAngle) { _tiltAngle = tiltAngle; }
+	float getFOV() const { return _fov; }
+	void setFOV(float fov) { _fov = fov; }
 
 	int getCurrentRow() { return _nextVideoTrack->getCurFrame() / _nav.columns; }
 	void setCurrentRow(int row);
@@ -116,20 +118,37 @@ public:
 
 protected:
 	Common::QuickTimeParser::SampleDesc *readSampleDesc(Common::QuickTimeParser::Track *track, uint32 format, uint32 descSize);
+	Common::QuickTimeParser::SampleDesc *readPanoSampleDesc(Common::QuickTimeParser::Track *track, uint32 format, uint32 descSize);
 
 private:
 	void init();
 
 	void updateAudioBuffer();
 
+	void closeQTVR();
+	void updateAngles();
+	void updateQTVRCursor(int16 x, int16 y);
+	void setCursor(int curId);
+	void cleanupCursors();
+	void computeInteractivityZones();
+
 	uint16 _width, _height;
 
 	uint16 _prevMouseX, _prevMouseY;
 	bool _isMouseButtonDown;
+	Common::Rect _curBbox;
+
+	int _currentQTVRCursor = -1;
+	Common::Archive *_dataBundle = nullptr;
+	Graphics::Cursor **_cursorCache = nullptr;
 
 	bool _isVR;
 
 	uint8 _warpMode; // (2 | 1 | 0) for 2-d, 1-d or no warping
+
+	float _panAngle = 0.0f;
+	float _tiltAngle = 0.0f;
+	float _fov = 0.0f;
 
 	Graphics::Surface *_scaledSurface;
 	void scaleSurface(const Graphics::Surface *src, Graphics::Surface *dst,
@@ -168,6 +187,45 @@ private:
 		QuickTimeAudioTrack *_audioTrack;
 	};
 
+	class PanoSampleDesc : public Common::QuickTimeParser::SampleDesc {
+	public:
+		PanoSampleDesc(Common::QuickTimeParser::Track *parentTrack, uint32 codecTag);
+		~PanoSampleDesc();
+
+		uint32 _reserved1;
+		uint32 _reserved2;
+		int16 _majorVersion;
+		int16 _minorVersion;
+		int32 _sceneTrackID;
+		int32 _loResSceneTrackID;
+		byte _reserved3[4 * 6];
+		int32 _hotSpotTrackID;
+		byte _reserved4[4 * 9];
+		float _hPanStart;
+		float _hPanEnd;
+		float _vPanTop;
+		float _vPanBottom;
+		float _minimumZoom;
+		float _maximumZoom;
+
+		// info for the highest res version of scene track
+		uint32 _sceneSizeX;
+		uint32 _sceneSizeY;
+		uint32 _numFrames;
+		int16 _reserved5;
+		int16 _sceneNumFramesX;
+		int16 _sceneNumFramesY;
+		int16 _sceneColorDepth;
+
+		// info for the highest rest version of hotSpot track
+		int32 _hotSpotSizeX;
+		int32 _hotSpotSizeY;
+		int16 _reserved6;
+		int16 _hotSpotNumFramesX;
+		int16 _hotSpotNumFramesY;
+		int16 _hotSpotColorDepth;
+	};
+
 	// The VideoTrackHandler is the bridge between the time of playback
 	// and the media for the given track. It calculates when to start
 	// tracks and at what rate to play the media using the edit list.
@@ -201,13 +259,6 @@ private:
 		Common::Rational getScaledWidth() const;
 		Common::Rational getScaledHeight() const;
 
-		float getPanAngle() const { return _panAngle; }
-		void setPanAngle(float panAngle) { _panAngle = panAngle; }
-		float getTiltAngle() const { return _tiltAngle; }
-		void setTiltAngle(float tiltAngle) { _tiltAngle = tiltAngle; }
-		float getFOV() const { return _fov; }
-		void setFOV(float fov) { _fov = fov; }
-
 	private:
 		QuickTimeDecoder *_decoder;
 		Common::QuickTimeParser::Track *_parent;
@@ -220,18 +271,6 @@ private:
 		const byte *_curPalette;
 		mutable bool _dirtyPalette;
 		bool _reversed;
-
-		float _panAngle;
-		float _tiltAngle;
-		float _fov;
-
-		void constructPanorama();
-		void projectPanorama();
-
-		Graphics::Surface *_constructedPano;
-		Graphics::Surface *_projectedPano;
-
-		bool _isPanoConstructed;
 
 		// Forced dithering of frames
 		byte *_forcedDitherPalette;
@@ -251,6 +290,41 @@ private:
 		bool atLastEdit() const;
 		bool endOfCurEdit() const;
 		void checkEditListBounds();
+	};
+
+	class PanoTrackHandler {
+	public:
+		PanoTrackHandler(QuickTimeDecoder *decoder, Common::QuickTimeParser::Track *parent);
+		~PanoTrackHandler();
+
+		uint16 getWidth() const;
+		uint16 getHeight() const;
+		Graphics::PixelFormat getPixelFormat() const;
+		bool setOutputPixelFormat(const Graphics::PixelFormat &format);
+		const Graphics::Surface *decodeNextFrame();
+		const byte *getPalette() const;
+		bool hasDirtyPalette() const { return _curPalette; }
+		bool canDither() const;
+		void setDither(const byte *palette);
+
+		Common::Rational getScaledWidth() const;
+		Common::Rational getScaledHeight() const;
+
+	private:
+		QuickTimeDecoder *_decoder;
+		Common::QuickTimeParser::Track *_parent;
+
+		const byte *_curPalette;
+
+		void constructPanorama();
+		void projectPanorama();
+
+		const Graphics::Surface *bufferNextFrame();
+
+		Graphics::Surface *_constructedPano;
+		Graphics::Surface *_projectedPano;
+
+		bool _isPanoConstructed;
 	};
 };
 

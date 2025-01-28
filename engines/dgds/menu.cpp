@@ -501,19 +501,13 @@ void Menu::onMouseLUp(const Common::Point &mouse) {
 static void _toggleSoundType(Audio::Mixer::SoundType soundType) {
 	DgdsEngine *engine = DgdsEngine::getInstance();
 	Audio::Mixer *mixer = engine->_mixer;
-	const char *typeStr = (soundType == Audio::Mixer::kMusicSoundType) ? "music" : "sfx";
+	//const char *typeStr = (soundType == Audio::Mixer::kMusicSoundType) ? "music" : "sfx";
 	if (!mixer->isSoundTypeMuted(soundType)) {
 		mixer->muteSoundType(soundType, true);
-		warning("TODO: Sync volume and pause %s", typeStr);
-		//midiPlayer->syncVolume();
-		//if (soundType == Audio::Mixer::kMusicSoundType)
-		//	engine->_soundPlayer->pauseMusic();
+		engine->_soundPlayer->muteSoundType(soundType);
 	} else {
 		mixer->muteSoundType(soundType, false);
-		warning("TODO: Sync volume and resume %s", typeStr);
-		//midiPlayer->syncVolume();
-		//if (soundType == Audio::Mixer::kMusicSoundType)
-		//	engine->_soundPlayer->resumeMusic();
+		engine->_soundPlayer->unmuteSoundType(soundType);
 	}
 }
 
