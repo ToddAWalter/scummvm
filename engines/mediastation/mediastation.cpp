@@ -51,8 +51,6 @@ MediaStationEngine::MediaStationEngine(OSystem *syst, const ADGameDescription *g
 }
 
 MediaStationEngine::~MediaStationEngine() {
-	_mixer = nullptr;
-
 	delete _screen;
 	_screen = nullptr;
 
@@ -145,17 +143,7 @@ Common::Error MediaStationEngine::run() {
 			break;
 		}
 
-		// PROCESS ANY ASSETS CURRENTLY PLAYING.
-		// TODO: Implement a dirty-rect based rendering system rather than
-		// redrawing the screen each time. This will require keeping track of
-		// all the images on screen at any given time, rather than just letting
-		// the movies handle their own drawing.
-		//
-		// First, they all need to be sorted by z-coordinate.
-		debugC(5, kDebugGraphics, "***** START RENDERING ***");
-		Common::sort(_assetsPlaying.begin(), _assetsPlaying.end(), [](Asset * a, Asset * b) {
-			return a->zIndex() > b->zIndex();
-		});
+		debugC(5, kDebugGraphics, "***** START SCREEN UPDATE ***");
 		for (auto it = _assetsPlaying.begin(); it != _assetsPlaying.end();) {
 			(*it)->process();
 			if (!(*it)->isActive()) {
@@ -164,10 +152,10 @@ Common::Error MediaStationEngine::run() {
 				++it;
 			}
 		}
-		debugC(5, kDebugGraphics, "***** END RENDERING ***");
+		redraw();
+		debugC(5, kDebugGraphics, "***** END SCREEN UPDATE ***");
 
-		// UPDATE THE SCREEN.
-		g_engine->_screen->update();
+		_screen->update();
 		g_system->delayMillis(10);
 	}
 
@@ -205,7 +193,11 @@ void MediaStationEngine::processEvents() {
 				debugC(5, kDebugEvents, "EVENT_MOUSEMOVE (%d, %d): Sent to hotspot %d", e.mouse.x, e.mouse.y, hotspot->getHeader()->_id);
 				hotspot->runEventHandlerIfExists(kMouseMovedEvent);
 			} else {
-				_currentHotspot = nullptr;
+				if (_currentHotspot != nullptr) {
+					_currentHotspot->runEventHandlerIfExists(kMouseExitedEvent);
+					debugC(5, kDebugEvents, "EVENT_MOUSEMOVE (%d, %d): Exited hotspot %d", e.mouse.x, e.mouse.y, _currentHotspot->getHeader()->_id);
+					_currentHotspot = nullptr;
+				}
 			}
 			break;
 		}
@@ -242,6 +234,30 @@ void MediaStationEngine::processEvents() {
 		}
 		}
 	}
+}
+
+void MediaStationEngine::redraw() {
+	if (_dirtyRects.empty()) {
+		return;
+	}
+
+	Common::sort(_assetsPlaying.begin(), _assetsPlaying.end(), [](Asset * a, Asset * b) {
+		return a->zIndex() > b->zIndex();
+	});
+
+	for (Common::Rect dirtyRect : _dirtyRects) {
+		for (Asset *asset : _assetsPlaying) {
+			Common::Rect *bbox = asset->getBbox();
+			if (bbox != nullptr) {
+				if (dirtyRect.intersects(*bbox)) {
+					asset->redraw(dirtyRect);
+				}
+			}
+		}
+	}
+
+	_screen->update();
+	_dirtyRects.clear();
 }
 
 Context *MediaStationEngine::loadContext(uint32 contextId) {
@@ -360,6 +376,8 @@ void MediaStationEngine::branchToScreen(uint32 contextId) {
 
 	Context *context = loadContext(contextId);
 	_currentContext = context;
+	_dirtyRects.push_back(Common::Rect(SCREEN_WIDTH, SCREEN_HEIGHT));
+	_currentHotspot = nullptr;
 
 	if (context->_screenAsset != nullptr) {
 		// TODO: Make the screen an asset just like everything else so we can

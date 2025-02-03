@@ -145,7 +145,7 @@ void Room608::init() {
 			-30, 324, 3, triggerMachineByHashCallback3000, "tt walker");
 		sendWSMessage_10000(_tt, 105, 324, 5, 20, 1);
 	} else if (_G(flags)[V203] == 6) {
-		_tt02 = series_load("606TT02");
+		_tt02 = series_load("608TT02");
 		_tt03 = series_load("608TT03");
 		_tt05 = series_load("608TT05");
 		_ripHandChin = series_load("RIP TREK HAND CHIN POS3");
@@ -1129,7 +1129,7 @@ void Room608::daemon() {
 
 	case 700:
 		player_update_info(_tt, &_G(player_info));
-		ws_hide_walker();
+		ws_hide_walker(_tt);
 		_ttShadow = series_show("tt walker shadow 3", 0xf00, 0, -1, -1, 0,
 			_G(player_info).scale, _G(player_info).x, _G(player_info).y);
 		_ttTalker = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
@@ -1316,7 +1316,7 @@ void Room608::daemon() {
 		break;
 
 	case 758:
-		sendWSMessage_10000(1, _ttTalker, _all5a, 760, 7, -1, _all5a, 1, 12, 4);
+		sendWSMessage_10000(1, _ttTalker, _all5a, 7, 7, -1, _all5a, 7, 12, 4);
 		digi_play("608t11", 2, 255, 760);
 		break;
 
@@ -1371,7 +1371,7 @@ void Room608::daemon() {
 		break;
 
 	case 770:
-		sendWSMessage_10000(1, _ttTalker, _all5a, 23, 1, 773, _all5a, 1, 1, 1);
+		sendWSMessage_10000(1, _ttTalker, _tt05, 23, 1, 773, _tt05, 1, 1, 1);
 		break;
 
 	case 771:
@@ -1975,6 +1975,8 @@ bool Room608::takeLighter() {
 		if (inv_object_is_here("LIGHTER")) {
 			player_set_commands_allowed(false);
 			_ripLowReach = series_load("RIP LOW REACH POS1");
+			setGlobals1(_ripLowReach, 1, 16, 16, 16);
+			sendWSMessage_110000(2);
 			return true;
 		}
 		break;
@@ -2020,6 +2022,7 @@ bool Room608::hornCordWater() {
 
 			_shadow5 = series_show("safari shadow 5", _G(player_info).depth, 144, -1, -1, 0,
 				_G(player_info).scale, _G(player_info).x, _G(player_info.y));
+			_horn = series_load("608horn");
 			_ol2 = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 0, 0, 100, 0x100, 0,
 				triggerMachineByHashCallback, "ol");
 			sendWSMessage_10000(1, _ol2, _horn, 1, 16, 2, _horn, 16, 16, 0);

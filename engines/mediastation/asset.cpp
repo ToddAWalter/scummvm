@@ -45,6 +45,23 @@ int Asset::zIndex() const {
 	return _header->_zIndex;
 }
 
+Common::Rect *Asset::getBbox() {
+	return _header->_boundingBox;
+}
+
+void Asset::setActive() {
+	_isActive = true;
+	_startTime = g_system->getMillis();
+	_lastProcessedTime = 0;
+	g_engine->addPlayingAsset(this);
+}
+
+void Asset::setInactive() {
+	_isActive = false;
+	_startTime = 0;
+	_lastProcessedTime = 0;
+}
+
 void Asset::processTimeEventHandlers() {
 	if (!_isActive) {
 		warning("Asset::processTimeEventHandlers(): Attempted to process time event handlers while asset %d is not playing", _header->_id);

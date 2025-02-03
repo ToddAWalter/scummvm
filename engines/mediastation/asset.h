@@ -44,6 +44,12 @@ public:
 	virtual void process() {
 		return;
 	}
+
+	// For spatial assets, actually redraws the dirty area.
+	virtual void redraw(Common::Rect &rect) {
+		return;
+	}
+
 	// Runs built-in bytecode methods.
 	virtual Operand callMethod(BuiltInMethod methodId, Common::Array<Operand> &args) = 0;
 	// Called to have the asset do any processing, like drawing new frames,
@@ -58,6 +64,8 @@ public:
 	virtual void readChunk(Chunk &chunk);
 	virtual void readSubfile(Subfile &subfile, Chunk &chunk);
 
+	void setInactive();
+	void setActive();
 	void processTimeEventHandlers();
 	void runEventHandlerIfExists(EventType eventType);
 	void runKeyDownEventHandlerIfExists(Common::KeyState keyState);
@@ -67,6 +75,7 @@ public:
 	AssetHeader *getHeader() const {
 		return _header;
 	}
+	Common::Rect *getBbox();
 
 protected:
 	AssetHeader *_header = nullptr;

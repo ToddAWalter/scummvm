@@ -68,6 +68,9 @@ public:
 		_currentScriptOffsetSavedForSpeechMI = scriptOffset;
 	}
 
+	void startAmbience(int32 musicTrack);
+	void stopAmbience();
+
 private:
 	enum AudioCodec {
 		kXWBCodecPCM = 0,
@@ -126,8 +129,8 @@ private:
 
 	OffsetToIndexMap _offsetToIndexDOTTAndFT;
 	NameToOffsetMap _nameToOffsetDOTTAndFT;
-	NameToIndexMap _nameToIndex;
-	NameToIndexMap _nameToIndexPatched;
+	NameToIndexMap _nameToIndexMISpeech;
+	NameToIndexMap _nameToIndexMISpeechPatched;
 
 	AudioIndex _musicEntries;
 	AudioIndex _speechEntries;
@@ -142,6 +145,8 @@ private:
 	/* MI SE injected speech */
 	int32 _currentScriptSavedForSpeechMI = 0;
 	int32 _currentScriptOffsetSavedForSpeechMI = 0;
+
+	Audio::SoundHandle _ambienceHandle;
 
 	int32 getSoundIndexFromOffset(uint32 offset);
 	int32 getAppropriateSpeechCue(const char *msgString,
@@ -167,6 +172,7 @@ private:
 	Common::SeekableReadStream *getAudioFile(const Common::String &filename);
 	Common::SeekableReadStream *getAudioFile(SoundSEType type);
 	AudioIndex *getAudioEntries(SoundSEType type);
+	int32 getAmbienceTrack(int32 musicTrack);
 
 	Audio::SeekableAudioStream *createSoundStream(Common::SeekableSubReadStream *stream, AudioEntry entry, DisposeAfterUse::Flag disposeAfterUse = DisposeAfterUse::YES);
 };
