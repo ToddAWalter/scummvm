@@ -31,6 +31,7 @@
 #define VIDEO_QT_DECODER_H
 
 #include "audio/decoders/quicktime_intern.h"
+#include "common/keyboard.h"
 #include "common/scummsys.h"
 
 #include "video/video_decoder.h"
@@ -75,15 +76,18 @@ public:
 	void enableEditListBoundsCheckQuirk(bool enable) { _enableEditListBoundsCheckQuirk = enable; }
 	Common::String getAliasPath();
 
+	void setTargetSize(uint16 w, uint16 h);
+
 	void handleMouseMove(int16 x, int16 y);
-	void handleMouseButton(bool isDown, int16 x = -1, int16 y = -1);
+	void handleMouseButton(bool isDown, int16 x = -1, int16 y = -1, bool repeat = false);
+	void handleKey(Common::KeyState &state, bool down, bool repeat = false);
 
 	float getPanAngle() const { return _panAngle; }
 	void setPanAngle(float panAngle) { _panAngle = panAngle; }
 	float getTiltAngle() const { return _tiltAngle; }
 	void setTiltAngle(float tiltAngle) { _tiltAngle = tiltAngle; }
 	float getFOV() const { return _fov; }
-	void setFOV(float fov) { _fov = fov; }
+	bool setFOV(float fov);
 
 	int getCurrentRow() { return _nextVideoTrack->getCurFrame() / _nav.columns; }
 	void setCurrentRow(int row);
@@ -125,6 +129,14 @@ private:
 
 	void updateAudioBuffer();
 
+	void handleObjectMouseMove(int16 x, int16 y);
+	void handleObjectMouseButton(bool isDown, int16 x, int16 y, bool repeat);
+	void handlePanoMouseMove(int16 x, int16 y);
+	void handlePanoMouseButton(bool isDown, int16 x, int16 y, bool repeat);
+
+	void handleObjectKey(Common::KeyState &state, bool down, bool repeat);
+	void handlePanoKey(Common::KeyState &state, bool down, bool repeat);
+
 	void closeQTVR();
 	void updateAngles();
 	void updateQTVRCursor(int16 x, int16 y);
@@ -134,13 +146,21 @@ private:
 
 	uint16 _width, _height;
 
+public:
 	uint16 _prevMouseX, _prevMouseY;
 	bool _isMouseButtonDown;
+	Common::Point _mouseDrag;
+
+	bool _isKeyDown = false;
+	Common::KeyState _lastKey;
+
+private:
 	Common::Rect _curBbox;
 
 	int _currentQTVRCursor = -1;
 	Common::Archive *_dataBundle = nullptr;
 	Graphics::Cursor **_cursorCache = nullptr;
+	int _cursorDirMap[256];
 
 	bool _isVR;
 
@@ -148,13 +168,24 @@ private:
 
 	float _panAngle = 0.0f;
 	float _tiltAngle = 0.0f;
-	float _fov = 0.0f;
+	float _fov = 56.0f;
+	float _hfov = 56.0f;
+	int _zoomState = kZoomNone;
+	bool _repeatTimerActive = false;
 
 	Graphics::Surface *_scaledSurface;
 	void scaleSurface(const Graphics::Surface *src, Graphics::Surface *dst,
 			const Common::Rational &scaleFactorX, const Common::Rational &scaleFactorY);
 
 	bool _enableEditListBoundsCheckQuirk;
+
+	enum {
+		kZoomNone,
+		kZoomQuestion,
+		kZoomIn,
+		kZoomOut,
+		kZoomLimit,
+	};
 
 	class VideoSampleDesc : public Common::QuickTimeParser::SampleDesc {
 	public:
@@ -191,9 +222,6 @@ private:
 	public:
 		PanoSampleDesc(Common::QuickTimeParser::Track *parentTrack, uint32 codecTag);
 		~PanoSampleDesc();
-
-		uint32 _reserved1;			// must be zero
-		uint32 _reserved2;			// must be zero
 
 		int16 _majorVersion;		// must be zero, also observed to be 1
 		int16 _minorVersion;		// must be zero, also observed to be 1
@@ -262,6 +290,8 @@ private:
 		Common::Rational getScaledWidth() const;
 		Common::Rational getScaledHeight() const;
 
+		const Graphics::Surface *bufferNextFrame();
+
 	private:
 		QuickTimeDecoder *_decoder;
 		Common::QuickTimeParser::Track *_parent;
@@ -286,7 +316,6 @@ private:
 		uint32 findKeyFrame(uint32 frame) const;
 		bool isEmptyEdit() const;
 		void enterNewEditListEntry(bool bufferFrames, bool intializingTrack = false);
-		const Graphics::Surface *bufferNextFrame();
 		uint32 getRateAdjustedFrameTime() const; // media time
 		uint32 getCurEditTimeOffset() const;     // media time
 		uint32 getCurEditTrackDuration() const;  // media time
@@ -300,36 +329,48 @@ private:
 		PanoTrackHandler(QuickTimeDecoder *decoder, Common::QuickTimeParser::Track *parent);
 		~PanoTrackHandler();
 
+		bool endOfTrack() const { return false; }
 		uint16 getWidth() const;
 		uint16 getHeight() const;
 		int getCurFrame() const { return 1; }
 		uint32 getNextFrameStartTime() const { return 0; }
 		Graphics::PixelFormat getPixelFormat() const;
-		bool setOutputPixelFormat(const Graphics::PixelFormat &format);
 		const Graphics::Surface *decodeNextFrame();
-		const byte *getPalette() const;
-		bool hasDirtyPalette() const { return _curPalette; }
-		bool canDither() const;
-		void setDither(const byte *palette);
 
 		Common::Rational getScaledWidth() const;
 		Common::Rational getScaledHeight() const;
+
+		void constructPanorama();
+		Graphics::Surface *constructMosaic(VideoTrackHandler *track, uint w, uint h, Common::String fname);
+
+		int lookupHotspot(int16 x, int16 y);
+
+		float getPanAngle() { return _curPanAngle; }
+		void setPanAngle(float angle);
+		float getTiltAngle() { return _curTiltAngle; }
+		void setTiltAngle(float angle);
+
+		void setDirty() { _dirty = true; }
 
 	private:
 		QuickTimeDecoder *_decoder;
 		Common::QuickTimeParser::Track *_parent;
 
-		const byte *_curPalette;
-
-		void constructPanorama();
 		void projectPanorama();
 
 		const Graphics::Surface *bufferNextFrame();
 
 		Graphics::Surface *_constructedPano;
+		Graphics::Surface *_constructedHotspots;
 		Graphics::Surface *_projectedPano;
+		Graphics::Surface *_planarProjection;
 
 		bool _isPanoConstructed;
+
+		float _curPanAngle;
+		float _curTiltAngle;
+
+		bool _dirty;
 	};
 };
 

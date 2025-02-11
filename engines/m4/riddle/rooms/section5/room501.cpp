@@ -76,7 +76,7 @@ void Room501::init() {
 			++_val4;
 		}
 
-		ws_demand_location(588, 267, 9);
+		ws_demand_location(_G(my_walker), 588, 267, 9);
 		ws_walk(287, 268, nullptr, 522, 9);
 		_val5 = 0;
 		_trigger1 = -1;
@@ -466,6 +466,7 @@ void Room501::daemon() {
 		conv_export_value_curr(_G(flags)[V145] == 1 ||
 			_G(flags)[V146] > 0 || _G(flags)[V143] == 1 ? 1 : 0, 10);
 
+		_hasCrystalSkull = inv_player_has("CRYSTAL SKULL");
 		_hasStickAndShellMap = inv_player_has("STICK AND SHELL MAP");
 		_hasWheeledToy = inv_player_has("WHEELED TOY");
 		_hasRebusAmulet = inv_player_has("REBUS AMULET");
@@ -748,7 +749,7 @@ void Room501::daemon() {
 		series_unload(_ripParcelExchange);
 
 		int item = conv_current_entry();
-		if (item >= 1 && item <= 12) {
+		if (item >= 0 && item <= 11) {
 			static const char *ITEMS[12] = {
 				"CRYSTAL SKULL", "STICK AND SHELL MAP",
 				"WHEELED TOY", "REBUS AMULET", "SHRUNKEN HEAD",

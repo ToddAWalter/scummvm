@@ -244,10 +244,23 @@ void QuickTimeDecoder::init() {
 				((VideoSampleDesc *)tracks[i]->sampleDescs[j])->initCodec();
 
 			addTrack(new VideoTrackHandler(this, tracks[i]));
+
+			tracks[i]->targetTrack = getNumTracks() - 1;
 		}
 
-		if (tracks[i]->codecType == CODEC_TYPE_PANO)
+		if (tracks[i]->codecType == CODEC_TYPE_PANO) {
 			addTrack(new PanoTrackHandler(this, tracks[i]));
+
+			tracks[i]->targetTrack = getNumTracks() - 1;
+		}
+	}
+
+	if (_qtvrType == QTVRType::PANORAMA) {
+		for (uint32 i = 0; i < Common::QuickTimeParser::_tracks.size(); i++) {
+			if (Common::QuickTimeParser::_tracks[i]->codecType == CODEC_TYPE_PANO) {
+				((PanoTrackHandler *)getTrack(Common::QuickTimeParser::_tracks[i]->targetTrack))->constructPanorama();
+			}
+		}
 	}
 
 	// Prepare the first video track
@@ -391,10 +404,10 @@ QuickTimeDecoder::VideoTrackHandler::~VideoTrackHandler() {
 
 bool QuickTimeDecoder::VideoTrackHandler::endOfTrack() const {
 	// A track is over when we've finished going through all edits
-	if (!_decoder->_isVR)
+	if (_decoder->_qtvrType != QTVRType::PANORAMA)
 		return _reversed ? (_curEdit == 0 && _curFrame < 0) : atLastEdit();
 	else
-		return false;
+		return true;
 }
 
 bool QuickTimeDecoder::VideoTrackHandler::seek(const Audio::Timestamp &requestedTime) {
@@ -523,6 +536,21 @@ uint32 QuickTimeDecoder::VideoTrackHandler::getNextFrameStartTime() const {
 }
 
 const Graphics::Surface *QuickTimeDecoder::VideoTrackHandler::decodeNextFrame() {
+#if 0
+	if (_decoder->_qtvrType == QTVRType::PANORAMA) {
+		if (!_isPanoConstructed)
+			return nullptr;
+
+		if (_projectedPano) {
+			_projectedPano->free();
+			delete _projectedPano;
+		}
+
+		projectPanorama();
+		return _projectedPano;
+	}
+#endif
+
 	if (endOfTrack())
 		return 0;
 
