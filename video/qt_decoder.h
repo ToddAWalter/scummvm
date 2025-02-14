@@ -119,6 +119,7 @@ public:
 	};
 
 	NodeData getNodeData(uint32 nodeID);
+	void goToNode(uint32 nodeID);
 
 protected:
 	Common::QuickTimeParser::SampleDesc *readSampleDesc(Common::QuickTimeParser::Track *track, uint32 format, uint32 descSize);
@@ -147,6 +148,7 @@ private:
 	uint16 _width, _height;
 
 public:
+	int _currentSample = -1;
 	uint16 _prevMouseX, _prevMouseY;
 	bool _isMouseButtonDown;
 	Common::Point _mouseDrag;
@@ -172,6 +174,8 @@ private:
 	float _hfov = 56.0f;
 	int _zoomState = kZoomNone;
 	bool _repeatTimerActive = false;
+
+	int _hotSpotIdx = -1;
 
 	Graphics::Surface *_scaledSurface;
 	void scaleSurface(const Graphics::Surface *src, Graphics::Surface *dst,
@@ -340,6 +344,7 @@ private:
 		Common::Rational getScaledWidth() const;
 		Common::Rational getScaledHeight() const;
 
+		void initPanorama();
 		void constructPanorama();
 		Graphics::Surface *constructMosaic(VideoTrackHandler *track, uint w, uint h, Common::String fname);
 

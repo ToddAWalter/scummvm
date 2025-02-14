@@ -39,24 +39,56 @@
 #include "m4/platform/keys.h"
 #include "m4/m4.h"
 
+#include "m4/burger/gui/game_menu.h"
+
 namespace M4 {
 namespace Riddle {
 namespace GUI {
 
-static void CreateGameMenuMain(RGB8 *myPalette);
+/*-------------------- GAME MENU --------------------*/
 
-void CreateGameMenu(RGB8 *myPalette) {
-	if ((!player_commands_allowed()) || (!INTERFACE_VISIBLE) ||
-		_G(pal_fade_in_progress) || _G(menuSystemInitialized)) {
-		return;
-	}
+#define GAME_MENU_X		212
+#define GAME_MENU_Y		160
 
-	CreateGameMenuMain(myPalette);
-}
+#define GM_TAG_QUIT     1
+#define GM_QUIT_X		13
+#define GM_QUIT_Y		31
+#define GM_QUIT_W		26
+#define GM_QUIT_H		26
 
-void CreateGameMenuMain(RGB8 *myPalette) {
+#define GM_TAG_MAIN     2
+#define GM_MAIN_X		108
+#define GM_MAIN_Y		31
+#define GM_MAIN_W		26
+#define GM_MAIN_H		26
+
+#define GM_TAG_OPTIONS	3
+#define GM_OPTIONS_X	162
+#define GM_OPTIONS_Y	31
+#define GM_OPTIONS_W	26
+#define GM_OPTIONS_H	26
+
+#define GM_TAG_RESUME	4
+#define GM_RESUME_X		54
+#define GM_RESUME_Y		94
+#define GM_RESUME_W		26
+#define GM_RESUME_H		26
+
+#define GM_TAG_SAVE		5
+#define GM_SAVE_X		108
+#define GM_SAVE_Y		94
+#define GM_SAVE_W		26
+#define GM_SAVE_H		26
+
+#define GM_TAG_LOAD		6
+#define GM_LOAD_X		162
+#define GM_LOAD_Y		94
+#define GM_LOAD_W		26
+#define GM_LOAD_H		26
+
+void GameMenu::show(RGB8 *myPalette) {
 	if (!_G(menuSystemInitialized)) {
-		menu_Initialize(myPalette);
+		guiMenu::initialize(myPalette);
 	}
 
 	// Keep the memory tidy
@@ -64,39 +96,188 @@ void CreateGameMenuMain(RGB8 *myPalette) {
 	CompactMem();
 
 	// Load in the game menu sprites
-	if (!menu_LoadSprites("gamemenu", GM_TOTAL_SPRITES)) {
-		return;
-	}
+	if (!guiMenu::loadSprites("gamemenu", GM_TOTAL_SPRITES))
+		error("Error loading gamemenu");
 
-	_GM(gameMenu) = menu_Create(_GM(menuSprites)[GM_DIALOG_BOX], GAME_MENU_X, GAME_MENU_Y, MENU_DEPTH | SF_GET_ALL | SF_BLOCK_ALL | SF_IMMOVABLE);
-	if (!_GM(gameMenu)) {
-		return;
-	}
-#if 0
-	menu_ButtonAdd(_GM(gameMenu), GM_TAG_MAIN, GM_MAIN_X, GM_MAIN_Y, GM_MAIN_W, GM_MAIN_H, cb_Game_Main);
-	menu_ButtonAdd(_GM(gameMenu), GM_TAG_OPTIONS, GM_OPTIONS_X, GM_OPTIONS_Y, GM_OPTIONS_W, GM_OPTIONS_H, cb_Game_Options);
-	menu_ButtonAdd(_GM(gameMenu), GM_TAG_RESUME, GM_RESUME_X, GM_RESUME_Y, GM_RESUME_W, GM_RESUME_H, cb_Game_Resume);
-	menu_ButtonAdd(_GM(gameMenu), GM_TAG_QUIT, GM_QUIT_X, GM_QUIT_Y, GM_QUIT_W, GM_QUIT_H, cb_Game_Quit);
+	_GM(gameMenu) = guiMenu::create(_GM(menuSprites)[GM_DIALOG_BOX],
+		GAME_MENU_X, GAME_MENU_Y, MENU_DEPTH | SF_GET_ALL | SF_BLOCK_ALL | SF_IMMOVABLE);
+	assert(_GM(gameMenu));
+
+	menuItemButton::add(_GM(gameMenu), GM_TAG_QUIT,
+		GM_QUIT_X, GM_QUIT_Y, GM_QUIT_W, GM_QUIT_H, cbQuitGame);
+	menuItemButton::add(_GM(gameMenu), GM_TAG_MAIN,
+		GM_MAIN_X, GM_MAIN_Y, GM_MAIN_W, GM_MAIN_H, cbMainMenu);
+	menuItemButton::add(_GM(gameMenu), GM_TAG_OPTIONS, GM_OPTIONS_X, GM_OPTIONS_Y, GM_OPTIONS_W, GM_OPTIONS_H, cbOptions);
+	menuItemButton::add(_GM(gameMenu), GM_TAG_RESUME, GM_RESUME_X, GM_RESUME_Y, GM_RESUME_W, GM_RESUME_H, cbResume);
 
 	if (!_GM(gameMenuFromMain)) {
-		menu_ButtonAdd(_GM(gameMenu), GM_TAG_SAVE, GM_SAVE_X, GM_SAVE_Y, GM_SAVE_W, GM_SAVE_H, cb_Game_Save);
+		menuItemButton::add(_GM(gameMenu), GM_TAG_SAVE, GM_SAVE_X, GM_SAVE_Y, GM_SAVE_W, GM_SAVE_H, cbSave);
 	} else {
-		menu_ButtonAdd(_GM(gameMenu), GM_TAG_SAVE, GM_SAVE_X, GM_SAVE_Y, GM_SAVE_W, GM_SAVE_H, cb_Game_Save, BTN_TYPE_GM_GENERIC, true);
+		menuItemButton::add(_GM(gameMenu), GM_TAG_SAVE, GM_SAVE_X, GM_SAVE_Y, GM_SAVE_W, GM_SAVE_H, cbSave, menuItemButton::BTN_TYPE_GM_GENERIC, true);
 	}
 
 	// See if there are any games to load
 	if (g_engine->savesExist()) {
-		menu_ButtonAdd(_GM(gameMenu), GM_TAG_LOAD, GM_LOAD_X, GM_LOAD_Y, GM_LOAD_W, GM_LOAD_H, cb_Game_Load);
+		menuItemButton::add(_GM(gameMenu), GM_TAG_LOAD, GM_LOAD_X, GM_LOAD_Y, GM_LOAD_W, GM_LOAD_H, cbLoad);
 	} else {
-		menu_ButtonAdd(_GM(gameMenu), GM_TAG_LOAD, GM_LOAD_X, GM_LOAD_Y, GM_LOAD_W, GM_LOAD_H, cb_Game_Load, BTN_TYPE_GM_GENERIC, true);
+		menuItemButton::add(_GM(gameMenu), GM_TAG_LOAD, GM_LOAD_X, GM_LOAD_Y, GM_LOAD_W, GM_LOAD_H, cbLoad, menuItemButton::BTN_TYPE_GM_GENERIC, true);
 	}
 
 	// Configure the game so pressing <esc> will cause the menu to disappear and the game to resume
-	menu_Configure(_GM(gameMenu), cb_Game_Resume, cb_Game_Resume);
+	guiMenu::configure(_GM(gameMenu), cbResume, cbResume);
 
 	vmng_screen_show((void *)_GM(gameMenu));
 	LockMouseSprite(0);
-#endif
+}
+
+void GameMenu::destroyGameMenu() {
+	if (!_GM(gameMenu))
+		return;
+
+	// Remove the screen from the gui
+	vmng_screen_dispose(_GM(gameMenu));
+
+	// Destroy the menu resources
+	guiMenu::destroy(_GM(gameMenu));
+
+	// Unload the menu sprites
+	guiMenu::unloadSprites();
+}
+
+void GameMenu::cbQuitGame(void *, void *) {
+	// Destroy the game menu
+	destroyGameMenu();
+
+	// Shutdown the menu system
+	guiMenu::shutdown(false);
+
+	// Set the global that will cause the entire game to exit to dos
+	_G(kernel).going = false;
+}
+
+void GameMenu::cbMainMenu(void *, void *) {
+	// Destroy the game menu
+	destroyGameMenu();
+
+	if (!_GM(gameMenuFromMain)) {
+		// Save the game so we can resume from here if possible
+		if (_GM(interfaceWasVisible) && player_commands_allowed()) {
+			other_save_game_for_resurrection();
+		}
+
+		// Make sure the interface does not reappear
+		_GM(interfaceWasVisible) = false;
+
+		// Shutdown the menu system
+		guiMenu::shutdown(false);
+	} else {
+		guiMenu::shutdown(true);
+	}
+
+	// Go to the main menu
+	_G(game).setRoom(494);
+}
+
+void GameMenu::cbResume(void *, void *) {
+	// Destroy the game menu
+	destroyGameMenu();
+
+	// Shutdown the menu system
+	guiMenu::shutdown(true);
+}
+
+void GameMenu::cbOptions(void *, void *) {
+	// Destroy the game menu
+	destroyGameMenu();
+
+	_GM(buttonClosesDialog) = true;
+
+	// Create the options menu
+	OptionsMenu::show();
+}
+
+void GameMenu::cbSave(void *, void *) {
+	// TODO
+}
+
+void GameMenu::cbLoad(void *, void *) {
+	// TODO
+}
+
+/*-------------------- OPTIONS MENU --------------------*/
+
+#define OPTIONS_MENU_X 212
+#define OPTIONS_MENU_Y 160
+
+#define OM_TAG_GAMEMENU		1
+#define OM_GAMEMENU_X		14
+#define OM_GAMEMENU_Y		94
+#define OM_GAMEMENU_W		26
+#define OM_GAMEMENU_H		26
+
+#define OM_TAG_SCROLLING	4
+#define OM_SCROLLING_X		131
+#define OM_SCROLLING_Y		113
+#define OM_SCROLLING_W		39
+#define OM_SCROLLING_H		39
+
+void OptionsMenu::show() {
+	// Load in the options menu sprites
+	if (!guiMenu::loadSprites("opmenu", OM_TOTAL_SPRITES))
+		error("Error loading opmenu");
+
+	_GM(opMenu) = guiMenu::create(_GM(menuSprites)[OM_DIALOG_BOX],
+		OPTIONS_MENU_X, OPTIONS_MENU_Y, MENU_DEPTH | SF_GET_ALL | SF_BLOCK_ALL | SF_IMMOVABLE);
+	if (!_GM(opMenu)) {
+		return;
+	}
+
+	menuItemButton::add(_GM(opMenu), OM_TAG_GAMEMENU,
+		OM_GAMEMENU_X, OM_GAMEMENU_Y, OM_GAMEMENU_W, OM_GAMEMENU_H,
+		cbGameMenu, menuItemButton::BTN_TYPE_GM_GENERIC);
+
+
+	menuItemButton::add(_GM(opMenu), OM_TAG_GAMEMENU,
+		OM_SCROLLING_X, OM_SCROLLING_Y, OM_SCROLLING_W, OM_SCROLLING_H, (CALLBACK)cbScrolling,
+		_G(kernel).cameraPans() ? menuItemButton::BTN_TYPE_OM_SCROLLING_ON :
+			menuItemButton::BTN_TYPE_OM_SCROLLING_OFF);
+
+	guiMenu::configure(_GM(opMenu), cbGameMenu, cbGameMenu);
+	vmng_screen_show((void *)_GM(opMenu));
+	LockMouseSprite(0);
+}
+
+void OptionsMenu::destroyOptionsMenu() {
+	// Remove the screen from the gui
+	vmng_screen_dispose(_GM(opMenu));
+
+	// Destroy the menu resources
+	guiMenu::destroy(_GM(opMenu));
+
+	// Unload the menu sprites
+	guiMenu::unloadSprites();
+}
+
+void OptionsMenu::cbGameMenu(void *, void *) {
+	destroyOptionsMenu();
+
+	GameMenu::show(nullptr);
+}
+
+void OptionsMenu::cbScrolling(M4::GUI::menuItemButton *myItem, M4::GUI::guiMenu *) {
+	_G(kernel).camera_pan_instant = myItem->buttonType ==
+		menuItemButton::BTN_TYPE_OM_SCROLLING_ON;
+}
+
+/*-------------------- ACCESS METHODS --------------------*/
+
+void CreateGameMenu(RGB8 *myPalette) {
+	if ((!player_commands_allowed()) || (!INTERFACE_VISIBLE) ||
+		_G(pal_fade_in_progress) || _G(menuSystemInitialized)) {
+		return;
+	}
+
+	GameMenu::show(myPalette);
 }
 
 } // namespace GUI

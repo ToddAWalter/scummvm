@@ -104,7 +104,7 @@ void Room403::init() {
 
 		MoveScreenDelta(-640, 0);
 		ws_demand_location(_G(my_walker), 1172, 322, 3);
-		ws_walk(1172, 322, nullptr, 400, 1);
+		ws_walk(_G(my_walker), 1172, 322, nullptr, 400, 1);
 
 	} else if (_G(flags)[V139] == 4) {
 		_G(flags)[V139] = 0;
@@ -112,7 +112,7 @@ void Room403::init() {
 		hotspot_set_active("STEP LADDER ", true);
 		MoveScreenDelta(-640, 0);
 		ws_demand_location(_G(my_walker), 1083, 322, 3);
-		ws_walk(1201, 321, nullptr, 420, 2);
+		ws_walk(_G(my_walker), 1201, 321, nullptr, 420, 2);
 
 	} else {
 		if (inv_player_has("TURTLE"))
@@ -250,7 +250,7 @@ void Room403::init() {
 				player_set_commands_allowed(true);
 			} else {
 				ws_demand_location(_G(my_walker), 4, 296);
-				ws_walk(80, 300, nullptr, 300, 3);
+				ws_walk(_G(my_walker), 80, 300, nullptr, 300, 3);
 			}
 		}
 	}
@@ -1252,7 +1252,7 @@ void Room403::daemon() {
 		break;
 
 	case 311:
-		ws_walk(1120, 328, nullptr, 314, 1);
+		ws_walk(_G(my_walker), 1120, 328, nullptr, 314, 1);
 		break;
 
 	case 312:
@@ -1417,7 +1417,7 @@ void Room403::daemon() {
 		ws_unhide_walker();
 		series_unload(_ripPutBoard);
 
-		ws_walk(620, 326, nullptr, 1);
+		ws_walk(_G(my_walker), 620, 326, nullptr, -1, 1, true);
 		kernel_timing_trigger(60, 444);
 		break;
 
@@ -1976,7 +1976,7 @@ void Room403::plankUrn() {
 	switch (_G(kernel).trigger) {
 	case 69:
 		player_set_commands_allowed(false);
-		ws_walk(1110, 322, nullptr, 1, 11);
+		ws_walk(_G(my_walker), 1110, 322, nullptr, 1, 11);
 		_plank = 2;
 		break;
 
@@ -2041,7 +2041,7 @@ bool Room403::edgerUrn() {
 	case 69:
 		if (inv_player_has("EDGER")) {
 			player_set_commands_allowed(false);
-			ws_walk(1201, 321, 0, 1, 2);
+			ws_walk(_G(my_walker), 1201, 321, nullptr, 1, 2, true);
 			return true;
 		}
 		return false;
