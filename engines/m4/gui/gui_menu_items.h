@@ -33,50 +33,6 @@ namespace M4 {
 namespace Burger {
 namespace GUI {
 
-enum save_load_menu_sprites {
-	SL_DIALOG_BOX,
-	SL_EMPTY_THUMB,
-
-	SL_SAVE_BTN_GREY,
-	SL_SAVE_BTN_NORM,
-	SL_SAVE_BTN_OVER,
-	SL_SAVE_BTN_PRESS,
-
-	SL_LOAD_BTN_GREY,
-	SL_LOAD_BTN_NORM,
-	SL_LOAD_BTN_OVER,
-	SL_LOAD_BTN_PRESS,
-
-	SL_CANCEL_BTN_NORM,
-	SL_CANCEL_BTN_OVER,
-	SL_CANCEL_BTN_PRESS,
-
-	SL_UP_BTN_GREY,
-	SL_UP_BTN_NORM,
-	SL_UP_BTN_OVER,
-	SL_UP_BTN_PRESS,
-
-	SL_DOWN_BTN_GREY,
-	SL_DOWN_BTN_NORM,
-	SL_DOWN_BTN_OVER,
-	SL_DOWN_BTN_PRESS,
-
-	SL_SAVE_LABEL,
-	SL_LOAD_LABEL,
-
-	SL_SLIDER_BTN_NORM,
-	SL_SLIDER_BTN_OVER,
-	SL_SLIDER_BTN_PRESS,
-
-	SL_LINE_NORM,
-	SL_LINE_OVER,
-	SL_LINE_PRESS,
-
-	SL_SCROLL_BAR,
-
-	SL_TOTAL_SPRITES
-};
-
 enum options_menu_sprites {
 	OM_DIALOG_BOX,
 
@@ -98,19 +54,6 @@ enum options_menu_sprites {
 	OM_TOTAL_SPRITES
 };
 
-enum save_load_menu_item_tags {
-	SL_TAG_SAVE = 100,
-	SL_TAG_SAVE_LABEL,
-	SL_TAG_LOAD,
-	SL_TAG_LOAD_LABEL,
-	SL_TAG_CANCEL,
-	SL_TAG_VSLIDER,
-	SL_TAG_THUMBNAIL
-};
-
-constexpr int SL_THUMBNAIL_W = 215;
-constexpr int SL_THUMBNAIL_H = 162;
-
 } // namespace GUI
 } // namespace Burger
 
@@ -120,6 +63,10 @@ namespace GUI {
 enum options_menu_sprites {
 	OM_DIALOG_BOX,
 
+	OM_SLIDER_BTN_NORM = 5,
+	OM_SLIDER_BTN_OVER = 6,
+	OM_SLIDER_BTN_PRESS = 7,
+
 	OM_SCROLLING_ON_BTN_NORM = 8,
 	OM_SCROLLING_ON_BTN_OVER = 9,
 	OM_SCROLLING_ON_BTN_PRESS = 13,
@@ -127,22 +74,7 @@ enum options_menu_sprites {
 	OM_SCROLLING_OFF_BTN_NORM = 11,
 	OM_SCROLLING_OFF_BTN_OVER = 12,
 	OM_SCROLLING_OFF_BTN_PRESS = 10,
-#if 0
-	OM_SLIDER_BTN_NORM,
-	OM_SLIDER_BTN_OVER,
-	OM_SLIDER_BTN_PRESS,
 
-	OM_SLIDER_BAR,
-
-	OM_DONE_BTN_GREY,
-	OM_DONE_BTN_NORM,
-	OM_DONE_BTN_OVER,
-	OM_DONE_BTN_PRESS,
-
-	OM_CANCEL_BTN_NORM,
-	OM_CANCEL_BTN_OVER,
-	OM_CANCEL_BTN_PRESS,
-#endif
 	OM_TOTAL_SPRITES = 14
 };
 
@@ -154,6 +86,18 @@ namespace GUI {
 #define _GM(X) ::M4::g_vars->_menu.X
 #define LockMouseSprite mouse_lock_sprite
 #define UnlockMouseSprite mouse_unlock_sprite
+
+enum save_load_menu_item_tags {
+	SL_TAG_SAVE = 100,
+	SL_TAG_SAVE_LABEL,
+	SL_TAG_LOAD,
+	SL_TAG_LOAD_LABEL,
+	SL_TAG_CANCEL,
+	SL_TAG_SAVE_TITLE_LABEL,
+	SL_TAG_LOAD_TITLE_LABEL,
+	SL_TAG_VSLIDER,
+	SL_TAG_THUMBNAIL
+};
 
 struct menuItem;
 struct guiMenu;
@@ -195,8 +139,6 @@ struct menuItem {
 		TEXT_COLOR_PRESS_HILITE		= 3,
 		TEXT_COLOR_PRESS_FOREGROUND = 2,
 		TEXT_COLOR_PRESS_SHADOW		= 1,
-
-		SLIDER_BAR_COLOR			= 129
 	};
 
 	menuItem *next = nullptr;
@@ -437,16 +379,11 @@ struct MenuGlobals {
 };
 
 extern void gui_DrawSprite(Sprite *mySprite, Buffer *myBuff, int32 x, int32 y);
-extern bool LoadThumbNail(int32 slotNum);
-extern void UnloadThumbNail(int32 slotNum);
-extern void UpdateThumbNails(int32 firstSlot, guiMenu *myMenu);
-extern void SetFirstSlot(int32 firstSlot, guiMenu *myMenu);
 
 //======================================
 //
 //		gamemenu module defines
 //
-#define MEMORY_NEEDED		0	// bytes needed for menus to work
 #define MENU_DEPTH 			9 	// video depth for menu popup boxes
 #define MAX_SLOTS			99	// number of save games you can have
 #define MAX_SLOTS_SHOWN 	8	// number of slots in the scrolling field

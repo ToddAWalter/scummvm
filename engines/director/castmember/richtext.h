@@ -19,15 +19,37 @@
  *
  */
 
-#ifndef COMMON_TYPE_TRAITS_H
-#define COMMON_TYPE_TRAITS_H
+#ifndef DIRECTOR_CASTMEMBER_RICHTEXT_H
+#define DIRECTOR_CASTMEMBER_RICHTEXT_H
 
-namespace Common {
-	template <bool b, class T, class U> struct Conditional { typedef T type; };
-	template <class T, class U> struct Conditional<false, T, U> { typedef U type; };
-	template <typename T> struct RemoveConst { typedef T type; };
-	template <typename T> struct RemoveConst<const T> { typedef T type; };
-	template <typename T> struct AddConst { typedef const T type; };
-} // End of namespace Common
+#include "director/types.h"
+#include "director/castmember/castmember.h"
+
+namespace Director {
+
+class RichTextCastMember : public CastMember {
+public:
+	RichTextCastMember(Cast *cast, uint16 castId, Common::SeekableReadStreamEndian &stream, uint16 version);
+	RichTextCastMember(Cast *cast, uint16 castId, RichTextCastMember &source);
+	~RichTextCastMember();
+
+	void load() override;
+
+	Graphics::MacWidget *createWidget(Common::Rect &bbox, Channel *channel, SpriteType spriteType) override;
+
+	bool hasField(int field) override;
+	Datum getField(int field) override;
+	bool setField(int field, const Datum &value) override;
+
+	Common::String formatInfo() override;
+
+private:
+	Common::U32String _plainText;
+	uint32 _foreColor;
+	uint32 _bgColor;
+	Picture *_picture;
+};
+
+} // End of namespace Director
 
 #endif

@@ -23,16 +23,13 @@
 #include "m4/burger/gui/game_menu.h"
 #include "m4/burger/gui/interface.h"
 #include "m4/adv_r/other.h"
-#include "m4/adv_r/adv_background.h"
-#include "m4/adv_r/adv_control.h"
 #include "m4/adv_r/adv_player.h"
 #include "m4/core/errors.h"
 #include "m4/core/imath.h"
 #include "m4/gui/gui_event.h"
+#include "m4/gui/gui_menu_items.h"
 #include "m4/gui/hotkeys.h"
-#include "m4/graphics/gr_line.h"
 #include "m4/graphics/gr_sprite.h"
-#include "m4/graphics/krn_pal.h"
 #include "m4/gui/gui_sys.h"
 #include "m4/gui/gui_vmng.h"
 #include "m4/mem/mem.h"
@@ -45,194 +42,16 @@ namespace M4 {
 namespace Burger {
 namespace GUI {
 
-Sprite *menu_CreateThumbnail(int32 *spriteSize) {
-	Sprite *thumbNailSprite;
-	GrBuff *thumbNail;
-	Buffer *scrnBuff, *intrBuff, *destBuff, RLE8Buff;
-	uint8 *srcPtr, *srcPtr2, *srcPtr3, *srcRowPtr, *destPtr;
-	ScreenContext *gameScreen;
-	int32 i, status;
-	int32 currRow, beginRow, endRow;
-
-	// Create a Sprite for the thumbNail
-	if ((thumbNailSprite = (Sprite *)mem_alloc(sizeof(Sprite), "sprite")) == nullptr) {
-		return nullptr;
-	}
-
-	thumbNail = new GrBuff((MAX_VIDEO_X + 1) / 3, (MAX_VIDEO_Y + 1) / 3);
-	if (!thumbNail) {
-		return nullptr;
-	}
-
-	destBuff = thumbNail->get_buffer();
-	if (!destBuff) {
-		return nullptr;
-	}
-
-	gameScreen = vmng_screen_find(_G(gameDrawBuff), &status);
-	if ((!gameScreen) || (status != SCRN_ACTIVE)) {
-		return nullptr;
-	}
-
-	scrnBuff = _G(gameDrawBuff)->get_buffer();
-	if (!scrnBuff) {
-		return nullptr;
-	}
-
-	// Grab the interface buffer
-	intrBuff = _G(gameInterfaceBuff)->get_buffer();
-
-	if (gameScreen->y1 > 0) {
-		// Paint the top of the thumbnail black
-		beginRow = gameScreen->y1;
-		memset(destBuff->data, 21, (beginRow / 3) * destBuff->stride);
-		srcRowPtr = (uint8 *)(scrnBuff->data + (-gameScreen->x1));
-		destPtr = (uint8 *)(destBuff->data + ((beginRow / 3) * destBuff->stride));
-	} else {
-		srcRowPtr = (uint8 *)(scrnBuff->data + ((-gameScreen->y1) * scrnBuff->stride) + (-gameScreen->x1));
-		beginRow = 0;
-		destPtr = destBuff->data;
-	}
-	endRow = imath_min(MAX_VIDEO_Y, gameScreen->y2);
-
-	for (currRow = beginRow; currRow <= endRow; currRow += 3) {
-
-		// Set the src pointers
-		srcPtr = srcRowPtr;
-		srcPtr2 = srcRowPtr + scrnBuff->stride;
-		srcPtr3 = srcRowPtr + (scrnBuff->stride << 1);
-
-		for (i = 0; i < (MAX_VIDEO_X + 1) / 3; i++) {
-
-			// Calculate the average - make sure not to extend past the end of the buffer
-			if (endRow - currRow < 1) {
-				*destPtr = (uint8)((uint32)((*srcPtr + *(srcPtr + 1) + *(srcPtr + 2)) / 3));
-			} else if (endRow - currRow < 2) {
-				*destPtr = (uint8)((uint32)((*srcPtr + *(srcPtr + 1) + *(srcPtr + 2) +
-					*srcPtr2 + *(srcPtr2 + 1) + *(srcPtr2 + 2)) / 6));
-			} else {
-				*destPtr = (uint8)((uint32)((*srcPtr + *(srcPtr + 1) + *(srcPtr + 2) +
-					*srcPtr2 + *(srcPtr2 + 1) + *(srcPtr2 + 2) +
-					*srcPtr3 + *(srcPtr3 + 1) + *(srcPtr3 + 2)) / 9));
-			}
-
-			if (*destPtr == 0) {
-				*destPtr = 21;
-			}
-
-			// Increment the pointers
-			srcPtr += 3;
-			srcPtr2 += 3;
-			srcPtr3 += 3;
-			destPtr++;
-		}
-
-		// Update the row pointer
-		srcRowPtr += scrnBuff->stride * 3;
-	}
-
-	// Reset the currRow
-	beginRow = currRow;
-
-	// Paint the interface section of the thumbnail
-	if (currRow < MAX_VIDEO_Y) {
-		// If the interface is visible, grab it
-		if (intrBuff) {
-			srcRowPtr = intrBuff->data;
-			endRow = imath_min(MAX_VIDEO_Y, beginRow + intrBuff->h - 1);
-			for (currRow = beginRow; currRow <= endRow; currRow += 3) {
-				// Set the src pointers
-				srcPtr = srcRowPtr;
-				srcPtr2 = srcRowPtr + intrBuff->stride;
-				srcPtr3 = srcRowPtr + (intrBuff->stride << 1);
-
-				for (i = 0; i < (MAX_VIDEO_X + 1) / 3; i++) {
-					// If the pix is outside of the inventory objects in the interface, set to black
-					// If ((srcPtr - srcRowPtr < 180) || (srcPtr - srcRowPtr > 575)) {
-					if (true) {			// for now make everything in the interface black
-						*destPtr = 21;
-					}
-
-					// Else calculate the average - make sure not to extend past the end of the buffer
-					else {
-						if (endRow - currRow < 1) {
-							*destPtr = (uint8)((uint32)((*srcPtr + *(srcPtr + 1) + *(srcPtr + 2)) / 3));
-						} else if (endRow - currRow < 2) {
-							*destPtr = (uint8)((uint32)((*srcPtr + *(srcPtr + 1) + *(srcPtr + 2) +
-								*srcPtr2 + *(srcPtr2 + 1) + *(srcPtr2 + 2)) / 6));
-						} else {
-							*destPtr = (uint8)((uint32)((*srcPtr + *(srcPtr + 1) + *(srcPtr + 2) +
-								*srcPtr2 + *(srcPtr2 + 1) + *(srcPtr2 + 2) +
-								*srcPtr3 + *(srcPtr3 + 1) + *(srcPtr3 + 2)) / 9));
-						}
-						if (*destPtr == 0) {
-							*destPtr = 21;
-						}
-					}
-
-					// Increment the pointers
-					srcPtr += 3;
-					srcPtr2 += 3;
-					srcPtr3 += 3;
-					destPtr++;
-				}
-
-				// Update the row pointer
-				srcRowPtr += intrBuff->stride * 3;
-			}
-		} else {
-			// Else paint the bottom of the thumbnail black
-			destPtr = (uint8 *)(destBuff->data + ((currRow / 3) * destBuff->stride));
-			memset(destPtr, 21, (destBuff->h - (currRow / 3)) * destBuff->stride);
-		}
-	}
-
-	// Reset the currRow
-	beginRow = currRow;
-
-	if (currRow < MAX_VIDEO_Y) {
-		// Paint the bottom of the thumbnail black
-		destPtr = (uint8 *)(destBuff->data + ((currRow / 3) * destBuff->stride));
-		memset(destPtr, 21, (destBuff->h - (currRow / 3)) * destBuff->stride);
-	}
-
-	// Compress the thumbNail data into the RLE8Buff
-	if ((*spriteSize = (int32)gr_sprite_RLE8_encode(destBuff, &RLE8Buff)) <= 0) {
-		return nullptr;
-	}
-
-	// Fill in the Sprite structure
-	thumbNailSprite->w = destBuff->w;
-	thumbNailSprite->h = destBuff->h;
-	thumbNailSprite->encoding = RLE8;
-	thumbNailSprite->data = nullptr;
-	if ((thumbNailSprite->sourceHandle = NewHandle(*spriteSize, "thumbNail source")) == nullptr) {
-		return nullptr;
-	}
-	thumbNailSprite->sourceOffset = 0;
-
-	// Now copy the RLE8Buff into the thumbNail source handle
-	HLock(thumbNailSprite->sourceHandle);
-	thumbNailSprite->data = (uint8 *)(*(thumbNailSprite->sourceHandle));
-	memcpy(thumbNailSprite->data, RLE8Buff.data, *spriteSize);
-	HUnLock(thumbNailSprite->sourceHandle);
-
-	// Release all buffers
-	_G(gameDrawBuff)->release();
-	if (intrBuff) {
-		_G(gameInterfaceBuff)->release();
-	}
-	thumbNail->release();
-
-	// Free up both the thumbNail and the RLE8Buff
-	delete thumbNail;
-	mem_free((void *)RLE8Buff.data);
-
-	return thumbNailSprite;
-}
-
 //-------------------------------------   GAME MENU   -------------------------------------//
 
+enum game_menu_button_tags {
+	GM_TAG_QUIT = 1,
+	GM_TAG_OPTIONS = 2,
+	GM_TAG_RESUME = 3,
+	GM_TAG_SAVE = 4,
+	GM_TAG_LOAD = 5,
+	GM_TAG_MAIN = 6
+};
 
 #define GAME_MENU_X		190
 #define GAME_MENU_Y		100
@@ -269,11 +88,11 @@ Sprite *menu_CreateThumbnail(int32 *spriteSize) {
 #define GM_LOAD_W			 24
 #define GM_LOAD_H			 24
 
-static void DestroyGameMenu();
 
-void cb_Game_Quit(void *, void *) {
+
+void GameMenu::cb_Game_Quit(void *, void *) {
 	// Destroy the game menu
-	DestroyGameMenu();
+	destroyMenu();
 
 	// Shutdown the menu system
 	guiMenu::shutdown(false);
@@ -282,17 +101,17 @@ void cb_Game_Quit(void *, void *) {
 	_G(kernel).going = false;
 }
 
-void cb_Game_Resume(void *, void *) {
+void GameMenu::cb_Game_Resume(void *, void *) {
 	// Destroy the game menu
-	DestroyGameMenu();
+	destroyMenu();
 
 	// Shutdown the menu system
 	guiMenu::shutdown(true);
 }
 
-void cb_Game_Save(void *, void *) {
+void GameMenu::cb_Game_Save(void *, void *) {
 	// Destroy the game menu
-	DestroyGameMenu();
+	destroyMenu();
 	guiMenu::shutdown(true);
 	_GM(buttonClosesDialog) = true;
 
@@ -300,9 +119,9 @@ void cb_Game_Save(void *, void *) {
 	g_engine->showSaveScreen();
 }
 
-void cb_Game_Load(void *, void *) {
+void GameMenu::cb_Game_Load(void *, void *) {
 	// Destroy the game menu
-	DestroyGameMenu();
+	destroyMenu();
 	guiMenu::shutdown(true);
 	_GM(buttonClosesDialog) = true;
 
@@ -310,9 +129,9 @@ void cb_Game_Load(void *, void *) {
 	g_engine->showLoadScreen(M4Engine::kLoadFromGameDialog);
 }
 
-void cb_Game_Main(void *, void *) {
+void GameMenu::cb_Game_Main(void *, void *) {
 	// Destroy the game menu
-	DestroyGameMenu();
+	destroyMenu();
 
 	if (!_GM(gameMenuFromMain)) {
 		// Save the game so we can resume from here if possible
@@ -333,16 +152,16 @@ void cb_Game_Main(void *, void *) {
 	_G(game).setRoom(_G(executing) == WHOLE_GAME ? 903 : 901);
 }
 
-void cb_Game_Options(void *, void *) {
+void GameMenu::cb_Game_Options(void *, void *) {
 	// Destroy the game menu
-	DestroyGameMenu();
+	destroyMenu();
 	_GM(buttonClosesDialog) = true;
 
 	// Create the options menu
-	CreateOptionsMenu(nullptr);
+	OptionsMenu::show(nullptr);
 }
 
-void DestroyGameMenu(void) {
+void GameMenu::destroyMenu() {
 	if (!_GM(gameMenu)) {
 		return;
 	}
@@ -357,14 +176,10 @@ void DestroyGameMenu(void) {
 	guiMenu::unloadSprites();
 }
 
-void CreateGameMenuMain(RGB8 *myPalette) {
+void GameMenu::show(RGB8 *myPalette) {
 	if (!_G(menuSystemInitialized)) {
 		guiMenu::initialize(myPalette);
 	}
-
-	// Keep the memory tidy
-	PurgeMem();
-	CompactMem();
 
 	// Load in the game menu sprites
 	if (!guiMenu::loadSprites("gamemenu", GM_TOTAL_SPRITES)) {
@@ -409,32 +224,57 @@ void CreateGameMenuMain(RGB8 *myPalette) {
 #define OPTIONS_MENU_W		298
 #define OPTIONS_MENU_H		218
 
-void DestroyOptionsMenu();
 
+enum option_menu_item_tags {
+	OM_TAG_DONE = 1,
+	OM_TAG_CANCEL,
+	OM_TAG_DIGI,
+	OM_TAG_DIGESTABILITY,
+};
 
-void cb_Options_Game_Cancel(void *, void *) {
+#define OM_DONE_X 168
+#define OM_DONE_Y 141
+#define OM_DONE_W  74
+#define OM_DONE_H  43
+
+#define OM_CANCEL_X  93
+#define OM_CANCEL_Y 141
+#define OM_CANCEL_W  74
+#define OM_CANCEL_H  43
+
+#define OM_DIGI_X	  47
+#define OM_DIGI_Y	  64
+#define OM_DIGI_W	 212
+#define OM_DIGI_H	  24
+
+#define OM_DIGESTABILITY_X	  47
+#define OM_DIGESTABILITY_Y	 104
+#define OM_DIGESTABILITY_W	 212
+#define OM_DIGESTABILITY_H	  24
+
+void OptionsMenu::cb_Options_Game_Cancel(void *, void *) {
 	// Reset values of items to what they were when options menu came up
 	digi_set_overall_volume(_GM(remember_digi_volume));
 	_G(flags)[digestability] = _GM(remember_digestability);
 
 	// Destroy the options menu
-	DestroyOptionsMenu();
+	destroyMenu();
 	_GM(buttonClosesDialog) = true;
 
 	// Create the options menu
-	CreateGameMenuMain(nullptr);
+	GameMenu::show(nullptr);
 }
 
-void cb_Options_Game_Done(void *, void *) {
+void OptionsMenu::cb_Options_Game_Done(void *, void *) {
 	// Destroy the options menu
-	DestroyOptionsMenu();
+	destroyMenu();
 	_GM(buttonClosesDialog) = true;
 
 	// Create the options menu
-	CreateGameMenuMain(nullptr);
+	GameMenu::show(nullptr);
 }
 
-void cb_Options_Digi(menuItemHSlider *myItem, guiMenu *myMenu) {
+void OptionsMenu::cb_Options_Digi(menuItemHSlider *myItem, guiMenu *myMenu) {
 	// Set the digi volume
 	digi_set_overall_volume(myItem->percent);
 	term_message("digi volume: %d", myItem->percent);
@@ -445,7 +285,7 @@ void cb_Options_Digi(menuItemHSlider *myItem, guiMenu *myMenu) {
 
 }
 
-void cb_Options_Digestability(menuItemHSlider *myItem, guiMenu *myMenu) {
+void OptionsMenu::cb_Options_Digestability(menuItemHSlider *myItem, guiMenu *myMenu) {
 	term_message("digestability: %d", myItem->percent);
 	_G(flags)[digestability] = myItem->percent;
 
@@ -454,7 +294,7 @@ void cb_Options_Digestability(menuItemHSlider *myItem, guiMenu *myMenu) {
 	guiMenu::itemRefresh(nullptr, OM_TAG_DONE, myMenu);
 }
 
-void DestroyOptionsMenu(void) {
+void OptionsMenu::destroyMenu(void) {
 	if (!_GM(opMenu))
 		return;
 
@@ -468,15 +308,10 @@ void DestroyOptionsMenu(void) {
 	guiMenu::unloadSprites();
 }
 
-
-void CreateOptionsMenu(RGB8 *myPalette) {
+void OptionsMenu::show(RGB8 *myPalette) {
 	if (!_G(menuSystemInitialized)) {
 		guiMenu::initialize(myPalette);
 	}
-
-	// Keep the memory tidy
-	PurgeMem();
-	CompactMem();
 
 	// Load in the game menu sprites
 	if (!guiMenu::loadSprites("opmenu", OM_TOTAL_SPRITES)) {
@@ -511,18 +346,40 @@ void CreateOptionsMenu(RGB8 *myPalette) {
 //--------------------------------   ERR MENU   --------------------------------------//
 //------------------------------------------------------------------------------------//
 
-void DestroyErrMenu();
+enum error_menu_sprites {
+	EM_DIALOG_BOX,
 
-void cb_Err_Done(void *, void *) {
+	EM_RETURN_BTN_NORM,
+	EM_RETURN_BTN_OVER,
+	EM_RETURN_BTN_PRESS,
+
+	EM_TOTAL_SPRITES
+};
+
+enum error_menu_tags {
+	EM_TAG_RETURN = 1
+};
+
+#define ERROR_MENU_X	 100
+#define ERROR_MENU_Y	 100
+#define ERROR_MENU_W	 100
+#define ERROR_MENU_H	 100
+
+#define EM_RETURN_X	  15
+#define EM_RETURN_Y	  15
+#define EM_RETURN_W	  15
+#define EM_RETURN_H	  15
+
+
+void ErrorMenu::cb_Err_Done(void *, void *) {
 	// Destroy the game menu
-	DestroyErrMenu();
+	destroyMenu();
 
 	// Shutdown the menu system
 	guiMenu::shutdown(true);
 }
 
-
-void DestroyErrMenu(void) {
+void ErrorMenu::destroyMenu() {
 	if (!_GM(errMenu)) {
 		return;
 	}
@@ -537,17 +394,10 @@ void DestroyErrMenu(void) {
 	guiMenu::unloadSprites();
 }
 
-
-void CreateErrMenu(RGB8 *myPalette) {
-	Buffer *myBuff;
-
+void ErrorMenu::show(RGB8 *myPalette) {
 	if (!_G(menuSystemInitialized)) {
 		guiMenu::initialize(myPalette);
 	}
-
-	// Keep the memory tidy
-	PurgeMem();
-	CompactMem();
 
 	// Load in the game menu sprites
 	if (!guiMenu::loadSprites("errmenu", 5)) {
@@ -560,7 +410,7 @@ void CreateErrMenu(RGB8 *myPalette) {
 	}
 
 	// Get the menu buffer
-	myBuff = _GM(errMenu)->menuBuffer->get_buffer();
+	Buffer *myBuff = _GM(errMenu)->menuBuffer->get_buffer();
 	if (!myBuff) {
 		return;
 	}
@@ -589,21 +439,191 @@ void CreateErrMenu(RGB8 *myPalette) {
 	LockMouseSprite(0);
 }
 
-
 //--------------------------------   SAVE / LOAD MENU   -----------------------------------//
 
-void DestroySaveLoadMenu(bool saveMenu);
-void cb_SaveLoad_Slot(menuItemButton *theItem, guiMenu *myMenu);
-bool load_Handler(menuItemButton *theItem, int32 eventType, int32 event, int32 x, int32 y, void **currItem);
+#define SAVE_LOAD_MENU_X		145
+#define SAVE_LOAD_MENU_Y		 10
+#define SAVE_LOAD_MENU_W		344
+#define SAVE_LOAD_MENU_H		460
 
-void cb_SaveLoad_VSlider(menuItemVSlider *myItem, guiMenu *myMenu) {
-	bool redraw;
+#define SL_SAVE_X			214
+#define SL_SAVE_Y			384
+#define SL_SAVE_W			 74
+#define SL_SAVE_H		    43
 
+#define SL_LOAD_X			214
+#define SL_LOAD_Y			384
+#define SL_LOAD_W			 74
+#define SL_LOAD_H		    43
+
+#define SL_UP_X			292
+#define SL_UP_Y			255
+#define SL_UP_W			 20
+#define SL_UP_H		    17
+
+#define SL_DOWN_X			293
+#define SL_DOWN_Y			363
+#define SL_DOWN_W			 20
+#define SL_DOWN_H		    17
+
+#define SL_SLIDER_X			291
+#define SL_SLIDER_Y			255
+#define SL_SLIDER_W			 23
+#define SL_SLIDER_H		   127
+
+#define SL_CANCEL_X			139	
+#define SL_CANCEL_Y			384	
+#define SL_CANCEL_W			 74	
+#define SL_CANCEL_H		    43	
+
+#define SL_SAVE_LABEL_X			 50
+#define SL_SAVE_LABEL_Y			241
+#define SL_SAVE_LABEL_W			 70
+#define SL_SAVE_LABEL_H		    16
+
+#define SL_LOAD_LABEL_X			 50
+#define SL_LOAD_LABEL_Y			241
+#define SL_LOAD_LABEL_W			 70
+#define SL_LOAD_LABEL_H		    16
+
+#define SL_SCROLL_FIELD_X 		 50
+#define SL_SCROLL_FIELD_Y 		256
+#define SL_SCROLL_FIELD_W 		238
+#define SL_SCROLL_FIELD_H 		121
+
+#define SL_SCROLL_LINE_W 		238
+#define SL_SCROLL_LINE_H 		 15	//was 16
+
+#define SL_THUMBNAIL_X			 66
+#define SL_THUMBNAIL_Y			 28
+
+
+void SaveLoadMenu::show(RGB8 *myPalette, bool saveMenu) {
+	ItemHandlerFunction	i_handler;
+	bool buttonGreyed;
+
+	if (!_G(menuSystemInitialized)) {
+		guiMenu::initialize(myPalette);
+	}
+
+	// Load in the game menu sprites
+	if (!guiMenu::loadSprites("slmenu", GUI::SaveLoadMenuBase::SL_TOTAL_SPRITES)) {
+		return;
+	}
+
+	// Initialize some global vars
+	_GM(firstSlotIndex) = 0;
+	_GM(slotSelected) = -1;
+	_GM(saveLoadThumbNail) = nullptr;
+	_GM(thumbIndex) = 100;
+	_GM(currMenuIsSave) = saveMenu;
+
+	_GM(slMenu) = guiMenu::create(_GM(menuSprites)[GUI::SaveLoadMenuBase::SL_DIALOG_BOX], SAVE_LOAD_MENU_X, SAVE_LOAD_MENU_Y,
+		MENU_DEPTH | SF_GET_ALL | SF_BLOCK_ALL | SF_IMMOVABLE);
+	if (!_GM(slMenu)) {
+		return;
+	}
+
+	if (_GM(currMenuIsSave)) {
+		menuItemMsg::msgAdd(_GM(slMenu), SL_TAG_SAVE_LABEL, SL_SAVE_LABEL_X, SL_SAVE_LABEL_Y, SL_SAVE_LABEL_W, SL_SAVE_LABEL_H);
+		menuItemButton::add(_GM(slMenu), SL_TAG_SAVE, SL_SAVE_X, SL_SAVE_Y, SL_SAVE_W, SL_SAVE_H,
+			(CALLBACK)cb_SaveLoad_Save, menuItemButton::BTN_TYPE_SL_SAVE, true);
+	} else {
+		menuItemMsg::msgAdd(_GM(slMenu), SL_TAG_LOAD_LABEL, SL_LOAD_LABEL_X, SL_LOAD_LABEL_Y, SL_LOAD_LABEL_W, SL_LOAD_LABEL_H);
+		menuItemButton::add(_GM(slMenu), SL_TAG_LOAD, SL_LOAD_X, SL_LOAD_Y, SL_LOAD_W, SL_LOAD_H,
+			(CALLBACK)cb_SaveLoad_Load, menuItemButton::BTN_TYPE_SL_LOAD, true);
+	}
+
+	menuItemButton::add(_GM(slMenu), SL_TAG_CANCEL, SL_CANCEL_X, SL_CANCEL_Y, SL_CANCEL_W, SL_CANCEL_H,
+		(CALLBACK)cb_SaveLoad_Cancel, menuItemButton::BTN_TYPE_SL_CANCEL);
+
+	menuItemVSlider::add(_GM(slMenu), SL_TAG_VSLIDER, SL_SLIDER_X, SL_SLIDER_Y, SL_SLIDER_W, SL_SLIDER_H,
+		0, (CALLBACK)cb_SaveLoad_VSlider);
+
+	initializeSlotTables();
+
+	if (_GM(currMenuIsSave)) {
+		buttonGreyed = false;
+		i_handler = (ItemHandlerFunction)menuItemButton::handler;
+	} else {
+		buttonGreyed = true;
+		i_handler = (ItemHandlerFunction)load_Handler;
+	}
+
+	for (int32 i = 0; i < MAX_SLOTS_SHOWN; i++) {
+		menuItemButton::add(_GM(slMenu), 1001 + i,
+			SL_SCROLL_FIELD_X, SL_SCROLL_FIELD_Y + i * SL_SCROLL_LINE_H,
+			SL_SCROLL_LINE_W, SL_SCROLL_LINE_H,
+			(CALLBACK)cb_SaveLoad_Slot, menuItemButton::BTN_TYPE_SL_TEXT,
+			buttonGreyed && (!_GM(slotInUse)[i]), true, _GM(slotTitles)[i], i_handler);
+	}
+
+	if (_GM(currMenuIsSave)) {
+		// Create thumbnails. One in the original game format for displaying,
+		// and the other in the ScummVM format for actually using in the save files
+		_GM(saveLoadThumbNail) = menu_CreateThumbnail(&_GM(sizeofThumbData));
+		_GM(_thumbnail).free();
+		Graphics::createThumbnail(_GM(_thumbnail));
+
+	} else {
+		updateThumbnails(0, _GM(slMenu));
+		_GM(saveLoadThumbNail) = _GM(menuSprites)[GUI::SaveLoadMenuBase::SL_EMPTY_THUMB_25];
+	}
+
+	menuItemMsg::msgAdd(_GM(slMenu), SL_TAG_THUMBNAIL, SL_THUMBNAIL_X, SL_THUMBNAIL_Y,
+		M4::GUI::SaveLoadMenuBase::SL_THUMBNAIL_W,
+		M4::GUI::SaveLoadMenuBase::SL_THUMBNAIL_H, false);
+
+	if (_GM(currMenuIsSave)) {
+		//<return> - if a slot has been selected, saves the game
+		//<esc> - cancels and returns to the game menu
+		guiMenu::configure(_GM(slMenu), (CALLBACK)cb_SaveLoad_Save, (CALLBACK)cb_SaveLoad_Cancel);
+	} else {
+		//<return> - if a slot has been selected, loads the selected game
+		//<esc> - cancels and returns to the game menu
+		guiMenu::configure(_GM(slMenu), (CALLBACK)cb_SaveLoad_Load, (CALLBACK)cb_SaveLoad_Cancel);
+	}
+
+	vmng_screen_show((void *)_GM(slMenu));
+	LockMouseSprite(0);
+}
+
+void SaveLoadMenu::destroyMenu(bool saveMenu) {
+	if (!_GM(slMenu)) {
+		return;
+	}
+
+	// Determine whether the screen was the SAVE or the LOAD menu
+	if (saveMenu) {
+
+		// If SAVE, there should be a thumbnail to unload
+		if (_GM(saveLoadThumbNail)) {
+			DisposeHandle(_GM(saveLoadThumbNail)->sourceHandle);
+			mem_free(_GM(saveLoadThumbNail));
+			_GM(saveLoadThumbNail) = nullptr;
+		}
+	} else {
+		// Else there may be up to 10 somewhere in the list to be unloaded
+		for (int32 i = 0; i < MAX_SLOTS; i++) {
+			unloadThumbnail(i);
+		}
+		_GM(saveLoadThumbNail) = nullptr;
+	}
+
+	// Destroy the screen
+	vmng_screen_dispose(_GM(slMenu));
+	guiMenu::destroy(_GM(slMenu));
+
+	// Unload the save/load menu sprites
+	guiMenu::unloadSprites();
+}
+
+void SaveLoadMenu::cb_SaveLoad_VSlider(menuItemVSlider *myItem, guiMenu *myMenu) {
 	if (!myMenu || !myItem)
 		return;
 
 	if ((myItem->itemFlags & menuItemVSlider::VS_COMPONENT) != menuItemVSlider::VS_THUMB) {
-		redraw = (DrawFunction)false;
+		bool redraw = (DrawFunction)false;
 		switch (myItem->itemFlags & menuItemVSlider::VS_COMPONENT) {
 		case menuItemVSlider::VS_UP:
 			if (_GM(firstSlotIndex) > 0) {
@@ -636,7 +656,7 @@ void cb_SaveLoad_VSlider(menuItemVSlider *myItem, guiMenu *myMenu) {
 
 		// See if we were able to set a new first slot index
 		if (redraw) {
-			SetFirstSlot(_GM(firstSlotIndex), myMenu);
+			setFirstSlot(_GM(firstSlotIndex), myMenu);
 
 			// Calculate the new percent
 			myItem->percent = (_GM(firstSlotIndex) * 100) / 89;
@@ -653,23 +673,19 @@ void cb_SaveLoad_VSlider(menuItemVSlider *myItem, guiMenu *myMenu) {
 	// Else the callback came from the thumb - set the _GM(firstSlotIndex) based on the slider percent
 	else {
 		_GM(firstSlotIndex) = (myItem->percent * 89) / 100;
-		SetFirstSlot(_GM(firstSlotIndex), myMenu);
+		setFirstSlot(_GM(firstSlotIndex), myMenu);
 	}
 }
 
-
-void cb_SaveLoad_Save(void *, guiMenu *myMenu) {
-	menuItemTextField *myText;
-	bool saveGameFailed;
-
+void SaveLoadMenu::cb_SaveLoad_Save(void *, guiMenu *myMenu) {
 	// If (slotSelected < 0) this callback is being executed by pressing return prematurely
 	if (_GM(slotSelected) < 0) {
 		return;
 	}
 
 	// First make the textfield NORM
-	myText = (menuItemTextField *)guiMenu::getItem(2000, myMenu);
-	if (myText)
+	menuItemTextField *myText = (menuItemTextField *)guiMenu::getItem(2000, myMenu);
+	if (!myText)
 		return;
 
 	myText->itemFlags = menuItemTextField::TF_NORM;
@@ -679,39 +695,36 @@ void cb_SaveLoad_Save(void *, guiMenu *myMenu) {
 	Common::strcpy_s(_GM(slotTitles)[_GM(slotSelected) - 1], 80, myText->prompt);
 
 	// Save the game
-	saveGameFailed = !g_engine->saveGameFromMenu(_GM(slotSelected),
-		myText->prompt, _GM(_thumbnail));
+	bool saveGameFailed = !g_engine->saveGameFromMenu(_GM(slotSelected),
+	                                                  myText->prompt, _GM(_thumbnail));
 
 	// If the save game failed, bring up the err menu
 	if (saveGameFailed) {
 		// Kill the save menu
-		DestroySaveLoadMenu(true);
+		destroyMenu(true);
 
 		// Create the err menu
-		CreateErrMenu(nullptr);
+		ErrorMenu::show(nullptr);
 
 		// Abort this procedure
 		return;
 	}
 
 	// Kill the save menu
-	DestroySaveLoadMenu(true);
+	destroyMenu(true);
 
 	// Shutdown the menu system
 	guiMenu::shutdown(true);
 }
 
-
-void cb_SaveLoad_Load(menuItemButton *, guiMenu *) {
-	KernelTriggerType oldMode;
-
+void SaveLoadMenu::cb_SaveLoad_Load(menuItemButton *, guiMenu *) {
 	// If (slotSelected < 0) this callback is being executed by pressing return prematurely
 	if (_GM(slotSelected) < 0) {
 		return;
 	}
 
 	// Kill the menu
-	DestroySaveLoadMenu(false);
+	destroyMenu(false);
 
 	// Shutdown the menu system
 	guiMenu::shutdown(false);
@@ -725,22 +738,18 @@ void cb_SaveLoad_Load(menuItemButton *, guiMenu *) {
 
 	// Start the restore process
 	_G(kernel).restore_slot = _GM(slotSelected);
-	oldMode = _G(kernel).trigger_mode;
+	const KernelTriggerType oldMode = _G(kernel).trigger_mode;
 
 	_G(kernel).trigger_mode = KT_DAEMON;
 	kernel_trigger_dispatch_now(TRIG_RESTORE_GAME);
 	_G(kernel).trigger_mode = oldMode;
 }
 
-
-void cb_SaveLoad_Cancel(menuItemButton *, guiMenu *myMenu) {
-	menuItem *myItem;
-	int32 i, x, y, w, h;
-
+void SaveLoadMenu::cb_SaveLoad_Cancel(menuItemButton *, guiMenu *myMenu) {
 	// If a slot has been selected, cancel will re-enable all slots
 	if (_GM(slotSelected) >= 0) {
 		// Enable the prev buttons
-		for (i = 1001; i <= 1010; i++) {
+		for (int32 i = 1001; i <= 1010; i++) {
 			if (_GM(currMenuIsSave) || _GM(slotInUse)[i - 1001 + _GM(firstSlotIndex)]) {
 				menuItemButton::enableButton(nullptr, i, myMenu);
 				guiMenu::itemRefresh(nullptr, i, myMenu);
@@ -748,11 +757,11 @@ void cb_SaveLoad_Cancel(menuItemButton *, guiMenu *myMenu) {
 		}
 
 		// Find the textfield and use it's coords to place the button
-		myItem = guiMenu::getItem(2000, myMenu);
-		x = myItem->x1;
-		y = myItem->y1;
-		w = myItem->x2 - myItem->x1 + 1;
-		h = myItem->y2 - myItem->y1 + 1;
+		menuItem *myItem = guiMenu::getItem(2000, myMenu);
+		int32 x = myItem->x1;
+		int32 y = myItem->y1;
+		int32 w = myItem->x2 - myItem->x1 + 1;
+		int32 h = myItem->y2 - myItem->y1 + 1;
 
 		// Delete the textfield
 		guiMenu::itemDelete(myItem, 2000, myMenu);
@@ -768,11 +777,11 @@ void cb_SaveLoad_Cancel(menuItemButton *, guiMenu *myMenu) {
 
 			// Remove the thumbnail
 			if (_GM(saveLoadThumbNail)) {
-				_GM(saveLoadThumbNail) = _GM(menuSprites)[Burger::GUI::SL_EMPTY_THUMB];
+				_GM(saveLoadThumbNail) = _GM(menuSprites)[GUI::SaveLoadMenuBase::SL_EMPTY_THUMB_25];
 				guiMenu::itemRefresh(nullptr, SL_TAG_THUMBNAIL, myMenu);
 			}
 		}
-		SetFirstSlot(_GM(firstSlotIndex), myMenu);
+		setFirstSlot(_GM(firstSlotIndex), myMenu);
 
 		// Enable the slider
 		menuItemVSlider::enableVSlider(nullptr, SL_TAG_VSLIDER, myMenu);
@@ -794,25 +803,22 @@ void cb_SaveLoad_Cancel(menuItemButton *, guiMenu *myMenu) {
 		// Otherwise, back to the game menu
 
 		// Destroy the menu
-		DestroySaveLoadMenu(_GM(currMenuIsSave));
+		destroyMenu(_GM(currMenuIsSave));
 
 		if (_GM(saveLoadFromHotkey)) {
 			// Shutdown the menu system
 			guiMenu::shutdown(true);
 		} else {
 			// Create the game menu
-			CreateGameMenuMain(nullptr);
+			GameMenu::show(nullptr);
 		}
 	}
 
 	_GM(buttonClosesDialog) = true;
 }
 
-
-void cb_SaveLoad_Slot(menuItemButton *myButton, guiMenu *myMenu) {
-	int32 i, x, y, w, h;
+void SaveLoadMenu::cb_SaveLoad_Slot(menuItemButton *myButton, guiMenu *myMenu) {
 	char prompt[80];
-	int32 specialTag;
 
 	// Verify params
 	if (!myMenu || !myButton)
@@ -820,14 +826,14 @@ void cb_SaveLoad_Slot(menuItemButton *myButton, guiMenu *myMenu) {
 
 	// Get the button
 	Common::strcpy_s(prompt, 80, myButton->prompt);
-	specialTag = myButton->specialTag;
+	int32 specialTag = myButton->specialTag;
 
 	// Set the globals
 	_GM(slotSelected) = myButton->specialTag;
 	_GM(deleteSaveDesc) = true;
 
 	// Disable all other buttons
-	for (i = 1001; i <= 1010; i++) {
+	for (int32 i = 1001; i <= 1010; i++) {
 		if (i != myButton->tag) {
 			menuItemButton::disableButton(nullptr, i, myMenu);
 			guiMenu::itemRefresh(nullptr, i, myMenu);
@@ -835,10 +841,10 @@ void cb_SaveLoad_Slot(menuItemButton *myButton, guiMenu *myMenu) {
 	}
 
 	// Get the slot coords, and delete it
-	x = myButton->x1;
-	y = myButton->y1;
-	w = myButton->x2 - myButton->x1 + 1;
-	h = myButton->y2 - myButton->y1 + 1;
+	int32 x = myButton->x1;
+	int32 y = myButton->y1;
+	int32 w = myButton->x2 - myButton->x1 + 1;
+	int32 h = myButton->y2 - myButton->y1 + 1;
 	guiMenu::itemDelete(myButton, -1, myMenu);
 
 	if (_GM(currMenuIsSave)) {
@@ -869,29 +875,9 @@ void cb_SaveLoad_Slot(menuItemButton *myButton, guiMenu *myMenu) {
 	}
 }
 
-void InitializeSlotTables(void) {
-	const SaveStateList saves = g_engine->listSaves();
-
-	// First reset all the slots to empty
-	for (int i = 0; i < MAX_SLOTS; ++i) {
-		Common::strcpy_s(_GM(slotTitles)[i], 80, "<empty>");
-		_GM(slotInUse)[i] = false;
-	}
-
-	for (const auto &save : saves) {
-		if (save.getSaveSlot() != 0) {
-			Common::String desc = save.getDescription();
-			Common::strcpy_s(_GM(slotTitles)[save.getSaveSlot() - 1], 80, desc.c_str());
-			_GM(slotInUse)[save.getSaveSlot() - 1] = true;
-		}
-	}
-}
-
-bool load_Handler(menuItemButton *myItem, int32 eventType, int32 event, int32 x, int32 y, void **currItem) {
-	bool handled;
-
+bool SaveLoadMenu::load_Handler(menuItemButton *myItem, int32 eventType, int32 event, int32 x, int32 y, void **currItem) {
 	// Handle the event just like any other button
-	handled = menuItemButton::handler(myItem, eventType, event, x, y, currItem);
+	bool handled = menuItemButton::handler(myItem, eventType, event, x, y, currItem);
 
 	// If we've selected a slot, we want the thumbNail to remain on the menu permanently
 	if (_GM(slotSelected) >= 0) {
@@ -928,7 +914,7 @@ bool load_Handler(menuItemButton *myItem, int32 eventType, int32 event, int32 x,
 
 				// Remove the thumbnail
 				if (_GM(saveLoadThumbNail)) {
-					_GM(saveLoadThumbNail) = _GM(menuSprites)[Burger::GUI::SL_EMPTY_THUMB];
+					_GM(saveLoadThumbNail) = _GM(menuSprites)[GUI::SaveLoadMenuBase::SL_EMPTY_THUMB_25];
 					guiMenu::itemRefresh(nullptr, SL_TAG_THUMBNAIL, (guiMenu *)myItem->myMenu);
 				}
 			}
@@ -939,131 +925,6 @@ bool load_Handler(menuItemButton *myItem, int32 eventType, int32 event, int32 x,
 }
 
 
-void DestroySaveLoadMenu(bool saveMenu) {
-	int32 i;
-
-	if (!_GM(slMenu)) {
-		return;
-	}
-
-	// Determine whether the screen was the SAVE or the LOAD menu
-	if (saveMenu) {
-
-		// If SAVE, there should be a thumbnail to unload
-		if (_GM(saveLoadThumbNail)) {
-			DisposeHandle(_GM(saveLoadThumbNail)->sourceHandle);
-			mem_free(_GM(saveLoadThumbNail));
-			_GM(saveLoadThumbNail) = nullptr;
-		}
-	} else {
-		// Else there may be up to 10 somewhere in the list to be unloaded
-		for (i = 0; i < MAX_SLOTS; i++) {
-			UnloadThumbNail(i);
-		}
-		_GM(saveLoadThumbNail) = nullptr;
-	}
-
-	// Destroy the screen
-	vmng_screen_dispose(_GM(slMenu));
-	guiMenu::destroy(_GM(slMenu));
-
-	// Unload the save/load menu sprites
-	guiMenu::unloadSprites();
-}
-
-
-void CreateSaveLoadMenu(RGB8 *myPalette, bool saveMenu) {
-	ItemHandlerFunction	i_handler;
-	bool buttonGreyed;
-
-	if (!_G(menuSystemInitialized)) {
-		guiMenu::initialize(myPalette);
-	}
-
-	// Keep the memory tidy
-	PurgeMem();
-	CompactMem();
-
-	// Load in the game menu sprites
-	if (!guiMenu::loadSprites("slmenu", Burger::GUI::SL_TOTAL_SPRITES)) {
-		return;
-	}
-
-	// Initialize some global vars
-	_GM(firstSlotIndex) = 0;
-	_GM(slotSelected) = -1;
-	_GM(saveLoadThumbNail) = nullptr;
-	_GM(thumbIndex) = 100;
-	_GM(currMenuIsSave) = saveMenu;
-
-	_GM(slMenu) = guiMenu::create(_GM(menuSprites)[Burger::GUI::SL_DIALOG_BOX], SAVE_LOAD_MENU_X, SAVE_LOAD_MENU_Y,
-		MENU_DEPTH | SF_GET_ALL | SF_BLOCK_ALL | SF_IMMOVABLE);
-	if (!_GM(slMenu)) {
-		return;
-	}
-
-	if (_GM(currMenuIsSave)) {
-		menuItemMsg::msgAdd(_GM(slMenu), SL_TAG_SAVE_LABEL, SL_SAVE_LABEL_X, SL_SAVE_LABEL_Y, SL_SAVE_LABEL_W, SL_SAVE_LABEL_H);
-		menuItemButton::add(_GM(slMenu), SL_TAG_SAVE, SL_SAVE_X, SL_SAVE_Y, SL_SAVE_W, SL_SAVE_H,
-			(CALLBACK)cb_SaveLoad_Save, menuItemButton::BTN_TYPE_SL_SAVE, true);
-	} else {
-		menuItemMsg::msgAdd(_GM(slMenu), SL_TAG_LOAD_LABEL, SL_LOAD_LABEL_X, SL_LOAD_LABEL_Y, SL_LOAD_LABEL_W, SL_LOAD_LABEL_H);
-		menuItemButton::add(_GM(slMenu), SL_TAG_LOAD, SL_LOAD_X, SL_LOAD_Y, SL_LOAD_W, SL_LOAD_H,
-			(CALLBACK)cb_SaveLoad_Load, menuItemButton::BTN_TYPE_SL_LOAD, true);
-	}
-
-	menuItemButton::add(_GM(slMenu), SL_TAG_CANCEL, SL_CANCEL_X, SL_CANCEL_Y, SL_CANCEL_W, SL_CANCEL_H,
-		(CALLBACK)cb_SaveLoad_Cancel, menuItemButton::BTN_TYPE_SL_CANCEL);
-
-	menuItemVSlider::add(_GM(slMenu), SL_TAG_VSLIDER, SL_SLIDER_X, SL_SLIDER_Y, SL_SLIDER_W, SL_SLIDER_H,
-		0, (CALLBACK)cb_SaveLoad_VSlider);
-
-	InitializeSlotTables();
-
-	if (_GM(currMenuIsSave)) {
-		buttonGreyed = false;
-		i_handler = (ItemHandlerFunction)menuItemButton::handler;
-	} else {
-		buttonGreyed = true;
-		i_handler = (ItemHandlerFunction)load_Handler;
-	}
-
-	for (int32 i = 0; i < MAX_SLOTS_SHOWN; i++) {
-		menuItemButton::add(_GM(slMenu), 1001 + i,
-			SL_SCROLL_FIELD_X, SL_SCROLL_FIELD_Y + i * SL_SCROLL_LINE_H,
-			SL_SCROLL_LINE_W, SL_SCROLL_LINE_H,
-			(CALLBACK)cb_SaveLoad_Slot, menuItemButton::BTN_TYPE_SL_TEXT,
-			buttonGreyed && (!_GM(slotInUse)[i]), true, _GM(slotTitles)[i], i_handler);
-	}
-
-	if (_GM(currMenuIsSave)) {
-		// Create thumbnails. One in the original game format for displaying,
-		// and the other in the ScummVM format for actually using in the save files
-		_GM(saveLoadThumbNail) = menu_CreateThumbnail(&_GM(sizeofThumbData));
-		_GM(_thumbnail).free();
-		Graphics::createThumbnail(_GM(_thumbnail));
-
-	} else {
-		UpdateThumbNails(0, _GM(slMenu));
-		_GM(saveLoadThumbNail) = _GM(menuSprites)[Burger::GUI::SL_EMPTY_THUMB];
-	}
-
-	menuItemMsg::msgAdd(_GM(slMenu), SL_TAG_THUMBNAIL, SL_THUMBNAIL_X, SL_THUMBNAIL_Y, SL_THUMBNAIL_W, SL_THUMBNAIL_H, false);
-
-	if (_GM(currMenuIsSave)) {
-		//<return> - if a slot has been selected, saves the game
-		//<esc> - cancels and returns to the game menu
-		guiMenu::configure(_GM(slMenu), (CALLBACK)cb_SaveLoad_Save, (CALLBACK)cb_SaveLoad_Cancel);
-	} else {
-		//<return> - if a slot has been selected, loads the selected game
-		//<esc> - cancels and returns to the game menu
-		guiMenu::configure(_GM(slMenu), (CALLBACK)cb_SaveLoad_Load, (CALLBACK)cb_SaveLoad_Cancel);
-	}
-
-	vmng_screen_show((void *)_GM(slMenu));
-	LockMouseSprite(0);
-}
-
 void CreateGameMenu(RGB8 *myPalette) {
 	if ((!player_commands_allowed()) || (!INTERFACE_VISIBLE) ||
 		_G(pal_fade_in_progress) || _G(menuSystemInitialized)) {
@@ -1071,7 +932,7 @@ void CreateGameMenu(RGB8 *myPalette) {
 	}
 
 	_GM(gameMenuFromMain) = false;
-	CreateGameMenuMain(myPalette);
+	GameMenu::show(myPalette);
 }
 
 void CreateGameMenuFromMain(RGB8 *myPalette) {
@@ -1080,12 +941,12 @@ void CreateGameMenuFromMain(RGB8 *myPalette) {
 	}
 
 	_GM(gameMenuFromMain) = true;
-	CreateGameMenuMain(myPalette);
+	GameMenu::show(myPalette);
 }
 
 void CreateSaveMenu(RGB8 *myPalette) {
 	_GM(saveLoadFromHotkey) = false;
-	CreateSaveLoadMenu(myPalette, true);
+	SaveLoadMenu::show(myPalette, true);
 }
 
 void CreateF2SaveMenu(RGB8 *myPalette) {
@@ -1096,12 +957,12 @@ void CreateF2SaveMenu(RGB8 *myPalette) {
 
 	_GM(saveLoadFromHotkey) = true;
 	_GM(gameMenuFromMain) = false;
-	CreateSaveLoadMenu(myPalette, true);
+	SaveLoadMenu::show(myPalette, true);
 }
 
 void CreateLoadMenu(RGB8 *myPalette) {
 	_GM(saveLoadFromHotkey) = false;
-	CreateSaveLoadMenu(myPalette, false);
+	SaveLoadMenu::show(myPalette, false);
 }
 
 void CreateF3LoadMenu(RGB8 *myPalette) {
@@ -1112,7 +973,7 @@ void CreateF3LoadMenu(RGB8 *myPalette) {
 
 	_GM(saveLoadFromHotkey) = true;
 	_GM(gameMenuFromMain) = false;
-	CreateSaveLoadMenu(myPalette, false);
+	SaveLoadMenu::show(myPalette, false);
 }
 
 void CreateLoadMenuFromMain(RGB8 *myPalette) {
@@ -1122,7 +983,7 @@ void CreateLoadMenuFromMain(RGB8 *myPalette) {
 
 	_GM(saveLoadFromHotkey) = true;
 	_GM(gameMenuFromMain) = true;
-	CreateSaveLoadMenu(myPalette, false);
+	SaveLoadMenu::show(myPalette, false);
 }
 
 } // namespace GUI

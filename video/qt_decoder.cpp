@@ -54,14 +54,9 @@ namespace Video {
 ////////////////////////////////////////////
 
 QuickTimeDecoder::QuickTimeDecoder() {
-	_scaledSurface = 0;
+	_scaledSurface = nullptr;
 	_width = _height = 0;
 	_enableEditListBoundsCheckQuirk = false;
-	_prevMouseX = _prevMouseY = 0;
-	_isMouseButtonDown = false;
-	_isVR = false;
-
-	_currentSample = 1;
 }
 
 QuickTimeDecoder::~QuickTimeDecoder() {
@@ -538,21 +533,6 @@ uint32 QuickTimeDecoder::VideoTrackHandler::getNextFrameStartTime() const {
 }
 
 const Graphics::Surface *QuickTimeDecoder::VideoTrackHandler::decodeNextFrame() {
-#if 0
-	if (_decoder->_qtvrType == QTVRType::PANORAMA) {
-		if (!_isPanoConstructed)
-			return nullptr;
-
-		if (_projectedPano) {
-			_projectedPano->free();
-			delete _projectedPano;
-		}
-
-		projectPanorama();
-		return _projectedPano;
-	}
-#endif
-
 	if (endOfTrack())
 		return 0;
 

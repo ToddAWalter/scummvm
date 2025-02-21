@@ -233,7 +233,7 @@ static const BuiltinProto builtins[] = {
 	// References
 	{ "cast",			LB::b_cast,			1, 1, 400, FBLTIN },	//			D4 f
 	{ "castLib",		LB::b_castLib,		1, 1, 500, FBLTIN },	//				D5 f
-	{ "member",			LB::b_member,		1, 1, 500, FBLTIN },	//				D5 f
+	{ "member",			LB::b_member,		1, 2, 500, FBLTIN },	//				D5 f
 	{ "script",			LB::b_script,		1, 1, 400, FBLTIN },	//			D4 f
 	{ "sprite",			LB::b_sprite,		1, 1, 500, FBLTIN },	//				D5 f
 	{ "window",			LB::b_window,		1, 1, 400, FBLTIN },	//			D4 f
@@ -1589,6 +1589,10 @@ void LB::b_delay(int nargs) {
 
 void LB::b_do(int nargs) {
 	Common::String code = g_lingo->pop().asString();
+
+	if (code.empty())
+		return;
+
 	ScriptContext *sc = g_lingo->_compiler->compileAnonymous(code);
 	if (!sc) {
 		warning("b_do(): compilation failed, ignoring");
@@ -2896,7 +2900,12 @@ void LB::b_ramNeeded(int nargs) {
 void LB::b_rollOver(int nargs) {
 	Datum d = g_lingo->pop();
 	Datum res(0);
-	int arg = d.asInt();
+	int arg = 0;
+	if (d.type == SPRITEREF) {
+		arg = d.u.i;
+	} else {
+		arg = d.asInt();
+	}
 
 	Score *score = g_director->getCurrentMovie()->getScore();
 
@@ -3482,8 +3491,17 @@ void LB::b_castLib(int nargs) {
 
 void LB::b_member(int nargs) {
 	Movie *movie = g_director->getCurrentMovie();
-	Datum member = g_lingo->pop();
-	CastMemberID res = member.asMemberID();
+
+	CastMemberID res;
+	if (nargs == 1) {
+		Datum member = g_lingo->pop();
+		res = member.asMemberID();
+	} else if (nargs == 2) {
+		Datum library = g_lingo->pop();
+		Datum member = g_lingo->pop();
+		res = g_lingo->toCastMemberID(member, library);
+	}
+
 	if (!movie->getCastMember(res)) {
 		g_lingo->lingoError("No match found for cast member");
 		return;

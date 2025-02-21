@@ -892,6 +892,11 @@ int QuickTimeParser::readCTYP(Atom atom) {
 		_qtvrType = QTVRType::PANORAMA;
 		break;
 
+	case MKTAG('q', 't', 'v', 'r'):
+		_qtvrType = QTVRType::OTHER;
+		warning("QuickTimeParser::readCTYP(): QTVR 2.0 files are not yet supported");
+		break;
+
 	default:
 		_qtvrType = QTVRType::OTHER;
 		warning("QuickTimeParser::readCTYP(): Unknown QTVR Type ('%s')", tag2str(ctype));
@@ -1076,43 +1081,7 @@ int QuickTimeParser::readPHOT(Atom atom) {
 
 		_fd->readUint16BE(); // reserved
 
-		uint32 type = _fd->readUint32BE();
-
-		switch (type) {
-		case MKTAG('a', 'n', 'i', 'm'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::anim;
-			break;
-
-		case MKTAG('c', 'n', 'o', 'd'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::cnod;
-			break;
-
-		case MKTAG('c', 'm', 'o', 'v'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::cmov;
-			break;
-
-		case MKTAG('l', 'i', 'n', 'k'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::link;
-			break;
-
-		case MKTAG('n', 'a', 'v', 'g'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::navg;
-			break;
-
-		case MKTAG('s', 'o', 'u', 'n'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::soun;
-			break;
-
-		case MKTAG('u', 'n', 'd', 'f'):
-			pHotSpotTable.hotSpots[i].type = HotSpotType::undefined;
-			break;
-
-		default:
-			pHotSpotTable.hotSpots[i].type = HotSpotType::undefined;
-			warning("QuickTimeParser::readPHOT(): Unknown HotSpot Type ('%s')", tag2str(type));
-			break;
-		}
-
+		pHotSpotTable.hotSpots[i].type = _fd->readUint32BE();
 		pHotSpotTable.hotSpots[i].typeData = _fd->readUint32BE();
 
 		pHotSpotTable.hotSpots[i].viewHPan = readAppleFloatField(_fd);
@@ -1121,8 +1090,8 @@ int QuickTimeParser::readPHOT(Atom atom) {
 
 		pHotSpotTable.hotSpots[i].rect.top = _fd->readSint16BE();
 		pHotSpotTable.hotSpots[i].rect.left = _fd->readSint16BE();
-		pHotSpotTable.hotSpots[i].rect.bottom = _fd->readSint16BE();
 		pHotSpotTable.hotSpots[i].rect.right = _fd->readSint16BE();
+		pHotSpotTable.hotSpots[i].rect.bottom = _fd->readSint16BE();
 
 		pHotSpotTable.hotSpots[i].mouseOverCursorID = _fd->readSint32BE();
 		pHotSpotTable.hotSpots[i].mouseDownCursorID = _fd->readSint32BE();
@@ -1190,10 +1159,14 @@ int QuickTimeParser::readPNAV(Atom atom) {
 		_fd->readUint16BE(); // reserved
 		_fd->readUint32BE(); // reserved2
 
-		pLinkTable.navs[i].rect.top = _fd->readSint16BE();
-		pLinkTable.navs[i].rect.left = _fd->readSint16BE();
-		pLinkTable.navs[i].rect.bottom = _fd->readSint16BE();
-		pLinkTable.navs[i].rect.right = _fd->readSint16BE();
+		pLinkTable.navs[i].navgHPan = readAppleFloatField(_fd);
+		pLinkTable.navs[i].navgVPan = readAppleFloatField(_fd);
+		pLinkTable.navs[i].navgZoom = readAppleFloatField(_fd);
+
+		pLinkTable.navs[i].zoomRect.top = _fd->readSint16BE();
+		pLinkTable.navs[i].zoomRect.left = _fd->readSint16BE();
+		pLinkTable.navs[i].zoomRect.right = _fd->readSint16BE();
+		pLinkTable.navs[i].zoomRect.bottom = _fd->readSint16BE();
 
 		_fd->readSint32BE(); // reserved3
 

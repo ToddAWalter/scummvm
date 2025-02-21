@@ -344,6 +344,7 @@ static void conv_save_state(Conv *c) {
 	int32 next, tag;	// receive conv_ops_get_entry results
 	int32 myCNode = c->myCNode;
 	char fname[9];
+	memset(fname, 0, 9);
 
 	int32 num_decls = 0;
 	int32 num_entries = 0;
@@ -386,7 +387,6 @@ static void conv_save_state(Conv *c) {
 
 	int32 file_size = 0;
 	int32 offset;
-	int32 prev_size;
 	char *conv_save_buff;
 	bool overwrite_file = false;
 
@@ -408,7 +408,7 @@ static void conv_save_state(Conv *c) {
 
 		if (offset != -1) {
 			overwrite_file = true;
-			prev_size = READ_LE_UINT32(&conv_save_buff[offset]);
+			int32 prev_size = READ_LE_UINT32(&conv_save_buff[offset]);
 			prev_size += 3 * sizeof(int32);
 			offset += sizeof(int32);	// Skip header. (name + size)
 		} else {
@@ -751,7 +751,7 @@ Conv *conv_load(const char *filename, int x1, int y1, int32 myTrigger, bool want
 	else
 		Common::sprintf_s(fullpathname, "%s.chk", filename);
 
-	SysFile fp(fullpathname, BINARY);
+	SysFile fp(fullpathname);
 	if (!fp.exists()) {
 		// Force the file open
 		error_show(FL, 'CNVL', "couldn't conv_load %s", fullpathname);

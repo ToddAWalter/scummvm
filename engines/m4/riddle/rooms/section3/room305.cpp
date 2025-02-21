@@ -273,7 +273,7 @@ void Room305::daemon() {
 
 	case 42:
 		sendWSMessage_60000(_stander);
-		_stander = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 494, 278, 73, 0xf00, 1,
+		_stander = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 494, 278, 73, 0xf00, true,
 			triggerMachineByHashCallback, "fl stander");
 		_G(kernel).trigger_mode = KT_DAEMON;
 		sendWSMessage_10000(1, _stander, _feng3, 1, 1, 400, _feng3, 1, 6, 1);
@@ -293,7 +293,7 @@ void Room305::daemon() {
 
 			if (_showWalker) {
 				ws_unhide_walker();
-				_showWalker = 0;
+				_showWalker = false;
 			}
 		}
 
@@ -573,8 +573,8 @@ void Room305::daemon() {
 }
 
 void Room305::pre_parser() {
-	bool lookFlag = player_said_any("look", "look at");
-	bool takeFlag = player_said("take");
+	const bool lookFlag = player_said_any("look", "look at");
+	const bool takeFlag = player_said("take");
 
 	if (_drawerOpen && !(takeFlag && player_said("turtle treats"))
 			&& !(lookFlag && player_said("turtle treats"))) {
@@ -617,9 +617,9 @@ void Room305::pre_parser() {
 }
 
 void Room305::parser() {
-	bool lookFlag = player_said_any("look", "look at");
-	bool takeFlag = player_said("take");
-	bool useFlag = player_said_any("push", "pull", "gear", "open", "close");
+	const bool lookFlag = player_said_any("look", "look at");
+	const bool takeFlag = player_said("take");
+	const bool useFlag = player_said_any("push", "pull", "gear", "open", "close");
 	bool itemFlag = false;
 	bool chiselFlag = false;
 	bool caseFlag = false;
@@ -633,7 +633,7 @@ void Room305::parser() {
 
 		_rip6 = TriggerMachineByHash(1, 1, 0, 0, 0, 0,
 			_G(player_info).x, _G(player_info).y, _G(player_info).scale + 1,
-			0x500, 0, triggerMachineByHashCallback, "rip");
+			0x500, false, triggerMachineByHashCallback, "rip");
 		_G(kernel).trigger_mode = KT_DAEMON;
 		sendWSMessage_10000(1, _rip6, 1, 1, 1,
 			_G(flags)[V000] == 1 ? 200 : 300,
@@ -760,7 +760,7 @@ next2:
 				(takeFlag && inv_object_is_here(_G(player).noun))) {
 				if (chiselFlag) {
 					if (player_said("CHISEL")) {
-						ws_walk(_G(my_walker), 186, 279, 0, 1, 10);
+						ws_walk(_G(my_walker), 186, 279, nullptr, 1, 10);
 					}
 				} else {
 					kernel_timing_trigger(1, 1);
@@ -810,9 +810,8 @@ next2:
 next3:
 	caseFlag = player_said_any("GERMAN BANKNOTE", "REBUS AMULET", "SILVER BUTTERFLY",
 		"POSTAGE STAMP", "STICK AND SHELL MAP") && player_said("DISPLAY CASE");
-	// The second or parameter looks redundant, but I'm keeping it in as a reminder,
-	// just in case there's something actually different in the original disassembly
-	if (caseFlag || (takeFlag && caseFlag)) {
+
+	if (caseFlag || (takeFlag && player_said_any("GERMAN BANKNOTE", "REBUS AMULET", "SILVER BUTTERFLY", "POSTAGE STAMP", "STICK AND SHELL MAP"))) {
 		switch (_G(kernel).trigger) {
 		case -1:
 			if ((caseFlag && inv_player_has(_G(player).verb)) ||
@@ -915,14 +914,15 @@ next4:
 		case -1:
 		case 1: {
 			player_set_commands_allowed(true);
-			int area = getXAreaNum();
-			const int32 flags[8] = {
+			const int area = getXAreaNum();
+			const int32 flags[9] = {
 				_G(flags)[kEasterIslandCartoon], _G(flags)[kChinshiCartoon],
 				_G(flags)[kTabletsCartoon], _G(flags)[kEpitaphCartoon],
 				_G(flags)[kGraveyardCartoon], _G(flags)[kCastleCartoon],
-				_G(flags)[kMocaMocheCartoon], _G(flags)[kTempleCartoon]
+				_G(flags)[kMocaMocheCartoon], _G(flags)[kTempleCartoon],
+				_G(flags)[kEmeraldCartoon]
 			};
-			bool flag = flags[area - 1] != 0;
+			const bool flag = flags[area - 1] != 0;
 			if (flag && (area == 3 || area == 9))
 				player_set_commands_allowed(true);
 
@@ -995,7 +995,7 @@ next4:
 			else
 				setGlobals4(_suit1, 17, 17, 17);
 
-			sendWSMessage_C0000(0);
+			sendWSMessage_C0000(_G(my_walker), 0);
 
 			if (_G(flags)[V087]) {
 				digi_play("305r31", 1, 255, 2);
@@ -1009,7 +1009,7 @@ next4:
 			break;
 
 		case 2:
-			sendWSMessage_B0000(3);
+			sendWSMessage_B0000(_G(my_walker), 3);
 			break;
 
 		case 3:
@@ -1033,12 +1033,12 @@ next4:
 				setGlobals4(_lookUp, 7, 7, 7);
 			}
 
-			sendWSMessage_C0000(0);
+			sendWSMessage_C0000(_G(my_walker), 0);
 			digi_play("305r13", 1, 255, 2);
 			break;
 
 		case 2:
-			sendWSMessage_B0000(3);
+			sendWSMessage_B0000(_G(my_walker), 3);
 			break;
 
 		case 3:
@@ -1112,12 +1112,12 @@ next4:
 			else
 				setGlobals4(_suit1, 17, 17, 17);
 
-			sendWSMessage_C0000(0);
+			sendWSMessage_C0000(_G(my_walker), 0);
 			digi_play("305r14", 1, 255, 2);
 			break;
 
 		case 2:
-			sendWSMessage_B0000(3);
+			sendWSMessage_B0000(_G(my_walker), 3);
 			break;
 
 		case 3:
@@ -1141,16 +1141,17 @@ next4:
 				setGlobals4(_lookUp, 7, 7, 7);
 			}
 
-			sendWSMessage_C0000(0);
+			sendWSMessage_C0000(_G(my_walker), 0);
 			digi_play("305r12", 1, 255, 2);
 			break;
 
 		case 2:
-			sendWSMessage_B0000(3);
+			sendWSMessage_B0000(_G(my_walker), 3);
 			break;
 
 		case 3:
 			series_unload(_lookUp);
+			player_set_commands_allowed(true);
 			break;
 
 		default:
@@ -1232,9 +1233,9 @@ void Room305::setShadow5(bool active) {
 }
 
 void Room305::conv305a() {
-	int who = conv_whos_talking();
-	int node = conv_current_node();
-	int entry = conv_current_entry();
+	const int who = conv_whos_talking();
+	const int node = conv_current_node();
+	const int entry = conv_current_entry();
 	const char *sound = conv_sound_to_play();
 
 	if (_G(kernel).trigger == 1) {
@@ -1305,7 +1306,7 @@ bool Room305::walkToObject() {
 }
 
 int Room305::getXAreaNum() const {
-	int x = _G(player).click_x;
+	const int x = _G(player).click_x;
 
 	if (x < 300)
 		return 1;
@@ -1370,17 +1371,17 @@ Common::String Room305::getXAreaDigi2() const {
 }
 
 int Room305::getItemX(int seriesHash) const {
-	int w = ws_get_sprite_width(seriesHash, 0);
+	const int w = ws_get_sprite_width(seriesHash, 0);
 	int result = (640 - w) / 2;
 
-	int sx1 = _G(game_buff_ptr)->x1;
+	const int sx1 = _G(game_buff_ptr)->x1;
 	result += imath_abs(sx1);
 
 	return result;
 }
 
 int Room305::getItemY(int seriesHash) const {
-	int h = ws_get_sprite_height(seriesHash, 0);
+	const int h = ws_get_sprite_height(seriesHash, 0);
 	return (374 - h) / 2;
 }
 
