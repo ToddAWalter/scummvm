@@ -99,6 +99,14 @@ Common::KeyCode Menu::getLocalisedConfirmToQuitKeycode() {
 }
 
 void Menu::loadMenu() {
+	if (g_engine->_sound->isPlayingMusic()) {
+		g_engine->_sound->startFadeOut();
+		while (g_engine->_sound->isFading()) {
+			g_engine->wait();
+		}
+		g_engine->_sound->stopMusic();
+	}
+
 	_open = true;
 	Graphics::Surface screenCopy;
 	screenCopy.copyFrom(*g_engine->_screen);
@@ -158,6 +166,7 @@ void Menu::loadMenu() {
 		if (menuItemIdx == 1) {
 			// restore game screen back for the save game thumbnail
 			g_engine->_screen->copyRectToSurface(screenCopy, 0, 0, {screenCopy.w, screenCopy.h});
+			g_engine->_room->installPalette(); // restore room working palette
 			g_engine->_screen->update();
 			_open = false; // mark menu as closed to allow saving.
 			g_engine->saveGameDialog();
@@ -198,6 +207,8 @@ void Menu::loadMenu() {
 		g_engine->_screen->update();
 		g_engine->wait();
 	}
+
+	g_engine->_room->loadRoomMusic();
 
 	g_engine->removeFullscreenPic();
 	_open = false;

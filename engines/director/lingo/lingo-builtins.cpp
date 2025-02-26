@@ -234,7 +234,7 @@ static const BuiltinProto builtins[] = {
 	{ "cast",			LB::b_cast,			1, 1, 400, FBLTIN },	//			D4 f
 	{ "castLib",		LB::b_castLib,		1, 1, 500, FBLTIN },	//				D5 f
 	{ "member",			LB::b_member,		1, 2, 500, FBLTIN },	//				D5 f
-	{ "script",			LB::b_script,		1, 1, 400, FBLTIN },	//			D4 f
+	{ "script",			LB::b_script,		1, 2, 400, FBLTIN },	//			D4 f
 	{ "sprite",			LB::b_sprite,		1, 1, 500, FBLTIN },	//				D5 f
 	{ "window",			LB::b_window,		1, 1, 400, FBLTIN },	//			D4 f
 	{ "windowPresent",	LB::b_windowPresent,1, 1, 500, FBLTIN },	//				D5 f
@@ -245,6 +245,7 @@ static const BuiltinProto builtins[] = {
 	{ "locVToLinePos",	LB::b_locVToLinePos, 2, 2, 500, FBLTIN },	//				D5 f
 	{ "scrollByLine",	LB::b_scrollByLine, 2, 2, 500, CBLTIN },	//				D5 c
 	{ "scrollByPage",	LB::b_scrollByPage, 2, 2, 500, CBLTIN },	//				D5 c
+	{ "lineHeight",		LB::b_lineHeight,   2, 2, 500, FBLTIN },	//				D5 f
 	// Chunk operations
 	{ "numberOfChars",	LB::b_numberofchars,1, 1, 300, FBLTIN },	//			D3 f
 	{ "numberOfItems",	LB::b_numberofitems,1, 1, 300, FBLTIN },	//			D3 f
@@ -3510,13 +3511,15 @@ void LB::b_member(int nargs) {
 }
 
 void LB::b_script(int nargs) {
-	Datum d = g_lingo->pop();
-	// FIXME: Check with later versions of director
-	//        The kCastText check version breaks Phibos, which loads a
-	//        non-kCastText script using this builtin.
-	//        With the kCastText version, Phibos crashes during its intro.
-	// CastMemberID memberID = d.asMemberID(kCastText);
-	CastMemberID memberID = d.asMemberID();
+	CastMemberID memberID;
+	if (nargs == 1) {
+		Datum member = g_lingo->pop();
+		memberID = member.asMemberID();
+	} else if (nargs == 2) {
+		Datum library = g_lingo->pop();
+		Datum member = g_lingo->pop();
+		memberID = g_lingo->toCastMemberID(member, library);
+	}
 	CastMember *cast = g_director->getCurrentMovie()->getCastMember(memberID);
 
 	if (cast) {
@@ -3538,7 +3541,7 @@ void LB::b_script(int nargs) {
 			return;
 		}
 	}
-	warning("b_script(): No script context found for '%s'", d.asString(true).c_str());
+	warning("b_script(): No script context found for '%s'", memberID.asString().c_str());
 	g_lingo->push(Datum());
 }
 
@@ -3619,6 +3622,13 @@ void LB::b_scrollByLine(int nargs) {
 void LB::b_scrollByPage(int nargs) {
 	g_lingo->printSTUBWithArglist("b_scrollByPage", nargs);
 	g_lingo->dropStack(nargs);
+}
+
+void LB::b_lineHeight(int nargs) {
+	g_lingo->printSTUBWithArglist("b_lineHeight", nargs);
+	g_lingo->dropStack(nargs);
+	Datum res(1);
+	g_lingo->push(res);
 }
 
 void LB::b_numberofchars(int nargs) {

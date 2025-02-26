@@ -277,9 +277,8 @@ EngineResourceDeclaration::~EngineResourceDeclaration() {
 #pragma endregion
 
 #pragma region Boot
-Boot::Boot(const Common::Path &path) : Datafile(path) {
-	// OPEN THE FILE FOR READING.
-	subfile = Subfile(_stream);
+Boot::Boot(const Common::Path &path) : Datafile(path){
+	Subfile subfile = getNextSubfile();
 	Chunk chunk = subfile.nextChunk();
 
 	uint32 beforeSectionTypeUnk = Datum(chunk, kDatumTypeUint16_1).u.i; // Usually 0x0001
@@ -426,7 +425,7 @@ Boot::Boot(const Common::Path &path) : Datafile(path) {
 	}
 }
 
-BootSectionType Boot::getSectionType(Chunk& chunk) {
+BootSectionType Boot::getSectionType(Chunk &chunk) {
 	Datum datum = Datum(chunk, kDatumTypeUint16_1);
 	BootSectionType sectionType = static_cast<BootSectionType>(datum.u.i);
 	return sectionType;
@@ -466,6 +465,11 @@ Boot::~Boot() {
 		delete unknownDeclaration;
 	}
 	_unknownDeclarations.clear();
+
+	for (auto it = _fileDeclarations.begin(); it != _fileDeclarations.end(); ++it) {
+		delete it->_value;
+	}
+	_fileDeclarations.clear();
 }
 #pragma endregion
 

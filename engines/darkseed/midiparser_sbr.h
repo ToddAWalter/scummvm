@@ -19,33 +19,34 @@
  *
  */
 
-#ifndef MEDIASTATION_SUBFILE_H
-#define MEDIASTATION_SUBFILE_H
+#ifndef DARKSEED_MIDIPARSER_SBR_H
+#define DARKSEED_MIDIPARSER_SBR_H
 
-#include "common/stream.h"
+#include "audio/midiparser_smf.h"
 
-#include "mediastation/chunk.h"
+namespace Darkseed {
 
-namespace MediaStation {
-
-class Subfile {
+/**
+ * MIDI parser for the SBR format used by Dark Seed floppy version.
+ */
+class MidiParser_SBR : public MidiParser_SMF {
 public:
-	Chunk _rootChunk;
-	Chunk _currentChunk;
+	MidiParser_SBR(int8 source = -1, bool sfx = false);
 
-	Subfile();
-	Subfile(Common::SeekableReadStream *stream);
+	bool loadMusic(byte *data, uint32 size) override;
 
-	Chunk nextChunk();
-	bool atEnd();
+protected:
+	void parseNextEvent(EventInfo &info) override;
+	bool processEvent(const EventInfo &info, bool fireEvents = true) override;
+	void onTrackStart(uint8 track) override;
 
-	uint32 _rate;
-
-private:
-	Common::SeekableReadStream *_stream;
-
+	bool _sfx = false;
+	uint8 _trackInstruments[10];
+	uint16 _trackDeltas[10];
+	uint8 _trackNoteActive[10];
+	uint16 _trackLoopCounter[10];
 };
 
-} // End of namespace MediaStation
+} // End of namespace Darkseed
 
 #endif

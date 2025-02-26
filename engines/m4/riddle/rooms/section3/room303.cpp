@@ -233,7 +233,7 @@ void Room303::init() {
 			_fengFlag = true;
 			loadFengLi();
 
-			_fengLi = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 480, 256, 86, 0xc00, 1,
+			_fengLi = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 480, 256, 86, 0xc00, true,
 				triggerMachineByHashCallback, "fl");
 			sendWSMessage_10000(1, _fengLi, _feng4, 1, 16, 400,
 				_feng4, 1, 6, 0);
@@ -1170,13 +1170,14 @@ void Room303::parser() {
 		case 1:
 			setShadow5(false);
 			if (player_said("giant matchstick"))
-				ws_demand_location(610, 256);
+				ws_demand_location(_fengLi, 610, 256);
 
 			sendWSMessage_10000(_fengLi, 706, 256, 5, 2, 1);
 			break;
 
 		case 2:
 			setShadow5Alt(true);
+			sendWSMessage_60000(_fengLi);
 			_fengLi = TriggerMachineByHash(1, 1, 0, 0, 0, 0, 706, 256, 86, 0xc00, false,
 				triggerMachineByHashCallback, "fl state machine");
 
@@ -1483,6 +1484,10 @@ void Room303::parser() {
 				sendWSMessage_C0000(_G(my_walker), 1);
 				break;
 
+			case 1:
+				kernel_timing_trigger(10, 2, nullptr);
+				break;
+				
 			case 2:
 				sendWSMessage_D0000(_G(my_walker));
 				digi_play("303r25", 1, 255, 3);
@@ -1497,6 +1502,7 @@ void Room303::parser() {
 			case 4:
 				_fengShould = 1;
 				series_unload(_chinTalk4);
+				player_set_commands_allowed(true);
 				break;
 
 			default:
@@ -1778,7 +1784,6 @@ void Room303::setFengActive(bool flag) {
 			} else {
 				hotspot->active = hotspot->lr_x > 600;
 			}
-			break;
 		}
 	}
 }
@@ -1816,7 +1821,8 @@ void Room303::playSeries(bool cow) {
 	series_plain_play("SPINNING TOMATO MAN", -1, 0, 100, 0, 7);
 	series_plain_play("PUFFBALL", -1, 0, 100, 0, 8);
 	series_plain_play("CREATURE FEATURE LONG VIEW", 1, 0, 100, 0xf05, 7, 70);
-	series_plain_play("303cow1", -1, 0, 100, 0, 9);
+	if (cow)
+		series_plain_play("303cow1", -1, 0, 100, 0, 9);
 }
 
 void Room303::conv303a() {
@@ -1875,6 +1881,7 @@ void Room303::conv303a() {
 	}
 }
 
+// Conversation with Mei
 void Room303::conv303b() {
 	const int who = conv_whos_talking();
 	const int node = conv_current_node();
@@ -1913,7 +1920,9 @@ void Room303::conv303b() {
 				_ripPonders = series_stream("303pu01", 4, 0x100, 666);
 				series_stream_break_on_frame(_ripPonders, 5, 700);
 				return;
-			} else if (node == 1 && entry == 2) {
+			}
+
+			if (node == 1 && entry == 2) {
 				// No implementation
 			} else if ((node == 2 && entry == 0) || (node == 2 && entry == 2)) {
 				_ripleyShould = 3;
