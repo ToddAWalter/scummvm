@@ -102,9 +102,8 @@ Context::Context(const Common::Path &path) : Datafile(path) {
 				break;
 			}
 
-			default: {
+			default:
 				error("Context::Context(): Asset type %d referenced, but reference not implemented yet", asset->getHeader()->_type);
-			}
 			}
 		}
 	}
@@ -114,8 +113,8 @@ Context::~Context() {
 	delete _palette;
 	_palette = nullptr;
 
-	delete _parameters;
-	_parameters = nullptr;
+	delete _contextName;
+	_contextName = nullptr;
 
 	for (auto it = _assets.begin(); it != _assets.end(); ++it) {
 		delete it->_value;
@@ -151,6 +150,64 @@ void Context::registerActiveAssets() {
 	}
 }
 
+void Context::readParametersSection(Chunk &chunk) {
+	_fileNumber = Datum(chunk, kDatumTypeUint16_1).u.i;
+
+	ContextParametersSectionType sectionType = static_cast<ContextParametersSectionType>(Datum(chunk, kDatumTypeUint16_1).u.i);
+	while (sectionType != kContextParametersEmptySection) {
+		debugC(5, kDebugLoading, "ContextParameters::ContextParameters: sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
+		switch (sectionType) {
+		case kContextParametersName: {
+			uint repeatedFileNumber = Datum(chunk, kDatumTypeUint16_1).u.i;
+			if (repeatedFileNumber != _fileNumber) {
+				warning("ContextParameters::ContextParameters(): Repeated file number didn't match: %d != %d", repeatedFileNumber, _fileNumber);
+			}
+			_contextName = Datum(chunk, kDatumTypeString).u.string;
+
+			uint endingFlag = Datum(chunk, kDatumTypeUint16_1).u.i;
+			if (endingFlag != 0) {
+				warning("ContextParameters::ContextParameters(): Got non-zero ending flag 0x%x", endingFlag);
+			}
+			break;
+		}
+
+		case kContextParametersFileNumber: {
+			error("ContextParameters::ContextParameters(): Section type FILE_NUMBER not implemented yet");
+			break;
+		}
+
+		case kContextParametersVariable: {
+			uint repeatedFileNumber = Datum(chunk, kDatumTypeUint16_1).u.i;
+			if (repeatedFileNumber != _fileNumber) {
+				warning("ContextParameters::ContextParameters(): Repeated file number didn't match: %d != %d", repeatedFileNumber, _fileNumber);
+			}
+			Variable *variable = new Variable(chunk);
+			if (g_engine->_variables.contains(variable->_id)) {
+				// Don't overwrite the variable if it already exists. This can happen if we have
+				// unloaded a screen but are returning to it later.
+				debugC(5, kDebugScript, "ContextParameters::ContextParameters(): Skipping re-creation of existing global variable %d (type: %s)", variable->_id, variableTypeToStr(variable->_type));
+				delete variable;
+			} else {
+				g_engine->_variables.setVal(variable->_id, variable);
+				debugC(5, kDebugScript, "ContextParameters::ContextParameters(): Created global variable %d (type: %s)", variable->_id, variableTypeToStr(variable->_type));
+			}
+			break;
+		}
+
+		case kContextParametersBytecode: {
+			Function *function = new Function(chunk);
+			_functions.setVal(function->_id, function);
+			break;
+		}
+
+		default:
+			error("ContextParameters::ContextParameters(): Unknown section type 0x%x", static_cast<uint>(sectionType));
+		}
+
+		sectionType = static_cast<ContextParametersSectionType>(Datum(chunk, kDatumTypeUint16_1).u.i);
+	}
+}
+
 void Context::readOldStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 	error("Context::readOldStyleHeaderSections(): Not implemented yet");
 }
@@ -162,7 +219,7 @@ void Context::readNewStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 	}
 
 	while (moreSectionsToRead) {
-		// VERIFY THIS CHUNK IS A HEADER.
+		// Verify this chunk is a header.
 		// TODO: What are the situations when it's not?
 		uint16 sectionType = Datum(chunk, kDatumTypeUint16_1).u.i;
 		debugC(5, kDebugLoading, "Context::readNewStyleHeaderSections(): sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
@@ -171,7 +228,7 @@ void Context::readNewStyleHeaderSections(Subfile &subfile, Chunk &chunk) {
 			error("Context::readNewStyleHeaderSections(): Expected header chunk, got %s (@0x%llx)", tag2str(chunk._id), static_cast<long long int>(chunk.pos()));
 		}
 
-		// READ THIS HEADER SECTION.
+		// Read this header section.
 		moreSectionsToRead = readHeaderSection(subfile, chunk);
 		if (subfile.atEnd()) {
 			break;
@@ -225,10 +282,7 @@ bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
 	debugC(5, kDebugLoading, "Context::readHeaderSection(): sectionType = 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
 	switch (sectionType) {
 	case kContextParametersSection: {
-		if (_parameters != nullptr) {
-			error("Context::readHeaderSection(): Got multiple parameters (@0x%llx)", static_cast<long long int>(chunk.pos()));
-		}
-		_parameters = new ContextParameters(chunk);
+		readParametersSection(chunk);
 		break;
 	}
 
@@ -365,9 +419,8 @@ bool Context::readHeaderSection(Subfile &subfile, Chunk &chunk) {
 		break;
 	}
 
-	default: {
+	default:
 		error("Context::readHeaderSection(): Unknown section type 0x%x (@0x%llx)", static_cast<uint>(sectionType), static_cast<long long int>(chunk.pos()));
-	}
 	}
 
 	return true;

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.5.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-02-24 23:38+0000\n"
+"POT-Creation-Date: 2025-03-02 00:34+0000\n"
 "PO-Revision-Date: 2024-02-05 18:42+0000\n"
 "Last-Translator: Josu Igoa <josuigoa@ni.eus>\n"
 "Language-Team: Basque <https://translations.scummvm.org/projects/scummvm/"
@@ -352,7 +352,7 @@ msgstr "JSON kodearen edukia ez dago ongi osatuta."
 #: backends/platform/wii/options.cpp:46 engines/agos/animation.cpp:577
 #: engines/agos/midi.cpp:320 engines/agos/midi.cpp:378
 #: engines/agos/midi.cpp:457 engines/buried/saveload.cpp:83
-#: engines/director/lingo/lingo-builtins.cpp:2094
+#: engines/director/lingo/lingo-builtins.cpp:2132
 #: engines/drascula/saveload.cpp:48 engines/grim/inputdialog.cpp:83
 #: engines/groovie/script.cpp:665 engines/mtropolis/mtropolis.cpp:114
 #: engines/mtropolis/mtropolis.cpp:124 engines/parallaction/saveload.cpp:270
@@ -360,10 +360,9 @@ msgstr "JSON kodearen edukia ez dago ongi osatuta."
 #: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1351
 #: engines/scumm/scumm.cpp:1768 engines/scumm/scumm.cpp:2258
 #: engines/scumm/scumm.cpp:2274 engines/sky/compact.cpp:140
-#: engines/sword1/animation.cpp:532 engines/sword1/animation.cpp:563
-#: engines/sword1/animation.cpp:571 engines/sword1/control.cpp:2816
-#: engines/sword1/logic.cpp:1732 engines/sword2/animation.cpp:426
-#: engines/sword2/animation.cpp:456 engines/sword2/animation.cpp:466
+#: engines/sword1/animation.cpp:566 engines/sword1/animation.cpp:574
+#: engines/sword1/control.cpp:2816 engines/sword1/logic.cpp:1738
+#: engines/sword2/animation.cpp:459 engines/sword2/animation.cpp:469
 #: engines/vcruise/vcruise.cpp:96 engines/vcruise/vcruise.cpp:106
 #: engines/zvision/file/save_manager.cpp:225
 msgid "OK"
@@ -2988,7 +2987,7 @@ msgstr ""
 "Repeat steps 1 and 6 for each game."
 
 #: base/main.cpp:652 base/main.cpp:677
-#: engines/director/lingo/lingo-builtins.cpp:1416
+#: engines/director/lingo/lingo-builtins.cpp:1454
 #: engines/director/lingo/xlibs/jitdraw3.cpp:123
 #: engines/director/lingo/xlibs/jitdraw3.cpp:131
 msgid "Ok"
@@ -7401,7 +7400,7 @@ msgstr " (Jokoa)"
 msgid "Versailles 1685 support is not compiled in"
 msgstr "Ezaugarri erantsiak:"
 
-#: engines/darkseed/darkseed.cpp:67
+#: engines/darkseed/darkseed.cpp:68
 #, fuzzy
 msgid "Unable to locate the darkseed.dat engine data file."
 msgstr "Ezin izan da fitxategia ezabatu."
@@ -11894,18 +11893,13 @@ msgid ""
 "Removes some repetitive actions, adds possibility to change verbs by keyboard"
 msgstr ""
 
-#: engines/sword1/animation.cpp:532
-#, c-format
-msgid "PSX stream cutscene '%s' cannot be played in paletted mode"
-msgstr "'%s' PSX eszena ezin da erreproduzitu paletatutako moduan"
-
-#: engines/sword1/animation.cpp:563 engines/sword2/animation.cpp:456
+#: engines/sword1/animation.cpp:566 engines/sword2/animation.cpp:459
 msgid ""
 "MPEG-2 cutscenes found but ScummVM has been built without MPEG-2 support"
 msgstr ""
 "MPEG-2 bideoak aurkitu dira, baina ScummVM MPEG-2 euskarri gabe konpilatu da"
 
-#: engines/sword1/animation.cpp:570 engines/sword2/animation.cpp:465
+#: engines/sword1/animation.cpp:573 engines/sword2/animation.cpp:468
 #, c-format
 msgid "Cutscene '%s' not found"
 msgstr "Ez da '%s' bideoa aurkitu"
@@ -11946,7 +11940,7 @@ msgstr "Zaharra mantendu"
 msgid "Keep the new one"
 msgstr "Berria mantendu"
 
-#: engines/sword1/logic.cpp:1732
+#: engines/sword1/logic.cpp:1738
 msgid "This is the end of the Broken Sword 1 Demo"
 msgstr "Hau Broken Sword 1 Demoaren amaiera da"
 
@@ -12008,13 +12002,6 @@ msgstr ""
 #, fuzzy
 msgid "Main Menu"
 msgstr "Menu ~n~agusia"
-
-#: engines/sword2/animation.cpp:426
-msgid ""
-"PSX cutscenes found but ScummVM has been built without RGB color support"
-msgstr ""
-"PSX eszenak aurkitu dira, baina ScummVM RGB kolorearen euskarri gabe "
-"konpilatu da"
 
 #: engines/sword2/detection_tables.h:419
 msgid "Remastered edition is not supported. Please, use the classic version"
@@ -13719,6 +13706,16 @@ msgstr ""
 "ditzazkezu. Aukeratutako paketeko letra-tipo guztiak beharko dituzu, hau da, "
 "LiberationMono, LiberationSans eta LiberationSerif, edo FreeMono, FreeSans "
 "eta FreeSerif hurrenez hurren."
+
+#, c-format
+#~ msgid "PSX stream cutscene '%s' cannot be played in paletted mode"
+#~ msgstr "'%s' PSX eszena ezin da erreproduzitu paletatutako moduan"
+
+#~ msgid ""
+#~ "PSX cutscenes found but ScummVM has been built without RGB color support"
+#~ msgstr ""
+#~ "PSX eszenak aurkitu dira, baina ScummVM RGB kolorearen euskarri gabe "
+#~ "konpilatu da"
 
 #, fuzzy
 #~ msgid ""

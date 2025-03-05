@@ -1843,6 +1843,8 @@ void Room203::daemon() {
 				_officialHalt = series_load("official halt");
 				sendWSMessage_10000(1, _official, _officialHalt, 1, 15, 141,
 					_officialHalt, 15, 15, 0);
+
+				_officialShould = 2024;
 				digi_play("03_02n01", 1);
 				break;
 
@@ -2293,6 +2295,7 @@ void Room203::daemon() {
 
 		setupOfficial();
 		kernel_trigger_dispatchx(kernel_trigger_create(125));
+		kernel_trigger_dispatchx(kernel_trigger_create(130));
 		break;
 
 
@@ -2313,6 +2316,7 @@ void Room203::daemon() {
 
 	case 350:
 		kernel_trigger_dispatchx(kernel_trigger_create(125));
+		kernel_trigger_dispatchx(kernel_trigger_create(130));
 		break;
 
 	case 352:
@@ -2639,7 +2643,7 @@ void Room203::parser() {
 			kernel_trigger_dispatchx(kernel_trigger_create(140));
 			_G(kernel).trigger_mode = KT_PARSE;
 			break;
-		case 1:
+		case 2:
 			player_set_commands_allowed(true);
 			break;
 		default:
