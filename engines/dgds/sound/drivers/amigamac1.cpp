@@ -27,12 +27,10 @@
 #include "audio/mixer.h"
 #include "audio/mods/paula.h"
 #include "common/array.h"
-#include "common/debug-channels.h"
 #include "common/hashmap.h"
 #include "common/memstream.h"
 #include "common/mutex.h"
 #include "common/stream.h"
-#include "common/util.h"
 
 namespace Dgds {
 
@@ -877,6 +875,8 @@ void MidiPlayer_AmigaMac1::send(uint32 b) {
 				if (v->_channel == channel && v->_note != -1)
 					v->noteOff();
 			}
+		default:
+			break;
 		}
 		break;
 	case 0xc0:
@@ -884,6 +884,8 @@ void MidiPlayer_AmigaMac1::send(uint32 b) {
 		break;
 	case 0xe0:
 		channel->setPitchWheel((op2 << 7) | op1);
+		break;
+	default:
 		break;
 	}
 }

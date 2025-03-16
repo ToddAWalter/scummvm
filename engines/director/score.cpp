@@ -770,7 +770,7 @@ bool Score::renderTransition(uint16 frameId, RenderMode mode) {
 
 void Score::incrementFilmLoops() {
 	for (auto &it : _channels) {
-		if (it->_sprite->_cast && it->_sprite->_cast->_type == kCastFilmLoop) {
+		if (it->_sprite->_cast && (it->_sprite->_cast->_type == kCastFilmLoop || it->_sprite->_cast->_type == kCastMovie)) {
 			FilmLoopCastMember *fl = ((FilmLoopCastMember *)it->_sprite->_cast);
 			if (!fl->_frames.empty()) {
 				// increment the film loop counter
@@ -1343,7 +1343,7 @@ bool Score::checkShotSimilarity(const Graphics::Surface *oldSurface, const Graph
 				absolute_pixel_differences++;
 
 				for (int c = 0; c < 4; c++) {
-					if (ABS((newColor & 0xFF) - (oldColor & 0xFF)) > kShotColorDiffThreshold) {
+					if (ABS<int32>((newColor & 0xFF) - (oldColor & 0xFF)) > kShotColorDiffThreshold) {
 						different_pixel_count++;
 						break;
 					}
