@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-03-10 16:53+0000\n"
+"POT-Creation-Date: 2025-03-25 04:17+0000\n"
 "PO-Revision-Date: 2024-05-14 12:42+0000\n"
 "Last-Translator: 复予 <clonewith@qq.com>\n"
 "Language-Team: Chinese <https://translations.scummvm.org/projects/scummvm/"
@@ -315,7 +315,7 @@ msgstr "另一存储正工作中。您要中断它吗？"
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:143
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4199
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4200
 #: engines/toon/toon.cpp:1543
 msgid "Yes"
 msgstr "是"
@@ -328,7 +328,7 @@ msgstr "是"
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:149
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4199
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4200
 #: engines/toon/toon.cpp:1543
 msgid "No"
 msgstr "否"
@@ -352,7 +352,7 @@ msgstr "JSON 代码内容有误。"
 #: backends/platform/wii/options.cpp:46 engines/agos/animation.cpp:577
 #: engines/agos/midi.cpp:320 engines/agos/midi.cpp:378
 #: engines/agos/midi.cpp:457 engines/buried/saveload.cpp:83
-#: engines/director/lingo/lingo-builtins.cpp:2132
+#: engines/director/lingo/lingo-builtins.cpp:2144
 #: engines/drascula/saveload.cpp:48 engines/grim/inputdialog.cpp:83
 #: engines/groovie/script.cpp:665 engines/mtropolis/mtropolis.cpp:114
 #: engines/mtropolis/mtropolis.cpp:124 engines/parallaction/saveload.cpp:270
@@ -2807,7 +2807,7 @@ msgid ""
 msgstr ""
 
 #: base/main.cpp:652 base/main.cpp:677
-#: engines/director/lingo/lingo-builtins.cpp:1454
+#: engines/director/lingo/lingo-builtins.cpp:1465
 #: engines/director/lingo/xlibs/jitdraw3.cpp:123
 #: engines/director/lingo/xlibs/jitdraw3.cpp:131
 msgid "Ok"
@@ -7455,7 +7455,7 @@ msgstr ""
 msgid "Thor Dies"
 msgstr ""
 
-#: engines/got/got.cpp:185 engines/got/got.cpp:195
+#: engines/got/got.cpp:188 engines/got/got.cpp:198
 msgid "Savegames are not available in demo mode"
 msgstr ""
 
@@ -9740,7 +9740,7 @@ msgid "Your Name:"
 msgstr "游戏名："
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4205
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4206
 msgid "Host"
 msgstr ""
 
@@ -9752,7 +9752,7 @@ msgid "Querying games..."
 msgstr "讀取遊戲…"
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4205
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4206
 msgid "Join"
 msgstr ""
 
@@ -10755,14 +10755,14 @@ msgid ""
 "required resources for MT-32. Using AdLib instead."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:4093
+#: engines/scumm/scumm.cpp:4094
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
 "Tentacle game directory, and the game has to be added to ScummVM."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:4205
+#: engines/scumm/scumm.cpp:4206
 msgid "Would you like to host or join a network play session?"
 msgstr ""
 
