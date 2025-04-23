@@ -1915,6 +1915,9 @@ bool qdGameDispatcher::play_video(qdVideo *p) {
 
 	_cur_video = p;
 
+	if (p->background_file_name().toString().c_str())
+		p->draw_background();
+
 	if (p->check_flag(qdVideo::VID_FULLSCREEN_FLAG)) {
 		_video_player.set_window(0, 0, g_engine->_screenW, g_engine->_screenH);
 	} else {
@@ -2992,7 +2995,7 @@ void qdGameDispatcher::request_file_package(const qdFileOwner &file_owner) const
 	error("Requested file package is not available");
 }
 
-Common::Path qdGameDispatcher::find_file(const Common::Path file_name, const qdFileOwner &file_owner) const {
+Common::Path qdGameDispatcher::find_file(const Common::Path &file_name, const qdFileOwner &file_owner) const {
 	debugC(4, kDebugLoad, "qdGameDispatcher::find_file(%s)", file_name.toString().c_str());
 
 	return file_name;

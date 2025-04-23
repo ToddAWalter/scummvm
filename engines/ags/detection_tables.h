@@ -603,6 +603,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "alysvsthephantomfelinefoe", "Alys vs. The Phantom Feline Foe" },
 	{ "amagicstone", "A magic stone" },
 	{ "america2000", "America 2000" },
+	{ "ammonia", "Ammonia" },
 	{ "amotospuf", "Amoto's Puf" },
 	{ "amongthorns", "Among Thorns" },
 	{ "amtag", "AMTAG: another medieval themed adventure game" },
@@ -741,6 +742,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "basedon", "Basedon - The Game" },
 	{ "basementwoods", "Basement in the Woods" },
 	{ "basketqust", "Interesting Basket Qust" },  // not a typo
+	{ "bathroomadv", "Bathroom Adventure" },
 	{ "battlewarriorsrt", "Battle Warriors: Rovendale Tactics" },
 	{ "bbcscreensaver", "Background Blitz Collection Screensaver" },
 	{ "bcremake", "Black Cauldron Remake" },
@@ -886,7 +888,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "buccaneer", "Buccaneer" },
 	{ "buddiestuniverse", "Buddiest Universe - Day Off" },
 	{ "buddybrick", "Buddy Brick" },
-	{ "bug", "BUG" },
+	{ "bug", "BUG - The Game" },
 	{ "buhf", "Buhf" },
 	{ "bullettrain", "Bullet Train" },
 	{ "bunawantsbeer", "Buna Wants Beer" },
@@ -1173,6 +1175,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "devochkaquest", "Devochka Quest" },
 	{ "dexter", "Dexter Morning Routine" },
 	{ "dgsearchbatteries", "Another DG game: the search of the batteries" },
+	{ "diasgeminis", "Los días de Géminis" },
 	{ "dicklarenzo", "Dick LaRenzo: Secret Agent!" },
 	{ "diemaskennyarlathoteps", "Die Masken Nyarlathoteps" },
 	{ "digilawyer", "DigiLawyer" },
@@ -1822,6 +1825,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "katurarpg", "Katura RPG" },
 	{ "keptosh1", "Keptosh I: The Search for junc" },
 	{ "keyboardmadness", "Keyboard Madness" },
+	{ "keyknees", "The Key's Knees" },
 	{ "keypad", "Keypad" },
 	{ "keysofagamespace", "Keys of a gamespace. An expressive game" },
 	{ "kidnapped", "Kidnapped" },
@@ -2227,7 +2231,9 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "mmm99", "Maniac Mansion Mania Ep. 099: Die Premiere" },
 	{ "mmm100", "Maniac Mansion Mania Ep. 100: Money Mansion" },
 	{ "mmm101", "Maniac Mansion Mania Ep. 101: With Other Eyes / Mit anderen Augen" },
+	{ "mmm102", "Maniac Mansion Mania Ep. 102: Michaels Nacht" },
 	{ "mmmatman", "Maniac Mansion Mania: @-Man - The Dork Knight" },
+	{ "mmmcoll1", "Maniac Mansion Mania Ronmastered Collection (Ep. 1-9)" },
 	{ "mmmd1", "Maniac Dungeon Raum 01: The great Escape from Maniac Dungeon" },
 	{ "mmmd2", "Maniac Dungeon Raum 02: Der Bunker" },
 	{ "mmmd3", "Maniac Dungeon Raum 03: Der Verbindungstunnel" },
@@ -2860,6 +2866,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "saturdaynightlone2", "Saturday Night is the Loneliest Night of the Week 2" },
 	{ "saturdayschool", "Saturday School" },
 	{ "saturdaysymbiosis", "Saturday Night Symbiosis" },
+	{ "savejazz", "Save Me This Jazz" },
 	{ "saw", "Saw" },
 	{ "saw2", "Saw II" },
 	{ "sawn1", "Sawn 1: Pain is just the start!" },
@@ -3445,6 +3452,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "tooblivion", "Who sent me to Oblivion" },
 	{ "toomanykittens", "Too Many Kittens" },
 	{ "topus", "You rock, Topus!" },
+	{ "tornapart", "Torn Apart" },
 	{ "totheend", "To the end of the way" },
 	{ "tothemom", "To The Mountains Of Madness" },
 	{ "tots", "T.O.T.S. : Trick-Or-Treat Simulator" },
@@ -3576,6 +3584,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "wduprodigal", "World of Darkness Unbound - Prodigal" },
 	{ "wearevectors", "We Are Vectors" },
 	{ "weathered", "Weathered" },
+	{ "weavingtime", "Weaving Time" },
 	{ "weepinglilium", "Weeping Lilium" },
 	{ "wegotlost", "I Think We Got Lost" },
 	{ "weightloss", "Narcoleptic Weight Loss Expert" },
@@ -3666,6 +3675,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "zalgohs", "Zalgo Hotstar in The Trailer" },
 	{ "zankrobot", "Zank, Robot Boy Wonder" },  // Matt Wilson's Hour Game
 	{ "zapandy", "Zap & Andy: Get Outta Hell" },
+	{ "zauberkraft", "Zauberkraft" },
 	{ "zedquest", "Zed's Quest" },
 	{ "zeke", "Zeke and the Island of Barentsev" },
 	{ "zempquest", "Zemp's Birthday Kuest" },
@@ -3710,6 +3720,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "gloriouswolfcomicsep2", "Glorious Wolf - Interactive Musical Comics Ep. 2" },
 	{ "paintedhills", "Painted Hills" },
 	{ "paintedhills2", "Big Trouble in Little River" },
+	{ "reddad", "Red Dad Redemption" },
 	{ "useitall", "Use It All (Or Forget Your Ball)" },
 
 	{ 0, 0 }
@@ -4191,6 +4202,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	UNSUPPORTED_GAME_ENTRY("paintedhills2", "Painted Hills 2.ags", "b332b0acdbe998142aa019075f21ac82", 203373406),
 	UNSUPPORTED_GAME_ENTRY("paintedhills2", "Painted Hills 2.ags", "6837c43e8ad038be9bd3c0eed267f82a", 724921454),
 	UNSUPPORTED_GAME_ENTRY("paintedhills2", "Big Trouble in Little River.ags", "2b1d7d8958d817543671177d6d98a77c", 203373454),
+	UNSUPPORTED_GAME_ENTRY("reddad", "Red Dad Redemption.ags", "9390772f2a4c4f28a2ca8fed610c0d82", 114168081),
 	UNSUPPORTED_GAME_ENTRY("useitall", "mags2402.exe", "41cd9288896f33d2003f3f3a3a208482", 5212519),  // Win
 	UNSUPPORTED_GAME_ENTRY("useitall", "mags2402.ags", "bf6501e529633843043b94643bcb8348", 2219859),  // Linux
 
@@ -4233,6 +4245,10 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("astroloco", "astroloco1.exe", "06e70a826fde73b3f86f974885d31abe", 42492070),
 	GAME_ENTRY("avcsurvivalguide", "CAV.exe", "42656cf777d07d4d35e978b233bb7aa8", 11001785),  // Eng-Esp itch.io 1.0
 	GAME_ENTRY_EN_STEAM("azazelxmas", "Azazels_Christmas_Fable.exe", "46fcfdc2aa113c05f3ba95ad356e1a63", 408594796),
+	GAME_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.exe", "031b525706d93c172a2329894d255feb", 250051066),  // Win v1.0
+	GAME_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.exe", "031b525706d93c172a2329894d255feb", 250052667),  // Win v1.1
+	GAME_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.ags", "f98bc7b344c75e6ed5513cc4e04eeb44", 246874086),  // Linux v1.0
+	GAME_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.ags", "523256421463b5660db305cf4db5d9cc", 246875687),  // Linux v1.1
 	GAME_ENTRY_EN_STEAM("beer", "beer!.exe", "6f201fd7a19869c85f49c7c471d0479a", 5055091), // Windows
 	GAME_ENTRY_EN_STEAM("beer", "beer!.ags", "4a751c43af8699aabdb0b9ebcc2024d3", 2145485), // Eng Win v1.5
 	GAME_ENTRY_EN_STEAM("beer", "Beer!.ags", "6f201fd7a19869c85f49c7c471d0479a", 5042748), // Linux
@@ -4818,6 +4834,9 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN_STEAM("rnrneverdies", "Rock 'n' Roll Will Never Die.exe", "28456c6a3a38874b833651c4433e22b4", 37725830),
 	GAME_ENTRY_EN_STEAM("rnrneverdies", "Rock 'n' Roll Will Never Die.exe", "28456c6a3a38874b833651c4433e22b4", 37729146),
 	DETECTION_ENTRY_GUIO("roguestate", "roguestate.exe", "981a1c4d5a64b8ebe300f9769acf0fe5", 895486573, Common::EN_ANY, "Steam", GUIO2(GUIO_NOLANG, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0),
+	GAME_ENTRY_PLUGIN_GOG_NOAUTOSAVE("rosewater", "Rosewater.ags", "9748c2a388a93061a1a480127493acb2", 3905499047, 0),  // v1.00.1
+	GAME_ENTRY_PLUGIN_GOG_NOAUTOSAVE("rosewater", "Rosewater.ags", "9748c2a388a93061a1a480127493acb2", 3905515500, 0),  // v1.02.0
+	GAME_ENTRY_PLUGIN_STEAM_NOAUTOSAVE("rosewater", "Rosewater.ags", "9748c2a388a93061a1a480127493acb2", 3905498635, 0),
 	GAME_ENTRY_GOG("samaritan", "samaritan.exe", "79dd677433bbb10d4970367eb68b243c", 78070237), // Groupees, v1.1 - GOG
 	GAME_ENTRY_STEAM("samaritan", "samaritan.exe", "5fb404a4a7c9cd1449dfdd3d23fa0250", 78753952),  // En-Fr-De-Es-It
 	GAME_ENTRY_STEAM("samaritan", "samaritan.exe", "6a3b669b7d34ec9356a665afe0c2c003", 78438375),
@@ -4900,6 +4919,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "c0d0009485795a4ff0cf9dbe5ad82a2f", 3183902196, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac v3?
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "c5978d50a9b7ee1c8a50a731847d8504", 3186428869, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win 2.3
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "c5978d50a9b7ee1c8a50a731847d8504", 3187004654, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win-Linux v3.0
+	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "a20e9de4567f25b692c724d9783436ac", 3012885224, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win v3.2?
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "e037ab3414dec971b90715c7dbb56f4c", 3183901914, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "f82b54c827a6c77c9f3922f8d3c52565", 3183901922, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac
 	GAME_ENTRY("sulifallenharmony", "Suli Fallen Harmony.exe", "8a58836830dce896e4366f57791ab6cc", 35900870),  // v1.4 itch.io En-Fr
@@ -5110,7 +5130,9 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	DEMO_ENTRY_EN("bachelorstory", "Bachelor Story.exe", "a524cbb1c51589903c4043b98917f1d9", 7436465),
 	DEMO_ENTRY_EN("bananaman", "banana man demo.exe", "615e806856b7730afadf1fea9a756b70", 53524952),
 	DEMO_ENTRY("battlewarriorsrt", "battle.exe", "3b7cceb3e4bdb031dc5d8f290936e94b", 16314318),  //En-Ru
-	DEMO_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.exe", "1177e20f6a84ded5fad2a5d79fff8cb5", 190595833),
+	DEMO_ENTRY_EN("beekeeperpicnic", "holmestest.exe", "0595b55383d72a99cd995092c5bf8475", 28798211),  // PoC 1.3
+	DEMO_ENTRY_EN("beekeeperpicnic", "holmestest.ags", "97ae33827aa36d1fc9024137bcd6a072", 25689327),
+	DEMO_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.exe", "1177e20f6a84ded5fad2a5d79fff8cb5", 190595833),  // Alpha Demo 0.1
 	DEMO_ENTRY_EN("beekeeperpicnic", "beekeeperspicnic.ags", "8ad3471b1f914371dae6a24d031ce8bf", 187427045),
 	DEMO_ENTRY_EN("beforeww2", "beforeww.exe", "4d17844029d8910fbaae1bdc99e250f2", 9759616),
 	DEMO_ENTRY_EN("beyondowlsgard", "Owlsgard Demo.exe", "ef70606d7030e9f6fa7c39f6437391c1", 783490949),
@@ -5866,6 +5888,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("alysvsthephantomfelinefoe", "alys.exe", "3c5bd1713959ff469cb46ebe5542cfcf", 22323495),
 	GAME_ENTRY_EN("amagicstone", "a magic stone.exe", "465f972675db2da6040518221af5b0ba", 5478520),
 	GAME_ENTRY_EN("america2000", "America2000.exe", "7ddb9e776648faed5a51170d087074e9", 4136265),
+	GAME_ENTRY_EN_PLATFORM("ammonia", "Ammoniadoll.ags", "2ff1bf04ce34a0899d579996d3032265", 18306318, "Prototype"),  //itch.io client
 	GAME_ENTRY_EN("amotospuf", "amotos.exe", "06a03fe35791b0578068ab1873455463", 10771879),
 	GAME_ENTRY_EN("amotospuf", "amotos.exe", "06a03fe35791b0578068ab1873455463", 10226456),
 	GAME_ENTRY_EN("amongthorns", "Among Thorns.exe", "b5c41e08919834b549ca350a28f18f87", 64621203),
@@ -6057,6 +6080,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("basementwoods", "BasementInTheWoods.exe", "7971a7c02d414dc8cb33b6ec36080b91", 4490579),
 	GAME_ENTRY_EN("basementwoods", "BasementInTheWoods.ags", "21e9a8e97bc43f3200bfc5db32c0867f", 1993539),
 	GAME_ENTRY_EN("basketqust", "eeeeeeeeeeeeeeeee.exe", "9cf51833e787cc919837d9a8bd8fc14c", 874080),
+	GAME_ENTRY_EN("bathroomadv", "bathroomadventure.ags", "aa11e83afbb7dbba5326eb36699e97e9", 18177134),  // itch.io client
 	GAME_ENTRY_EN("bbcscreensaver", "BBC-Screensaver.exe", "0e6d6f3c19f5ca250b7b7ee03cdb2083", 131195371),
 	GAME_ENTRY_EN("bcremake", "bc.exe", "2e58934bbe98335f33c20a23a6c6135a", 8208487),  // v1.2
 	GAME_ENTRY_EN("bcremake", "bc.exe", "0710e2ec71042617f565c01824f0cf3c", 7683255),  // v1.3
@@ -6591,6 +6615,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("dexter", "DexterIntro.exe", "2ca80bd50763378b72cd1e1cf25afac3", 4630186),
 	GAME_ENTRY_EN("dgsearchbatteries", "dgsfb.exe", "88cf59aad15ca331ab0f854e16c84df3", 1664209),  // English
 	GAME_ENTRY_LANG("dgsearchbatteries", "dgf.exe", "88cf59aad15ca331ab0f854e16c84df3", 1619269, Common::FR_FRA),  //French
+	GAME_ENTRY("diasgeminis", "Los dias de geminis.exe", "3d057daf3d17f04e0d72cad85651a08f", 1036229032),  // Eng-Esp  v0.0.9.0
 	GAME_ENTRY_EN("dicklarenzo", "LaRenzo.exe", "0500aacb6c176d47ac0f8158f055db83", 36844867),
 	GAME_ENTRY("diemaskennyarlathoteps", "ags_masken.exe", "74dc062c5f68f3d70da911f2db5737b6", 129219473),
 	GAME_ENTRY_EN("digilawyer", "DigiLawyer.exe", "3b7cceb3e4bdb031dc5d8f290936e94b", 1686006),
@@ -7387,6 +7412,8 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_LANG("katurarpg", "Katura RPG.exe", "01d0e6bd812abaa307bcb10fc2193416", 295327636, Common::FR_FRA),
 	GAME_ENTRY_EN("keptosh1", "Keptosh.exe", "95b7dd55f6e15c8a2118856ed9fe8ff9", 2904848),
 	GAME_ENTRY_EN("keyboardmadness", "piano.exe", "f120690b506dd63cd7d1112ea6af2f77", 1767775),
+	GAME_ENTRY_EN("keyknees", "The Keys Knees.exe", "a9093fafca0476d3d486f3ad08665cbe", 10436508),  // Windows
+	GAME_ENTRY_EN("keyknees", "The Keys Knees.ags", "65152c0e76302fa953b82ad17ad8ef04", 7324552),   // Linux
 	GAME_ENTRY_EN("keypad", "keypad.ags", "ba213536c51051e2a0abcc862c081bb5", 5579547),  // Windows
 	GAME_ENTRY_EN("keypad", "keypad.ags", "b9b2ded9de2c26a1e225e1aa4dab4947", 8670761),  // Linux
 	GAME_ENTRY("keysofagamespace", "Keys.exe", "75f4c7f66b1be60af5b2d65f617b91a7", 85582285),  // En-Fr
@@ -7829,6 +7856,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY("mmm40", "MMM40.exe", "3b7cceb3e4bdb031dc5d8f290936e94b", 10990625),  // v3.01    Multi
 	GAME_ENTRY_LANG("mmm40", "MMM40.exe", "3b7cceb3e4bdb031dc5d8f290936e94b", 9385965, Common::DE_DEU),  // Talkie
 	GAME_ENTRY("mmm41", "mmm41.exe", "6d5a5284ed0403e75d64f42f415242a5", 8634455),  // De-It
+	GAME_ENTRY_LANG("mmm41", "DasNeueJugendschutzgesetz.exe", "07b6c61269775f714e681c3a184a8580", 9518761, Common::DE_DEU),  // De Talkie
 	GAME_ENTRY_LANG("mmm42", "psychobernie.exe", "0710e2ec71042617f565c01824f0cf3c", 6696188, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmm43", "Edna.exe", "0710e2ec71042617f565c01824f0cf3c", 5149386, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmm44", "Razor.exe", "0710e2ec71042617f565c01824f0cf3c", 4820839, Common::DE_DEU),
@@ -7899,6 +7927,8 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY("mmm100", "money.exe", "91b1d125f9c818b8d2f376d24774377e", 52085746),  // En-De
 	GAME_ENTRY_LANG("mmm101", "MMM_MiAu.exe", "bc40ee6a0cf03a983f9fcaca906d12b8", 7696543, Common::DE_DEU),
 	GAME_ENTRY("mmm101", "MMM_MiAu.exe", "bc40ee6a0cf03a983f9fcaca906d12b8", 8192536),  // En-De + De speech
+	GAME_ENTRY_LANG("mmm102", "Michaels Nacht.exe", "c4a80b2e90a3b032ae370ee7329455ad", 9689363, Common::DE_DEU),
+	GAME_ENTRY_LANG("mmmcoll1", "mmm.ags", "9f9897dda68345bb0eeb4b506bcedf18", 15180588, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmmd1", "Starter.exe", "6cddccb3744ec5c6af7c398fb7b3b11c", 5174259, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmmd2", "002.exe", "6cddccb3744ec5c6af7c398fb7b3b11c", 5104718, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmmd3", "003.exe", "6cddccb3744ec5c6af7c398fb7b3b11c", 5275394, Common::DE_DEU),
@@ -7957,6 +7987,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY("mmmmm4", "bertholdsreturn.exe", "ce5605f3f83c609b8ffce472936e6d83", 10292426),  // En-De
 	GAME_ENTRY_LANG("mmmmm5", "marcy.exe", "2ce63b8fabba844aaf06426814e3f40f", 10234949, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmmmm5", "marcy.exe", "2ce63b8fabba844aaf06426814e3f40f", 10234769, Common::DE_DEU),  // fireorange's itch.io
+	GAME_ENTRY_LANG("mmmmm5", "marcy.exe", "84c3450209ded54a68adc14cbc0cbcd0", 9459770, Common::DE_DEU),  // Talkie
 	GAME_ENTRY_LANG("mmmmovie1", "in da house1.exe", "6cddccb3744ec5c6af7c398fb7b3b11c", 10384508, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmmmovie2", "Doktor2.exe", "6cddccb3744ec5c6af7c398fb7b3b11c", 12675202, Common::DE_DEU),
 	GAME_ENTRY_LANG("mmmmovie3", "Kochen mit Fred.exe", "465f972675db2da6040518221af5b0ba", 19068509, Common::DE_DEU),
@@ -8301,6 +8332,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("peakvalley2", "MOPV 2 The White Lady.exe", "55c5470f14317d5e806cd4f4271a2118", 45221210),  // v1.0.3
 	GAME_ENTRY_EN("pendek", "Pendek.exe", "6a2bd70d9b482cf8fcc9f9b99adf704c", 14652428),
 	GAME_ENTRY_EN("penguincy", "Penguincy.ags", "fba95583bc891449c5d4ce3d51e7ef5e", 14790192),
+	GAME_ENTRY_EN("penguincy", "Penguincy.ags", "060d7cd3d519af2856313ab74b00a6b4", 14795729),  // voiceover update
 	GAME_ENTRY_EN("pennispong", "Pennis.exe", "28f82e420b82d07651b68114f90223c8", 900335),
 	GAME_ENTRY_EN("pennispong", "Pennis.exe", "28f82e420b82d07651b68114f90223c8", 939611),
 	GAME_ENTRY_EN("pepeadventure", "pepe.exe", "0710e2ec71042617f565c01824f0cf3c", 2211759),
@@ -8643,6 +8675,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("saturdayschool", "ss.exe", "b216ee957dd677023e02d900281a02d6", 1588546),
 	GAME_ENTRY_EN_PLATFORM("saturdayschool", "ss.exe", "c9cc759756e1f24783029948da533ccd", 1916056, "OROW"),
 	GAME_ENTRY_EN("saturdaysymbiosis", "Saturday Night Symbiosis.exe", "f18443f98fd61d2c655e76a17f7da905", 24170102),
+	GAME_ENTRY_EN("savejazz", "Save Me This Jazz.exe", "495d45fb8adfd49690ae3b97921feec6", 11367061),
 	GAME_ENTRY("saw", "Saw.exe", "f120690b506dd63cd7d1112ea6af2f77", 60869310),  // Eng-Esp
 	GAME_ENTRY_PLATFORM("saw", "Saw.exe", "34a66a5033b70f4050cbe5e33a45f747", 2452460, "Deluxe"),  //v1.30 Eng-Esp
 	GAME_ENTRY("saw2", "Saw2.exe", "615e806856b7730afadf1fea9a756b70", 45338514),  // Eng-Esp
@@ -9407,6 +9440,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN_PLATFORM("tonyspaghetti", "Tony's_Spaghetti.exe", "1177e20f6a84ded5fad2a5d79fff8cb5", 4740438, "Post-Jam"),
 	GAME_ENTRY("topus", "Topus.exe", "25f2daf37e9fa873e0ddd765121d5ef0", 90520515),  // En-Fr Win
 	GAME_ENTRY("topus", "Topus.ags", "5189846132206c64d04be3e0f9c1d13d", 88133043),  // En-Fr Linux
+	GAME_ENTRY_EN("tornapart", "torn-apart.ags", "403fc90aa15e41974c96842026ca5d54", 55634087),  // itch.io client
 	GAME_ENTRY_EN("totheend", "chemin.exe", "06a03fe35791b0578068ab1873455463", 3179064),
 	GAME_ENTRY_EN("tothemom", "To The Mountains Of Madness.exe", "6b1702aec6d0a44bda59ef8f229956c5", 18160599),
 	GAME_ENTRY_EN("tothemom", "To The Mountains Of Madness.ags", "62c97d20188f62b1b92473bb5ca70152", 15674823),
@@ -9571,6 +9605,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("wduprodigal", "vtprodigal.ags", "44a50cc46c4b2b6940d0070c78a0a7b3", 291157671),  // Linux
 	GAME_ENTRY_EN("wearevectors", "WAV.exe", "a524cbb1c51589903c4043b98917f1d9", 5851536),
 	GAME_ENTRY_EN_PLATFORM("weathered", "Weathered.exe", "60850a0b0f1ef2e2deb15a815c0a1715", 110310651, "Beta"),
+	GAME_ENTRY_EN("weavingtime", "WeavingTime.ags", "87b2fe7ee698976d22d6721aed30b0cc", 4294219),
 	GAME_ENTRY_LANG("weepinglilium", "weepinglilium.ags", "b570d980a264f085d00f52936e72ad43", 99619088, Common::IT_ITA),  // itch.io client
 	GAME_ENTRY_EN("wegotlost", "dream.exe", "0710e2ec71042617f565c01824f0cf3c", 8820049),
 	GAME_ENTRY_EN("weightloss", "Narcoleptic Weight Loss Expert.exe", "6d2f8e80c5f2372b705fdd4cc32f3579", 3940985),
@@ -9685,6 +9720,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN("zakrepixeled", "ZAK.exe", "4f5275d2c9c451940a5d23b267c7a269", 5842142), // v0.3.2.1
 	GAME_ENTRY_EN("zakthemaniac", "maniaczak.exe", "dee872e31c6d205e68aa9d87a542f07b", 24492152),
 	GAME_ENTRY_EN("zalgohs", "ZTT.ags", "4ab5683ccc5a075cd336493239678138", 17650653),
+	GAME_ENTRY_EN("zauberkraft", "Zauberkraft2025.exe", "615e73fc1874e92d60a1996c2330ea36", 257783783),
 	GAME_ENTRY_EN("zedquest", "NewZud.exe", "0500aacb6c176d47ac0f8158f055db83", 1367132),
 	GAME_ENTRY_EN("zeke", "ZTO.exe", "f120690b506dd63cd7d1112ea6af2f77", 1201019),
 	GAME_ENTRY_EN("zempquest", "HBDZemp.30", "06a03fe35791b0578068ab1873455463", 2028630),
