@@ -449,6 +449,9 @@ void QtvrxtraXtra::m_QTVRIdle(int nargs) {
 	g_director->getCurrentWindow()->getSurface()->copyRectToSurface(
 		dither->getPixels(), dither->pitch, me->_rect.left, me->_rect.top, dither->w, dither->h
 	);
+
+	dither->free();
+	delete dither;
 }
 
 void QtvrxtraXtra::m_QTVRMouseDown(int nargs) {
@@ -483,6 +486,9 @@ void QtvrxtraXtra::m_QTVRMouseDown(int nargs) {
 		g_director->getCurrentWindow()->getSurface()->copyRectToSurface(
 			dither->getPixels(), dither->pitch, me->_rect.left, me->_rect.top, dither->w, dither->h
 		);
+
+		dither->free();
+		delete dither;
 
 		g_director->getCurrentWindow()->setDirty(true);
 
@@ -571,6 +577,9 @@ void QtvrxtraXtra::m_QTVRMouseOver(int nargs) {
 		g_director->getCurrentWindow()->getSurface()->copyRectToSurface(
 			dither->getPixels(), dither->pitch, me->_rect.left, me->_rect.top, dither->w, dither->h
 		);
+
+		dither->free();
+		delete dither;
 
 		g_director->getCurrentWindow()->setDirty(true);
 
@@ -927,6 +936,9 @@ void QtvrxtraXtra::m_QTVRSetVisible(int nargs) {
 	QtvrxtraXtraObject *me = (QtvrxtraXtraObject *)g_lingo->_state->me.u.obj;
 
 	me->_visible = (bool)g_lingo->pop().asInt();
+
+	if (!me->_visible)
+		g_director->getCurrentWindow()->render(true);
 }
 
 void QtvrxtraXtra::m_QTVRGetWarpMode(int nargs) {
@@ -1134,6 +1146,9 @@ QtvrxtraWidget::QtvrxtraWidget(QtvrxtraXtraObject *xtra, Graphics::MacWidget *pa
 }
 
 bool QtvrxtraWidget::processEvent(Common::Event &event) {
+	if (!_xtra->_visible)
+		return false;
+
 	switch (event.type) {
 	case Common::EVENT_LBUTTONDOWN:
 		if (_xtra->_mouseDownHandler.empty()) {
@@ -1154,6 +1169,9 @@ bool QtvrxtraWidget::processEvent(Common::Event &event) {
 	case Common::EVENT_MOUSEMOVE:
 		_xtra->_video->handleMouseMove(event.mouse.x - _xtra->_rect.left, event.mouse.y - _xtra->_rect.top);
 		return true;
+	case Common::EVENT_QUIT:
+		_xtra->_video->handleQuit();
+		return false;
 	case Common::EVENT_KEYDOWN:
 	case Common::EVENT_KEYUP: {
 		int zoomState = _xtra->_video->getZoomState();

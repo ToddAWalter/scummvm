@@ -57,6 +57,8 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 		initDOS();
 	else if (isCPC())
 		initCPC();
+	else if (isC64())
+		initC64();
 	else if (isSpectrum())
 		initZX();
 	else if (isAmiga() || isAtariST())
@@ -458,11 +460,7 @@ void EclipseEngine::drawInfoMenu() {
 }
 
 void EclipseEngine::pressedKey(const int keycode) {
-	if (keycode == kActionRotateLeft) {
-		rotate(-_angleRotations[_angleRotationIndex], 0);
-	} else if (keycode == kActionRotateRight) {
-		rotate(_angleRotations[_angleRotationIndex], 0);
-	} else if (keycode == kActionChangeAngle) {
+	if (keycode == kActionChangeAngle) {
 		changeAngle();
 	} else if (keycode == kActionChangeStepSize) {
 		changeStepSize();

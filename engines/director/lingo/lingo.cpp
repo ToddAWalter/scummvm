@@ -31,6 +31,7 @@
 #include "director/picture.h"
 #include "director/score.h"
 #include "director/sprite.h"
+#include "director/util.h"
 #include "director/window.h"
 #include "director/castmember/castmember.h"
 #include "director/castmember/text.h"
@@ -1385,13 +1386,13 @@ const char *Datum::type2str(bool ilk) const {
 }
 
 int Datum::equalTo(const Datum &d, bool ignoreCase) const {
-	// VOID can only be equal to VOID and INT 0
+	// VOID can only be equal to VOID and INT 0 (on the right)
 	if (type == VOID && d.type == VOID) {
 		return 1;
 	} else if (type == VOID) {
 		return d.type == INT && d.u.i == 0;
 	} else if (d.type == VOID) {
-		return type == INT && u.i == 0;
+		return 0;
 	}
 	int alignType = g_lingo->getAlignedType(*this, d, true);
 
@@ -1403,9 +1404,9 @@ int Datum::equalTo(const Datum &d, bool ignoreCase) const {
 	case STRING:
 	case SYMBOL:
 		if (ignoreCase) {
-			return g_lingo->normalizeString(asString()).equals(g_lingo->normalizeString(d.asString()));
+			return compareStringEquality(g_lingo->normalizeString(asString()), g_lingo->normalizeString(d.asString()));
 		} else {
-			return asString().equals(d.asString());
+			return compareStringEquality(asString(), d.asString());
 		}
 	case OBJECT:
 		return u.obj == d.u.obj;
@@ -1434,13 +1435,11 @@ bool Datum::operator<(const Datum &d) const {
 }
 
 bool Datum::operator>=(const Datum &d) const {
-	uint32 res = compareTo(d);
-	return res & kCompareGreater || res & kCompareEqual;
+	return compareTo(d) & kCompareGreaterEqual;
 }
 
 bool Datum::operator<=(const Datum &d) const {
-	uint32 res = compareTo(d);
-	return res & kCompareLess || res & kCompareEqual;
+	return compareTo(d) & kCompareLessEqual;
 }
 
 uint32 Datum::compareTo(const Datum &d) const {
@@ -1449,15 +1448,13 @@ uint32 Datum::compareTo(const Datum &d) const {
 	// - less than -and- equal to INT 0 (yes, really)
 	// - less than any other type
 	if (type == VOID && d.type == VOID) {
-		return kCompareEqual;
+		return kCompareEqual | kCompareLessEqual | kCompareGreaterEqual;
 	} else if (type == VOID && d.type == INT && d.u.i == 0) {
-		return kCompareLess | kCompareEqual;
-	} else if (d.type == VOID && type == INT && u.i == 0) {
-		return kCompareLess | kCompareEqual;
+		return kCompareLess | kCompareEqual | kCompareLessEqual;
 	} else if (type == VOID) {
-		return kCompareLess;
+		return kCompareLess | kCompareLessEqual;
 	} else if (d.type == VOID) {
-		return kCompareGreater;
+		return kCompareGreater | kCompareGreaterEqual;
 	}
 
 	int alignType = g_lingo->getAlignedType(*this, d, true);
@@ -1466,31 +1463,45 @@ uint32 Datum::compareTo(const Datum &d) const {
 		double f1 = asFloat();
 		double f2 = d.asFloat();
 		if (f1 < f2) {
-			return kCompareLess;
+			return kCompareLess | kCompareLessEqual;
 		} else if (f1 == f2) {
-			return kCompareEqual;
+			return kCompareEqual | kCompareLessEqual | kCompareGreaterEqual;
 		} else {
-			return kCompareGreater;
+			return kCompareGreater | kCompareGreaterEqual;
 		}
 	} else if (alignType == INT) {
 		double i1 = asInt();
 		double i2 = d.asInt();
 		if (i1 < i2) {
-			return kCompareLess;
+			return kCompareLess | kCompareLessEqual;
 		} else if (i1 == i2) {
-			return kCompareEqual;
+			return kCompareEqual | kCompareLessEqual | kCompareGreaterEqual;
 		} else {
-			return kCompareGreater;
+			return kCompareGreater | kCompareGreaterEqual;
 		}
 	} else if (alignType == STRING || alignType == SYMBOL) {
-		int res = compareStrings(asString(), d.asString());
+		uint32 result = 0;
+		// Strings can be equal and less/greater than at the same time.
+		// Equality is determined by whether the characters
+		// match based on the equality table, whereas less/greater
+		// than status is determined by the order of the characters
+		// in the order table.
+		bool eq = compareStringEquality(asString(), d.asString());
+		int res = compareStringOrder(asString(), d.asString());
 		if (res < 0) {
-			return kCompareLess;
+			result = kCompareLess | kCompareLessEqual;
+			if (eq) {
+				result |= kCompareEqual;
+			}
 		} else if (res == 0) {
-			return kCompareEqual;
+			result = kCompareEqual | kCompareLessEqual | kCompareGreaterEqual;
 		} else {
-			return kCompareGreater;
+			result = kCompareGreater | kCompareGreaterEqual;
+			if (eq) {
+				result |= kCompareEqual;
+			}
 		}
+		return result;
 	} else {
 		warning("Datum::compareTo(): Invalid comparison between types %s and %s", type2str(), d.type2str());
 		return kCompareError;

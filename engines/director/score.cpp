@@ -437,6 +437,7 @@ void Score::updateCurrentFrame() {
 	}
 
 	_nextFrame = 0;
+	_vm->_skipFrameAdvance = false;
 
 	if (nextFrameNumberToLoad >= getFramesNum()) {
 		Window *window = _vm->getCurrentWindow();
@@ -581,8 +582,6 @@ void Score::update() {
 			_exitFrameCalled = true;
 		}
 	}
-
-	_vm->_skipFrameAdvance = false;
 
 	// Check for delay
 	if (g_system->getMillis() < _nextFrameDelay) {
@@ -740,7 +739,7 @@ void Score::renderFrame(uint16 frameId, RenderMode mode) {
 	playQueuedSound(); // this is currently only used in FPlayXObj
 
 	if (_cursorDirty) {
-		renderCursor(_movie->getWindow()->getMousePos());
+		renderCursor(_movie->getWindow()->getMousePos(), true);
 		_cursorDirty = false;
 	}
 	uint32 end = g_system->getMillis(false);
@@ -1277,11 +1276,15 @@ void Score::renderCursor(Common::Point pos, bool forceUpdate) {
 	if (!_channels.empty() && _playState != kPlayStopped) {
 		uint spriteId = 0;
 
-		for (int i = _channels.size() - 1; i >= 0; i--)
-			if (_channels[i]->isMouseIn(pos) && !_channels[i]->_cursor.isEmpty()) {
+		for (int i = _channels.size() - 1; i >= 0; i--) {
+			CollisionTest test = _channels[i]->isMouseIn(pos);
+			if (test == kCollisionYes && !_channels[i]->_cursor.isEmpty()) {
 				spriteId = i;
 				break;
+			} else if (test == kCollisionHole) {
+				break;
 			}
+		}
 
 		if (!_channels[spriteId]->_cursor.isEmpty()) {
 			if (!forceUpdate && _currentCursor == _channels[spriteId]->_cursor)
@@ -1467,26 +1470,37 @@ void Score::screenShot() {
 }
 
 uint16 Score::getSpriteIDFromPos(Common::Point pos) {
-	for (int i = _channels.size() - 1; i >= 0; i--)
-		if (_channels[i]->isMouseIn(pos))
+	for (int i = _channels.size() - 1; i >= 0; i--) {
+		CollisionTest test = _channels[i]->isMouseIn(pos);
+		if (test == kCollisionYes)
 			return i;
+		else if (test == kCollisionHole)
+			break;
+	}
 
 	return 0;
 }
 
 uint16 Score::getMouseSpriteIDFromPos(Common::Point pos) {
-	for (int i = _channels.size() - 1; i >= 0; i--)
-		if (_channels[i]->isMouseIn(pos) && _channels[i]->_sprite->respondsToMouse())
+	for (int i = _channels.size() - 1; i >= 0; i--) {
+		CollisionTest test = _channels[i]->isMouseIn(pos);
+		if (test == kCollisionYes && _channels[i]->_sprite->respondsToMouse())
 			return i;
+		else if (test == kCollisionHole)
+			break;
+	}
 
 	return 0;
 }
 
 uint16 Score::getActiveSpriteIDFromPos(Common::Point pos) {
-	for (int i = _channels.size() - 1; i >= 0; i--)
-		if (_channels[i]->isMouseIn(pos) && _channels[i]->_sprite->isActive())
+	for (int i = _channels.size() - 1; i >= 0; i--) {
+		CollisionTest test = _channels[i]->isMouseIn(pos);
+		if (test == kCollisionYes && _channels[i]->_sprite->isActive())
 			return i;
-
+		else if (test == kCollisionHole)
+			break;
+	}
 	return 0;
 }
 
@@ -1544,6 +1558,29 @@ bool Score::refreshPointersForCastMemberID(CastMemberID id) {
 		if (it->_castId == id) {
 			it->_cast = nullptr;
 			it->setCast(id);
+			hit = true;
+		}
+	}
+	return hit;
+}
+
+bool Score::refreshPointersForCastLib(uint16 castLib) {
+	// FIXME: This can be removed once Sprite is refactored to not
+	// keep a pointer to a CastMember.
+	bool hit = false;
+	for (auto &it : _channels) {
+		if (it->_sprite->_castId.castLib == castLib) {
+			it->_sprite->_cast = nullptr;
+			it->setCast(it->_sprite->_castId);
+			it->_dirty = true;
+			hit = true;
+		}
+	}
+
+	for (auto &it : _currentFrame->_sprites) {
+		if (it->_castId.castLib == castLib) {
+			it->_cast = nullptr;
+			it->setCast(it->_castId);
 			hit = true;
 		}
 	}

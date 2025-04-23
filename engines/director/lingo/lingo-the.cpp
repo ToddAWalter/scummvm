@@ -2058,7 +2058,10 @@ void Lingo::setTheCastLib(Datum &id1, int field, Datum &d) {
 
 	switch (field) {
 	case kTheFileName:
-		warning("STUB: Lingo::setTheCastLib(): fileName not implemented");
+		{
+			Common::Path castPath = findMoviePath(d.asString());
+			movie->loadCastLibFrom(id1.u.i, castPath);
+		}
 		break;
 	case kTheName:
 		warning("STUB: Lingo::setTheCastLib(): name not implemented");
@@ -2327,7 +2330,7 @@ void Lingo::getObjectProp(Datum &obj, Common::String &propName) {
 					break;
 				case kTheRect:
 					d = Datum(Common::Rect(0, 0, 0, 0));
-break;
+					break;
 				case kTheRegPoint:
 					d = Datum(Common::Point(0, 0));
 					break;

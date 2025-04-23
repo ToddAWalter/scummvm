@@ -358,6 +358,10 @@ void ScummEngine_v5::setupOpcodes() {
 	OPCODE(0xfd, o5_findInventory);
 	OPCODE(0xfe, o5_walkActorTo);
 	OPCODE(0xff, o5_drawBox);
+
+	if (_game.id == GID_MONKEY && _game.platform == Common::kPlatformSegaCD && _language == Common::EN_ANY && enhancementEnabled(kEnhMinorBugFixes)) {
+		OPCODE(0x1a, o5_move_segafix);
+	}
 }
 
 int ScummEngine_v5::getVar() {
@@ -475,7 +479,9 @@ void ScummEngine_v5::o5_actorOps() {
 			// hard disk, I believe.
 			//
 			// Costume 0 doesn't have any cigar smoke, perhaps to
-			// cut down on disk access.
+			// cut down on disk access -- or, according to Aric
+			// Wilmunder, possibly because it "looked too 'cartoony'
+			// next to the higher-fidelity close-ups."
 			//
 			// But in the VGA CD version, only costume 0 is used
 			// and the close-up is missing the cigar smoke.
@@ -709,7 +715,7 @@ void ScummEngine_v5::o5_add() {
 	//
 	// We fix this by changing Var[229] += 8 to Var[229] += 1.
 
-	if (_game.id == GID_MONKEY && _game.platform == Common::kPlatformSegaCD && _resultVarNumber == 229 && a == 8 && enhancementEnabled(kEnhSubFmtCntChanges)) {
+	if (_game.id == GID_MONKEY && _game.platform == Common::kPlatformSegaCD && _language == Common::EN_ANY && _resultVarNumber == 229 && a == 8 && enhancementEnabled(kEnhSubFmtCntChanges)) {
 		int scriptNr = vm.slot[_currentScript].number;
 
 		// Room 35 - Talking to the Men of Low Moral Fiber (pirates),
@@ -1753,6 +1759,9 @@ void ScummEngine_v5::o5_notEqualZero() {
 		// enters the hold where he remarks that the whole thing reeks
 		// of monkeys. But the way it's scripted, the message is only
 		// shown if it has already been shown.
+		//
+		// Ron Gilbert commented on this: "Not sure I'd call that a
+		// coding error. The lines were just cut. But what do I know."
 
 		if ((_game.id == GID_MONKEY || _game.id == GID_MONKEY_VGA || _game.id == GID_MONKEY_EGA) && _roomResource == 8 && vm.slot[_currentScript].number == 10002) {
 			// A local getVar(), where the var number can be examined.
@@ -1953,6 +1962,65 @@ void ScummEngine_v5::o5_move() {
 	setResult(getVarOrDirectWord(PARAM_1));
 }
 
+// WORKAROUND: MI1 uses bit flags for some sort of bookkeeping for its
+// conversation trees. These are assigned by "Bit[384 + Var[100]] = 1", or
+// "B.384[V.100] = 1" in NUTCracker syntax.
+//
+// Var[100] is supposed to be a value between 0 and 8, but it's also used for
+// the verb ID, which is between 120 and 128. In other versions, the scripts
+// subtract 120 before setting the bit, the the Sega CD version does not. This
+// means that the Sega version uses bits 504 through 512 instead of bits 384
+// through 392.
+//
+// While most conversations probably only clobber a few of these flags, the
+// following things may be impacted:
+//
+// 504 - Saying "Geeze, what an obvious sales pitch." to Cobb.
+// 505 - Saying "You know, you really should quit smoking." to Smirk.
+// 506 - Something unknown around the line "I give up!  You win!"
+// 507 - unused
+// 508 - Saying "I need a ship." / "Can you guys crew a ship?" to the cannibals.
+// 509 - Saying "Money.  I want money." to the cannibals.
+// 510 - Saying "What's in your standard potion of exorcism?" to the cannibals.
+// 511 - Saying "Where is he hiding it?" to the cannibals.
+// 512 - Saying "How do I get to these catacombs?" to the cannibals.
+//       This is also unavailable if Herman already told you.
+//
+// We're just lucky the bug didn't impact anything more important than this,
+// because the bug is literally in hundreds of places throughout the game. And
+// just to rub it in, the Sega version doesn't even seem to use these flags for
+// the conversation trees.
+//
+// Fortunately, this is the only places in the game where the bit variables are
+// set in this particular fashion, so we can detect and correct for it. Though
+// old savegames will of course still be impacted.
+
+void ScummEngine_v5::o5_move_segafix() {
+	int result;
+
+	// In most cases, this is identical to getResultPos()
+	_resultVarNumber = fetchScriptWord();
+	if (_resultVarNumber & 0x2000) {
+		int a = fetchScriptWord();
+		result = getVarOrDirectWord(PARAM_1);
+
+		if (a & 0x2000) {
+			int var = a & ~0x2000;
+			int value = readVar(var);
+			if (_resultVarNumber == 0xA000 + 384 && var == 100 && value >= 120 && value <= 128 && result == 1) {
+				value -= 120;
+			}
+			_resultVarNumber += value;
+		} else {
+			_resultVarNumber += a & 0xFFF;
+		}
+		_resultVarNumber &= ~0x2000;
+	} else {
+		result = getVarOrDirectWord(PARAM_1);
+	}
+	setResult(result);
+}
+
 void ScummEngine_v5::o5_multiply() {
 	int a;
 	getResultPos();
@@ -2060,7 +2128,8 @@ void ScummEngine_v5::o5_putActor() {
 
 	// WORKAROUND: When enabling the cigar smoke in the captain Smirk
 	// close-up, it turns out that the coordinates in the CD
-	// version's script were taken from the EGA version.
+	// version's script were taken from the EGA version. (This alignment
+	// problem was also remembered and mentionned by Aric Wilmunder.)
 	//
 	// The coordinates below are taken from the VGA floppy version. The
 	// "Ultimate Talkie" version also corrects the positions, but uses
@@ -2932,20 +3001,26 @@ void ScummEngine_v5::o5_startScript() {
 	// WORKAROUND: In the CD version of Monkey Island 1, and the EGA
 	// version before it, there is animated smoke in parts of the lava maze
 	// beneath the monkey head. The VGA floppy version still calls the
-	// script to add the smoke, but the script is empty. We repliacte what
-	// the script did manually.
+	// script to add the smoke, but the script is empty (the Amiga release
+	// has it, though -- at least the 1.2 release does -- so that's what we
+	// replicate).
+	//
+	// According to Aric Wilmunder, this may have been done to avoid swapping
+	// floppy disks when exploring the maze (since the resource is stored in the
+	// fortune teller's room, and the Hellmaze being large, it was hard for the
+	// memory manager to keep it in memory).
 
 	if (_game.id == GID_MONKEY_VGA && _roomResource == 39 && script == 211 && enhancementEnabled(kEnhRestoredContent)) {
 		Actor *a = derefActorSafe(12, "o5_startScript");
 
-		if (a) {
+		if (a && (a->_room != _roomResource || a->_costume == 0)) {
 			a->initActor(0);
 			a->setActorCostume(76);
 			a->setPalette(3, 8);
 			a->setPalette(2, 12);
 			a->setPalette(9, 4);
-			a->_ignoreBoxes = 1;
-			a->_forceClip = 1;
+			putClass(12, 150, true);
+			putClass(12, 149, true);
 			a->animateActor(250);
 			a->_room = _roomResource;
 			a->putActor(data[0], data[1]);

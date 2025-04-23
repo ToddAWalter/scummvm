@@ -219,6 +219,16 @@ void DarkEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *infoS
 	act->addDefaultInputMapping("w");
 	engineKeyMap->addAction(act);
 
+	act = new Common::Action("ROLL_LEFT", _("Roll left"));
+	act->setCustomEngineActionEvent(kActionRollLeft);
+	act->addDefaultInputMapping("n");
+	engineKeyMap->addAction(act);
+
+	act = new Common::Action("ROLL_RIGHT", _("Roll right"));
+	act->setCustomEngineActionEvent(kActionRollRight);
+	act->addDefaultInputMapping("m");
+	engineKeyMap->addAction(act);
+
 	// I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
 	act = new Common::Action("INCSTEPSIZE", _("Increase Step Size"));
 	act->setCustomEngineActionEvent(kActionIncreaseStepSize);
@@ -644,14 +654,14 @@ void DarkEngine::gotoArea(uint16 areaID, int entranceID) {
 
 void DarkEngine::pressedKey(const int keycode) {
 	// This code is duplicated in the DrillerEngine::pressedKey (except for the J case)
-	if (keycode == kActionRotateLeft) {
-		rotate(-_angleRotations[_angleRotationIndex], 0);
-	} else if (keycode == kActionRotateRight) {
-		rotate(_angleRotations[_angleRotationIndex], 0);
-	} else if (keycode == kActionIncreaseStepSize) {
+	if (keycode == kActionIncreaseStepSize) {
 		increaseStepSize();
 	} else if (keycode == kActionDecreaseStepSize) {
 		decreaseStepSize();
+	} else if (keycode == kActionRollRight) {
+		rotate(0, 0, -_angleRotations[_angleRotationIndex]);
+	} else if (keycode == kActionRollLeft) {
+		rotate(0, 0, _angleRotations[_angleRotationIndex]);
 	} else if (keycode == kActionRiseOrFlyUp) {
 		rise();
 	} else if (keycode == kActionLowerOrFlyDown) {
@@ -761,15 +771,18 @@ void DarkEngine::drawBinaryClock(Graphics::Surface *surface, int xPosition, int 
 
 		if (_gameStateVars[kVariableDarkEnding] == 0)
 			number = (1 << 15) - 1;
-		else
-			number = 1 << (_ticks - _ticksFromEnd) / 15;
+		else {
+			int shift = (_ticks - _ticksFromEnd) / 15;
+			if (shift >= 15)
+				number = (1 << 15) - 1;
+			else
+				number = 1 << shift;
+		}
+
 	} else
 		return;
 
-	int maxBits = isAtariST() || isAmiga() ? 14 : 15;
-	/*if (number >= 1 << maxBits)
-		number = (1 << maxBits) - 1;*/
-
+	int maxBits = 14;
 	int bits = 0;
 	while (bits <= maxBits) {
 		int y = 0;

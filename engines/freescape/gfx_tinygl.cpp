@@ -162,11 +162,12 @@ void TinyGLRenderer::updateProjectionMatrix(float fov, float aspectRatio, float 
 	tglLoadIdentity();
 }
 
-void TinyGLRenderer::positionCamera(const Math::Vector3d &pos, const Math::Vector3d &interest) {
+void TinyGLRenderer::positionCamera(const Math::Vector3d &pos, const Math::Vector3d &interest, float rollAngle) {
 	Math::Vector3d up_vec(0, 1, 0);
 
 	Math::Matrix4 lookMatrix = Math::makeLookAtMatrix(pos, interest, up_vec);
 	tglMultMatrixf(lookMatrix.getData());
+	tglRotatef(rollAngle, 0.0f, 0.0f, 1.0f);
 	tglTranslatef(-pos.x(), -pos.y(), -pos.z());
 }
 
@@ -186,7 +187,7 @@ void TinyGLRenderer::renderSensorShoot(byte color, const Math::Vector3d sensor, 
 }
 
 void TinyGLRenderer::renderPlayerShootBall(byte color, const Common::Point &position, int frame, const Common::Rect &viewArea) {
-	/*uint8 r, g, b;
+	uint8 r, g, b;
 
 	tglMatrixMode(TGL_PROJECTION);
 	tglLoadIdentity();
@@ -228,7 +229,7 @@ void TinyGLRenderer::renderPlayerShootBall(byte color, const Common::Point &posi
 
 	tglDisable(TGL_BLEND);
 	tglEnable(TGL_DEPTH_TEST);
-	tglDepthMask(TGL_TRUE);*/
+	tglDepthMask(TGL_TRUE);
 }
 
 
@@ -449,10 +450,10 @@ void TinyGLRenderer::drawCelestialBody(Math::Vector3d position, float radius, by
 
 	// Quick billboard effect inspired from this code:
 	// http://www.lighthouse3d.com/opengl/billboarding/index.php?billCheat
-	/*glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	GLfloat m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
+	tglMatrixMode(TGL_MODELVIEW);
+	tglPushMatrix();
+	TGLfloat m[16];
+	tglGetFloatv(TGL_MODELVIEW_MATRIX, m);
 	for(int i = 1; i < 4; i++)
 		for(int j = 0; j < 4; j++ ) {
 			if (i == 2)
@@ -463,7 +464,7 @@ void TinyGLRenderer::drawCelestialBody(Math::Vector3d position, float radius, by
 				m[i*4 + j] = 0.0;
 		}
 
-	glLoadMatrixf(m);*/
+	tglLoadMatrixf(m);
 	tglDisable(TGL_DEPTH_TEST);
 	tglDepthMask(TGL_FALSE);
 
@@ -508,7 +509,7 @@ void TinyGLRenderer::drawCelestialBody(Math::Vector3d position, float radius, by
 
 	tglEnable(TGL_DEPTH_TEST);
 	tglDepthMask(TGL_TRUE);
-	//tglPopMatrix();
+	tglPopMatrix();
 }
 
 void TinyGLRenderer::depthTesting(bool enabled) {

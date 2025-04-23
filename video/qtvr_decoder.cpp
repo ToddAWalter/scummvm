@@ -281,7 +281,7 @@ void QuickTimeDecoder::setTargetSize(uint16 w, uint16 h) {
 		_height = h;
 
 		setFOV(_fov);
-	} if (_qtvrType == QTVRType::OBJECT) {
+	} else if (_qtvrType == QTVRType::OBJECT) {
 		if (_width != w)
 			_scaleFactorX *= Common::Rational(_width, w);
 
@@ -575,6 +575,8 @@ Graphics::Surface *QuickTimeDecoder::PanoTrackHandler::constructMosaic(VideoTrac
 		Common::DumpFile bitmapFile;
 		if (!bitmapFile.open(path, true)) {
 			warning("Cannot dump panorama into file '%s'", path.toString().c_str());
+			target->free();
+			delete target;
 			return nullptr;
 		}
 
@@ -794,15 +796,14 @@ void QuickTimeDecoder::PanoTrackHandler::projectPanorama() {
 		float t = ((float)y + 0.5f) / (float)h;
 
 		float vector[3];
-		for (int v = 0; v < 3; v++) {
+		for (int v = 0; v < 3; v++)
 			vector[v] = cornerVectors[0][v] * (1.0f - t) + cornerVectors[1][v] * t;
 
-			float projectedX = vector[0] / vector[2];
-			float projectedY = vector[1] / vector[2];
+		float projectedX = vector[0] / vector[2];
+		float projectedY = vector[1] / vector[2];
 
-			sideEdgeXYInterpolators[y * 2 + 0] = projectedX / maxProjectedX;
-			sideEdgeXYInterpolators[y * 2 + 1] = (projectedY - minProjectedY) / (maxProjectedY - minProjectedY);
-		}
+		sideEdgeXYInterpolators[y * 2 + 0] = projectedX / maxProjectedX;
+		sideEdgeXYInterpolators[y * 2 + 1] = (projectedY - minProjectedY) / (maxProjectedY - minProjectedY);
 	}
 
 	const bool isWidthOdd = ((w % 2) == 1);
@@ -1011,6 +1012,13 @@ void QuickTimeDecoder::setClickedHotSpot(int id) {
 ///////////////////////////////
 // INTERACTIVITY
 //////////////////////////////
+
+void QuickTimeDecoder::handleQuit() {
+	if (_repeatTimerActive) {
+		_repeatTimerActive = false;
+		g_system->getTimerManager()->removeTimerProc(&repeatCallback);
+	}
+}
 
 void QuickTimeDecoder::handleMouseMove(int16 x, int16 y) {
 	if (_qtvrType == QTVRType::OBJECT)
@@ -1476,9 +1484,6 @@ void QuickTimeDecoder::cleanupCursors() {
 }
 
 void QuickTimeDecoder::setCursor(int curId) {
-	if (_currentQTVRCursor == curId)
-		return;
-
 	_currentQTVRCursor = curId;
 
 	if (!_dataBundle) {

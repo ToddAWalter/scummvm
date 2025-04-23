@@ -283,22 +283,19 @@ bool Channel::isActiveText() {
 	return false;
 }
 
-bool Channel::isMouseIn(const Common::Point &pos) {
+CollisionTest Channel::isMouseIn(const Common::Point &pos) {
 	if (!_visible)
-		return false;
+		return kCollisionNo;
 
-	Common::Rect bbox = getBbox();
-	if (!bbox.contains(pos))
-		return false;
+	const Common::Rect bbox = getBbox();
 
-	if (_sprite->_ink == kInkTypeMatte) {
-		if (_sprite->_cast && _sprite->_cast->_type == kCastBitmap) {
-			Graphics::Surface *matte = ((BitmapCastMember *)_sprite->_cast)->getMatte(bbox);
-			return matte ? *(byte *)(matte->getBasePtr(pos.x - bbox.left, pos.y - bbox.top)) : true;
-		}
+	if (_sprite->_cast) {
+		return _sprite->_cast->isWithin(bbox, pos, _sprite->_ink);
+	} else if (!bbox.contains(pos)) {
+		return kCollisionNo;
 	}
 
-	return true;
+	return kCollisionYes;
 }
 
 bool Channel::isMatteIntersect(Channel *channel) {
@@ -590,6 +587,12 @@ void Channel::setPosition(int x, int y, bool force) {
 		newPos.y = MIN(constraintBbox.bottom, MAX(constraintBbox.top, newPos.y));
 	}
 	_sprite->setPosition(newPos.x, newPos.y);
+	// Update the dimensons on the widget
+	if (_widget) {
+		Common::Rect dims = _widget->getDimensions();
+		dims.translate(newPos.x - dims.left, newPos.y - dims.top);
+		_widget->setDimensions(dims);
+	}
 }
 
 // here is the place for deciding whether the widget can be keep or not

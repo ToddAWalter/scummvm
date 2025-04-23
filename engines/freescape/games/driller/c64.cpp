@@ -27,7 +27,7 @@
 
 namespace Freescape {
 
-extern byte kDrillerC64Palette[16][3];
+extern byte kC64Palette[16][3];
 
 void DrillerEngine::initC64() {
 	_viewArea = Common::Rect(32, 16, 288, 120);
@@ -145,8 +145,10 @@ void DrillerEngine::loadAssetsC64FullGame() {
 		surf->convertToInPlace(_gfx->_texturePixelFormat);
 		_border = new Graphics::ManagedSurface();
 		_border->copyFrom(*surf);
+		surf->free();
+		delete surf;
 
-		/*file.close();
+		file.close();
 		file.open("driller.c64.title.bitmap");
 
 		Common::File colorFile1;
@@ -154,7 +156,7 @@ void DrillerEngine::loadAssetsC64FullGame() {
 		Common::File colorFile2;
 		colorFile2.open("driller.c64.title.colors2");
 
-		_title = loadAndConvertDoodleImage(&file, &colorFile1, &colorFile2, (byte *)&kDrillerC64Palette);*/
+		_title = loadAndConvertDoodleImage(&file, &colorFile1, &colorFile2, (byte *)&kC64Palette);
 	} else
 		error("Unknown C64 release");
 
