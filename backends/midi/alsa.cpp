@@ -26,9 +26,6 @@
 
 #if defined(USE_ALSA)
 
-// For my sysex pause
-#include <unistd.h>
-
 #include "common/config-manager.h"
 #include "common/error.h"
 #include "common/textconsole.h"
@@ -37,8 +34,6 @@
 #include "audio/mpu401.h"
 
 #include <alsa/asoundlib.h>
-
-#define MIDI_USB_HACK
 
 /*
  *     ALSA sequencer driver
@@ -222,12 +217,10 @@ void MidiDriver_ALSA::send(uint32 b) {
 		/* is it this simple ? Wow... */
 		snd_seq_ev_set_controller(&ev, chanID, midiCmd[1], midiCmd[2]);
 
-#ifdef MIDI_USB_HACK
 		// We save the volume of the first MIDI channel here to utilize it in
 		// our workaround for broken USB-MIDI cables.
 		if (chanID == 0 && midiCmd[1] == 0x07)
 			_channel0Volume = midiCmd[2];
-#endif
 
 		send_event(1);
 		break;
@@ -235,25 +228,21 @@ void MidiDriver_ALSA::send(uint32 b) {
 		snd_seq_ev_set_pgmchange(&ev, chanID, midiCmd[1]);
 		send_event(0);
 
-#ifdef MIDI_USB_HACK
 		// Send a volume change command to work around a firmware bug in common
 		// USB-MIDI cables. If the first MIDI command in a USB packet is a
 		// Cx or Dx command, the second command in the packet is dropped
 		// somewhere.
 		send(0x07B0 | (_channel0Volume << 16));
-#endif
 		break;
 	case 0xD0:
 		snd_seq_ev_set_chanpress(&ev, chanID, midiCmd[1]);
 		send_event(1);
 
-#ifdef MIDI_USB_HACK
 		// Send a volume change command to work around a firmware bug in common
 		// USB-MIDI cables. If the first MIDI command in a USB packet is a
 		// Cx or Dx command, the second command in the packet is dropped
 		// somewhere.
 		send(0x07B0 | (_channel0Volume << 16));
-#endif
 		break;
 	case 0xE0: {
 		// long theBend = ((((long)midiCmd[1] + (long)(midiCmd[2] << 7))) - 0x2000) / 4;
@@ -277,7 +266,7 @@ void MidiDriver_ALSA::sysEx(const byte *msg, uint16 length) {
 		return;
 	}
 
-	unsigned char buf[270];
+	unsigned char buf[266];
 
 	assert(length + 2 <= ARRAYSIZE(buf));
 
@@ -287,11 +276,6 @@ void MidiDriver_ALSA::sysEx(const byte *msg, uint16 length) {
 	buf[0] = 0xF0;
 	memcpy(buf + 1, msg, length);
 	buf[length + 1] = 0xF7;
-
-	// Wait 100ms to see if it helps (it does when using amidi and sysex; anything slower checksum errors)
-	usleep(39000); // Slows down but still has checksum error; bad data real? Didn't slow down enough; see below
-	// Per llamamusic's D-110 page: 390ms interval required.  Guess I'm making this configurable as many other synth nerds will not be pleased with that much delay
-	// High system load can result in missing the sysex patch load before moving on to the title screen in KQ4; will need to find a way to alert the engine to pause
 
 	// Send it
 	snd_seq_ev_set_sysex(&ev, length + 2, &buf);
@@ -440,8 +424,8 @@ MusicDevices AlsaMusicPlugin::getDevices() const {
 
 	// Add the remaining devices in the order they were found.
 
-	for (auto &device : alsaDevices)
-		devices.push_back(MusicDevice(this, device.getName(), device.getType()));
+	for (d = alsaDevices.begin(); d != alsaDevices.end(); ++d)
+		devices.push_back(MusicDevice(this, d->getName(), d->getType()));
 
 	return devices;
 }
@@ -477,18 +461,13 @@ Common::Error AlsaMusicPlugin::createInstance(MidiDriver **mididriver, MidiDrive
 	if (!found && dev) {
 		AlsaDevices alsaDevices = getAlsaDevices();
 
-		for (auto &d : alsaDevices) {
-			MusicDevice device(this, d.getName(), d.getType());
+		for (AlsaDevices::iterator d = alsaDevices.begin(); d != alsaDevices.end(); ++d) {
+			MusicDevice device(this, d->getName(), d->getType());
 
 			if (device.getCompleteId().equals(MidiDriver::getDeviceString(dev, MidiDriver::kDeviceId))) {
 				found = true;
-<<<<<<< HEAD
 				seq_client = d->getClient();
 				seq_port = d->getPort();
-=======
-				seq_client = d.getClient();
-				seq_port = -1;
->>>>>>> upstream
 				break;
 			}
 		}
