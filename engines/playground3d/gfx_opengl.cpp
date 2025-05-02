@@ -159,6 +159,19 @@ void OpenGLRenderer::enableFog(const Math::Vector4d &fogColor) {
 	glEnable(GL_FOG);
 }
 
+void OpenGLRenderer::disableFog() {
+	glDisable(GL_FOG);
+}
+
+void OpenGLRenderer::enableScissor(int x, int y, int width, int height) {
+	glScissor(x, y, width, height);
+	glEnable(GL_SCISSOR_TEST);
+}
+
+void OpenGLRenderer::disableScissor() {
+	glDisable(GL_SCISSOR_TEST);
+}
+
 void OpenGLRenderer::drawFace(uint face) {
 	glBegin(GL_TRIANGLE_STRIP);
 	for (uint i = 0; i < 4; i++) {

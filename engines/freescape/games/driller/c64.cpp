@@ -44,24 +44,21 @@ void DrillerEngine::loadAssetsC64FullGame() {
 	} else if (_targetName.hasPrefix("driller")) {
 		file.open("driller.c64.data");
 
-		if (_variant & GF_C64_RETAIL) {
+		if (_variant) {
 			loadFonts(&file, 0x402);
 			load8bitBinary(&file, 0x8b04, 16);
 			loadMessagesFixedSize(&file, 0x167a, 14, 20);
 			loadGlobalObjects(&file, 0x1855, 8);
-		} else if (_variant & GF_C64_BUDGET) {
+		/*} else if (_variant & GF_C64_BUDGET) {
 			//loadFonts(&file, 0x402);
 			load8bitBinary(&file, 0x7df7, 16);
 			loadMessagesFixedSize(&file, 0x1399, 14, 20);
-			loadGlobalObjects(&file, 0x150a, 8);
-		} else {
-			//error("Unknown C64 release");
-			assert(false);
-		}
+			loadGlobalObjects(&file, 0x150a, 8);*/
+		} else
+			error("Unknown C64 variant %x", _variant);
 
-
-		// The color map from the C64 version looks invalid
-		// so we'll just hardcode the Dark Side one which works fine
+		// The color map from the data is not correct,
+		// so we'll just hardcode the one that we found in the executable
 
 		for (int i = 0; i < 15; i++) {
 			_colorMap[i][0] = 0;
@@ -70,76 +67,77 @@ void DrillerEngine::loadAssetsC64FullGame() {
 			_colorMap[i][3] = 0;
 		}
 
-		_colorMap[1][0] = 0xf0;
-		_colorMap[1][1] = 0xf0;
-		_colorMap[1][2] = 0xf0;
-		_colorMap[1][3] = 0xf0;
+		_colorMap[1][0] = 0x55;
+		_colorMap[1][1] = 0x55;
+		_colorMap[1][2] = 0x55;
+		_colorMap[1][3] = 0x55;
 
-		_colorMap[2][0] = 0x0f;
-		_colorMap[2][1] = 0x0f;
-		_colorMap[2][2] = 0x0f;
-		_colorMap[2][3] = 0x0f;
+		_colorMap[2][0] = 0xaa;
+		_colorMap[2][1] = 0xaa;
+		_colorMap[2][2] = 0xaa;
+		_colorMap[2][3] = 0xaa;
 
 		_colorMap[3][0] = 0xff;
 		_colorMap[3][1] = 0xff;
 		_colorMap[3][2] = 0xff;
 		_colorMap[3][3] = 0xff;
 
-		_colorMap[4][0] = 0x05;
-		_colorMap[4][1] = 0x0a;
-		_colorMap[4][2] = 0x05;
-		_colorMap[4][3] = 0x0a;
+		_colorMap[4][0] = 0x44;
+		_colorMap[4][1] = 0x11;
+		_colorMap[4][2] = 0x44;
+		_colorMap[4][3] = 0x11;
 
-		_colorMap[5][0] = 0x50;
-		_colorMap[5][1] = 0xa0;
-		_colorMap[5][2] = 0x50;
-		_colorMap[5][3] = 0xa0;
+		_colorMap[5][0] = 0x88;
+		_colorMap[5][1] = 0x22;
+		_colorMap[5][2] = 0x88;
+		_colorMap[5][3] = 0x22;
 
-		_colorMap[6][0] = 0x55;
-		_colorMap[6][1] = 0xaa;
-		_colorMap[6][2] = 0x55;
-		_colorMap[6][3] = 0xaa;
+		_colorMap[6][0] = 0xcc;
+		_colorMap[6][1] = 0x33;
+		_colorMap[6][2] = 0xcc;
+		_colorMap[6][3] = 0x33;
 
-		_colorMap[7][0] = 0x5a;
-		_colorMap[7][1] = 0xa5;
-		_colorMap[7][2] = 0x5a;
-		_colorMap[7][3] = 0xa5;
+		_colorMap[7][0] = 0x66;
+		_colorMap[7][1] = 0x99;
+		_colorMap[7][2] = 0x66;
+		_colorMap[7][3] = 0x99;
 
-		_colorMap[8][0] = 0x5f;
-		_colorMap[8][1] = 0xaf;
-		_colorMap[8][2] = 0x5f;
-		_colorMap[8][3] = 0xaf;
+		_colorMap[8][0] = 0x77;
+		_colorMap[8][1] = 0xdd;
+		_colorMap[8][2] = 0x77;
+		_colorMap[8][3] = 0xdd;
 
-		_colorMap[9][0] = 0xf5;
-		_colorMap[9][1] = 0xfa;
-		_colorMap[9][2] = 0xf5;
-		_colorMap[9][3] = 0xfa;
+		_colorMap[9][0] = 0xbb;
+		_colorMap[9][1] = 0xee;
+		_colorMap[9][2] = 0xbb;
+		_colorMap[9][3] = 0xee;
 
-		_colorMap[10][0] = 0x0a;
-		_colorMap[10][1] = 0x05;
-		_colorMap[10][2] = 0x0a;
-		_colorMap[10][3] = 0x05;
+		_colorMap[10][0] = 0x5a;
+		_colorMap[10][1] = 0xa5;
+		_colorMap[10][2] = 0x5a;
+		_colorMap[10][3] = 0xa5;
 
-		_colorMap[11][0] = 0xa0;
-		_colorMap[11][1] = 0x50;
-		_colorMap[11][2] = 0xa0;
-		_colorMap[11][3] = 0x50;
+		_colorMap[11][0] = 0xaf;
+		_colorMap[11][1] = 0xfa;
+		_colorMap[11][2] = 0xaf;
+		_colorMap[11][3] = 0xfa;
 
-		_colorMap[12][0] = 0xa5;
-		_colorMap[12][1] = 0x5a;
-		_colorMap[12][2] = 0xa5;
-		_colorMap[12][3] = 0x5a;
 
-		_colorMap[13][0] = 0xaa;
-		_colorMap[13][1] = 0x55;
-		_colorMap[13][2] = 0xaa;
-		_colorMap[13][3] = 0x55;
+		_colorMap[12][0] = 0x77;
+		_colorMap[12][1] = 0xdd;
+		_colorMap[12][2] = 0x77;
+		_colorMap[12][3] = 0xdd;
 
-		_colorMap[14][0] = 0xdd;
+		_colorMap[13][0] = 0xcc;
+		_colorMap[13][1] = 0xcc;
+		_colorMap[13][2] = 0xcc;
+		_colorMap[13][3] = 0xcc;
+
+		// TODO
+		_colorMap[14][0] = 0x77;
 		_colorMap[14][1] = 0xdd;
-		_colorMap[14][2] = 0xdd;
+		_colorMap[14][2] = 0x77;
 		_colorMap[14][3] = 0xdd;
-
 
 		Graphics::Surface *surf = loadBundledImage("driller_border");
 		surf->convertToInPlace(_gfx->_texturePixelFormat);

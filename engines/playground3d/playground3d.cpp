@@ -78,7 +78,7 @@ Playground3dEngine::Playground3dEngine(OSystem *syst)
 		: Engine(syst), _system(syst), _gfx(nullptr), _frameLimiter(nullptr),
 		_rotateAngleX(0), _rotateAngleY(0), _rotateAngleZ(0), _fogEnable(false),
 		_clearColor(0.0f, 0.0f, 0.0f, 1.0f), _fogColor(0.0f, 0.0f, 0.0f, 1.0f),
-        _fade(1.0f), _fadeIn(false),
+		_fade(1.0f), _fadeIn(false), _scissorEnable(false),
 		_rgbaTexture(nullptr), _rgbTexture(nullptr), _rgb565Texture(nullptr),
 		_rgba5551Texture(nullptr), _rgba4444Texture(nullptr) {
 }
@@ -105,6 +105,7 @@ Common::Error Playground3dEngine::run() {
 	// 5 - drawing RGBA pattern texture to check endian correctness
 	testId = 1;
 	_fogEnable = false;
+	_scissorEnable = false;
 
 	if (_fogEnable) {
 		_fogColor = Math::Vector4d(1.0f, 1.0f, 1.0f, 1.0f);
@@ -157,7 +158,12 @@ void Playground3dEngine::processInput() {
 		if (event.type == Common::EVENT_SCREEN_CHANGED) {
 			_gfx->computeScreenViewport();
 		}
-		if (event.type == Common::EVENT_LBUTTONUP) {
+		if (event.type != Common::EVENT_CUSTOM_ENGINE_ACTION_START)	{
+			continue;
+		}
+
+		switch (event.customType) {
+		case kActionSwitchTest:
 			testId++;
 			if (testId > 5)
 				testId = 1;
@@ -186,6 +192,13 @@ void Playground3dEngine::processInput() {
 				default:
 					assert(false);
 			}
+			break;
+		case kActionEnableFog:
+			_fogEnable = !_fogEnable;
+			break;
+		case kActionEnableScissor:
+			_scissorEnable = !_scissorEnable;
+			break;
 		}
 	}
 }
@@ -268,6 +281,12 @@ void Playground3dEngine::drawFrame(int id) {
 	Common::Rect vp = _gfx->viewport();
 	_gfx->setupViewport(vp.left, _system->getHeight() - vp.top - vp.height(), vp.width(), vp.height());
 
+	if (_scissorEnable) {
+		_gfx->enableScissor(vp.left + vp.width() / 4, _system->getHeight() - vp.top - (vp.height() * 3) / 4, vp.width() / 2, vp.height() / 2);
+	}
+
+	_gfx->disableFog();
+
 	switch (id) {
 		case 1:
 			if (_fogEnable) {
@@ -295,6 +314,10 @@ void Playground3dEngine::drawFrame(int id) {
 			break;
 		default:
 			assert(false);
+	}
+
+	if (_scissorEnable) {
+		_gfx->disableScissor();
 	}
 
 	_gfx->flipBuffer();

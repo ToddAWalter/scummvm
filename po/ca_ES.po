@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.6.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-04-23 07:56+0000\n"
-"PO-Revision-Date: 2025-04-23 08:11+0000\n"
+"POT-Creation-Date: 2025-04-30 15:51+0000\n"
+"PO-Revision-Date: 2025-05-01 01:19+0000\n"
 "Last-Translator: Xaviu <xaviu@xaviu.com>\n"
 "Language-Team: Catalan <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ca/>\n"
@@ -57,7 +57,7 @@ msgstr "Motors disponibles:"
 
 #. I18N: Close dialog button
 #: gui/about.cpp:523 gui/downloadpacksdialog.cpp:297
-#: gui/downloadpacksdialog.cpp:388 gui/integrity-dialog.cpp:276
+#: gui/downloadpacksdialog.cpp:388 gui/integrity-dialog.cpp:308
 #: gui/gui-manager.cpp:170 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:53
 #: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:558
 #: engines/saga/metaengine.cpp:374 engines/scumm/help.cpp:126
@@ -93,7 +93,7 @@ msgstr "Amunt"
 #: gui/downloaddlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:271
 #: gui/downloadpacksdialog.cpp:464 gui/editgamedialog.cpp:340
 #: gui/editrecorddialog.cpp:66 gui/integrity-dialog.cpp:118
-#: gui/integrity-dialog.cpp:169 gui/filebrowser-dialog.cpp:68
+#: gui/integrity-dialog.cpp:207 gui/filebrowser-dialog.cpp:68
 #: gui/fluidsynth-dialog.cpp:153 gui/massadd.cpp:93 gui/options.cpp:2427
 #: gui/predictivedialog.cpp:68 gui/recorderdialog.cpp:73
 #: gui/recorderdialog.cpp:212 gui/remotebrowser.cpp:59
@@ -318,7 +318,7 @@ msgstr "Un altre Emmagatzematge està actiu ara mateix. Voleu interrompre'l?"
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:143
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4202
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4200
 #: engines/toon/toon.cpp:1543
 msgid "Yes"
 msgstr "Sí"
@@ -331,7 +331,7 @@ msgstr "Sí"
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:149
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4202
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4200
 #: engines/toon/toon.cpp:1543
 msgid "No"
 msgstr "No"
@@ -347,7 +347,7 @@ msgstr "El contingut del codi JSON està mal format."
 
 #: gui/cloudconnectionwizard.cpp:557 gui/downloaddialog.cpp:146
 #: gui/editgamedialog.cpp:341 gui/editrecorddialog.cpp:67
-#: gui/integrity-dialog.cpp:176 gui/fluidsynth-dialog.cpp:154
+#: gui/integrity-dialog.cpp:214 gui/fluidsynth-dialog.cpp:154
 #: gui/launcher.cpp:558 gui/launcher.cpp:562 gui/massadd.cpp:90
 #: gui/options.cpp:2429 gui/predictivedialog.cpp:69
 #: gui/saveload-dialog.cpp:1244 dists/android.strings.xml.cpp:33
@@ -355,14 +355,14 @@ msgstr "El contingut del codi JSON està mal format."
 #: backends/platform/wii/options.cpp:46 engines/agos/animation.cpp:577
 #: engines/agos/midi.cpp:320 engines/agos/midi.cpp:378
 #: engines/agos/midi.cpp:457 engines/buried/saveload.cpp:83
-#: engines/director/lingo/lingo-builtins.cpp:2144
+#: engines/director/lingo/lingo-builtins.cpp:2150
 #: engines/drascula/saveload.cpp:48 engines/grim/inputdialog.cpp:83
 #: engines/groovie/script.cpp:665 engines/mtropolis/mtropolis.cpp:114
 #: engines/mtropolis/mtropolis.cpp:124 engines/parallaction/saveload.cpp:270
 #: engines/saga/music.cpp:102 engines/sci/engine/kgraphics.cpp:76
-#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1353
-#: engines/scumm/scumm.cpp:1770 engines/scumm/scumm.cpp:2260
-#: engines/scumm/scumm.cpp:2276 engines/sky/compact.cpp:140
+#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1351
+#: engines/scumm/scumm.cpp:1768 engines/scumm/scumm.cpp:2258
+#: engines/scumm/scumm.cpp:2274 engines/sky/compact.cpp:140
 #: engines/sword1/animation.cpp:566 engines/sword1/animation.cpp:574
 #: engines/sword1/control.cpp:2816 engines/sword1/logic.cpp:1738
 #: engines/sword2/animation.cpp:459 engines/sword2/animation.cpp:469
@@ -852,7 +852,7 @@ msgstr ""
 "La verificació de la integritat del fitxer pot trigar molt a completar-se. "
 "Espereu...\n"
 
-#: gui/integrity-dialog.cpp:107 gui/integrity-dialog.cpp:168
+#: gui/integrity-dialog.cpp:107 gui/integrity-dialog.cpp:206
 msgid "Calculating file checksums..."
 msgstr "S'estan calculant les sumes de verificació dels fitxers..."
 
@@ -860,16 +860,16 @@ msgstr "S'estan calculant les sumes de verificació dels fitxers..."
 msgid "Launch Email Client"
 msgstr "Inicia el client de correu electrònic"
 
-#: gui/integrity-dialog.cpp:174
+#: gui/integrity-dialog.cpp:212
 msgid "Calculation complete"
 msgstr "S'ha completat el càlcul"
 
-#: gui/integrity-dialog.cpp:263
+#: gui/integrity-dialog.cpp:295
 #, c-format
 msgid "Calculated %s %S / %s %S"
 msgstr "Calculat %s %S / %s %S"
 
-#: gui/integrity-dialog.cpp:509
+#: gui/integrity-dialog.cpp:540
 msgid ""
 "### Results\n"
 "Your set of game files seems to be unknown to us.\n"
@@ -883,13 +883,13 @@ msgstr ""
 "Si esteu segur que aquesta és una variant vàlida desconeguda, envieu el "
 "següent correu electrònic a integrity@scummvm.org"
 
-#: gui/integrity-dialog.cpp:533
+#: gui/integrity-dialog.cpp:564
 msgid ""
 "The game doesn't seem to have any files. Are you sure the path is correct?"
 msgstr ""
 "Sembla que el joc no té cap fitxer. Esteu segur que el camí és correcte?"
 
-#: gui/integrity-dialog.cpp:538
+#: gui/integrity-dialog.cpp:569
 msgid ""
 "The game doesn't seem to have any metadata associated with it, so it is "
 "unable to be matched. Please fill in the correct metadata for the game."
@@ -897,7 +897,7 @@ msgstr ""
 "Sembla que el joc no té cap metadada associada amb ell, per la qual cosa no "
 "es pot comparar. Si us plau, ompliu les metadades correctes per al joc."
 
-#: gui/integrity-dialog.cpp:565
+#: gui/integrity-dialog.cpp:596
 msgid "Files all OK"
 msgstr "Tots els fitxers són correctes"
 
@@ -1018,7 +1018,7 @@ msgstr "interfície gràfica d'usuari"
 msgid "Interact"
 msgstr "Interaccionar"
 
-#: gui/gui-manager.cpp:176 engines/metaengine.cpp:117
+#: gui/gui-manager.cpp:176 engines/metaengine.cpp:134
 #: engines/crab/input/input.cpp:95 engines/crab/input/input.cpp:145
 #: engines/dragons/metaengine.cpp:159 engines/freescape/movement.cpp:35
 #: engines/got/metaengine.cpp:55 engines/griffon/metaengine.cpp:121
@@ -1033,7 +1033,7 @@ msgstr "Interaccionar"
 msgid "Up"
 msgstr "Amunt"
 
-#: gui/gui-manager.cpp:182 engines/metaengine.cpp:123
+#: gui/gui-manager.cpp:182 engines/metaengine.cpp:140
 #: engines/crab/input/input.cpp:101 engines/crab/input/input.cpp:151
 #: engines/dragons/metaengine.cpp:165 engines/freescape/movement.cpp:42
 #: engines/got/metaengine.cpp:56 engines/griffon/metaengine.cpp:127
@@ -1048,7 +1048,7 @@ msgstr "Amunt"
 msgid "Down"
 msgstr "Avall"
 
-#: gui/gui-manager.cpp:188 engines/metaengine.cpp:129
+#: gui/gui-manager.cpp:188 engines/metaengine.cpp:146
 #: engines/crab/input/input.cpp:107 engines/crab/input/input.cpp:157
 #: engines/dragons/metaengine.cpp:171 engines/got/metaengine.cpp:57
 #: engines/griffon/metaengine.cpp:133 engines/grim/grim.cpp:491
@@ -1064,7 +1064,7 @@ msgstr "Avall"
 msgid "Left"
 msgstr "Esquerra"
 
-#: gui/gui-manager.cpp:194 engines/metaengine.cpp:135
+#: gui/gui-manager.cpp:194 engines/metaengine.cpp:152
 #: engines/crab/input/input.cpp:113 engines/crab/input/input.cpp:163
 #: engines/dragons/metaengine.cpp:177 engines/got/metaengine.cpp:58
 #: engines/griffon/metaengine.cpp:139 engines/grim/grim.cpp:496
@@ -3664,11 +3664,11 @@ msgstr "IDs de joc disponibles per al motor %s:"
 msgid "Game not implemented"
 msgstr "Joc no implementat"
 
-#: engines/metaengine.cpp:58 engines/saga/metaengine.cpp:267
+#: engines/metaengine.cpp:75 engines/saga/metaengine.cpp:267
 msgid "Default game keymap"
 msgstr "Assignació de tecles per defecte"
 
-#: engines/metaengine.cpp:62 backends/platform/maemo/maemo.cpp:161
+#: engines/metaengine.cpp:79 backends/platform/maemo/maemo.cpp:161
 #: engines/agos/metaengine.cpp:232 engines/asylum/metaengine.cpp:159
 #: engines/bbvs/metaengine.cpp:99 engines/cge/metaengine.cpp:203
 #: engines/cge2/metaengine.cpp:216 engines/cine/metaengine.cpp:264
@@ -3688,7 +3688,7 @@ msgstr "Assignació de tecles per defecte"
 msgid "Left Click"
 msgstr "Clic esquerre"
 
-#: engines/metaengine.cpp:68 backends/platform/maemo/maemo.cpp:165
+#: engines/metaengine.cpp:85 backends/platform/maemo/maemo.cpp:165
 #: engines/mtropolis/metaengine.cpp:173 engines/saga/metaengine.cpp:284
 #: engines/wintermute/keymapper_tables.h:256
 #: engines/wintermute/keymapper_tables.h:300
@@ -3696,7 +3696,7 @@ msgstr "Clic esquerre"
 msgid "Middle Click"
 msgstr "Clic central"
 
-#: engines/metaengine.cpp:73 backends/platform/maemo/maemo.cpp:169
+#: engines/metaengine.cpp:90 backends/platform/maemo/maemo.cpp:169
 #: engines/agos/metaengine.cpp:238 engines/asylum/metaengine.cpp:165
 #: engines/bbvs/metaengine.cpp:105 engines/cge/metaengine.cpp:209
 #: engines/cge2/metaengine.cpp:222 engines/cine/metaengine.cpp:270
@@ -3716,7 +3716,7 @@ msgid "Right Click"
 msgstr "Clic dret"
 
 #. I18N: Action in In Cold Blood
-#: engines/metaengine.cpp:79 engines/agos/metaengine.cpp:252
+#: engines/metaengine.cpp:96 engines/agos/metaengine.cpp:252
 #: engines/crab/input/input.cpp:261 engines/cruise/metaengine.cpp:191
 #: engines/grim/grim.cpp:550 engines/hdb/metaengine.cpp:258
 #: engines/icb/icb.cpp:137 engines/icb/icb.cpp:203 engines/mohawk/myst.cpp:595
@@ -3726,13 +3726,13 @@ msgstr "Clic dret"
 msgid "Pause"
 msgstr "Pausa"
 
-#: engines/metaengine.cpp:85 engines/parallaction/metaengine.cpp:137
+#: engines/metaengine.cpp:102 engines/parallaction/metaengine.cpp:137
 msgid "Game menu"
 msgstr "Menú del joc"
 
 #. I18N: Skipping cutscene plaback
 #. I18N: Skipping cutscene playback
-#: engines/metaengine.cpp:92 engines/composer/metaengine.cpp:125
+#: engines/metaengine.cpp:109 engines/composer/metaengine.cpp:125
 #: engines/freescape/movement.cpp:87 engines/grim/grim.cpp:533
 #: engines/grim/grim.cpp:633 engines/illusions/metaengine.cpp:142
 #: engines/made/metaengine.cpp:121 engines/mohawk/myst.cpp:566
@@ -3745,29 +3745,29 @@ msgstr "Menú del joc"
 msgid "Skip"
 msgstr "Salta"
 
-#: engines/metaengine.cpp:99 engines/sky/metaengine.cpp:121
+#: engines/metaengine.cpp:116 engines/sky/metaengine.cpp:121
 msgid "Skip line"
 msgstr "Salta la línia"
 
-#: engines/metaengine.cpp:106
+#: engines/metaengine.cpp:123
 msgid "Predictive input dialog"
 msgstr "Diàleg d'entrada predictiu"
 
 #. I18N: This keymap works within the KIA Save Game screen
 #. and allows confirming popup dialogue prompts (eg. for save game deletion or overwriting)
 #. and also submitting a new save game name, or choosing an existing save game for overwriting.
-#: engines/metaengine.cpp:111 engines/bladerunner/metaengine.cpp:273
+#: engines/metaengine.cpp:128 engines/bladerunner/metaengine.cpp:273
 #: engines/griffon/metaengine.cpp:115 engines/grim/grim.cpp:539
 #: engines/grim/grim.cpp:639 engines/sky/metaengine.cpp:101
 #: engines/wintermute/keymapper_tables.h:54
 msgid "Confirm"
 msgstr "Confirma"
 
-#: engines/metaengine.cpp:414
+#: engines/metaengine.cpp:431
 msgid "Autosave on"
 msgstr "Desament automàtic activat"
 
-#: engines/metaengine.cpp:414
+#: engines/metaengine.cpp:431
 msgid "Autosave off"
 msgstr "Desament automàtic desactivat"
 
@@ -5980,7 +5980,7 @@ msgstr ""
 "La càrrega ràpida o desament de la partida no està s'admet en aquesta "
 "ubicació"
 
-#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3156
+#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3154
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -5991,7 +5991,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3143
+#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3141
 #, c-format
 msgid ""
 "Failed to save game to file:\n"
@@ -6002,7 +6002,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3176
+#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3174
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -6723,7 +6723,7 @@ msgstr "Commuta la privadesa de la pista"
 #. SAVE GAME
 #: engines/bladerunner/metaengine.cpp:330 engines/dgds/metaengine.cpp:75
 #: engines/freescape/games/castle/castle.cpp:246
-#: engines/freescape/games/dark/dark.cpp:186
+#: engines/freescape/games/dark/dark.cpp:193
 #: engines/freescape/games/driller/driller.cpp:135
 #: engines/freescape/games/eclipse/eclipse.cpp:206
 #: engines/pegasus/pegasus.cpp:2825
@@ -6736,7 +6736,7 @@ msgstr "Desa la partida"
 #. LOAD GAME
 #: engines/bladerunner/metaengine.cpp:339 engines/dgds/metaengine.cpp:74
 #: engines/freescape/games/castle/castle.cpp:251
-#: engines/freescape/games/dark/dark.cpp:191
+#: engines/freescape/games/dark/dark.cpp:198
 #: engines/freescape/games/driller/driller.cpp:140
 #: engines/freescape/games/eclipse/eclipse.cpp:211
 #: engines/pegasus/pegasus.cpp:2831
@@ -6774,7 +6774,7 @@ msgstr "Base de dades de pistes"
 #: engines/bladerunner/metaengine.cpp:375 engines/darkseed/metaengine.cpp:93
 #: engines/dragons/metaengine.cpp:224
 #: engines/freescape/games/castle/castle.cpp:259
-#: engines/freescape/games/dark/dark.cpp:196
+#: engines/freescape/games/dark/dark.cpp:203
 #: engines/freescape/games/driller/driller.cpp:145
 #: engines/freescape/games/eclipse/eclipse.cpp:216
 #: engines/sword1/metaengine.cpp:295
@@ -6818,7 +6818,7 @@ msgstr ""
 "demanar la propera vegada que inicieu el joc.\n"
 
 #: engines/buried/saveload.cpp:179 engines/mtropolis/saveload.cpp:158
-#: engines/vcruise/vcruise.cpp:345
+#: engines/vcruise/vcruise.cpp:358
 msgid "Saved game was created with a newer version of ScummVM. Unable to load."
 msgstr ""
 "El joc es va crear amb una nova versió de ScummVM. No s'ha pogut carregar."
@@ -7506,21 +7506,21 @@ msgid "Select Princess"
 msgstr "Selecciona la princesa"
 
 #: engines/freescape/games/castle/castle.cpp:264
-#: engines/freescape/games/dark/dark.cpp:206
+#: engines/freescape/games/dark/dark.cpp:213
 #: engines/freescape/games/driller/driller.cpp:153
 #: engines/freescape/games/eclipse/eclipse.cpp:224
 msgid "Toggle Sound"
 msgstr "Commuta el so"
 
 #: engines/freescape/games/castle/castle.cpp:269
-#: engines/freescape/games/dark/dark.cpp:212
+#: engines/freescape/games/dark/dark.cpp:219
 #: engines/freescape/games/driller/driller.cpp:159
 #: engines/freescape/games/eclipse/eclipse.cpp:229
 msgid "Rotate Left"
 msgstr "Gira cap a l'esquerra"
 
 #: engines/freescape/games/castle/castle.cpp:274
-#: engines/freescape/games/dark/dark.cpp:217
+#: engines/freescape/games/dark/dark.cpp:224
 #: engines/freescape/games/driller/driller.cpp:164
 #: engines/freescape/games/eclipse/eclipse.cpp:234
 msgid "Rotate Right"
@@ -7543,49 +7543,60 @@ msgstr "Arrossegar-se"
 msgid "Face Forward"
 msgstr "Mira endavant"
 
-#: engines/freescape/games/dark/dark.cpp:222
-#: engines/freescape/games/driller/driller.cpp:187
+#: engines/freescape/games/dark/dark.cpp:229
+#: engines/freescape/games/driller/driller.cpp:198
 msgid "Roll left"
 msgstr "Roda cap a l'esquerra"
 
-#: engines/freescape/games/dark/dark.cpp:227
-#: engines/freescape/games/driller/driller.cpp:192
+#: engines/freescape/games/dark/dark.cpp:234
+#: engines/freescape/games/driller/driller.cpp:203
 msgid "Roll right"
 msgstr "Roda cap a la dreta"
 
-#. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:233
+#. I18N: Illustrates the angle at which you turn left or right.
+#: engines/freescape/games/dark/dark.cpp:240
 #: engines/freescape/games/driller/driller.cpp:170
+msgid "Increase Turn Angle"
+msgstr "Augmenta l'angle de gir"
+
+#: engines/freescape/games/dark/dark.cpp:245
+#: engines/freescape/games/driller/driller.cpp:175
+msgid "Decrease Turn Angle"
+msgstr "Disminueix l'angle de gir"
+
+#. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
+#: engines/freescape/games/dark/dark.cpp:251
+#: engines/freescape/games/driller/driller.cpp:181
 msgid "Increase Step Size"
 msgstr "Augmenta la mida dels passos"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:239
-#: engines/freescape/games/driller/driller.cpp:176
+#: engines/freescape/games/dark/dark.cpp:257
+#: engines/freescape/games/driller/driller.cpp:187
 msgid "Decrease Step Size"
 msgstr "Disminueix la mida dels passos"
 
-#: engines/freescape/games/dark/dark.cpp:244
-#: engines/freescape/games/driller/driller.cpp:181
+#: engines/freescape/games/dark/dark.cpp:262
+#: engines/freescape/games/driller/driller.cpp:192
 msgid "Rise/Fly up"
 msgstr "Ascendeix/Vola amunt"
 
-#: engines/freescape/games/dark/dark.cpp:250
-#: engines/freescape/games/driller/driller.cpp:197
+#: engines/freescape/games/dark/dark.cpp:268
+#: engines/freescape/games/driller/driller.cpp:208
 msgid "Lower/Fly down"
 msgstr "Descendeix/Vola avall"
 
-#: engines/freescape/games/dark/dark.cpp:256
+#: engines/freescape/games/dark/dark.cpp:274
 msgid "Enable/Disable Jetpack"
 msgstr "Activa/Desactiva Jetpack"
 
 #. I18N: drilling rig is an in game item
-#: engines/freescape/games/driller/driller.cpp:204
+#: engines/freescape/games/driller/driller.cpp:215
 msgid "Deploy drilling rig"
 msgstr "Desplega l'equip de perforació"
 
 #. I18N: drilling rig is an in game item
-#: engines/freescape/games/driller/driller.cpp:211
+#: engines/freescape/games/driller/driller.cpp:222
 msgid "Collect drilling rig"
 msgstr "Recull l'equip de perforació"
 
@@ -9238,12 +9249,12 @@ msgstr ""
 msgid "Failed to read version information from save file"
 msgstr "No s'ha pogut llegir la informació de la versió de la partida desada"
 
-#: engines/mtropolis/saveload.cpp:150 engines/vcruise/vcruise.cpp:340
+#: engines/mtropolis/saveload.cpp:150 engines/vcruise/vcruise.cpp:353
 msgid ""
 "Failed to load save, the save file doesn't contain valid version information."
 msgstr ""
 
-#: engines/mtropolis/saveload.cpp:166 engines/vcruise/vcruise.cpp:350
+#: engines/mtropolis/saveload.cpp:166 engines/vcruise/vcruise.cpp:363
 msgid ""
 "Saved game was created with an earlier, incompatible version of ScummVM. "
 "Unable to load."
@@ -10054,7 +10065,7 @@ msgid "Your Name:"
 msgstr "El vostre nom:"
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4208
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4206
 msgid "Host"
 msgstr ""
 
@@ -10064,7 +10075,7 @@ msgid "Querying games..."
 msgstr "S'estan cercant partides..."
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4208
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4206
 msgid "Join"
 msgstr ""
 
@@ -10998,43 +11009,43 @@ msgid ""
 "320x200, under 'engine' tab."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1344
+#: engines/scumm/scumm.cpp:1342
 #, c-format
 msgid "This game requires the '%s' Macintosh executable for its fonts."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1348
+#: engines/scumm/scumm.cpp:1346
 #, c-format
 msgid ""
 "This game requires the '%s' Macintosh executable for its music and fonts."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1352
+#: engines/scumm/scumm.cpp:1350
 #, c-format
 msgid ""
 "Could not find the '%s' Macintosh executable to read resources from. %s will "
 "be disabled."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1353
+#: engines/scumm/scumm.cpp:1351
 msgid "The Mac GUI"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1353
+#: engines/scumm/scumm.cpp:1351
 msgid "The music and the Mac GUI"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1373
+#: engines/scumm/scumm.cpp:1371
 #, c-format
 msgid "Could not open Macintosh resource file %s"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1376
+#: engines/scumm/scumm.cpp:1374
 #, c-format
 msgid "Could not find resource fork in Macintosh resource file %s"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1384
+#: engines/scumm/scumm.cpp:1382
 #, c-format
 msgid ""
 "'%s' appears to be the wrong Dig executable. It may be the launcher one "
@@ -11043,14 +11054,14 @@ msgid ""
 "its sub-folders should be what you need."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1767
+#: engines/scumm/scumm.cpp:1765
 msgid ""
 "Audio files compressed with ScummVM Tools were detected; *.BUN/*.SOU\n"
 "compression is not supported anymore for this game, audio will be disabled.\n"
 "Please copy the game from the original media without compression."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:2258
+#: engines/scumm/scumm.cpp:2256
 #, c-format
 msgid ""
 "Native MIDI support requires the Roland Upgrade from LucasArts,\n"
@@ -11059,13 +11070,13 @@ msgstr ""
 "El suport de MIDI natiu requereix l'actualització Roland de LucasArts,\n"
 "però no s'ha trobat %s. S'utilitzarà AdLib."
 
-#: engines/scumm/scumm.cpp:2274
+#: engines/scumm/scumm.cpp:2272
 msgid ""
 "This particular version of Monkey Island 1 is known to miss some\n"
 "required resources for MT-32. Using AdLib instead."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:4096
+#: engines/scumm/scumm.cpp:4094
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -11076,7 +11087,7 @@ msgstr ""
 "'Maniac' dins del directori del joc Tentacle, i el joc s'ha d'afegir a "
 "ScummVM."
 
-#: engines/scumm/scumm.cpp:4208
+#: engines/scumm/scumm.cpp:4206
 msgid "Would you like to host or join a network play session?"
 msgstr "Voleu crear o unir-vos a una sessió de joc en xarxa?"
 
@@ -12398,17 +12409,17 @@ msgstr ""
 "compilació.\n"
 "El joc seguirà executant-se, però no tindrà cap música."
 
-#: engines/vcruise/vcruise.cpp:330
+#: engines/vcruise/vcruise.cpp:343
 msgid "Failed to load save, the save data appears to be damaged."
 msgstr ""
 "No s'ha pogut carregar la partida desada, sembla que les dades desades estan "
 "malmeses."
 
-#: engines/vcruise/vcruise.cpp:335
+#: engines/vcruise/vcruise.cpp:348
 msgid "Failed to read version information from save file."
 msgstr "No s'ha pogut llegir la informació de la versió de la partida desada."
 
-#: engines/vcruise/vcruise.cpp:355
+#: engines/vcruise/vcruise.cpp:368
 msgid "An unknown error occurred while attempting to load the saved game."
 msgstr ""
 "S'ha produït un error desconegut en intentar carregar la partida desada."
@@ -13195,14 +13206,8 @@ msgstr ""
 #~ msgid "Your set of game files seems to be unknown to us."
 #~ msgstr "El joc a '%s' sembla ser desconegut."
 
-#~ msgid "Increasing Volume"
-#~ msgstr "Pujant el volum"
-
 #~ msgid "Minimal Volume"
 #~ msgstr "Volum mínim"
-
-#~ msgid "Decreasing Volume"
-#~ msgstr "Baixant el volum"
 
 #~ msgid "Select Actor 6"
 #~ msgstr "Selecciona actor 6"

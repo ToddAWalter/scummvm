@@ -166,6 +166,17 @@ void DrillerEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *in
 	act->addDefaultInputMapping("w");
 	engineKeyMap->addAction(act);
 
+	// I18N: Illustrates the angle at which you turn left or right.
+	act = new Common::Action("INCANGLE", _("Increase Turn Angle"));
+	act->setCustomEngineActionEvent(kActionIncreaseAngle);
+	act->addDefaultInputMapping("a");
+	engineKeyMap->addAction(act);
+
+	act = new Common::Action("DECANGLE", _("Decrease Turn Angle"));
+	act->setCustomEngineActionEvent(kActionDecreaseAngle);
+	act->addDefaultInputMapping("z");
+	engineKeyMap->addAction(act);
+
 	// I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
 	act = new Common::Action("INCSTEPSIZE", _("Increase Step Size"));
 	act->setCustomEngineActionEvent(kActionIncreaseStepSize);
@@ -510,13 +521,15 @@ void DrillerEngine::pressedKey(const int keycode) {
 		rise();
 	} else if (keycode == kActionLowerOrFlyDown) {
 		lower();
+	} else if (keycode == kActionIncreaseAngle) {
+		changeAngle(1, false);
+	} else if (keycode == kActionDecreaseAngle) {
+		changeAngle(-1, false);
 	} else if (keycode == kActionRollRight) {
 		rotate(0, 0, -_angleRotations[_angleRotationIndex]);
 	} else if (keycode == kActionRollLeft) {
 		rotate(0, 0, _angleRotations[_angleRotationIndex]);
 	} else if (keycode == kActionDeployDrillingRig) {
-		if (isDOS() && isDemo()) // No support for drilling here yet
-			return;
 		clearTemporalMessages();
 		Common::Point gasPocket = _currentArea->_gasPocketPosition;
 		uint32 gasPocketRadius = _currentArea->_gasPocketRadius;
@@ -553,6 +566,9 @@ void DrillerEngine::pressedKey(const int keycode) {
 		_gameStateVars[k8bitVariableEnergy] = _gameStateVars[k8bitVariableEnergy] - 5;
 		const Math::Vector3d gasPocket3D(gasPocket.x, drill.y(), gasPocket.y);
 		float distanceToPocket = (gasPocket3D - drill).length();
+		debugC(1, kFreescapeDebugMove, "Gas pocket position: %f %f %f", gasPocket3D.x(), gasPocket3D.y(), gasPocket3D.z());
+		debugC(1, kFreescapeDebugMove, "Distance to gas pocket: %f", distanceToPocket);
+
 		float success = _useAutomaticDrilling ? 100.0 : 100.0 * (1.0 - distanceToPocket / _currentArea->_gasPocketRadius);
 		insertTemporaryMessage(_messagesList[3], _countdown - 2);
 		addDrill(drill, success > 0);
@@ -630,7 +646,6 @@ Math::Vector3d DrillerEngine::drillPosition() {
 
 	Object *obj = (GeometricObject *)_areaMap[255]->objectWithID(255); // Drill base
 	assert(obj);
-	position.setValue(0, position.x() - 128);
 	position.setValue(2, position.z() - 128);
 	return position;
 }
@@ -759,6 +774,7 @@ void DrillerEngine::addDrill(const Math::Vector3d position, bool gasFound) {
 	// int drillObjectIDs[8] = {255, 254, 253, 252, 251, 250, 248, 247};
 	GeometricObject *obj = nullptr;
 	Math::Vector3d origin = position;
+	origin.setValue(0, origin.x() - 128);
 
 	int16 id;
 	int heightLastObject;
@@ -875,6 +891,8 @@ void DrillerEngine::initGameState() {
 	_gameStateVars[k8bitVariableShieldDrillerJet] = _initialJetShield;
 
 	_playerHeightNumber = 1;
+	_angleRotationIndex = 0;
+	_playerStepIndex = 6;
 	_demoIndex = 0;
 	_demoEvents.clear();
 
