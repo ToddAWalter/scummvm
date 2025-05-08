@@ -195,6 +195,8 @@ static const char *const selectorNameTable[] = {
 	"setScaler",    // LSL6hires, QFG4
 	"showTitle",    // LSL6hires
 	"name",         // LSL6hires
+	"completed",    // LSL6hires
+	"endType",      // LSL6hires
 	"oSpecialSync", // LSL7
 	"readWord",     // LSL7, Phant1, Torin
 	"points",       // PQ4
@@ -339,6 +341,8 @@ enum ScriptPatcherSelectors {
 	SELECTOR_setScaler,
 	SELECTOR_showTitle,
 	SELECTOR_name,
+	SELECTOR_completed,
+	SELECTOR_endType,
 	SELECTOR_oSpecialSync,
 	SELECTOR_readWord,
 	SELECTOR_points,
@@ -9747,11 +9751,60 @@ static const uint16 larry6HelpCursorPatch[] = {
 	PATCH_END
 };
 
+// When entering the west hallway (room 680) from outside the hotel, clicking
+//  Walk before Larry finishes moving breaks the room exits. The room's init
+//  method contains incorrect logic that calls handsOn during enterFromWestScr.
+//  Interrupting Larry's initial motion prevents the script from completing, and
+//  this leaves a stale room script that blocks the exit scripts.
+//
+// We fix this by skipping the handsOn call in rm680:init when the room has a
+//  script running. enterFromWestScr now runs in handsOff mode as intended.
+//  The east hallway (room 690) contains the correct logic and does not have
+//  this bug. See larry6HiresRoom680ExitsPatch for high-res version.
+//
+// Applies to: All versions
+// Responsible method: rm680:init
+// Fixes bug: #15910
+static const uint16 larry6Room680ExitsSignature[] = {
+	0x31, 0x4d,                         // bnt 4d
+	SIG_ADDTOOFFSET(+0x7),
+	0x18,                               // not
+	0x31,                               // bnt
+	SIG_ADDTOOFFSET(+0x36),
+	0x72, SIG_ADDTOOFFSET(+2),          // lofsa rideTram
+	0x36,                               // push
+	SIG_ADDTOOFFSET(+0xa),
+	SIG_MAGICDWORD,
+	0x38, SIG_SELECTOR16(handsOn),      // pushi handsOn
+	0x76,                               // push0
+	0x81, 0x01,                         // lag 01
+	0x4a, 0x04,                         // send 04 [ LSL6 handsOn: ]
+	SIG_ADDTOOFFSET(+0x1d),
+	0x39, SIG_SELECTOR8(init),          // pushi init
+	0x76,                               // push0
+	0x59, 0x01,                         // &rest 01 [ unused ]
+	SIG_END
+};
+
+static const uint16 larry6Room680ExitsPatch[] = {
+	0x31, 0x4b,                         // bnt 4b
+	PATCH_ADDTOOFFSET(+0x7),
+	0x2f,                               // bt [ save 1 byte ]
+	PATCH_GETORIGINALBYTES(0xb, 0x36),
+	0x74, PATCH_GETORIGINALUINT16(0x42),// lofss rideTram [ save 1 byte ]
+	PATCH_GETORIGINALBYTES(0x45, 0xa),
+	0x63, 0x12,                         // pToa script
+	0x2f, 0x08,                         // bt 08 [ skip handsOn if room has script ]
+	PATCH_GETORIGINALBYTES(0x4f, 0x28),
+	PATCH_END
+};
+
 //          script, description,                                      signature                   patch
 static const SciScriptPatcherEntry larry6Signatures[] = {
 	{  true,    75, "fix help cursor",                             1, larry6HelpCursorSignature,  larry6HelpCursorPatch },
 	{  true,    82, "death dialog memory corruption",              1, larry6DeathDialogSignature, larry6DeathDialogPatch },
 	{  true,    99, "disable speed test",                          1, sci11SpeedTestSignature,    sci11SpeedTestPatch },
+	{  true,   680, "room 680 exits",                              1, larry6Room680ExitsSignature,larry6Room680ExitsPatch },
 	{  true,   928, "Narrator lockup fix",                         1, sciNarratorLockupSignature, sciNarratorLockupPatch },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
@@ -9997,16 +10050,120 @@ static const uint16 larry6HiresHelpCursorPatch[] = {
 	PATCH_END
 };
 
+// LSL6 High-Res initializes the picture plane (global 3) to an incorrect width.
+//  It seems there was confusion over whether scripts should set a plane's rect
+//  with endpoint-inclusive or exclusive coordinates. This causes mirrored
+//  pictures to appear two pixels to the right, leaving a border of stale pixels
+//  from the previous screen. This occurs in the three west hallway rooms.
+//
+// When restarting the game, a different code path sets the correct width.
+//
+// We fix this by setting the correct picture plane width when the game starts.
+//
+// Applies to: All versions
+// Responsible method: rm100:dispose
+// Fixes bug: #15909
+static const uint16 larry6HiresPlaneWidthSignature[] = {
+	SIG_MAGICDWORD,
+	0x38, SIG_UINT16(0x0140),           // pushi 0140 [ right:  320 ]
+	0x38, SIG_UINT16(0x009a),           // pushi 009a [ bottom: 154 ]
+	SIG_END
+};
+
+static const uint16 larry6HiresPlaneWidthPatch[] = {
+	0x38, PATCH_UINT16(0x013f),         // pushi 013f [ right:  319 ]
+	PATCH_END
+};
+
+// When entering the west hallway (room 680) from outside the hotel, clicking
+//  Walk before Larry finishes moving breaks the room exits.
+//
+// This bug originated in the low-res version, see larry6Room680ExitsPatch.
+//
+// Applies to: All versions
+// Responsible method: rm680:init
+// Fixes bug: #15910
+static const uint16 larry6HiresRoom680ExitsSignature[] = {
+	0x31, 0x58,                         // bnt 58
+	SIG_ADDTOOFFSET(+0x56),
+	SIG_MAGICDWORD,
+	0x33, 0x09,                         // jmp 09
+	0x38, SIG_SELECTOR16(handsOn),      // pushi handsOn
+	0x76,                               // push0
+	0x81, 0x01,                         // lag 01
+	0x4a, SIG_UINT16(0x0004),           // send 04 [ LSL6 handsOn: ]
+	SIG_ADDTOOFFSET(+0x1f),
+	0x38, SIG_SELECTOR16(init),         // pushi init
+	0x76,                               // push0
+	0x59, 0x01,                         // &rest 01 [ unused ]
+	SIG_END
+};
+
+static const uint16 larry6HiresRoom680ExitsPatch[] = {
+	0x31, 0x56,                         // bnt 56
+	PATCH_ADDTOOFFSET(+0x56),
+	0x63, 0x14,                         // pToa script
+	0x2f, 0x09,                         // bt 09 [ skip handsOn if room has script ]
+	PATCH_GETORIGINALBYTES(0x5a, 0x2c),
+	PATCH_END
+};
+
+// Restarting the game while the tram is moving east breaks the game. Instead of
+//  restting the tram to room 820, the tram is stuck off-screen above room 680.
+//  The first time room 680 is entered, the tram descends from the sky, turns
+//  around, and floats back off-screen. After this, the tram never reappears.
+//  Normally, the tram is always moving back and forth across the hotel, so in
+//  practice there is a 50% chance that a restarted game can't be completed.
+//
+// This bug only occurs in the high-res version because kRestartGame was removed
+//  in SCI32. SCI32 games are responsible for manually implementing restart, but
+//  LSL6:restart fails to reset all of theTramPath's properties.
+//
+// We fix this by resetting theTramPath:endType to its initial heap value when
+//  restarting. We make room by overwriting code that disposes of the tram if it
+//  is in the cast. This code has no effect because several lines earlier the
+//  function disposes of all cast members and clears the list.
+//
+// Applies to: All versions
+// Responsible method: LSL6:restart
+static const uint16 larry6HiresTramRestartSignature[] = {
+	0x38, SIG_ADDTOOFFSET(+2),          // pushi contains
+	0x78,                               // push1
+	0x7a,                               // push2
+	SIG_MAGICDWORD,
+	0x38, SIG_UINT16(0x0339),           // pushi 0339
+	0x78,                               // push1
+	0x43, 0x02, SIG_UINT16(0x0004),     // callk ScriptID 04 [ tram ]
+	SIG_ADDTOOFFSET(+29),
+	0x38, SIG_SELECTOR16(completed),    // pushi completed
+	SIG_ADDTOOFFSET(+21),
+	0x4a, SIG_UINT16(0x0012),           // send 12 [ theTramPath completed: 1 ... ]
+	SIG_END
+};
+
+static const uint16 larry6HiresTramRestartPatch[] = {
+	0x38, PATCH_SELECTOR16(endType),    // pushi endType
+	0x78,                               // push1
+	0x39, 0xff,                         // pushi ff
+	0x33, 0x22,                         // jmp 22 [ pushi completed ]
+	PATCH_ADDTOOFFSET(+58),
+	0x4a, PATCH_UINT16(0x0018),         // send 18 [ theTramPath endType: -1 completed: 1 ... ]
+	PATCH_END
+};
+
 //          script, description,                                      signature                             patch
 static const SciScriptPatcherEntry larry6HiresSignatures[] = {
 	{  true,     0, "disable mac volume restore",                  1, larry6HiresMacVolumeRestoreSignature, larry6HiresMacVolumeRestorePatch },
+	{  true,     0, "fix tram restart",                            1, larry6HiresTramRestartSignature,      larry6HiresTramRestartPatch },
 	{  true,    71, "disable volume reset on startup (1/2)",       1, sci2VolumeResetSignature,             sci2VolumeResetPatch },
 	{  true,    71, "disable volume reset on startup (2/2)",       1, larry6HiresVolumeResetSignature,      larry6HiresVolumeResetPatch },
 	{  true,    71, "disable video benchmarking",                  1, sci2BenchmarkSignature,               sci2BenchmarkPatch },
 	{  true,    75, "fix help cursor",                             1, larry6HiresHelpCursorSignature,       larry6HiresHelpCursorPatch },
+	{  true,   100, "fix plane width",                             1, larry6HiresPlaneWidthSignature,       larry6HiresPlaneWidthPatch },
 	{  true,   270, "fix incorrect setScale call",                 1, larry6HiresSetScaleSignature,         larry6HiresSetScalePatch },
 	{  true,   330, "fix whale oil lamp lockup",                   1, larry6HiresWhaleOilLampSignature,     larry6HiresWhaleOilLampPatch },
 	{  true,   610, "phone operator crash",                        1, larry6HiresPhoneOperatorSignature,    larry6HiresPhoneOperatorPatch },
+	{  true,   680, "room 680 exits",                              1, larry6HiresRoom680ExitsSignature,     larry6HiresRoom680ExitsPatch },
 	{  true,   850, "guard delay (1/2)",                           1, larry6HiresGuardDelaySignature1,      larry6HiresGuardDelayPatch1 },
 	{  true,   850, "guard delay (2/2)",                           1, larry6HiresGuardDelaySignature2,      larry6HiresGuardDelayPatch2 },
 	{  true, 64928, "Narrator lockup fix",                         1, sciNarratorLockupSignature,           sciNarratorLockupPatch },

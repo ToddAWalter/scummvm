@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-04-30 15:51+0000\n"
+"POT-Creation-Date: 2025-05-07 15:54+0000\n"
 "PO-Revision-Date: 2025-04-28 17:18+0000\n"
 "Last-Translator: Hoseok Seo <ddinghoya@gmail.com>\n"
 "Language-Team: Korean <https://translations.scummvm.org/projects/scummvm/"
@@ -566,7 +566,7 @@ msgid "GFX"
 msgstr "GFX"
 
 #: gui/editgamedialog.cpp:164 gui/options.cpp:2082 gui/options.cpp:2263
-#: backends/graphics/atari/atari-graphics.cpp:1043
+#: backends/graphics/atari/atari-graphics.cpp:1061
 #: backends/graphics/sdl/sdl-graphics.cpp:529
 msgid "Graphics"
 msgstr "그래픽"
@@ -1006,13 +1006,14 @@ msgid "Interact"
 msgstr "상호작용"
 
 #: gui/gui-manager.cpp:176 engines/metaengine.cpp:134
-#: engines/crab/input/input.cpp:95 engines/crab/input/input.cpp:145
-#: engines/dragons/metaengine.cpp:159 engines/freescape/movement.cpp:35
-#: engines/got/metaengine.cpp:55 engines/griffon/metaengine.cpp:121
-#: engines/grim/grim.cpp:481 engines/grim/grim.cpp:563 engines/icb/icb.cpp:68
-#: engines/icb/icb.cpp:152 engines/scumm/metaengine.cpp:1004
-#: engines/twine/metaengine.cpp:430 engines/twine/metaengine.cpp:497
-#: engines/twp/metaengine.cpp:154 engines/wintermute/keymapper_tables.h:1290
+#: engines/awe/metaengine.cpp:57 engines/crab/input/input.cpp:95
+#: engines/crab/input/input.cpp:145 engines/dragons/metaengine.cpp:159
+#: engines/freescape/movement.cpp:35 engines/got/metaengine.cpp:55
+#: engines/griffon/metaengine.cpp:121 engines/grim/grim.cpp:481
+#: engines/grim/grim.cpp:563 engines/icb/icb.cpp:68 engines/icb/icb.cpp:152
+#: engines/scumm/metaengine.cpp:1004 engines/twine/metaengine.cpp:430
+#: engines/twine/metaengine.cpp:497 engines/twp/metaengine.cpp:154
+#: engines/wintermute/keymapper_tables.h:1290
 #: engines/wintermute/keymapper_tables.h:1373
 #: engines/wintermute/keymapper_tables.h:1449
 #: engines/wintermute/keymapper_tables.h:1920
@@ -1021,13 +1022,14 @@ msgid "Up"
 msgstr "위쪽"
 
 #: gui/gui-manager.cpp:182 engines/metaengine.cpp:140
-#: engines/crab/input/input.cpp:101 engines/crab/input/input.cpp:151
-#: engines/dragons/metaengine.cpp:165 engines/freescape/movement.cpp:42
-#: engines/got/metaengine.cpp:56 engines/griffon/metaengine.cpp:127
-#: engines/grim/grim.cpp:486 engines/grim/grim.cpp:568 engines/icb/icb.cpp:73
-#: engines/icb/icb.cpp:157 engines/scumm/metaengine.cpp:971
-#: engines/twine/metaengine.cpp:437 engines/twine/metaengine.cpp:505
-#: engines/twp/metaengine.cpp:155 engines/wintermute/keymapper_tables.h:1296
+#: engines/awe/metaengine.cpp:58 engines/crab/input/input.cpp:101
+#: engines/crab/input/input.cpp:151 engines/dragons/metaengine.cpp:165
+#: engines/freescape/movement.cpp:42 engines/got/metaengine.cpp:56
+#: engines/griffon/metaengine.cpp:127 engines/grim/grim.cpp:486
+#: engines/grim/grim.cpp:568 engines/icb/icb.cpp:73 engines/icb/icb.cpp:157
+#: engines/scumm/metaengine.cpp:971 engines/twine/metaengine.cpp:437
+#: engines/twine/metaengine.cpp:505 engines/twp/metaengine.cpp:155
+#: engines/wintermute/keymapper_tables.h:1296
 #: engines/wintermute/keymapper_tables.h:1379
 #: engines/wintermute/keymapper_tables.h:1456
 #: engines/wintermute/keymapper_tables.h:1926
@@ -1036,13 +1038,13 @@ msgid "Down"
 msgstr "아래쪽"
 
 #: gui/gui-manager.cpp:188 engines/metaengine.cpp:146
-#: engines/crab/input/input.cpp:107 engines/crab/input/input.cpp:157
-#: engines/dragons/metaengine.cpp:171 engines/got/metaengine.cpp:57
-#: engines/griffon/metaengine.cpp:133 engines/grim/grim.cpp:491
-#: engines/grim/grim.cpp:573 engines/icb/icb.cpp:78 engines/icb/icb.cpp:162
-#: engines/scumm/metaengine.cpp:984 engines/twine/metaengine.cpp:452
-#: engines/twine/metaengine.cpp:520 engines/twp/metaengine.cpp:152
-#: engines/wintermute/keymapper_tables.h:320
+#: engines/awe/metaengine.cpp:59 engines/crab/input/input.cpp:107
+#: engines/crab/input/input.cpp:157 engines/dragons/metaengine.cpp:171
+#: engines/got/metaengine.cpp:57 engines/griffon/metaengine.cpp:133
+#: engines/grim/grim.cpp:491 engines/grim/grim.cpp:573 engines/icb/icb.cpp:78
+#: engines/icb/icb.cpp:162 engines/scumm/metaengine.cpp:984
+#: engines/twine/metaengine.cpp:452 engines/twine/metaengine.cpp:520
+#: engines/twp/metaengine.cpp:152 engines/wintermute/keymapper_tables.h:320
 #: engines/wintermute/keymapper_tables.h:1302
 #: engines/wintermute/keymapper_tables.h:1385
 #: engines/wintermute/keymapper_tables.h:1908
@@ -1052,13 +1054,13 @@ msgid "Left"
 msgstr "왼쪽"
 
 #: gui/gui-manager.cpp:194 engines/metaengine.cpp:152
-#: engines/crab/input/input.cpp:113 engines/crab/input/input.cpp:163
-#: engines/dragons/metaengine.cpp:177 engines/got/metaengine.cpp:58
-#: engines/griffon/metaengine.cpp:139 engines/grim/grim.cpp:496
-#: engines/grim/grim.cpp:578 engines/icb/icb.cpp:83 engines/icb/icb.cpp:167
-#: engines/scumm/metaengine.cpp:991 engines/twine/metaengine.cpp:444
-#: engines/twine/metaengine.cpp:513 engines/twp/metaengine.cpp:153
-#: engines/wintermute/keymapper_tables.h:326
+#: engines/awe/metaengine.cpp:60 engines/crab/input/input.cpp:113
+#: engines/crab/input/input.cpp:163 engines/dragons/metaengine.cpp:177
+#: engines/got/metaengine.cpp:58 engines/griffon/metaengine.cpp:139
+#: engines/grim/grim.cpp:496 engines/grim/grim.cpp:578 engines/icb/icb.cpp:83
+#: engines/icb/icb.cpp:167 engines/scumm/metaengine.cpp:991
+#: engines/twine/metaengine.cpp:444 engines/twine/metaengine.cpp:513
+#: engines/twp/metaengine.cpp:153 engines/wintermute/keymapper_tables.h:326
 #: engines/wintermute/keymapper_tables.h:1308
 #: engines/wintermute/keymapper_tables.h:1391
 #: engines/wintermute/keymapper_tables.h:1914
@@ -4068,12 +4070,12 @@ msgstr "새 폴더 추가"
 msgid "Choose a new folder"
 msgstr "새 폴더를 선택"
 
-#: backends/graphics/atari/atari-graphics.cpp:1047
+#: backends/graphics/atari/atari-graphics.cpp:1065
 #: backends/graphics/sdl/sdl-graphics.cpp:556
 msgid "Toggle aspect ratio correction"
 msgstr "화면비 교정 전환"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:258
+#: backends/graphics/opengl/opengl-graphics.cpp:254
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:127
 #: backends/graphics3d/ios/ios-graphics3d.cpp:356
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:271
@@ -4081,71 +4083,71 @@ msgstr "화면비 교정 전환"
 msgid "Center"
 msgstr "중앙"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:259
+#: backends/graphics/opengl/opengl-graphics.cpp:255
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:128
 #: backends/graphics3d/ios/ios-graphics3d.cpp:357
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:272
 msgid "Pixel-perfect scaling"
 msgstr "픽셀 단위의 완벽한 크기 조정"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:260
+#: backends/graphics/opengl/opengl-graphics.cpp:256
 #: backends/graphics3d/ios/ios-graphics3d.cpp:358
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:273
 msgid "Even pixels scaling"
 msgstr "픽셀 크기 조정"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:261
+#: backends/graphics/opengl/opengl-graphics.cpp:257
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:129
 #: backends/graphics3d/ios/ios-graphics3d.cpp:359
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:274
 msgid "Fit to window"
 msgstr "창 크기에 맞춤"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:262
+#: backends/graphics/opengl/opengl-graphics.cpp:258
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:130
 #: backends/graphics3d/ios/ios-graphics3d.cpp:360
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:275
 msgid "Stretch to window"
 msgstr "창에 맞게 늘리기"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:263
+#: backends/graphics/opengl/opengl-graphics.cpp:259
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:131
 #: backends/graphics3d/ios/ios-graphics3d.cpp:361
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:276
 msgid "Fit to window (4:3)"
 msgstr "창 크기에 맞춤 (4:3)"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:847
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:842
 #, c-format
 msgid "Resolution: %dx%d"
 msgstr "해상도: %dx%d"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:891
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:886
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2941
 msgid "Active graphics filter:"
 msgstr "활성 그래픽 필터:"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:912
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:907
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2975
 msgid "Enabled aspect ratio correction"
 msgstr "화면비 교정 활성화"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:914
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:909
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2981
 msgid "Disabled aspect ratio correction"
 msgstr "화면비 교정 비활성화"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:927
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:922
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2997
 msgid "Filtering enabled"
 msgstr "필터링 활성화"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:929
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:924
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2999
 msgid "Filtering disabled"
 msgstr "필터링 비활성화"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:955
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:950
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:3026
 msgid "Stretch mode"
 msgstr "늘리기 모드"
@@ -4782,12 +4784,12 @@ msgstr "돋보기 모드 끔. 드래그 모드를 재활성화 중..."
 msgid "Magnify Mode Off"
 msgstr "돋보기 모드 끔"
 
-#: backends/platform/android/android.cpp:1102
+#: backends/platform/android/android.cpp:1114
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid "Getting help"
 msgstr "도움 받기"
 
-#: backends/platform/android/android.cpp:1105
+#: backends/platform/android/android.cpp:1117
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4828,13 +4830,13 @@ msgstr ""
 "신이 아찔할 정도로 까다롭습니다. 게임에 막혔다면 게임 연습을 확인해 보세요. "
 "행운을 빕니다!\n"
 
-#: backends/platform/android/android.cpp:1114
+#: backends/platform/android/android.cpp:1126
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "터치 조작"
 
-#: backends/platform/android/android.cpp:1117
+#: backends/platform/android/android.cpp:1129
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -4965,13 +4967,13 @@ msgstr ""
 "  ![Keyboard icon](keyboard.png \"Keyboard icon\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1173
+#: backends/platform/android/android.cpp:1185
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "게임 추가"
 
-#: backends/platform/android/android.cpp:1176
+#: backends/platform/android/android.cpp:1188
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -6234,18 +6236,20 @@ msgid "Add game speed menu (similar to PC version)"
 msgstr "속도 메뉴를 추가합니다. (PC 버전과 유사)"
 
 #: engines/agi/metaengine.cpp:195 engines/agos/metaengine.cpp:44
-#: engines/dreamweb/metaengine.cpp:36 engines/gob/metaengine.cpp:42
-#: engines/lure/metaengine.cpp:41 engines/mads/metaengine.cpp:51
-#: engines/mm/metaengine.cpp:46 engines/saga/metaengine.cpp:52
-#: engines/scumm/dialogs.cpp:1202 engines/scumm/metaengine.cpp:821
+#: engines/awe/metaengine.cpp:35 engines/dreamweb/metaengine.cpp:36
+#: engines/gob/metaengine.cpp:42 engines/lure/metaengine.cpp:41
+#: engines/mads/metaengine.cpp:51 engines/mm/metaengine.cpp:46
+#: engines/saga/metaengine.cpp:52 engines/scumm/dialogs.cpp:1202
+#: engines/scumm/metaengine.cpp:821
 msgid "Enable copy protection"
 msgstr "복사 방지 기능 활성화"
 
 #: engines/agi/metaengine.cpp:196 engines/agos/metaengine.cpp:45
-#: engines/dreamweb/metaengine.cpp:37 engines/gob/metaengine.cpp:43
-#: engines/lure/metaengine.cpp:42 engines/mads/metaengine.cpp:52
-#: engines/mm/metaengine.cpp:47 engines/saga/metaengine.cpp:53
-#: engines/scumm/dialogs.cpp:1203 engines/scumm/metaengine.cpp:822
+#: engines/awe/metaengine.cpp:36 engines/dreamweb/metaengine.cpp:37
+#: engines/gob/metaengine.cpp:43 engines/lure/metaengine.cpp:42
+#: engines/mads/metaengine.cpp:52 engines/mm/metaengine.cpp:47
+#: engines/saga/metaengine.cpp:53 engines/scumm/dialogs.cpp:1203
+#: engines/scumm/metaengine.cpp:822
 msgid "Enable any copy protection that would otherwise be bypassed by default."
 msgstr "기본적으로 우회되는 모든 복사 방지 기능을 활성화합니다."
 
@@ -6396,14 +6400,14 @@ msgstr "AGOS 메인"
 
 #: engines/agos/metaengine.cpp:228 engines/bbvs/metaengine.cpp:93
 #: engines/cine/metaengine.cpp:258 engines/cruise/metaengine.cpp:143
-#: engines/draci/metaengine.cpp:137 engines/hopkins/metaengine.cpp:207
-#: engines/hugo/metaengine.cpp:93 engines/illusions/metaengine.cpp:90
-#: engines/lure/metaengine.cpp:169 engines/made/metaengine.cpp:103
-#: engines/mads/metaengine.cpp:275 engines/stark/metaengine.cpp:185
-#: engines/sword1/metaengine.cpp:267 engines/tinsel/metaengine.cpp:241
-#: engines/toon/metaengine.cpp:82 engines/touche/metaengine.cpp:119
-#: engines/trecision/metaengine.cpp:121 engines/tsage/metaengine.cpp:170
-#: engines/tucker/metaengine.cpp:168
+#: engines/draci/metaengine.cpp:137 engines/efh/metaengine.cpp:203
+#: engines/hopkins/metaengine.cpp:207 engines/hugo/metaengine.cpp:93
+#: engines/illusions/metaengine.cpp:90 engines/lure/metaengine.cpp:169
+#: engines/made/metaengine.cpp:103 engines/mads/metaengine.cpp:275
+#: engines/stark/metaengine.cpp:185 engines/sword1/metaengine.cpp:267
+#: engines/tinsel/metaengine.cpp:241 engines/toon/metaengine.cpp:82
+#: engines/touche/metaengine.cpp:119 engines/trecision/metaengine.cpp:121
+#: engines/tsage/metaengine.cpp:170 engines/tucker/metaengine.cpp:168
 msgid "Game keymappings"
 msgstr "게임 키맵핑"
 
@@ -6644,6 +6648,16 @@ msgstr ""
 "일, 또는\n"
 "2. QfG2 리메이크 게임 디렉터리 내의 모든 .sav 파일"
 
+#: engines/alg/metaengine.cpp:34
+msgid "Use lower quality single speed CD-ROM video"
+msgstr ""
+
+#: engines/alg/metaengine.cpp:35
+msgid ""
+"These videos are of lower quality, the default version uses double speed CD-"
+"ROM videos which are of better quality"
+msgstr ""
+
 #: engines/asylum/metaengine.cpp:115
 msgid "Show version"
 msgstr "버전 표시"
@@ -6678,33 +6692,35 @@ msgstr "캐릭터 인벤토리 열기"
 
 #. I18N: Move Actor to upwards direction
 #: engines/asylum/metaengine.cpp:171 engines/asylum/metaengine.cpp:198
-#: engines/cine/metaengine.cpp:364 engines/hdb/metaengine.cpp:213
-#: engines/nancy/input.cpp:195 engines/tinsel/metaengine.cpp:263
+#: engines/cine/metaengine.cpp:364 engines/efh/metaengine.cpp:231
+#: engines/hdb/metaengine.cpp:213 engines/nancy/input.cpp:195
+#: engines/tinsel/metaengine.cpp:263
 msgid "Move up"
 msgstr "위로 이동"
 
 #. I18N: Move Actor to downwards direction
 #: engines/asylum/metaengine.cpp:177 engines/asylum/metaengine.cpp:205
-#: engines/cine/metaengine.cpp:371 engines/hdb/metaengine.cpp:219
-#: engines/nancy/input.cpp:201 engines/tinsel/metaengine.cpp:269
+#: engines/cine/metaengine.cpp:371 engines/efh/metaengine.cpp:237
+#: engines/hdb/metaengine.cpp:219 engines/nancy/input.cpp:201
+#: engines/tinsel/metaengine.cpp:269
 msgid "Move down"
 msgstr "아래로 이동"
 
 #. I18N: Move Actor to left direction
 #. I18N: Move actor left during fight
 #: engines/asylum/metaengine.cpp:183 engines/asylum/metaengine.cpp:212
-#: engines/cine/metaengine.cpp:378 engines/hdb/metaengine.cpp:225
-#: engines/lure/metaengine.cpp:218 engines/nancy/input.cpp:207
-#: engines/tinsel/metaengine.cpp:275
+#: engines/cine/metaengine.cpp:378 engines/efh/metaengine.cpp:243
+#: engines/hdb/metaengine.cpp:225 engines/lure/metaengine.cpp:218
+#: engines/nancy/input.cpp:207 engines/tinsel/metaengine.cpp:275
 msgid "Move left"
 msgstr "왼쪽으로 이동"
 
 #. I18N: Move Actor to right direction
 #. I18N: Move actor right during fight
 #: engines/asylum/metaengine.cpp:189 engines/asylum/metaengine.cpp:219
-#: engines/cine/metaengine.cpp:385 engines/hdb/metaengine.cpp:231
-#: engines/lure/metaengine.cpp:226 engines/nancy/input.cpp:213
-#: engines/tinsel/metaengine.cpp:281
+#: engines/cine/metaengine.cpp:385 engines/efh/metaengine.cpp:249
+#: engines/hdb/metaengine.cpp:231 engines/lure/metaengine.cpp:226
+#: engines/nancy/input.cpp:213 engines/tinsel/metaengine.cpp:281
 msgid "Move right"
 msgstr "오른쪽으로 이동"
 
@@ -6748,6 +6764,23 @@ msgstr "경고: 이전 버전에서 저장한 게임을 불러오려고 시도�
 msgid "Load anyway"
 msgstr "무시하고 불러오기"
 
+#: engines/awe/metaengine.cpp:61
+msgid "Select/Kick/Run"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:62 engines/hpl1/metaengine.cpp:83
+msgid "Jump"
+msgstr "점프"
+
+#: engines/awe/metaengine.cpp:63
+msgid "Enter Level Code"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:89 engines/dgds/metaengine.cpp:87
+#: engines/got/metaengine.cpp:90
+msgid "Game Keys"
+msgstr "게임 키"
+
 #: engines/bagel/metaengine.cpp:41
 msgid "Wait"
 msgstr "대기"
@@ -6765,10 +6798,11 @@ msgstr "일반 키"
 #: engines/hopkins/metaengine.cpp:206 engines/hugo/metaengine.cpp:92
 #: engines/illusions/metaengine.cpp:89 engines/lure/metaengine.cpp:168
 #: engines/made/metaengine.cpp:102 engines/mads/metaengine.cpp:274
-#: engines/stark/metaengine.cpp:184 engines/sword1/metaengine.cpp:266
-#: engines/tinsel/metaengine.cpp:240 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/trecision/metaengine.cpp:120
-#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/playground3d/metaengine.cpp:51 engines/stark/metaengine.cpp:184
+#: engines/sword1/metaengine.cpp:266 engines/tinsel/metaengine.cpp:240
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
+#: engines/tucker/metaengine.cpp:167
 msgid "Default keymappings"
 msgstr "기본 키맵핑"
 
@@ -7030,7 +7064,7 @@ msgstr "단서 개인 정보 보호 전환"
 #. SAVE GAME
 #: engines/bladerunner/metaengine.cpp:330 engines/dgds/metaengine.cpp:75
 #: engines/freescape/games/castle/castle.cpp:246
-#: engines/freescape/games/dark/dark.cpp:193
+#: engines/freescape/games/dark/dark.cpp:186
 #: engines/freescape/games/driller/driller.cpp:135
 #: engines/freescape/games/eclipse/eclipse.cpp:206
 #: engines/pegasus/pegasus.cpp:2825
@@ -7043,7 +7077,7 @@ msgstr "게임 저장"
 #. LOAD GAME
 #: engines/bladerunner/metaengine.cpp:339 engines/dgds/metaengine.cpp:74
 #: engines/freescape/games/castle/castle.cpp:251
-#: engines/freescape/games/dark/dark.cpp:198
+#: engines/freescape/games/dark/dark.cpp:191
 #: engines/freescape/games/driller/driller.cpp:140
 #: engines/freescape/games/eclipse/eclipse.cpp:211
 #: engines/pegasus/pegasus.cpp:2831
@@ -7081,7 +7115,7 @@ msgstr "단서 데이터베이스"
 #: engines/bladerunner/metaengine.cpp:375 engines/darkseed/metaengine.cpp:93
 #: engines/dragons/metaengine.cpp:224
 #: engines/freescape/games/castle/castle.cpp:259
-#: engines/freescape/games/dark/dark.cpp:203
+#: engines/freescape/games/dark/dark.cpp:196
 #: engines/freescape/games/driller/driller.cpp:145
 #: engines/freescape/games/eclipse/eclipse.cpp:216
 #: engines/sword1/metaengine.cpp:295
@@ -7158,19 +7192,19 @@ msgid "Exit/Skip"
 msgstr "나가기/건너뛰기"
 
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
-#: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:128
-#: engines/lure/metaengine.cpp:191 engines/made/metaengine.cpp:162
-#: engines/mads/metaengine.cpp:305 engines/saga/metaengine.cpp:442
-#: engines/stark/metaengine.cpp:208 engines/toltecs/metaengine.cpp:234
-#: engines/toon/metaengine.cpp:112 engines/trecision/metaengine.cpp:169
-#: engines/tsage/metaengine.cpp:242 engines/vcruise/metaengine.cpp:175
-#: engines/wintermute/keymapper_tables.h:920
+#: engines/efh/metaengine.cpp:219 engines/hopkins/metaengine.cpp:236
+#: engines/hugo/metaengine.cpp:128 engines/lure/metaengine.cpp:191
+#: engines/made/metaengine.cpp:162 engines/mads/metaengine.cpp:305
+#: engines/saga/metaengine.cpp:442 engines/stark/metaengine.cpp:208
+#: engines/toltecs/metaengine.cpp:234 engines/toon/metaengine.cpp:112
+#: engines/trecision/metaengine.cpp:169 engines/tsage/metaengine.cpp:242
+#: engines/vcruise/metaengine.cpp:175 engines/wintermute/keymapper_tables.h:920
 msgid "Save game"
 msgstr "게임 저장"
 
 #: engines/cge/metaengine.cpp:227 engines/cge2/metaengine.cpp:241
-#: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:168
-#: engines/mohawk/myst_stacks/menu.cpp:283
+#: engines/efh/metaengine.cpp:225 engines/hopkins/metaengine.cpp:242
+#: engines/made/metaengine.cpp:168 engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/riven_stacks/aspit.cpp:349 engines/saga/metaengine.cpp:432
 #: engines/stark/metaengine.cpp:213 engines/toltecs/metaengine.cpp:240
 #: engines/toon/metaengine.cpp:118 engines/trecision/metaengine.cpp:175
@@ -7583,15 +7617,32 @@ msgstr "집다 / 운용"
 msgid "Activate Inventory Object"
 msgstr "인벤토리 객체 활성화"
 
-#: engines/dgds/metaengine.cpp:87 engines/got/metaengine.cpp:90
-msgid "Game Keys"
-msgstr "게임 키"
-
 #: engines/director/events.cpp:99
 msgid ""
 "The game prevents quitting at this moment. Are you sure you want to quit "
 "anyway?"
 msgstr "이대로 진행하면 게임이 종료됩니다. 계속하시겠습니까?"
+
+#: engines/director/metaengine.cpp:70 engines/scumm/dialogs.cpp:1188
+#: engines/scumm/metaengine.cpp:792
+msgid "Enable gamma correction"
+msgstr "감마 교정 활성화"
+
+#: engines/director/metaengine.cpp:71
+#, fuzzy
+#| msgid "Brighten the graphics to simulate a Macintosh monitor."
+msgid "Brighten the graphics to simulate a Macintosh monitor"
+msgstr "매킨토시 모니터를 시뮬레이션하기 위해 그래픽을 밝게 합니다."
+
+#: engines/director/metaengine.cpp:81
+msgid "Force true color"
+msgstr ""
+
+#: engines/director/metaengine.cpp:82
+#, fuzzy
+#| msgid "Use antialiasing to draw text even if the game does not ask for it"
+msgid "Use true color graphics mode, even if the game is not designed for it"
+msgstr "게임에서 요청하지 않더라도 안티에일리어싱을 사용하여 텍스트를 그림"
 
 #: engines/draci/metaengine.cpp:153
 msgid "Skip intro/Exit map or inventory"
@@ -7690,6 +7741,56 @@ msgstr "게임 그래픽을 밝은 팔레트로 표시"
 #: engines/dreamweb/metaengine.cpp:73
 msgid "Enable Text to Speech for Objects, Options, and the Bible Quote"
 msgstr "개체, 옵션, 성경 인용문에 대해 TTS를 활성화"
+
+#: engines/efh/metaengine.cpp:207
+msgid "Left click"
+msgstr "왼쪽 클릭"
+
+#: engines/efh/metaengine.cpp:213
+msgid "Right click"
+msgstr "오른쪽 클릭"
+
+#: engines/efh/metaengine.cpp:255
+#, fuzzy
+#| msgid "Move up-left"
+msgid "Move up left"
+msgstr "왼쪽 위로 이동"
+
+#: engines/efh/metaengine.cpp:260
+#, fuzzy
+#| msgid "Move up-right"
+msgid "Move up right"
+msgstr "오른쪽 위로 이동"
+
+#: engines/efh/metaengine.cpp:265
+#, fuzzy
+#| msgid "Move down-left"
+msgid "Move down left"
+msgstr "왼쪽 아래로 이동"
+
+#: engines/efh/metaengine.cpp:270
+#, fuzzy
+#| msgid "Move down-right"
+msgid "Move down right"
+msgstr "오른쪽 아래로 이동"
+
+#: engines/efh/metaengine.cpp:275
+#, fuzzy
+#| msgid "Show character portraits"
+msgid "Character 1 status"
+msgstr "캐릭터 인물 표시"
+
+#: engines/efh/metaengine.cpp:280
+#, fuzzy
+#| msgid "Show character portraits"
+msgid "Character 2 status"
+msgstr "캐릭터 인물 표시"
+
+#: engines/efh/metaengine.cpp:285
+#, fuzzy
+#| msgid "Show character portraits"
+msgid "Character 3 status"
+msgstr "캐릭터 인물 표시"
 
 #: engines/freescape/metaengine.cpp:42
 msgid "Prerecorded sounds"
@@ -7808,21 +7909,21 @@ msgid "Select Princess"
 msgstr "공주 선택"
 
 #: engines/freescape/games/castle/castle.cpp:264
-#: engines/freescape/games/dark/dark.cpp:213
+#: engines/freescape/games/dark/dark.cpp:206
 #: engines/freescape/games/driller/driller.cpp:153
 #: engines/freescape/games/eclipse/eclipse.cpp:224
 msgid "Toggle Sound"
 msgstr "사운드 전환"
 
 #: engines/freescape/games/castle/castle.cpp:269
-#: engines/freescape/games/dark/dark.cpp:219
+#: engines/freescape/games/dark/dark.cpp:212
 #: engines/freescape/games/driller/driller.cpp:159
 #: engines/freescape/games/eclipse/eclipse.cpp:229
 msgid "Rotate Left"
 msgstr "왼쪽으로 회전"
 
 #: engines/freescape/games/castle/castle.cpp:274
-#: engines/freescape/games/dark/dark.cpp:224
+#: engines/freescape/games/dark/dark.cpp:217
 #: engines/freescape/games/driller/driller.cpp:164
 #: engines/freescape/games/eclipse/eclipse.cpp:234
 msgid "Rotate Right"
@@ -7845,50 +7946,50 @@ msgstr "기어가다"
 msgid "Face Forward"
 msgstr "얼굴 앞으로"
 
-#: engines/freescape/games/dark/dark.cpp:229
+#: engines/freescape/games/dark/dark.cpp:222
 #: engines/freescape/games/driller/driller.cpp:198
 msgid "Roll left"
 msgstr "왼쪽으로 구르기"
 
-#: engines/freescape/games/dark/dark.cpp:234
+#: engines/freescape/games/dark/dark.cpp:227
 #: engines/freescape/games/driller/driller.cpp:203
 msgid "Roll right"
 msgstr "오른쪽으로 구르기"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/dark/dark.cpp:240
+#: engines/freescape/games/dark/dark.cpp:233
 #: engines/freescape/games/driller/driller.cpp:170
 msgid "Increase Turn Angle"
 msgstr "회전 각도 증가"
 
-#: engines/freescape/games/dark/dark.cpp:245
+#: engines/freescape/games/dark/dark.cpp:238
 #: engines/freescape/games/driller/driller.cpp:175
 msgid "Decrease Turn Angle"
 msgstr "회전 각도 감소"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:251
+#: engines/freescape/games/dark/dark.cpp:244
 #: engines/freescape/games/driller/driller.cpp:181
 msgid "Increase Step Size"
 msgstr "단계 크기 증가"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:257
+#: engines/freescape/games/dark/dark.cpp:250
 #: engines/freescape/games/driller/driller.cpp:187
 msgid "Decrease Step Size"
 msgstr "단계 크기 감소"
 
-#: engines/freescape/games/dark/dark.cpp:262
+#: engines/freescape/games/dark/dark.cpp:255
 #: engines/freescape/games/driller/driller.cpp:192
 msgid "Rise/Fly up"
 msgstr "상승/급상승"
 
-#: engines/freescape/games/dark/dark.cpp:268
+#: engines/freescape/games/dark/dark.cpp:261
 #: engines/freescape/games/driller/driller.cpp:208
 msgid "Lower/Fly down"
 msgstr "하강/급강하"
 
-#: engines/freescape/games/dark/dark.cpp:274
+#: engines/freescape/games/dark/dark.cpp:267
 msgid "Enable/Disable Jetpack"
 msgstr "제트팩 활성화/비활성화"
 
@@ -8330,10 +8431,6 @@ msgstr "십자 패드 왼쪽"
 #: engines/hpl1/metaengine.cpp:81
 msgid "Lean Right"
 msgstr "십자 패드 오른쪽"
-
-#: engines/hpl1/metaengine.cpp:83
-msgid "Jump"
-msgstr "점프"
 
 #. I18N: Action in In Cold Blood
 #: engines/hpl1/metaengine.cpp:84 engines/icb/icb.cpp:119
@@ -9851,6 +9948,24 @@ msgstr "말 많은 AI 전환"
 msgid "This menu item is not yet implemented"
 msgstr "이 메뉴 항목은 아직 구현되지 않았음"
 
+#: engines/playground3d/metaengine.cpp:55
+#, fuzzy
+#| msgid "Switch to Game"
+msgid "Switch test"
+msgstr "게임으로 전환"
+
+#: engines/playground3d/metaengine.cpp:61
+#, fuzzy
+#| msgid "Enable/Disable Jetpack"
+msgid "Enable/Disable fog"
+msgstr "제트팩 활성화/비활성화"
+
+#: engines/playground3d/metaengine.cpp:67
+#, fuzzy
+#| msgid "Enable/Disable Jetpack"
+msgid "Enable/Disable scissor"
+msgstr "제트팩 활성화/비활성화"
+
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
 msgid "3DO Plumbers requires RGB support."
@@ -10569,10 +10684,6 @@ msgstr ""
 "게임에서 엔진 내 그래픽 인터페이스와 원래 저장/불러오기 메뉴를 사용하도록 허"
 "용합니다. \"종료 시 확인 요청\"과 함께 사용하면 더욱 완벽한 경험을 할 수 있습"
 "니다."
-
-#: engines/scumm/dialogs.cpp:1188 engines/scumm/metaengine.cpp:792
-msgid "Enable gamma correction"
-msgstr "감마 교정 활성화"
 
 #: engines/scumm/dialogs.cpp:1189 engines/scumm/metaengine.cpp:793
 msgid "Brighten the graphics to simulate a Macintosh monitor."
@@ -12128,6 +12239,10 @@ msgstr "저장/불러오기 메뉴 시작으로 이동"
 msgid "Go to end of save/load menu"
 msgstr "저장/불러오기 메뉴 끝으로 이동"
 
+#: engines/tinsel/tinsel.cpp:1040
+msgid "Discworld Noir needs ScummVM with TinyGL enabled"
+msgstr ""
+
 #: engines/toltecs/metaengine.cpp:216
 msgid "Move / Select"
 msgstr "이동 / 선택"
@@ -13651,12 +13766,6 @@ msgstr ""
 #~ msgctxt "Options menu"
 #~ msgid "Voices: German"
 #~ msgstr "음성: 독일어"
-
-#~ msgid "Left click"
-#~ msgstr "왼쪽 클릭"
-
-#~ msgid "Right click"
-#~ msgstr "오른쪽 클릭"
 
 #~ msgid "Toggle sound effect on/off"
 #~ msgstr "사운드 효과 켜기/끄기 전환"

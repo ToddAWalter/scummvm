@@ -291,10 +291,6 @@ AtariGraphicsManager::AtariGraphicsManager()
 	}
 	s_oldPhysbase = Physbase();
 
-	if (!Supexec(InstallVblHandler)) {
-		error("VBL handler was not installed");
-	}
-
 	g_system->getEventManager()->getEventDispatcher()->registerObserver(this, 10, false);
 }
 
@@ -406,6 +402,19 @@ void AtariGraphicsManager::beginGFXTransaction() {
 OSystem::TransactionError AtariGraphicsManager::endGFXTransaction() {
 	atari_debug("endGFXTransaction");
 
+	{
+		// this can't be done in the c-tor because if the c-tor called error(),
+		// its d-tor wouldn't be called => the vbl handler wouldn't be uninstalled
+		// (for the same reason we don't do any resolution changes in the c-tor)
+		static bool vblHandlerInstalled;
+		if (!vblHandlerInstalled) {
+			if (!Supexec(InstallVblHandler)) {
+				error("VBL handler was not installed");
+			}
+			vblHandlerInstalled = true;
+		}
+	}
+
 	_pendingState.inTransaction = false;
 	_ignoreCursorChanges = false;
 
@@ -475,10 +484,20 @@ OSystem::TransactionError AtariGraphicsManager::endGFXTransaction() {
 		_chunkySurfaceOffsetted.init(_currentState.width, _currentState.height, c2pWidth,
 			_chunkySurface.getBasePtr(xOffset, 0), _currentState.format);
 
+		Common::Point oldCursorPosition = _screen[kFrontBuffer]->cursor.getPosition();
+
 		_screen[kFrontBuffer]->reset(c2pWidth, _currentState.height, 8, _chunkySurfaceOffsetted, xOffset, true);
 		if (_currentState.mode > kSingleBuffering) {
 			_screen[kBackBuffer1]->reset(c2pWidth, _currentState.height, 8, _chunkySurfaceOffsetted, xOffset, true);
 			_screen[kBackBuffer2]->reset(c2pWidth, _currentState.height, 8, _chunkySurfaceOffsetted, xOffset, true);
+		}
+
+		{
+			Common::Event event;
+			event.type = Common::EVENT_MOUSEMOVE;
+			event.mouse = _screen[kFrontBuffer]->cursor.getPosition();
+			event.relMouse = event.mouse - oldCursorPosition;
+			g_system->getEventManager()->pushEvent(event);
 		}
 
 		if (hasPendingSize)
@@ -694,7 +713,6 @@ void AtariGraphicsManager::updateScreen() {
 		s_screenSurf = _pendingScreenChanges.screenSurface();
 		_pendingScreenChanges.setScreenSurface(nullptr);
 	}
-
 	if (_pendingScreenChanges.aspectRatioCorrectionYOffset().second)
 		s_aspectRatioCorrectionYOffset = _pendingScreenChanges.aspectRatioCorrectionYOffset().first;
 	if (_pendingScreenChanges.screenOffsets().second)

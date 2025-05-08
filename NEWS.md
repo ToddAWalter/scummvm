@@ -35,10 +35,12 @@ For a more comprehensive changelog of the latest experimental code, see:
 
 #### 2.9.1 (XXXX-XX-XX)
 
- General:
-   - Avoid using the GNU Gold linker when building ScummVM, (unless the
-     --enable-gold option is given), since it has long-standing issues
-     on some platforms and is now deprecated upstream.
+ AGS:
+   - Added support for sound clip speed variation, used in some games to
+     slow down background music or other audio effects.
+   - Fixed some audio volume changes not being triggered in some situations
+     (e.g. automatic music volume drop during dev commentary or when a
+     characters speaks, in the Blackwell series).
 
  Asylum:
    - Fixed crash in Sanitarium main menu, when moving the cursor to the
@@ -120,7 +122,11 @@ For a more comprehensive changelog of the latest experimental code, see:
      engines that heavily use the stack.
 
  Atari port:
-   - Fixed crash with certain audio settings.
+   - Fixed sending of SysEx MIDI messages.
+   - Fixed crash and distorted audio with certain audio settings.
+   - Fixed performance issues with SCI32 games like Phantasmagoria or
+     KQ7.
+   - Various GUI / backend fixes and optimizations.
 
  iOS/iPadOS port:
    - Fixed Fluidsynth soundfont existence check failing with sandboxed

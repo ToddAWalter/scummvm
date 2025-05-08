@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.10.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-04-30 15:51+0000\n"
-"PO-Revision-Date: 2025-05-01 17:09+0000\n"
+"POT-Creation-Date: 2025-05-07 15:54+0000\n"
+"PO-Revision-Date: 2025-05-06 12:03+0000\n"
 "Last-Translator: Lothar Serra Mari <lothar.serramari@scummvm.org>\n"
 "Language-Team: German <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/de/>\n"
@@ -574,7 +574,7 @@ msgid "GFX"
 msgstr "GFX"
 
 #: gui/editgamedialog.cpp:164 gui/options.cpp:2082 gui/options.cpp:2263
-#: backends/graphics/atari/atari-graphics.cpp:1043
+#: backends/graphics/atari/atari-graphics.cpp:1061
 #: backends/graphics/sdl/sdl-graphics.cpp:529
 msgid "Graphics"
 msgstr "Grafik"
@@ -1024,13 +1024,14 @@ msgid "Interact"
 msgstr "Interagieren"
 
 #: gui/gui-manager.cpp:176 engines/metaengine.cpp:134
-#: engines/crab/input/input.cpp:95 engines/crab/input/input.cpp:145
-#: engines/dragons/metaengine.cpp:159 engines/freescape/movement.cpp:35
-#: engines/got/metaengine.cpp:55 engines/griffon/metaengine.cpp:121
-#: engines/grim/grim.cpp:481 engines/grim/grim.cpp:563 engines/icb/icb.cpp:68
-#: engines/icb/icb.cpp:152 engines/scumm/metaengine.cpp:1004
-#: engines/twine/metaengine.cpp:430 engines/twine/metaengine.cpp:497
-#: engines/twp/metaengine.cpp:154 engines/wintermute/keymapper_tables.h:1290
+#: engines/awe/metaengine.cpp:57 engines/crab/input/input.cpp:95
+#: engines/crab/input/input.cpp:145 engines/dragons/metaengine.cpp:159
+#: engines/freescape/movement.cpp:35 engines/got/metaengine.cpp:55
+#: engines/griffon/metaengine.cpp:121 engines/grim/grim.cpp:481
+#: engines/grim/grim.cpp:563 engines/icb/icb.cpp:68 engines/icb/icb.cpp:152
+#: engines/scumm/metaengine.cpp:1004 engines/twine/metaengine.cpp:430
+#: engines/twine/metaengine.cpp:497 engines/twp/metaengine.cpp:154
+#: engines/wintermute/keymapper_tables.h:1290
 #: engines/wintermute/keymapper_tables.h:1373
 #: engines/wintermute/keymapper_tables.h:1449
 #: engines/wintermute/keymapper_tables.h:1920
@@ -1039,13 +1040,14 @@ msgid "Up"
 msgstr "Hoch"
 
 #: gui/gui-manager.cpp:182 engines/metaengine.cpp:140
-#: engines/crab/input/input.cpp:101 engines/crab/input/input.cpp:151
-#: engines/dragons/metaengine.cpp:165 engines/freescape/movement.cpp:42
-#: engines/got/metaengine.cpp:56 engines/griffon/metaengine.cpp:127
-#: engines/grim/grim.cpp:486 engines/grim/grim.cpp:568 engines/icb/icb.cpp:73
-#: engines/icb/icb.cpp:157 engines/scumm/metaengine.cpp:971
-#: engines/twine/metaengine.cpp:437 engines/twine/metaengine.cpp:505
-#: engines/twp/metaengine.cpp:155 engines/wintermute/keymapper_tables.h:1296
+#: engines/awe/metaengine.cpp:58 engines/crab/input/input.cpp:101
+#: engines/crab/input/input.cpp:151 engines/dragons/metaengine.cpp:165
+#: engines/freescape/movement.cpp:42 engines/got/metaengine.cpp:56
+#: engines/griffon/metaengine.cpp:127 engines/grim/grim.cpp:486
+#: engines/grim/grim.cpp:568 engines/icb/icb.cpp:73 engines/icb/icb.cpp:157
+#: engines/scumm/metaengine.cpp:971 engines/twine/metaengine.cpp:437
+#: engines/twine/metaengine.cpp:505 engines/twp/metaengine.cpp:155
+#: engines/wintermute/keymapper_tables.h:1296
 #: engines/wintermute/keymapper_tables.h:1379
 #: engines/wintermute/keymapper_tables.h:1456
 #: engines/wintermute/keymapper_tables.h:1926
@@ -1054,13 +1056,13 @@ msgid "Down"
 msgstr "Runter"
 
 #: gui/gui-manager.cpp:188 engines/metaengine.cpp:146
-#: engines/crab/input/input.cpp:107 engines/crab/input/input.cpp:157
-#: engines/dragons/metaengine.cpp:171 engines/got/metaengine.cpp:57
-#: engines/griffon/metaengine.cpp:133 engines/grim/grim.cpp:491
-#: engines/grim/grim.cpp:573 engines/icb/icb.cpp:78 engines/icb/icb.cpp:162
-#: engines/scumm/metaengine.cpp:984 engines/twine/metaengine.cpp:452
-#: engines/twine/metaengine.cpp:520 engines/twp/metaengine.cpp:152
-#: engines/wintermute/keymapper_tables.h:320
+#: engines/awe/metaengine.cpp:59 engines/crab/input/input.cpp:107
+#: engines/crab/input/input.cpp:157 engines/dragons/metaengine.cpp:171
+#: engines/got/metaengine.cpp:57 engines/griffon/metaengine.cpp:133
+#: engines/grim/grim.cpp:491 engines/grim/grim.cpp:573 engines/icb/icb.cpp:78
+#: engines/icb/icb.cpp:162 engines/scumm/metaengine.cpp:984
+#: engines/twine/metaengine.cpp:452 engines/twine/metaengine.cpp:520
+#: engines/twp/metaengine.cpp:152 engines/wintermute/keymapper_tables.h:320
 #: engines/wintermute/keymapper_tables.h:1302
 #: engines/wintermute/keymapper_tables.h:1385
 #: engines/wintermute/keymapper_tables.h:1908
@@ -1070,13 +1072,13 @@ msgid "Left"
 msgstr "Links"
 
 #: gui/gui-manager.cpp:194 engines/metaengine.cpp:152
-#: engines/crab/input/input.cpp:113 engines/crab/input/input.cpp:163
-#: engines/dragons/metaengine.cpp:177 engines/got/metaengine.cpp:58
-#: engines/griffon/metaengine.cpp:139 engines/grim/grim.cpp:496
-#: engines/grim/grim.cpp:578 engines/icb/icb.cpp:83 engines/icb/icb.cpp:167
-#: engines/scumm/metaengine.cpp:991 engines/twine/metaengine.cpp:444
-#: engines/twine/metaengine.cpp:513 engines/twp/metaengine.cpp:153
-#: engines/wintermute/keymapper_tables.h:326
+#: engines/awe/metaengine.cpp:60 engines/crab/input/input.cpp:113
+#: engines/crab/input/input.cpp:163 engines/dragons/metaengine.cpp:177
+#: engines/got/metaengine.cpp:58 engines/griffon/metaengine.cpp:139
+#: engines/grim/grim.cpp:496 engines/grim/grim.cpp:578 engines/icb/icb.cpp:83
+#: engines/icb/icb.cpp:167 engines/scumm/metaengine.cpp:991
+#: engines/twine/metaengine.cpp:444 engines/twine/metaengine.cpp:513
+#: engines/twp/metaengine.cpp:153 engines/wintermute/keymapper_tables.h:326
 #: engines/wintermute/keymapper_tables.h:1308
 #: engines/wintermute/keymapper_tables.h:1391
 #: engines/wintermute/keymapper_tables.h:1914
@@ -4151,12 +4153,12 @@ msgstr "Ordner hinzufügen"
 msgid "Choose a new folder"
 msgstr "Neuen Ordner wählen"
 
-#: backends/graphics/atari/atari-graphics.cpp:1047
+#: backends/graphics/atari/atari-graphics.cpp:1065
 #: backends/graphics/sdl/sdl-graphics.cpp:556
 msgid "Toggle aspect ratio correction"
 msgstr "Seitenverhältnis-Korrektur umschalten"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:258
+#: backends/graphics/opengl/opengl-graphics.cpp:254
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:127
 #: backends/graphics3d/ios/ios-graphics3d.cpp:356
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:271
@@ -4164,71 +4166,71 @@ msgstr "Seitenverhältnis-Korrektur umschalten"
 msgid "Center"
 msgstr "Zentriert"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:259
+#: backends/graphics/opengl/opengl-graphics.cpp:255
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:128
 #: backends/graphics3d/ios/ios-graphics3d.cpp:357
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:272
 msgid "Pixel-perfect scaling"
 msgstr "Pixelgenaue Skalierung"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:260
+#: backends/graphics/opengl/opengl-graphics.cpp:256
 #: backends/graphics3d/ios/ios-graphics3d.cpp:358
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:273
 msgid "Even pixels scaling"
 msgstr "Skalierung mit gleichmäßigen Pixeln"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:261
+#: backends/graphics/opengl/opengl-graphics.cpp:257
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:129
 #: backends/graphics3d/ios/ios-graphics3d.cpp:359
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:274
 msgid "Fit to window"
 msgstr "An Fenster anpassen"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:262
+#: backends/graphics/opengl/opengl-graphics.cpp:258
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:130
 #: backends/graphics3d/ios/ios-graphics3d.cpp:360
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:275
 msgid "Stretch to window"
 msgstr "Auf Fenstergröße strecken"
 
-#: backends/graphics/opengl/opengl-graphics.cpp:263
+#: backends/graphics/opengl/opengl-graphics.cpp:259
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:131
 #: backends/graphics3d/ios/ios-graphics3d.cpp:361
 #: backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp:276
 msgid "Fit to window (4:3)"
 msgstr "An Fenster anpassen (4:3)"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:847
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:842
 #, c-format
 msgid "Resolution: %dx%d"
 msgstr "Auflösung: %dx%d"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:891
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:886
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2941
 msgid "Active graphics filter:"
 msgstr "Aktiver Grafikfilter:"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:912
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:907
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2975
 msgid "Enabled aspect ratio correction"
 msgstr "Seitenverhältniskorrektur an"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:914
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:909
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2981
 msgid "Disabled aspect ratio correction"
 msgstr "Seitenverhältniskorrektur aus"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:927
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:922
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2997
 msgid "Filtering enabled"
 msgstr "Bilineare Filterung aktiviert"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:929
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:924
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2999
 msgid "Filtering disabled"
 msgstr "Bilineare Filterung deaktiviert"
 
-#: backends/graphics/openglsdl/openglsdl-graphics.cpp:955
+#: backends/graphics/openglsdl/openglsdl-graphics.cpp:950
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:3026
 msgid "Stretch mode"
 msgstr "Skaliermodus"
@@ -4867,12 +4869,12 @@ msgstr "Vergrößerungs-Modus deaktiviert. Aktiviere Drag-Modus..."
 msgid "Magnify Mode Off"
 msgstr "Vergrößerungs-Modus deaktiviert"
 
-#: backends/platform/android/android.cpp:1102
+#: backends/platform/android/android.cpp:1114
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid "Getting help"
 msgstr "Hilfe"
 
-#: backends/platform/android/android.cpp:1105
+#: backends/platform/android/android.cpp:1117
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4915,13 +4917,13 @@ msgstr ""
 "bleibst, solltest du vielleicht über ein Walkthrough nachdenken. Viel "
 "Glück!\n"
 
-#: backends/platform/android/android.cpp:1114
+#: backends/platform/android/android.cpp:1126
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "Touch-Steuerung"
 
-#: backends/platform/android/android.cpp:1117
+#: backends/platform/android/android.cpp:1129
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -5059,13 +5061,13 @@ msgstr ""
 "  ![Tastatursymbol](keyboard.png \"Tastatursymbol\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1173
+#: backends/platform/android/android.cpp:1185
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "Spiele hinzufügen"
 
-#: backends/platform/android/android.cpp:1176
+#: backends/platform/android/android.cpp:1188
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -6358,18 +6360,20 @@ msgid "Add game speed menu (similar to PC version)"
 msgstr "Geschwindigkeitsmenü hinzufügen (Ähnlich der PC-Version)"
 
 #: engines/agi/metaengine.cpp:195 engines/agos/metaengine.cpp:44
-#: engines/dreamweb/metaengine.cpp:36 engines/gob/metaengine.cpp:42
-#: engines/lure/metaengine.cpp:41 engines/mads/metaengine.cpp:51
-#: engines/mm/metaengine.cpp:46 engines/saga/metaengine.cpp:52
-#: engines/scumm/dialogs.cpp:1202 engines/scumm/metaengine.cpp:821
+#: engines/awe/metaengine.cpp:35 engines/dreamweb/metaengine.cpp:36
+#: engines/gob/metaengine.cpp:42 engines/lure/metaengine.cpp:41
+#: engines/mads/metaengine.cpp:51 engines/mm/metaengine.cpp:46
+#: engines/saga/metaengine.cpp:52 engines/scumm/dialogs.cpp:1202
+#: engines/scumm/metaengine.cpp:821
 msgid "Enable copy protection"
 msgstr "Kopierschutz aktivieren"
 
 #: engines/agi/metaengine.cpp:196 engines/agos/metaengine.cpp:45
-#: engines/dreamweb/metaengine.cpp:37 engines/gob/metaengine.cpp:43
-#: engines/lure/metaengine.cpp:42 engines/mads/metaengine.cpp:52
-#: engines/mm/metaengine.cpp:47 engines/saga/metaengine.cpp:53
-#: engines/scumm/dialogs.cpp:1203 engines/scumm/metaengine.cpp:822
+#: engines/awe/metaengine.cpp:36 engines/dreamweb/metaengine.cpp:37
+#: engines/gob/metaengine.cpp:43 engines/lure/metaengine.cpp:42
+#: engines/mads/metaengine.cpp:52 engines/mm/metaengine.cpp:47
+#: engines/saga/metaengine.cpp:53 engines/scumm/dialogs.cpp:1203
+#: engines/scumm/metaengine.cpp:822
 msgid "Enable any copy protection that would otherwise be bypassed by default."
 msgstr ""
 "Aktiviere Kopierschutz-Mechanismen, die ansonsten standardmäßig übersprungen "
@@ -6527,14 +6531,14 @@ msgstr "AGOS"
 
 #: engines/agos/metaengine.cpp:228 engines/bbvs/metaengine.cpp:93
 #: engines/cine/metaengine.cpp:258 engines/cruise/metaengine.cpp:143
-#: engines/draci/metaengine.cpp:137 engines/hopkins/metaengine.cpp:207
-#: engines/hugo/metaengine.cpp:93 engines/illusions/metaengine.cpp:90
-#: engines/lure/metaengine.cpp:169 engines/made/metaengine.cpp:103
-#: engines/mads/metaengine.cpp:275 engines/stark/metaengine.cpp:185
-#: engines/sword1/metaengine.cpp:267 engines/tinsel/metaengine.cpp:241
-#: engines/toon/metaengine.cpp:82 engines/touche/metaengine.cpp:119
-#: engines/trecision/metaengine.cpp:121 engines/tsage/metaengine.cpp:170
-#: engines/tucker/metaengine.cpp:168
+#: engines/draci/metaengine.cpp:137 engines/efh/metaengine.cpp:203
+#: engines/hopkins/metaengine.cpp:207 engines/hugo/metaengine.cpp:93
+#: engines/illusions/metaengine.cpp:90 engines/lure/metaengine.cpp:169
+#: engines/made/metaengine.cpp:103 engines/mads/metaengine.cpp:275
+#: engines/stark/metaengine.cpp:185 engines/sword1/metaengine.cpp:267
+#: engines/tinsel/metaengine.cpp:241 engines/toon/metaengine.cpp:82
+#: engines/touche/metaengine.cpp:119 engines/trecision/metaengine.cpp:121
+#: engines/tsage/metaengine.cpp:170 engines/tucker/metaengine.cpp:168
 msgid "Game keymappings"
 msgstr "Spiele-Tastenbelegungen"
 
@@ -6786,6 +6790,16 @@ msgstr ""
 "Spielstandverzeichnis oder\n"
 "2. Jede .sav-Datei im QfG2 Remake-Verzeichnis"
 
+#: engines/alg/metaengine.cpp:34
+msgid "Use lower quality single speed CD-ROM video"
+msgstr ""
+
+#: engines/alg/metaengine.cpp:35
+msgid ""
+"These videos are of lower quality, the default version uses double speed CD-"
+"ROM videos which are of better quality"
+msgstr ""
+
 #: engines/asylum/metaengine.cpp:115
 msgid "Show version"
 msgstr "Version anzeigen"
@@ -6820,33 +6834,35 @@ msgstr "Inventar öffnen"
 
 #. I18N: Move Actor to upwards direction
 #: engines/asylum/metaengine.cpp:171 engines/asylum/metaengine.cpp:198
-#: engines/cine/metaengine.cpp:364 engines/hdb/metaengine.cpp:213
-#: engines/nancy/input.cpp:195 engines/tinsel/metaengine.cpp:263
+#: engines/cine/metaengine.cpp:364 engines/efh/metaengine.cpp:231
+#: engines/hdb/metaengine.cpp:213 engines/nancy/input.cpp:195
+#: engines/tinsel/metaengine.cpp:263
 msgid "Move up"
 msgstr "Nach oben bewegen"
 
 #. I18N: Move Actor to downwards direction
 #: engines/asylum/metaengine.cpp:177 engines/asylum/metaengine.cpp:205
-#: engines/cine/metaengine.cpp:371 engines/hdb/metaengine.cpp:219
-#: engines/nancy/input.cpp:201 engines/tinsel/metaengine.cpp:269
+#: engines/cine/metaengine.cpp:371 engines/efh/metaengine.cpp:237
+#: engines/hdb/metaengine.cpp:219 engines/nancy/input.cpp:201
+#: engines/tinsel/metaengine.cpp:269
 msgid "Move down"
 msgstr "Nach unten bewegen"
 
 #. I18N: Move Actor to left direction
 #. I18N: Move actor left during fight
 #: engines/asylum/metaengine.cpp:183 engines/asylum/metaengine.cpp:212
-#: engines/cine/metaengine.cpp:378 engines/hdb/metaengine.cpp:225
-#: engines/lure/metaengine.cpp:218 engines/nancy/input.cpp:207
-#: engines/tinsel/metaengine.cpp:275
+#: engines/cine/metaengine.cpp:378 engines/efh/metaengine.cpp:243
+#: engines/hdb/metaengine.cpp:225 engines/lure/metaengine.cpp:218
+#: engines/nancy/input.cpp:207 engines/tinsel/metaengine.cpp:275
 msgid "Move left"
 msgstr "Nach links bewegen"
 
 #. I18N: Move Actor to right direction
 #. I18N: Move actor right during fight
 #: engines/asylum/metaengine.cpp:189 engines/asylum/metaengine.cpp:219
-#: engines/cine/metaengine.cpp:385 engines/hdb/metaengine.cpp:231
-#: engines/lure/metaengine.cpp:226 engines/nancy/input.cpp:213
-#: engines/tinsel/metaengine.cpp:281
+#: engines/cine/metaengine.cpp:385 engines/efh/metaengine.cpp:249
+#: engines/hdb/metaengine.cpp:231 engines/lure/metaengine.cpp:226
+#: engines/nancy/input.cpp:213 engines/tinsel/metaengine.cpp:281
 msgid "Move right"
 msgstr "Nach rechts bewegen"
 
@@ -6892,6 +6908,23 @@ msgstr ""
 msgid "Load anyway"
 msgstr "Trotzdem laden"
 
+#: engines/awe/metaengine.cpp:61
+msgid "Select/Kick/Run"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:62 engines/hpl1/metaengine.cpp:83
+msgid "Jump"
+msgstr "Springen"
+
+#: engines/awe/metaengine.cpp:63
+msgid "Enter Level Code"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:89 engines/dgds/metaengine.cpp:87
+#: engines/got/metaengine.cpp:90
+msgid "Game Keys"
+msgstr "Spiele-Tasten"
+
 #: engines/bagel/metaengine.cpp:41
 msgid "Wait"
 msgstr "Warten"
@@ -6909,10 +6942,11 @@ msgstr "Allgemeine Tasten"
 #: engines/hopkins/metaengine.cpp:206 engines/hugo/metaengine.cpp:92
 #: engines/illusions/metaengine.cpp:89 engines/lure/metaengine.cpp:168
 #: engines/made/metaengine.cpp:102 engines/mads/metaengine.cpp:274
-#: engines/stark/metaengine.cpp:184 engines/sword1/metaengine.cpp:266
-#: engines/tinsel/metaengine.cpp:240 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/trecision/metaengine.cpp:120
-#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/playground3d/metaengine.cpp:51 engines/stark/metaengine.cpp:184
+#: engines/sword1/metaengine.cpp:266 engines/tinsel/metaengine.cpp:240
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
+#: engines/tucker/metaengine.cpp:167
 msgid "Default keymappings"
 msgstr "Standard-Tastenbelegungen"
 
@@ -7188,7 +7222,7 @@ msgstr "Hinweis-Geheimhaltung umschalten"
 #. SAVE GAME
 #: engines/bladerunner/metaengine.cpp:330 engines/dgds/metaengine.cpp:75
 #: engines/freescape/games/castle/castle.cpp:246
-#: engines/freescape/games/dark/dark.cpp:193
+#: engines/freescape/games/dark/dark.cpp:186
 #: engines/freescape/games/driller/driller.cpp:135
 #: engines/freescape/games/eclipse/eclipse.cpp:206
 #: engines/pegasus/pegasus.cpp:2825
@@ -7201,7 +7235,7 @@ msgstr "Spiel speichern"
 #. LOAD GAME
 #: engines/bladerunner/metaengine.cpp:339 engines/dgds/metaengine.cpp:74
 #: engines/freescape/games/castle/castle.cpp:251
-#: engines/freescape/games/dark/dark.cpp:198
+#: engines/freescape/games/dark/dark.cpp:191
 #: engines/freescape/games/driller/driller.cpp:140
 #: engines/freescape/games/eclipse/eclipse.cpp:211
 #: engines/pegasus/pegasus.cpp:2831
@@ -7239,7 +7273,7 @@ msgstr "Hinweis-Menü"
 #: engines/bladerunner/metaengine.cpp:375 engines/darkseed/metaengine.cpp:93
 #: engines/dragons/metaengine.cpp:224
 #: engines/freescape/games/castle/castle.cpp:259
-#: engines/freescape/games/dark/dark.cpp:203
+#: engines/freescape/games/dark/dark.cpp:196
 #: engines/freescape/games/driller/driller.cpp:145
 #: engines/freescape/games/eclipse/eclipse.cpp:216
 #: engines/sword1/metaengine.cpp:295
@@ -7319,19 +7353,19 @@ msgid "Exit/Skip"
 msgstr "Verlassen/Überspringen"
 
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
-#: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:128
-#: engines/lure/metaengine.cpp:191 engines/made/metaengine.cpp:162
-#: engines/mads/metaengine.cpp:305 engines/saga/metaengine.cpp:442
-#: engines/stark/metaengine.cpp:208 engines/toltecs/metaengine.cpp:234
-#: engines/toon/metaengine.cpp:112 engines/trecision/metaengine.cpp:169
-#: engines/tsage/metaengine.cpp:242 engines/vcruise/metaengine.cpp:175
-#: engines/wintermute/keymapper_tables.h:920
+#: engines/efh/metaengine.cpp:219 engines/hopkins/metaengine.cpp:236
+#: engines/hugo/metaengine.cpp:128 engines/lure/metaengine.cpp:191
+#: engines/made/metaengine.cpp:162 engines/mads/metaengine.cpp:305
+#: engines/saga/metaengine.cpp:442 engines/stark/metaengine.cpp:208
+#: engines/toltecs/metaengine.cpp:234 engines/toon/metaengine.cpp:112
+#: engines/trecision/metaengine.cpp:169 engines/tsage/metaengine.cpp:242
+#: engines/vcruise/metaengine.cpp:175 engines/wintermute/keymapper_tables.h:920
 msgid "Save game"
 msgstr "Spiel speichern"
 
 #: engines/cge/metaengine.cpp:227 engines/cge2/metaengine.cpp:241
-#: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:168
-#: engines/mohawk/myst_stacks/menu.cpp:283
+#: engines/efh/metaengine.cpp:225 engines/hopkins/metaengine.cpp:242
+#: engines/made/metaengine.cpp:168 engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/riven_stacks/aspit.cpp:349 engines/saga/metaengine.cpp:432
 #: engines/stark/metaengine.cpp:213 engines/toltecs/metaengine.cpp:240
 #: engines/toon/metaengine.cpp:118 engines/trecision/metaengine.cpp:175
@@ -7747,10 +7781,6 @@ msgstr "Aufnehmen / Betätigen"
 msgid "Activate Inventory Object"
 msgstr "Inventargegenstand aktivieren"
 
-#: engines/dgds/metaengine.cpp:87 engines/got/metaengine.cpp:90
-msgid "Game Keys"
-msgstr "Spiele-Tasten"
-
 #: engines/director/events.cpp:99
 msgid ""
 "The game prevents quitting at this moment. Are you sure you want to quit "
@@ -7758,6 +7788,27 @@ msgid ""
 msgstr ""
 "An dieser Stelle ist nicht vorgesehen, das Spiel zu beenden. Möchtest du das "
 "Spiel dennoch verlassen?"
+
+#: engines/director/metaengine.cpp:70 engines/scumm/dialogs.cpp:1188
+#: engines/scumm/metaengine.cpp:792
+msgid "Enable gamma correction"
+msgstr "Aktiviere Gamma-Korrektur"
+
+#: engines/director/metaengine.cpp:71
+msgid "Brighten the graphics to simulate a Macintosh monitor"
+msgstr "Hellt das Bild auf, um einen Macintosh-Monitor zu simulieren"
+
+#: engines/director/metaengine.cpp:81
+msgid "Force true color"
+msgstr ""
+
+#: engines/director/metaengine.cpp:82
+#, fuzzy
+#| msgid "Use antialiasing to draw text even if the game does not ask for it"
+msgid "Use true color graphics mode, even if the game is not designed for it"
+msgstr ""
+"Erzwinge Kantenglättung für die Text-Darstellung, auch wenn das Spiel dies "
+"nicht selbst anfordert"
 
 #: engines/draci/metaengine.cpp:153
 msgid "Skip intro/Exit map or inventory"
@@ -7858,6 +7909,48 @@ msgstr "Zeigt Grafiken über helle Spielpalette an"
 msgid "Enable Text to Speech for Objects, Options, and the Bible Quote"
 msgstr ""
 "Aktiviere Sprachausgabe für Gegenstände, Optionen und für das Bibel-Zitat"
+
+#: engines/efh/metaengine.cpp:207
+msgid "Left click"
+msgstr "Linksklick"
+
+#: engines/efh/metaengine.cpp:213
+msgid "Right click"
+msgstr "Rechtsklick"
+
+#: engines/efh/metaengine.cpp:255
+msgid "Move up left"
+msgstr "Nach oben links bewegen"
+
+#: engines/efh/metaengine.cpp:260
+msgid "Move up right"
+msgstr "Nach oben rechts bewegen"
+
+#: engines/efh/metaengine.cpp:265
+msgid "Move down left"
+msgstr "Nach unten links bewegen"
+
+#: engines/efh/metaengine.cpp:270
+msgid "Move down right"
+msgstr "Nach unten rechts bewegen"
+
+#: engines/efh/metaengine.cpp:275
+#, fuzzy
+#| msgid "Show character portraits"
+msgid "Character 1 status"
+msgstr "Figurenportraits zeigen"
+
+#: engines/efh/metaengine.cpp:280
+#, fuzzy
+#| msgid "Show character portraits"
+msgid "Character 2 status"
+msgstr "Figurenportraits zeigen"
+
+#: engines/efh/metaengine.cpp:285
+#, fuzzy
+#| msgid "Show character portraits"
+msgid "Character 3 status"
+msgstr "Figurenportraits zeigen"
 
 #: engines/freescape/metaengine.cpp:42
 msgid "Prerecorded sounds"
@@ -7976,21 +8069,21 @@ msgid "Select Princess"
 msgstr "Prinzessin auswählen"
 
 #: engines/freescape/games/castle/castle.cpp:264
-#: engines/freescape/games/dark/dark.cpp:213
+#: engines/freescape/games/dark/dark.cpp:206
 #: engines/freescape/games/driller/driller.cpp:153
 #: engines/freescape/games/eclipse/eclipse.cpp:224
 msgid "Toggle Sound"
 msgstr "Sound umschalten"
 
 #: engines/freescape/games/castle/castle.cpp:269
-#: engines/freescape/games/dark/dark.cpp:219
+#: engines/freescape/games/dark/dark.cpp:212
 #: engines/freescape/games/driller/driller.cpp:159
 #: engines/freescape/games/eclipse/eclipse.cpp:229
 msgid "Rotate Left"
 msgstr "Nach links drehen"
 
 #: engines/freescape/games/castle/castle.cpp:274
-#: engines/freescape/games/dark/dark.cpp:224
+#: engines/freescape/games/dark/dark.cpp:217
 #: engines/freescape/games/driller/driller.cpp:164
 #: engines/freescape/games/eclipse/eclipse.cpp:234
 msgid "Rotate Right"
@@ -8013,50 +8106,50 @@ msgstr "Kriechen"
 msgid "Face Forward"
 msgstr "Nach vorne blicken"
 
-#: engines/freescape/games/dark/dark.cpp:229
+#: engines/freescape/games/dark/dark.cpp:222
 #: engines/freescape/games/driller/driller.cpp:198
 msgid "Roll left"
 msgstr "Nach links rollen"
 
-#: engines/freescape/games/dark/dark.cpp:234
+#: engines/freescape/games/dark/dark.cpp:227
 #: engines/freescape/games/driller/driller.cpp:203
 msgid "Roll right"
 msgstr "Nach rechts rollen"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/dark/dark.cpp:240
+#: engines/freescape/games/dark/dark.cpp:233
 #: engines/freescape/games/driller/driller.cpp:170
 msgid "Increase Turn Angle"
 msgstr "Drehwinkel erhöhen"
 
-#: engines/freescape/games/dark/dark.cpp:245
+#: engines/freescape/games/dark/dark.cpp:238
 #: engines/freescape/games/driller/driller.cpp:175
 msgid "Decrease Turn Angle"
 msgstr "Drehwinkel verringern"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:251
+#: engines/freescape/games/dark/dark.cpp:244
 #: engines/freescape/games/driller/driller.cpp:181
 msgid "Increase Step Size"
 msgstr "Schrittgröße vergrößern"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:257
+#: engines/freescape/games/dark/dark.cpp:250
 #: engines/freescape/games/driller/driller.cpp:187
 msgid "Decrease Step Size"
 msgstr "Schrittgröße verkleinern"
 
-#: engines/freescape/games/dark/dark.cpp:262
+#: engines/freescape/games/dark/dark.cpp:255
 #: engines/freescape/games/driller/driller.cpp:192
 msgid "Rise/Fly up"
 msgstr "Nach oben fliegen"
 
-#: engines/freescape/games/dark/dark.cpp:268
+#: engines/freescape/games/dark/dark.cpp:261
 #: engines/freescape/games/driller/driller.cpp:208
 msgid "Lower/Fly down"
 msgstr "Nach unten fliegen"
 
-#: engines/freescape/games/dark/dark.cpp:274
+#: engines/freescape/games/dark/dark.cpp:267
 msgid "Enable/Disable Jetpack"
 msgstr "Jetpack aktivieren/deaktivieren"
 
@@ -8513,10 +8606,6 @@ msgstr "Nach links lehnen"
 #: engines/hpl1/metaengine.cpp:81
 msgid "Lean Right"
 msgstr "Nach rechts lehnen"
-
-#: engines/hpl1/metaengine.cpp:83
-msgid "Jump"
-msgstr "Springen"
 
 #. I18N: Action in In Cold Blood
 #: engines/hpl1/metaengine.cpp:84 engines/icb/icb.cpp:119
@@ -10093,6 +10182,20 @@ msgstr "Schalte die gesprächige KI um"
 msgid "This menu item is not yet implemented"
 msgstr "Dieser Menüpunkt ist noch nicht implementiert"
 
+#: engines/playground3d/metaengine.cpp:55
+#, fuzzy
+#| msgid "Switch to Game"
+msgid "Switch test"
+msgstr "Wechsle"
+
+#: engines/playground3d/metaengine.cpp:61
+msgid "Enable/Disable fog"
+msgstr "Nebel aktivieren/deaktivieren"
+
+#: engines/playground3d/metaengine.cpp:67
+msgid "Enable/Disable scissor"
+msgstr "Scissor aktivieren/deaktivieren"
+
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
 msgid "3DO Plumbers requires RGB support."
@@ -10855,10 +10958,6 @@ msgstr ""
 "Erlaube dem Spiel die Benutzeroberfläche und das originale Menü zum "
 "Speichern und Laden zu verwenden. Verwende die Option zusammen mit \"Beim "
 "Verlassen um Bestätigung bitten\" für eine optimale Benutzererfahrung."
-
-#: engines/scumm/dialogs.cpp:1188 engines/scumm/metaengine.cpp:792
-msgid "Enable gamma correction"
-msgstr "Aktiviere Gamma-Korrektur"
 
 #: engines/scumm/dialogs.cpp:1189 engines/scumm/metaengine.cpp:793
 msgid "Brighten the graphics to simulate a Macintosh monitor."
@@ -12478,6 +12577,11 @@ msgstr "Gehe zum Anfang des Speichern-/Laden-Menüs"
 msgid "Go to end of save/load menu"
 msgstr "Gehe zum Ende des Speichern-/Laden-Menüs"
 
+#: engines/tinsel/tinsel.cpp:1040
+msgid "Discworld Noir needs ScummVM with TinyGL enabled"
+msgstr ""
+"Discworld Noir benötigt eine ScummVM-Version, bei der TinyGL aktiviert ist"
+
 #: engines/toltecs/metaengine.cpp:216
 msgid "Move / Select"
 msgstr "Bewegen / Auswählen"
@@ -14034,12 +14138,6 @@ msgstr ""
 #~ msgctxt "Options menu"
 #~ msgid "Voices: German"
 #~ msgstr "Sprachausgabe: Deutsch"
-
-#~ msgid "Left click"
-#~ msgstr "Linksklick"
-
-#~ msgid "Right click"
-#~ msgstr "Rechtsklick"
 
 #~ msgid "Toggle sound effect on/off"
 #~ msgstr "Sound-Effekt umschalten"

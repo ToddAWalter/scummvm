@@ -36,9 +36,26 @@ extern byte kC64Palette[16][3];
 void EclipseEngine::loadAssetsC64FullGame() {
 	Common::File file;
 	file.open("totaleclipse.c64.data");
-	loadMessagesFixedSize(&file, 0x1d82, 16, 30);
-	loadFonts(&file, 0xc3e);
-	load8bitBinary(&file, 0x9a3e, 16);
+
+	if (_variant & GF_C64_TAPE) {
+		int size = file.size();
+
+		byte *buffer = (byte *)malloc(size * sizeof(byte));
+		file.read(buffer, file.size());
+
+		_extraBuffer = decompressC64RLE(buffer, &size, 0xe1);
+		// size should be the size of the decompressed data
+		Common::MemoryReadStream dfile(_extraBuffer, size, DisposeAfterUse::NO);
+
+		loadMessagesFixedSize(&dfile, 0x1d82, 16, 30);
+		loadFonts(&dfile, 0xc3e);
+		load8bitBinary(&dfile, 0x9a3e, 16);
+	} else if (_variant & GF_C64_DISC) {
+		loadMessagesFixedSize(&file,0x1536, 16, 30);
+		loadFonts(&file, 0x3f2);
+		load8bitBinary(&file, 0x7ab4, 16);
+	} else
+		error("Unknown C64 variant %x", _variant);
 
 	for (auto &it : _areaMap) {
 		it._value->addStructure(_areaMap[255]);
@@ -63,6 +80,11 @@ void EclipseEngine::loadAssetsC64FullGame() {
 	colorFile2.open("totaleclipse.c64.title.colors2");
 
 	_title = loadAndConvertDoodleImage(&file, &colorFile1, &colorFile2, (byte *)&kC64Palette);
+
+	_indicators.push_back(loadBundledImage("eclipse_ankh_indicator"));
+
+	for (auto &it : _indicators)
+		it->convertToInPlace(_gfx->_texturePixelFormat);
 }
 
 
@@ -119,11 +141,11 @@ void EclipseEngine::drawC64UI(Graphics::Surface *surface) {
 
 	Common::String shieldStr = Common::String::format("%d", shield);
 
-	int x = 171;
+	int x = 174;
 	if (shield < 10)
-		x = 179;
+		x = 182;
 	else if (shield < 100)
-		x = 175;
+		x = 179;
 
 	if (energy < 0)
 		energy = 0;
@@ -136,20 +158,25 @@ void EclipseEngine::drawC64UI(Graphics::Surface *surface) {
 	Common::Rect jarWater(112, 196 - energy, 144, 196);
 	surface->fillRect(jarWater, blue);
 
-	/*drawStringInSurface(shiftStr("0", 'Z' - '$' + 1 - _angleRotationIndex), 79, 141, back, yellow, surface);
-	drawStringInSurface(shiftStr("3", 'Z' - '$' + 1 - _playerStepIndex), 63, 141, back, yellow, surface);
-	drawStringInSurface(shiftStr("7", 'Z' - '$' + 1 - _playerHeightNumber), 240, 141, back, yellow, surface);
+	// TODO
+	/*drawStringInSurface(shiftStr("0", 'Z' - '$' + 1 - _angleRotationIndex), 79, 138, back, yellow, surface);
+	drawStringInSurface(shiftStr("3", 'Z' - '$' + 1 - _playerStepIndex), 63, 138, back, yellow, surface);
+	drawStringInSurface(shiftStr("7", 'Z' - '$' + 1 - _playerHeightNumber), 240, 138, back, yellow, surface);
 
 	if (_shootingFrames > 0) {
-		drawStringInSurface(shiftStr("4", 'Z' - '$' + 1), 232, 141, back, yellow, surface);
-		drawStringInSurface(shiftStr("<", 'Z' - '$' + 1) , 240, 141, back, yellow, surface);
-	}
-	drawAnalogClock(surface, 89, 172, back, back, gray);
+		drawStringInSurface(shiftStr("4", 'Z' - '$' + 1), 232, 138, back, yellow, surface);
+		drawStringInSurface(shiftStr("<", 'Z' - '$' + 1) , 240, 138, back, yellow, surface);
+	}*/
 
-	surface->fillRect(Common::Rect(227, 168, 235, 187), gray);
-	drawCompass(surface, 231, 177, _yaw, 10, back);*/
+	drawAnalogClockHand(surface, 72, 172, 38 * 6 - 90, 11, white);
+	drawAnalogClockHand(surface, 72, 172, 37 * 6 - 90, 11, white);
+	drawAnalogClockHand(surface, 72, 172, 36 * 6 - 90, 11, white);
+	drawAnalogClock(surface, 72, 172, back, red, white);
 
-	//drawIndicator(surface, 65, 7, 8);
+	surface->fillRect(Common::Rect(236, 170, 258, 187), white);
+	drawCompass(surface, 247, 177, _yaw, 13, back);
+
+	drawIndicator(surface, 56, 4, 8);
 	drawEclipseIndicator(surface, 224, 0, front, green);
 }
 

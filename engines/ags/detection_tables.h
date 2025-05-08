@@ -3499,6 +3499,7 @@ const PlainGameDescriptor GAME_NAMES[] = {
 	{ "twelvethirteenep2", "Twelve Thirteen - Episode 2" },
 	{ "twelvethirteenep3", "Twelve Thirteen - Episode 3" },
 	{ "twentiesflappersvsthemummy", "Twenties Flappers vs. The Mummy" },
+	{ "twilightzonelost", "The Twilight Zone: The Lost Episode" },
 	{ "twoghosts", "Two ghosts of that house: the missing toy" },
 	{ "twoofakind", "Two of a Kind" },
 	{ "ugalembrace", "Ugal's Embrace" },
@@ -4741,9 +4742,11 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "OldSkies.ags", "4f356539cb679daf9c45cf592abddb47", 2477370512, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Win/Linux 1.6?
 	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "OldSkies.ags", "4f356539cb679daf9c45cf592abddb47", 2477371093, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Win/Linux 1.8
 	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "OldSkies.ags", "4f356539cb679daf9c45cf592abddb47", 2477372648, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Win/Linux 1.9
+	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "OldSkies.ags", "4f356539cb679daf9c45cf592abddb47", 2477379620, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Win/Linux 1.9a
 	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "ac2game.dat", "4f356539cb679daf9c45cf592abddb47", 2477364851, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Mac 1.2
 	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "ac2game.dat", "4f356539cb679daf9c45cf592abddb47", 2477370512, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Mac 1.8
 	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "ac2game.dat", "4f356539cb679daf9c45cf592abddb47", 2477372422, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Mac 1.9
+	GAME_ENTRY_PLUGIN_STEAM_EN_NOAUTOSAVE("oldskies", "ac2game.dat", "4f356539cb679daf9c45cf592abddb47", 2477379620, GAMEFLAG_PLUGINS_AGSTEAM_WADJETEYE),  // Mac 1.9a
 	GAME_ENTRY_PLUGIN_GOG_EN_NOAUTOSAVE("oott", "oott-tkc.exe", "11c2421258465cba4bd773c49d918ee3", 467834855, 0),
 	GAME_ENTRY_PLUGIN_GOG_EN_NOAUTOSAVE("oott", "oott-tkc.exe", "11c2421258465cba4bd773c49d918ee3", 467845009, 0),
 	GAME_ENTRY_PLUGIN_GOG_EN_NOAUTOSAVE("oott", "agsgame.dat", "ca8414acc5dc5687891db2d8ac5a0e76", 465662744, 0), // Linux
@@ -4955,6 +4958,7 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "151b0391a650d3c81c2758deaa5852cd", 3183277137, Common::EN_ANY, nullptr, GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0),
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "c5978d50a9b7ee1c8a50a731847d8504", 3186989657, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win v2.7
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "c5978d50a9b7ee1c8a50a731847d8504", 3187004936, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win v3.0
+	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "a20e9de4567f25b692c724d9783436ac", 3012885588, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win v3.2c
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "511e08ad31c4020a9ca01b6f7ce1365f", 3009634736, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "7e5abc5202098bd00ddef999854eb9ab", 3183368017, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "e4b9f0aa26c1115143ad483c99bc9383", 3183880236, Common::UNK_LANG, "GOG.com", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac v2.5a
@@ -4963,8 +4967,11 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "c5978d50a9b7ee1c8a50a731847d8504", 3186428869, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win 2.3
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "c5978d50a9b7ee1c8a50a731847d8504", 3187004654, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win-Linux v3.0
 	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "a20e9de4567f25b692c724d9783436ac", 3012885224, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win v3.2?
+	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.exe", "a20e9de4567f25b692c724d9783436ac", 3012885314, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Win v3.2c
+	DETECTION_ENTRY_GUIO("strangeland", "Strangeland.ags", "186db7411f5dd4b8996be8a47d3a15ea", 3009649966, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Linux v3.2c
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "e037ab3414dec971b90715c7dbb56f4c", 3183901914, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac
 	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "f82b54c827a6c77c9f3922f8d3c52565", 3183901922, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac
+	DETECTION_ENTRY_GUIO("strangeland", "ac2game.dat", "186db7411f5dd4b8996be8a47d3a15ea", 3009649966, Common::UNK_LANG, "Steam", GUIO3(GUIO_NOLANG, GUIO_NOLAUNCHLOAD, GAMEOPTION_NO_SAVELOAD), ADGF_NO_FLAGS, 0), // Mac v3.6
 	GAME_ENTRY("sulifallenharmony", "Suli Fallen Harmony.exe", "8a58836830dce896e4366f57791ab6cc", 35900870),  // v1.4 itch.io En-Fr
 	GAME_ENTRY_STEAM("sumatra", "sumatra fate of yandi.exe", "57c868b1a81c0335ab60970292cd79d8", 170088886),  // En-Fr-De-Es
 	GAME_ENTRY_STEAM("sumatra", "sumatra fate of yandi.exe", "b4407ac542f316456f549fc8a60dccae", 170634789),
@@ -9553,6 +9560,8 @@ const AGSGameDescription GAME_DESCRIPTIONS[] = {
 	GAME_ENTRY_EN_PLATFORM("twelvethirteenep3", "1213_ep3.exe", "3b7cceb3e4bdb031dc5d8f290936e94b", 3246117, "Special Edition"), // From SE
 	DETECTION_ENTRY_GUIO("twelvethirteense", "1213 SE.exe", "3b7cceb3e4bdb031dc5d8f290936e94b", 644458, Common::EN_ANY, nullptr, GUIO2(GUIO_NOLANG, GUIO_NOLAUNCHLOAD), ADGF_NO_FLAGS, 0),  // Menu
 	GAME_ENTRY_EN("twentiesflappersvsthemummy", "Twenties Flappers vs The Mummy.exe", "a524cbb1c51589903c4043b98917f1d9", 15042196),
+	GAME_ENTRY_EN("twilightzonelost", "Twilight Zone.exe", "7c1cd5d4ab446db3b764ff749ea1d933", 11136440),
+	GAME_ENTRY_EN("twilightzonelost", "Twilight Zone.ags", "27d551d19101d827549bb9c2fe335bb0", 8004004),
 	GAME_ENTRY("twoghosts", "Ghosts.exe", "2f2bc0b9c539d20529c0e343315d5f65", 4525238),  // En-Fr
 	GAME_ENTRY("twoghosts", "Ghosts.exe", "2f2bc0b9c539d20529c0e343315d5f65", 4525343),  // En-Fr
 	GAME_ENTRY_EN("twoofakind", "toak.exe", "465f972675db2da6040518221af5b0ba", 24644765),

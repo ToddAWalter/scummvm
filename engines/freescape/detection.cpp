@@ -93,7 +93,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSUPPORTED,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
 		"driller", // Original tape relase?
@@ -102,7 +102,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE | GF_C64_TAPE,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
 		"driller", // Tape re-relase
@@ -110,8 +110,8 @@ static const ADGameDescription gameDescriptions[] = {
 		AD_ENTRY1s("DRILLER.C64.DATA", "4afec6eea3887343e7f91fb21a2f2948", 43278),
 		Common::EN_ANY,
 		Common::kPlatformC64,
-		ADGF_UNSTABLE | GF_C64_TAPE,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		ADGF_UNSUPPORTED, //| GF_C64_TAPE,
+		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
 		"driller", // Disc release
@@ -120,7 +120,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE | GF_C64_DISC,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
 		"driller",
@@ -344,7 +344,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSUPPORTED,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
 		"spacestationoblivion",
@@ -353,7 +353,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSUPPORTED,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 
 	// Dark Side
@@ -530,11 +530,11 @@ static const ADGameDescription gameDescriptions[] = {
 	{
 		"darkside", // Tape release
 		"",
-		AD_ENTRY1s("DARKSIDE.C64.DATA", "c0d271d86cf4434ef7c3d823a32c0df5", 61290),
+		AD_ENTRY1s("DARKSIDE.C64.DATA", "7d5fc9a962a146e303a0c71a2d5c651e", 48129),
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE | GF_C64_TAPE,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERC64)
 	},
 	{
 		"darkside", // Disk release PAL?
@@ -543,7 +543,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE | GF_C64_DISC,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERC64)
 	},
 	{
 		"darkside", // Disk release NTSC?
@@ -555,7 +555,7 @@ static const ADGameDescription gameDescriptions[] = {
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE | GF_C64_DISC,
-		GUIO2(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING)
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERC64)
 	},
 
 	// Total Eclipse
@@ -696,11 +696,20 @@ static const ADGameDescription gameDescriptions[] = {
 	{
 		"totaleclipse", // Tape relese
 		"",
-		AD_ENTRY1s("TOTALECLIPSE.C64.DATA", "70bbb8b122a27a476f908de697098947", 64317),
+		AD_ENTRY1s("TOTALECLIPSE.C64.DATA", "968fd46b941a00f887741dfc348ac149", 47105),
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE,
-		GUIO1(GUIO_NOMIDI)
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERC64)
+	},
+	{
+		"totaleclipse", // Disk release
+		"",
+		AD_ENTRY1s("TOTALECLIPSE.C64.DATA", "b9d3aa682777ee50840cabfc036693b0", 50356),
+		Common::EN_ANY,
+		Common::kPlatformC64,
+		ADGF_UNSTABLE | GF_C64_DISC,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERC64)
 	},
 	{
 		"totaleclipse",
