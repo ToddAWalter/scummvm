@@ -167,7 +167,8 @@ TextCastMember::TextCastMember(Cast *cast, uint16 castId, TextCastMember &source
 
 	_initialRect = source._initialRect;
 	_boundingRect = source._boundingRect;
-	_children = source._children;
+	if (cast == source._cast)
+		_children = source._children;
 
 	_borderSize = source._borderSize;
 	_gutterSize = source._gutterSize;
@@ -383,7 +384,11 @@ CollisionTest TextCastMember::isWithin(const Common::Rect &bbox, const Common::P
 	if (!bbox.contains(pos))
 		return kCollisionNo;
 
-	Graphics::MacWindowConstants::WindowClick result = getWidget()->isInScrollBar(pos.x, pos.y);
+	Graphics::MacText *target = getWidget();
+	if (!target)
+		return kCollisionYes;
+
+	Graphics::MacWindowConstants::WindowClick result = target->isInScrollBar(pos.x, pos.y);
 	if (result == Graphics::MacWindowConstants::kBorderScrollDown ||
 			result == Graphics::MacWindowConstants::kBorderScrollUp)
 		return kCollisionHole;
@@ -567,8 +572,8 @@ void TextCastMember::setTextStyle(const Common::String &textStyle, int start, in
 	_modified = true;
 }
 
-void TextCastMember::updateFromWidget(Graphics::MacWidget *widget) {
-	if (widget) {
+void TextCastMember::updateFromWidget(Graphics::MacWidget *widget, bool spriteEditable) {
+	if (widget && (spriteEditable || _editable)) {
 		Common::String content = ((Graphics::MacText *)widget)->getEditedString();
 		content.replace('\n', '\r');
 		_ptext = content;
@@ -628,7 +633,6 @@ void TextCastMember::unload() {
 
 bool TextCastMember::hasField(int field) {
 	switch (field) {
-	case kTheHilite:
 	case kTheText:
 	case kTheTextAlign:
 	case kTheTextFont:
@@ -659,9 +663,6 @@ Datum TextCastMember::getField(int field) {
 	Datum d;
 
 	switch (field) {
-	case kTheHilite:
-		d = _hilite;
-		break;
 	case kTheText:
 		d = getText().encode(Common::kUtf8);
 		break;
@@ -763,12 +764,6 @@ bool TextCastMember::setField(int field, const Datum &d) {
 			uint32 color = g_director->transformColor(d.asInt());
 			setColors(&color, nullptr);
 		}
-		return true;
-	case kTheHilite:
-		// TODO: Understand how texts can be selected programmatically as well.
-		// since hilite won't affect text castmember, and we may have button info in text cast in D2/3. so don't check type here
-		_hilite = (bool)d.asInt();
-		_modified = true;
 		return true;
 	case kTheText:
 		setRawText(d.asString());

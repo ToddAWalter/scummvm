@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-05-07 15:54+0000\n"
-"PO-Revision-Date: 2025-04-28 17:18+0000\n"
+"POT-Creation-Date: 2025-05-13 20:15+0000\n"
+"PO-Revision-Date: 2025-05-10 19:19+0000\n"
 "Last-Translator: Hoseok Seo <ddinghoya@gmail.com>\n"
 "Language-Team: Korean <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ko/>\n"
@@ -312,11 +312,11 @@ msgstr "다른 저장소가 지금 작동 중입니다. 중단할까요?"
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
 #: gui/launcher.cpp:502 gui/options.cpp:3528 gui/options.cpp:3911
 #: base/main.cpp:585 backends/events/default/default-events.cpp:193
-#: engines/buried/buried.cpp:590 engines/director/events.cpp:100
+#: engines/buried/buried.cpp:590 engines/director/events.cpp:101
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:143
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4200
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4201
 #: engines/toon/toon.cpp:1543
 msgid "Yes"
 msgstr "예"
@@ -325,11 +325,11 @@ msgstr "예"
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
 #: gui/launcher.cpp:502 gui/options.cpp:3528 gui/options.cpp:3911
-#: engines/buried/buried.cpp:590 engines/director/events.cpp:100
+#: engines/buried/buried.cpp:590 engines/director/events.cpp:101
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/grim/grim.cpp:366
 #: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
 #: engines/parallaction/metaengine.cpp:149
-#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4200
+#: engines/sci/graphics/controls32.cpp:929 engines/scumm/scumm.cpp:4201
 #: engines/toon/toon.cpp:1543
 msgid "No"
 msgstr "아니오"
@@ -353,14 +353,14 @@ msgstr "JSON 코드 내용이 잘못되었습니다."
 #: backends/platform/wii/options.cpp:46 engines/agos/animation.cpp:577
 #: engines/agos/midi.cpp:320 engines/agos/midi.cpp:378
 #: engines/agos/midi.cpp:457 engines/buried/saveload.cpp:83
-#: engines/director/lingo/lingo-builtins.cpp:2150
+#: engines/director/lingo/lingo-builtins.cpp:2148
 #: engines/drascula/saveload.cpp:48 engines/grim/inputdialog.cpp:83
 #: engines/groovie/script.cpp:665 engines/mtropolis/mtropolis.cpp:114
 #: engines/mtropolis/mtropolis.cpp:124 engines/parallaction/saveload.cpp:270
 #: engines/saga/music.cpp:102 engines/sci/engine/kgraphics.cpp:76
-#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1351
-#: engines/scumm/scumm.cpp:1768 engines/scumm/scumm.cpp:2258
-#: engines/scumm/scumm.cpp:2274 engines/sky/compact.cpp:140
+#: engines/sci/graphics/controls32.cpp:926 engines/scumm/scumm.cpp:1352
+#: engines/scumm/scumm.cpp:1769 engines/scumm/scumm.cpp:2259
+#: engines/scumm/scumm.cpp:2275 engines/sky/compact.cpp:140
 #: engines/sword1/animation.cpp:566 engines/sword1/animation.cpp:574
 #: engines/sword1/control.cpp:2816 engines/sword1/logic.cpp:1738
 #: engines/sword2/animation.cpp:459 engines/sword2/animation.cpp:469
@@ -6308,7 +6308,7 @@ msgstr "복원"
 msgid "Quick load or save game isn't supported in this location"
 msgstr "이 위치에서는 빠른 게임 불러오기 또는 저장이 지원되지 않음"
 
-#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3154
+#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3155
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -6319,7 +6319,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3141
+#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3142
 #, c-format
 msgid ""
 "Failed to save game to file:\n"
@@ -6330,7 +6330,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3174
+#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3175
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -6650,13 +6650,14 @@ msgstr ""
 
 #: engines/alg/metaengine.cpp:34
 msgid "Use lower quality single speed CD-ROM video"
-msgstr ""
+msgstr "낮은 품질의 단일 속도 CD-ROM 비디오 사용"
 
 #: engines/alg/metaengine.cpp:35
 msgid ""
 "These videos are of lower quality, the default version uses double speed CD-"
 "ROM videos which are of better quality"
 msgstr ""
+"이 비디오는 품질이 낮음, 기본 버전은 품질이 더 좋은 2배속 CD-ROM 비디오 사용"
 
 #: engines/asylum/metaengine.cpp:115
 msgid "Show version"
@@ -6766,7 +6767,7 @@ msgstr "무시하고 불러오기"
 
 #: engines/awe/metaengine.cpp:61
 msgid "Select/Kick/Run"
-msgstr ""
+msgstr "선택/킥/런"
 
 #: engines/awe/metaengine.cpp:62 engines/hpl1/metaengine.cpp:83
 msgid "Jump"
@@ -6774,7 +6775,7 @@ msgstr "점프"
 
 #: engines/awe/metaengine.cpp:63
 msgid "Enter Level Code"
-msgstr ""
+msgstr "레벨 코드 입력"
 
 #: engines/awe/metaengine.cpp:89 engines/dgds/metaengine.cpp:87
 #: engines/got/metaengine.cpp:90
@@ -7617,7 +7618,7 @@ msgstr "집다 / 운용"
 msgid "Activate Inventory Object"
 msgstr "인벤토리 객체 활성화"
 
-#: engines/director/events.cpp:99
+#: engines/director/events.cpp:100
 msgid ""
 "The game prevents quitting at this moment. Are you sure you want to quit "
 "anyway?"
@@ -7629,20 +7630,17 @@ msgid "Enable gamma correction"
 msgstr "감마 교정 활성화"
 
 #: engines/director/metaengine.cpp:71
-#, fuzzy
-#| msgid "Brighten the graphics to simulate a Macintosh monitor."
 msgid "Brighten the graphics to simulate a Macintosh monitor"
-msgstr "매킨토시 모니터를 시뮬레이션하기 위해 그래픽을 밝게 합니다."
+msgstr "매킨토시 모니터를 시뮬레이션하기 위해 그래픽을 밝게 함"
 
 #: engines/director/metaengine.cpp:81
 msgid "Force true color"
-msgstr ""
+msgstr "강제 트루 컬러"
 
 #: engines/director/metaengine.cpp:82
-#, fuzzy
-#| msgid "Use antialiasing to draw text even if the game does not ask for it"
 msgid "Use true color graphics mode, even if the game is not designed for it"
-msgstr "게임에서 요청하지 않더라도 안티에일리어싱을 사용하여 텍스트를 그림"
+msgstr ""
+"게임이 실제 색상 그래픽 모드로 설계되지 않았더라도 실제 색상 그래픽 모드 사용"
 
 #: engines/draci/metaengine.cpp:153
 msgid "Skip intro/Exit map or inventory"
@@ -7751,46 +7749,32 @@ msgid "Right click"
 msgstr "오른쪽 클릭"
 
 #: engines/efh/metaengine.cpp:255
-#, fuzzy
-#| msgid "Move up-left"
 msgid "Move up left"
 msgstr "왼쪽 위로 이동"
 
 #: engines/efh/metaengine.cpp:260
-#, fuzzy
-#| msgid "Move up-right"
 msgid "Move up right"
 msgstr "오른쪽 위로 이동"
 
 #: engines/efh/metaengine.cpp:265
-#, fuzzy
-#| msgid "Move down-left"
 msgid "Move down left"
 msgstr "왼쪽 아래로 이동"
 
 #: engines/efh/metaengine.cpp:270
-#, fuzzy
-#| msgid "Move down-right"
 msgid "Move down right"
 msgstr "오른쪽 아래로 이동"
 
 #: engines/efh/metaengine.cpp:275
-#, fuzzy
-#| msgid "Show character portraits"
 msgid "Character 1 status"
-msgstr "캐릭터 인물 표시"
+msgstr "캐릭터 1 상태"
 
 #: engines/efh/metaengine.cpp:280
-#, fuzzy
-#| msgid "Show character portraits"
 msgid "Character 2 status"
-msgstr "캐릭터 인물 표시"
+msgstr "캐릭터 2 상태"
 
 #: engines/efh/metaengine.cpp:285
-#, fuzzy
-#| msgid "Show character portraits"
 msgid "Character 3 status"
-msgstr "캐릭터 인물 표시"
+msgstr "캐릭터 3 상태"
 
 #: engines/freescape/metaengine.cpp:42
 msgid "Prerecorded sounds"
@@ -9949,22 +9933,16 @@ msgid "This menu item is not yet implemented"
 msgstr "이 메뉴 항목은 아직 구현되지 않았음"
 
 #: engines/playground3d/metaengine.cpp:55
-#, fuzzy
-#| msgid "Switch to Game"
 msgid "Switch test"
-msgstr "게임으로 전환"
+msgstr "테스트 전환"
 
 #: engines/playground3d/metaengine.cpp:61
-#, fuzzy
-#| msgid "Enable/Disable Jetpack"
 msgid "Enable/Disable fog"
-msgstr "제트팩 활성화/비활성화"
+msgstr "안개 활성화/비활성화"
 
 #: engines/playground3d/metaengine.cpp:67
-#, fuzzy
-#| msgid "Enable/Disable Jetpack"
 msgid "Enable/Disable scissor"
-msgstr "제트팩 활성화/비활성화"
+msgstr "가위 활성화/비활성화"
 
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
@@ -10403,7 +10381,7 @@ msgstr "최대 색심도가 8 bpp인 시스템에서 %d bpp 비디오를 재생�
 msgid "SCI32 support not compiled in"
 msgstr "SCI32 지원이 컴파일 되지 않았음"
 
-#: engines/sci/resource/resource.cpp:858
+#: engines/sci/resource/resource.cpp:859
 msgid ""
 "Missing or corrupt game resources have been detected. Some game features may "
 "not work properly. Please check the console for more information, and verify "
@@ -10555,7 +10533,7 @@ msgid "Your Name:"
 msgstr "사용자 이름:"
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4206
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4207
 msgid "Host"
 msgstr "호스트"
 
@@ -10565,7 +10543,7 @@ msgid "Querying games..."
 msgstr "게임 쿼리 중..."
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4206
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4207
 msgid "Join"
 msgstr "참여"
 
@@ -11538,7 +11516,7 @@ msgstr ""
 "불러오기를 시도하지만 게임이 제대로 작동하지 않거나 충돌할 수 있습니다.\n"
 "이 저장 파일을 제대로 불러오려면 오디오 구성을 적절히 변경하세요."
 
-#: engines/scumm/scumm.cpp:312
+#: engines/scumm/scumm.cpp:313
 msgid ""
 "You have enabled 'aspect ratio correction'. However, FM-TOWNS' natural "
 "resolution is 320x240, which doesn't allow aspect ratio correction.\n"
@@ -11549,19 +11527,19 @@ msgstr ""
 "320x240으로 화면비 교정을 허용하지 않습니다.\n"
 "화면비 교정은 '엔진' 탭에서 해상도를 320x200으로 잘라내어 달성할 수 있습니다."
 
-#: engines/scumm/scumm.cpp:1342
+#: engines/scumm/scumm.cpp:1343
 #, c-format
 msgid "This game requires the '%s' Macintosh executable for its fonts."
 msgstr "이 게임의 글꼴을 사용하려면 '%s' 매킨토시 실행 파일이 필요합니다."
 
-#: engines/scumm/scumm.cpp:1346
+#: engines/scumm/scumm.cpp:1347
 #, c-format
 msgid ""
 "This game requires the '%s' Macintosh executable for its music and fonts."
 msgstr ""
 "이 게임은 음악과 글꼴을 사용하려면 '%s' 매킨토시 실행 파일이 필요합니다."
 
-#: engines/scumm/scumm.cpp:1350
+#: engines/scumm/scumm.cpp:1351
 #, c-format
 msgid ""
 "Could not find the '%s' Macintosh executable to read resources from. %s will "
@@ -11570,25 +11548,25 @@ msgstr ""
 "리소스를 읽기 위한 매킨토시 실행 파일 '%s'를 찾을 수 없습니다. %s는 비활성화"
 "됩니다."
 
-#: engines/scumm/scumm.cpp:1351
+#: engines/scumm/scumm.cpp:1352
 msgid "The Mac GUI"
 msgstr "맥 GUI"
 
-#: engines/scumm/scumm.cpp:1351
+#: engines/scumm/scumm.cpp:1352
 msgid "The music and the Mac GUI"
 msgstr "음악과 맥 GUI"
 
-#: engines/scumm/scumm.cpp:1371
+#: engines/scumm/scumm.cpp:1372
 #, c-format
 msgid "Could not open Macintosh resource file %s"
 msgstr "매킨토시 리소스 파일 %s을(를) 열 수 없음"
 
-#: engines/scumm/scumm.cpp:1374
+#: engines/scumm/scumm.cpp:1375
 #, c-format
 msgid "Could not find resource fork in Macintosh resource file %s"
 msgstr "매킨토시 리소스 파일 %s에서 리소스 포크를 찾을 수 없음"
 
-#: engines/scumm/scumm.cpp:1382
+#: engines/scumm/scumm.cpp:1383
 #, c-format
 msgid ""
 "'%s' appears to be the wrong Dig executable. It may be the launcher one "
@@ -11600,7 +11578,7 @@ msgstr ""
 "기에는 필요한 메뉴와 대화 상자 정의가 하나도 없습니다. CD에서 'The Dig f' 폴"
 "더를 찾으세요. 하위 폴더 중 하나면 필요한 것이 있을 것입니다."
 
-#: engines/scumm/scumm.cpp:1765
+#: engines/scumm/scumm.cpp:1766
 msgid ""
 "Audio files compressed with ScummVM Tools were detected; *.BUN/*.SOU\n"
 "compression is not supported anymore for this game, audio will be disabled.\n"
@@ -11610,7 +11588,7 @@ msgstr ""
 "압축은 이 게임에서 더 이상 지원되지 않으므로 오디오가 비활성화됩니다.\n"
 "게임을 압축하지 않고 원본 미디어에서 복사하세요."
 
-#: engines/scumm/scumm.cpp:2256
+#: engines/scumm/scumm.cpp:2257
 #, c-format
 msgid ""
 "Native MIDI support requires the Roland Upgrade from LucasArts,\n"
@@ -11619,7 +11597,7 @@ msgstr ""
 "실기 미디 지원에는 루카스아츠의 롤랜드 업그레이드가 필요하지만,\n"
 "%s가 없습니다. 대신 애드립을 사용합니다."
 
-#: engines/scumm/scumm.cpp:2272
+#: engines/scumm/scumm.cpp:2273
 msgid ""
 "This particular version of Monkey Island 1 is known to miss some\n"
 "required resources for MT-32. Using AdLib instead."
@@ -11627,7 +11605,7 @@ msgstr ""
 "이 특정 버전의 원숭이 섬 1은 MT-32에 필요한 리소스가 일부\n"
 "빠진 것으로 알려져 있습니다. 대신 애드립을 사용합니다."
 
-#: engines/scumm/scumm.cpp:4094
+#: engines/scumm/scumm.cpp:4095
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -11637,7 +11615,7 @@ msgstr ""
 "게임 파일이 Tentacle 게임 디렉터리 내의 'Maniac' 디렉터리에 있어야 하고, 게임"
 "을 ScummVM에 추가해야 합니다."
 
-#: engines/scumm/scumm.cpp:4206
+#: engines/scumm/scumm.cpp:4207
 msgid "Would you like to host or join a network play session?"
 msgstr "네트워크 플레이 세션을 호스팅하거나 참여하고 싶습니까?"
 
@@ -12241,7 +12219,7 @@ msgstr "저장/불러오기 메뉴 끝으로 이동"
 
 #: engines/tinsel/tinsel.cpp:1040
 msgid "Discworld Noir needs ScummVM with TinyGL enabled"
-msgstr ""
+msgstr "Discworld Noir는 TinyGL이 활성화된 ScummVM이 필요함"
 
 #: engines/toltecs/metaengine.cpp:216
 msgid "Move / Select"

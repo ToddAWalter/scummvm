@@ -33,18 +33,31 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed text rendering in Chinese and Japanese localizations.
    - Added support for Japanese DVD version of Schizm: Mysterious Journey.
 
-#### 2.9.1 (XXXX-XX-XX)
+#### 2.9.1 (2025-05-25)
+
+ AGI:
+   - Added support for early version of Christmas Card 1986 with advertisements
+     for Tandy hardware.
+   - Fixed many graphics bugs and improved responsiveness in Mickey's Space
+     Adventure, Winnie The Pooh In The Hundred Acre Wood, and Troll's Tale.
+   - Save games in Mickey's Space Adventure now restore to the planet they
+     were saved on instead of Earth.
 
  AGS:
+   - Added official support for Old Skies and Rosewater.
    - Added support for sound clip speed variation, used in some games to
      slow down background music or other audio effects.
    - Fixed some audio volume changes not being triggered in some situations
      (e.g. automatic music volume drop during dev commentary or when a
      characters speaks, in the Blackwell series).
+   - Added/updated detection entries for various AGS games.
 
  Asylum:
    - Fixed crash in Sanitarium main menu, when moving the cursor to the
      top part of the screen.
+
+ BAGEL:
+   - Fixed crash when inserting the credit card in the slot machine.
 
  Bladerunner:
    - Fixed 2x scaling and fullscreen support in non-interactive demo.
@@ -63,7 +76,25 @@ For a more comprehensive changelog of the latest experimental code, see:
      Android.
 
  SCI:
-   - Fixed KQ6 CD hi-res drawing glitches.
+   - Fixed KQ6 CD crash when talking to Rotten Tomato from inventory window in
+     high-resolution mode. (ScummVM 2.9.0 bug)
+   - Fixed KQ4 Amiga skipping title screen. (ScummVM 2.8.0 bug)
+   - Fixed QFG4 v1.0 crash in Thieves' Guild. (ScummVM 2.1.0 bug)
+   - Fixed messages disappearing every 18.2 minutes in BRAIN1, LSL5, and SQ1.
+     (Original game bug)
+   - Fixed SQ5 introduction comets not appearing on machines faster than a 386.
+     (Original game bug)
+   - Fixed LSL1 lockup when entering casino. (Original game bug)
+   - Fixed LSL6 crash when entering hotel. (Original game bug)
+   - Fixed LSL6-HIRES tram disappearing after restarting game.
+     (Original game bug)
+   - Fixed LSL6 help cursor not appearing. (Original game bug)
+   - Fixed QFG1 EGA lockup when tripping over trip wire. (Original game bug)
+   - Fixed KQ1 lockup when drowning in cave. (Original game bug)
+   - Fixed GK1 day 5 phone lockup in all game versions at all speeds.
+     (Original game bug)
+   - Fixed incorrect blue dither pattern in EGA vector pictures.
+     (All SCI tools since SCI Decoder in 1992)
 
  SCUMM:
    - Restored the ScummVM 2.7.0 behavior of allowing all the DOS v2-v4
@@ -113,7 +144,16 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed meca penguin movement.
    - Fixed sound related issues.
 
+ TWP:
+   - Added an error message when trying to play Thimbleweed Park on
+     platforms not having support for OpenGL with shaders.
+
+ 3DS port:
+   - Fix top screen not fully rendering in some cases.
+
  Android port:
+   - Added a feature to let users backup and restore their configuration
+     and saves.
    - Enabled NEON support by default, resulting in better performance for
      the vast majority of older Android devices.
    - Worked around a bug in ARMv7a Android 6.0 and below, which could

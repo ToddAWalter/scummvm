@@ -34,19 +34,32 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Fehlerhafte Text-Darstellung in der chinesischen und japanischen Version korrigiert.
    - Unterstützung für die japanische DVD-Version von Schizm: Mysterious Journey hinzugefügt.
 
-#### 2.9.1 (XXXX-XX-XX)
+#### 2.9.1 (25.05.2025)
+
+ AGI:
+   - Unterstützung für frühe Versionen von Christmas Card 1986 mit Werbung
+     für Tandy-Hardware hinzugefügt.
+   - Korrektur vieler Grafikfehler und verbesserte Wiedergabegeschwindigkeit in Mickey's Space
+     Adventure, Winnie The Pooh In The Hundred Acre Wood und Troll's Tale.
+   - Spielstände in Mickey's Space Adventure werden jetzt auf dem Planeten wiederhergestellt,
+     auf dem sie gespeichert wurden, und nicht länger immer auf der Erde.
 
  AGS:
+   - Unterstützung für Old Skies und Rosewater hinzugefügt.
    - Unterstützung für Geschwindigkeitsänderungen von Audio-Clips hinzugefügt.
      Diese werden in einigen Spielen verwendet, um die Hintergrundmusik oder andere
      Audio-Effekte zu verlangsamen.
    - Fehler korrigiert, durch den in einigen Fällen Lautstärkeänderungen nicht korrekt
      ausgelöst wurden (beispielsweise um die Musiklautstärke in Entwicklerkommentaren oder
      wenn in der Blackwell-Serie ein Charakter spricht, zu verringern)
+   - Erkennungs-Datenbank für einige AGS-Spiele aktualisiert.
 
  Asylum:
    - Absturz im Hauptmenü von Sanitarium korrigiert, der auftritt, wenn der Cursor in den
      oberen Bereich des Bildschirms bewegt wird.
+
+ BAGEL:
+   - Absturz behoben, der auftritt, wenn die Kreditkarte in den Spielautomat gesteckt wird.
 
  Bladerunner:
    - 2x-Skalierung und Vollbild-Unterstützung in der nicht-interaktiven Demo-Version korrigiert.
@@ -63,7 +76,23 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Behandlung von Spiel-Ressourcen verbessert, was zur Verbesserung der Leistung auf Android führt.
 
  SCI:
-   - Darstellungsprobleme bei den hochaufläsenden Grafiken von KQ6 korrigiert.
+   - Absturz in der CD-Version von KQ6 korrigiert, wenn im hochauflösenden Modus vom Inventar-Fenster aus
+     mit Rotten Tomato gesprochen wird. (Fehler in ScummVM 2.9.0)
+   - Fehler korrigiert, durch den der Titel-Bildschirm in der Amiga-Version von KQ4 übersprungen wird. (Fehler in ScummVM 2.8.0)
+   - Absturz in der Thieves' Guild in QFG4 v1.0 behoben. (Fehler in ScummVM 2.1.0)
+   - Fehler korrigiert, der verursacht, dass in BRAIN1, LSL5 und SQ1 Nachrichten alle 18,2 Minuten verschwinden. (Fehler im Original-Spiel)
+   - Fehler in SQ5 korrigiert, durch den die Kometen in der Einfürhung nicht erscheinen, wenn das Spiel
+     auf einer Maschine läuft, die schneller als ein 386er ist. (Fehler im Original-Spiel)
+   - Absturz in LSL1 behoben, der auftritt, wenn das Casino betreten wird. (Fehler im Original-Spiel)
+   - Absturz in LSL6 behoben, der auftritt, wenn das Hotel betreten wird. (Fehler im Original-Spiel)
+   - Fehler in LSL6-HIRES behoben, durch den die Tram verschwindet, wenn das Spiel neu gestartet wird.
+     (Fehler im Original-Spiel)
+   - Der Hilfe-Cursor in LSL6 wird jetzt korrekt angezeigt. (Fehler im Original-Spiel)
+   - Absturz in QFG1 EGA behoben, der auftritt, wenn auf den Stolperdraht getreten wird. (Fehler im Original-Spiel)
+   - Absturz in KQ1 behoben, der auftritt, wenn in der Höhle ertrunken wird. (Fehler im Original-Spiel)
+   - Absturz im Zusammenhang mit dem Telefon an Tag 5 in GK1 in allen Spiel-Geschwindigkeiten behoben.
+     (Fehler im Original-Spiel)
+   - Fehlerhafter Blauton im Dithering von EGA-Vektorgrafiken behoben (Alle SCI-Tools seit dem SCI-Decoder von 1992)
 
  SCUMM:
    - Verhalten von ScummVM 2.7.0 wiederhergestellt: Die DOS-v2-v4-Spiele (Maniac Mansion bis Monkey2)
@@ -78,8 +107,8 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Fehler behoben, der dazu führt, dass bei der Verringerung der Lautstärke in iMUSE
      (z.B. im Intro von Sam & Max) exzessive MIDI-Nachrichten erzeugt werden, die zu verlangsamter,
 	 fehlerhafter Sprachausgabe bei der Nutzung älterer MIDI-Hardware führen kann.
-   - Absturz behoben, der auftritt, wenn ein älterer Spielstand geladen werden und gerade
-     ein iMUSE-Überang wiedergegeben wird.
+   - Absturz behoben, der auftritt, wenn ein älterer Spielstand geladen und gerade
+     ein iMUSE-Überang wiedergegeben werden.
    - Jolly Roger-Verbesserung für Moneky1 korrigiert. Die Aktivierung dieser Verbesserung
      würde verhindern, dass diese Flagge erscheint, obwohl sie nicht mehr sichtbar sein sollte.
 	 Die entsprechende Fehlerbehebung war in einigen VGA-Diskettenversionen fehlerhaft.
@@ -107,7 +136,15 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Bewegungsabläufe des Meca-Pinguins korrigiert.
    - Einige Fehler bei der Audiowiedergabe behoben.
 
+ TWP:
+   - Wenn Thimbleweed Park auf Plattformen gestartet wird, die keine Unterstützung für
+     OpenGL-Shader anbieten, wird jetzt eine entsprechende Fehlermeldung ausgegeben.
+
+ 3DS-Portierung:
+   - Fehler behoben, durch den die Darstellung auf dem oberen Bildschirm teilweise fehlerhaft war.
+
  Android-Portierung:
+   - Spielstände und Konfiguration können jetzt gesichert und wiederhergestellt werden.
    - Die NEON-Unterstützung ist jetzt standardmäßig aktiviert, was zu einer verbesserten Leistung auf
      der überwiegenden Mehrzahl älterer Android-Geräte führt.
    - Ein Fehler in der ARMv7a-Version von Android 6.0 und älter wurde behoben, der in einigen

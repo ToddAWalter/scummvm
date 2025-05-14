@@ -1986,8 +1986,6 @@ void LB::b_return(int nargs) {
 	Datum retVal;
 	if (nargs > 0) {
 		retVal = g_lingo->pop();
-		if (retVal.type != VOID && g_lingo->_state->callstack.size() <= 2)
-			g_lingo->_theResult = retVal;	// Store result for possible reference
 	}
 
 	// clear any temp values from loops
@@ -2981,7 +2979,7 @@ void LB::b_rollOver(int nargs) {
 
 	Common::Point pos = g_director->getCurrentWindow()->getMousePos();
 
-	if (score->checkSpriteIntersection(arg, pos))
+	if (score->checkSpriteRollOver(arg, pos))
 		res.u.i = 1; // TRUE
 
 	g_lingo->push(res);
@@ -3550,8 +3548,6 @@ void LB::b_castLib(int nargs) {
 }
 
 void LB::b_member(int nargs) {
-	Movie *movie = g_director->getCurrentMovie();
-
 	CastMemberID res;
 	if (nargs == 1) {
 		Datum member = g_lingo->pop();
@@ -3562,8 +3558,8 @@ void LB::b_member(int nargs) {
 		res = g_lingo->toCastMemberID(member, library);
 	}
 
-	if (!movie->getCastMember(res)) {
-		g_lingo->lingoError("No match found for cast member");
+	if (res.member > g_lingo->getMembersNum(res.castLib)) {
+		g_lingo->lingoError("b_member: Cast member ID out of range");
 		return;
 	}
 	g_lingo->push(res);

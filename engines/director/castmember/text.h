@@ -34,6 +34,9 @@ class TextCastMember : public CastMember {
 public:
 	TextCastMember(Cast *cast, uint16 castId, Common::SeekableReadStreamEndian &stream, uint16 version, uint8 flags1 = 0, bool asButton = false);
 	TextCastMember(Cast *cast, uint16 castId, TextCastMember &source);
+
+	CastMember *duplicate(Cast *cast, uint16 castId) override { return (CastMember *)(new TextCastMember(cast, castId, *this)); }
+
 	void setColors(uint32 *fgcolor, uint32 *bgcolor) override;
 
 	Graphics::MacWidget *createWidget(Common::Rect &bbox, Channel *channel, SpriteType spriteType) override;
@@ -44,7 +47,7 @@ public:
 
 	bool isEditable() override { return _editable; }
 	void setEditable(bool editable) override { _editable = editable; }
-	void updateFromWidget(Graphics::MacWidget *widget) override;
+	void updateFromWidget(Graphics::MacWidget *widget, bool spriteEditable) override;
 	Graphics::TextAlign getAlignment();
 
 	uint32 getBackColor() override { return _bgcolor; }

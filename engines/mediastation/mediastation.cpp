@@ -125,7 +125,7 @@ bool MediaStationEngine::isFirstGenerationEngine() {
 	if (_boot == nullptr) {
 		error("Attempted to get engine version before BOOT.STM was read");
 	} else {
-		return (_boot->_versionInfo == nullptr);
+		return (_boot->_versionInfo.major == 0);
 	}
 }
 
@@ -227,7 +227,9 @@ void MediaStationEngine::processEvents() {
 			Asset *hotspot = findAssetToAcceptMouseEvents();
 			if (hotspot != nullptr) {
 				debugC(1, kDebugEvents, "EVENT_KEYDOWN (%d): Sent to hotspot %d", _event.kbd.ascii, hotspot->getHeader()->_id);
-				hotspot->runKeyDownEventHandlerIfExists(_event.kbd);
+				ScriptValue keyCode;
+				keyCode.setToFloat(_event.kbd.ascii);
+				hotspot->runEventHandlerIfExists(kKeyDownEvent, keyCode);
 			}
 			break;
 		}
@@ -260,11 +262,8 @@ void MediaStationEngine::setCursor(uint id) {
 	// that's a lookup into BOOT.STM, which gives actual name the name of the
 	// resource in the executable.
 	if (id != 0) {
-		CursorDeclaration *cursorDeclaration = _boot->_cursorDeclarations.getValOrDefault(id);
-		if (cursorDeclaration == nullptr) {
-			error("MediaStationEngine::setCursor(): Cursor %d not declared", id);
-		}
-		_cursor->setCursor(*cursorDeclaration->_name);
+		const CursorDeclaration &cursorDeclaration = _boot->_cursorDeclarations.getVal(id);
+		_cursor->setCursor(cursorDeclaration._name);
 	}
 }
 
@@ -282,7 +281,7 @@ void MediaStationEngine::refreshActiveHotspot() {
 			hotspot->runEventHandlerIfExists(kMouseEnteredEvent);
 		} else {
 			// There is no hotspot, so set the default cursor for this screen instead.
-			setCursor(_currentContext->_screenAsset->_cursorResourceId);
+			setCursor(_currentContext->_screenAsset->getHeader()->_cursorResourceId);
 		}
 	}
 
@@ -303,9 +302,9 @@ void MediaStationEngine::redraw() {
 
 	for (Common::Rect dirtyRect : _dirtyRects) {
 		for (Asset *asset : _assetsPlaying) {
-			Common::Rect *bbox = asset->getBbox();
-			if (bbox != nullptr) {
-				if (dirtyRect.intersects(*bbox)) {
+			Common::Rect bbox = asset->getBbox();
+			if (!bbox.isEmpty()) {
+				if (dirtyRect.intersects(bbox)) {
 					asset->redraw(dirtyRect);
 				}
 			}
@@ -328,31 +327,23 @@ Context *MediaStationEngine::loadContext(uint32 contextId) {
 	}
 
 	// Get the file ID.
-	SubfileDeclaration *subfileDeclaration = _boot->_subfileDeclarations.getValOrDefault(contextId);
-	if (subfileDeclaration == nullptr) {
-		error("MediaStationEngine::loadContext(): Couldn't find subfile declaration with ID %d", contextId);
-		return nullptr;
-	}
+	const SubfileDeclaration &subfileDeclaration = _boot->_subfileDeclarations.getVal(contextId);
 	// There are other assets in a subfile too, so we need to make sure we're
 	// referencing the screen asset, at the start of the file.
-	if (subfileDeclaration->_startOffsetInFile != 16) {
+	if (subfileDeclaration._startOffsetInFile != 16) {
 		warning("MediaStationEngine::loadContext(): Requested ID wasn't for a context.");
 		return nullptr;
 	}
-	uint32 fileId = subfileDeclaration->_fileId;
+	uint fileId = subfileDeclaration._fileId;
 
 	// Get the filename.
-	FileDeclaration *fileDeclaration = _boot->_fileDeclarations.getValOrDefault(fileId);
-	if (fileDeclaration == nullptr) {
-		warning("MediaStationEngine::loadContext(): Couldn't find file declaration with ID 0x%x", fileId);
-		return nullptr;
-	}
-	Common::Path entryCxtFilepath(*fileDeclaration->_name);
+	const FileDeclaration &fileDeclaration = _boot->_fileDeclarations.getVal(fileId);
+	Common::Path entryCxtFilepath(fileDeclaration._name);
 
 	// Load any child contexts before we actually load this one. The child
 	// contexts must be unloaded explicitly later.
-	ContextDeclaration *contextDeclaration = _boot->_contextDeclarations.getValOrDefault(contextId);
-	for (uint32 childContextId : contextDeclaration->_fileReferences) {
+	ContextDeclaration contextDeclaration = _boot->_contextDeclarations.getVal(contextId);
+	for (uint childContextId : contextDeclaration._parentContextIds) {
 		// The root context is referred to by an ID of 0, regardless of what its
 		// actual ID is. The root context is already always loaded.
 		if (childContextId != 0) {
@@ -428,15 +419,8 @@ ScriptValue MediaStationEngine::callMethod(BuiltInMethod methodId, Common::Array
 
 void MediaStationEngine::doBranchToScreen() {
 	if (_currentContext != nullptr) {
-		EventHandler *exitEvent = _currentContext->_screenAsset->_eventHandlers.getValOrDefault(kExitEvent);
-		if (exitEvent != nullptr) {
-			debugC(5, kDebugScript, "Executing context exit event handler");
-			exitEvent->execute(_currentContext->_screenAsset->_id);
-		} else {
-			debugC(5, kDebugScript, "No context exit event handler");
-		}
-
-		releaseContext(_currentContext->_screenAsset->_id);
+		_currentContext->_screenAsset->runEventHandlerIfExists(kExitEvent);
+		releaseContext(_currentContext->_screenAsset->getHeader()->_id);
 	}
 
 	Context *context = loadContext(_requestedScreenBranchId);
@@ -445,15 +429,7 @@ void MediaStationEngine::doBranchToScreen() {
 	_currentHotspot = nullptr;
 
 	if (context->_screenAsset != nullptr) {
-		// TODO: Make the screen an asset just like everything else so we can
-		// run event handlers with runEventHandlerIfExists.
-		EventHandler *entryEvent = context->_screenAsset->_eventHandlers.getValOrDefault(MediaStation::kEntryEvent);
-		if (entryEvent != nullptr) {
-			debugC(5, kDebugScript, "Executing context entry event handler");
-			entryEvent->execute(context->_screenAsset->_id);
-		} else {
-			debugC(5, kDebugScript, "No context entry event handler");
-		}
+		context->_screenAsset->runEventHandlerIfExists(kEntryEvent);
 	}
 
 	_requestedScreenBranchId = 0;
@@ -469,8 +445,8 @@ void MediaStationEngine::releaseContext(uint32 contextId) {
 	// Make sure nothing is still using this context.
 	for (auto it = _loadedContexts.begin(); it != _loadedContexts.end(); ++it) {
 		uint id = it->_key;
-		ContextDeclaration *contextDeclaration = _boot->_contextDeclarations.getValOrDefault(id);
-		for (uint32 childContextId : contextDeclaration->_fileReferences) {
+		ContextDeclaration contextDeclaration = _boot->_contextDeclarations.getVal(id);
+		for (uint32 childContextId : contextDeclaration._parentContextIds) {
 			if (childContextId == contextId) {
 				return;
 			}

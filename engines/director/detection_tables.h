@@ -216,6 +216,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "giggletour",			"The Gigglebone Gang World Tour" },
 	{ "gigglevania",		"Pantsylvania: The Kingdom of the Fancy Pants" },
 	{ "goferwinkel",		"Goferwinkel's Adventures: The Lavender Land" },
+	{ "goldendolphin",		"Search for the Golden Dolphin" },
 	{ "goldilocks",			"Goldilocks Gamebook" },
 	{ "gordak",				"Gord@k" },
 	{ "gothos",				"Gothos" },
@@ -4399,6 +4400,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("gusbuds", "",		"MMV Product Demos for PowerMac", "r:692f6732b6d7deaa00c9b3df57bb30ce", 60068, 404),
 	WINGAME1("gusbuds", "",		"MMVDEMOS.EXE",					  "d:71d4ad9e9dc92a81561476d4d9813492", 692037, 404),
 
+	MACGAME1("guscarn", "", "Gus Goes to the Kooky Carnival", "r:e6833f1ce3b022f0128e4c80a55bcd46", 285310, 404),
+	WINGAME1("guscarn", "", "CARNIVAL.EXE", "t:d0babe1503cdec2b3c45674f91911c13", 690553, 404),
 	WINGAME1_l("guscarn", "", "PRETPARK.EXE", "t:d0babe1503cdec2b3c45674f91911c13", 690553, Common::NL_NLD, 404),
 	MACDEMO1("guscarn", "Demo", "Carnival Demo 4 you", "r:67f572196550aedb1f9523d782022be0", 481226, 404),
 
@@ -6561,8 +6564,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1("compconf", "Windows 3.1", "CCWIN311.EXE", "t:d2f5116b14bb8aaeaeae3d3d7e55d40b", 918905,  500),
 	WINGAME1("compconf", "Windows 95",  "CCWIN95.EXE",  "t:4cb9a6383932f6f11946a5692d82bcf0", 1395275, 500),
 
-	WINGAME2t("cracking", "", "crack.exe", "c2093c2b5dc9d3dc5b491e4df027e202", 1842361,
-							  "ufog8.dxr", "7c8222a010d40b59dd96a97f0b4fa974", 542472, 500),
+	WINGAME2tf("cracking", "", "crack.exe", "c2093c2b5dc9d3dc5b491e4df027e202", 1842361,
+							  "ufog8.dxr", "7c8222a010d40b59dd96a97f0b4fa974", 542472, 500, GF_32BPP),
 
 	// Mac versions require installation
 	// Original Mac german filename is Kreuzzüge
@@ -8963,6 +8966,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	MACGAME1_l("glitzerschuppen", "", "GLITZERSCHUPPEN",	 "r:dec72b4b6f8e97f1ea24361794bf0bdf", 116459, Common::DE_DEU, 702),
 	WINGAME1_l("glitzerschuppen", "", "Glitzerschuppen.exe", "t:b04230237024e1c8e7f4d3920acba08a", 1820762, Common::DE_DEU, 702),
+
+	WINGAME1("goldendolphin", "", "files/Golden Dolphin/dolphin.exe", "t:f7faf63f4a68592cc83206874a89b54b", 2148101, 702),
+	MACGAME1("goldendolphin", "", "files/macinstall/Dolphin", "tr:fea0a7666493192c59b2051dd8485fe5", 114553, 702),
 
 	// Found on アクティブマスコット・ハイジ (Heidi Desktop Mascot) software from Inner Brain, Shinjuku, Tokyo
 	// Installers for the screen savers and other applications also use Director

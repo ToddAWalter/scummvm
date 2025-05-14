@@ -115,6 +115,7 @@ public:
 	bool duplicateCastMember(CastMemberID source, CastMemberID target);
 	CastMemberID getCastMemberIDByMember(int memberID);
 	int getCastLibIDByName(const Common::String &name);
+	void setCastLibName(const Common::String &name, int castLib);
 	CastMemberID getCastMemberIDByName(const Common::String &name);
 	CastMemberID getCastMemberIDByNameAndType(const Common::String &name, int castLib, CastType type);
 	CastMemberInfo *getCastMemberInfo(CastMemberID memberID);
@@ -172,7 +173,7 @@ public:
 	int _nextEventId;
 	Common::Queue<LingoEvent> _inputEventQueue;
 
-	unsigned char _key;
+	uint16 _key;
 	int _keyCode;
 	byte _keyFlags;
 

@@ -160,20 +160,6 @@ bool BaseRenderOpenGL3D::setup2D(bool force) {
 		glDisable(GL_STENCIL_TEST);
 
 		glDisable(GL_FOG);
-
-		//
-		// WME has this. It's unknown if it's really needed
-		// Support this would require higher OpenGL version
-		//
-		// D3DTSS_COLOROP               = D3DTOP_MODULATE
-		// D3DTSS_COLORARG1             = D3DTA_TEXTURE
-		// D3DTSS_COLORARG              = D3DTA_DIFFUSE
-		// D3DTSS_ALPHAOP               = D3DTOP_MODULATE
-		// D3DTSS_ALPHAARG1             = D3DTA_TEXTURE
-		// D3DTSS_ALPHAARG2             = D3DTA_DIFFUSE
-		// D3DTSS_MIPFILTER             = D3DTEXF_NONE
-		// D3DTSS_TEXCOORDINDEX         = 0
-		// D3DTSS_TEXTURETRANSFORMFLAGS = D3DTTFF_DISABLE
 	}
 
 	return true;
@@ -184,15 +170,6 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 		_state = RSTATE_3D;
 
 		glEnable(GL_NORMALIZE);
-
-		//
-		// WME has this. It's unknown if it's really needed
-		// Support this would require higher OpenGL version
-		//
-		// D3DTSS_COLORARG1 = D3DTA_TEXTURE
-		// D3DTSS_COLORARG2 = D3DTA_CURRENT
-		// D3DTSS_COLOROP   = D3DTOP_MODULATE
-		// D3DTSS_ALPHAOP   = D3DTOP_SELECTARG1
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -682,7 +659,7 @@ BaseImage *BaseRenderOpenGL3D::takeScreenshot() {
 }
 
 bool BaseRenderOpenGL3D::enableShadows() {
-	_gameRef->_supportsRealTimeShadows = false;
+	_gameRef->_supportsRealTimeShadows = true;
 	return true;
 }
 
@@ -690,21 +667,10 @@ bool BaseRenderOpenGL3D::disableShadows() {
 	return true;
 }
 
-void BaseRenderOpenGL3D::displayShadow(BaseObject *object, const DXVector3 *lightPos, bool lightPosRelative) {
-	if (!_ready || !object || !lightPos)
+void BaseRenderOpenGL3D::displaySimpleShadow(BaseObject *object) {
+	if (!_ready || !object)
 		return;
 
-	// redirect simple shadow if needed
-	bool simpleShadow = _gameRef->getMaxShadowType(object) <= SHADOW_SIMPLE;
-	if (!_gameRef->_supportsRealTimeShadows)
-		simpleShadow = true;
-	if (simpleShadow)
-		return renderSimpleShadow(object);
-
-	// TODO: to be implemented
-}
-
-void BaseRenderOpenGL3D::renderSimpleShadow(BaseObject *object) {
 	BaseSurface *shadowImage;
 	if (object->_shadowImage) {
 		shadowImage = object->_shadowImage;

@@ -471,6 +471,17 @@ void Score::updateCurrentFrame() {
 	}
 
 	if (_curFrameNumber != nextFrameNumberToLoad) {
+		// Cache the previous bounding box for the purposes of rollOver.
+		// If the sprite is blank, D4 and below will use whatever the previous valid bounding
+		// box was for rollOver testing.
+		if (g_director->getVersion() < 500) {
+			for (uint ch = 0; ch < _channels.size(); ch++) {
+				if (_channels[ch]->_sprite->_castId.member != 0) {
+					_channels[ch]->_rollOverBbox = _channels[ch]->getBbox();
+				}
+			}
+		}
+
 		// Load the current sprite information into the _currentFrame data store.
 		// This is specifically because of delta updates; loading the next frame
 		// in the score applies delta changes to _currentFrame, and ideally we want
@@ -622,17 +633,20 @@ void Score::update() {
 
 	uint32 count = _window->frozenLingoStateCount();
 
-	// new frame, first call the perFrameHook (if one exists)
-	if (!_window->_newMovieStarted && !_vm->_playbackPaused) {
-		// Call the perFrameHook as soon as a frame switch is done.
-		// If there is a transition, the perFrameHook is called
-		// after each transition subframe instead of here.
-		if (_currentFrame->_mainChannels.transType == 0 && _currentFrame->_mainChannels.trans.isNull()) {
-			_lingo->executePerFrameHook(_curFrameNumber, 0);
+	// Director 4 and below will allow infinite recursion via the perFrameHook.
+	if (_vm->getVersion() < 500) {
+		// new frame, first call the perFrameHook (if one exists)
+		if (!_window->_newMovieStarted && !_vm->_playbackPaused) {
+			// Call the perFrameHook as soon as a frame switch is done.
+			// If there is a transition, the perFrameHook is called
+			// after each transition subframe instead of here.
+			if (_currentFrame->_mainChannels.transType == 0 && _currentFrame->_mainChannels.trans.isNull()) {
+				_lingo->executePerFrameHook(_curFrameNumber, 0);
+			}
 		}
+		if (_window->frozenLingoStateCount() > count)
+			return;
 	}
-	if (_window->frozenLingoStateCount() > count)
-		return;
 
 	// Check to see if we've hit the recursion limit
 	if (_vm->getVersion() >= 400 && _window->frozenLingoRecursionCount() >= 2) {
@@ -643,6 +657,21 @@ void Score::update() {
 		warning("Score::update(): Stopping runaway script recursion. By this point D3 will have run out of stack space");
 		processFrozenScripts();
 		return;
+	}
+
+	// Director 5 and above actually check for recursion for the perFrameHook.
+	if (_vm->getVersion() >= 500) {
+		// new frame, first call the perFrameHook (if one exists)
+		if (!_window->_newMovieStarted && !_vm->_playbackPaused) {
+			// Call the perFrameHook as soon as a frame switch is done.
+			// If there is a transition, the perFrameHook is called
+			// after each transition subframe instead of here.
+			if (_currentFrame->_mainChannels.transType == 0 && _currentFrame->_mainChannels.trans.isNull()) {
+				_lingo->executePerFrameHook(_curFrameNumber, 0);
+			}
+		}
+		if (_window->frozenLingoStateCount() > count)
+			return;
 	}
 
 	if (_vm->getVersion() >= 600) {
@@ -1504,8 +1533,8 @@ uint16 Score::getActiveSpriteIDFromPos(Common::Point pos) {
 	return 0;
 }
 
-bool Score::checkSpriteIntersection(uint16 spriteId, Common::Point pos) {
-	if (_channels[spriteId]->getBbox().contains(pos))
+bool Score::checkSpriteRollOver(uint16 spriteId, Common::Point pos) {
+	if (_channels[spriteId]->getRollOverBbox().contains(pos))
 		return true;
 
 	return false;
