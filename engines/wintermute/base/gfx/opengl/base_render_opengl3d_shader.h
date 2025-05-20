@@ -56,11 +56,34 @@ class BaseRenderOpenGL3DShader : public BaseRenderer3D {
 		float a;
 	};
 
+	struct LineVertex {
+		float x;
+		float y;
+		float z;
+	};
+
+	struct SimpleShadowVertex {
+		float u;
+		float v;
+		float nx;
+		float ny;
+		float nz;
+		float x;
+		float y;
+		float z;
+	};
+
+
 public:
 	BaseRenderOpenGL3DShader(BaseGame *inGame = nullptr);
 	~BaseRenderOpenGL3DShader() override;
 
 	bool invalidateTexture(BaseSurfaceOpenGL3D *texture) override;
+
+	bool invalidateDeviceObjects() override;
+	bool restoreDeviceObjects() override;
+
+	bool resetDevice() override;
 
 	void setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode, bool forceChange = false) override;
 
@@ -77,7 +100,6 @@ public:
 	bool disableShadows() override;
 	bool stencilSupported() override;
 
-	void dumpData(const char *filename) override {}
 	BaseImage *takeScreenshot() override;
 	void fadeToColor(byte r, byte g, byte b, byte a) override;
 	bool flip() override;

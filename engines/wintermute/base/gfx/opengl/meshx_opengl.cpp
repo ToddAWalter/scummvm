@@ -109,8 +109,8 @@ bool XMeshOpenGL::render(XModel *model) {
 			glEnable(GL_TEXTURE_2D);
 			static_cast<BaseSurfaceOpenGL3D *>(mat->getSurface())->setTexture();
 		} else {
-			glDisable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, 0);
+			glDisable(GL_TEXTURE_2D);
 		}
 
 		if (mat->getEffect()) {
@@ -214,9 +214,9 @@ bool XMeshOpenGL::renderFlatShadowModel(uint32 shadowColor) {
 	glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
 
 	glColor4ub(RGBCOLGetR(shadowColor), RGBCOLGetG(shadowColor), RGBCOLGetB(shadowColor), RGBCOLGetA(shadowColor));
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDepthMask(GL_TRUE);
 
