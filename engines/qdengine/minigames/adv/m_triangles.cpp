@@ -108,6 +108,8 @@ MinigameTriangle::MinigameTriangle(MinigameManager *runtime) {
 	if (!_runtime->getParameter("animation_time", _animationTime, true))
 		return;
 
+	_quickReselect = _runtime->getParameter("quick_reselect", false);
+
 	const char *faceNameBegin = _runtime->parameter("object_name_begin", "obj_");
 	const char *backNameBegin = _runtime->parameter("backg_name_begin", "element__back");
 	const char *selectNameBegin = _runtime->parameter("select_name_begin", "element_select_");
@@ -133,8 +135,15 @@ MinigameTriangle::MinigameTriangle(MinigameManager *runtime) {
 	if (!_runtime->processGameData(gameData))
 		return;
 
-	for (auto &it : _positions)
-		it.read(gameData);
+	GameInfo *gameInfo = _runtime->getCurrentGameInfo();
+	if (gameInfo) {
+		Common::MemoryReadStream buf((byte *)gameInfo->_gameData, gameInfo->_dataSize);
+		for (auto &it : _positions)
+			it.read(buf);
+	} else {
+		for (auto &it : _positions)
+			it.read(gameData);
+	}
 
 	for (int num = 1; num <= 2; ++num) {
 		for (int angle = 1; angle <= 3; ++angle) {
@@ -334,6 +343,8 @@ void MinigameTriangle::endSwapNodes(int pos1, int pos2) {
 }
 
 bool MinigameTriangle::animate(float dt) {
+	warning("STUB: MinigameTriangle::animate()");
+
 	if (_animationState == NO_ANIMATION)
 		return false;
 
@@ -487,6 +498,8 @@ void MinigameTriangle::quant(float dt) {
 			}
 		}
 	}
+
+	warning("STUB: MinigameTriangle::quant()");
 
 	if (_hovered != mousePos || _selected != lastSelected) {
 		highlight(_hovered, false);
