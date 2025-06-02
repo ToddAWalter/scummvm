@@ -72,6 +72,7 @@
 
 // klepa
 #include "qdengine/minigames/adv/m_puzzle.h"
+#include "qdengine/minigames/adv/m_karaoke.h"
 
 namespace QDEngine {
 
@@ -270,14 +271,15 @@ bool qdMiniGame::load_config() {
 		return false;
 
 	_config.clear();
+	Common::INIFile ini;
 	Common::INIFile::SectionList section_list;
-	enumerateIniSections(config_file_name(), section_list);
+	enumerateIniSections(ini, config_file_name(), section_list);
 
 	_config.reserve(section_list.size());
 
 	for (auto &it : section_list) {
 		qdMinigameConfigParameter prm;
-		prm.load_ini(config_file_name(), it.name.c_str());
+		prm.load_ini(ini, config_file_name(), it.name.c_str());
 		_config.push_back(prm);
 	}
 
@@ -345,10 +347,11 @@ bool qdMiniGame::load_interface() {
 			return true;
 
 		// klepa
-		// Karaoke.dll
-		// puzzle.dll
 		} else if (_dll_name == "DLL\\puzzle.dll") {
 			_interface = create_adv_minigame(_dll_name.c_str(), createMinigamePuzzle);
+			return true;
+		} else if (_dll_name == "DLL\\Karaoke.dll") {
+			_interface = create_adv_minigame(_dll_name.c_str(), createMinigameKaraoke);
 			return true;
 
 		// 3mice2
