@@ -4,14 +4,21 @@ For a more comprehensive changelog of the latest experimental code, see:
 #### 2.10.0 (XXXX-XX-XX)
 
  New games:
-   - Added support for Another World.
    - Added support for Dark Seed.
    - Added support for God of Thunder.
    - Added support for The Adventures of Willy Beamish.
    - Added support for Heart of China.
    - Added support for Nancy Drew: Secret of the Scarlet Hand.
    - Added support for Nancy Drew: Ghost Dogs of Moon Lake.
-   - Added support for Ripley's Believe It or Not!: The Riddle of Master Lu
+   - Added support for Ripley's Believe It or Not!: The Riddle of Master Lu.
+   - Added support for Little Longnose.
+   - Added support for Pilot Brothers 3: Back Side of the Earth.
+   - Added support for Pilot Brothers 3D. The Case of Garden Pests.
+   - Added support for Pilot Brothers 3D-2. Kennel Club Secrets.
+   - Added support for Features of National Fishing.
+   - Added support for Mom Don't Worry.
+   - Added support for Dog-n-cat: In the Footsteps of Unprecedented Beasts.
+   - Added support for Dog-n-cat: Island of Dr Ratiarty.
 
  Drascula:
    - Fixed displaying accented characters.

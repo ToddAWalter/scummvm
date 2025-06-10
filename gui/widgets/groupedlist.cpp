@@ -229,8 +229,11 @@ void GroupedListWidget::setSelected(int item) {
 		// Notify clients that the selection changed.
 		sendCommand(kListSelectionChangedCmd, _selectedItem);
 
-		_currentPos = _selectedItem - _entriesPerPage / 2;
-		scrollToCurrent();
+		if (!isItemVisible(_selectedItem)) {
+			// scroll selected item to center if possible
+			_currentPos = _selectedItem - _entriesPerPage / 2;
+			scrollToCurrent();
+		}
 		markAsDirty();
 	}
 }
@@ -294,14 +297,13 @@ void GroupedListWidget::handleCommand(CommandSender *sender, uint32 cmd, uint32 
 	}
 }
 
-int GroupedListWidget::getNextPos(int oldSel) {
+int GroupedListWidget::getItemPos(int item) {
 	int pos = 0;
 
-	// Find the position of the new selection in the list. 
 	for (uint i = 0; i < _listIndex.size(); i++) {
-		if (_listIndex[i] == oldSel) {
+		if (_listIndex[i] == item) {
 			return pos;
-		} else if (_listIndex[i] > 0) {
+		} else if (_listIndex[i] >= 0) { // skip headers
 			pos++;
 		}
 	}
