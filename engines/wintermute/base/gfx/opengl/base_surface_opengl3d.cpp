@@ -60,8 +60,7 @@ bool BaseSurfaceOpenGL3D::invalidate() {
 bool BaseSurfaceOpenGL3D::isTransparentAt(int x, int y) {
 	prepareToDraw();
 
-	uint8 alpha = reinterpret_cast<uint8 *>(_imageData->getPixels())[y * _width * 4 + x * 4 + 3];
-	return alpha < 128;
+	return isTransparentAtLite(x, y);
 }
 
 bool BaseSurfaceOpenGL3D::displayTransZoom(int x, int y, Rect32 rect, float zoomX, float zoomY, uint32 alpha, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY) {
@@ -147,17 +146,27 @@ bool BaseSurfaceOpenGL3D::create(const Common::String &filename, bool defaultCK,
 	_imageData = img.getSurface()->convertTo(Graphics::PixelFormat(4, 8, 8, 8, 8, 0, 8, 16, 24), img.getPalette(), img.getPaletteCount());
 #endif
 
-	if (BaseEngine::instance().getTargetExecutable() < WME_LITE) {
+	if (_filename.matchString("savegame:*g", true)) {
+		uint8 r, g, b, a;
+		for (int x = 0; x < _imageData->w; x++) {
+			for (int y = 0; y < _imageData->h; y++) {
+				_imageData->format.colorToARGB(_imageData->getPixel(x, y), a, r, g, b);
+				uint8 grey = (uint8)((0.2126f * r + 0.7152f * g + 0.0722f * b) + 0.5f);
+				_imageData->setPixel(x, y, _imageData->format.ARGBToColor(a, grey, grey, grey));
+			}
+		}
+	}
+
+	if (_filename.hasSuffix(".bmp")) {
+		// Ignores alpha channel for BMPs
+		needsColorKey = true;
+	} else if (BaseEngine::instance().getTargetExecutable() < WME_LITE) {
 		// WME 1.x always use colorkey, even for images with transparency
 		needsColorKey = true;
 		replaceAlpha = false;
 	} else if (BaseEngine::instance().isFoxTail()) {
 		// FoxTail does not use colorkey
 		needsColorKey = false;
-	} else if (_filename.hasSuffix(".bmp")) {
-		// generic WME Lite ignores alpha channel for BMPs
-		needsColorKey = true;
-		replaceAlpha = false;
 	} else if (img.getSurface()->format.aBits() == 0) {
 		// generic WME Lite does not use colorkey for non-BMPs with transparency
 		needsColorKey = true;
@@ -167,6 +176,25 @@ bool BaseSurfaceOpenGL3D::create(const Common::String &filename, bool defaultCK,
 		// We set the pixel color to transparent black,
 		// like D3DX, if it matches the color key.
 		_imageData->applyColorKey(ckRed, ckGreen, ckBlue, replaceAlpha, 0, 0, 0);
+	}
+
+	// Bug #6572 WME: Rosemary - Sprite flaw on going upwards
+	// Some Rosemary sprites have non-fully transparent pixels
+	// In original WME it wasn't seen because sprites were downscaled
+	// Let's set alpha to 0 if it is smaller then some treshold
+	if (BaseEngine::instance().getGameId() == "rosemary" && _filename.hasPrefix("actors") && _imageData->format.bytesPerPixel == 4) {
+		uint32 mask = _imageData->format.ARGBToColor(255, 0, 0, 0);
+		uint32 treshold = _imageData->format.ARGBToColor(16, 0, 0, 0);
+		uint32 blank = _imageData->format.ARGBToColor(0, 0, 0, 0);
+
+		for (int x = 0; x < _imageData->w; x++) {
+			for (int y = 0; y < _imageData->h; y++) {
+				uint32 pixel = _imageData->getPixel(x, y);
+				if ((pixel & mask) > blank && (pixel & mask) < treshold) {
+					_imageData->setPixel(x, y, blank);
+				}
+			}
+		}
 	}
 
 	putSurface(*_imageData);
