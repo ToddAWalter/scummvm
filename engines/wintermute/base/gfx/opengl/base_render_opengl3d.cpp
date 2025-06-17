@@ -159,11 +159,11 @@ bool BaseRenderOpenGL3D::flip() {
 	return true;
 }
 
-bool BaseRenderOpenGL3D::fill(byte r, byte g, byte b, Common::Rect *rect) {
+bool BaseRenderOpenGL3D::clear() {
 	if(!_gameRef->_editorMode) {
 		glViewport(0, _height, _width, _height);
 	}
-	glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	return true;
 }
@@ -210,8 +210,6 @@ bool BaseRenderOpenGL3D::setup3D(Camera3D *camera, bool force) {
 		glAlphaFunc(GL_GEQUAL, 8 / 255.0f);
 
 		setAmbientLightRenderState();
-
-
 
 		if (camera)
 			_camera = camera;
@@ -544,20 +542,26 @@ bool BaseRenderOpenGL3D::setProjection() {
 	return setProjectionTransform(matProj);
 }
 
-bool BaseRenderOpenGL3D::drawLine(int x1, int y1, int x2, int y2, uint32 color) {
-	x1 += _drawOffsetX;
-	x2 += _drawOffsetX;
-	y1 += _drawOffsetY;
-	y2 += _drawOffsetY;
+bool BaseRenderOpenGL3D::fillRect(int x, int y, int w, int h, uint32 color) {
+	setupLines();
+
+	x += _drawOffsetX;
+	y += _drawOffsetY;
 
 	// position coords
-	LineVertex vertices[2];
-	vertices[0].x = x1;
-	vertices[0].y = y1;
+	RectangleVertex vertices[4];
+	vertices[0].x = x;
+	vertices[0].y = y + h;
 	vertices[0].z = 0.9f;
-	vertices[1].x = x2;
-	vertices[1].y = y2;
+	vertices[1].x = x;
+	vertices[1].y = y;
 	vertices[1].z = 0.9f;
+	vertices[2].x = x + w;
+	vertices[2].y = y + h;
+	vertices[2].z = 0.9f;
+	vertices[3].x = x + w;
+	vertices[3].y = y;
+	vertices[3].z = 0.9f;
 
 	byte a = RGBCOLGetA(color);
 	byte r = RGBCOLGetR(color);
@@ -571,12 +575,13 @@ bool BaseRenderOpenGL3D::drawLine(int x1, int y1, int x2, int y2, uint32 color) 
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glVertexPointer(3, GL_FLOAT, sizeof(LineVertex), &vertices[0].x);
+	glVertexPointer(3, GL_FLOAT, sizeof(RectangleVertex), &vertices[0].x);
 
-	glDrawArrays(GL_LINES, 0, 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 
+	setup2D();
 	return true;
 }
 
@@ -589,7 +594,7 @@ void BaseRenderOpenGL3D::fadeToColor(byte r, byte g, byte b, byte a) {
 	top = _viewportRect.top;
 
 	// position coords
-	LineVertex vertices[4];
+	RectangleVertex vertices[4];
 	vertices[0].x = left;
 	vertices[0].y = bottom;
 	vertices[0].z = 0.0f;
@@ -619,7 +624,7 @@ void BaseRenderOpenGL3D::fadeToColor(byte r, byte g, byte b, byte a) {
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glVertexPointer(3, GL_FLOAT, sizeof(LineVertex), &vertices[0].x);
+	glVertexPointer(3, GL_FLOAT, sizeof(RectangleVertex), &vertices[0].x);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

@@ -50,7 +50,6 @@ BaseRenderer *makeOSystemRenderer(BaseGame *inGame) {
 //////////////////////////////////////////////////////////////////////////
 BaseRenderOSystem::BaseRenderOSystem(BaseGame *inGame) : BaseRenderer(inGame) {
 	_renderSurface = new Graphics::Surface();
-	_blankSurface = new Graphics::Surface();
 	_lastFrameIter = _renderQueue.end();
 	_needsFlip = true;
 	_skipThisFrame = false;
@@ -79,8 +78,6 @@ BaseRenderOSystem::~BaseRenderOSystem() {
 
 	_renderSurface->free();
 	delete _renderSurface;
-	_blankSurface->free();
-	delete _blankSurface;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -127,8 +124,6 @@ bool BaseRenderOSystem::initRenderer(int width, int height, bool windowed) {
 	g_system->showMouse(false);
 
 	_renderSurface->create(g_system->getWidth(), g_system->getHeight(), g_system->getScreenFormat());
-	_blankSurface->create(g_system->getWidth(), g_system->getHeight(), g_system->getScreenFormat());
-	_blankSurface->fillRect(Common::Rect(0, 0, _blankSurface->h, _blankSurface->w), _blankSurface->format.ARGBToColor(255, 0, 0, 0));
 	_active = true;
 
 	_clearColor = _renderSurface->format.ARGBToColor(255, 0, 0, 0);
@@ -218,22 +213,12 @@ void BaseRenderOSystem::setWindowed(bool windowed) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseRenderOSystem::fill(byte r, byte g, byte b, Common::Rect *rect) {
-	_clearColor = _renderSurface->format.ARGBToColor(0xFF, r, g, b);
+bool BaseRenderOSystem::clear() {
 	if (!_disableDirtyRects) {
 		return STATUS_OK;
 	}
-	if (!rect) {
-		// TODO: This should speed things up, but for some reason it misses the size by quite a bit.
-		/*if (r == 0 && g == 0 && b == 0) {
-			// Simply memcpy from the buffered black-surface, way faster than Surface::fillRect.
-			memcpy(_renderSurface->pixels, _blankSurface->pixels, _renderSurface->pitch * _renderSurface->h);
-			return STATUS_OK;
-		}*/
-		rect = &_renderRect;
-	}
 	// TODO: This doesn't work with dirty rects
-	_renderSurface->fillRect(*rect, _clearColor);
+	_renderSurface->fillRect(_renderRect, _clearColor);
 
 	return STATUS_OK;
 }
@@ -468,11 +453,11 @@ void BaseRenderOSystem::drawFromSurface(RenderTicket *ticket, Common::Rect *dstR
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseRenderOSystem::drawLine(int x1, int y1, int x2, int y2, uint32 color) {
+bool BaseRenderOSystem::fillRect(int x, int y, int w, int h, uint32 color) {
 	// This function isn't used outside of indicator-displaying, and thus quite unused in
 	// BaseRenderOSystem when dirty-rects are enabled.
 	if (!_disableDirtyRects && !_indicatorDisplay) {
-		error("BaseRenderOSystem::DrawLine - doesn't work for dirty rects yet");
+		error("BaseRenderOSystem::fillRect - doesn't work for dirty rects yet");
 	}
 
 	byte r = RGBCOLGetR(color);
@@ -482,17 +467,11 @@ bool BaseRenderOSystem::drawLine(int x1, int y1, int x2, int y2, uint32 color) {
 
 	//SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
-	Point32 point1, point2;
-	point1.x = x1;
-	point1.y = y1;
-	pointToScreen(&point1);
-
-	point2.x = x2;
-	point2.y = y2;
-	pointToScreen(&point2);
+	Common::Rect fillRect(x, y, x + w, y + w);
+	modTargetRect(&fillRect);
 
 	uint32 colorVal = _renderSurface->format.ARGBToColor(a, r, g, b);
-	_renderSurface->drawLine(point1.x, point1.y, point2.x, point2.y, colorVal);
+	_renderSurface->fillRect(fillRect, colorVal);
 	return STATUS_OK;
 }
 

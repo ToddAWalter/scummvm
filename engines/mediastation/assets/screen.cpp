@@ -24,8 +24,15 @@
 
 namespace MediaStation {
 
-ScriptValue Screen::callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) {
-	error("Screen::callMethod(): Got unimplemented method ID %s (%d)", builtInMethodToStr(methodId), static_cast<uint>(methodId));
+void Screen::readParameter(Chunk &chunk, AssetHeaderSectionType paramType) {
+	switch (paramType) {
+	case kAssetHeaderCursorResourceId:
+		_cursorResourceId = chunk.readTypedUint16();
+		break;
+
+	default:
+		Asset::readParameter(chunk, paramType);
+	}
 }
 
 } // End of namespace MediaStation

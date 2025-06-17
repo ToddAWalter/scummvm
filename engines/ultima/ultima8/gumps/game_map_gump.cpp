@@ -111,7 +111,7 @@ void GameMapGump::PaintThis(RenderSurface *surf, int32 lerp_factor, bool scaled)
 
 	uint32 gametick = Kernel::get_instance()->getFrameNum();
 
-	bool paintEditorItems = Ultima8Engine::get_instance()->isPaintEditorItems();
+	bool showEditorItems = Ultima8Engine::get_instance()->isShowEditorItems();
 
 	// Get all the required items
 	for (int cy = 0; cy < MAP_NUM_CHUNKS; cy++) {
@@ -134,7 +134,7 @@ void GameMapGump::PaintThis(RenderSurface *surf, int32 lerp_factor, bool scaled)
 
 				if (item->getZ() >= zlimit && !item->getShapeInfo()->is_draw())
 					continue;
-				if (!paintEditorItems && item->getShapeInfo()->is_editor())
+				if (!showEditorItems && item->getShapeInfo()->is_editor())
 					continue;
 				if (item->hasFlags(Item::FLG_INVISIBLE)) {
 					// special case: invisible avatar _is_ drawn
@@ -163,7 +163,12 @@ void GameMapGump::PaintThis(RenderSurface *surf, int32 lerp_factor, bool scaled)
 		                      _draggingFlags, Item::EXT_TRANSPARENT);
 	}
 
-	_displayList->PaintDisplayList(surf, _highlightItems, _showFootpads, _gridlines);
+	int gridlines = _gridlines;
+	if (gridlines < 0) {
+		gridlines = map->getChunkSize();
+	}
+
+	_displayList->PaintDisplayList(surf, _highlightItems, _showFootpads, gridlines);
 }
 
 // Trace a click, and return ObjId
@@ -576,24 +581,6 @@ void GameMapGump::DropItem(Item *item, int mx, int my) {
 		item->collideMove(_draggingPos.x, _draggingPos.y, _draggingPos.z,
 		                  true, true); // teleport item
 		item->fall();
-	}
-}
-
-void GameMapGump::setGridlines(int gridlines) {
-	if (gridlines >= 0) {
-		_gridlines = gridlines;
-	} else if (_gridlines > 0) {
-		_gridlines = 0;
-	} else {
-		World *world = World::get_instance();
-		if (!world)
-			return;
-
-		CurrentMap *map = world->getCurrentMap();
-		if (!map)
-			return;
-
-		_gridlines = map->getChunkSize();
 	}
 }
 

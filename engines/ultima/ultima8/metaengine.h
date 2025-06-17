@@ -48,10 +48,8 @@ enum KeybindingAction {
 	ACTION_QUICK_MOVE_UP, ACTION_QUICK_MOVE_DOWN, ACTION_QUICK_MOVE_LEFT,
 	ACTION_QUICK_MOVE_RIGHT,
 
-#ifndef RELEASE_BUILD
-	ACTION_TOGGLE_PAINT, ACTION_ENGINE_STATS, ACTION_FRAME_BY_FRAME,
+	ACTION_TOGGLE_PAINT, ACTION_FRAME_BY_FRAME,
 	ACTION_ADVANCE_FRAME, ACTION_TOGGLE_STASIS, ACTION_SHAPE_VIEWER,
-#endif
 
 	ACTION_NONE
 };
@@ -62,11 +60,6 @@ public:
 	 * Initialize keymaps
 	 */
 	static Common::KeymapArray initKeymaps(const Common::String &gameId);
-
-	/**
-	 * Get the method to execute
-	 */
-	static Common::String getMethod(KeybindingAction keyAction, bool isPress);
 
 	/**
 	 * Return meta information from the specified save state for saves that do not have ExtendedSavegameHeader
