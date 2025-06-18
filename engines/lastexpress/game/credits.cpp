@@ -88,13 +88,14 @@ void LastExpressEngine::doCredits() {
 			_savedMouseEventHandle = getMessageManager()->getEventHandle(1);
 			_savedTimerEventHandle = getMessageManager()->getEventHandle(3);
 
-			getMessageManager()->setEventHandle(1, &LastExpressEngine::creditsMouseWrapper);
-			getMessageManager()->setEventHandle(3, &LastExpressEngine::creditsTimerWrapper);
+			getMessageManager()->setEventHandle(kEventChannelMouse, &LastExpressEngine::creditsMouseWrapper);
+			getMessageManager()->setEventHandle(kEventChannelTimer, &LastExpressEngine::creditsTimerWrapper);
 
 			do {
 				getSoundManager()->soundThread();
-				handleEvents();
 			} while (getMessageManager()->process());
+
+			waitForTimer(5);
 
 			setEventTickInternal(false);
 			
@@ -104,8 +105,9 @@ void LastExpressEngine::doCredits() {
 			while (_doCredits) {
 				do {
 					getSoundManager()->soundThread();
-					handleEvents();
 				} while (_doCredits && getMessageManager()->process());
+
+				waitForTimer(5);
 
 				if (!_savedFrameCounter) {
 					// Handle the background map transition
@@ -328,8 +330,8 @@ void LastExpressEngine::doCredits() {
 			if (nextTga)
 				getMemoryManager()->lockFX();
 
-			getMessageManager()->setEventHandle(1, _savedMouseEventHandle);
-			getMessageManager()->setEventHandle(3, _savedTimerEventHandle);
+			getMessageManager()->setEventHandle(kEventChannelMouse, _savedMouseEventHandle);
+			getMessageManager()->setEventHandle(kEventChannelTimer, _savedTimerEventHandle);
 
 			_doCredits = 0;
 
@@ -358,20 +360,20 @@ void LastExpressEngine::creditsMouse(Event *event) {
 
 	mouseSetRightClicked(false);
 	
-	if ((event->flags & 8) != 0)
+	if ((event->flags & kMouseFlagLeftDown) != 0)
 		_savedFrameCounter = getSoundFrameCounter();
 
-	if (_savedFrameCounter && (event->flags & 0x80) != 0) {
+	if (_savedFrameCounter && (event->flags & kMouseFlagLeftUp) != 0) {
 		_savedFrameInterval += getSoundFrameCounter() - _savedFrameCounter;
 		_savedFrameCounter = 0;
 	}
 
-	if ((event->flags & 0x10) != 0)
+	if ((event->flags & kMouseFlagRightDown) != 0)
 		abortCredits();
 }
 
 void LastExpressEngine::creditsTimer(Event *event) {
-	setEventTickInternal(0);
+	setEventTickInternal(false);
 }
 
 int32 LastExpressEngine::readTGAIntoMemory(const char *filename, TGAHeader *tgaHeader) {
@@ -476,12 +478,12 @@ bool LastExpressEngine::demoEnding(bool wonGame) {
 		"BONDAGE", "KILL", "HIGHFITE", "1315GUNS", "BOOM2", "ISTANBUL", "LASTSHOT"};
 
 	if (wonGame) {
-		getMessageManager()->setEventHandle(1, &LastExpressEngine::emptyHandler);
+		getMessageManager()->setEventHandle(kEventChannelMouse, &LastExpressEngine::emptyHandler);
 	} else {
-		getMessageManager()->setEventHandle(1, &LastExpressEngine::demoEndingMouseWrapper);
+		getMessageManager()->setEventHandle(kEventChannelMouse, &LastExpressEngine::demoEndingMouseWrapper);
 	}
 
-	getMessageManager()->setEventHandle(3, &LastExpressEngine::demoEndingTimerWrapper);
+	getMessageManager()->setEventHandle(kEventChannelTimer, &LastExpressEngine::demoEndingTimerWrapper);
 	getGraphicsManager()->setMouseDrawable(false);
 
 	mouseSetRightClicked(false);
@@ -528,10 +530,13 @@ bool LastExpressEngine::demoEnding(bool wonGame) {
 			}
 
 			if (!exitFlag) {
-				getMessageManager()->process();
+				bool haveMoreMessages = getMessageManager()->process();
 				getSoundManager()->soundThread();
 				getSubtitleManager()->subThread();
-				handleEvents();
+
+				// Only wait and handle events if we've processed all messages, unlike the original which had a separate thread for input...
+				if (!haveMoreMessages)
+					waitForTimer(5);
 			}
 		}
 
@@ -539,14 +544,14 @@ bool LastExpressEngine::demoEnding(bool wonGame) {
 	}
 
 	getGraphicsManager()->setMouseDrawable(savedMouseState);
-	getMenu()->setEggTimerDelta(2700);
+	getMenu()->setEggTimerDelta(DEMO_TIMEOUT);
 
 	return exitFlag;
 }
 
 void LastExpressEngine::demoEndingMouse(Event *event) {
 	if (event->flags || ABS<int32>((int32)event->x - _cursorX) > 5 || ABS<int32>((int32)event->y - _cursorY) > 5)
-		getMenu()->setEggTimerDelta(2700);
+		getMenu()->setEggTimerDelta(DEMO_TIMEOUT);
 }
 
 void LastExpressEngine::demoEndingTimer(Event *event) {

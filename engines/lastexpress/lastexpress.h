@@ -507,6 +507,8 @@ typedef struct NisEvents {
 
 #define PAGE_SIZE  0x800
 
+#define DEMO_TIMEOUT 2700
+
 typedef uint16 PixMap;
 
 class LastExpressEngine : public Engine {
@@ -636,7 +638,7 @@ public:
 	void startUp();
 	void shutDown();
 
-	void waitForTimer(int frames);
+	void waitForTimer(int millis);
 	void initGameData();
 	void startNewGame();
 	void engineEventHandler(Event *event);
