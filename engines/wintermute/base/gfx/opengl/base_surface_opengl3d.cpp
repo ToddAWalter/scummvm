@@ -35,7 +35,7 @@
 namespace Wintermute {
 
 BaseSurfaceOpenGL3D::BaseSurfaceOpenGL3D(BaseGame *game, BaseRenderer3D *renderer)
-	: BaseSurface(game), _tex(0), _renderer(renderer), _imageData(nullptr), _maskData(nullptr), _texWidth(0), _texHeight(0) {
+	: BaseSurface(game), _tex(0), _renderer(renderer), _imageData(nullptr), _maskData(nullptr), _texWidth(0), _texHeight(0), _pixelOpReady(false) {
 }
 
 BaseSurfaceOpenGL3D::~BaseSurfaceOpenGL3D() {
@@ -69,12 +69,6 @@ bool BaseSurfaceOpenGL3D::invalidate() {
 
 	_valid = false;
 	return true;
-}
-
-bool BaseSurfaceOpenGL3D::isTransparentAt(int x, int y) {
-	prepareToDraw();
-
-	return isTransparentAtLite(x, y);
 }
 
 bool BaseSurfaceOpenGL3D::displayTransZoom(int x, int y, Rect32 rect, float zoomX, float zoomY, uint32 alpha, Graphics::TSpriteBlendMode blendMode, bool mirrorX, bool mirrorY) {
@@ -155,11 +149,7 @@ bool BaseSurfaceOpenGL3D::create(const Common::String &filename, bool defaultCK,
 		_imageData = nullptr;
 	}
 
-#ifdef SCUMM_BIG_ENDIAN
-	_imageData = img.getSurface()->convertTo(Graphics::PixelFormat(4, 8, 8, 8, 8, 24, 16, 8, 0), img.getPalette(), img.getPaletteCount());
-#else
-	_imageData = img.getSurface()->convertTo(Graphics::PixelFormat(4, 8, 8, 8, 8, 0, 8, 16, 24), img.getPalette(), img.getPaletteCount());
-#endif
+	_imageData = img.getSurface()->convertTo(Graphics::PixelFormat::createFormatRGBA32(), img.getPalette(), img.getPaletteCount());
 
 	if (_filename.matchString("savegame:*g", true)) {
 		uint8 r, g, b, a;
@@ -275,7 +265,11 @@ bool BaseSurfaceOpenGL3D::putSurface(const Graphics::Surface &surface, bool hasA
 	return true;
 }
 
-bool BaseSurfaceOpenGL3D::getPixel(int x, int y, byte *r, byte *g, byte *b, byte *a) {
+bool BaseSurfaceOpenGL3D::getPixel(int x, int y, byte *r, byte *g, byte *b, byte *a) const {
+	if (!_pixelOpReady) {
+		return false;
+	}
+
 	if (x < 0 || y < 0 || x >= _width || y >= _height) {
 		return false;
 	}
@@ -294,15 +288,22 @@ bool BaseSurfaceOpenGL3D::getPixel(int x, int y, byte *r, byte *g, byte *b, byte
 }
 
 bool BaseSurfaceOpenGL3D::startPixelOp() {
-	prepareToDraw();
+	if (!prepareToDraw())
+		return false;
+	_pixelOpReady = true;
 	return true;
 }
 
 bool BaseSurfaceOpenGL3D::endPixelOp() {
+	_pixelOpReady = false;
 	return true;
 }
 
-bool BaseSurfaceOpenGL3D::isTransparentAtLite(int x, int y) {
+bool BaseSurfaceOpenGL3D::isTransparentAtLite(int x, int y) const {
+	if (!_pixelOpReady) {
+		return false;
+	}
+
 	if (x < 0 || y < 0 || x >= _width || y >= _height) {
 		return false;
 	}
@@ -338,11 +339,7 @@ bool BaseSurfaceOpenGL3D::setAlphaImage(const Common::String &filename) {
 
 	Graphics::AlphaType type = alphaImage->getSurface()->detectAlpha();
 	if (type != Graphics::ALPHA_OPAQUE) {
-#ifdef SCUMM_BIG_ENDIAN
-		_maskData = alphaImage->getSurface()->convertTo(Graphics::PixelFormat(4, 8, 8, 8, 8, 24, 16, 8, 0));
-#else
-		_maskData = alphaImage->getSurface()->convertTo(Graphics::PixelFormat(4, 8, 8, 8, 8, 0, 8, 16, 24));
-#endif
+		_maskData = alphaImage->getSurface()->convertTo(Graphics::PixelFormat::createFormatRGBA32());
 	}
 
 	delete alphaImage;

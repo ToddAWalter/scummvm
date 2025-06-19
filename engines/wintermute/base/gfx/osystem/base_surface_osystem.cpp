@@ -49,18 +49,18 @@ namespace Wintermute {
 //////////////////////////////////////////////////////////////////////////
 BaseSurfaceOSystem::BaseSurfaceOSystem(BaseGame *inGame) : BaseSurface(inGame) {
 	_surface = new Graphics::Surface();
+	_pixelOpReady = false;
 	_alphaMask = nullptr;
 	_alphaType = Graphics::ALPHA_FULL;
 	_alphaMaskType = Graphics::ALPHA_OPAQUE;
-	_lockPixels = nullptr;
-	_lockPitch = 0;
-	_loaded = false;
 	_rotation = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
 BaseSurfaceOSystem::~BaseSurfaceOSystem() {
 	if (_surface) {
+		if (_valid)
+			_gameRef->addMem(-_width * _height * 4);
 		_surface->free();
 		delete _surface;
 		_surface = nullptr;
@@ -72,7 +72,6 @@ BaseSurfaceOSystem::~BaseSurfaceOSystem() {
 		_alphaMask = nullptr;
 	}
 
-	_gameRef->addMem(-_width * _height * 4);
 	BaseRenderOSystem *renderer = static_cast<BaseRenderOSystem *>(_gameRef->_renderer);
 	renderer->invalidateTicketsFromSurface(this);
 }
@@ -111,14 +110,16 @@ bool BaseSurfaceOSystem::finishLoad() {
 		return false;
 	}
 
-	_width = image->getSurface()->w;
-	_height = image->getSurface()->h;
-
 	if (_surface) {
+		if (_valid)
+			_gameRef->addMem(-_width * _height * 4);
 		_surface->free();
 		delete _surface;
 		_surface = nullptr;
 	}
+
+	_width = image->getSurface()->w;
+	_height = image->getSurface()->h;
 
 	bool needsColorKey = false;
 	bool replaceAlpha = true;
@@ -133,6 +134,8 @@ bool BaseSurfaceOSystem::finishLoad() {
 		_surface = new Graphics::Surface();
 		_surface->copyFrom(*image->getSurface());
 	}
+
+	_gameRef->addMem(_width * _height * 4);
 
 	if (_filename.matchString("savegame:*g", true)) {
 		uint8 r, g, b, a;
@@ -169,8 +172,6 @@ bool BaseSurfaceOSystem::finishLoad() {
 	_alphaType = _surface->detectAlpha();
 	_valid = true;
 
-	_gameRef->addMem(_width * _height * 4);
-
 	delete image;
 
 	// Bug #6572 WME: Rosemary - Sprite flaw on going upwards
@@ -193,16 +194,20 @@ bool BaseSurfaceOSystem::finishLoad() {
 		}
 	}
 
-	_loaded = true;
 
 	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseSurfaceOSystem::create(int width, int height) {
+	if (_valid)
+		_gameRef->addMem(-_width * _height * 4);
+	_surface->free();
+
 	_width = width;
 	_height = height;
 
+	_surface->create(_width, _height, g_system->getScreenFormat());
 	_gameRef->addMem(_width * _height * 4);
 
 	_valid = true;
@@ -211,12 +216,26 @@ bool BaseSurfaceOSystem::create(int width, int height) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseSurfaceOSystem::isTransparentAt(int x, int y) {
-	return isTransparentAtLite(x, y);
+bool BaseSurfaceOSystem::invalidate() {
+	if (_pixelOpReady) {
+		return STATUS_FAILED;
+	}
+
+	if (_valid) {
+		_gameRef->addMem(-_width * _height * 4);
+		_surface->free();
+		_valid = false;
+	}
+
+	return STATUS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseSurfaceOSystem::isTransparentAtLite(int x, int y) {
+bool BaseSurfaceOSystem::isTransparentAtLite(int x, int y) const {
+	if (!_pixelOpReady) {
+		return false;
+	}
+
 	if (x < 0 || x >= _surface->w || y < 0 || y >= _surface->h) {
 		return true;
 	}
@@ -233,14 +252,19 @@ bool BaseSurfaceOSystem::isTransparentAtLite(int x, int y) {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseSurfaceOSystem::startPixelOp() {
-	// Any pixel-op makes the caching useless:
-	BaseRenderOSystem *renderer = static_cast<BaseRenderOSystem *>(_gameRef->_renderer);
-	renderer->invalidateTicketsFromSurface(this);
+	if (!_valid) {
+		if (DID_FAIL(finishLoad())) {
+			return STATUS_FAILED;
+		}
+	}
+	_pixelOpReady = true;
 	return STATUS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseSurfaceOSystem::endPixelOp() {
+	_lastUsedTime = _gameRef->getLiveTimer()->getTime();
+	_pixelOpReady = false;
 	return STATUS_OK;
 }
 
@@ -292,7 +316,10 @@ bool BaseSurfaceOSystem::displayTiled(int x, int y, Rect32 rect, int numTimesX, 
 bool BaseSurfaceOSystem::drawSprite(int x, int y, Rect32 *rect, Rect32 *newRect, Graphics::TransformStruct transform) {
 	BaseRenderOSystem *renderer = static_cast<BaseRenderOSystem *>(_gameRef->_renderer);
 
-	if (!_loaded) {
+	_lastUsedTime = _gameRef->getLiveTimer()->getTime();
+
+	// TODO: Skip this check if we can reuse an existing ticket?
+	if (!_valid) {
 		finishLoad();
 	}
 
@@ -347,14 +374,7 @@ bool BaseSurfaceOSystem::drawSprite(int x, int y, Rect32 *rect, Rect32 *newRect,
 }
 
 bool BaseSurfaceOSystem::putSurface(const Graphics::Surface &surface, bool hasAlpha) {
-	_loaded = true;
-	if (surface.format == _surface->format && surface.w == _surface->w && surface.h == _surface->h) {
-		_surface->copyRectToSurface(surface, 0, 0, Common::Rect(surface.w, surface.h));
-	} else {
-		_surface->free();
-		_surface->copyFrom(surface);
-	}
-
+	_surface->copyRectToSurface(surface, 0, 0, Common::Rect(surface.w, surface.h));
 	writeAlpha(_surface, _alphaMask);
 
 	if (hasAlpha) {

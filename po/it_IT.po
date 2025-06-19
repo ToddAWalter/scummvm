@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-06-17 18:49+0000\n"
-"PO-Revision-Date: 2025-06-13 10:32+0000\n"
+"POT-Creation-Date: 2025-06-19 11:17+0000\n"
+"PO-Revision-Date: 2025-06-19 10:53+0000\n"
 "Last-Translator: Walter Agazzi <walter.agazzi@protonmail.com>\n"
 "Language-Team: Italian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/it/>\n"
@@ -7251,7 +7251,7 @@ msgstr "Imposta indizio privato/pubblico"
 #: engines/freescape/games/castle/castle.cpp:246
 #: engines/freescape/games/dark/dark.cpp:186
 #: engines/freescape/games/driller/driller.cpp:135
-#: engines/freescape/games/eclipse/eclipse.cpp:206
+#: engines/freescape/games/eclipse/eclipse.cpp:231
 #: engines/pegasus/pegasus.cpp:2825 engines/ultima/ultima8/metaengine.cpp:45
 msgid "Save Game"
 msgstr "Salva Partita"
@@ -7264,7 +7264,7 @@ msgstr "Salva Partita"
 #: engines/freescape/games/castle/castle.cpp:251
 #: engines/freescape/games/dark/dark.cpp:191
 #: engines/freescape/games/driller/driller.cpp:140
-#: engines/freescape/games/eclipse/eclipse.cpp:211
+#: engines/freescape/games/eclipse/eclipse.cpp:236
 #: engines/pegasus/pegasus.cpp:2831 engines/ultima/ultima8/metaengine.cpp:46
 msgid "Load Game"
 msgstr "Carica Partita"
@@ -7302,7 +7302,7 @@ msgstr "Database indizi"
 #: engines/freescape/games/castle/castle.cpp:259
 #: engines/freescape/games/dark/dark.cpp:196
 #: engines/freescape/games/driller/driller.cpp:145
-#: engines/freescape/games/eclipse/eclipse.cpp:216
+#: engines/freescape/games/eclipse/eclipse.cpp:241
 #: engines/sword1/metaengine.cpp:295
 msgid "Quit Game"
 msgstr "Esci dal gioco"
@@ -8096,21 +8096,21 @@ msgstr "Seleziona la Principessa"
 #: engines/freescape/games/castle/castle.cpp:264
 #: engines/freescape/games/dark/dark.cpp:206
 #: engines/freescape/games/driller/driller.cpp:153
-#: engines/freescape/games/eclipse/eclipse.cpp:224
+#: engines/freescape/games/eclipse/eclipse.cpp:249
 msgid "Toggle Sound"
 msgstr "Attiva/disattiva sonoro"
 
 #: engines/freescape/games/castle/castle.cpp:269
 #: engines/freescape/games/dark/dark.cpp:212
 #: engines/freescape/games/driller/driller.cpp:159
-#: engines/freescape/games/eclipse/eclipse.cpp:229
+#: engines/freescape/games/eclipse/eclipse.cpp:254
 msgid "Rotate Left"
 msgstr "Ruota verso sinistra"
 
 #: engines/freescape/games/castle/castle.cpp:274
 #: engines/freescape/games/dark/dark.cpp:217
 #: engines/freescape/games/driller/driller.cpp:164
-#: engines/freescape/games/eclipse/eclipse.cpp:234
+#: engines/freescape/games/eclipse/eclipse.cpp:259
 msgid "Rotate Right"
 msgstr "Ruota verso destra"
 
@@ -8128,7 +8128,7 @@ msgid "Crawl"
 msgstr "Avanza lentamente"
 
 #: engines/freescape/games/castle/castle.cpp:296
-#: engines/freescape/games/eclipse/eclipse.cpp:261
+#: engines/freescape/games/eclipse/eclipse.cpp:286
 msgid "Face Forward"
 msgstr "Guarda in avanti"
 
@@ -8190,21 +8190,21 @@ msgid "Collect drilling rig"
 msgstr "Ritira trivella"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/eclipse/eclipse.cpp:240
+#: engines/freescape/games/eclipse/eclipse.cpp:265
 msgid "Change Angle"
 msgstr "Modifica angolo di rotazione"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/eclipse/eclipse.cpp:246
+#: engines/freescape/games/eclipse/eclipse.cpp:271
 msgid "Change Step Size"
 msgstr "Modifica lunghezza dei passi"
 
-#: engines/freescape/games/eclipse/eclipse.cpp:251
+#: engines/freescape/games/eclipse/eclipse.cpp:276
 msgid "Toggle Height"
 msgstr "Alterna altezza"
 
 #. I18N: Action of hero party in Might & Magic 1
-#: engines/freescape/games/eclipse/eclipse.cpp:256
+#: engines/freescape/games/eclipse/eclipse.cpp:281
 #: engines/kyra/engine/lol.cpp:516 engines/mm/mm1/metaengine.cpp:109
 msgid "Rest"
 msgstr "Riposa"
@@ -9976,7 +9976,7 @@ msgstr ""
 "Gli aggiornamenti possono essere scaricati da:\n"
 "%s"
 
-#: engines/myst3/myst3.cpp:1640 engines/pegasus/pegasus.cpp:749
+#: engines/myst3/myst3.cpp:1636 engines/pegasus/pegasus.cpp:749
 msgid "Invalid file name for saving"
 msgstr "Nome salvataggio non valido"
 
@@ -12197,40 +12197,28 @@ msgstr ""
 "ATTENZIONE: Questo motore non permette di eliminare il salvataggio automatico"
 
 #: engines/sludge/keymapper_tables.h:34
-#, fuzzy
-#| msgid "Default keymappings"
 msgid "Debug keymappings"
-msgstr "Mappe tasti predefinite"
+msgstr "Mappature tasti di debug"
 
 #: engines/sludge/keymapper_tables.h:35
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Menu keymappings"
-msgstr "Mappature tasti gioco"
+msgstr "Mappature tasti menù"
 
 #: engines/sludge/keymapper_tables.h:36
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Minigame keymappings"
-msgstr "Mappature tasti gioco"
+msgstr "Mappature tasti dei mini-giochi"
 
 #: engines/sludge/keymapper_tables.h:46
-#, fuzzy
-#| msgid "Change game options"
 msgid "Change action"
-msgstr "Modifica le opzioni del gioco selezionato"
+msgstr "Cambia azione"
 
 #: engines/sludge/keymapper_tables.h:70 engines/sludge/keymapper_tables.h:293
-#, fuzzy
-#| msgid "Select dialogue"
 msgid "Speed up dialogue"
-msgstr "Seleziona dialogo"
+msgstr "Velocizza dialoghi"
 
 #: engines/sludge/keymapper_tables.h:76 engines/sludge/keymapper_tables.h:298
-#, fuzzy
-#| msgid "Slow down virtual mouse"
 msgid "Slow down dialogue"
-msgstr "Rallenta mouse virtuale"
+msgstr "Rallenta dialoghi"
 
 #: engines/sludge/keymapper_tables.h:83 engines/sludge/keymapper_tables.h:132
 #: engines/sludge/keymapper_tables.h:175 engines/sludge/keymapper_tables.h:211
@@ -12238,95 +12226,71 @@ msgstr "Rallenta mouse virtuale"
 #: engines/sludge/keymapper_tables.h:275 engines/sludge/keymapper_tables.h:386
 #: engines/sludge/keymapper_tables.h:446 engines/sludge/keymapper_tables.h:478
 #: engines/sludge/keymapper_tables.h:529
-#, fuzzy
-#| msgid "Move / Select"
 msgid "Move / Interact"
-msgstr "Spostamento / Selezione"
+msgstr "Spostamento / Interazione"
 
 #: engines/sludge/keymapper_tables.h:101 engines/sludge/keymapper_tables.h:150
-#, fuzzy
-#| msgid "Unnamed autosave"
 msgid "Load auto save"
-msgstr "Autosalvataggio senza nome"
+msgstr "Carica salvataggio automatico"
 
 #: engines/sludge/keymapper_tables.h:113 engines/sludge/keymapper_tables.h:162
-#, fuzzy
-#| msgid "Load Game"
 msgid "Load save"
-msgstr "Carica Partita"
+msgstr "Carica salvataggio"
 
 #: engines/sludge/keymapper_tables.h:200 engines/sludge/keymapper_tables.h:435
 #: engines/sludge/keymapper_tables.h:552
 msgid "DEBUG: Show floor"
-msgstr ""
+msgstr "DEBUG: Mostra pavimento"
 
 #: engines/sludge/keymapper_tables.h:205 engines/sludge/keymapper_tables.h:440
 #: engines/sludge/keymapper_tables.h:547
 msgid "DEBUG: Show boxes"
-msgstr ""
+msgstr "DEBUG: Mostra boxes"
 
 #: engines/sludge/keymapper_tables.h:237
-#, fuzzy
-#| msgid "Inventory"
 msgid "Inventory / Examine"
-msgstr "Inventario"
+msgstr "Inventario / Esamina"
 
 #: engines/sludge/keymapper_tables.h:281
-#, fuzzy
-#| msgid "Skip dialogue"
 msgid "Examine / Skip dialogue"
-msgstr "Salta battuta dialogo"
+msgstr "Esamina / Salta dialogo"
 
 #: engines/sludge/keymapper_tables.h:287 engines/sludge/keymapper_tables.h:398
 #: engines/sludge/keymapper_tables.h:522
-#, fuzzy
-#| msgid "Skip cutscene"
 msgid "Pause / Skip cutscene"
-msgstr "Salta scena di intermezzo"
+msgstr "Pausa / Salta scena di intermezzo"
 
 #: engines/sludge/keymapper_tables.h:328
 msgid "Smell"
-msgstr ""
+msgstr "Annusa"
 
 #: engines/sludge/keymapper_tables.h:338
 msgid "Consume"
-msgstr ""
+msgstr "Consuma"
 
 #: engines/sludge/keymapper_tables.h:361
-#, fuzzy
-#| msgid "Cast Spell"
 msgid "Cast earth spell"
-msgstr "Lancia incantesimo"
+msgstr "Lancia incantesimo della terra"
 
 #: engines/sludge/keymapper_tables.h:367
-#, fuzzy
-#| msgid "Cast Spell"
 msgid "Cast air spell"
-msgstr "Lancia incantesimo"
+msgstr "Lancia incantesimo dell'aria"
 
 #: engines/sludge/keymapper_tables.h:373
-#, fuzzy
-#| msgid "Cast Spell"
 msgid "Cast fire spell"
-msgstr "Lancia incantesimo"
+msgstr "Lancia incantesimo del fuoco"
 
 #: engines/sludge/keymapper_tables.h:379
-#, fuzzy
-#| msgid "Cast Spell"
 msgid "Cast water spell"
-msgstr "Lancia incantesimo"
+msgstr "Lancia incantesimo dell'acqua"
 
 #: engines/sludge/keymapper_tables.h:423 engines/sludge/keymapper_tables.h:510
-#, fuzzy
-#| msgid "Go to next dialogue"
 msgid "Move / Interact / Skip dialogue"
-msgstr "Dialogo successivo"
+msgstr "Movimento / Interazione / Salta dialogo"
 
 #: engines/sludge/keymapper_tables.h:516
-#, fuzzy
-#| msgid "Skip dialogue"
 msgid "Inventory / Skip dialogue"
-msgstr "Salta battuta dialogo"
+msgstr "Inventario / Salta dialogo"
 
 #: engines/sludge/keymapper_tables.h:573
 msgid "Pause Game"
@@ -13338,13 +13302,11 @@ msgstr "Trasferisci personaggio"
 
 #: engines/ultima/ultima8/metaengine.cpp:47
 msgid "Draw Weapon / Combat"
-msgstr ""
+msgstr "Impugna Arma / Combatti"
 
 #: engines/ultima/ultima8/metaengine.cpp:48
-#, fuzzy
-#| msgid "Game menu"
 msgid "Game Menu"
-msgstr "Menù di gioco"
+msgstr "Menù del Gioco"
 
 #: engines/ultima/ultima8/metaengine.cpp:52
 msgid "Move Back"
@@ -13352,242 +13314,186 @@ msgstr "Arretra"
 
 #: engines/ultima/ultima8/metaengine.cpp:53
 #: engines/ultima/ultima8/metaengine.cpp:109
-#, fuzzy
-#| msgid "Move up"
 msgid "Move Up"
 msgstr "Movimento verso l'alto"
 
 #: engines/ultima/ultima8/metaengine.cpp:54
 #: engines/ultima/ultima8/metaengine.cpp:110
-#, fuzzy
-#| msgid "Move down"
 msgid "Move Down"
 msgstr "Movimento verso il basso"
 
 #: engines/ultima/ultima8/metaengine.cpp:58
-#, fuzzy
-#| msgid "Highlight next dialogue"
 msgid "Highlight Items"
-msgstr "Evidenzia dialogo successivo"
+msgstr "Evidenzia Oggetti"
 
 #: engines/ultima/ultima8/metaengine.cpp:64
 msgid "Use Bedroll"
-msgstr ""
+msgstr "Usa sacco a pelo"
 
 #: engines/ultima/ultima8/metaengine.cpp:65
-#, fuzzy
-#| msgid "Backspace"
 msgid "Open Backpack"
-msgstr "Backspace"
+msgstr "Apri Zaino"
 
 #: engines/ultima/ultima8/metaengine.cpp:66
-#, fuzzy
-#| msgid "Use RGB rendering"
 msgid "Use Keyring"
-msgstr "Usa rendering RGB"
+msgstr "Usa mazzo di chiavi"
 
 #: engines/ultima/ultima8/metaengine.cpp:67
-#, fuzzy
-#| msgid "Open map"
 msgid "Open Minimap"
-msgstr "Apri mappa"
+msgstr "Apri Mini-mappa"
 
 #: engines/ultima/ultima8/metaengine.cpp:68
 msgid "Use Recall"
-msgstr ""
+msgstr "Usa Memoria"
 
 #: engines/ultima/ultima8/metaengine.cpp:69
-#, fuzzy
-#| msgid "Open inventory"
 msgid "Open Inventory & Statistics"
-msgstr "Apri Inventario"
+msgstr "Apri Inventario e Statistiche"
 
 #. I18N: gump is Graphical User Menu Pop-up
 #: engines/ultima/ultima8/metaengine.cpp:71
 msgid "Close All Displays"
-msgstr ""
+msgstr "Chiudi tutte le finestre"
 
 #: engines/ultima/ultima8/metaengine.cpp:72
 msgid "Jump (fake both-button-click)"
-msgstr ""
+msgstr "Salta (simula clic con entrambi i tasti)"
 
 #: engines/ultima/ultima8/metaengine.cpp:73
 msgid "Careful Step"
-msgstr ""
+msgstr "Passo Prudente"
 
 #: engines/ultima/ultima8/metaengine.cpp:79
-#, fuzzy
-#| msgid "Cycle back through inventory cursor items"
 msgid "Cycle through Weapon Inventory"
-msgstr "Seleziona oggetto precedente nell'inventario"
+msgstr "Itera nell'inventario delle Armi"
 
 #: engines/ultima/ultima8/metaengine.cpp:80
-#, fuzzy
-#| msgid "Cycle through stretch modes"
 msgid "Cycle through Item Inventory"
-msgstr "Itera tra le modalità di ridimensionamento immagine"
+msgstr "Itera nell'inventario degli Oggetti"
 
 #: engines/ultima/ultima8/metaengine.cpp:81
-#, fuzzy
-#| msgid "Inventory"
 msgid "Use Inventory Item"
-msgstr "Inventario"
+msgstr "Usa oggetto dell'inventario"
 
 #: engines/ultima/ultima8/metaengine.cpp:82
 msgid "Use Medikit"
-msgstr ""
+msgstr "Usa Medikit"
 
 #: engines/ultima/ultima8/metaengine.cpp:83
 msgid "Use Energy Cube"
-msgstr ""
+msgstr "Usa Cubo di Energia"
 
 #: engines/ultima/ultima8/metaengine.cpp:84
 msgid "Detonate Bomb"
-msgstr ""
+msgstr "Detonazione Bomba"
 
 #: engines/ultima/ultima8/metaengine.cpp:86
-#, fuzzy
-#| msgid "Drop page"
 msgid "Drop Weapon"
-msgstr "Lascia pagina"
+msgstr "Abbandona Arma"
 
 #: engines/ultima/ultima8/metaengine.cpp:87
-#, fuzzy
-#| msgid "Select a Theme"
 msgid "Search / Select Item"
-msgstr "Seleziona un tema"
+msgstr "Cerca / Seleziona Oggetto"
 
 #: engines/ultima/ultima8/metaengine.cpp:88
-#, fuzzy
-#| msgid "Use action"
 msgid "Use Selection"
-msgstr "Azione: Usa"
+msgstr "Usa Selezione"
 
 #: engines/ultima/ultima8/metaengine.cpp:89
 msgid "Grab Items"
-msgstr ""
+msgstr "Prendi Oggetti"
 
 #: engines/ultima/ultima8/metaengine.cpp:90
-#, fuzzy
-#| msgid "Next action"
 msgid "Fire Weapon"
-msgstr "Azione successiva"
+msgstr "Spara con l'arma"
 
 #: engines/ultima/ultima8/metaengine.cpp:91
-#, fuzzy
-#| msgid "Camera moves with Silencer"
 msgid "Center screen on Silencer"
 msgstr "Centra inquadratura su Silencer"
 
 #: engines/ultima/ultima8/metaengine.cpp:92
 msgid "Jump / Roll / Crouch"
-msgstr ""
+msgstr "Salta / Rotola / Abbassati"
 
 #: engines/ultima/ultima8/metaengine.cpp:93
-#, fuzzy
-#| msgid "Shorty mode"
 msgid "Short Jump"
-msgstr "Modalità tappo"
+msgstr "Salto Corto"
 
 #: engines/ultima/ultima8/metaengine.cpp:94
-#, fuzzy
-#| msgid "Slide Left"
 msgid "Sidestep Left"
-msgstr "Scorri a sinistra"
+msgstr "Passo a sinistra"
 
 #: engines/ultima/ultima8/metaengine.cpp:95
-#, fuzzy
-#| msgid "Slide Right"
 msgid "Sidestep Right"
-msgstr "Scorri a destra"
+msgstr "Passo a destra"
 
 #: engines/ultima/ultima8/metaengine.cpp:96
-#, fuzzy
-#| msgid "Face Forward"
 msgid "Step Forward"
-msgstr "Guarda in avanti"
+msgstr "Passo in avanti"
 
 #: engines/ultima/ultima8/metaengine.cpp:97
-#, fuzzy
-#| msgid "Step back"
 msgid "Step Back"
 msgstr "Passo indietro"
 
 #: engines/ultima/ultima8/metaengine.cpp:98
-#, fuzzy
-#| msgid "Roll left"
 msgid "Roll Left"
-msgstr "Vira a sinistra"
+msgstr "Rotola a sinistra"
 
 #: engines/ultima/ultima8/metaengine.cpp:99
-#, fuzzy
-#| msgid "Roll right"
 msgid "Roll Right"
-msgstr "Vira a destra"
+msgstr "Rotola a destra"
 
 #: engines/ultima/ultima8/metaengine.cpp:100
-#, fuzzy
-#| msgid "Toggle Clock"
 msgid "Toggle Crouch"
-msgstr "Mostra/nascondi orologio"
+msgstr "Alterna in piedi / abbassato"
 
 #: engines/ultima/ultima8/metaengine.cpp:101
 msgid "Side Step / Advance / Retreat"
-msgstr ""
+msgstr "Passo Laterale / Avanza / Arretra"
 
 #: engines/ultima/ultima8/metaengine.cpp:106
-#, fuzzy
-#| msgid "Toggle Clock"
 msgid "Toggle Clipping"
-msgstr "Mostra/nascondi orologio"
+msgstr "Attiva/disattiva Clipping"
 
 #: engines/ultima/ultima8/metaengine.cpp:107
 msgid "Ascend"
-msgstr ""
+msgstr "Sali"
 
 #: engines/ultima/ultima8/metaengine.cpp:108
 msgid "Descend"
-msgstr ""
+msgstr "Scendi"
 
 #: engines/ultima/ultima8/metaengine.cpp:119
-#, fuzzy
-#| msgid "Show hints"
 msgid "Show Touching Items"
-msgstr "Mostra suggerimenti"
+msgstr "Mostra oggetti in contatto"
 
 #: engines/ultima/ultima8/metaengine.cpp:120
-#, fuzzy
-#| msgid "Show quotes"
 msgid "Show Editor Items"
-msgstr "Mostra citazioni"
+msgstr "Mostra Oggetti Editor"
 
 #: engines/ultima/ultima8/metaengine.cpp:121
 msgid "Decrement Map Sort Order"
-msgstr ""
+msgstr "Decrementa ordinamento della Mappa"
 
 #: engines/ultima/ultima8/metaengine.cpp:122
 msgid "Increment Map Sort Order"
-msgstr ""
+msgstr "Incrementa ordinamento della Mappa"
 
 #: engines/ultima/ultima8/metaengine.cpp:123
-#, fuzzy
-#| msgid "Toggle panel style"
 msgid "Toggle Frame By Frame"
-msgstr "Alterna stile pannello comandi"
+msgstr "Attiva/Disattiva Frame By Frame"
 
 #: engines/ultima/ultima8/metaengine.cpp:124
 msgid "Advance Frame"
-msgstr ""
+msgstr "Frame successivo"
 
 #: engines/ultima/ultima8/metaengine.cpp:125
 msgid "Toggle Avatar In Stasis"
-msgstr ""
+msgstr "Attiva/Disattiva stasi di Avatar"
 
 #: engines/ultima/ultima8/metaengine.cpp:126
-#, fuzzy
-#| msgid "Image Viewer"
 msgid "Show Shape Viewer"
-msgstr "Visualizzatore immagini"
+msgstr "Mostra Visualizzatore Forme"
 
 #: engines/ultima/ultima8/metaengine.cpp:136
 msgid "Ultima VIII"
