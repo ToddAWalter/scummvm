@@ -19,39 +19,49 @@
  *
  */
 
-#include "ultima/shared/std/string.h"
-#include "common/algorithm.h"
+#include "atari-supervidel.h"
 
-namespace Ultima {
-namespace Std {
+#include "common/scummsys.h"
 
-const char *const endl = "\n";
+bool g_hasSuperVidel = false;
 
-Common::String to_uppercase(const Common::String &s) {
-	Common::String str = s;
-	Common::String::iterator X;
-	for (X = str.begin(); X != str.end(); ++X)
-		*X = toupper(*X);
+#ifdef USE_SUPERVIDEL
 
-	return str;
+#ifdef USE_SV_BLITTER
+int g_superVidelFwVersion = 0;
+const byte *g_blitMask = nullptr;
+
+static bool isSuperBlitterLocked;
+
+void SyncSuperBlitter() {
+	// if externally locked, let the owner decide when to sync (unlock)
+	if (isSuperBlitterLocked)
+		return;
+
+	// while FIFO not empty...
+	if (g_superVidelFwVersion >= 9)
+		while (!(*SV_BLITTER_FIFO & 1));
+	// while busy blitting...
+	while (*SV_BLITTER_CONTROL & 1);
+}
+#endif	// USE_SV_BLITTER
+
+void LockSuperBlitter() {
+#ifdef USE_SV_BLITTER
+	assert(!isSuperBlitterLocked);
+
+	isSuperBlitterLocked = true;
+#endif
 }
 
-string::string(size_t n, char c) : Common::String() {
-	ensureCapacity(n, false);
-	for (size_t idx = 0; idx < n; ++idx)
-		(*this) += c;
+void UnlockSuperBlitter() {
+#ifdef USE_SV_BLITTER
+	assert(isSuperBlitterLocked);
+
+	isSuperBlitterLocked = false;
+	if (g_hasSuperVidel)
+		SyncSuperBlitter();
+#endif
 }
 
-void string::resize(size_t count) {
-	if (count == 0)
-		clear();
-	else if (count < size())
-		*this = string(_str, _str + count);
-	else {
-		while (size() < count)
-			*this += ' ';
-	}
-}
-
-} // End of namespace Std
-} // End of namespace Ultima
+#endif	// USE_SUPERVIDEL

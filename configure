@@ -3465,8 +3465,6 @@ EOF
 		fi
 		if test "$_debug_build" = yes; then
 			_optimization_level=-O0
-			append_var DEFINES "-D__PSP2_DEBUG__"
-			append_var LIBS "-lpsp2shell"
 		fi
 		add_line_to_config_mk 'PSP2 = 1'
 		add_line_to_config_h "#define PREFIX \"${prefix}\""
@@ -4092,7 +4090,6 @@ case $_backend in
 		;;
 	atari)
 		define_in_config_if_yes yes "ATARI"
-		append_var DEFINES "-DDISABLE_LAUNCHERDISPLAY_GRID"
 		append_var DEFINES "-DDISABLE_NES_APU"
 		#append_var DEFINES "-DDISABLE_DOSBOX_OPL"
 		append_var LIBS "-lgem"

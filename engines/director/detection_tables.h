@@ -104,6 +104,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "bodypark",			"Body Park" },
 	{ "brer",				"Brer Rabbit and the Wonderful Tar Baby" },
 	{ "buzz1",				"Buzz Lightyear 1st Grade" },
+	{ "capnco",				"A Case for Cap & Co" },
 	{ "carmenmath",			"Carmen Sandiego Math Detective" },
 	{ "casino",				"Casino!" },
 	{ "casino5p",			"Casino 5 Pack" },
@@ -305,6 +306,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "legendsmyths",		"Legends & Myths" },
 	{ "letsdiscover",		"Let's Discover" },
 	{ "letters",			"Letters" },
+	{ "lostfoundvol1",		"Lost & Found: Volume 1" },
 	{ "louiscatorze",		"Louis Cat Orze: The Mystery of the Queen's Necklace" },
 	{ "luxor",				"Secrets of the Luxor" },
 	{ "madcc12",			"Madeline Classroom Companion: 1st & 2nd Grade" },
@@ -398,6 +400,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "okayhenry",			"O!Kay! Henry in Love" },
 	{ "okaytruehero",		"O!Kay! A True Hero" },
 	{ "operafatal",			"Opera Fatal" },
+	{ "oscarballforest",	"Oscar the Balloonist and the Secrets of the Forest" },
 	{ "oslotg",				"Adventures with Oslo: Tools and Gadgets" },
 	{ "oztma",				"Oz: The Magical Adventure" },
 	{ "paparazzi",			"Paparazzi!: Tales of Tinseltown" },
@@ -465,7 +468,8 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "sinkha1",			"Sinkha: Hyleyn" },
 	{ "sinkha2",			"Sinkha: Atmosphere / Planet of the Clouds" },
 	{ "sitfarm",			"Sitting on the Farm" },
-	{ "skeeto10",			"Skipper & Skeeto: Fun in the Park" }, // Magnus & Myggen
+	{ "skeeto1",			"Skipper & Skeeto: Tales from Paradise Park" }, // Magnus & Myggen
+	{ "skeeto10",			"Skipper & Skeeto: Fun in the Park" },
 	{ "skippy",             "Skippy and the Curse of the Temple of Ock" },
 	{ "skyborg",			"SkyBorg: Into the Vortex" },
 	{ "slamdunktyping",		"Slam Dunk Typing" },
@@ -620,6 +624,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "dailymail100",		"Daily Mail Centenary: 100 Amazing Years" },
 	{ "dayaftertrinity",	"The Day After Trinity: J. Robert Oppenheimer and the Atomic Bomb" },
 	{ "delphi4tutor",		"Borland Delphi 4 Tutor" },
+	{ "digitalgriot",		"Digital Griot" }, // by Betye Saar [ISBN 1-58125-C29-0]
 	{ "dinos",				"Multimedia Dinosaurs" },
 	{ "dominionvol1",		"Dominion Tank Police - Volume 1: Acts I & II" },
 	{ "draculaterror",		"Dracula: Truth and Terror" },
@@ -1229,6 +1234,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "ukiukiitsudemo",		"ウキウキ釣り天国 ～いつでもどこでも海釣り三昧～" },		// Ukiuki Tsuri Tengoku: Itsudemo Dokodemo Umitsuri Zanmai
 	{ "ukiukistamp",		"うきうきスタンプ" },
 	{ "ukyo1",				"うきょー1" },
+	{ "umezma",				"UMEZMA ウメズマ" },
 	{ "ursaminorblue",		"銀河の魚 URSA minor BLUE" },				// Galaxy Fish: Ursa Minor Blue
 	{ "uruuruexcellent",	"うるうる The Excellent Edition" }, // Uruuru: The Excellent Edition
 	{ "victorianpark",		"Victorian Park" },
@@ -1396,6 +1402,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "businessmanager",	"琢磨 BusinessManager" },							// from Takuma Co.
 	{ "calling",			"Calling" },
 	{ "cnl",				"City Net Line" },
+	{ "cockpit",			"The Cockpit" },
 	{ "creativeeye",		"Creative EYE" },
 	{ "fontfriends",		"フォントフレンズ" },
 	{ "greetingstudio",		"Greeting STUDIO" },
@@ -1650,7 +1657,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "techiescom",			"techies.com Business Card" },
 	{ "terapreviews",		"TeraMedia Previews" },
 	{ "tivolaspring1997",	"Tivola Demo - Frühjahr '97" },
-	{ "tivolafall1998",		"Tivola Demo - Herbst 1998" },   // Contains D4, D5 and D6 executables
+	{ "tivolafall1998",		"Tivola Demo - Fall 1998" },   // Contains D4, D5 and D6 executables
 	{ "tivolaspring1999",	"Tivola Demo - Frühling 1999" }, // Contains D4, D5 and D6 executables
 	{ "tivolasummer2000",	"Tivola Demo - Sommer 2000" },
 	{ "tlc",				"The Learning Company Sampler" },
@@ -3191,6 +3198,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINDEMO2("sk8board", "Demo", "RIDE.EXE",  "65d06b5fef155a2473434571aff5bc29", 370013,
 								 "INTRO.MMM", "91195cec43e8a7bafe8b91d5e121b2e5", 273118, 310),
 
+	// Magnus & Myggen: Leg og Lær
+	// Original release. Other versions are D5 and above
+	WINGAME2_l("skeeto1", "", "MAGNUS.EXE",  "t:23965c54b1d788825fa2ef912f7a637b", 28609061,
+							  "MAGNUS0.DXR", "f:30dfa45352e90a7b070b21e8948934d8",	   3916, Common::DA_DNK, 404),
+
 	// Demo from Blender 1.5
 	// Version 1.2 onwards are D4
 	MACGAME1("smile", "v1.1", "SMILE! The Splattering", "249f5b6c2a2b050af6ebd533203c5e32", 2479330, 310),
@@ -3923,6 +3935,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	// Original filename is CityNetLine デモ版
 	MACDEMO1_l("cnl", "Demo", "CityNetLine Demo Version", "f5033f237ad1b1639fc46d01a82ac380", 286140, Common::JA_JPN, 404),
+
+	// Demo of "The Cockpit" CD based on the manga by Matsumoto
+	// Found on UMEZMA
+	MACDEMO1_l("cockpit", "Demo", "MANGAROM/COCKDEMO.APPL",		  "rt:e63337750ae3043299238d5868af8bb6", 502685, Common::JA_JPN, 404),
+	WINDEMO1_l("cockpit", "Demo", "MANGAROM/ISOIRE/COCKDEMO.EXE", "t:db1164fdd4d0580d70f427b6df2874fe",  748231, Common::JA_JPN, 404),
 
 	WINDEMO2t("compton", "Guided Tour", "TOURDEMO.EXE", "cb88f94bc905aeb3ef8717196c4b0be9", 688039,
 										"DEMO.DXR",		"7d87e2099fc0d3de8869a00f4a084f97", 1730688, 404),
@@ -4910,6 +4927,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACDEMO1("lion", "Demo", "Lion Demo", "r:01be45e7241194dad07938e7059b88e3", 484028, 400),
 
 	WINGAME1_l("lobomau", "", "LOBO.EXE", "162d4d1aaf42b6e8d7dfc520e5de2bed", 201828999, Common::PT_BRA, 400),
+
+	MACGAME1("lostfoundvol1", "", "Lost & Found Hidden Mag", "r:364b833a3c776779cce6a4b089c84a23",  304499, 404),
+	WINGAME1("lostfoundvol1", "", "LOSTFOND/LOST.EXE",		 "t:1fa1f969a7beb400709e23490316113a", 6180257, 404),
 
 	MACGAME1("louiscatorze", "", "Louis Cat Orze/Louis Catorze", "r:2c7d0c0d55cbe3f622c7d68cedb671e0", 486698, 404),
 	WINGAME2("louiscatorze", "", "LCO/LOUIS.EXE",	   "t:cf4ba6186525654f10baf9091358b9c1",  719433,
@@ -5950,7 +5970,13 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME2_l("tivolaspring1997", "Sampler", "Tivola Demos",      "r:5debd53e3dd84431c9ca1e47f5e10c1b", 503636,
 											  "Demo/SAMPLECD.Dxr", "d:81c08d08680a7e8649b67a6a0314776d", 5667390, Common::DE_DEU, 404),
 	WINGAME2_l("tivolaspring1997", "Sampler", "START.EXE",         "t:e38cb9f5acb91b498a7a6718385c82e2", 740011,
-											  "DEMO/SAMPLECD.DXR", "d:81c08d08680a7e8649b67a6a0314776d", 5667390, Common::DE_DEU, 404),
+											  "DEMO/SAMPLECD.DXR", "f:81c08d08680a7e8649b67a6a0314776d", 5667390, Common::DE_DEU, 404),
+
+	// Found on "A Case for Cap & Co" (English)
+	MACGAME2("tivolafall1998", "Sampler", "Tivola Demos",      "r:5debd53e3dd84431c9ca1e47f5e10c1b",  503636,
+										  "Demo/SAMPLECD.Dxr", "d:da105c85715e489f73a384b7e63cb9ac", 6347750, 404),
+	WINGAME2("tivolafall1998", "Sampler", "START.EXE",		   "t:e38cb9f5acb91b498a7a6718385c82e2",  740011,
+										  "DEMO/SAMPLECD.DXR", "f:da105c85715e489f73a384b7e63cb9ac", 6347750, 404),
 
 	MACDEMO1_l("toeic", "Demo", "TOEIC", "r:77f4098988d5386794d1530065f514cd", 301681, Common::JA_JPN, 400),
 
@@ -6051,6 +6077,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Demo is D5
 	// Original filename is 人魚島のボート釣り
 	MACGAME1_l("ukiuki3", "", "xn--u9jwcxjzcuh504p22ubz0h51ra", "r:bcd3c718db258701496b3c5bcb827ef2", 487782, Common::JA_JPN, 404),
+
+	MACGAME1_l("umezma", "", "Copy To Hard Disk/UMEZMA", "rt:9a2a95f0887f224b1a73e45d86183947", 483518, Common::JA_JPN, 404),
+	WINGAME1_l("umezma", "", "WIN/UMEZMA.EXE",			 "t:111a5351db236155b0510b37f30731a6",  742039, Common::JA_JPN, 404),
 
 	// Bilingual Japanese/English
 	MACGAME1("undergroundaz", "", "SO_OUT/SO_OUT",	   "r:47e49b52d4c99ea6ea72c3dcbb57b34b",  290422, 400),
@@ -6535,6 +6564,17 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("canelect", "", "Elect", "6e7e31d05709e1d38d63f4df6a59eec0", 719289, 501),
 	WINGAME1("canelect", "", "ELECT_95.EXE", "1a7acbba10a7246ba58c1d53fc7203f5", 1479345, 501),
 
+	// Original German title: Ein Fall für Mütze & Co
+	// German Windows version requires installation
+	MACGAME2("capnco", "", "xn--Copy on the hard drive...-/A Case for Cap & Co", "r:622fd022d45f232f35967daad146035f", 719465,
+						   "DATA/BACKPACK.DXR", "f:f02da6a7ba372e2d1656dd7c12cb27d0", 626082, 501),
+	MACGAME1_l("capnco", "", "xn--Auf die Festplatte kopieren ...-/xn--Ein Fall fr Mtze & Co-iicd", "r:0c27fab8d2ebda608e6bb1a58bf15fe1", 718385, Common::DE_DEU, 501),
+	WINGAME2("capnco", "", "CAP95.EX_", "t:811b35b41ffa76e802afe55d490b50c3", 1559083,
+						   "DATA/BACKPACK.DXR", "f:f02da6a7ba372e2d1656dd7c12cb27d0", 626082, 501),
+	WINGAME1_l("capnco", "", "MUETZE95.EXE", "t:a04f2d4af18a04dd2a8343498435538f", 1559109, Common::DE_DEU, 501),
+	// Reported in TRAC #15845
+	WINGAME1_l("capnco", "", "MUETZE95.EXE", "t:a04f2d4af18a04dd2a8343498435538f", 1559137, Common::DE_DEU, 501),
+
 	// Available here: http://web.archive.org/web/20080412010505/http://www.beachware.com/download/
 	// Each shareware title plays one of several casino games until unlocked with registration code
 	// The games are also available and unlocked on various retail CDs from BeachWare
@@ -6645,6 +6685,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	// From MacFormat #42
 	MACGAME1("digihbd", "", "Digital Happy Birthday Card", "61f3e061ae6236d8f72312ae9de83f46", 703153, 500),
+
+	WINGAME1("digitalgriot", "", "GRIOT.EXE", "t:9d96285877f5f6a2c65390b8327c0592", 4398121, 501),
 
 	// Windows executables for Win 3.1 and 95; Mac executables for 68k, PPC, and Fat binary
 	MACGAME2("dimensionq", "", "Dimension Q",  "r:c148f66ae3511fb88733102aa27efe7e",  719057,
@@ -6824,6 +6866,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 									 "DATA/TEXT_E.Cxt", "f:e74119685db701dea9f31f91521fd078", 2457643, 501, GF_32BPP),
 	WINGAME2f("gadgetpaf",	"",		 "GADGET/GADGET.EXE", "1a7acbba10a7246ba58c1d53fc7203f5", 1411507,
 									 "DATA/TEXT_E.Cxt", "5f14330705974a22deb9a12cd8ae6e79", 691046, 501, GF_32BPP),
+	WINGAME2f("gadgetpaf",	"",		 "GADGET/GADGET.EXE", "t:c8a85e9a0eda2b7dd7974197c02d6469", 1411507,
+									 "DATA/TEXT_E.Cxt", "f:d6ec0787583dd1ad4dcd0513aaeb8cbc", 813491, 501, GF_32BPP),
 	WINGAME2f_l("gadgetpaf", "",		 "GADGET/GADGET.EXE", "1a7acbba10a7246ba58c1d53fc7203f5", 1411507,
 									 "DATA/TEXT_E.Cxt", "056ab5419f65fab51fa50c28ad360e76", 561824, Common::ES_ESP, 501, GF_32BPP),
 	WINDEMO2f_l("gadgetpaf", "Demo", "GADGET.exe", "t:7e393434e06153a6413baf1b448f440e", 1647502,
@@ -7276,6 +7320,12 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINDEMO2_l("osaka2", "Demo", "OSAKA2.EXE",		  	 "t:a1b15df3e663f99b015753bc82e22bcd", 1410110,
 								 "WINMOVIE/BARGAIN.DIR", "d:949640df6d4db94e85b466da5e5d8470", 1880116, Common::JA_JPN, 501),
 
+	// Found on "A Case for Cap & Co"
+	MACGAME2("oscarballforest", "Demo", "Oscar Demo active",  "rt:1a0f4b8c982d1823a6953c1602e92d22", 705417,
+										"DACHS/DAFRUEHL.DIR", "d:4cfe5498828fb97d9d2152a3064154e3",  366052, 501),
+	WINDEMO2("oscarballforest", "Demo", "TIVOLA.EXE",		  "t:d13a9d569cd0b061ae572b8bea4e7966",  933683,
+										"DACHS/DAFRUEHL.DIR", "f:4cfe5498828fb97d9d2152a3064154e3",  366052, 501),
+
 	WINGAME1("parliament", "", "PARL/GUIDE.EXE", "t:6ada9911cbb5aaa010fa4f4115603ce9", 918871, 500),
 
 	// Screen savers from Perfect Blue
@@ -7585,6 +7635,17 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("sinkha", "Music and Animation", "Music&Animation", "08d6f6e39fbd8388faf57f602acaebcc", 705445, 500),
 	WINGAME2("sinkha", "Music and Animation", "MUSIC.EXE",		 "3460ad87d2ba57104e2810a77b53c220", 1393827,
 											  "MUS_ANIM.DXR",    "2e31baec8a4957593db517bbf46c6740", 1141212, 500),
+
+	// Multilanguage English/Spanish. Needs installation
+	WINGAME2("skeeto1", "",			  "START16.EXE",  "t:c19794b0e9df2c4e76c0d227ae4e4883",  1147041,
+									  "MAGNUSGB.CXT", "f:fbb5c96c52981b53a893f69275629bb4", 11087808, 501),
+	WINGAME2("skeeto1", "Tutorial",	  "TUTOR32.EXE",  "t:6eae78e010386eec6c540537e179457f",  1448025,
+									  "MMTUTOR.DXR",  "f:e3e670ee1545071c62373de6fd52ea86", 12223542, 501),
+	// Multilanguage Danish/Swedish/Norwegian/Finnish
+	WINGAME2_l("skeeto1", "",		  "START32.EXE", "t:789a64c2bb938610c3d3eca4cbd1a483",  1624983,
+									  "MAGNUS1.DXR", "f:9d9e1d7063775648445e93b5e2969b33",  6508488, Common::DA_DNK, 501),
+	WINGAME2_l("skeeto1", "Tutorial", "TUTOR32.EXE", "t:dab81d0fbcdcaa38f05858a99fa4298f",  1448069,
+									  "MMTUTOR.DXR", "f:1d8d4e8c4ebe9fa7d465f302644ab1c5", 26066084, Common::DA_DNK, 501),
 
 	// Developed by Mary Boies Software, published by Creative Wonders
 	// Windows version also found in Middle School Advantage 2001 bundle

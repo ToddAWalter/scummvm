@@ -316,7 +316,7 @@ int ArchiveManager::loadBG(const char *filename) {
 	tbm.width = _engine->getGraphicsManager()->_renderBox1.width;
 	tbm.height = _engine->getGraphicsManager()->_renderBox1.height;
 
-	PixMap *bgSurface = _engine->getGraphicsManager()->_backgroundBuffer;
+	PixMap *bgSurface = _engine->getGraphicsManager()->_frontBuffer;
 
 	if (_engine->getLogicManager()->_doubleClickFlag &&
 		(_engine->mouseHasLeftClicked() || _engine->mouseHasRightClicked()) &&
@@ -368,14 +368,14 @@ int ArchiveManager::loadBG(const char *filename) {
 			}
 
 			if (_engine->getGraphicsManager()->_renderBox1.x) {
-				_engine->getGraphicsManager()->clear(_engine->getGraphicsManager()->_backgroundBuffer, 0, 0, _engine->getGraphicsManager()->_renderBox1.x, 480);
-				_engine->getGraphicsManager()->clear(_engine->getGraphicsManager()->_backgroundBuffer, 640 - _engine->getGraphicsManager()->_renderBox1.x, 0, _engine->getGraphicsManager()->_renderBox1.x, 480);
+				_engine->getGraphicsManager()->clear(_engine->getGraphicsManager()->_frontBuffer, 0, 0, _engine->getGraphicsManager()->_renderBox1.x, 480);
+				_engine->getGraphicsManager()->clear(_engine->getGraphicsManager()->_frontBuffer, 640 - _engine->getGraphicsManager()->_renderBox1.x, 0, _engine->getGraphicsManager()->_renderBox1.x, 480);
 			}
 
 			if (_engine->getGraphicsManager()->_renderBox1.y) {
-				_engine->getGraphicsManager()->clear(_engine->getGraphicsManager()->_backgroundBuffer, _engine->getGraphicsManager()->_renderBox1.x, 0, _engine->getGraphicsManager()->_renderBox1.width, _engine->getGraphicsManager()->_renderBox1.y);
+				_engine->getGraphicsManager()->clear(_engine->getGraphicsManager()->_frontBuffer, _engine->getGraphicsManager()->_renderBox1.x, 0, _engine->getGraphicsManager()->_renderBox1.width, _engine->getGraphicsManager()->_renderBox1.y);
 				_engine->getGraphicsManager()->clear(
-					_engine->getGraphicsManager()->_backgroundBuffer,
+					_engine->getGraphicsManager()->_frontBuffer,
 					_engine->getGraphicsManager()->_renderBox1.x,
 					480 - _engine->getGraphicsManager()->_renderBox1.y,
 					_engine->getGraphicsManager()->_renderBox1.width,
@@ -389,7 +389,7 @@ int ArchiveManager::loadBG(const char *filename) {
 				return -1;
 
 			} else {
-				_engine->getGraphicsManager()->copy(_engine->getGraphicsManager()->_backgroundBuffer, _engine->getGraphicsManager()->_screenBuffer, 0, 0, 640, 480);
+				_engine->getGraphicsManager()->copy(_engine->getGraphicsManager()->_frontBuffer, _engine->getGraphicsManager()->_backBuffer, 0, 0, 640, 480);
 
 				if (tbm.x      != _engine->getGraphicsManager()->_renderBox1.x     ||
 					tbm.y      != _engine->getGraphicsManager()->_renderBox1.y     ||
@@ -420,9 +420,9 @@ int ArchiveManager::loadBG(const char *filename) {
 			}
 		}
 	} else {
-		memset(_engine->getGraphicsManager()->_screenBuffer, 0, (640 * 480 * sizeof(PixMap)));
+		memset(_engine->getGraphicsManager()->_backBuffer, 0, (640 * 480 * sizeof(PixMap)));
 
-		_engine->getGraphicsManager()->copy(_engine->getGraphicsManager()->_screenBuffer, _engine->getGraphicsManager()->_backgroundBuffer, 0, 0, 640, 480);
+		_engine->getGraphicsManager()->copy(_engine->getGraphicsManager()->_backBuffer, _engine->getGraphicsManager()->_frontBuffer, 0, 0, 640, 480);
 		_engine->getGraphicsManager()->_renderBox1.x = 0;
 		_engine->getGraphicsManager()->_renderBox1.y = 0;
 		_engine->getGraphicsManager()->_renderBox1.width = 640;
@@ -531,6 +531,10 @@ Seq *ArchiveManager::loadSeq(const char *filename, uint8 ticksToWaitUntilCycleRe
 	// sprite data...
 	uint16 *paletteAddr = (uint16 *)&seqDataRaw[8 + 68 * seq->numFrames]; 
 
+	for (int j = 0; j < 184; j++) {
+		paletteAddr[j] = READ_LE_UINT16(&paletteAddr[j]);
+	}
+
 	_engine->getGraphicsManager()->modifyPalette(paletteAddr, 184);
 	return seq;
 }
@@ -541,6 +545,16 @@ void ArchiveManager::loadMice() {
 	if (archive) {
 		readHPF(archive, _engine->_cursorsMemoryPool, archive->size);
 		closeHPF(archive);
+
+		for (int i = 0; i < 0xC000; i++) {
+			_engine->getGraphicsManager()->_iconsBitmapData[i] = (PixMap)READ_LE_UINT16(&_engine->getGraphicsManager()->_iconsBitmapData[i]);
+		}
+
+		for (int i = 0; i < 48; i++) {
+			_engine->getGraphicsManager()->_cursorsDataHeader[i].hotspotX = READ_LE_INT16(&_engine->getGraphicsManager()->_cursorsDataHeader[i].hotspotX);
+			_engine->getGraphicsManager()->_cursorsDataHeader[i].hotspotY = READ_LE_INT16(&_engine->getGraphicsManager()->_cursorsDataHeader[i].hotspotY);
+		}
+
 		_engine->getGraphicsManager()->modifyPalette(_engine->getGraphicsManager()->_iconsBitmapData, 0xC000);
 	}
 }

@@ -94,6 +94,10 @@ class VCR;
 
 struct Extent;
 
+enum {
+	GF_COMPRESSED = 1 << 0
+};
+
 typedef struct Item {
 	uint8 mnum;
 	uint16 closeUp;
@@ -471,7 +475,7 @@ typedef struct FontData {
 		memset(charMap, 0, sizeof(charMap));
 		memset(charKerning, 0, sizeof(charKerning));
 
-		delete fontData;
+		free(fontData);
 		fontData = nullptr;
 	}
 } FontData;
@@ -551,6 +555,7 @@ public:
 
 	bool isDemo() const;
 	bool isGoldEdition() const;
+	bool isCompressed() const;
 
 	Common::String getTargetName() const;
 

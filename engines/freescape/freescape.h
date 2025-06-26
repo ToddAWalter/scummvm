@@ -105,6 +105,9 @@ enum FreescapeAction {
 	kActionSelectPrince,
 	kActionSelectPrincess,
 	kActionQuit,
+	// Demo actions
+	kActionUnknownKey,
+	kActionWait
 };
 
 typedef Common::HashMap<uint16, Area *> AreaMap;
@@ -137,6 +140,7 @@ struct CGAPaletteEntry {
 };
 
 extern Common::String shiftStr(const Common::String &str, int shift);
+extern Common::String centerAndPadString(const Common::String &str, int size);
 
 class EventManagerWrapper {
 public:

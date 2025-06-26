@@ -38,6 +38,7 @@
 #include "common/error.h"
 #include "common/fs.h"
 #include "common/timer.h"
+#include "common/compression/installshield_cab.h"
 
 #include "engines/util.h"
 #include "engines/advancedDetector.h"
@@ -90,8 +91,8 @@ void LastExpressEngine::startUp() {
 	getMemoryManager()->initMem();
 
 	getGraphicsManager()->clear(getGraphicsManager()->_screenSurface, 0, 0, 640, 480);
-	getGraphicsManager()->clear(getGraphicsManager()->_screenBuffer, 0, 0, 640, 480);
-	getGraphicsManager()->clear(getGraphicsManager()->_backgroundBuffer, 0, 0, 640, 480);
+	getGraphicsManager()->clear(getGraphicsManager()->_backBuffer, 0, 0, 640, 480);
+	getGraphicsManager()->clear(getGraphicsManager()->_frontBuffer, 0, 0, 640, 480);
 
 	getVCR()->shuffleGames();
 	getArchiveManager()->loadMice();
@@ -136,6 +137,14 @@ void LastExpressEngine::soundTimerHandler(void *refCon) {
 }
 
 Common::Error LastExpressEngine::run() {
+	// Allow HD.HPF to be read directly from the InstallShield archive
+	if (isCompressed()) {
+		Common::Archive *cabinet = Common::makeInstallShieldArchive("data");
+		if (cabinet) {
+			SearchMan.add("data1.cab", cabinet);
+		}
+	}
+
 	// Initialize the graphics
 	const Graphics::PixelFormat dataPixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0);
 	initGraphics(640, 480, &dataPixelFormat);
@@ -467,16 +476,17 @@ bool LastExpressEngine::handleEvents() {
 		switch (ev.type) {
 
 		case Common::EVENT_KEYDOWN:
-			//// DEBUG: Quit game on escape
-			// if (ev.kbd.keycode == Common::KEYCODE_ESCAPE)
-			//	quitGame();
+			switch (ev.kbd.keycode) {
+			case Common::KEYCODE_F4:
+				if (_navigationEngineIsRunning && gDebugLevel >= 3)
+					getLogicManager()->doF4();
+
+				break;
+			default:
+				break;
+			}
 
 			break;
-
-		//case Common::EVENT_MAINMENU:
-			// Closing the GMM
-
-
 		case Common::EVENT_LBUTTONDOWN:
 			_systemEventLeftMouseDown = true;
 			curFlags |= kMouseFlagLeftButton;
