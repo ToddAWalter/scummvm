@@ -155,6 +155,13 @@ void MemoryManager::freeMem(void *data) {
 void MemoryManager::releaseMemory() {
 	SAFE_FREE(_engine->_globalMemoryPool);
 	SAFE_FREE(_engine->getGraphicsManager()->_backBuffer);
+
+	for (int i = 0; i < _engine->getLogicManager()->_numberOfScenes; i++) {
+		if (_engine->getLogicManager()->_trainData[i].link) {
+			SAFE_DELETE(_engine->getLogicManager()->_trainData[i].link);
+		}
+	}
+
 	SAFE_FREE(_engine->getLogicManager()->_trainData);
 	SAFE_FREE(_engine->_cursorsMemoryPool);
 	SAFE_DELETE(_engine->_characters);
@@ -298,6 +305,8 @@ Seq *MemoryManager::copySeq(Seq *sequenceToCopy) {
 
 		newSeqDataStream->readUint32LE(); // Empty "next" sprite pointer
 	}
+
+	delete newSeqDataStream;
 
 	return newSeq;
 }

@@ -26,6 +26,7 @@ import unicodedata
 import urllib.request
 import zipfile
 from binascii import crc_hqx
+from datetime import datetime, timezone
 from enum import Enum
 from io import BytesIO, IOBase, StringIO
 from pathlib import Path
@@ -560,6 +561,30 @@ def extract_volume_iso(args: argparse.Namespace) -> None:
             with open(os.path.join(pwd, filename), "wb") as f:
                 arg[path_type] = iso_file_path
                 iso.get_file_from_iso_fp(outfp=f, **arg)
+
+                rec = iso.get_record(**arg).date
+                stamp = datetime(rec.years_since_1900 + 1900, rec.month, rec.day_of_month,
+                                 rec.hour - rec.gmtoffset, rec.minute, rec.second, tzinfo=timezone.utc).timestamp()
+
+                f.close()
+
+                os.utime(os.path.join(pwd, filename), (stamp, stamp))
+
+    print("Fixing directory timestamps...")
+
+    arg[path_type] = "/"
+    for dirname, dirlist, filelist in iso.walk(**arg):
+        pwd = output_dir + dirname
+        # Set the modified time for directories
+        for dir in dirlist:
+            joined_path = os.path.join(pwd, dir)
+            if not dryrun:
+                print(joined_path)
+                arg[path_type] = os.path.join(dirname, dir)
+                rec = iso.get_record(**arg).date
+                stamp = datetime(rec.years_since_1900 + 1900, rec.month, rec.day_of_month,
+                                 rec.hour - rec.gmtoffset, rec.minute, rec.second, tzinfo=timezone.utc).timestamp()
+                os.utime(joined_path, (stamp, stamp))
 
     if dopunycode:
         punyencode_dir(Path(output_dir))

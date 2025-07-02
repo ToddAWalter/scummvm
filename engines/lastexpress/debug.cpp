@@ -53,21 +53,22 @@ typedef struct ImGuiState {
 	float _bottomPanelHeight = 0.0f;
 	float _rightTopPanelHeight = 0.0f;
 	int _ticksToAdvance = 0;
-	ImTextureID _textureID = nullptr;
+	ImTextureID _textureID = ImTextureID_Invalid;
+	int _selectedGlobalVarRow = -1;
 } ImGuiState;
 
 ImGuiState *_state = nullptr;
 
 void onImGuiInit() {
 	ImGuiIO &io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; 
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	_state = new ImGuiState();
 	_state->_engine = (LastExpressEngine *)g_engine;
 }
 
 void onImGuiRender() {
-	if (_state->_engine->shouldQuit())
+	if (_state->_engine->shouldQuit() || _state->_engine->_exitFromMenuButton)
 		return;
 
 	if (!debugChannelSet(-1, kDebugConsole)) {
@@ -177,6 +178,11 @@ void onImGuiRender() {
 					ImGui::EndTabItem();
 				}
 
+				if (ImGui::BeginTabItem("Global Vars")) {
+					_state->_currentTab = 4;
+					ImGui::EndTabItem();
+				}
+
 				ImGui::EndTabBar();
 			}
 
@@ -202,6 +208,9 @@ void onImGuiRender() {
 				break;
 			case 3: // Current Scene
 				_state->_engine->getLogicManager()->renderCurrentSceneDebugger();
+				break;
+			case 4: // Global Vars
+				_state->_engine->getLogicManager()->renderGlobalVars();
 				break;
 			default:
 				break;
@@ -442,14 +451,16 @@ void LogicManager::renderCharacterList(int &selectedCharacter) {
 
 void LogicManager::renderCurrentSceneDebugger() {
 	if (_state->_textureID)
-		g_system->freeImGuiTexture(_state->_textureID);
+		g_system->freeImGuiTexture((void *)_state->_textureID);
 
 	// Let's blit the current background on the ImGui window...
 	Graphics::Surface temp;
 	temp.create(640, 480, Graphics::PixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0));
 	_engine->getGraphicsManager()->copy(_engine->getGraphicsManager()->_backBuffer, (PixMap *)temp.getPixels(), 0, 0, 640, 480);
 
-	_state->_textureID = g_system->getImGuiTexture(temp);
+	_state->_textureID = (ImTextureID)(intptr_t)g_system->getImGuiTexture(temp);
+
+	temp.free();
 
 	ImVec2 imagePos = ImGui::GetCursorScreenPos();
 	ImVec2 imageSize(640, 480);
@@ -497,25 +508,6 @@ void LogicManager::renderCurrentSceneDebugger() {
 
 			ImU32 rectColor = IM_COL32(255, 0, 0, 100);   // Semi-transparent red
 			ImU32 borderColor = IM_COL32(255, 0, 0, 255); // Solid red border
-
-			// Different colors for different cursor types
-			//switch (currentLink->cursor) {
-			//case 0:
-			//	borderColor = IM_COL32(255, 0, 0, 255);
-			//	break; // Red
-			//case 1:
-			//	borderColor = IM_COL32(0, 255, 0, 255);
-			//	break; // Green
-			//case 2:
-			//	borderColor = IM_COL32(0, 0, 255, 255);
-			//	break; // Blue
-			//case 3:
-			//	borderColor = IM_COL32(255, 255, 0, 255);
-			//	break; // Yellow
-			//default:
-			//	borderColor = IM_COL32(255, 0, 255, 255);
-			//	break; // Magenta
-			//}
 
 			// Highlight hovered link...
 			if (isHovered) {
@@ -626,11 +618,11 @@ void LogicManager::renderCurrentSceneDebugger() {
 				"None", "Inventory", "SendCathMessage", "PlaySound", "PlayMusic",
 				"Knock", "Compartment", "PlaySounds", "PlayAnimation", "SetDoor",
 				"SetModel", "SetItem", "KnockInside", "TakeItem", "DropItem",
-				"LinkOnGlobal", "Rattle", "DummyAction2", "LeanOutWindow", "AlmostFall",
+				"LinkOnGlobal", "Rattle", "DummyAction1", "LeanOutWindow", "AlmostFall",
 				"ClimbInWindow", "ClimbLadder", "ClimbDownTrain", "KronosSanctum", "EscapeBaggage",
-				"EnterBaggage", "BombPuzzle", "Conductors", "KronosConcert", "PlayMusic2",
+				"EnterBaggage", "BombPuzzle", "Conductors", "KronosConcert", "LetterInAugustSuitcase",
 				"CatchBeetle", "ExitCompartment", "OutsideTrain", "FirebirdPuzzle", "OpenMatchBox",
-				"OpenBed", "DummyAction3", "HintDialog", "MusicEggBox", "PlayMusic3",
+				"OpenBed", "DummyAction2", "HintDialog", "MusicEggBox", "FindEggUnderSink",
 				"Bed", "PlayMusicChapter", "PlayMusicChapterSetupTrain", "SwitchChapter", "EasterEgg"
 			};
 
@@ -682,6 +674,102 @@ void LogicManager::renderCurrentSceneDebugger() {
 		}
 
 		ImGui::EndTooltip();
+	}
+}
+
+void LogicManager::renderGlobalVars() {
+	_state->_selectedGlobalVarRow = -1;
+
+	if (ImGui::BeginTable("GlobalVars", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable)) {
+		ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+		ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 400.0f);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableHeadersRow();
+
+		const char *globalNames[58] = {
+			"",
+			"Jacket",
+			"CorpseMovedFromFloor",
+			"ReadLetterInAugustSuitcase",
+			"FoundCorpse",
+			"CharacterSearchingForCath",
+			"PhaseOfTheNight",
+			"CathIcon",
+			"CorpseHasBeenThrown",
+			"FrancoisHasSeenCorpseThrown",
+			"AnnaIsEating",
+			"Chapter",
+			"DoneSavePointAfterLeftCompWithNewJacket",
+			"MetAugust",
+			"IsDayTime",
+			"PoliceHasBoardedAndGone",
+			"ConcertIsHappening",
+			"KahinaKillTimeoutActive",
+			"MaxHasToStayInBaggage",
+			"UnknownDebugFlag",
+			"TrainIsRunning",
+			"AnnaIsInBaggageCar",
+			"DoneSavePointAfterLeavingSuitcaseInCathComp",
+			"TatianaFoundOutEggStolen",
+			"OverheardAugustInterruptingAnnaAtDinner",
+			"MetTatianaAndVassili",
+			"OverheardTatianaAndAlexeiAtBreakfast",
+			"KnowAboutAugust",
+			"KnowAboutKronos",
+			"EggIsOpen",
+			"CanPlayKronosSuitcaseLeftInCompMusic",
+			"CanPlayEggSuitcaseMusic",
+			"CanPlayEggUnderSinkMusic",
+			"CathInSpecialState",
+			"OverheardAlexeiTellingTatianaAboutBomb",
+			"OverheardAlexeiTellingTatianaAboutWantingToKillVassili",
+			"OverheardTatianaAndAlexeiPlayingChess",
+			"OverheardMilosAndVesnaConspiring",
+			"OverheardVesnaAndMilosDebatingAboutCath",
+			"FrancoisSawABlackBeetle",
+			"OverheardMadameAndFrancoisTalkingAboutWhistle",
+			"MadameDemandedMaxInBaggage",
+			"MadameComplainedAboutMax",
+			"MetMadame",
+			"KnowAboutRebeccaDiary",
+			"OverheardSophieTalkingAboutCath",
+			"MetSophieAndRebecca",
+			"KnowAboutRebeccaAndSophieRelationship",
+			"RegisteredTimeAtWhichCathGaveFirebirdToKronos",
+			"MetMahmud",
+			"AlmostFallActionIsAvailable",
+			"MetMilos",
+			"MetMonsieur",
+			"MetHadija",
+			"MetYasmin",
+			"MetAlouan",
+			"MetFatima",
+			"TatianaScheduledToVisitCath"
+		};
+
+		for (int i = 1; i < 58; i++) {
+			ImGui::TableNextRow();
+
+			// Make the entire row selectable, so I don't have to buy new glasses to see the name of the variable...
+			ImGui::TableSetColumnIndex(0);
+			bool isSelected = (_state->_selectedGlobalVarRow == i);
+			if (ImGui::Selectable(("##row" + Common::String(i)).c_str(), isSelected, ImGuiSelectableFlags_SpanAllColumns)) {
+				_state->_selectedGlobalVarRow = i;
+			}
+
+			ImGui::SameLine();
+
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("%d", i);
+
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%s", globalNames[i]);
+
+			ImGui::TableSetColumnIndex(2);
+			ImGui::Text("%d", _globals[i]);
+		}
+
+		ImGui::EndTable();
 	}
 }
 
@@ -762,7 +850,7 @@ void LogicManager::showTrainMapWindow() {
 	CarInfo *cars = nullptr;
 	int carCount = 0;
 
-	switch (_state->_engine->getLogicManager()->_globals[kProgressChapter]) {
+	switch (_state->_engine->getLogicManager()->_globals[kGlobalChapter]) {
 	case 1:
 		cars = carsChapter1;
 		carCount = ARRAYSIZE(carsChapter1);
@@ -775,7 +863,7 @@ void LogicManager::showTrainMapWindow() {
 		break;
 	case 4:
 	case 5:
-		if (_state->_engine->getLogicManager()->_globals[kProgressChapter] == 5 &&
+		if (_state->_engine->getLogicManager()->_globals[kGlobalChapter] == 5 &&
 			(_state->_engine->getLogicManager()->_doneNIS[kEventAugustUnhookCars] || _state->_engine->getLogicManager()->_doneNIS[kEventAugustUnhookCarsBetrayal])) {
 			cars = carsChapter5;
 			carCount = ARRAYSIZE(carsChapter5);

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-06-26 03:01+0000\n"
-"PO-Revision-Date: 2025-06-25 08:54+0000\n"
+"POT-Creation-Date: 2025-07-01 05:54+0000\n"
+"PO-Revision-Date: 2025-06-29 10:50+0000\n"
 "Last-Translator: Walter Agazzi <walter.agazzi@protonmail.com>\n"
 "Language-Team: Italian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/it/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.7.2\n"
+"X-Generator: Weblate 5.12.2\n"
 "X-Language-name: Italiano\n"
 
 #: audio/mac_plugin.cpp:30
@@ -4179,13 +4179,13 @@ msgid "Touchscreen 'Tap Mode' - Hover (DPad Clicks)"
 msgstr "Touchscreen 'Tap Mode' - Passaggio del cursore (clic DPad)"
 
 #. I18N: This is displayed in the file browser to let the user choose a new folder for Android Storage Attached Framework
-#: backends/fs/android/android-saf-fs.cpp:802
-#: backends/fs/android/android-saf-fs.cpp:806
+#: backends/fs/android/android-saf-fs.cpp:804
+#: backends/fs/android/android-saf-fs.cpp:808
 msgid "Add a new folder"
 msgstr "Aggiungi cartella"
 
 #. I18N: This may be displayed in the Android UI used to add a Storage Attach Framework authorization
-#: backends/fs/android/android-saf-fs.cpp:918
+#: backends/fs/android/android-saf-fs.cpp:924
 msgid "Choose a new folder"
 msgstr "Seleziona cartella"
 
@@ -4908,12 +4908,12 @@ msgstr ""
 msgid "Magnify Mode Off"
 msgstr "Vista Ingrandita disattivata"
 
-#: backends/platform/android/android.cpp:1059
+#: backends/platform/android/android.cpp:1065
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid "Getting help"
 msgstr "Ottenere aiuto"
 
-#: backends/platform/android/android.cpp:1062
+#: backends/platform/android/android.cpp:1068
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4955,13 +4955,13 @@ msgstr ""
 "complicati, talvolta a livelli impensabili. Se rimani bloccato, prova a "
 "cercare qualche guida online. Buona fortuna!\n"
 
-#: backends/platform/android/android.cpp:1071
+#: backends/platform/android/android.cpp:1077
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "Controlli Touch"
 
-#: backends/platform/android/android.cpp:1074
+#: backends/platform/android/android.cpp:1080
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -5101,13 +5101,13 @@ msgstr ""
 "  ![Icona tastiera](keyboard.png \"Icona tastiera\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1130
+#: backends/platform/android/android.cpp:1136
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "Aggiungere Giochi"
 
-#: backends/platform/android/android.cpp:1133
+#: backends/platform/android/android.cpp:1139
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -6415,20 +6415,18 @@ msgstr ""
 "Aggiunge un menu per regolare la velocità del gioco (simile alla versione PC)"
 
 #: engines/agi/metaengine.cpp:195 engines/agos/metaengine.cpp:44
-#: engines/awe/metaengine.cpp:35 engines/dreamweb/metaengine.cpp:36
-#: engines/gob/metaengine.cpp:42 engines/lure/metaengine.cpp:41
-#: engines/mads/metaengine.cpp:51 engines/mm/metaengine.cpp:46
-#: engines/saga/metaengine.cpp:52 engines/scumm/dialogs.cpp:1202
-#: engines/scumm/metaengine.cpp:821
+#: engines/dreamweb/metaengine.cpp:36 engines/gob/metaengine.cpp:42
+#: engines/lure/metaengine.cpp:41 engines/mads/metaengine.cpp:51
+#: engines/mm/metaengine.cpp:46 engines/saga/metaengine.cpp:52
+#: engines/scumm/dialogs.cpp:1202 engines/scumm/metaengine.cpp:821
 msgid "Enable copy protection"
 msgstr "Abilita protezione anticopia"
 
 #: engines/agi/metaengine.cpp:196 engines/agos/metaengine.cpp:45
-#: engines/awe/metaengine.cpp:36 engines/dreamweb/metaengine.cpp:37
-#: engines/gob/metaengine.cpp:43 engines/lure/metaengine.cpp:42
-#: engines/mads/metaengine.cpp:52 engines/mm/metaengine.cpp:47
-#: engines/saga/metaengine.cpp:53 engines/scumm/dialogs.cpp:1203
-#: engines/scumm/metaengine.cpp:822
+#: engines/dreamweb/metaengine.cpp:37 engines/gob/metaengine.cpp:43
+#: engines/lure/metaengine.cpp:42 engines/mads/metaengine.cpp:52
+#: engines/mm/metaengine.cpp:47 engines/saga/metaengine.cpp:53
+#: engines/scumm/dialogs.cpp:1203 engines/scumm/metaengine.cpp:822
 msgid "Enable any copy protection that would otherwise be bypassed by default."
 msgstr ""
 "Abilita le schermate di protezione anticopia, che altrimenti verrebbero "
@@ -7009,6 +7007,21 @@ msgstr ""
 #: engines/asylum/asylum.cpp:204 engines/cine/saveload.cpp:857
 msgid "Load anyway"
 msgstr "Carica comunque"
+
+#: engines/awe/metaengine.cpp:35
+msgid "Enable title and copy protection screens (if present)"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:36
+#, fuzzy
+#| msgid ""
+#| "Enable any copy protection that would otherwise be bypassed by default."
+msgid ""
+"Displays title and copy protection screens that would otherwise be bypassed "
+"by default."
+msgstr ""
+"Abilita le schermate di protezione anticopia, che altrimenti verrebbero "
+"saltate di default."
 
 #: engines/awe/metaengine.cpp:61
 msgid "Select/Kick/Run"
@@ -12432,14 +12445,10 @@ msgid "Scroll down in inventory"
 msgstr "Scorri inventario verso il basso"
 
 #: engines/stark/metaengine.cpp:306
-#, fuzzy
-#| msgid "Scroll up in your dialogues"
 msgid "Scroll up in your dialogs"
 msgstr "Scorri log dialoghi verso l'alto"
 
 #: engines/stark/metaengine.cpp:312
-#, fuzzy
-#| msgid "Scroll down in your dialogues"
 msgid "Scroll down in your dialogs"
 msgstr "Scorri log dialoghi verso il basso"
 
@@ -12547,64 +12556,44 @@ msgstr ""
 "verbi usando la tastiera"
 
 #: engines/supernova/metaengine.cpp:219 engines/voyeur/metaengine.cpp:185
-#, fuzzy
-#| msgid "Exit screen keymappings"
 msgid "Cutscene keymappings"
-msgstr "Mappatura comandi di chiusura"
+msgstr "Mappatura comandi scene intermezzo"
 
 #: engines/supernova/metaengine.cpp:220
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Improved mode keymappings"
-msgstr "Mappature tasti indice"
+msgstr "Mappature tasti in modalità migliorata"
 
 #: engines/supernova/metaengine.cpp:221
-#, fuzzy
-#| msgid "Exit screen keymappings"
 msgid "Text reader keymappings"
-msgstr "Mappatura comandi di chiusura"
+msgstr "Mappatura comandi visualizzatore testi"
 
 #: engines/supernova/metaengine.cpp:222
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Computer keymappings"
-msgstr "Mappature tasti gioco"
+msgstr "Mappature comandi del computer"
 
 #: engines/supernova/metaengine.cpp:232
-#, fuzzy
-#| msgid "Move / Perform Default Action"
 msgid "Perform default action"
-msgstr "Spostamento / Esegui azione predefinita"
+msgstr "Esegui azione predefinita"
 
 #: engines/supernova/metaengine.cpp:244
-#, fuzzy
-#| msgid "Interpolation:"
 msgid "Instructions"
-msgstr "Interpolazione:"
+msgstr "Istruzioni"
 
 #: engines/supernova/metaengine.cpp:250
-#, fuzzy
-#| msgid "General Information"
 msgid "Information"
-msgstr "Informazioni generali"
+msgstr "Informazioni"
 
 #: engines/supernova/metaengine.cpp:256
-#, fuzzy
-#| msgid "Text speed - Fast"
 msgid "Text speed"
-msgstr "Velocità testo - Veloce"
+msgstr "Velocità testo"
 
 #: engines/supernova/metaengine.cpp:285
-#, fuzzy
-#| msgid "Rotate up"
 msgid "Page up"
-msgstr "Ruota verso l'alto"
+msgstr "Pagina precedente"
 
 #: engines/supernova/metaengine.cpp:291
-#, fuzzy
-#| msgid "Rotate down"
 msgid "Page down"
-msgstr "Ruota verso il basso"
+msgstr "Pagina successiva"
 
 #. I18N: Exits the game
 #: engines/supernova/metaengine.cpp:297 engines/supernova/metaengine.cpp:373
@@ -12615,28 +12604,24 @@ msgid "Exit"
 msgstr "Esci"
 
 #: engines/supernova/metaengine.cpp:321
-#, fuzzy
-#| msgid "Good"
 msgid "Go"
-msgstr "Buona"
+msgstr "Vai"
 
 #: engines/supernova/metaengine.cpp:379
-#, fuzzy
-#| msgid "Open Files manager"
 msgid "Office manager"
-msgstr "Apri gestione files"
+msgstr "Gestione ufficio"
 
 #: engines/supernova/metaengine.cpp:385
 msgid "Phone"
-msgstr ""
+msgstr "Telefono"
 
 #: engines/supernova/metaengine.cpp:391
 msgid "ProText"
-msgstr ""
+msgstr "ProText"
 
 #: engines/supernova/metaengine.cpp:397
 msgid "Calculata"
-msgstr ""
+msgstr "Calculata"
 
 #: engines/sword1/animation.cpp:566 engines/sword2/animation.cpp:459
 msgid ""
@@ -12745,10 +12730,8 @@ msgid "Additional options:"
 msgstr "Opzioni aggiuntive:"
 
 #: engines/sword1/metaengine.cpp:301
-#, fuzzy
-#| msgid "Main Menu"
 msgid "Main menu"
-msgstr "Menù Principale"
+msgstr "Menù principale"
 
 #: engines/sword2/detection_tables.h:419
 msgid "Remastered edition is not supported. Please, use the classic version"
@@ -12818,170 +12801,124 @@ msgid "Save/Load keymappings"
 msgstr "Mappa tasti Salvataggio/Caricamento"
 
 #: engines/tinsel/metaengine.cpp:341
-#, fuzzy
-#| msgid "Page Up in save/load menu"
 msgid "Page up in save / load menu"
-msgstr "Pagina precedente del menù salva/carica"
+msgstr "Pagina precedente del menù salva / carica"
 
 #: engines/tinsel/metaengine.cpp:347
-#, fuzzy
-#| msgid "Page down in save/load menu"
 msgid "Page down in save / load menu"
-msgstr "Pagina seguente del menù salva/carica"
+msgstr "Pagina seguente del menù salva / carica"
 
 #: engines/tinsel/metaengine.cpp:353
-#, fuzzy
-#| msgid "Go to start of save/load menu"
 msgid "Go to start of save / load menu"
-msgstr "Vai all'inizio del menù salva/carica"
+msgstr "Vai all'inizio del menù salva / carica"
 
 #: engines/tinsel/metaengine.cpp:359
-#, fuzzy
-#| msgid "Go to end of save/load menu"
 msgid "Go to end of save / load menu"
-msgstr "Vai alla fine del menù salva/carica"
+msgstr "Vai alla fine del menù salva / carica"
 
 #: engines/tinsel/tinsel.cpp:1040
 msgid "Discworld Noir needs ScummVM with TinyGL enabled"
 msgstr "Discworld Noir richiede una versione di ScummVM con TinyGL abilitato"
 
 #: engines/titanic/metaengine.cpp:173
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "PET keymappings"
-msgstr "Mappatura tasto Escape"
+msgstr "Mappatura tasti PET"
 
 #: engines/titanic/metaengine.cpp:174
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Real Life keymappings"
-msgstr "Mappature tasti gioco"
+msgstr "Mappature tasti Real Life"
 
 #: engines/titanic/metaengine.cpp:175
-#, fuzzy
-#| msgid "KIA only shortcuts"
 msgid "Inventory shortcut"
-msgstr "comandi rapidi KIA"
+msgstr "Scorciatoia inventario"
 
 #: engines/titanic/metaengine.cpp:176
-#, fuzzy
-#| msgid "Minigame keymappings"
 msgid "Continue game dialogue keymappings"
-msgstr "Mappature tasti dei mini-giochi"
+msgstr "Mappature tasti finestra Continua"
 
 #: engines/titanic/metaengine.cpp:177
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Star Map keymappings"
-msgstr "Mappature menù principale"
+msgstr "Mappature tasti Mappa Stellare"
 
 #: engines/titanic/metaengine.cpp:178
-#, fuzzy
-#| msgid "Menu keymappings"
 msgid "Movement keymappings"
-msgstr "Mappature tasti menù"
+msgstr "Mappature tasti di movimento"
 
 #: engines/titanic/metaengine.cpp:182
-#, fuzzy
-#| msgid "Interact Mode"
 msgid "Select / Interact / Move"
-msgstr "Modalità Interazione"
+msgstr "Selezione / Interazione / Movimento"
 
 #: engines/titanic/metaengine.cpp:188
-#, fuzzy
-#| msgid "Move / Interact / Skip dialogue"
 msgid "Select / Interact / Quick move"
-msgstr "Movimento / Interazione / Salta dialogo"
+msgstr "Selezione / Interazione / Movimento rapido"
 
 #: engines/titanic/metaengine.cpp:194
-#, fuzzy
-#| msgid "Game menu"
 msgid "Cheat menu"
-msgstr "Menù di gioco"
+msgstr "Menù dei cheat"
 
 #: engines/titanic/metaengine.cpp:239
-#, fuzzy
-#| msgid "Conversation log"
 msgid "Conversation"
-msgstr "Diario delle conversazioni"
+msgstr "Conversazione"
 
 #: engines/titanic/metaengine.cpp:249
-#, fuzzy
-#| msgid "Remove"
 msgid "Remote"
-msgstr "Rimuovi"
+msgstr "Telecomando"
 
 #: engines/titanic/metaengine.cpp:254
-#, fuzzy
-#| msgid "Room:"
 msgid "Rooms"
-msgstr "Stanza:"
+msgstr "Stanze"
 
 #: engines/titanic/metaengine.cpp:259
 msgid "Real life"
-msgstr ""
+msgstr "Mondo reale"
 
 #: engines/titanic/metaengine.cpp:264
-#, fuzzy
-#| msgid "Scroll up"
 msgid "Scroll up page"
-msgstr "Scorri verso l'alto"
+msgstr "Scorri pagina verso l'alto"
 
 #: engines/titanic/metaengine.cpp:271
-#, fuzzy
-#| msgid "Scroll down"
 msgid "Scroll down page"
-msgstr "Scorri verso il basso"
+msgstr "Scorri pagina verso il basso"
 
 #: engines/titanic/metaengine.cpp:278
-#, fuzzy
-#| msgid "Scroll list up"
 msgid "Scroll to top"
-msgstr "Scorri lista verso l'alto"
+msgstr "Vai a inizio lista"
 
 #: engines/titanic/metaengine.cpp:284
-#, fuzzy
-#| msgid "Move to bottom"
 msgid "Scroll to bottom"
-msgstr "Movimento verso il basso"
+msgstr "Vai a fine lista"
 
 #: engines/titanic/metaengine.cpp:291
-#, fuzzy
-#| msgid "Transitions:"
 msgid "Translation"
-msgstr "Transizioni:"
+msgstr "Traduzione"
 
 #: engines/titanic/metaengine.cpp:307
 msgid "Toggle between Star Map and photo of your home"
-msgstr ""
+msgstr "Alterna tra la Mappa Stellare e la foto della tua casa"
 
 #: engines/titanic/metaengine.cpp:343 engines/titanic/metaengine.cpp:384
-#, fuzzy
-#| msgid "Move backwards"
 msgid "Move backward"
 msgstr "Movimento indietro"
 
 #: engines/titanic/metaengine.cpp:350
 msgid "Stop moving"
-msgstr ""
+msgstr "Arresta movimento"
 
 #: engines/titanic/metaengine.cpp:356
 msgid "Lock coordinate"
-msgstr ""
+msgstr "Blocca coordinate"
 
 #: engines/titanic/metaengine.cpp:362
 msgid "Unlock coordinate"
-msgstr ""
+msgstr "Sblocca coordinate"
 
 #: engines/titanic/metaengine.cpp:368
-#, fuzzy
-#| msgid "Exit conversation"
 msgid "View constellations"
-msgstr "Chiudi conversazione"
+msgstr "Mostra costellazioni"
 
 #: engines/titanic/metaengine.cpp:373
 msgid "View boundaries"
-msgstr ""
+msgstr "Mostra limiti"
 
 #: engines/toltecs/metaengine.cpp:216
 msgid "Move / Select"

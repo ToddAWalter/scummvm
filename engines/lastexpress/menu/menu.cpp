@@ -30,6 +30,8 @@
 #include "lastexpress/graphics.h"
 #include "lastexpress/lastexpress.h"
 
+#include "common/config-manager.h"
+
 namespace LastExpress {
 
 Menu::Menu(LastExpressEngine *engine) {
@@ -37,6 +39,16 @@ Menu::Menu(LastExpressEngine *engine) {
 
 	if (_engine->isDemo())
 		_eggTimerDelta = DEMO_TIMEOUT;
+}
+
+Menu::~Menu() {
+	for (int i = 0; i < 8; i++) {
+		if (_menuSeqs[i]) {
+			_engine->getMemoryManager()->freeMem(_menuSeqs[i]->rawSeqData);
+			delete _menuSeqs[i];
+			_menuSeqs[i] = nullptr;
+		}
+	}
 }
 
 void Menu::doEgg(bool doSaveGame, int type, int32 time) {
@@ -67,6 +79,8 @@ void Menu::doEgg(bool doSaveGame, int type, int32 time) {
 				while (_engine->getSoundFrameCounter() < delay) {
 					if (_engine->mouseHasRightClicked())
 						break;
+
+					 _engine->waitForTimer(4);
 					_engine->getSoundManager()->soundThread();
 				}
 			}
@@ -292,8 +306,10 @@ bool Menu::eggCursorAction(int8 action, int8 flags) {
 		if ((flags & kMouseFlagLeftDown) != 0) {
 			setSprite(2, 11, true);
 
-			_engine->getSoundManager()->killAllSlots();
-			_engine->getSoundManager()->soundThread();
+			if (!ConfMan.getBool("confirm_exit")) {
+				_engine->getSoundManager()->killAllSlots();
+				_engine->getSoundManager()->soundThread();
+			}
 
 			if (_engine->isDemo()) {
 				_engine->getSoundManager()->playSoundFile("LIB046.SND", 16, 0, 0);
@@ -309,10 +325,20 @@ bool Menu::eggCursorAction(int8 action, int8 flags) {
 			g_system->delayMillis(334);
 
 			_engine->getGraphicsManager()->setMouseDrawable(false);
-			endEgg();
 
-			_engine->quitGame();
+			if (!ConfMan.getBool("confirm_exit")) {
+				endEgg();
+			}
+
+			Common::Event event;
+			event.type = Common::EVENT_QUIT;
+			g_system->getEventManager()->pushEvent(event);
+
 			_engine->_exitFromMenuButton = true;
+
+			if (ConfMan.getBool("confirm_exit")) {
+				return true;
+			}
 		} else {
 			setSprite(2, 10, true);
 			return true;
@@ -338,8 +364,8 @@ bool Menu::eggCursorAction(int8 action, int8 flags) {
 		}
 
 		int whichCD = 1;
-		if (_engine->getLogicManager()->_globals[kProgressChapter] > 1)
-			whichCD = (_engine->getLogicManager()->_globals[kProgressChapter] > 3) + 2;
+		if (_engine->getLogicManager()->_globals[kGlobalChapter] > 1)
+			whichCD = (_engine->getLogicManager()->_globals[kGlobalChapter] > 3) + 2;
 
 		if (_engine->isDemo()) {
 			if (!_gameInNotStartedInFile) {
@@ -906,6 +932,7 @@ bool Menu::eggCursorAction(int8 action, int8 flags) {
 
 		do {
 			_engine->getSoundManager()->soundThread();
+			_engine->waitForTimer(4);
 		} while (delay > _engine->getSoundFrameCounter());
 
 		return true;
@@ -942,6 +969,7 @@ bool Menu::eggCursorAction(int8 action, int8 flags) {
 
 				do {
 					_engine->getSoundManager()->soundThread();
+					_engine->waitForTimer(4);
 				} while (_engine->getSoundFrameCounter() < delay);
 
 				return true;

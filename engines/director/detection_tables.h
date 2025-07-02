@@ -294,6 +294,8 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "kidsbiblejlife",		"Interactive Bible for Kids: The Life and Ministry of Jesus" },
 	{ "kidsbiblemoses",		"Interactive Bible for Kids: The Life of Moses" },
 	{ "kidsbiblepaul",		"Interactive Bible for Kids: The Life of Paul" },
+	{ "kidstorypirate",		"The Kidstory Series: The Pirate Who Wouldn't Wash" },
+	{ "kidstorymilly",		"The Kidstory Series: Milly Fitzwilly's Mouse Catcher" },
 	{ "kingandi",			"The King and I: Animated Thinking Adventure" },
 	{ "korkydragons",		"Dragons!" },
 	{ "kothhoot",			"King of the Hill: Hootenany" },
@@ -360,7 +362,9 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "mortalus",			"Mortalus: The Quest for Immortality" },
 	{ "mrsquack",			"Reading with Peter Cottontail: The Story of Mrs. Quack" },
 	{ "mummy",				"Mummy: Tomb of the Pharaoh" },
-	{ "muppetkidsearly5",	"Muppets Kids Early Learning Series Volume 5: Sound Patterns: Phonics" },
+	{ "muppetkidsbegin",	"Muppets Kids Beginning Sounds: Phonics" },
+	{ "muppetkidsletters",	"Muppets Kids Letters: Capital & Small" },
+	{ "muppetkidssamediff",	"Muppets Kids Same & Different" },
 	{ "muppetkidsthinking",	"Muppets Kids Thinking Skills" },
 	{ "murderbrett",		"Who Killed Brett Penance?" },
 	{ "murdermagic",		"The Magic Death" },
@@ -858,6 +862,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "bobmambo5",			"Bob the Builder: Mambo No. 5" },
 	{ "chaquico1000",		"Craig Chaquico: A Thousand Pictures" },
 	{ "concentration",		"Solitudes: Natural Concentration" },
+	{ "coldcutletusplay",	"Coldcut: Let Us Play!" },
 	{ "custardloverama",	"Custard: Loverama" },
 	{ "doorswindows",		"The Cranberries: Doors and Windows" },
 	{ "freakshowost",		"The Residents: Freak Show: Multimedia Bonus Track" },
@@ -1035,8 +1040,8 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "harating",			"בתככי הרייטינג" },  // BeTchachey HaRating - TV Ratings Intrigue
 
 	// Italian titles
-	{ "fuzzyfloppy2",		"Fuzzy e Floppy: Il Furto Della Rotonda" },
-	{ "fuzzyfloppy3",		"Fuzzy e Floppy: Il Raggio Magico" },
+	{ "fuzzyfloppy2",		"Fuzzy e Floppy: Il furto della rotonda" },
+	{ "fuzzyfloppy3",		"Fuzzy e Floppy: Il raggio magico" },
 	{ "tesorovenezia",		"Il tesoro di Venezia" },
 	{ "ironmask",			"The Iron Mask" },
 	{ "lunes",				"I Lunes e la sfera di Lasifer" },					// Lunes & the sphere of Lasifer
@@ -1212,6 +1217,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "sakuratoasobo",		"さくらとあそぼ" },								// Let's Play with "SAKURA"!
 	{ "schoolworld",		"A-L: Artificial Life: School World" },
 	{ "seesawc1",			"SeesawC1" },
+	{ "shikiotabisuru",		"四季を旅する" },
 	{ "smallhouse",			"Small House" },
 	{ "startover",			"Start Over ROM" },
 	{ "tantei",				"完全探偵マニュアル" },								// Perfect Detective Manual
@@ -2537,7 +2543,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("cinevolt", "", "Cinema Volta", "2ce360c9ea2da80a2c6d1040b0ad92dd", 387911, 313),
 	WINGAME1("cinevolt", "", "CINEVOLT.EXE", "65d06b5fef155a2473434571aff5bc29", 370009, 313),
 
-	WINGAME1_l("cklasse", "", "c-klasse.exe", "39df1c7ff23ba627ddffaa5a77f83008", 376244, Common::DE_DEU, 313),
+	WINGAME1_l("cklasse", "", "c-klasse.exe", "t:9defffd35651ce464d41be094258c373", 376244, Common::DE_DEU, 313),
 
 	MACDEMO1("clarisimpact", "Demo", "ClarisImpact Self Running Demo", "7f443f2e63fd497a9ad85b10dc880a91", 1241451, 310),
 
@@ -3188,6 +3194,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("sfk", "", "More SFK Products!", "1ae45c23586b41997ba52e2e7c771c4c", 377667, 310),
 
 	MACGAME1_l("directorshokai", "", "Director Movie", "276bee761e48a6fd709df77d5c2f60dd", 395882, Common::JA_JPN, 313),
+
+	// Original filename is Station-四季を旅する
+	MACGAME1t_l("shikiotabisuru", "", "xn--Station--883ghrnc9646d4kmin9a", "rt:5ee55eaa551cd866da692454e0691f1d", 398904, Common::JA_JPN, 311),
 
 	// Found on The Cat Came Back
 	WINDEMO1("sitfarm", "Demo", "MOREFUN.EXE", "65d06b5fef155a2473434571aff5bc29", 4397800, 310),
@@ -4029,11 +4038,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACDEMO1("dazzeloids", "Demo", "Dazzleoids", "77f4098988d5386794d1530065f514cd", 301697, 400),
 	PIPDEMO1_l("dazzeloids", "Non-interactive Demo", "xn--PippinDEMO-jx4ixivcug6w", "8b138db44d4421cc7294a9dc792ccf1b", 502657, Common::JA_JPN, 404),
 
-	MACGAME1_l("dcanyon", "", "Devils Canyon (16+Mb)", "97474208c44c78f26bef8b2011d341aa", 483518, Common::IT_ITA, 404),
+	MACGAME1_l("dcanyon", "", "Devils Canyon (16+Mb)", "r:81f1369d0587432220f32a129daef036", 483518, Common::IT_ITA, 404),
 	WINGAME2("dcanyon", "",	  "DCANYON.EXE",		   "f5033a9fd54d41d348fa97bd13f8f088", 1050728,
 							  "00INTRO.DIR",		   "d0c7645593725340480e2425811d6d8f", 3644052, 404),
-	WINGAME2_l("dcanyon", "", "DCANYON.EXE",		   "f5033a9fd54d41d348fa97bd13f8f088", 1050728,
-							  "00intro.Dir",		   "f6ca66b328f7fbcdd2e911273d74677c", 3777126, Common::IT_ITA, 404),
+	WINGAME2_l("dcanyon", "", "DCANYON.EXE",		   "t:9264471ce90fcc1d4f2b2a152f0a7ebf", 1050728,
+							  "DICFILES/00intro.Dir",  "t:32a84007f4cf155aa6f531b4de4e308d", 3777126, Common::IT_ITA, 404),
 	WINGAME2_l("dcanyon", "", "DCANYON.EXE",		   "85e7939a0c3041660defb80e0d530230", 744381,
 							  "00INTRO.DIR",		   "3621850ac727f9cf116c41143482c16c", 4044830, Common::ZH_CHN, 404),
 	WINGAME1("dcanyoncd", "", "DINO_CD.EXE",		   "5fe054ed623541a92c04f1572ecb6c5d", 3160272, 404),
@@ -4313,7 +4322,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// English version by Macmillan Interactive Publishing (MIP), London
 	MACGAME1("fuzzyfloppy1", "", "Fuzzy & Floppy (PPC)", "25e6bf9372fb9350b0873a2c1c66e312", 60068, 404),
 	WINGAME1("fuzzyfloppy1", "", "BEE.EXE", "t:f60a44f4c3fe602685f972e16746040d", 696827, 404),
-	WINGAME1_l("fuzzyfloppy1", "", "APEDORO.EXE", "317dfcb883a6dd59129606adcd3ffdcb", 696827, Common::IT_ITA, 404),
+	WINGAME1_l("fuzzyfloppy1", "", "APEDORO.EXE", "t:f60a44f4c3fe602685f972e16746040d", 696827, Common::IT_ITA, 404),
 	WINDEMO1("fuzzyfloppy1", "Demo", "APE.EXE", "t:f60a44f4c3fe602685f972e16746040d", 696827, 404),
 
 	WINGAME1t_l("fuzzyfloppy2", "", "ROTONDA.EXE", "99b7160243ac5807dc1e39c603284620", 701131, Common::IT_ITA, 404),
@@ -4875,6 +4884,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	WINGAME1("kidtools", "", "DEMO.EXE", "da65c64d0821c0d689f8a3ead9301a2a", 15606953, 400),
 
+	WINGAME2("kidstorypirate", "", "PIRATE.EXE", "t:9f557eeb3322d61feb4e11251bbf85c9", 3570593,
+									"C01.DXR", "d:3430a236538e856eca98885407063a22", 810064, 404),
+	WINGAME2("kidstorymilly", "", "MILLY.EXE", "t:9f557eeb3322d61feb4e11251bbf85c9", 3570593,
+			                      "D01.DXR", "d:e3467d46a301f7974c7f128617e1cbe4", 1350746, 404),
+
 	// Original Mac filename is Kinder-Kit™
 	MACGAME1_l("kinderkit", "", "xn--Kinder-Kit-398e", "r:bcd3c718db258701496b3c5bcb827ef2", 483518, Common::PT_BRA, 404),
 	WINGAME1_l("kinderkit", "", "KKIT.EXE",			   "t:87ecfa89c0a78bedd277930c267dd07d", 862425, Common::PT_BRA, 404),
@@ -5257,6 +5271,18 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME2("mummy", "", "MUMMY.EXE",		  "2ebe3a4ef8c128db46794333d4b61c36", 2939630,
 						  "MUSIC/INTRO1.MOV", "a7df6b011014719d3fbc9c5f1af18f3b", 1919338, 404),
 
+	// Developed by Iona Software, Dublin (1995)
+	// Sold together as part of Iona 3-in-1 with Edmark/MECC products (1996)
+	//	3-in-1 plays in "British" / Spanish / Italian / Finnish / Norwegian / Swedish
+	// Italian individual title is Primi suoni: fonetica
+	WINGAME1t_l("muppetkidsbegin", "", "BEGSNDS.EXE", "t:5c3116c2a6c3b176c1f24dc190fbbbfc", 1817047, Common::IT_ITA, 404),
+
+	// Italian individual title is Lettere
+	WINGAME1t_l("muppetkidsletters", "", "LETTERS.EXE", "t:618e8bb2e15f342b664bc0efd3cbe9db", 1735083, Common::IT_ITA, 404),
+
+	// Italian individual title is Uguale e diverso
+	WINGAME1t_l("muppetkidssamediff", "", "SAMEDIFF.EXE", "t:d8a0ba7e5ff3464921539924bee07daa", 2140235, Common::IT_ITA, 404),
+
 	// Demo for a game that is detected in mTropolis engine
 	WINDEMO1("mti", "Demo", "MUPPETS/MUPPETS.EXE", "4a8fd0d74faef305bc935e1aac94d3e8", 712817, 400),
 
@@ -5424,8 +5450,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 								 "Opera/SPRINT.Dxr", "3e86f01eeac5fa3349c5177378997a7f", 694912, 400),
 	WINGAME2("operafatal", "",	 "OPERA.EXE",		 "t:1708e82d4b297a1e74fe683f86521dc4", 697739,
 								 "OPERA/SPRINT.DXR", "d:9415903c9259c67731d24a70d9d9e1e0", 694758, 400),
-	MACGAME2_l("operafatal", "", "OPERA FATAL",		 "f5033f237ad1b1639fc46d01a82ac380", 285310,
-								 "Opera/SPRINT.Dxr", "3eb6f5568c9ced258059e2cfd30751c5", 479616, Common::IT_ITA, 400),
+	MACGAME2_l("operafatal", "", "OPERA FATAL",		 "r:f5033f237ad1b1639fc46d01a82ac380", 285310,
+								 "Opera/SPRINT.Dxr", "f:7055a0b9f2385f9b78f55494c8a010d4", 479518, Common::IT_ITA, 404),
 	// From bugreport #13466
 	// Windows version is identical to regular Windows version
 	MACGAME2("operafatal", "Hybrid release", "OPERA FATAL",		 "f5033f237ad1b1639fc46d01a82ac380", 285310,
@@ -5888,7 +5914,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("superspy", "",   "ssi english",	  "r:ccf864a8dc6e9d0d26eb73b4683e634b", 60068, 404),
 	MACGAME1_l("superspy", "", "SSI (Power Mac)", "r:5f036ea61efdcc5e30074a404dbf4d80", 60774, Common::DE_DEU, 404),
 	MACGAME1_l("superspy", "", "ssi hebrew",	  "r:49aa41e6b624e64e8e48850faa882cc8", 60068, Common::HE_ISR, 404),
-	MACGAME1_l("superspy", "", "SSI",			  "r:8f6a07fe6aa88428dd73557e1cd53d06", 57802, Common::IT_ITA, 404),
+	MACGAME1_l("superspy", "", "Trascina sull'Hard Disk/SSI (per Power Macintosh)/SSI",
+                                                  "r:8f6a07fe6aa88428dd73557e1cd53d06", 57802, Common::IT_ITA, 404),
 	WINGAME1("superspy", "", "ssie.exe", "1f256591c24a3bef0875aee737114057", 2181003, 400),
 	WINGAME1_l("superspy", "", "Ssi.exe", "88272b3e24689c3986f4f4aa8c50e1f7", 2307489, Common::DE_DEU, 400),
 	WINGAME1_l("superspy", "", "ssih.exe", "f016f23131189b2b65669f5258538fb5", 2261091, Common::HE_ISR, 400),
@@ -6268,9 +6295,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Decomposed variant of the above filename
 	MACDEMO1_l("withopeneyes", "Demo", "xn--DEMO-p73cya6krlma4hwc4581n9dwl", "4577dd3eadc467a986ab172d90871b22", 502657, Common::JA_JPN, 404),
 
-	MACGAME1_l("wolfgang", "v1.0", "Wolfgang", "01be45e7241194dad07938e7059b88e3", 483518, Common::IT_ITA, 404),
-	WINGAME1t_l("wolfgang", "v1.0", "TOSYS/WOLFGANG.EXE", "35faee21d2aadf32cf2e68535ed3a77e", 1256449, Common::IT_ITA, 404),
-	WINGAME1t_l("wolfgang", "v2.0", "WOLF95.EXE", "f6b43329b6ad968eb4fb15436549ef85", 1305318, Common::IT_ITA, 404),
+	// v2.0 found on Clic! CD 11 (Nov 1997) by Mondadori Informatica of Milan
+	MACGAME1_l("wolfgang", "v1.0", "Wolfgang",           "r:01be45e7241194dad07938e7059b88e3",  483518, Common::IT_ITA, 404),
+	WINGAME1_l("wolfgang", "v1.0", "TOSYS/WOLFGANG.EXE", "t:35faee21d2aadf32cf2e68535ed3a77e", 1256449, Common::IT_ITA, 404),
+	WINGAME1_l("wolfgang", "v2.0", "TOSYS/WOLF95.EXE",   "t:f6b43329b6ad968eb4fb15436549ef85", 1305318, Common::IT_ITA, 404),
 
 	MACDEMO1_l("wonderomcw", "Demo", "WONDEROM_CW", "r:549afa25835bcd35daff0f399e54149e", 290470, Common::JA_JPN, 402),
 
@@ -6632,6 +6660,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Requires installation, DATA.Z, InstallShield v3
 	WINGAME1t("cocktailhour", "", "COCKT32.EXE", "f594dd4e50ea175e8d3453b3cd16b536", 1411465, 501),
 
+	MACGAME1t("coldcutletusplay", "", "MainMenu", "t:e835056d51945ffc0822f6ae2e6f73a3", 1693312, 500),
+	WINGAME1t("coldcutletusplay", "", "MAINMENU.EXE", "t:6715f522a4c1483570ebfbb5561b674e", 1393839, 500),
+
 	MACGAME1("colormind", "v1.5", "ColorMind 1.5", "r:37faaf693259d7a4fa031f4a2edf3098", 125831, 501),
 
 	WINGAME1("compconf", "Windows 3.1", "CCWIN311.EXE", "t:d2f5116b14bb8aaeaeae3d3d7e55d40b", 918905,  500),
@@ -6686,7 +6717,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// From MacFormat #42
 	MACGAME1("digihbd", "", "Digital Happy Birthday Card", "61f3e061ae6236d8f72312ae9de83f46", 703153, 500),
 
-	WINGAME1("digitalgriot", "", "GRIOT.EXE", "t:9d96285877f5f6a2c65390b8327c0592", 4398121, 501),
+	WINGAME1("digitalgriot", "", "griot/saar/GRIOT.EXE", "t:9d96285877f5f6a2c65390b8327c0592", 4398121, 501),
 
 	// Windows executables for Win 3.1 and 95; Mac executables for 68k, PPC, and Fat binary
 	MACGAME2("dimensionq", "", "Dimension Q",  "r:c148f66ae3511fb88733102aa27efe7e",  719057,
@@ -7202,7 +7233,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	WINGAME1("msn", "Preview", "MSNPREV8.EXE", "1a7acbba10a7246ba58c1d53fc7203f5", 5215403, 501),
 
-	WINGAME2("muppetkidsearly5", "",   "bright32.exe", "1a7acbba10a7246ba58c1d53fc7203f5", 2159587,
+	WINGAME2("muppetkidsbegin", "",	   "bright32.exe", "1a7acbba10a7246ba58c1d53fc7203f5", 2159587,
 									   "sndpats.dir",  "5d1c7b91fcb9cfc0ea438bb09b968df1", 1369944, 501),
 	WINGAME2("muppetkidsthinking", "", "bright32.exe", "1a7acbba10a7246ba58c1d53fc7203f5", 2159587,
 									   "thinkskl.dir", "8a6267e64700117ee7ebaab48316741d", 1504798, 501),

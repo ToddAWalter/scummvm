@@ -69,7 +69,6 @@ LastExpressEngine::~LastExpressEngine() {
 	SAFE_DELETE(_otisMan);
 	SAFE_DELETE(_subtitleMan);
 	SAFE_DELETE(_archiveMan);
-	SAFE_DELETE(_memMan);
 	SAFE_DELETE(_msgMan);
 	SAFE_DELETE(_nisMan);
 	SAFE_DELETE(_soundMan);
@@ -79,6 +78,8 @@ LastExpressEngine::~LastExpressEngine() {
 	SAFE_DELETE(_clock);
 	SAFE_DELETE(_vcr);
 	SAFE_DELETE(_soundMutex);
+	SAFE_DELETE(_savegame);
+	SAFE_DELETE(_memMan);
 
 	//_debugger is deleted by Engine
 
@@ -241,6 +242,8 @@ Common::Error LastExpressEngine::run() {
 		haveEvent = getMessageManager()->process();
 	}
 
+	getSoundManager()->destroyAllSound();
+
 	getTimerManager()->removeTimerProc(soundTimerHandler);
 
 	shutDown();
@@ -353,8 +356,8 @@ void LastExpressEngine::initGameData() {
 	getLogicManager()->_items[kItemArticle].closeUp = 36;
 	getLogicManager()->_items[kItemTelegram].haveIt = 1;
 	getLogicManager()->_items[kItemArticle].haveIt = 1;
-	getLogicManager()->_globals[kProgressPortrait] = isDemo() ? 34: 32;
-	getLogicManager()->_globals[kProgressChapter] = isDemo() ? 3 : 1;
+	getLogicManager()->_globals[kGlobalCathIcon] = isDemo() ? 34: 32;
+	getLogicManager()->_globals[kGlobalChapter] = isDemo() ? 3 : 1;
 	getLogicManager()->_lastSavegameSessionTicks = 0;
 	getLogicManager()->_realTime = 0;
 	getLogicManager()->_closeUp = 0;
@@ -556,6 +559,9 @@ bool LastExpressEngine::handleEvents() {
 			break;
 		}
 	}
+
+	if (_exitFromMenuButton)
+		_exitFromMenuButton = false;
 
 	return true;
 }

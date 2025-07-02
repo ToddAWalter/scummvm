@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-06-26 03:01+0000\n"
-"PO-Revision-Date: 2025-05-01 16:19+0000\n"
+"POT-Creation-Date: 2025-07-01 05:54+0000\n"
+"PO-Revision-Date: 2025-06-28 10:25+0000\n"
 "Last-Translator: VAN-Gluon <van.gluonp@gmail.com>\n"
 "Language-Team: Japanese <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ja/>\n"
@@ -4047,13 +4047,13 @@ msgid "Touchscreen 'Tap Mode' - Hover (DPad Clicks)"
 msgstr "タッチパネル(タップモード) - ホバー(十字キー)"
 
 #. I18N: This is displayed in the file browser to let the user choose a new folder for Android Storage Attached Framework
-#: backends/fs/android/android-saf-fs.cpp:802
-#: backends/fs/android/android-saf-fs.cpp:806
+#: backends/fs/android/android-saf-fs.cpp:804
+#: backends/fs/android/android-saf-fs.cpp:808
 msgid "Add a new folder"
 msgstr "新規フォルダー作成"
 
 #. I18N: This may be displayed in the Android UI used to add a Storage Attach Framework authorization
-#: backends/fs/android/android-saf-fs.cpp:918
+#: backends/fs/android/android-saf-fs.cpp:924
 msgid "Choose a new folder"
 msgstr "新規フォルダー選択"
 
@@ -4762,12 +4762,12 @@ msgstr "拡大モードOFF。ドラッグモードを有効にしています...
 msgid "Magnify Mode Off"
 msgstr "拡大モードOFF"
 
-#: backends/platform/android/android.cpp:1059
+#: backends/platform/android/android.cpp:1065
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid "Getting help"
 msgstr "ヘルプを得る"
 
-#: backends/platform/android/android.cpp:1062
+#: backends/platform/android/android.cpp:1068
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4789,13 +4789,13 @@ msgid ""
 "checking out a game walkthrough. Good luck!\n"
 msgstr ""
 
-#: backends/platform/android/android.cpp:1071
+#: backends/platform/android/android.cpp:1077
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "タッチ操作"
 
-#: backends/platform/android/android.cpp:1074
+#: backends/platform/android/android.cpp:1080
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -4924,13 +4924,13 @@ msgstr ""
 "  ![Keyboard icon](keyboard.png \"Keyboard icon\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1130
+#: backends/platform/android/android.cpp:1136
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "ゲームを追加"
 
-#: backends/platform/android/android.cpp:1133
+#: backends/platform/android/android.cpp:1139
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -5114,11 +5114,11 @@ msgstr "バックアップ先を選択"
 
 #: backends/platform/android/options.cpp:276
 msgid "The backup has been saved successfully."
-msgstr ""
+msgstr "バックアップは正常に完了しました。"
 
 #: backends/platform/android/options.cpp:278
 msgid "The backup has been saved successfully to the Downloads folder."
-msgstr ""
+msgstr "バックアップがダウンロードフォルダーに保存されました。"
 
 #: backends/platform/android/options.cpp:280
 #: backends/platform/android/options.cpp:313
@@ -5138,6 +5138,8 @@ msgid ""
 "Restoring a backup will erase the current configuration and overwrite "
 "existing saves. Do you want to proceed?"
 msgstr ""
+"バックアップを復元すると、現在の設定は削除され、既存のデータが上書きされま"
+"す。続行しますか?"
 
 #: backends/platform/android/options.cpp:294
 #, fuzzy
@@ -5147,7 +5149,7 @@ msgstr "テーマを選ぶ"
 
 #: backends/platform/android/options.cpp:311
 msgid "The backup has been restored successfully."
-msgstr ""
+msgstr "バックアップが正常に復元されました。"
 
 #: backends/platform/android/options.cpp:315
 #, fuzzy
@@ -6165,26 +6167,24 @@ msgid "Add game speed menu (similar to PC version)"
 msgstr "ゲームスピードメニューを追加(PC版と同様)"
 
 #: engines/agi/metaengine.cpp:195 engines/agos/metaengine.cpp:44
-#: engines/awe/metaengine.cpp:35 engines/dreamweb/metaengine.cpp:36
-#: engines/gob/metaengine.cpp:42 engines/lure/metaengine.cpp:41
-#: engines/mads/metaengine.cpp:51 engines/mm/metaengine.cpp:46
-#: engines/saga/metaengine.cpp:52 engines/scumm/dialogs.cpp:1202
-#: engines/scumm/metaengine.cpp:821
+#: engines/dreamweb/metaengine.cpp:36 engines/gob/metaengine.cpp:42
+#: engines/lure/metaengine.cpp:41 engines/mads/metaengine.cpp:51
+#: engines/mm/metaengine.cpp:46 engines/saga/metaengine.cpp:52
+#: engines/scumm/dialogs.cpp:1202 engines/scumm/metaengine.cpp:821
 msgid "Enable copy protection"
 msgstr "コピープロテクト有効化"
 
 #: engines/agi/metaengine.cpp:196 engines/agos/metaengine.cpp:45
-#: engines/awe/metaengine.cpp:36 engines/dreamweb/metaengine.cpp:37
-#: engines/gob/metaengine.cpp:43 engines/lure/metaengine.cpp:42
-#: engines/mads/metaengine.cpp:52 engines/mm/metaengine.cpp:47
-#: engines/saga/metaengine.cpp:53 engines/scumm/dialogs.cpp:1203
-#: engines/scumm/metaengine.cpp:822
+#: engines/dreamweb/metaengine.cpp:37 engines/gob/metaengine.cpp:43
+#: engines/lure/metaengine.cpp:42 engines/mads/metaengine.cpp:52
+#: engines/mm/metaengine.cpp:47 engines/saga/metaengine.cpp:53
+#: engines/scumm/dialogs.cpp:1203 engines/scumm/metaengine.cpp:822
 msgid "Enable any copy protection that would otherwise be bypassed by default."
 msgstr "デフォルトではバイパスされるコピープロテクトを有効化します。"
 
 #: engines/agi/metaengine.cpp:207
 msgid "Use PCjr's sound chip in 16-bit shift mode"
-msgstr ""
+msgstr "PCjrの音源チップを16ビットシフトで使用"
 
 #: engines/agi/metaengine.cpp:208
 msgid ""
@@ -6193,6 +6193,9 @@ msgid ""
 "especially in fanmade games, but original Sierra music designed strictly for "
 "PCjr may sound wrong."
 msgstr ""
+"PCjrのサウンドモードでは、SEGA Master Systemと類似したSN76496クローンをエミュ"
+"レートできます。同人ゲームなどで特定の効果を再現しますが、PCjr専用に設計され"
+"たオリジナルのSierra音楽は正しく再生されない場合があります。"
 
 #: engines/agi/metaengine.cpp:433 engines/asylum/asylum.cpp:655
 #: engines/buried/saveload.cpp:53 engines/mohawk/riven.cpp:759
@@ -6625,13 +6628,15 @@ msgstr ""
 
 #: engines/alg/metaengine.cpp:34
 msgid "Use lower quality single speed CD-ROM video"
-msgstr ""
+msgstr "低品質な単一速度のCD-ROMビデオを使用"
 
 #: engines/alg/metaengine.cpp:35
 msgid ""
 "These videos are of lower quality, the default version uses double speed CD-"
 "ROM videos which are of better quality"
 msgstr ""
+"これらの動画は低画質です。デフォルトのバージョンでは、より高画質な2倍速CD-ROM"
+"動画が使用されます"
 
 #: engines/asylum/metaengine.cpp:115
 msgid "Show version"
@@ -6756,9 +6761,22 @@ msgstr "警告: 旧バージョンのセーブをロードしようとしてい�
 msgid "Load anyway"
 msgstr "とにかくロードする"
 
+#: engines/awe/metaengine.cpp:35
+msgid "Enable title and copy protection screens (if present)"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:36
+#, fuzzy
+#| msgid ""
+#| "Enable any copy protection that would otherwise be bypassed by default."
+msgid ""
+"Displays title and copy protection screens that would otherwise be bypassed "
+"by default."
+msgstr "デフォルトではバイパスされるコピープロテクトを有効化します。"
+
 #: engines/awe/metaengine.cpp:61
 msgid "Select/Kick/Run"
-msgstr ""
+msgstr "選択/キック/走る"
 
 #: engines/awe/metaengine.cpp:62 engines/hpl1/metaengine.cpp:83
 msgid "Jump"
@@ -6766,7 +6784,7 @@ msgstr "ジャンプ"
 
 #: engines/awe/metaengine.cpp:63
 msgid "Enter Level Code"
-msgstr ""
+msgstr "レベルを入力"
 
 #: engines/awe/metaengine.cpp:88 engines/dgds/metaengine.cpp:87
 #: engines/got/metaengine.cpp:90
@@ -7665,6 +7683,8 @@ msgid ""
 "Use the music from the floppy version. The floppy version's music files must "
 "be copied to the SOUND directory."
 msgstr ""
+"FD版の音楽を使用します。そのサウンドファイルは、SOUNDディレクトリーに配置する"
+"必要があります。"
 
 #. I18N: Perform action on object where cursor points
 #: engines/darkseed/metaengine.cpp:75 engines/dragons/metaengine.cpp:136
@@ -7733,11 +7753,11 @@ msgstr "縦横比修正適用"
 
 #: engines/director/metaengine.cpp:71
 msgid "Brighten the graphics to simulate a Macintosh monitor"
-msgstr ""
+msgstr "明るさを上げてMacintoshのモニターをシミュレート"
 
 #: engines/director/metaengine.cpp:81
 msgid "Force true color"
-msgstr ""
+msgstr "True Colorを強制"
 
 #: engines/director/metaengine.cpp:82
 #, fuzzy
@@ -7771,7 +7791,7 @@ msgstr "メインメニューを開く"
 
 #: engines/draci/metaengine.cpp:190
 msgid "Toggle between mouse pointer and the last game item"
-msgstr ""
+msgstr "マウスポインターと最後に使用したアイテムを切替"
 
 #: engines/draci/metaengine.cpp:196
 #, fuzzy
@@ -7951,7 +7971,7 @@ msgstr "有効にする"
 
 #: engines/freescape/metaengine.cpp:131
 msgid "Enable traveling using a rock shoot at start"
-msgstr ""
+msgstr "開始時に岩の射出を使用して移動"
 
 #: engines/freescape/movement.cpp:49
 msgid "Strafe Left"

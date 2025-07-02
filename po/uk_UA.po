@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-06-26 03:01+0000\n"
+"POT-Creation-Date: 2025-07-01 05:54+0000\n"
 "PO-Revision-Date: 2025-03-27 07:17+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
@@ -4153,13 +4153,13 @@ msgid "Touchscreen 'Tap Mode' - Hover (DPad Clicks)"
 msgstr "Режим дотику у тачскріні - Проліт (клік DPad)"
 
 #. I18N: This is displayed in the file browser to let the user choose a new folder for Android Storage Attached Framework
-#: backends/fs/android/android-saf-fs.cpp:802
-#: backends/fs/android/android-saf-fs.cpp:806
+#: backends/fs/android/android-saf-fs.cpp:804
+#: backends/fs/android/android-saf-fs.cpp:808
 msgid "Add a new folder"
 msgstr "Додати нову папку"
 
 #. I18N: This may be displayed in the Android UI used to add a Storage Attach Framework authorization
-#: backends/fs/android/android-saf-fs.cpp:918
+#: backends/fs/android/android-saf-fs.cpp:924
 msgid "Choose a new folder"
 msgstr "Вибрати нову папку"
 
@@ -4869,12 +4869,12 @@ msgstr "Режим збільшення вимкнено. Вмикаю режи�
 msgid "Magnify Mode Off"
 msgstr "Режим збільшення вимкнено"
 
-#: backends/platform/android/android.cpp:1059
+#: backends/platform/android/android.cpp:1065
 #: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid "Getting help"
 msgstr "Допомога"
 
-#: backends/platform/android/android.cpp:1062
+#: backends/platform/android/android.cpp:1068
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -4914,13 +4914,13 @@ msgstr ""
 "навіть карколомні. Якщо ви застрягли в грі, можливо вам потрібно звернутися "
 "до її покрокового проходження. Успіхів!\n"
 
-#: backends/platform/android/android.cpp:1071
+#: backends/platform/android/android.cpp:1077
 #: backends/platform/ios7/ios7_osys_misc.mm:261
 #: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid "Touch Controls"
 msgstr "Керування дотиком"
 
-#: backends/platform/android/android.cpp:1074
+#: backends/platform/android/android.cpp:1080
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -5056,13 +5056,13 @@ msgstr ""
 "   ![Піктограма клавіатури](keyboard.png \"Піктограма клавіатури\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1130
+#: backends/platform/android/android.cpp:1136
 #: backends/platform/ios7/ios7_osys_misc.mm:336
 #: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid "Adding Games"
 msgstr "Додавання ігор"
 
-#: backends/platform/android/android.cpp:1133
+#: backends/platform/android/android.cpp:1139
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -6390,20 +6390,18 @@ msgid "Add game speed menu (similar to PC version)"
 msgstr "Додати меню швидкості гри (подібно до версії PC)"
 
 #: engines/agi/metaengine.cpp:195 engines/agos/metaengine.cpp:44
-#: engines/awe/metaengine.cpp:35 engines/dreamweb/metaengine.cpp:36
-#: engines/gob/metaengine.cpp:42 engines/lure/metaengine.cpp:41
-#: engines/mads/metaengine.cpp:51 engines/mm/metaengine.cpp:46
-#: engines/saga/metaengine.cpp:52 engines/scumm/dialogs.cpp:1202
-#: engines/scumm/metaengine.cpp:821
+#: engines/dreamweb/metaengine.cpp:36 engines/gob/metaengine.cpp:42
+#: engines/lure/metaengine.cpp:41 engines/mads/metaengine.cpp:51
+#: engines/mm/metaengine.cpp:46 engines/saga/metaengine.cpp:52
+#: engines/scumm/dialogs.cpp:1202 engines/scumm/metaengine.cpp:821
 msgid "Enable copy protection"
 msgstr "Ввімкнути захист від копіювання"
 
 #: engines/agi/metaengine.cpp:196 engines/agos/metaengine.cpp:45
-#: engines/awe/metaengine.cpp:36 engines/dreamweb/metaengine.cpp:37
-#: engines/gob/metaengine.cpp:43 engines/lure/metaengine.cpp:42
-#: engines/mads/metaengine.cpp:52 engines/mm/metaengine.cpp:47
-#: engines/saga/metaengine.cpp:53 engines/scumm/dialogs.cpp:1203
-#: engines/scumm/metaengine.cpp:822
+#: engines/dreamweb/metaengine.cpp:37 engines/gob/metaengine.cpp:43
+#: engines/lure/metaengine.cpp:42 engines/mads/metaengine.cpp:52
+#: engines/mm/metaengine.cpp:47 engines/saga/metaengine.cpp:53
+#: engines/scumm/dialogs.cpp:1203 engines/scumm/metaengine.cpp:822
 msgid "Enable any copy protection that would otherwise be bypassed by default."
 msgstr "Ввімкнути захист від копіювання, який зазвичай перескакується."
 
@@ -6981,6 +6979,19 @@ msgstr ""
 #: engines/asylum/asylum.cpp:204 engines/cine/saveload.cpp:857
 msgid "Load anyway"
 msgstr "Все одно зчитати"
+
+#: engines/awe/metaengine.cpp:35
+msgid "Enable title and copy protection screens (if present)"
+msgstr ""
+
+#: engines/awe/metaengine.cpp:36
+#, fuzzy
+#| msgid ""
+#| "Enable any copy protection that would otherwise be bypassed by default."
+msgid ""
+"Displays title and copy protection screens that would otherwise be bypassed "
+"by default."
+msgstr "Ввімкнути захист від копіювання, який зазвичай перескакується."
 
 #: engines/awe/metaengine.cpp:61
 msgid "Select/Kick/Run"
