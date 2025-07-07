@@ -1010,6 +1010,8 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "loewe6",				"Löwenzahn 6" },
 	{ "loewe7",				"Löwenzahn 7" },
 	{ "loewe8",				"Löwenzahn 8" },
+	{ "loewecalendar",		"Löwenzahn Adventskalender" },
+	{ "loewespielebox",		"Löwenzahn Spielebox" },
 	{ "lulu",				"Das Buch von Lulu" },
 	{ "mathica",			"Mathica ... und Mathematik wird zum Abenteuer" },
 	{ "mats3",				"Mats und das rätselhafte Tier" },
@@ -3196,7 +3198,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1_l("directorshokai", "", "Director Movie", "276bee761e48a6fd709df77d5c2f60dd", 395882, Common::JA_JPN, 313),
 
 	// Original filename is Station-四季を旅する
-	MACGAME1t_l("shikiotabisuru", "", "xn--Station--883ghrnc9646d4kmin9a", "rt:5ee55eaa551cd866da692454e0691f1d", 398904, Common::JA_JPN, 311),
+	MACGAME1_l("shikiotabisuru", "", "xn--Station--883ghrnc9646d4kmin9a", "rt:5ee55eaa551cd866da692454e0691f1d", 398904, Common::JA_JPN, 311),
 
 	// Found on The Cat Came Back
 	WINDEMO1("sitfarm", "Demo", "MOREFUN.EXE", "65d06b5fef155a2473434571aff5bc29", 4397800, 310),
@@ -6660,8 +6662,12 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Requires installation, DATA.Z, InstallShield v3
 	WINGAME1t("cocktailhour", "", "COCKT32.EXE", "f594dd4e50ea175e8d3453b3cd16b536", 1411465, 501),
 
-	MACGAME1t("coldcutletusplay", "", "MainMenu", "t:e835056d51945ffc0822f6ae2e6f73a3", 1693312, 500),
-	WINGAME1t("coldcutletusplay", "", "MAINMENU.EXE", "t:6715f522a4c1483570ebfbb5561b674e", 1393839, 500),
+	MACGAME2("coldcutletusplay", "", "MainMenu",		  		  "rt:946bee76a867ded034b02894c0bfd303", 719005,
+									 "Coldcut A to Z/CCAtoZ.Dxr", "d:774d0eb3c3b376d237c49741c83949be", 8195642, 500),
+	WINGAME2("coldcutletusplay", "", "MAINMENU.EXE",	  "t:6715f522a4c1483570ebfbb5561b674e", 1393839,
+									 "CCATOZ/CCATOZ.DXR", "f:ed0e743c375b8d2cb135c775310ddfc3", 8197662, 500),
+	WINGAME2("coldcutletusplay", "My Little FunKit", "FUNKIT.EXE", "t:807de8c4a3d6b6b5ca709fec2021244d", 10476689,
+													 "FUNKIT.TXT", "f:406dee54f8cd867b4a29f818d111d47a",	  432, 500),
 
 	MACGAME1("colormind", "v1.5", "ColorMind 1.5", "r:37faaf693259d7a4fa031f4a2edf3098", 125831, 501),
 
@@ -6891,7 +6897,7 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Other versions are D3
 	PIPGAME1("gadget", "", "GADGET", "d7e907d3933869f055ae59774c87f501", 111000, 501),
 
-	MACGAME1f("gadgetpaf",	"",		 "GADGET -Past as Future- (Disc1)", "3b96e0a903130cf68e6f8362bb4d096c", 178907, 501, GF_32BPP),
+	MACGAME1f("gadgetpaf",	"",		 "GADGET -Past as Future- (Disc1)", "r:3b96e0a903130cf68e6f8362bb4d096c", 178651, 501, GF_32BPP),
 	MACGAME1f_l("gadgetpaf", "",		 "GADGET -Past as Future- (Disc1)", "4b2213a9fb04f390ec074c54b916370d", 113169, Common::JA_JPN, 501, GF_32BPP),
 	WINGAME2f("gadgetpaf",	"",		 "GADGET/GADGET.EXE", "t:c8a85e9a0eda2b7dd7974197c02d6469", 1411507,
 									 "DATA/TEXT_E.Cxt", "f:e74119685db701dea9f31f91521fd078", 2457643, 501, GF_32BPP),
@@ -9756,6 +9762,15 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1_l("loewe8", "OSX",	"xn--Lwenzahn 8 (OSX)-mwb", "rt:bdb87b75fe7db4ee20d859bd640f5697", 276263, Common::DE_DEU, 851),
 	WINGAME1_l("loewe8", "",	"Setup/WinRoot/Terzio/Loewenzahn 8/Loewe_8.exe", "t:973b650dd2564c20cc1d3501a7498dc1", 71020, Common::DE_DEU, 851),
 
+	MACGAME1_l("loewecalendar", "", "Adventskalender",										 "rt:0e5578cf47954a2c7af8930264791666", 157787, Common::DE_DEU, 850),
+	WINGAME1_l("loewecalendar", "",	"Setup/WinRoot/Terzio/LZ_Adventskalender/LZ_Advent.exe", "t:a08e0377bea127d46b3491db914ef07a",   78516, Common::DE_DEU, 851),
+
+	// Windows versions are D9
+	MACGAME1_l("loewespielebox", "OS9",  "xn--Lwenzahn Spielebox (OS9)-loc",  "rt:19e9fb7b215165e975ab6c6fcedc07cd", 195151, Common::DE_DEU, 850),
+	MACGAME1_l("loewespielebox", "OS X", "xn--Lwenzahn Spielebox (OS X)-yrc", "rt:314c3d52b50d730a3e9382273404eea4", 277675, Common::DE_DEU, 850),
+	MACGAME1_l("loewespielebox", "Farbenspiel",		"Farbenspiel",	   "rt:d381da584c1b1a6e4a6b79b2576a15da", 429369, Common::DE_DEU, 850),
+	MACGAME1_l("loewespielebox", "Farbenspiel OSX", "Farbenspiel OSX", "rt:843d35914a24c6b221aff7cc80a4eead", 528991, Common::DE_DEU, 850),
+
 	WINGAME1_l("lunes", "", "Lunes.exe", "9482a4a5f6ae02470ce1863808120f6e", 2258509, Common::IT_ITA, 851),
 
 	// Advertainment film from Ferrero (chocolates)
@@ -10199,6 +10214,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1t_l("loewe3", "", "Loewenzahn 3.exe", "46243628b1d79872340993bdc4a156d8", 87791, Common::DE_DEU, 900),
 	WINGAME1t_l("loewe4", "", "Loewenzahn 4.exe", "fcd7e3e7b9b1080f848c518b6e66d860", 87795, Common::DE_DEU, 900),
 	WINGAME1t_l("loewe6", "", "Loewenzahn 6.exe", "c4135f262abdbf3f2dc660e341b8a192", 87820, Common::DE_DEU, 900),
+
+	// Mac versions are D8
+	WINGAME1_l("loewespielebox", "",			"Setup/WinRoot/Terzio/LZ_Spielebox/LZ_Spielebox.exe", "t:2e0749bd71f312abdf445e958f6fd737", 95544, Common::DE_DEU, 900),
+	WINGAME1_l("loewespielebox", "Farbenspiel", "Setup/WinRoot/Terzio/LZ_Spielebox/Farbenspiel.exe",  "t:7fef21c2e52f377d53f2489f25258fae", 95714, Common::DE_DEU, 900),
 
 	// Original Mac filename is Mats und das rätselhafte Tier
 	// Mac version must be installed. Additional OS X installer runs the game Classic environment.

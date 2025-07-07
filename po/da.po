@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-07-01 05:54+0000\n"
+"POT-Creation-Date: 2025-07-07 02:38+0000\n"
 "PO-Revision-Date: 2023-09-07 17:04+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Danish <https://translations.scummvm.org/projects/scummvm/"
@@ -897,7 +897,7 @@ msgstr "Skan gennemført!"
 msgid "Calculated %s %S / %s %S"
 msgstr "Downloadet %s %S/%s %S"
 
-#: gui/integrity-dialog.cpp:621
+#: gui/integrity-dialog.cpp:622
 msgid ""
 "### Results\n"
 "Your set of game files seems to be unknown to us.\n"
@@ -906,18 +906,18 @@ msgid ""
 "following e-mail to integrity@scummvm.org"
 msgstr ""
 
-#: gui/integrity-dialog.cpp:645
+#: gui/integrity-dialog.cpp:646
 msgid ""
 "The game doesn't seem to have any files. Are you sure the path is correct?"
 msgstr ""
 
-#: gui/integrity-dialog.cpp:650
+#: gui/integrity-dialog.cpp:651
 msgid ""
 "The game doesn't seem to have any metadata associated with it, so it is "
 "unable to be matched. Please fill in the correct metadata for the game."
 msgstr ""
 
-#: gui/integrity-dialog.cpp:677
+#: gui/integrity-dialog.cpp:678
 msgid "Files all OK"
 msgstr ""
 
@@ -1295,12 +1295,12 @@ msgstr "Forrige"
 msgid "Save Image..."
 msgstr "Gemmer spil ..."
 
-#: gui/imagealbum-dialog.cpp:263
+#: gui/imagealbum-dialog.cpp:260
 #, c-format
 msgid "%u of %u"
 msgstr ""
 
-#: gui/imagealbum-dialog.cpp:376
+#: gui/imagealbum-dialog.cpp:373
 #, fuzzy
 msgid "Save Image"
 msgstr "Gemt spil:"
@@ -5947,7 +5947,7 @@ msgstr "Søg efter opdateringer ..."
 #: engines/mortevielle/mortevielle.cpp:300 engines/sky/compact.cpp:129
 #: engines/supernova/supernova.cpp:467 engines/teenagent/resources.cpp:97
 #: engines/tony/tony.cpp:187 engines/toon/toon.cpp:5418
-#: engines/ultima/ultima8/ultima8.cpp:192
+#: engines/ultima/ultima8/ultima8.cpp:193
 #, c-format
 msgid "Unable to locate the '%s' engine data file."
 msgstr "Kan ikke finde '%s'-motorens datafil."
