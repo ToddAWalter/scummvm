@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-07-07 02:38+0000\n"
+"POT-Creation-Date: 2025-07-11 16:32+0000\n"
 "PO-Revision-Date: 2024-10-10 12:33+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Turkish <https://translations.scummvm.org/projects/scummvm/"
@@ -1015,7 +1015,7 @@ msgstr "GUI"
 #: gui/gui-manager.cpp:162 engines/hpl1/metaengine.cpp:91
 #: engines/icb/icb.cpp:95 engines/icb/icb.cpp:173 engines/mohawk/myst.cpp:572
 #: engines/mohawk/riven.cpp:853 engines/sludge/keymapper_tables.h:40
-#: engines/supernova/metaengine.cpp:226
+#: engines/supernova/metaengine.cpp:226 engines/teenagent/metaengine.cpp:195
 #: engines/ultima/ultima4/metaengine.cpp:42
 #: engines/ultima/ultima4/metaengine.cpp:144 engines/voyeur/metaengine.cpp:192
 msgid "Interact"
@@ -3247,7 +3247,7 @@ msgstr ""
 #: dists/android.strings.xml.cpp:34
 #: backends/events/default/default-events.cpp:217
 #: backends/events/default/default-events.cpp:358
-#: engines/adl/metaengine.cpp:338 engines/hdb/metaengine.cpp:275
+#: engines/adl/metaengine.cpp:352 engines/hdb/metaengine.cpp:275
 #: engines/mohawk/myst_stacks/menu.cpp:317
 #: engines/mohawk/riven_stacks/aspit.cpp:454 engines/saga/metaengine.cpp:449
 #: engines/scumm/help.cpp:84 engines/scumm/help.cpp:86
@@ -3648,7 +3648,7 @@ msgid "ERROR: Could not copy the savegame to a new slot"
 msgstr ""
 
 #: engines/engine.cpp:687 engines/savestate.cpp:98
-#: backends/platform/ios7/ios7_osys_main.cpp:263 engines/mm/xeen/saves.cpp:293
+#: backends/platform/ios7/ios7_osys_main.cpp:260 engines/mm/xeen/saves.cpp:293
 #: engines/sky/metaengine.cpp:218
 msgid "Autosave"
 msgstr "Otokayıt"
@@ -4145,34 +4145,34 @@ msgid "Resolution: %dx%d"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1005
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2941
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2882
 msgid "Active graphics filter:"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1026
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2975
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2916
 #, fuzzy
 msgid "Enabled aspect ratio correction"
 msgstr "Görüntü oranı düzeltme"
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1028
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2981
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2922
 #, fuzzy
 msgid "Disabled aspect ratio correction"
 msgstr "Görüntü oranı düzeltme"
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1041
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2997
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2938
 msgid "Filtering enabled"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1043
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2999
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2940
 msgid "Filtering disabled"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1069
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:3026
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2967
 #, fuzzy
 msgid "Stretch mode"
 msgstr "Çekiştirme modu:"
@@ -5842,7 +5842,7 @@ msgstr ""
 #: engines/access/resources.cpp:43 engines/drascula/drascula.cpp:959
 #: engines/hugo/hugo.cpp:427 engines/lure/lure.cpp:57
 #: engines/mortevielle/mortevielle.cpp:300 engines/sky/compact.cpp:129
-#: engines/supernova/supernova.cpp:467 engines/teenagent/resources.cpp:97
+#: engines/supernova/supernova.cpp:467 engines/teenagent/resources.cpp:146
 #: engines/tony/tony.cpp:187 engines/toon/toon.cpp:5418
 #: engines/ultima/ultima8/ultima8.cpp:193
 #, c-format
@@ -5852,7 +5852,8 @@ msgstr ""
 #: engines/access/resources.cpp:51 engines/drascula/drascula.cpp:975
 #: engines/hugo/hugo.cpp:439 engines/lure/lure.cpp:66
 #: engines/mortevielle/mortevielle.cpp:308 engines/supernova/supernova.cpp:472
-#: engines/tony/tony.cpp:200 engines/toon/toon.cpp:5431
+#: engines/teenagent/resources.cpp:163 engines/tony/tony.cpp:200
+#: engines/toon/toon.cpp:5431
 #, c-format
 msgid "The '%s' engine data file is corrupt."
 msgstr ""
@@ -5906,6 +5907,22 @@ msgstr ""
 
 #: engines/adl/metaengine.cpp:105
 msgid "Use the checkered cursor from later Apple II models"
+msgstr ""
+
+#: engines/adl/metaengine.cpp:117 engines/cge/metaengine.cpp:56
+#: engines/cruise/metaengine.cpp:45 engines/drascula/metaengine.cpp:51
+#: engines/glk/metaengine.cpp:193 engines/griffon/metaengine.cpp:40
+#: engines/mortevielle/metaengine.cpp:37 engines/sci/detection_options.h:223
+#: engines/supernova/metaengine.cpp:53 engines/teenagent/metaengine.cpp:49
+#: engines/wage/metaengine.cpp:51
+#, fuzzy
+msgid "Enable Text to Speech"
+msgstr "Oyunun tam ismi"
+
+#: engines/adl/metaengine.cpp:118 engines/cge/metaengine.cpp:57
+#: engines/cruise/metaengine.cpp:46 engines/drascula/metaengine.cpp:52
+#: engines/mortevielle/metaengine.cpp:38 engines/teenagent/metaengine.cpp:50
+msgid "Use TTS to read text in the game (if TTS is available)"
 msgstr ""
 
 #: engines/agi/detection_tables.h:262
@@ -6615,6 +6632,7 @@ msgstr ""
 #: engines/made/metaengine.cpp:102 engines/mads/metaengine.cpp:274
 #: engines/playground3d/metaengine.cpp:51 engines/stark/metaengine.cpp:184
 #: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
+#: engines/teenagent/metaengine.cpp:185 engines/tetraedge/metaengine.cpp:86
 #: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
 #: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
 #: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
@@ -6841,7 +6859,8 @@ msgstr ""
 #: engines/sludge/keymapper_tables.h:138 engines/sludge/keymapper_tables.h:194
 #: engines/sludge/keymapper_tables.h:268 engines/sludge/keymapper_tables.h:392
 #: engines/sludge/keymapper_tables.h:452 engines/sludge/keymapper_tables.h:484
-#: engines/sludge/keymapper_tables.h:535 engines/toltecs/metaengine.cpp:228
+#: engines/sludge/keymapper_tables.h:535 engines/teenagent/metaengine.cpp:201
+#: engines/tetraedge/metaengine.cpp:98 engines/toltecs/metaengine.cpp:228
 #: engines/touche/metaengine.cpp:141
 #, fuzzy
 #| msgid "Show hidden files"
@@ -6927,10 +6946,11 @@ msgstr ""
 #: engines/mads/metaengine.cpp:305 engines/pegasus/pegasus.cpp:2825
 #: engines/saga/metaengine.cpp:442 engines/sludge/keymapper_tables.h:107
 #: engines/sludge/keymapper_tables.h:156 engines/stark/metaengine.cpp:208
-#: engines/titanic/metaengine.cpp:199 engines/toltecs/metaengine.cpp:234
-#: engines/toon/metaengine.cpp:112 engines/trecision/metaengine.cpp:169
-#: engines/tsage/metaengine.cpp:242 engines/ultima/ultima8/metaengine.cpp:45
-#: engines/vcruise/metaengine.cpp:175 engines/wintermute/keymapper_tables.h:920
+#: engines/tetraedge/metaengine.cpp:110 engines/titanic/metaengine.cpp:199
+#: engines/toltecs/metaengine.cpp:234 engines/toon/metaengine.cpp:112
+#: engines/trecision/metaengine.cpp:169 engines/tsage/metaengine.cpp:242
+#: engines/ultima/ultima8/metaengine.cpp:45 engines/vcruise/metaengine.cpp:175
+#: engines/wintermute/keymapper_tables.h:920
 #, fuzzy
 msgid "Save game"
 msgstr "Kaydetme Yolu:"
@@ -6949,8 +6969,9 @@ msgstr "Kaydetme Yolu:"
 #: engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/riven_stacks/aspit.cpp:349 engines/pegasus/pegasus.cpp:2831
 #: engines/saga/metaengine.cpp:432 engines/stark/metaengine.cpp:213
-#: engines/titanic/metaengine.cpp:205 engines/toltecs/metaengine.cpp:240
-#: engines/toon/metaengine.cpp:118 engines/trecision/metaengine.cpp:175
+#: engines/tetraedge/metaengine.cpp:104 engines/titanic/metaengine.cpp:205
+#: engines/toltecs/metaengine.cpp:240 engines/toon/metaengine.cpp:118
+#: engines/trecision/metaengine.cpp:175
 #: engines/ultima/ultima8/metaengine.cpp:46 engines/vcruise/metaengine.cpp:180
 #: engines/wintermute/keymapper_tables.h:925
 #: engines/wintermute/keymapper_tables.h:1265
@@ -7040,21 +7061,6 @@ msgstr ""
 
 #: engines/cge/metaengine.cpp:44 engines/cge2/metaengine.cpp:47
 msgid "Enable Color Blind Mode by default"
-msgstr ""
-
-#: engines/cge/metaengine.cpp:56 engines/cruise/metaengine.cpp:45
-#: engines/drascula/metaengine.cpp:51 engines/glk/metaengine.cpp:193
-#: engines/griffon/metaengine.cpp:40 engines/mortevielle/metaengine.cpp:37
-#: engines/sci/detection_options.h:223 engines/supernova/metaengine.cpp:53
-#: engines/teenagent/metaengine.cpp:45 engines/wage/metaengine.cpp:51
-#, fuzzy
-msgid "Enable Text to Speech"
-msgstr "Oyunun tam ismi"
-
-#: engines/cge/metaengine.cpp:57 engines/cruise/metaengine.cpp:46
-#: engines/drascula/metaengine.cpp:52 engines/mortevielle/metaengine.cpp:38
-#: engines/teenagent/metaengine.cpp:46
-msgid "Use TTS to read text in the game (if TTS is available)"
 msgstr ""
 
 #: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
@@ -11909,7 +11915,7 @@ msgstr ""
 msgid "Unable to locate the text for %s language in engine data file."
 msgstr ""
 
-#: engines/supernova/supernova.cpp:479
+#: engines/supernova/supernova.cpp:479 engines/teenagent/resources.cpp:172
 #, c-format
 msgid ""
 "Incorrect version of the '%s' engine data file found. Expected %d but got %d."
@@ -12144,6 +12150,32 @@ msgid ""
 "Use English speech instead of German for every language other than German"
 msgstr ""
 
+#: engines/teenagent/metaengine.cpp:189
+#, fuzzy
+msgid "Move / Examine"
+msgstr "Sol"
+
+#: engines/teenagent/metaengine.cpp:209
+#, fuzzy
+msgid "Close inventory"
+msgstr "Altyazılar"
+
+#: engines/teenagent/metaengine.cpp:214
+#, fuzzy
+msgid "Toggle inventory"
+msgstr "Altyazılar"
+
+#: engines/teenagent/metaengine.cpp:220 engines/toon/metaengine.cpp:98
+#: engines/voyeur/metaengine.cpp:235
+#, fuzzy
+msgid "Skip intro"
+msgstr "Gizli dosyaları göster"
+
+#. I18N: Speeds up the game to twice its normal speed
+#: engines/teenagent/metaengine.cpp:227 engines/touche/metaengine.cpp:167
+msgid "Toggle fast mode"
+msgstr ""
+
 #: engines/tetraedge/metaengine.cpp:32
 #, fuzzy
 #| msgid "Correct aspect ratio for games"
@@ -12161,6 +12193,11 @@ msgstr ""
 #: engines/tetraedge/metaengine.cpp:44
 msgid "Restore some scenes originally in the Windows edition"
 msgstr ""
+
+#: engines/tetraedge/metaengine.cpp:92
+#, fuzzy
+msgid "Move / Interact / Select"
+msgstr "Sol"
 
 #: engines/tinsel/detection_tables.h:481
 msgid "Saturn CD version is not yet supported"
@@ -12341,11 +12378,6 @@ msgstr "İptal"
 msgid "Font variant not present in '%s' engine data file."
 msgstr ""
 
-#: engines/toon/metaengine.cpp:98 engines/voyeur/metaengine.cpp:235
-#, fuzzy
-msgid "Skip intro"
-msgstr "Gizli dosyaları göster"
-
 #. I18N: Skips current line being spoken by a character
 #: engines/toon/metaengine.cpp:105
 #, fuzzy
@@ -12419,10 +12451,6 @@ msgstr "Altyazılar"
 #, fuzzy
 msgid "Disable fast walk"
 msgstr "Altyazılar"
-
-#: engines/touche/metaengine.cpp:167
-msgid "Toggle fast mode"
-msgstr ""
 
 #: engines/touche/metaengine.cpp:173
 msgid "Toggle between voice / text / text and voice"

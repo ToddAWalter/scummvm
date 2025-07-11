@@ -52,6 +52,14 @@ void QuizPuzzle::execute() {
 			warning("STUB - Nancy 9 Quiz Puzzle - GPS new waypoint");
 			// Set the GPS waypoint as discovered
 			NancySceneState.setEventFlag(410, g_nancy->_true);	// EV_Solved_GPS_Beach
+		} else if (sceneId == 6344) {
+			warning("STUB - Nancy 9 Quiz Puzzle - GPS new waypoint - cache A");
+			// Set the GPS waypoint as discovered
+			NancySceneState.setEventFlag(411, g_nancy->_true); // EV_Solved_GPS_CacheA
+		} else if (sceneId == 6345) {
+			warning("STUB - Nancy 9 Quiz Puzzle - GPS new waypoint - cache B");
+			// Set the GPS waypoint as discovered
+			NancySceneState.setEventFlag(412, g_nancy->_true); // EV_Solved_GPS_CacheB
 		} else if (sceneId == 6431) {
 			warning("STUB - Nancy 9 Quiz Puzzle - Hilda Swenson's letter");
 			NancySceneState.setEventFlag(179, g_nancy->_true); // EV_Hilda_Said_Objects
@@ -60,7 +68,10 @@ void QuizPuzzle::execute() {
 			NancySceneState.setEventFlag(119, g_nancy->_true);	// EV_Finished_Chess_Quiz
 		} else if (sceneId == 4184) {
 			warning("STUB - Nancy 9 Quiz Puzzle - Lighthouse Morse code");
-			NancySceneState.setEventFlag(420, g_nancy->_true);	// EV_Solved_Morse_Code
+			SceneChangeDescription scene;
+			scene.sceneID = 4190;
+			NancySceneState.resetStateToInit();
+			NancySceneState.changeScene(scene);
 		} else {
 			warning("STUB - Nancy 9 Quiz Puzzle");
 		}
