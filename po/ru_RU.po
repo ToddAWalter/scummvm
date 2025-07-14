@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-07-11 16:32+0000\n"
+"POT-Creation-Date: 2025-07-14 12:58+0000\n"
 "PO-Revision-Date: 2025-03-27 07:17+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
@@ -56,9 +56,9 @@ msgid "Available engines:"
 msgstr "Доступные движки:"
 
 #. I18N: Close dialog button
-#: gui/about.cpp:523 gui/downloadpacksdialog.cpp:297
+#: gui/about.cpp:527 gui/downloadpacksdialog.cpp:297
 #: gui/downloadpacksdialog.cpp:388 gui/integrity-dialog.cpp:310
-#: gui/gui-manager.cpp:167 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:53
+#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:53
 #: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:558
 #: engines/saga/metaengine.cpp:374 engines/scumm/help.cpp:126
 #: engines/scumm/help.cpp:141 engines/scumm/help.cpp:166
@@ -193,7 +193,7 @@ msgid "Now, open this link in your browser:"
 msgstr "Теперь откройте эту сслыку в вашем браузере:"
 
 #: gui/cloudconnectionwizard.cpp:272 gui/cloudconnectionwizard.cpp:329
-#: gui/message.cpp:246 gui/message.cpp:250
+#: gui/message.cpp:257 gui/message.cpp:261
 msgid "Open URL"
 msgstr "Открыть URL"
 
@@ -247,8 +247,8 @@ msgstr "Ручной режим: Шаг 2"
 msgid "Copy the JSON code from the browser here and press Next:"
 msgstr "Скопируйте JSON-код из браузера сюда и нажмите Далее:"
 
-#: gui/cloudconnectionwizard.cpp:367 gui/gui-manager.cpp:255
-#: gui/gui-manager.cpp:270
+#: gui/cloudconnectionwizard.cpp:367 gui/gui-manager.cpp:256
+#: gui/gui-manager.cpp:271
 msgid "Paste"
 msgstr "Вставить"
 
@@ -543,7 +543,7 @@ msgstr ""
 "Вы собираетесь удалить %s%S данных и удалите все скачанные %S. Вы "
 "действительно хотите продолжить?"
 
-#: gui/downloadpacksdialog.cpp:464 gui/updates-dialog.cpp:115
+#: gui/downloadpacksdialog.cpp:464 gui/updates-dialog.cpp:117
 #: backends/platform/android/options.cpp:289
 msgid "Proceed"
 msgstr "Продолжить"
@@ -1002,12 +1002,12 @@ msgstr ""
 "Вы действительно хотите сбросить все настройки FluidSynth в значения по "
 "умолчанию?"
 
-#: gui/gui-manager.cpp:158 gui/options.cpp:2362
+#: gui/gui-manager.cpp:159 gui/options.cpp:2362
 msgid "GUI"
 msgstr "GUI"
 
 #. I18N: Action in In Cold Blood
-#: gui/gui-manager.cpp:162 engines/hpl1/metaengine.cpp:91
+#: gui/gui-manager.cpp:163 engines/hpl1/metaengine.cpp:91
 #: engines/icb/icb.cpp:95 engines/icb/icb.cpp:173 engines/mohawk/myst.cpp:572
 #: engines/mohawk/riven.cpp:853 engines/sludge/keymapper_tables.h:40
 #: engines/supernova/metaengine.cpp:226 engines/teenagent/metaengine.cpp:195
@@ -1016,7 +1016,7 @@ msgstr "GUI"
 msgid "Interact"
 msgstr "Взаимодействие"
 
-#: gui/gui-manager.cpp:173 engines/metaengine.cpp:134
+#: gui/gui-manager.cpp:174 engines/metaengine.cpp:137
 #: engines/awe/metaengine.cpp:57 engines/crab/input/input.cpp:95
 #: engines/crab/input/input.cpp:145 engines/dragons/metaengine.cpp:159
 #: engines/freescape/movement.cpp:35 engines/got/metaengine.cpp:55
@@ -1035,7 +1035,7 @@ msgstr "Взаимодействие"
 msgid "Up"
 msgstr "Вверх"
 
-#: gui/gui-manager.cpp:179 engines/metaengine.cpp:140
+#: gui/gui-manager.cpp:180 engines/metaengine.cpp:143
 #: engines/awe/metaengine.cpp:58 engines/crab/input/input.cpp:101
 #: engines/crab/input/input.cpp:151 engines/dragons/metaengine.cpp:165
 #: engines/freescape/movement.cpp:42 engines/got/metaengine.cpp:56
@@ -1054,7 +1054,7 @@ msgstr "Вверх"
 msgid "Down"
 msgstr "Вниз"
 
-#: gui/gui-manager.cpp:185 engines/metaengine.cpp:146
+#: gui/gui-manager.cpp:186 engines/metaengine.cpp:149
 #: engines/awe/metaengine.cpp:59 engines/crab/input/input.cpp:107
 #: engines/crab/input/input.cpp:157 engines/dragons/metaengine.cpp:171
 #: engines/got/metaengine.cpp:57 engines/griffon/metaengine.cpp:133
@@ -1073,7 +1073,7 @@ msgstr "Вниз"
 msgid "Left"
 msgstr "Влево"
 
-#: gui/gui-manager.cpp:191 engines/metaengine.cpp:152
+#: gui/gui-manager.cpp:192 engines/metaengine.cpp:155
 #: engines/awe/metaengine.cpp:60 engines/crab/input/input.cpp:113
 #: engines/crab/input/input.cpp:163 engines/dragons/metaengine.cpp:177
 #: engines/got/metaengine.cpp:58 engines/griffon/metaengine.cpp:139
@@ -1092,39 +1092,39 @@ msgstr "Влево"
 msgid "Right"
 msgstr "Вправо"
 
-#: gui/gui-manager.cpp:197
+#: gui/gui-manager.cpp:198
 msgid "Backspace"
 msgstr "Backspace"
 
-#: gui/gui-manager.cpp:203
+#: gui/gui-manager.cpp:204
 msgid "Delete Character"
 msgstr "Удалить символ"
 
-#: gui/gui-manager.cpp:209
+#: gui/gui-manager.cpp:210
 msgid "Go to end of line"
 msgstr "Перейти в конец строки"
 
-#: gui/gui-manager.cpp:219
+#: gui/gui-manager.cpp:220
 msgid "Select to end of line"
 msgstr "Выделить до конца строки"
 
-#: gui/gui-manager.cpp:229
+#: gui/gui-manager.cpp:230
 msgid "Select to start of line"
 msgstr "Выделить с начала строки"
 
-#: gui/gui-manager.cpp:239
+#: gui/gui-manager.cpp:240
 msgid "Go to start of line"
 msgstr "Перейти к началу строки"
 
-#: gui/gui-manager.cpp:250 gui/gui-manager.cpp:265
+#: gui/gui-manager.cpp:251 gui/gui-manager.cpp:266
 msgid "Cut"
 msgstr "Вырезать"
 
-#: gui/gui-manager.cpp:260 gui/gui-manager.cpp:275
+#: gui/gui-manager.cpp:261 gui/gui-manager.cpp:276
 msgid "Copy"
 msgstr "Скопировать"
 
-#: gui/gui-manager.cpp:281 engines/pegasus/pegasus.cpp:2819
+#: gui/gui-manager.cpp:282 engines/pegasus/pegasus.cpp:2819
 #: engines/wintermute/keymapper_tables.h:305
 #: engines/wintermute/keymapper_tables.h:346
 #: engines/wintermute/keymapper_tables.h:381
@@ -1569,85 +1569,85 @@ msgstr "ScummVM не смог найти игру в указанном ката
 msgid "Unknown variant"
 msgstr "Неизвестный вариант"
 
-#: gui/launcher.cpp:938 gui/saveload-dialog.cpp:381
+#: gui/launcher.cpp:935 gui/saveload-dialog.cpp:381
 msgid "List view"
 msgstr "Вид списка"
 
-#: gui/launcher.cpp:939 gui/saveload-dialog.cpp:382
+#: gui/launcher.cpp:936 gui/saveload-dialog.cpp:382
 msgid "Grid view"
 msgstr "Вид сетки"
 
-#: gui/launcher.cpp:1081
+#: gui/launcher.cpp:1078
 msgid "~S~tart"
 msgstr "П~у~ск"
 
-#: gui/launcher.cpp:1081
+#: gui/launcher.cpp:1078
 msgid "Start selected game"
 msgstr "Запустить выбранную игру"
 
-#: gui/launcher.cpp:1084
+#: gui/launcher.cpp:1081
 msgid "~L~oad..."
 msgstr "~З~агрузить..."
 
-#: gui/launcher.cpp:1084
+#: gui/launcher.cpp:1081
 msgid "Load saved game for selected game"
 msgstr "Загрузить сохранение для выбранной игры"
 
-#: gui/launcher.cpp:1086
+#: gui/launcher.cpp:1083
 msgid "Record..."
 msgstr "Запись..."
 
-#: gui/launcher.cpp:1092
+#: gui/launcher.cpp:1089
 msgid "~G~ame Options..."
 msgstr "Настройки ~и~гры..."
 
-#: gui/launcher.cpp:1092
+#: gui/launcher.cpp:1089
 msgid "Change game options"
 msgstr "Изменить настройки игры"
 
-#: gui/launcher.cpp:1092
+#: gui/launcher.cpp:1089
 msgctxt "lowres"
 msgid "~G~ame Opts..."
 msgstr "Настр. ~и~гры..."
 
 #. I18N: List grouping when no engine is specified
-#: gui/launcher.cpp:1189 gui/launcher.cpp:1385
+#: gui/launcher.cpp:1186 gui/launcher.cpp:1382
 msgid "Unknown Engine"
 msgstr "Неизвестный движок"
 
 #. I18N: List grouping when no publisher is specified
 #. I18N: List group when no publisher is specified
-#: gui/launcher.cpp:1206 gui/launcher.cpp:1402
+#: gui/launcher.cpp:1203 gui/launcher.cpp:1399
 msgid "Unknown Publisher"
 msgstr "Неизвестный издатель"
 
 #. I18N: List group when no game series is specified
 #. I18N: List grouping when no game series is specified
-#: gui/launcher.cpp:1223 gui/launcher.cpp:1419
+#: gui/launcher.cpp:1220 gui/launcher.cpp:1416
 msgid "No Series"
 msgstr "Без серии"
 
 #. I18N: List group when no language is specified
-#: gui/launcher.cpp:1237 gui/launcher.cpp:1433
+#: gui/launcher.cpp:1234 gui/launcher.cpp:1430
 msgid "Language not detected"
 msgstr "Язык не определён"
 
 #. I18N: List group when no platform is specified
-#: gui/launcher.cpp:1251 gui/launcher.cpp:1447
+#: gui/launcher.cpp:1248 gui/launcher.cpp:1444
 msgid "Platform not detected"
 msgstr "Платформа не определена"
 
 #. I18N: List group when no year is specified
-#: gui/launcher.cpp:1268 gui/launcher.cpp:1464
+#: gui/launcher.cpp:1265 gui/launcher.cpp:1461
 msgid "Unknown Year"
 msgstr "Год неизвестен"
 
 #. I18N: Group for All items
-#: gui/launcher.cpp:1471 gui/widgets/groupedlist.cpp:81
+#: gui/launcher.cpp:1468 gui/widgets/groupedlist.cpp:81
 msgid "All"
 msgstr "Все"
 
-#: gui/launcher.cpp:1626
+#: gui/launcher.cpp:1623
 msgid "Icons per row:"
 msgstr "Иконок в ряду:"
 
@@ -2390,7 +2390,7 @@ msgstr ""
 "Показывать информацию текущей игре на Discord, когда у вас запущен клиент "
 "Discord."
 
-#: gui/options.cpp:2777 gui/updates-dialog.cpp:85
+#: gui/options.cpp:2777 gui/updates-dialog.cpp:87
 msgid "Update check:"
 msgstr "Проверять обновления:"
 
@@ -2938,7 +2938,7 @@ msgstr "Вся необходимая информация об игре ско�
 msgid "Copying the game information to the clipboard has failed!"
 msgstr "Скопировать игровую информацию в буфер обмена не удалось!"
 
-#: gui/updates-dialog.cpp:48
+#: gui/updates-dialog.cpp:47
 msgid ""
 "ScummVM now supports automatic check for updates\n"
 "which requires access to the Internet. Would you\n"
@@ -2948,7 +2948,7 @@ msgstr ""
 "обновлений, требующую доступ в Интернет.\n"
 "Вы хотите включить эту опцию?"
 
-#: gui/updates-dialog.cpp:51
+#: gui/updates-dialog.cpp:50
 msgid ""
 "You can change this setting later in the Misc tab\n"
 "in the Options dialog."
@@ -3794,7 +3794,7 @@ msgstr "Игра не реализована"
 msgid "Default game keymap"
 msgstr "Раскладка клавиш по умолчанию"
 
-#: engines/metaengine.cpp:79 engines/agos/metaengine.cpp:232
+#: engines/metaengine.cpp:82 engines/agos/metaengine.cpp:232
 #: engines/asylum/metaengine.cpp:159 engines/bbvs/metaengine.cpp:99
 #: engines/cge/metaengine.cpp:203 engines/cge2/metaengine.cpp:216
 #: engines/cine/metaengine.cpp:264 engines/composer/metaengine.cpp:113
@@ -3820,7 +3820,7 @@ msgstr "Раскладка клавиш по умолчанию"
 msgid "Left click"
 msgstr "Левый щелчок"
 
-#: engines/metaengine.cpp:85 engines/mtropolis/metaengine.cpp:173
+#: engines/metaengine.cpp:88 engines/mtropolis/metaengine.cpp:173
 #: engines/saga/metaengine.cpp:284 engines/wintermute/keymapper_tables.h:256
 #: engines/wintermute/keymapper_tables.h:300
 #: engines/wintermute/keymapper_tables.h:2166
@@ -3829,7 +3829,7 @@ msgstr "Левый щелчок"
 msgid "Middle click"
 msgstr "Средний щелчок"
 
-#: engines/metaengine.cpp:90 engines/agos/metaengine.cpp:238
+#: engines/metaengine.cpp:93 engines/agos/metaengine.cpp:238
 #: engines/asylum/metaengine.cpp:165 engines/bbvs/metaengine.cpp:105
 #: engines/cge/metaengine.cpp:209 engines/cge2/metaengine.cpp:222
 #: engines/cine/metaengine.cpp:270 engines/composer/metaengine.cpp:119
@@ -3854,7 +3854,7 @@ msgid "Right click"
 msgstr "Правый щелчок"
 
 #. I18N: Action in In Cold Blood
-#: engines/metaengine.cpp:96 engines/agos/metaengine.cpp:252
+#: engines/metaengine.cpp:99 engines/agos/metaengine.cpp:252
 #: engines/crab/input/input.cpp:261 engines/cruise/metaengine.cpp:217
 #: engines/grim/grim.cpp:550 engines/hdb/metaengine.cpp:258
 #: engines/icb/icb.cpp:137 engines/icb/icb.cpp:203 engines/mohawk/myst.cpp:595
@@ -3863,19 +3863,19 @@ msgstr "Правый щелчок"
 #: engines/sludge/keymapper_tables.h:187 engines/sludge/keymapper_tables.h:243
 #: engines/sludge/keymapper_tables.h:262 engines/sludge/keymapper_tables.h:459
 #: engines/sludge/keymapper_tables.h:490 engines/supernova/metaengine.cpp:262
-#: engines/tucker/metaengine.cpp:184 engines/twine/metaengine.cpp:223
-#: engines/wintermute/keymapper_tables.h:1608
+#: engines/sword25/metaengine.cpp:124 engines/tucker/metaengine.cpp:184
+#: engines/twine/metaengine.cpp:223 engines/wintermute/keymapper_tables.h:1608
 msgid "Pause"
 msgstr "Пауза"
 
-#: engines/metaengine.cpp:102 engines/parallaction/metaengine.cpp:137
+#: engines/metaengine.cpp:105 engines/parallaction/metaengine.cpp:137
 #: engines/ultima/ultima8/metaengine.cpp:48
 msgid "Game menu"
 msgstr "Меню игры"
 
 #. I18N: Skipping cutscene plaback
 #. I18N: Skipping cutscene playback
-#: engines/metaengine.cpp:109 engines/composer/metaengine.cpp:125
+#: engines/metaengine.cpp:112 engines/composer/metaengine.cpp:125
 #: engines/freescape/movement.cpp:87 engines/grim/grim.cpp:533
 #: engines/grim/grim.cpp:633 engines/illusions/metaengine.cpp:142
 #: engines/made/metaengine.cpp:121 engines/mohawk/myst.cpp:566
@@ -3888,30 +3888,30 @@ msgstr "Меню игры"
 msgid "Skip"
 msgstr "Пропустить"
 
-#: engines/metaengine.cpp:116 engines/sky/metaengine.cpp:121
+#: engines/metaengine.cpp:119 engines/sky/metaengine.cpp:121
 #: engines/supernova/metaengine.cpp:315
 msgid "Skip line"
 msgstr "Пропустить строку"
 
-#: engines/metaengine.cpp:123
+#: engines/metaengine.cpp:126
 msgid "Predictive input dialog"
 msgstr "Диалог предиктивного ввода"
 
 #. I18N: This keymap works within the KIA Save Game screen
 #. and allows confirming popup dialog prompts (eg. for save game deletion or overwriting)
 #. and also submitting a new save game name, or choosing an existing save game for overwriting.
-#: engines/metaengine.cpp:128 engines/bladerunner/metaengine.cpp:273
+#: engines/metaengine.cpp:131 engines/bladerunner/metaengine.cpp:273
 #: engines/griffon/metaengine.cpp:115 engines/grim/grim.cpp:539
 #: engines/grim/grim.cpp:639 engines/sky/metaengine.cpp:101
 #: engines/wintermute/keymapper_tables.h:54
 msgid "Confirm"
 msgstr "Подтвердить"
 
-#: engines/metaengine.cpp:431
+#: engines/metaengine.cpp:434
 msgid "Autosave on"
 msgstr "Автосохранение включено"
 
-#: engines/metaengine.cpp:431
+#: engines/metaengine.cpp:434
 msgid "Autosave off"
 msgstr "Автосохранение выключено"
 
@@ -7066,11 +7066,12 @@ msgstr "Общие клавиши"
 #: engines/made/metaengine.cpp:102 engines/mads/metaengine.cpp:274
 #: engines/playground3d/metaengine.cpp:51 engines/stark/metaengine.cpp:184
 #: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/teenagent/metaengine.cpp:185 engines/tetraedge/metaengine.cpp:86
-#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
-#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:185
+#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
+#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
+#: engines/toon/metaengine.cpp:81 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 msgid "Default keymappings"
 msgstr "Раскладки клавиш по умолчанию"
 
@@ -8648,6 +8649,14 @@ msgstr ""
 "не оказывает поддержку при использовании таких патчей."
 
 #: engines/grim/metaengine.cpp:87
+#, fuzzy
+#| msgid "Escape from Monkey Island support is not compiled in"
+msgid ""
+"Escape from Monkey Island PS2 support required MPEG2 support, which is not "
+"compiled in"
+msgstr "Поддержка для Escape from Monkey Island не скомпилирована"
+
+#: engines/grim/metaengine.cpp:92
 msgid "Escape from Monkey Island support is not compiled in"
 msgstr "Поддержка для Escape from Monkey Island не скомпилирована"
 
@@ -12465,7 +12474,7 @@ msgstr ""
 msgid "Inventory / Examine"
 msgstr "Инвентарь"
 
-#: engines/sludge/keymapper_tables.h:281
+#: engines/sludge/keymapper_tables.h:281 engines/sword25/metaengine.cpp:118
 #, fuzzy
 #| msgid "Skip dialogue"
 msgid "Examine / Skip dialog"
@@ -12511,6 +12520,7 @@ msgid "Cast water spell"
 msgstr "Применить заклинание"
 
 #: engines/sludge/keymapper_tables.h:423 engines/sludge/keymapper_tables.h:510
+#: engines/sword25/metaengine.cpp:112
 #, fuzzy
 #| msgid "Go to next dialogue"
 msgid "Move / Interact / Skip dialog"
@@ -12935,16 +12945,20 @@ msgstr "Показывать названия объектов"
 msgid "Show labels for objects on mouse hover"
 msgstr "Показывает названия объектов при наведении курсора мыши"
 
-#: engines/sword25/metaengine.cpp:35
+#: engines/sword25/metaengine.cpp:39
 msgid "Use English speech"
 msgstr "Использовать английскую озвучку"
 
-#: engines/sword25/metaengine.cpp:36
+#: engines/sword25/metaengine.cpp:40
 msgid ""
 "Use English speech instead of German for every language other than German"
 msgstr ""
 "Использовать английскую озвучку вместо немецкой для всех языков, кроме "
 "немецкого"
+
+#: engines/sword25/metaengine.cpp:130
+msgid "Reveal all interactive hotspots (hold the key)"
+msgstr ""
 
 #: engines/teenagent/metaengine.cpp:189
 #, fuzzy

@@ -634,6 +634,16 @@ bool ScScript::executeInstruction() {
 		}
 
 		if (DID_FAIL(res)) {
+
+			// W/A: Avoid crash here:
+			if (var->isNative() && var->getNative() == nullptr) {
+				_stack->correctParams(0);
+				runtimeError("Cannot call method '%s'. Native variable is null.", methodName);
+				_stack->pushNULL();
+				delete[] methodName;
+				break;
+			}
+
 			if (var->isNative() && var->getNative()->canHandleMethod(methodName)) {
 				if (!_unbreakable) {
 					_waitScript = var->getNative()->invokeMethodThread(methodName);
@@ -1500,7 +1510,7 @@ bool ScScript::copyParameters(ScStack *stack) {
 
 //////////////////////////////////////////////////////////////////////////
 bool ScScript::finishThreads() {
-	for (uint32 i = 0; i < _engine->_scripts.size(); i++) {
+	for (uint32 i = 0; i < _engine->_scripts.getSize(); i++) {
 		ScScript *scr = _engine->_scripts[i];
 		if (scr->_thread && scr->_state != SCRIPT_FINISHED && scr->_owner == _owner && scumm_stricmp(scr->_filename, _filename) == 0) {
 			scr->finish(true);
