@@ -22,32 +22,38 @@
 #include "hpl1/graphics.h"
 
 #include "common/config-manager.h"
-#include "graphics/opengl/context.h"
+#include "graphics/renderer.h"
 #include "graphics/surface.h"
 #include "hpl1/opengl.h"
 
 namespace Hpl1 {
 
+static Graphics::RendererType getBestRendererType() {
+	Common::String renderConfig = ConfMan.get("renderer");
+	Graphics::RendererType desiredRendererType = Graphics::Renderer::parseTypeCode(renderConfig);
+	uint32 availableRendererTypes = Graphics::Renderer::getAvailableTypes();
+	// only the following renderer types are supported for now
+	availableRendererTypes &= Graphics::kRendererTypeOpenGL | Graphics::kRendererTypeOpenGLShaders | Graphics::kRendererTypeTinyGL;
+	return Graphics::Renderer::getBestMatchingType(
+		desiredRendererType, availableRendererTypes);
+}
+
 bool areShadersAvailable() {
-#ifdef USE_OPENGL
-	return useOpenGL() && OpenGLContext.enginesShadersSupported &&
-		   (!ConfMan.hasKey("renderer") || ConfMan.get("renderer") == "opengl_shaders");
-#endif
-	return false;
+	return getBestRendererType() == Graphics::kRendererTypeOpenGLShaders;
 }
 
 Common::ScopedPtr<Graphics::Surface> createViewportScreenshot() {
 #ifdef USE_OPENGL
 	return createGLViewportScreenshot();
-#endif
+#else
 	return nullptr;
+#endif
 }
 
 bool useOpenGL() {
-#ifdef USE_OPENGL
-	return (!ConfMan.hasKey("renderer") || ConfMan.get("renderer").contains("opengl"));
-#endif
-	return false;
+	Graphics::RendererType bestRendererType = getBestRendererType();
+	return bestRendererType == Graphics::kRendererTypeOpenGL ||
+	       bestRendererType == Graphics::kRendererTypeOpenGLShaders;
 }
 
 } // namespace Hpl1
