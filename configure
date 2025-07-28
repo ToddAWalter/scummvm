@@ -3264,7 +3264,7 @@ EOF
 		add_line_to_config_mk 'EMSCRIPTEN = 1'
 		_port_mk="backends/platform/sdl/emscripten/emscripten.mk"
 		append_var LDFLAGS "-s FORCE_FILESYSTEM"
-		append_var LDFLAGS "-s INITIAL_MEMORY=128MB -s TOTAL_STACK=32MB -s ALLOW_MEMORY_GROWTH=1"
+		append_var LDFLAGS "-s INITIAL_MEMORY=128MB -s STACK_SIZE=32MB -s ALLOW_MEMORY_GROWTH=1"
 		append_var LDFLAGS "-s ASYNCIFY=1 -s ASYNCIFY_STACK_SIZE=1048576"
 
 		if test "$_debug_build" = yes; then
@@ -3449,7 +3449,14 @@ EOF
 		#the next line fixes "branch out of range" error in gob engine when -Os is used
 		append_var CXXFLAGS "-mlong-calls"
 		append_var CXXFLAGS "-mword-relocations"
-		append_var CXXFLAGS "-fomit-frame-pointer"
+		if test "$_enable_prof" = no ; then
+			# -fomit-frame-pointer is incompatible with profiling but is needed for gob engine
+			append_var CXXFLAGS "-fomit-frame-pointer"
+		fi
+		if test "$_enable_prof" = yes ; then
+			# disable dynamic modules when profiling
+			_dynamic_modules=no
+		fi
 		#ensure verbose output during linking to prevent buildbot kills after 1200 seconds
 		if test "$_verbose_build" = yes ; then
 			append_var LDFLAGS "-Wl,-v --verbose"
@@ -3630,6 +3637,9 @@ if test -n "$_host"; then
 			_libcurl=no
 			_curl=no
 			_enet=no
+			_seq_midi=no
+			_timidity=no
+			_sndio=no
 			_ar="emar cr"
 			_ranlib="emranlib"
 			;;
@@ -3990,8 +4000,6 @@ if test -n "$_host"; then
 		psp2)
 			_backend="psp2"
 			_vkeybd=yes
-			_build_scalers=yes
-			_build_hq_scalers=no
 			_mt32emu=no
 			_timidity=no
 			_port_mk="backends/platform/sdl/psp2/psp2.mk"
@@ -4189,6 +4197,9 @@ case $_backend in
 		append_var LIBS "-lSceNet_stub -lSceNetCtl_stub"
 		append_var LIBS "-lSceAppMgr_stub -lSceAppUtil_stub -lScePgf_stub"
 		append_var LIBS "-lSceTouch_stub -lSceHid_stub -lSceMotion_stub"
+		if test "$_enable_prof" = yes ; then
+			append_var LIBS "-lvitagprof"
+		fi
 		_sdl=yes
 		_sdlversion=2.0.0
 		append_var MODULES "backends/platform/sdl"
@@ -7499,7 +7510,7 @@ case $_host_os in
 		fi
 		;;
 	emscripten)
-		append_var LDFLAGS "--pre-js ./dists/emscripten/custom_shell-pre.js --post-js ./dists/emscripten/custom_shell-post.js --shell-file ./dists/emscripten/custom_shell.html"
+		append_var LDFLAGS '--pre-js $(srcdir)/dists/emscripten/custom_shell-pre.js --post-js $(srcdir)/dists/emscripten/custom_shell-post.js --shell-file $(srcdir)/dists/emscripten/custom_shell.html'
 		# we remove some linker flags for libs which will be added by emscripten from emscripten-ports to avoid duplicate symbols
 		if test "${LDFLAGS#*-s USE_GIFLIB=1}" != "$LDFLAGS"; then
 			LIBS=`echo ${LIBS} | sed 's/-lgif//g'`

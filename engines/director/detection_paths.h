@@ -32,9 +32,6 @@ const char *const directoryGlobs[] = {
 	"media",						// Gundam
 	"mvm",							// Master of the Elements
 	"datas",						// O!KAY! subscription from Domino Verlag
-	"data_k",
-	"data_1",
-	"data_2",						// JumpStart World
 	"numbers",						// JumpStart Learning Games
 	"blender",						// Blender CD-ROM magazines
 	"cd_data",						// Polis
@@ -47,26 +44,17 @@ const char *const directoryGlobs[] = {
 	"fctdata",
 	"fct",					   		// Felix the Cat
 	"95instal",						// Fisher-Price Little People
-	"popup",						// Pop Up Computer
-	"win_demo",
-	"file",
-	"mfile",
+//	"mfile",
 	"lingo expo",					// D4 sample movies
 	"main",							// Meet MediaBand
-	"bellinin bikinit",				// Bellini 3 (Finnish)
 //	"abc",							// Alphabet Train
 //	"123",							// Ktar Alarkam
-	"vlaams",
-	"ned",							// I Spy School Days (Dutch)
 	"fl1",							// Flipper & Lopaka
 	"cipdemo",
 	"cipher",						// Jewels of the Oracle
 	"gems",							// Gems of Darkness / Jewels II
-	"xn--t8jo8k",					// Perfect Blue screen savers
 	"maccurio",
 	"wincurio",						// Curio City
-	"a.d.a.m. the inside story 1.1", // ADAM
-	"nine month miracle 1.0",		// Nine Month Miracle
 	"_A.D.A.M. Data",				// ADAM Software Products
 	"_A.D.A.M.  Data",				// ADAM Software Products with more space
 	"_setup",
