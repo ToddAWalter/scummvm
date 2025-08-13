@@ -68,7 +68,7 @@ bool UIText::display(int offsetX, int offsetY) {
 
 	BaseFont *font = _font;
 	if (!font) {
-		font = _gameRef->getSystemFont();
+		font = _gameRef->_systemFont;
 	}
 
 	if (_back) {
@@ -321,7 +321,7 @@ bool UIText::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent, "STATIC\n");
 	buffer->putTextIndent(indent, "{\n");
 
-	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", getName());
+	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", _name);
 	buffer->putTextIndent(indent + 2, "CAPTION=\"%s\"\n", getCaption());
 
 	buffer->putTextIndent(indent + 2, "\n");
@@ -389,7 +389,7 @@ bool UIText::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent + 2, "\n");
 
 	// scripts
-	for (uint32 i = 0; i < _scripts.getSize(); i++) {
+	for (int32 i = 0; i < _scripts.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "SCRIPT=\"%s\"\n", _scripts[i]->_filename);
 	}
 

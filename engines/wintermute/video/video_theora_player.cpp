@@ -43,12 +43,11 @@ IMPLEMENT_PERSISTENT(VideoTheoraPlayer, false)
 
 //////////////////////////////////////////////////////////////////////////
 VideoTheoraPlayer::VideoTheoraPlayer(BaseGame *inGame) : BaseClass(inGame) {
-	SetDefaults();
+	setDefaults();
 }
 
 //////////////////////////////////////////////////////////////////////////
-void VideoTheoraPlayer::SetDefaults() {
-
+void VideoTheoraPlayer::setDefaults() {
 	_filename = "";
 	_startTime = 0;
 	_looping = false;
@@ -82,15 +81,13 @@ void VideoTheoraPlayer::SetDefaults() {
 	_volume = 100;
 	_theoraDecoder = nullptr;
 
-	_subtitler = new VideoSubtitler(_gameRef);
+	_subtitler = nullptr;
 	_foundSubtitles = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
 VideoTheoraPlayer::~VideoTheoraPlayer() {
 	cleanup();
-	delete _subtitler;
-	_subtitler = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -98,6 +95,8 @@ void VideoTheoraPlayer::cleanup() {
 	if (_theoraDecoder) {
 		_theoraDecoder->close();
 	}
+	delete _subtitler;
+	_subtitler = nullptr;
 	delete _theoraDecoder;
 	_theoraDecoder = nullptr;
 	delete _texture;
@@ -124,6 +123,7 @@ bool VideoTheoraPlayer::initialize(const Common::String &filename, const Common:
 	return STATUS_FAILED;
 #endif
 
+	_subtitler = new VideoSubtitler(_gameRef);
 	_foundSubtitles = _subtitler->loadSubtitles(_filename, subtitleFile);
 
 	if (!_theoraDecoder->isVideoLoaded()) {
@@ -437,7 +437,7 @@ bool VideoTheoraPlayer::persist(BasePersistenceManager *persistMgr) {
 		_savedPos = getMovieTime() * 1000;
 		_savedState = _state;
 	} else {
-		SetDefaults();
+		setDefaults();
 	}
 
 	persistMgr->transferPtr(TMEMBER_PTR(_gameRef));

@@ -49,6 +49,7 @@ public:
 	bool create(int width, int height) override;
 	bool setAlphaImage(const Common::String &filename) override;
 	bool putSurface(const Graphics::Surface &surface, bool hasAlpha = false) override;
+	bool putPixel(int x, int y, byte r, byte g, byte b, byte a) override;
 	bool getPixel(int x, int y, byte *r, byte *g, byte *b, byte *a = nullptr) const override;
 	bool startPixelOp() override;
 	bool endPixelOp() override;
@@ -76,6 +77,7 @@ private:
 	uint _texWidth;
 	uint _texHeight;
 	bool _pixelOpReady;
+	bool _surfaceModified;
 
 	void writeAlpha(Graphics::Surface *surface, const Graphics::Surface *mask);
 };

@@ -542,7 +542,7 @@ bool AdEntity::loadBuffer(char *buffer, bool complete) {
 	}
 
 	if (_region && _sprite) {
-		_gameRef->LOG(0, "Warning: Entity '%s' has both sprite and region.", getName());
+		_gameRef->LOG(0, "Warning: Entity '%s' has both sprite and region.", _name);
 	}
 
 	updatePosition();
@@ -594,7 +594,7 @@ bool AdEntity::display() {
 		}
 
 		if (_region && (reg || _editorAlwaysRegister)) {
-			_gameRef->_renderer->addRectToList(new BaseActiveRect(_gameRef,  _registerAlias, _region, _gameRef->_offsetX, _gameRef->_offsetY));
+			_gameRef->_renderer->_rectList.add(new BaseActiveRect(_gameRef,  _registerAlias, _region, _gameRef->_offsetX, _gameRef->_offsetY));
 		}
 
 		displaySpriteAttachments(true);
@@ -616,6 +616,21 @@ bool AdEntity::display() {
 			_partEmitter->display(_region);
 		}
 
+		// accessibility
+		/*if (Game->m_AccessMgr->GetActiveObject() == this) {
+			float ScaleX, ScaleY;
+			GetScale(&ScaleX, &ScaleY);
+
+			RECT rc;
+			SetRectEmpty(&rc);
+			if (m_CurrentSprite) {
+				m_CurrentSprite->GetBoundingRect(&rc, m_PosX - Game->m_OffsetX, m_PosY - Game->m_OffsetY, ScaleX, ScaleY);
+			} else if (m_Region) {
+				m_Region->GetBoundingRect(&rc);
+				OffsetRect(&rc, -Game->m_OffsetX, -Game->m_OffsetY);
+			}
+			Game->m_AccessMgr->SetHintRect(&rc);
+		}*/
 	}
 	return STATUS_OK;
 }
@@ -854,19 +869,19 @@ bool AdEntity::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->correctParams(1);
 		const char *nodeName = stack->pop()->getString();
 
-		if (strcmp(getName(), nodeName) == 0) {
+		if (strcmp(_name, nodeName) == 0) {
 			warning("%s(%s): source and target have the same name", name, nodeName);
 			stack->pushBool(false);
 			return STATUS_OK;
 		}
 
-		for (uint32 i = 0; i < ((AdGame *)_gameRef)->_scene->_layers.getSize(); i++) {
+		for (int32 i = 0; i < ((AdGame *)_gameRef)->_scene->_layers.getSize(); i++) {
 			AdLayer *layer = ((AdGame *)_gameRef)->_scene->_layers[i];
-			for (uint32 j = 0; j < layer->_nodes.getSize(); j++) {
+			for (int32 j = 0; j < layer->_nodes.getSize(); j++) {
 				if (layer->_nodes[j]->_type == OBJECT_ENTITY && this == layer->_nodes[j]->_entity) {
 					// found source layer and index, looking for target node
-					for (uint32 k = 0; k < layer->_nodes.getSize(); k++) {
-						if (layer->_nodes[k]->_type == OBJECT_ENTITY && strcmp(layer->_nodes[k]->_entity->getName(), nodeName) == 0) {
+					for (int32 k = 0; k < layer->_nodes.getSize(); k++) {
+						if (layer->_nodes[k]->_type == OBJECT_ENTITY && strcmp(layer->_nodes[k]->_entity->_name, nodeName) == 0) {
 							// update target index, depending on method name and comparison of index values
 							if (j < k && strcmp(name, "SetBeforeEntity") == 0) {
 								k--;
@@ -877,7 +892,7 @@ bool AdEntity::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 							// shift layer nodes array between source and target
 							int32 delta = j <= k ? 1 : -1;
 							AdSceneNode *tmp = layer->_nodes[j];
-							for (int32 x = j; x != (int32)k; x += delta) {
+							for (int32 x = j; x != k; x += delta) {
 								layer->_nodes[x] = layer->_nodes[x + delta];
 							}
 							layer->_nodes[k] = tmp;
@@ -903,9 +918,9 @@ bool AdEntity::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "GetLayer") == 0 || strcmp(name, "GetIndex") == 0) {
 		stack->correctParams(0);
 
-		for (uint32 i = 0; i < ((AdGame *)_gameRef)->_scene->_layers.getSize(); i++) {
+		for (int32 i = 0; i < ((AdGame *)_gameRef)->_scene->_layers.getSize(); i++) {
 			AdLayer *layer = ((AdGame *)_gameRef)->_scene->_layers[i];
-			for (uint32 j = 0; j < layer->_nodes.getSize(); j++) {
+			for (int32 j = 0; j < layer->_nodes.getSize(); j++) {
 				if (layer->_nodes[j]->_type == OBJECT_ENTITY && this == layer->_nodes[j]->_entity) {
 					if (strcmp(name, "GetLayer") == 0) {
 						stack->pushNative(layer, true);
@@ -1126,7 +1141,7 @@ const char *AdEntity::scToString() {
 //////////////////////////////////////////////////////////////////////////
 bool AdEntity::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent, "ENTITY {\n");
-	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", getName());
+	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", _name);
 	if (_subtype == ENTITY_SOUND) {
 		buffer->putTextIndent(indent + 2, "SUBTYPE=\"SOUND\"\n");
 	}
@@ -1168,7 +1183,7 @@ bool AdEntity::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent + 2, "HINT_Y=%d\n", _hintY);
 #endif
 
-	for (uint32 i = 0; i < _scripts.getSize(); i++) {
+	for (int32 i = 0; i < _scripts.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "SCRIPT=\"%s\"\n", _scripts[i]->_filename);
 	}
 
@@ -1176,12 +1191,11 @@ bool AdEntity::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "SPRITE=\"%s\"\n", _sprite->getFilename());
 	}
 
-	if (_subtype == ENTITY_SOUND && _sFX && _sFX->getFilename()) {
-		buffer->putTextIndent(indent + 2, "SOUND=\"%s\"\n", _sFX->getFilename());
+	if (_subtype == ENTITY_SOUND && _sFX && !_sFX->_soundFilename.empty()) {
+		buffer->putTextIndent(indent + 2, "SOUND=\"%s\"\n", _sFX->_soundFilename.c_str());
 		buffer->putTextIndent(indent + 2, "SOUND_START_TIME=%d\n", _sFXStart);
 		buffer->putTextIndent(indent + 2, "SOUND_VOLUME=%d\n", _sFXVolume);
 	}
-
 
 	if (RGBCOLGetR(_alphaColor) != 0 || RGBCOLGetG(_alphaColor) != 0 ||  RGBCOLGetB(_alphaColor) != 0) {
 		buffer->putTextIndent(indent + 2, "ALPHA_COLOR { %d,%d,%d }\n", RGBCOLGetR(_alphaColor), RGBCOLGetG(_alphaColor), RGBCOLGetB(_alphaColor));
@@ -1301,6 +1315,6 @@ bool AdEntity::setSprite(const char *filename) {
 }
 
 Common::String AdEntity::debuggerToString() const {
-	return Common::String::format("%p: Entity \"%s\"; (X,Y): (%d, %d), rotate(%d): %f deg, scale(%d): (%f, %f)%%", (const void *)this, getName(), _posX, _posY, _rotatable, _rotate, _zoomable, _scaleX, _scaleY);
+	return Common::String::format("%p: Entity \"%s\"; (X,Y): (%d, %d), rotate(%d): %f deg, scale(%d): (%f, %f)%%", (const void *)this, _name, _posX, _posY, _rotatable, _rotate, _zoomable, _scaleX, _scaleY);
 }
 } // End of namespace Wintermute

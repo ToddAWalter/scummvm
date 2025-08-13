@@ -51,19 +51,19 @@ AdTalkDef::AdTalkDef(BaseGame *inGame) : BaseObject(inGame) {
 
 //////////////////////////////////////////////////////////////////////////
 AdTalkDef::~AdTalkDef() {
-	for (uint32 i = 0; i < _nodes.getSize(); i++) {
+	for (int32 i = 0; i < _nodes.getSize(); i++) {
 		delete _nodes[i];
 	}
 	_nodes.removeAll();
 
 	delete[] _defaultSpriteFilename;
-	delete _defaultSprite;
 	_defaultSpriteFilename = nullptr;
+	delete _defaultSprite;
 	_defaultSprite = nullptr;
 
 	delete[] _defaultSpriteSetFilename;
-	delete _defaultSpriteSet;
 	_defaultSpriteSetFilename = nullptr;
+	delete _defaultSpriteSet;
 	_defaultSpriteSet = nullptr;
 }
 
@@ -181,8 +181,8 @@ bool AdTalkDef::loadBuffer(char *buffer, bool complete) {
 	}
 
 	delete _defaultSprite;
-	delete _defaultSpriteSet;
 	_defaultSprite = nullptr;
+	delete _defaultSpriteSet;
 	_defaultSpriteSet = nullptr;
 
 	if (_defaultSpriteFilename) {
@@ -233,7 +233,7 @@ bool AdTalkDef::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		_defaultSpriteSet->saveAsText(buffer, indent + 2);
 	}
 
-	for (uint32 i = 0; i < _nodes.getSize(); i++) {
+	for (int32 i = 0; i < _nodes.getSize(); i++) {
 		_nodes[i]->saveAsText(buffer, indent + 2);
 		buffer->putTextIndent(indent, "\n");
 	}

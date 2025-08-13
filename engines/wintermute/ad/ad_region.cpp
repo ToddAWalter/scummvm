@@ -50,21 +50,6 @@ AdRegion::AdRegion(BaseGame *inGame) : BaseRegion(inGame) {
 AdRegion::~AdRegion() {
 }
 
-uint32 AdRegion::getAlpha() const {
-	return _alpha;
-}
-
-float AdRegion::getZoom() const {
-	return _zoom;
-}
-
-bool AdRegion::isBlocked() const {
-	return _blocked;
-}
-
-bool AdRegion::hasDecoration() const {
-	return _decoration;
-}
 
 //////////////////////////////////////////////////////////////////////////
 bool AdRegion::loadFile(const char *filename) {
@@ -142,7 +127,7 @@ bool AdRegion::loadBuffer(char *buffer, bool complete) {
 		buffer = params;
 	}
 
-	for (uint32 i = 0; i < _points.getSize(); i++) {
+	for (int32 i = 0; i < _points.getSize(); i++) {
 		delete _points[i];
 	}
 	_points.removeAll();
@@ -274,7 +259,7 @@ ScValue *AdRegion::scGetProperty(const Common::String &name) {
 	// Name
 	//////////////////////////////////////////////////////////////////////////
 	else if (name == "Name") {
-		_scValue->setString(getName());
+		_scValue->setString(_name);
 		return _scValue;
 	}
 
@@ -369,7 +354,7 @@ const char *AdRegion::scToString() {
 //////////////////////////////////////////////////////////////////////////
 bool AdRegion::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent, "REGION {\n");
-	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", getName());
+	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", _name);
 	buffer->putTextIndent(indent + 2, "CAPTION=\"%s\"\n", getCaption());
 	buffer->putTextIndent(indent + 2, "BLOCKED=%s\n", _blocked ? "TRUE" : "FALSE");
 	buffer->putTextIndent(indent + 2, "DECORATION=%s\n", _decoration ? "TRUE" : "FALSE");
@@ -379,7 +364,7 @@ bool AdRegion::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent + 2, "ALPHA = %d\n", RGBCOLGetA(_alpha));
 	buffer->putTextIndent(indent + 2, "EDITOR_SELECTED=%s\n", _editorSelected ? "TRUE" : "FALSE");
 
-	for (uint32 i = 0; i < _scripts.getSize(); i++) {
+	for (int32 i = 0; i < _scripts.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "SCRIPT=\"%s\"\n", _scripts[i]->_filename);
 	}
 
@@ -387,7 +372,7 @@ bool AdRegion::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		_scProp->saveAsText(buffer, indent + 2);
 	}
 
-	for (uint32 i = 0; i < _points.getSize(); i++) {
+	for (int32 i = 0; i < _points.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "POINT {%d,%d}\n", _points[i]->x, _points[i]->y);
 	}
 

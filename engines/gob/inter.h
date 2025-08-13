@@ -704,6 +704,8 @@ protected:
 
 	Common::String ansiToOEM(Common::String string);
 	Common::String oemToANSI(Common::String string);
+	void xorObfuscate(byte *str, int len);
+	void xorDeobfuscate(byte *str, int len);
 
 	void o7_draw0x0C();
 	void o7_setCursorToLoadFromExec();
@@ -785,11 +787,14 @@ protected:
 	void o7_readData(OpFuncParams &params);
 	void o7_writeData(OpFuncParams &params);
 
+	void o7_xorDeobfuscate(OpGobParams &params);
+	void o7_xorObfuscate(OpGobParams &params);
 	void o7_ansiToOEM(OpGobParams &params);
 	void o7_oemToANSI(OpGobParams &params);
 	void o7_setDBStringEncoding(OpGobParams &params);
 	void o7_gob0x201(OpGobParams &params);
 	void o7_getFreeDiskSpace(OpGobParams &params);
+	void o7_dummy(OpGobParams &params);
 
 private:
 	INIConfig _inis;

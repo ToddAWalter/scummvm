@@ -79,12 +79,12 @@ bool AdInventoryBox::listen(BaseScriptHolder *param1, uint32 param2) {
 
 	switch (obj->_type) {
 	case UI_BUTTON:
-		if (scumm_stricmp(obj->getName(), "close") == 0) {
+		if (scumm_stricmp(obj->_name, "close") == 0) {
 			_visible = false;
-		} else if (scumm_stricmp(obj->getName(), "prev") == 0) {
+		} else if (scumm_stricmp(obj->_name, "prev") == 0) {
 			_scrollOffset -= _scrollBy;
 			_scrollOffset = MAX<int32>(_scrollOffset, 0);
-		} else if (scumm_stricmp(obj->getName(), "next") == 0) {
+		} else if (scumm_stricmp(obj->_name, "next") == 0) {
 			_scrollOffset += _scrollBy;
 		} else {
 			return BaseObject::listen(param1, param2);
@@ -113,14 +113,14 @@ bool AdInventoryBox::display() {
 
 	if (_window) {
 		_window->enableWidget("prev", _scrollOffset > 0);
-		_window->enableWidget("next", _scrollOffset + itemsX * itemsY < (int32)adGame->_inventoryOwner->getInventory()->_takenItems.getSize());
+		_window->enableWidget("next", _scrollOffset + itemsX * itemsY < adGame->_inventoryOwner->getInventory()->_takenItems.getSize());
 	}
 
 
 	if (_closeButton) {
 		_closeButton->_posX = _closeButton->_posY = 0;
-		_closeButton->setWidth(_gameRef->_renderer->getWidth());
-		_closeButton->setHeight(_gameRef->_renderer->getHeight());
+		_closeButton->_width = _gameRef->_renderer->getWidth();
+		_closeButton->_height = _gameRef->_renderer->getHeight();
 
 		_closeButton->display();
 	}
@@ -142,7 +142,7 @@ bool AdInventoryBox::display() {
 		int xxx = rect.left;
 		for (int i = 0; i < itemsX; i++) {
 			int itemIndex = _scrollOffset + j * itemsX + i;
-			if (itemIndex >= 0 && itemIndex < (int32)adGame->_inventoryOwner->getInventory()->_takenItems.getSize()) {
+			if (itemIndex >= 0 && itemIndex < adGame->_inventoryOwner->getInventory()->_takenItems.getSize()) {
 				AdItem *item = adGame->_inventoryOwner->getInventory()->_takenItems[itemIndex];
 				if (item != ((AdGame *)_gameRef)->_selectedItem || !_hideSelected) {
 					item->update();
@@ -324,8 +324,8 @@ bool AdInventoryBox::loadBuffer(char *buffer, bool complete) {
 	_visible = alwaysVisible;
 
 	if (_window) {
-		for (uint32 i = 0; i < _window->_widgets.getSize(); i++) {
-			if (!_window->_widgets[i]->getListener()) {
+		for (int32 i = 0; i < _window->_widgets.getSize(); i++) {
+			if (!_window->_widgets[i]->_listenerObject) {
 				_window->_widgets[i]->setListener(this, _window->_widgets[i], 0);
 			}
 		}
@@ -339,7 +339,7 @@ bool AdInventoryBox::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent, "INVENTORY_BOX\n");
 	buffer->putTextIndent(indent, "{\n");
 
-	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", getName());
+	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", _name);
 	buffer->putTextIndent(indent + 2, "CAPTION=\"%s\"\n", getCaption());
 
 	buffer->putTextIndent(indent + 2, "AREA { %d, %d, %d, %d }\n", _itemsArea.left, _itemsArea.top, _itemsArea.right, _itemsArea.bottom);

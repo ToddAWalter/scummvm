@@ -96,13 +96,9 @@ AdResponseBox::~AdResponseBox() {
 	_waitingScript = nullptr;
 }
 
-uint32 AdResponseBox::getNumResponses() const {
-	return _responses.getSize();
-}
-
 //////////////////////////////////////////////////////////////////////////
 void AdResponseBox::clearResponses() {
-	for (uint32 i = 0; i < _responses.getSize(); i++) {
+	for (int32 i = 0; i < _responses.getSize(); i++) {
 		delete _responses[i];
 	}
 	_responses.removeAll();
@@ -111,7 +107,7 @@ void AdResponseBox::clearResponses() {
 
 //////////////////////////////////////////////////////////////////////////
 void AdResponseBox::clearButtons() {
-	for (uint32 i = 0; i < _respButtons.getSize(); i++) {
+	for (int32 i = 0; i < _respButtons.getSize(); i++) {
 		delete _respButtons[i];
 	}
 	_respButtons.removeAll();
@@ -120,12 +116,12 @@ void AdResponseBox::clearButtons() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdResponseBox::invalidateButtons() {
-	for (uint32 i = 0; i < _respButtons.getSize(); i++) {
-		_respButtons[i]->setImage(nullptr);
+	for (int32 i = 0; i < _respButtons.getSize(); i++) {
+		_respButtons[i]->_image = nullptr;
 		_respButtons[i]->_cursor = nullptr;
-		_respButtons[i]->setFont(nullptr);
-		_respButtons[i]->setFontHover(nullptr);
-		_respButtons[i]->setFontPress(nullptr);
+		_respButtons[i]->_font = nullptr;
+		_respButtons[i]->_fontHover = nullptr;
+		_respButtons[i]->_fontPress = nullptr;
 		_respButtons[i]->setText("");
 	}
 	return STATUS_OK;
@@ -137,24 +133,23 @@ bool AdResponseBox::createButtons() {
 	clearButtons();
 
 	_scrollOffset = 0;
-	for (uint32 i = 0; i < _responses.getSize(); i++) {
+	for (int32 i = 0; i < _responses.getSize(); i++) {
 		UIButton *btn = new UIButton(_gameRef);
 		if (btn) {
 			btn->_parent = _window;
-			btn->setSharedFonts(true);
-			btn->setSharedImages(true);
+			btn->_sharedFonts = btn->_sharedImages = true;
 			btn->_sharedCursors = true;
 			// iconic
-			if (_responses[i]->getIcon()) {
-				btn->setImage(_responses[i]->getIcon());
-				if (_responses[i]->getIconHover()) {
-					btn->setImageHover(_responses[i]->getIconHover());
+			if (_responses[i]->_icon) {
+				btn->_image = _responses[i]->_icon;
+				if (_responses[i]->_iconHover) {
+					btn->_imageHover = _responses[i]->_iconHover;
 				}
-				if (_responses[i]->getIconPressed()) {
-					btn->setImagePress(_responses[i]->getIconPressed());
+				if (_responses[i]->_iconPressed) {
+					btn->_imagePress = _responses[i]->_iconPressed;
 				}
 
-				btn->setCaption(_responses[i]->getText());
+				btn->setCaption(_responses[i]->_text);
 				if (_cursor) {
 					btn->_cursor = _cursor;
 				} else if (_gameRef->_activeCursor) {
@@ -163,36 +158,29 @@ bool AdResponseBox::createButtons() {
 			}
 			// textual
 			else {
-				btn->setText(_responses[i]->getText());
-				if (_font == nullptr) {
-					btn->setFont(_gameRef->getSystemFont());
-				} else {
-					btn->setFont(_font);
-				}
-				btn->setFontHover((_fontHover == nullptr) ? _gameRef->getSystemFont() : _fontHover);
-				btn->setFontPress(btn->getFontHover());
-				btn->setTextAlign(_align);
+				btn->setText(_responses[i]->_text);
+				btn->_font = (_font == nullptr) ? _gameRef->_systemFont : _font;
+				btn->_fontHover = (_fontHover == nullptr) ? _gameRef->_systemFont : _fontHover;
+				btn->_fontPress = btn->_fontHover;
+				btn->_align = _align;
 
-				if (_responses[i]->getFont()) {
-					btn->setFont(_responses[i]->getFont());
+				if (_responses[i]->_font) {
+					btn->_font = _responses[i]->_font;
 				}
 
-				int width = _responseArea.right - _responseArea.left;
-
-				if (width <= 0) {
-					btn->setWidth(_gameRef->_renderer->getWidth());
-				} else {
-					btn->setWidth(width);
+				btn->_width = _responseArea.right - _responseArea.left;
+				if (btn->_width <= 0) {
+					btn->_width = _gameRef->_renderer->getWidth();
 				}
 			}
 
 #ifdef ENABLE_FOXTAIL
 			if (BaseEngine::instance().isFoxTail()) {
 				btn->addScript("interface/scripts/dialogue_button.script");
-				btn->setWidth(120);
+				btn->_width = 120;
 				if (_fontHover == nullptr) {
-					btn->setFontHover(btn->getFont());
-					btn->setFontPress(btn->getFontHover());
+					btn->_fontHover = btn->_font;
+					btn->_fontPress = btn->_fontHover;
 				}
 			}
 #endif
@@ -201,12 +189,12 @@ bool AdResponseBox::createButtons() {
 			btn->correctSize();
 			//btn->SetListener(this, btn, _responses[i]->_iD);
 			btn->setListener(this, btn, i);
-			btn->setVisible(false);
+			btn->_visible = false;
 			_respButtons.add(btn);
 
-			if (_responseArea.bottom - _responseArea.top < btn->getHeight()) {
-				_gameRef->LOG(0, "Warning: Response '%s' is too high to be displayed within response box. Correcting.", _responses[i]->getText());
-				_responseArea.bottom += (btn->getHeight() - (_responseArea.bottom - _responseArea.top));
+			if (_responseArea.bottom - _responseArea.top < btn->_height) {
+				_gameRef->LOG(0, "Warning: Response '%s' is too high to be displayed within response box. Correcting.", _responses[i]->_text);
+				_responseArea.bottom += (btn->_height - (_responseArea.bottom - _responseArea.top));
 			}
 		}
 	}
@@ -379,8 +367,8 @@ bool AdResponseBox::loadBuffer(char *buffer, bool complete) {
 	}
 
 	if (_window) {
-		for (uint32 i = 0; i < _window->_widgets.getSize(); i++) {
-			if (!_window->_widgets[i]->getListener()) {
+		for (int32 i = 0; i < _window->_widgets.getSize(); i++) {
+			if (!_window->_widgets[i]->_listenerObject) {
 				_window->_widgets[i]->setListener(this, _window->_widgets[i], 0);
 			}
 		}
@@ -473,8 +461,8 @@ bool AdResponseBox::display() {
 	// shift down if needed
 	if (!_horizontal) {
 		int32 totalHeight = 0;
-		for (i = 0; i < (int32) _respButtons.getSize(); i++) {
-			totalHeight += (_respButtons[i]->getHeight() + _spacing);
+		for (i = 0; i < _respButtons.getSize(); i++) {
+			totalHeight += (_respButtons[i]->_height + _spacing);
 		}
 		totalHeight -= _spacing;
 
@@ -500,7 +488,7 @@ bool AdResponseBox::display() {
 
 	// prepare response buttons
 	bool scrollNeeded = false;
-	for (i = _scrollOffset; i < (int32)_respButtons.getSize(); i++) {
+	for (i = _scrollOffset; i < _respButtons.getSize(); i++) {
 
 #ifdef ENABLE_FOXTAIL
 		// FoxTail's "HORIZONTAL=TRUE" display boxes are actual 2x3 display boxes
@@ -510,29 +498,28 @@ bool AdResponseBox::display() {
 				scrollNeeded = true;
 				break;
 			}
-			_respButtons[i]->setVisible(true);
+			_respButtons[i]->_visible = true;
 			_respButtons[i]->_posX = 55 + 120 * (i / 3);
 			_respButtons[i]->_posY = 100 + 10 * (i % 3);
 			continue;
 		}
 #endif
 
-		if ((_horizontal && xxx + _respButtons[i]->getWidth() > rect.right)
-		        || (!_horizontal && yyy + _respButtons[i]->getHeight() > rect.bottom)) {
+		if ((_horizontal && xxx + _respButtons[i]->_width > rect.right) || (!_horizontal && yyy + _respButtons[i]->_height > rect.bottom)) {
 
 			scrollNeeded = true;
-			_respButtons[i]->setVisible(false);
+			_respButtons[i]->_visible = false;
 			break;
 		}
 
-		_respButtons[i]->setVisible(true);
+		_respButtons[i]->_visible = true;
 		_respButtons[i]->_posX = xxx;
 		_respButtons[i]->_posY = yyy;
 
 		if (_horizontal) {
-			xxx += (_respButtons[i]->getWidth() + _spacing);
+			xxx += (_respButtons[i]->_width + _spacing);
 		} else {
-			yyy += (_respButtons[i]->getHeight() + _spacing);
+			yyy += (_respButtons[i]->_height+ _spacing);
 		}
 	}
 
@@ -545,8 +532,8 @@ bool AdResponseBox::display() {
 	// go exclusive
 	if (_shieldWindow) {
 		_shieldWindow->_posX = _shieldWindow->_posY = 0;
-		_shieldWindow->setWidth(_gameRef->_renderer->getWidth());
-		_shieldWindow->setHeight(_gameRef->_renderer->getHeight());
+		_shieldWindow->_width = _gameRef->_renderer->getWidth();
+		_shieldWindow->_height = _gameRef->_renderer->getHeight();
 
 		_shieldWindow->display();
 	}
@@ -558,7 +545,7 @@ bool AdResponseBox::display() {
 
 
 	// display response buttons
-	for (i = _scrollOffset; i < (int32)_respButtons.getSize(); i++) {
+	for (i = _scrollOffset; i < _respButtons.getSize(); i++) {
 		_respButtons[i]->display();
 	}
 
@@ -572,13 +559,13 @@ bool AdResponseBox::listen(BaseScriptHolder *param1, uint32 param2) {
 
 	switch (obj->_type) {
 	case UI_BUTTON:
-		if (scumm_stricmp(obj->getName(), "prev") == 0) {
+		if (scumm_stricmp(obj->_name, "prev") == 0) {
 			_scrollOffset--;
-		} else if (scumm_stricmp(obj->getName(), "next") == 0) {
+		} else if (scumm_stricmp(obj->_name, "next") == 0) {
 			_scrollOffset++;
-		} else if (scumm_stricmp(obj->getName(), "response") == 0) {
+		} else if (scumm_stricmp(obj->_name, "response") == 0) {
 			if (_waitingScript) {
-				_waitingScript->_stack->pushInt(_responses[param2]->getID());
+				_waitingScript->_stack->pushInt(_responses[param2]->_iD);
 			}
 			handleResponse(_responses[param2]);
 			_waitingScript = nullptr;
@@ -628,10 +615,10 @@ bool AdResponseBox::persist(BasePersistenceManager *persistMgr) {
 bool AdResponseBox::weedResponses() {
 	AdGame *adGame = (AdGame *)_gameRef;
 
-	for (int32 i = 0; i < (int32)_responses.getSize(); i++) {
+	for (int32 i = 0; i < _responses.getSize(); i++) {
 		switch (_responses[i]->_responseType) {
 		case RESPONSE_ONCE:
-			if (adGame->branchResponseUsed(_responses[i]->getID())) {
+			if (adGame->branchResponseUsed(_responses[i]->_iD)) {
 				delete _responses[i];
 				_responses.removeAt(i);
 				i--;
@@ -639,7 +626,7 @@ bool AdResponseBox::weedResponses() {
 			break;
 
 		case RESPONSE_ONCE_GAME:
-			if (adGame->gameResponseUsed(_responses[i]->getID())) {
+			if (adGame->gameResponseUsed(_responses[i]->_iD)) {
 				delete _responses[i];
 				_responses.removeAt(i);
 				i--;
@@ -660,44 +647,19 @@ void AdResponseBox::setLastResponseText(const char *text, const char *textOrig) 
 	BaseUtils::setString(&_lastResponseTextOrig, textOrig);
 }
 
-const char *AdResponseBox::getLastResponseText() const {
-	return _lastResponseText;
-}
-
-const char *AdResponseBox::getLastResponseTextOrig() const {
-	return _lastResponseTextOrig;
-}
-
-UIWindow *AdResponseBox::getResponseWindow() {
-	return _window;
-}
-
-void AdResponseBox::addResponse(const AdResponse *response) {
-	_responses.add(response);
-}
-
-int32 AdResponseBox::getIdForResponseNum(uint32 num) const {
-	assert(num < _responses.getSize());
-	return _responses[num]->getID();
-}
-
-bool AdResponseBox::handleResponseNum(uint32 num) {
-	return handleResponse(_responses[num]);
-}
-
 //////////////////////////////////////////////////////////////////////////
 bool AdResponseBox::handleResponse(const AdResponse *response) {
-	setLastResponseText(response->getText(), response->getTextOrig());
+	setLastResponseText(response->_text, response->_textOrig);
 
 	AdGame *adGame = (AdGame *)_gameRef;
 
 	switch (response->_responseType) {
 	case RESPONSE_ONCE:
-		adGame->addBranchResponse(response->getID());
+		adGame->addBranchResponse(response->_iD);
 		break;
 
 	case RESPONSE_ONCE_GAME:
-		adGame->addGameResponse(response->getID());
+		adGame->addGameResponse(response->_iD);
 		break;
 	default:
 		debugC(kWintermuteDebugGeneral, "AdResponseBox::HandleResponse - Unhandled enum");
@@ -716,7 +678,7 @@ BaseObject *AdResponseBox::getNextAccessObject(BaseObject *currObject) {
 		return nullptr;
 	} else {
 		if (currObject != nullptr) {
-			for (uint32 i = 0; i < objects.getSize(); i++) {
+			for (int32 i = 0; i < objects.getSize(); i++) {
 				if (objects[i] == currObject) {
 					if (i < objects.getSize() - 1) {
 						return objects[i + 1];
@@ -740,7 +702,7 @@ BaseObject *AdResponseBox::getPrevAccessObject(BaseObject *currObject) {
 		return nullptr;
 	} else {
 		if (currObject != nullptr) {
-			for (int i = objects.getSize() - 1; i >= 0; i--) {
+			for (int32 i = objects.getSize() - 1; i >= 0; i--) {
 				if (objects[i] == currObject) {
 					if (i > 0) {
 						return objects[i - 1];
@@ -757,7 +719,7 @@ BaseObject *AdResponseBox::getPrevAccessObject(BaseObject *currObject) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdResponseBox::getObjects(BaseArray<UIObject *> &objects, bool interactiveOnly) {
-	for (uint32 i = 0; i < _respButtons.getSize(); i++) {
+	for (int32 i = 0; i < _respButtons.getSize(); i++) {
 		objects.add(_respButtons[i]);
 	}
 	if (_window) {

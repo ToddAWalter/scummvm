@@ -59,7 +59,7 @@ BaseRegion::~BaseRegion() {
 
 //////////////////////////////////////////////////////////////////////////
 void BaseRegion::cleanup() {
-	for (uint32 i = 0; i < _points.getSize(); i++) {
+	for (int32 i = 0; i < _points.getSize(); i++) {
 		delete _points[i];
 	}
 	_points.removeAll();
@@ -159,7 +159,7 @@ bool BaseRegion::loadBuffer(char *buffer, bool complete) {
 		buffer = params;
 	}
 
-	for (uint32 i = 0; i < _points.getSize(); i++) {
+	for (int32 i = 0; i < _points.getSize(); i++) {
 		delete _points[i];
 	}
 	_points.removeAll();
@@ -248,7 +248,7 @@ bool BaseRegion::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		int x = stack->pop()->getInt();
 		int y = stack->pop()->getInt();
 
-		if (index >= 0 && index < (int32)_points.getSize()) {
+		if (index >= 0 && index < _points.getSize()) {
 			_points.insertAt(index, new BasePoint(x, y));
 			createRegion();
 
@@ -269,7 +269,7 @@ bool BaseRegion::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		int x = stack->pop()->getInt();
 		int y = stack->pop()->getInt();
 
-		if (index >= 0 && index < (int32)_points.getSize()) {
+		if (index >= 0 && index < _points.getSize()) {
 			_points[index]->x = x;
 			_points[index]->y = y;
 			createRegion();
@@ -289,7 +289,7 @@ bool BaseRegion::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		stack->correctParams(1);
 		int index = stack->pop()->getInt();
 
-		if (index >= 0 && index < (int32)_points.getSize()) {
+		if (index >= 0 && index < _points.getSize()) {
 			delete _points[index];
 			_points[index] = nullptr;
 
@@ -311,7 +311,7 @@ bool BaseRegion::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		stack->correctParams(1);
 		int index = stack->pop()->getInt();
 
-		if (index >= 0 && index < (int32)_points.getSize()) {
+		if (index >= 0 && index < _points.getSize()) {
 			ScValue *val = stack->getPushValue();
 			if (val) {
 				val->setProperty("X", _points[index]->x);
@@ -344,7 +344,7 @@ ScValue *BaseRegion::scGetProperty(const Common::String &name) {
 	// Name
 	//////////////////////////////////////////////////////////////////////////
 	else if (name == "Name") {
-		_scValue->setString(getName());
+		_scValue->setString(_name);
 		return _scValue;
 	}
 
@@ -404,16 +404,16 @@ bool BaseRegion::saveAsText(BaseDynamicBuffer *buffer, int indent, const char *n
 		buffer->putTextIndent(indent, "%s {\n", nameOverride);
 	}
 
-	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", getName());
+	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", _name);
 	buffer->putTextIndent(indent + 2, "CAPTION=\"%s\"\n", getCaption());
 	buffer->putTextIndent(indent + 2, "ACTIVE=%s\n", _active ? "TRUE" : "FALSE");
 	buffer->putTextIndent(indent + 2, "EDITOR_SELECTED_POINT=%d\n", _editorSelectedPoint);
 
-	for (uint32 i = 0; i < _scripts.getSize(); i++) {
+	for (int32 i = 0; i < _scripts.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "SCRIPT=\"%s\"\n", _scripts[i]->_filename);
 	}
 
-	for (uint32 i = 0; i < _points.getSize(); i++) {
+	for (int32 i = 0; i < _points.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "POINT {%d,%d}\n", _points[i]->x, _points[i]->y);
 	}
 
@@ -463,7 +463,7 @@ bool BaseRegion::ptInPolygon(int32 x, int32 y) {
 	p1.x = (double)_points[0]->x;
 	p1.y = (double)_points[0]->y;
 
-	for (uint32 i = 1; i <= _points.getSize(); i++) {
+	for (int32 i = 1; i <= _points.getSize(); i++) {
 		p2.x = (double)_points[i % _points.getSize()]->x;
 		p2.y = (double)_points[i % _points.getSize()]->y;
 
@@ -497,7 +497,7 @@ bool BaseRegion::getBoundingRect(Rect32 *rect) {
 	} else {
 		int32 minX = INT_MAX_VALUE, minY = INT_MAX_VALUE, maxX = INT_MIN_VALUE, maxY = INT_MIN_VALUE;
 
-		for (uint32 i = 0; i < _points.getSize(); i++) {
+		for (int32 i = 0; i < _points.getSize(); i++) {
 			minX = MIN(minX, _points[i]->x);
 			minY = MIN(minY, _points[i]->y);
 
@@ -518,7 +518,7 @@ bool BaseRegion::mimic(BaseRegion *region, float scale, int x, int y) {
 
 	cleanup();
 
-	for (uint32 i = 0; i < region->_points.getSize(); i++) {
+	for (int32 i = 0; i < region->_points.getSize(); i++) {
 		int xVal, yVal;
 
 		xVal = (int)((float)region->_points[i]->x * scale / 100.0f);
@@ -535,6 +535,6 @@ bool BaseRegion::mimic(BaseRegion *region, float scale, int x, int y) {
 }
 
 Common::String BaseRegion::debuggerToString() const {
-	return Common::String::format("%p: Region \"%s\": Rect (top, right, bottom, left): (%d, %d, %d, %d), active: %d ", (const void *)this, getName(), _rect.top, _rect.right, _rect.bottom, _rect.left, _active);
+	return Common::String::format("%p: Region \"%s\": Rect (top, right, bottom, left): (%d, %d, %d, %d), active: %d ", (const void *)this, _name, _rect.top, _rect.right, _rect.bottom, _rect.left, _active);
 }
 } // End of namespace Wintermute

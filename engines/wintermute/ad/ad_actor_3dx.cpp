@@ -104,13 +104,13 @@ AdActor3DX::AdActor3DX(BaseGame *inGame) : AdObject3D(inGame) {
 //////////////////////////////////////////////////////////////////////////
 AdActor3DX::~AdActor3DX() {
 	// delete attachments
-	for (uint32 i = 0; i < _attachments.getSize(); i++) {
+	for (int32 i = 0; i < _attachments.getSize(); i++) {
 		delete _attachments[i];
 	}
 	_attachments.removeAll();
 
 	// delete transition times
-	for (uint32 i = 0; i < _transitionTimes.getSize(); i++) {
+	for (int32 i = 0; i < _transitionTimes.getSize(); i++) {
 		delete _transitionTimes[i];
 	}
 	_transitionTimes.removeAll();
@@ -411,7 +411,7 @@ bool AdActor3DX::display() {
 	bool res = _xmodel->render();
 
 	if (_registrable) {
-		_gameRef->_renderer->addRectToList(new BaseActiveRect(_gameRef, this, _xmodel,
+		_gameRef->_renderer->_rectList.add(new BaseActiveRect(_gameRef, this, _xmodel,
 		                                                      _xmodel->_boundingRect.left,
 		                                                      _xmodel->_boundingRect.top,
 		                                                      _xmodel->_boundingRect.right - _xmodel->_boundingRect.left,
@@ -430,13 +430,10 @@ bool AdActor3DX::display() {
 		_partEmitter->display();
 	}
 
-	// this functionality appearently was removed in either WME lite
-	// or in the ScummVM port. It might have been replaced as well
-	// not sure what to do about it right now
 	// accessibility
-	//	if (_gameRef->_accessMgr->GetActiveObject() == this) {
-	//		_gameRef->_accessMgr->SetHintRect(&_xmodel->m_BoundingRect);
-	//	}
+	//if (_gameRef->_accessMgr->GetActiveObject() == this) {
+	//	_gameRef->_accessMgr->SetHintRect(&_xmodel->m_BoundingRect);
+	//}
 
 	return res;
 }
@@ -474,7 +471,7 @@ bool AdActor3DX::displayShadowVolume() {
 
 	DXVector3 lightPos = DXVector3(_shadowLightPos._x * _scale3D,
 	                               _shadowLightPos._y * _scale3D,
-								   _shadowLightPos._z * _scale3D);
+	                               _shadowLightPos._z * _scale3D);
 	pos = _posVector + lightPos;
 	target = _posVector;
 
@@ -499,7 +496,7 @@ bool AdActor3DX::displayShadowVolume() {
 	_gameRef->_renderer3D->getWorldTransform(&origWorld);
 
 	// handle the attachments
-	for (uint32 i = 0; i < _attachments.getSize(); i++) {
+	for (int32 i = 0; i < _attachments.getSize(); i++) {
 		AdAttach3DX *at = _attachments[i];
 
 		if (!at->_active) {
@@ -557,7 +554,7 @@ bool AdActor3DX::displayFlatShadow() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdActor3DX::updateAttachments() {
-	for (uint32 i = 0; i < _attachments.getSize(); i++) {
+	for (int32 i = 0; i < _attachments.getSize(); i++) {
 		if (_attachments[i]->_active) {
 			_attachments[i]->update();
 		}
@@ -578,7 +575,7 @@ bool AdActor3DX::displayAttachments(bool registerObjects) {
 	DXMatrix origView;
 	_gameRef->_renderer3D->getWorldTransform(&origView);
 
-	for (uint32 i = 0; i < _attachments.getSize(); i++) {
+	for (int32 i = 0; i < _attachments.getSize(); i++) {
 		AdAttach3DX *at = _attachments[i];
 		if (!at->_active) {
 			continue;
@@ -734,8 +731,8 @@ void AdActor3DX::getNextStep2D() {
 
 	DXVector3 currentPoint;
 	adGame->_scene->_geom->convert2Dto3DTolerant(_path2D->getCurrent()->x,
-	                                                      _path2D->getCurrent()->y,
-	                                                      &currentPoint);
+	                                             _path2D->getCurrent()->y,
+	                                             &currentPoint);
 
 	DXVector3 origVec, newVec;
 
@@ -756,8 +753,8 @@ void AdActor3DX::getNextStep2D() {
 			}
 		} else {
 			adGame->_scene->_geom->convert2Dto3DTolerant(_path2D->getCurrent()->x,
-			                                                      _path2D->getCurrent()->y,
-			                                                      &currentPoint);
+			                                             _path2D->getCurrent()->y,
+			                                             &currentPoint);
 			initLine3D(_posVector, currentPoint, false);
 		}
 	} else
@@ -785,8 +782,8 @@ void AdActor3DX::followPath2D() {
 
 		DXVector3 currentPoint;
 		adGameRef->_scene->_geom->convert2Dto3DTolerant(_path2D->getCurrent()->x,
-		                                                         _path2D->getCurrent()->y,
-		                                                         &currentPoint);
+		                                                _path2D->getCurrent()->y,
+		                                                &currentPoint);
 
 		initLine3D(_posVector, currentPoint, true);
 	} else {
@@ -1454,8 +1451,8 @@ bool AdActor3DX::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 					stack->pushBool(false);
 				} else {
 					bool isSet = false;
-					for (uint32 i = 0; i < _attachments.getSize(); i++) {
-						if (scumm_stricmp(_attachments[i]->getName(), attachName) == 0) {
+					for (int32 i = 0; i < _attachments.getSize(); i++) {
+						if (scumm_stricmp(_attachments[i]->_name, attachName) == 0) {
 							delete _attachments[i];
 							_attachments[i] = at;
 							isSet = true;
@@ -1488,8 +1485,8 @@ bool AdActor3DX::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 			stack->pushBool(false);
 		} else {
 			bool isFound = false;
-			for (uint32 i = 0; i < _attachments.getSize(); i++) {
-				if (scumm_stricmp(_attachments[i]->getName(), attachmentName) == 0) {
+			for (int32 i = 0; i < _attachments.getSize(); i++) {
+				if (scumm_stricmp(_attachments[i]->_name, attachmentName) == 0) {
 					delete _attachments[i];
 					_attachments.removeAt(i);
 					isFound = true;
@@ -1512,8 +1509,8 @@ bool AdActor3DX::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 			stack->pushNULL();
 		} else {
 			bool isFound = false;
-			for (uint32 i = 0; i < _attachments.getSize(); i++) {
-				if (scumm_stricmp(_attachments[i]->getName(), attachmentName) == 0) {
+			for (int32 i = 0; i < _attachments.getSize(); i++) {
+				if (scumm_stricmp(_attachments[i]->_name, attachmentName) == 0) {
 					stack->pushNative(_attachments[i], true);
 					isFound = true;
 					break;
@@ -1597,7 +1594,7 @@ bool AdActor3DX::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		}
 		AdObject *obj = (AdObject *)val->getNative();
 
-		if (!obj || obj->getType() != OBJECT_ENTITY) {
+		if (!obj || obj->_type != OBJECT_ENTITY) {
 			script->runtimeError("actor.%s method accepts an entity reference only", name);
 			stack->pushNULL();
 			return true;
@@ -1981,7 +1978,7 @@ bool AdActor3DX::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		int time = stack->pop()->getInt();
 
 		bool found = false;
-		for (uint32 i = 0; i < _transitionTimes.getSize(); i++) {
+		for (int32 i = 0; i < _transitionTimes.getSize(); i++) {
 			BaseAnimationTransitionTime *trans = _transitionTimes[i];
 			if (!trans->_animFrom.empty() && !trans->_animTo.empty() && trans->_animFrom.compareToIgnoreCase(animFrom) == 0 && trans->_animTo.compareToIgnoreCase(animTo) == 0) {
 				found = true;
@@ -2012,7 +2009,7 @@ bool AdActor3DX::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		const char *animTo = stack->pop()->getString();
 
 		int time = -1;
-		for (uint32 i = 0; i < _transitionTimes.getSize(); i++) {
+		for (int32 i = 0; i < _transitionTimes.getSize(); i++) {
 			BaseAnimationTransitionTime *trans = _transitionTimes[i];
 
 			if (!trans->_animFrom.empty() && !trans->_animTo.empty() && trans->_animFrom.compareToIgnoreCase(animFrom) == 0 && trans->_animTo.compareToIgnoreCase(animTo) == 0) {
@@ -2281,7 +2278,7 @@ bool AdActor3DX::persist(BasePersistenceManager *persistMgr) {
 
 	persistMgr->transferPtr(TMEMBER(_path3D));
 	persistMgr->transferPtr(TMEMBER(_path2D));
-	persistMgr->transferAngle(TMEMBER(_targetAngle));
+	persistMgr->transferFloat(TMEMBER(_targetAngle));
 	persistMgr->transferVector3d(TMEMBER(_targetPoint3D));
 	persistMgr->transferPtr(TMEMBER(_targetPoint2D));
 	persistMgr->transferBool(TMEMBER(_turningLeft));
@@ -2313,13 +2310,13 @@ bool AdActor3DX::persist(BasePersistenceManager *persistMgr) {
 	if (persistMgr->getIsSaving()) {
 		int32 numItems = _transitionTimes.getSize();
 		persistMgr->transferSint32(TMEMBER(numItems));
-		for (uint32 i = 0; i < _transitionTimes.getSize(); i++) {
+		for (int32 i = 0; i < _transitionTimes.getSize(); i++) {
 			_transitionTimes[i]->persist(persistMgr);
 		}
 	} else {
 		int32 numItems = _transitionTimes.getSize();
 		persistMgr->transferSint32(TMEMBER(numItems));
-		for (int i = 0; i < numItems; i++) {
+		for (int32 i = 0; i < numItems; i++) {
 			BaseAnimationTransitionTime *trans = new BaseAnimationTransitionTime();
 			trans->persist(persistMgr);
 			_transitionTimes.add(trans);
@@ -2341,7 +2338,7 @@ bool AdActor3DX::invalidateDeviceObjects() {
 	if (_shadowModel)
 		_shadowModel->invalidateDeviceObjects();
 
-	for (uint32 i = 0; i < _attachments.getSize(); i++) {
+	for (int32 i = 0; i < _attachments.getSize(); i++) {
 		_attachments[i]->invalidateDeviceObjects();
 	}
 
@@ -2358,7 +2355,7 @@ bool AdActor3DX::restoreDeviceObjects() {
 		_shadowModel->restoreDeviceObjects();
 	}
 
-	for (uint32 i = 0; i < _attachments.getSize(); i++) {
+	for (int32 i = 0; i < _attachments.getSize(); i++) {
 		_attachments[i]->restoreDeviceObjects();
 	}
 
@@ -2447,7 +2444,7 @@ bool AdActor3DX::isGoToNeeded(int x, int y) {
 
 //////////////////////////////////////////////////////////////////////////
 uint32 AdActor3DX::getAnimTransitionTime(char *from, char *to) {
-	for (uint32 i = 0; i < _transitionTimes.getSize(); i++) {
+	for (int32 i = 0; i < _transitionTimes.getSize(); i++) {
 		BaseAnimationTransitionTime *trans = _transitionTimes[i];
 		if (!trans->_animFrom.empty() && !trans->_animTo.empty() && trans->_animFrom.compareToIgnoreCase(from) == 0 && trans->_animTo.compareToIgnoreCase(to) == 0) {
 			return trans->_time;

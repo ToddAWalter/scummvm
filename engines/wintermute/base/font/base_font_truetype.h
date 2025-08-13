@@ -106,10 +106,6 @@ public:
 	bool loadBuffer(char *buffer);
 	bool loadFile(const Common::String &filename);
 
-	float getLineHeight() const {
-		return _lineHeight;
-	}
-
 	void afterLoad() override;
 	void initLoop() override;
 

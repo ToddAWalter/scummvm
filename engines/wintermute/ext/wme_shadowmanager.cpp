@@ -44,7 +44,7 @@ BaseScriptable *makeSXShadowManager(BaseGame *inGame, ScStack *stack) {
 //////////////////////////////////////////////////////////////////////////
 SXShadowManager::SXShadowManager(BaseGame *inGame, ScStack *stack) : BaseScriptable(inGame) {
 	stack->correctParams(0);
-	
+
 	PluginEventEntry event;
 	event._type = WME_EVENT_UPDATE;
 	event._callback = callback;
@@ -419,7 +419,7 @@ void SXShadowManager::run() {
 	AdGame *adGame = (AdGame *)_gameRef;
 	if (!adGame->_scene || !adGame->_scene->_geom)
 		return;
-	for (uint32 l = 0; l < adGame->_scene->_geom->_lights.getSize(); l++) {
+	for (int32 l = 0; l < adGame->_scene->_geom->_lights.getSize(); l++) {
 		auto light = adGame->_scene->_geom->_lights[l];
 		_lights.push_back(Common::Pair<Light3D *, bool>(light, true));
 	}

@@ -39,9 +39,15 @@ class BaseSurface: public BaseClass {
 public:
 	virtual bool invalidate();
 	virtual bool prepareToDraw();
+	bool _ckDefault;
+	byte _ckRed;
+	byte _ckGreen;
+	byte _ckBlue;
+
 	uint32 _lastUsedTime;
 	bool _valid;
 	int32 _lifeTime;
+	bool _keepLoaded;
 
 	BaseSurface(BaseGame *inGame);
 	~BaseSurface() override;
@@ -64,6 +70,7 @@ public:
 	}
 	virtual bool startPixelOp() = 0;
 	virtual bool endPixelOp() = 0;
+	virtual bool putPixel(int x, int y, byte r, byte g, byte b, byte a) = 0;
 	virtual bool getPixel(int x, int y, byte *r, byte *g, byte *b, byte *a = nullptr) const = 0;
 	virtual bool isTransparentAtLite(int x, int y) const = 0;
 	void setSize(int width, int height);
@@ -81,12 +88,7 @@ public:
 	//void SetWidth(int Width) { _width = Width;    }
 	//void SetHeight(int Height){ _height = Height; }
 protected:
-	bool _ckDefault;
-	byte _ckRed;
-	byte _ckGreen;
-	byte _ckBlue;
 
-	bool _keepLoaded;
 	Common::String _filename;
 	int32 _height;
 	int32 _width;

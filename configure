@@ -150,7 +150,6 @@ _sdlnet=auto
 _libcurl=auto
 _enet=yes
 _tremor=auto
-_tremolo=no
 _flac=auto
 _mad=auto
 _opl2lpt=no
@@ -2509,8 +2508,9 @@ fi
 # Additional tests for C++11 features that may not be present
 #
 
-# Check if initializer list is available
-echo_n "Checking if C++11 initializer list is available... "
+# Check if initializer_list is available (e.g. missing from macOS < 10.9,
+# when targeting system libstdc++ which had incomplete C++11 support)
+echo_n "Checking if C++11 initializer_list is available... "
 cat > $TMPC << EOF
 #include <initializer_list>
 #include <cstddef>
@@ -2529,7 +2529,8 @@ else
 	define_in_config_if_yes yes 'NO_CXX11_INITIALIZER_LIST'
 fi
 
-# Check if std::nullptr_t is available
+# Check if std::nullptr_t is available (e.g. missing from macOS < 10.9,
+# when targeting system libstdc++ which had incomplete C++11 support)
 echo_n "Checking if C++11 std::nullptr_t is available... "
 cat > $TMPC << EOF
 #include <cstddef>
@@ -2546,7 +2547,8 @@ else
 	define_in_config_if_yes yes 'NO_CXX11_NULLPTR_T'
 fi
 
-# Check if alignas and alignof are available
+# Check if alignas and alignof are available (e.g. GCC 4.7 as used for
+# RISC OS, while the feature was added in GCC 4.8)
 echo_n "Checking if C++11 alignas and alignof keywords are available... "
 cat > $TMPC << EOF
 #include <stddef.h>
@@ -2642,8 +2644,8 @@ fi
 # given (and then you're on your own).
 if $LD $LDFLAGS -Wl,--version 2>/dev/null | grep -q -e 'GNU gold'; then
 	# Trying to help systems where Gold may (unwisely) be the default;
-	# thus we only try to provide a GNU LD (BFD) fallback in that case,
-	# since it appears to only impact some (past?) GNU systems anyway.
+	# we only try to provide a GNU LD (BFD) fallback in that case, as
+	# it appears this would only impact older GNU systems anyway.
 	if test "$_gold" != yes && $LD $LDFLAGS -fuse-ld=bfd -Wl,--version >/dev/null 2>&1; then
 		append_var LDFLAGS -fuse-ld=bfd
 	else
@@ -3644,12 +3646,12 @@ if test -n "$_host"; then
 			;;
 		wasm*-emscripten)
 			_backend="emscripten"
-			# Disable cloud and SDL_Net as this is handled in the browser
-			_cloud=no
-			_sdlnet=no
-			_libcurl=no
-			_curl=no
-			_enet=no
+			_enet=no    # Disable ENet (no sockets in the browser)
+			_sdlnet=no  # Disable SDL_Net (no sockets in the browser)
+			_libcurl=no # Emscripten backend uses emscripten_fetch not libcurl
+			if test "$_cloud" != yes; then
+				_cloud=no
+			fi
 			_seq_midi=no
 			_timidity=no
 			_sndio=no
@@ -5319,10 +5321,6 @@ echo "$_vorbis"
 # Check for Tremor
 #
 echocheck "Tremor"
-if test "$_tremolo" = yes ; then
-	_tremor=yes
-fi
-
 if test "$_tremor" = auto ; then
 	_tremor=no
 	cat > $TMPC << EOF
@@ -5340,12 +5338,7 @@ fi
 if test "$_tremor" = yes && test "$_vorbis" = no; then
 	add_line_to_config_h '#define USE_TREMOR'
 	add_line_to_config_h '#define USE_VORBIS'
-	if test "$_tremolo" = yes ; then
-		add_line_to_config_h '#define USE_TREMOLO'
-		append_var LIBS "$TREMOR_LIBS -ltremolo"
-	else
-		append_var LIBS "$TREMOR_LIBS -lvorbisidec"
-	fi
+	append_var LIBS "$TREMOR_LIBS -lvorbisidec"
 	append_var INCLUDES "$TREMOR_CFLAGS"
 else
 	if test "$_vorbis" = yes; then
@@ -5946,6 +5939,20 @@ echo "$_libcurl"
 
 define_in_config_if_yes "$_libcurl" "USE_LIBCURL"
 
+echocheck "HTTP client"
+if test "$_host_os" = "emscripten" &&  test "$_cloud" = "yes"; then
+	append_var LDFLAGS "-sFETCH"
+	_http=yes
+	echo "Emscripten"
+elif test "$_libcurl" = "yes"; then
+	_http=yes
+	echo "libcurl"
+else
+	_http=no
+	echo "no"
+fi
+define_in_config_if_yes $_http 'USE_HTTP'
+
 #
 # Check for libopenmpt to be present
 #
@@ -6087,34 +6094,16 @@ fi
 
 echo "$_libmpcdec"
 
-#
-# Check whether to build cloud integration support
-#
-echo_n "Cloud integration... "
-if test "$_cloud" = "no"; then
-	echo "no"
+if test "$_scummvmdlc" = "yes"; then
+	if test "$_http" != "yes"; then
+		_scummvmdlc=no
+	fi
 else
-	_cloud=no
-	if test "$_sdlnet" = "yes"; then
-		_cloud=yes
-		echo_n "local"
-	fi
-	if test "$_libcurl" = "yes"; then
-		if test "$_cloud" = "yes"; then echo_n ", "; fi
-		_cloud=yes
-		echo_n "servers"
-	fi
-	if test "$_cloud" = "no"; then
-		echo_n "no"
-	fi
-	echo  # newline
+	_scummvmdlc=no
 fi
-define_in_config_if_yes $_cloud 'USE_CLOUD'
 
 if test "$_scummvmdlc" = "yes"; then
-	if test "$_libcurl" = "yes"; then
-		_dlc=yes
-	fi
+	_dlc=yes
 fi
 
 define_in_config_if_yes $_dlc 'USE_DLC'
@@ -7189,6 +7178,24 @@ else
 	echo "$_updates"
 fi
 define_in_config_if_yes $_updates 'USE_UPDATES'
+
+#
+# Check whether to build cloud integration support
+#
+echo_n "Building cloud integration... "
+if test "$_cloud" = "no"; then
+	echo "no"
+elif test "$_http" = "yes"; then
+	_cloud=yes
+	echo "yes"
+else
+	_cloud=no
+	echo "no"
+fi
+define_in_config_if_yes $_cloud 'USE_CLOUD'
+
+echo_n "Building local web server... "
+echo "$_sdlnet"
 
 #
 # Check whether to create a build with all resources files linked into the binary

@@ -49,14 +49,14 @@ AdResponse::AdResponse(BaseGame *inGame) : BaseObject(inGame) {
 //////////////////////////////////////////////////////////////////////////
 AdResponse::~AdResponse() {
 	delete[] _text;
-	delete[] _textOrig;
-	delete _icon;
-	delete _iconHover;
-	delete _iconPressed;
 	_text = nullptr;
+	delete[] _textOrig;
 	_textOrig = nullptr;
+	delete _icon;
 	_icon = nullptr;
+	delete _iconHover;
 	_iconHover = nullptr;
+	delete _iconPressed;
 	_iconPressed = nullptr;
 	if (_font) {
 		_gameRef->_fontStorage->removeFont(_font);
@@ -140,38 +140,6 @@ bool AdResponse::persist(BasePersistenceManager *persistMgr) {
 	persistMgr->transferPtr(TMEMBER_PTR(_font));
 
 	return STATUS_OK;
-}
-
-void AdResponse::setID(int32 id) {
-	_iD = id;
-}
-
-BaseSprite *AdResponse::getIcon() const {
-	return _icon;
-}
-
-BaseSprite *AdResponse::getIconHover() const {
-	return _iconHover;
-}
-
-BaseSprite *AdResponse::getIconPressed() const {
-	return _iconPressed;
-}
-
-BaseFont *AdResponse::getFont() const {
-	return _font;
-}
-
-int32 AdResponse::getID() const {
-	return _iD;
-}
-
-const char *AdResponse::getText() const {
-	return _text;
-}
-
-const char *AdResponse::getTextOrig() const {
-	return _textOrig;
 }
 
 } // End of namespace Wintermute

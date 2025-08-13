@@ -325,12 +325,14 @@ MODULE_OBJS = \
 	plugins/ags_creditz/ags_creditz1.o \
 	plugins/ags_creditz/ags_creditz2.o \
 	plugins/ags_creditz/drawing.o \
+	plugins/ags_filedel/ags_filedel.o \
 	plugins/ags_fire/ags_fire.o \
 	plugins/ags_flashlight/ags_flashlight.o \
 	plugins/ags_flashlight/gfx.o \
 	plugins/ags_galaxy_steam/ags_wadjeteye_steam.o \
 	plugins/ags_galaxy_steam/ags_galaxy_steam.o \
 	plugins/ags_joy/ags_joy.o \
+	plugins/ags_maya/ags_maya.o \
 	plugins/ags_nickenstien_gfx/ags_nickenstien_gfx.o \
 	plugins/ags_pal_render/ags_pal_render.o \
 	plugins/ags_pal_render/raycast.o \

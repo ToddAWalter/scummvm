@@ -149,8 +149,6 @@ void UIObject::correctSize() {
 	}
 }
 
-
-
 //////////////////////////////////////////////////////////////////////////
 // high level scripting interface
 //////////////////////////////////////////////////////////////////////////
@@ -250,7 +248,7 @@ bool UIObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (_parent && _parent->_type == UI_WINDOW) {
 			UIWindow *win = (UIWindow *)_parent;
 
-			uint32 i;
+			int32 i;
 			bool found = false;
 			ScValue *val = stack->pop();
 			// find directly
@@ -267,7 +265,7 @@ bool UIObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			else {
 				const char *findName = val->getString();
 				for (i = 0; i < win->_widgets.getSize(); i++) {
-					if (scumm_stricmp(win->_widgets[i]->getName(), findName) == 0) {
+					if (scumm_stricmp(win->_widgets[i]->_name, findName) == 0) {
 						found = true;
 						break;
 					}
@@ -276,7 +274,7 @@ bool UIObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 			if (found) {
 				bool done = false;
-				for (uint32 j = 0; j < win->_widgets.getSize(); j++) {
+				for (int32 j = 0; j < win->_widgets.getSize(); j++) {
 					if (win->_widgets[j] == this) {
 						if (strcmp(name, "MoveAfter") == 0) {
 							i++;
@@ -315,7 +313,7 @@ bool UIObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		if (_parent && _parent->_type == UI_WINDOW) {
 			UIWindow *win = (UIWindow *)_parent;
-			for (uint32 i = 0; i < win->_widgets.getSize(); i++) {
+			for (int32 i = 0; i < win->_widgets.getSize(); i++) {
 				if (win->_widgets[i] == this) {
 					win->_widgets.removeAt(i);
 					win->_widgets.insertAt(0, this);
@@ -338,7 +336,7 @@ bool UIObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		if (_parent && _parent->_type == UI_WINDOW) {
 			UIWindow *win = (UIWindow *)_parent;
-			for (uint32 i = 0; i < win->_widgets.getSize(); i++) {
+			for (int32 i = 0; i < win->_widgets.getSize(); i++) {
 				if (win->_widgets[i] == this) {
 					win->_widgets.removeAt(i);
 					win->_widgets.add(this);
@@ -373,7 +371,7 @@ ScValue *UIObject::scGetProperty(const Common::String &name) {
 	// Name
 	//////////////////////////////////////////////////////////////////////////
 	else if (name == "Name") {
-		_scValue->setString(getName());
+		_scValue->setString(_name);
 		return _scValue;
 	}
 
@@ -440,7 +438,7 @@ ScValue *UIObject::scGetProperty(const Common::String &name) {
 		_scValue->setNULL();
 		if (_parent && _parent->_type == UI_WINDOW) {
 			UIWindow *win = (UIWindow *)_parent;
-			for (uint32 i = 0; i < win->_widgets.getSize(); i++) {
+			for (int32 i = 0; i < win->_widgets.getSize(); i++) {
 				if (win->_widgets[i] == this) {
 					if (name == "NextSibling") {
 						if (i < win->_widgets.getSize() - 1) {
@@ -642,86 +640,20 @@ bool UIObject::persist(BasePersistenceManager *persistMgr) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+/*char *CUIObject::GetAccessCaption() {
+	if (m_AccessCaption)
+		return m_AccessCaption;
+	else {
+		if (m_Text)
+			return m_Text;
+		else
+			return GetCaption();
+	}
+}*/
+
+//////////////////////////////////////////////////////////////////////////
 bool UIObject::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	return STATUS_FAILED;
 }
-
-int32 UIObject::getWidth() const {
-	return _width;
-}
-
-// Has to be non-const to allow the virtual override to work,
-// as other getHeight()-functions currently have the potential
-// of having side-effects.
-int32 UIObject::getHeight() {
-	return _height;
-}
-
-void UIObject::setWidth(int32 width) {
-	assert(width >= 0);
-	_width = width;
-}
-
-void UIObject::setHeight(int32 height) {
-	assert(height >= 0);
-	_height = height;
-}
-
-bool UIObject::isDisabled() const {
-	return _disable;
-}
-
-bool UIObject::isVisible() const {
-	return _visible;
-}
-
-void UIObject::setVisible(bool visible) {
-	_visible = visible;
-}
-
-void UIObject::setDisabled(bool disable) {
-	_disable = disable;
-}
-
-bool UIObject::hasSharedFonts() const {
-	return _sharedFonts;
-}
-
-void UIObject::setSharedFonts(bool shared) {
-	_sharedFonts = shared;
-}
-
-bool UIObject::hasSharedImages() const {
-	return _sharedImages;
-}
-
-void UIObject::setSharedImages(bool shared) {
-	_sharedImages = shared;
-}
-
-BaseSprite *UIObject::getImage() const {
-	return _image;
-}
-
-void UIObject::setImage(BaseSprite *image) {
-	_image = image;
-}
-
-bool UIObject::canFocus() const {
-	return _canFocus;
-}
-
-void UIObject::setFont(BaseFont *font) {
-	_font = font;
-}
-
-BaseFont *UIObject::getFont() {
-	return _font;
-}
-
-BaseScriptHolder *UIObject::getListener() const {
-	return _listenerObject;
-}
-
 
 } // End of namespace Wintermute

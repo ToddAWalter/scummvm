@@ -1575,9 +1575,11 @@ void LB::b_save(int nargs) {
 }
 
 void LB::b_saveMovie(int nargs) {
-	g_lingo->printSTUBWithArglist("b_saveMovie", nargs);
-
-	g_lingo->dropStack(nargs);
+	Common::String filename;
+	if (nargs) {
+		filename = g_lingo->pop().asString();
+	}
+	g_director->getCurrentMovie()->getArchive()->writeToFile(filename, g_director->getCurrentMovie());
 }
 
 void LB::b_setCallBack(int nargs) {
@@ -3818,7 +3820,7 @@ void LB::b_scummvmassertequal(int nargs) {
 	}
 
 	if (!result) {
-		warning("BUILDBOT: LB::b_scummvmassertequals: %s is not equal %s at line %d", d1.asString().c_str(), d2.asString().c_str(), line.asInt());
+		warning("BUILDBOT: LB::b_scummvmassertequal: %s is not equal %s at line %d", formatStringForDump(d1.asString()).c_str(), formatStringForDump(d2.asString()).c_str(), line.asInt());
 	}
 	if (debugChannelSet(-1, kDebugLingoStrict)) {
 		assert(result == 1);

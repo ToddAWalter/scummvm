@@ -62,8 +62,8 @@ BaseFontBitmap::BaseFontBitmap(BaseGame *inGame) : BaseFont(inGame) {
 //////////////////////////////////////////////////////////////////////
 BaseFontBitmap::~BaseFontBitmap() {
 	delete _subframe;
-	delete _sprite;
 	_subframe = nullptr;
+	delete _sprite;
 	_sprite = nullptr;
 }
 
@@ -264,7 +264,7 @@ void BaseFontBitmap::drawChar(byte c, int x, int y) {
 	bool handled = false;
 	if (_sprite) {
 		_sprite->getCurrentFrame();
-		if (_sprite->_currentFrame >= 0 && _sprite->_currentFrame < (int32)_sprite->_frames.getSize() && _sprite->_frames[_sprite->_currentFrame]) {
+		if (_sprite->_currentFrame >= 0 && _sprite->_currentFrame < _sprite->_frames.getSize() && _sprite->_frames[_sprite->_currentFrame]) {
 			if (_sprite->_frames[_sprite->_currentFrame]->_subframes.getSize() > 0) {
 				_sprite->_frames[_sprite->_currentFrame]->_subframes[0]->_surface->displayTrans(x, y, rect);
 			}
@@ -573,8 +573,8 @@ bool BaseFontBitmap::getWidths() {
 	BaseSurface *surf = nullptr;
 
 	if (_sprite) {
-		if (_widthsFrame >= 0 && _widthsFrame < (int32)_sprite->_frames.getSize()) {
-			if (_sprite->_frames[_widthsFrame] && (int32)_sprite->_frames[_widthsFrame]->_subframes.getSize() > 0) {
+		if (_widthsFrame >= 0 && _widthsFrame < _sprite->_frames.getSize()) {
+			if (_sprite->_frames[_widthsFrame] && _sprite->_frames[_widthsFrame]->_subframes.getSize() > 0) {
 				surf = _sprite->_frames[_widthsFrame]->_subframes[0]->_surface;
 			}
 		}

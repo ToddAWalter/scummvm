@@ -36,6 +36,7 @@ namespace Common {
 	class ReadStreamEndian;
 	class MemoryReadStreamEndian;
 	class SeekableReadStreamEndian;
+	class SeekableWriteStream;
 }
 
 namespace Director {
@@ -73,6 +74,9 @@ public:
 	void updateFrame(Frame *frame);
 	Frame *getFrameData(int frameNum);
 
+	void writeVWSCResource(Common::SeekableWriteStream *writeStream, uint32 offset);
+	uint32 getVWSCResourceSize();
+
 	void loadLabels(Common::SeekableReadStreamEndian &stream);
 	void loadActions(Common::SeekableReadStreamEndian &stream);
 	void loadSampleSounds(uint type);
@@ -109,6 +113,7 @@ public:
 	int getCurrentLabelNumber();
 	int getNextLabelNumber(int referenceFrame);
 
+	uint16 getSpriteIDOfActiveWidget();
 	uint16 getSpriteIDFromPos(Common::Point pos);
 	uint16 getMouseSpriteIDFromPos(Common::Point pos);
 	uint16 getActiveSpriteIDFromPos(Common::Point pos);
@@ -149,6 +154,8 @@ private:
 
 	bool processImmediateFrameScript(Common::String s, int id);
 	bool processFrozenScripts(bool recursion = false, int count = 0);
+
+	void writeFrame(Common::SeekableWriteStream *writeStream, Frame frame, uint32 channelSize, uint32 mainChannelSize);
 
 public:
 	Common::Array<Channel *> _channels;
@@ -196,6 +203,9 @@ public:
 	bool _skipTransition;
 
 	int _numChannelsDisplayed;
+
+	/* Data to be saved */
+	uint16 _spriteRecordSize;
 
 private:
 	DirectorEngine *_vm;

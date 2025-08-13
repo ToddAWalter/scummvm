@@ -187,7 +187,7 @@ bool UIEntity::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent, "ENTITY_CONTAINER\n");
 	buffer->putTextIndent(indent, "{\n");
 
-	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", getName());
+	buffer->putTextIndent(indent + 2, "NAME=\"%s\"\n", _name);
 
 	buffer->putTextIndent(indent + 2, "\n");
 
@@ -197,14 +197,14 @@ bool UIEntity::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	buffer->putTextIndent(indent + 2, "DISABLED=%s\n", _disable ? "TRUE" : "FALSE");
 	buffer->putTextIndent(indent + 2, "VISIBLE=%s\n", _visible ? "TRUE" : "FALSE");
 
-	if (_entity && _entity->getFilename()) {
-		buffer->putTextIndent(indent + 2, "ENTITY=\"%s\"\n", _entity->getFilename());
+	if (_entity && _entity->_filename) {
+		buffer->putTextIndent(indent + 2, "ENTITY=\"%s\"\n", _entity->_filename);
 	}
 
 	buffer->putTextIndent(indent + 2, "\n");
 
 	// scripts
-	for (uint32 i = 0; i < _scripts.getSize(); i++) {
+	for (int32 i = 0; i < _scripts.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "SCRIPT=\"%s\"\n", _scripts[i]->_filename);
 	}
 

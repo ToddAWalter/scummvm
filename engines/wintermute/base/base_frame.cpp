@@ -62,12 +62,12 @@ BaseFrame::~BaseFrame() {
 	delete _sound;
 	_sound = nullptr;
 
-	for (uint32 i = 0; i < _subframes.getSize(); i++) {
+	for (int32 i = 0; i < _subframes.getSize(); i++) {
 		delete _subframes[i];
 	}
 	_subframes.removeAll();
 
-	for (uint32 i = 0; i < _applyEvent.getSize(); i++) {
+	for (int32 i = 0; i < _applyEvent.getSize(); i++) {
 		delete[] _applyEvent[i];
 		_applyEvent[i] = nullptr;
 	}
@@ -79,7 +79,7 @@ BaseFrame::~BaseFrame() {
 bool BaseFrame::draw(int x, int y, BaseObject *registerOwner, float zoomX, float zoomY, bool precise, uint32 alpha, bool allFrames, float rotate, Graphics::TSpriteBlendMode blendMode) {
 	bool res;
 
-	for (uint32 i = 0; i < _subframes.getSize(); i++) {
+	for (int32 i = 0; i < _subframes.getSize(); i++) {
 		// filter out subframes unsupported by current renderer
 		if (!allFrames) {
 			if ((_subframes[i]->_2DOnly && _gameRef->_useD3D) || (_subframes[i]->_3DOnly && !_gameRef->_useD3D))
@@ -92,13 +92,6 @@ bool BaseFrame::draw(int x, int y, BaseObject *registerOwner, float zoomX, float
 	}
 	return STATUS_OK;
 }
-
-void BaseFrame::stopSound() {
-	if (_sound) {
-		_sound->stop();
-	}
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseFrame::oneTimeDisplay(BaseObject *owner, bool muted) {
@@ -114,7 +107,7 @@ bool BaseFrame::oneTimeDisplay(BaseObject *owner, bool muted) {
 		*/
 	}
 	if (owner) {
-		for (uint32 i = 0; i < _applyEvent.getSize(); i++) {
+		for (int32 i = 0; i < _applyEvent.getSize(); i++) {
 			owner->applyEvent(_applyEvent[i]);
 		}
 	}
@@ -365,7 +358,7 @@ bool BaseFrame::getBoundingRect(Rect32 *rect, int x, int y, float scaleX, float 
 
 	Rect32 subRect;
 
-	for (uint32 i = 0; i < _subframes.getSize(); i++) {
+	for (int32 i = 0; i < _subframes.getSize(); i++) {
 		_subframes[i]->getBoundingRect(&subRect, x, y, scaleX, scaleY);
 		BasePlatform::unionRect(rect, rect, &subRect);
 	}
@@ -383,8 +376,8 @@ bool BaseFrame::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "MOVE {%d, %d}\n", _moveX, _moveY);
 	}
 
-	if (_sound && _sound->getFilename()) {
-		buffer->putTextIndent(indent + 2, "SOUND=\"%s\"\n", _sound->getFilename());
+	if (_sound && !_sound->_soundFilename.empty()) {
+		buffer->putTextIndent(indent + 2, "SOUND=\"%s\"\n", _sound->_soundFilename.c_str());
 	}
 
 	buffer->putTextIndent(indent + 2, "KEYFRAME=%s\n", _keyframe ? "TRUE" : "FALSE");
@@ -401,11 +394,11 @@ bool BaseFrame::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		_subframes[0]->saveAsText(buffer, indent, false);
 	}
 
-	for (uint32 i = 1; i < _subframes.getSize(); i++) {
+	for (int32 i = 1; i < _subframes.getSize(); i++) {
 		_subframes[i]->saveAsText(buffer, indent + 2);
 	}
 
-	for (uint32 i = 0; i < _applyEvent.getSize(); i++) {
+	for (int32 i = 0; i < _applyEvent.getSize(); i++) {
 		buffer->putTextIndent(indent + 2, "APPLY_EVENT=\"%s\"\n", _applyEvent[i]);
 	}
 
@@ -447,8 +440,8 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 	if (strcmp(name, "GetSound") == 0) {
 		stack->correctParams(0);
 
-		if (_sound && _sound->getFilename()) {
-			stack->pushString(_sound->getFilename());
+		if (_sound && !_sound->_soundFilename.empty()) {
+			stack->pushString(_sound->_soundFilename.c_str());
 		} else {
 			stack->pushNULL();
 		}
@@ -485,7 +478,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 	if (strcmp(name, "GetSubframe") == 0) {
 		stack->correctParams(1);
 		int index = stack->pop()->getInt(-1);
-		if (index < 0 || index >= (int32)_subframes.getSize()) {
+		if (index < 0 || index >= _subframes.getSize()) {
 			script->runtimeError("Frame.GetSubframe: Subframe index %d is out of range.", index);
 			stack->pushNULL();
 		} else {
@@ -503,12 +496,12 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 		ScValue *val = stack->pop();
 		if (val->isInt()) {
 			int index = val->getInt(-1);
-			if (index < 0 || index >= (int32)_subframes.getSize()) {
+			if (index < 0 || index >= _subframes.getSize()) {
 				script->runtimeError("Frame.DeleteSubframe: Subframe index %d is out of range.", index);
 			}
 		} else {
 			BaseSubFrame *sub = (BaseSubFrame *)val->getNative();
-			for (uint32 i = 0; i < _subframes.getSize(); i++) {
+			for (int32 i = 0; i < _subframes.getSize(); i++) {
 				if (_subframes[i] == sub) {
 					delete _subframes[i];
 					_subframes.removeAt(i);
@@ -563,7 +556,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 			sub->setSurface(filename);
 		}
 
-		if (index >= (int32)_subframes.getSize()) {
+		if (index >= _subframes.getSize()) {
 			_subframes.add(sub);
 		} else {
 			_subframes.insertAt(index, sub);
@@ -579,7 +572,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 	else if (strcmp(name, "GetSubframe") == 0) {
 		stack->correctParams(1);
 		int index = stack->pop()->getInt(-1);
-		if (index < 0 || index >= (int32)_applyEvent.getSize()) {
+		if (index < 0 || index >= _applyEvent.getSize()) {
 			script->runtimeError("Frame.GetEvent: Event index %d is out of range.", index);
 			stack->pushNULL();
 		} else {
@@ -594,7 +587,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 	else if (strcmp(name, "AddEvent") == 0) {
 		stack->correctParams(1);
 		const char *event = stack->pop()->getString();
-		for (uint32 i = 0; i < _applyEvent.getSize(); i++) {
+		for (int32 i = 0; i < _applyEvent.getSize(); i++) {
 			if (scumm_stricmp(_applyEvent[i], event) == 0) {
 				stack->pushNULL();
 				return STATUS_OK;
@@ -611,7 +604,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 	else if (strcmp(name, "DeleteEvent") == 0) {
 		stack->correctParams(1);
 		const char *event = stack->pop()->getString();
-		for (uint32 i = 0; i < _applyEvent.getSize(); i++) {
+		for (int32 i = 0; i < _applyEvent.getSize(); i++) {
 			if (scumm_stricmp(_applyEvent[i], event) == 0) {
 				delete[] _applyEvent[i];
 				_applyEvent.removeAt(i);
@@ -774,6 +767,6 @@ const char *BaseFrame::scToString() {
 }
 
 Common::String BaseFrame::debuggerToString() const {
-	return Common::String::format("%p: Frame \"%s\": #subframes %d ", (const void *)this, getName(), _subframes.getSize());
+	return Common::String::format("%p: Frame \"%s\": #subframes %d ", (const void *)this, _name, _subframes.getSize());
 }
 } // End of namespace Wintermute

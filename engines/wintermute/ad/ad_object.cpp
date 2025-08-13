@@ -143,12 +143,12 @@ AdObject::~AdObject() {
 	}
 
 
-	for (uint32 i = 0; i < _attachmentsPre.getSize(); i++) {
+	for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
 		_gameRef->unregisterObject(_attachmentsPre[i]);
 	}
 	_attachmentsPre.removeAll();
 
-	for (uint32 i = 0; i < _attachmentsPost.getSize(); i++) {
+	for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
 		_gameRef->unregisterObject(_attachmentsPost[i]);
 	}
 	_attachmentsPost.removeAll();
@@ -160,12 +160,12 @@ bool AdObject::playAnim(const char *filename) {
 	delete _animSprite;
 	_animSprite = new BaseSprite(_gameRef, this);
 	if (!_animSprite) {
-		_gameRef->LOG(0, "AdObject::PlayAnim: error creating temp sprite (object:\"%s\" sprite:\"%s\")", getName(), filename);
+		_gameRef->LOG(0, "AdObject::PlayAnim: error creating temp sprite (object:\"%s\" sprite:\"%s\")", _name, filename);
 		return STATUS_FAILED;
 	}
 	bool res = _animSprite->loadFile(filename);
 	if (DID_FAIL(res)) {
-		_gameRef->LOG(res, "AdObject::PlayAnim: error loading temp sprite (object:\"%s\" sprite:\"%s\")", getName(), filename);
+		_gameRef->LOG(res, "AdObject::PlayAnim: error loading temp sprite (object:\"%s\" sprite:\"%s\")", _name, filename);
 		delete _animSprite;
 		_animSprite = nullptr;
 		return res;
@@ -305,7 +305,7 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		AdLayer *main = ((AdGame *)_gameRef)->_scene->_mainLayer;
 		bool regFound = false;
 
-		uint32 i;
+		int32 i;
 		ScValue *val = stack->pop();
 		if (val->isNULL() || !main) {
 			_stickRegion = nullptr;
@@ -313,7 +313,7 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		} else if (val->isString()) {
 			const char *regionName = val->getString();
 			for (i = 0; i < main->_nodes.getSize(); i++) {
-				if (main->_nodes[i]->_type == OBJECT_REGION && main->_nodes[i]->_region->getName() && scumm_stricmp(main->_nodes[i]->_region->getName(), regionName) == 0) {
+				if (main->_nodes[i]->_type == OBJECT_REGION && main->_nodes[i]->_region->_name && scumm_stricmp(main->_nodes[i]->_region->_name, regionName) == 0) {
 					_stickRegion = main->_nodes[i]->_region;
 					regFound = true;
 					break;
@@ -446,7 +446,7 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			} else {
 				stack->pushNULL();
 			}
-		} else if (val->isNULL() || val->getInt() < 0 || val->getInt() >= (int32)_inventory->_takenItems.getSize()) {
+		} else if (val->isNULL() || val->getInt() < 0 || val->getInt() >= _inventory->_takenItems.getSize()) {
 			stack->pushNULL();
 		} else {
 			stack->pushNative(_inventory->_takenItems[val->getInt()], true);
@@ -468,11 +468,11 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		ScValue *val = stack->pop();
 		if (!val->isNULL()) {
-			for (uint32 i = 0; i < _inventory->_takenItems.getSize(); i++) {
+			for (int32 i = 0; i < _inventory->_takenItems.getSize(); i++) {
 				if (val->getNative() == _inventory->_takenItems[i]) {
 					stack->pushBool(true);
 					return STATUS_OK;
-				} else if (scumm_stricmp(val->getString(), _inventory->_takenItems[i]->getName()) == 0) {
+				} else if (scumm_stricmp(val->getString(), _inventory->_takenItems[i]->_name) == 0) {
 					stack->pushBool(true);
 					return STATUS_OK;
 				}
@@ -562,7 +562,7 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		bool found = false;
 		if (val->isNative()) {
 			BaseScriptable *obj = val->getNative();
-			for (uint32 i = 0; i < _attachmentsPre.getSize(); i++) {
+			for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
 				if (_attachmentsPre[i] == obj) {
 					found = true;
 					_gameRef->unregisterObject(_attachmentsPre[i]);
@@ -570,7 +570,7 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 					i--;
 				}
 			}
-			for (uint32 i = 0; i < _attachmentsPost.getSize(); i++) {
+			for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
 				if (_attachmentsPost[i] == obj) {
 					found = true;
 					_gameRef->unregisterObject(_attachmentsPost[i]);
@@ -580,16 +580,16 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			}
 		} else {
 			const char *attachmentName = val->getString();
-			for (int32 i = 0; i < (int32)_attachmentsPre.getSize(); i++) {
-				if (_attachmentsPre[i]->getName() && scumm_stricmp(_attachmentsPre[i]->getName(), attachmentName) == 0) {
+			for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
+				if (_attachmentsPre[i]->_name && scumm_stricmp(_attachmentsPre[i]->_name, attachmentName) == 0) {
 					found = true;
 					_gameRef->unregisterObject(_attachmentsPre[i]);
 					_attachmentsPre.removeAt(i);
 					i--;
 				}
 			}
-			for (int32 i = 0; i < (int32)_attachmentsPost.getSize(); i++) {
-				if (_attachmentsPost[i]->getName() && scumm_stricmp(_attachmentsPost[i]->getName(), attachmentName) == 0) {
+			for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
+				if (_attachmentsPost[i]->_name && scumm_stricmp(_attachmentsPost[i]->_name, attachmentName) == 0) {
 					found = true;
 					_gameRef->unregisterObject(_attachmentsPost[i]);
 					_attachmentsPost.removeAt(i);
@@ -613,13 +613,13 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (val->isInt()) {
 			int index = val->getInt();
 			int currIndex = 0;
-			for (uint32 i = 0; i < _attachmentsPre.getSize(); i++) {
+			for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
 				if (currIndex == index) {
 					ret = _attachmentsPre[i];
 				}
 				currIndex++;
 			}
-			for (uint32 i = 0; i < _attachmentsPost.getSize(); i++) {
+			for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
 				if (currIndex == index) {
 					ret = _attachmentsPost[i];
 				}
@@ -627,15 +627,15 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			}
 		} else {
 			const char *attachmentName = val->getString();
-			for (uint32 i = 0; i < _attachmentsPre.getSize(); i++) {
-				if (_attachmentsPre[i]->getName() && scumm_stricmp(_attachmentsPre[i]->getName(), attachmentName) == 0) {
+			for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
+				if (_attachmentsPre[i]->_name && scumm_stricmp(_attachmentsPre[i]->_name, attachmentName) == 0) {
 					ret = _attachmentsPre[i];
 					break;
 				}
 			}
 			if (!ret) {
-				for (uint32 i = 0; i < _attachmentsPost.getSize(); i++) {
-					if (_attachmentsPost[i]->getName() && scumm_stricmp(_attachmentsPost[i]->getName(), attachmentName) == 0) {
+				for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
+					if (_attachmentsPost[i]->_name && scumm_stricmp(_attachmentsPost[i]->_name, attachmentName) == 0) {
 						ret = _attachmentsPre[i];
 						break;
 					}
@@ -859,12 +859,12 @@ bool AdObject::setFont(const char *filename) {
 
 //////////////////////////////////////////////////////////////////////////
 int32 AdObject::getHeight() {
-	if (!_currentSprite || (int32)_currentSprite->_frames.getSize() <= _currentSprite->_currentFrame) {
+	if (!_currentSprite || _currentSprite->_frames.getSize() <= _currentSprite->_currentFrame) {
 		return 0;
 	} else {
 		BaseFrame *frame = _currentSprite->_frames[_currentSprite->_currentFrame];
 		int32 ret = 0;
-		for (uint32 i = 0; i < frame->_subframes.getSize(); i++) {
+		for (int32 i = 0; i < frame->_subframes.getSize(); i++) {
 			ret = MAX(ret, frame->_subframes[i]->_hotspotY);
 		}
 
@@ -874,10 +874,6 @@ int32 AdObject::getHeight() {
 		}
 		return ret;
 	}
-}
-
-TObjectType AdObject::getType() const {
-	return _type;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -905,7 +901,7 @@ void AdObject::talk(const char *text, const char *sound, uint32 duration, const 
 	_sentence->_align = Align;
 	_sentence->_startTime = _gameRef->getTimer()->getTime();
 	_sentence->_currentStance = -1;
-	_sentence->_font = _font == nullptr ? _gameRef->getSystemFont() : _font;
+	_sentence->_font = _font == nullptr ? _gameRef->_systemFont : _font;
 	_sentence->_freezable = _freezable;
 
 	// try to locate speech file automatically
@@ -1203,10 +1199,10 @@ bool AdObject::getScale(float *scaleX, float *scaleY) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdObject::updateSpriteAttachments() {
-	for (uint32 i = 0; i < _attachmentsPre.getSize(); i++) {
+	for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
 		_attachmentsPre[i]->update();
 	}
-	for (uint32 i = 0; i < _attachmentsPost.getSize(); i++) {
+	for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
 		_attachmentsPost[i]->update();
 	}
 	return STATUS_OK;
@@ -1215,11 +1211,11 @@ bool AdObject::updateSpriteAttachments() {
 //////////////////////////////////////////////////////////////////////////
 bool AdObject::displaySpriteAttachments(bool preDisplay) {
 	if (preDisplay) {
-		for (uint32 i = 0; i < _attachmentsPre.getSize(); i++) {
+		for (int32 i = 0; i < _attachmentsPre.getSize(); i++) {
 			displaySpriteAttachment(_attachmentsPre[i]);
 		}
 	} else {
-		for (uint32 i = 0; i < _attachmentsPost.getSize(); i++) {
+		for (int32 i = 0; i < _attachmentsPost.getSize(); i++) {
 			displaySpriteAttachment(_attachmentsPost[i]);
 		}
 	}

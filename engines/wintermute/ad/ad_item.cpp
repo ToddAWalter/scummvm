@@ -70,10 +70,10 @@ AdItem::AdItem(BaseGame *inGame) : AdTalkHolder(inGame) {
 //////////////////////////////////////////////////////////////////////////
 AdItem::~AdItem() {
 	delete _spriteHover;
-	delete _cursorNormal;
-	delete _cursorHover;
 	_spriteHover = nullptr;
+	delete _cursorNormal;
 	_cursorNormal = nullptr;
+	delete _cursorHover;
 	_cursorHover = nullptr;
 
 	delete[] _amountString;
@@ -439,7 +439,7 @@ bool AdItem::display(int x, int y) {
 		}
 		amountX += _amountOffsetX;
 
-		BaseFont *font = _font ? _font : _gameRef->getSystemFont();
+		BaseFont *font = _font ? _font : _gameRef->_systemFont;
 		if (font) {
 			if (_amountString) {
 				font->drawText((byte *)_amountString, amountX, amountY, width, _amountAlign);
@@ -667,7 +667,7 @@ ScValue *AdItem::scGetProperty(const Common::String &name) {
 	// Name
 	//////////////////////////////////////////////////////////////////////////
 	else if (name == "Name") {
-		_scValue->setString(getName());
+		_scValue->setString(_name);
 		return _scValue;
 	}
 

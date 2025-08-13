@@ -118,7 +118,10 @@ struct CachedFile {
 	{"finkletimes", Common::kPlatformWindows, "lernscor.txt", (const byte *)"", 0},
 	{"finkletimes", Common::kPlatformWindows, "namelist.txt", (const byte *)"", 0},
 	{"finkletimes", Common::kPlatformWindows, "userlist.txt", (const byte *)"", 0},
+
+	// Mission Code: Millennium expects the installer to have added an empty save file.
 	{"mcmillennium", Common::kPlatformWindows, "pc/players", (const byte *)"", 0},
+
 	{ nullptr, Common::kPlatformUnknown, nullptr, nullptr, 0 }
 };
 
@@ -143,6 +146,14 @@ static void quirkLimit15FPS() {
 
 static void quirkPretend16Bit() {
 	g_director->_colorDepth = 16;
+}
+
+static void quirkForceFileIOXObj() {
+	g_director->_fileIOType = kXObj;
+}
+
+static void quirkForceFileIOXtra() {
+	g_director->_fileIOType = kXtraObj;
 }
 
 static void quirkHollywoodHigh() {
@@ -259,6 +270,18 @@ const struct Quirk {
 	{ "finkletimes", Common::kPlatformMacintosh, &quirkPretend16Bit },
 	{ "flipper", Common::kPlatformMacintosh, &quirkPretend16Bit },
 	{ "flipper", Common::kPlatformWindows, &quirkPretend16Bit },
+
+	// The standard FileIO xlib exists as both an XObject and Xtra version, with similar functionality
+	// but incompatible APIs.
+	// We don't currently do any kind of introspection apart from filename, so for now here's a hint.
+	// Puppet Motel New Edition includes the Xtra edition in the Xtra folder, but embeds the XObject
+	// in the projector as a resource. New edition expects Xtra, old edition is D4 and won't be affected.
+	{ "puppetmotel", Common::kPlatformWindows, &quirkForceFileIOXtra },
+	{ "puppetmotel", Common::kPlatformMacintosh, &quirkForceFileIOXtra },
+	// Ingenious bundles both the Xtra and XObject editions in the Xtra folder, but expects the XObject
+	// version to be available.
+	{ "ingenious", Common::kPlatformWindows, &quirkForceFileIOXObj },
+	{ "ingenious", Common::kPlatformMacintosh, &quirkForceFileIOXObj },
 
 	{ nullptr, Common::kPlatformUnknown, nullptr }
 };

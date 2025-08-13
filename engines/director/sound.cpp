@@ -569,12 +569,22 @@ void DirectorSound::setPuppetSound(SoundID soundId, int soundChannel) {
 		return;
 
 	if (soundId.isZero()) {
+		// If soundId is zero, kill the current sound and clear the puppet flag.
 		stopSound(soundChannel);
+		disablePuppetSound(soundChannel);
 	} else {
+		// soundId is non-zero, set the puppet sound value to that.
 		_channels[soundChannel]->newPuppet = true;
 		_channels[soundChannel]->puppet = soundId;
 		_channels[soundChannel]->stopOnZero = true;
 	}
+}
+
+void DirectorSound::disablePuppetSound(int soundChannel) {
+	if (!assertChannel(soundChannel))
+		return;
+
+	_channels[soundChannel]->puppet = SoundID();
 }
 
 void DirectorSound::playPuppetSound(int soundChannel) {

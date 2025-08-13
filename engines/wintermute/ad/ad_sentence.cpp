@@ -73,14 +73,14 @@ AdSentence::AdSentence(BaseGame *inGame) : BaseClass(inGame) {
 //////////////////////////////////////////////////////////////////////////
 AdSentence::~AdSentence() {
 	delete _sound;
-	delete[] _text;
-	delete[] _stances;
-	delete[] _tempStance;
-	delete _talkDef;
 	_sound = nullptr;
+	delete[] _text;
 	_text = nullptr;
+	delete[] _stances;
 	_stances = nullptr;
+	delete[] _tempStance;
 	_tempStance = nullptr;
+	delete _talkDef;
 	_talkDef = nullptr;
 
 	_currentSprite = nullptr; // ref only
@@ -313,7 +313,7 @@ bool AdSentence::update(TDirection dir) {
 	currentTime = _gameRef->getTimer()->getTime() - _startTime;
 
 	bool talkNodeFound = false;
-	for (uint32 i = 0; i < _talkDef->_nodes.getSize(); i++) {
+	for (int32 i = 0; i < _talkDef->_nodes.getSize(); i++) {
 		if (_talkDef->_nodes[i]->isInTimeInterval(currentTime, dir)) {
 			talkNodeFound = true;
 

@@ -289,6 +289,7 @@ protected:
 
 public:
 	const DirectorGameDescription *_gameDescription;
+	Common::HashMap<Common::String, Common::String> _cachedSaveFiles;
 	Common::FSNode _gameDataDir;
 	CastMemberID *_clipBoard;
 	uint32 _wmMode;
@@ -301,6 +302,7 @@ public:
 	TimeDate _forceDate;
 	uint32 _loadSlowdownFactor;
 	uint32 _loadSlowdownCooldownTime;
+	int _fileIOType;
 
 private:
 	byte _currentPalette[768];

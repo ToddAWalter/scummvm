@@ -1535,6 +1535,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "historia",			"Svensk historia: från asatro till frihetskrig år 800-1500" },
 	{ "jonssonligan1",		"Jönssonligan: Jakten på Mjölner" },
 	{ "jonssonligan2",		"Jönssonligan går på djupet" },
+	{ "konrad",				"Konrad & Nobelmysteriet" },
 	{ "kosmopolska",		"Kosmopolska" },
 	{ "krakeldamm",			"Krakels ABC: Den galna dammsugaren/Mera Krakel" },
 	{ "mumin1",				"Kurragömma med Mumintrollen" },
@@ -4185,6 +4186,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Demo is found on Pantsylvania CD
 	MACGAME1("elroybug", "", "Elroy Goes Bugzerk", "r:ea646eccc9a53f44ce082459d4809a06", 520674, 400),
 	WINGAME1("elroybug", "", "BUGZERK.EXE", "t:3be9fa389257a608ff21e09074355fa5", 1593811, 400),
+	MACGAME1("elroybug", "1.0", "Elroy Goes Bugzerk", "r:cbce20666bfe47a9533331c6be1e6039", 321438, 404),
+	WINGAME1("elroybug", "1.0", "BUGZERK.EXE", "t:7fcb09d5dcc8096cd7ffa1fd618e5500", 1561075, 404),
 	MACDEMO1("elroybug", "Demo", "Elroy Goes Bugzerk Demo", "bcd3c718db258701496b3c5bcb827ef2", 498394, 404),
 	WINDEMO1("elroybug", "Demo", "ELRYDEMO.EXE", "cb2d86ea52d81d12d1fe8eadfb4a118c", 2438763, 404),
 
@@ -5306,7 +5309,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1t_l("muppetkidsbegin", "", "BEGSNDS.EXE", "t:5c3116c2a6c3b176c1f24dc190fbbbfc", 1817047, Common::IT_ITA, 404),
 
 	// Italian individual title is Lettere
-	WINGAME1t_l("muppetkidsletters", "", "LETTERS.EXE", "t:618e8bb2e15f342b664bc0efd3cbe9db", 1735083, Common::IT_ITA, 404),
+	WINGAME2_l("muppetkidsletters", "", "LETTERS.EXE", "t:618e8bb2e15f342b664bc0efd3cbe9db", 1735083,
+										"LT03.DIR",	   "f:2e31da85926f6fe208abf223e6b67230",  196586, Common::IT_ITA, 404),
 
 	// Italian individual title is Uguale e diverso
 	WINGAME1t_l("muppetkidssamediff", "", "SAMEDIFF.EXE", "t:d8a0ba7e5ff3464921539924bee07daa", 2140235, Common::IT_ITA, 404),
@@ -8531,6 +8535,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// Mac version requires installation
 	MACGAME1("kingandi", "", "The King and I Thinking Adv", "r:ef18d569c3cb7700367427cfc9150656",  115776, 602),
 	WINGAME1("kingandi", "", "King&I.exe",					"t:ed267a58821c0a586dab3d2b853971be", 1967220, 602),
+
+	// Both versions require installation
+	MACGAME1_l("konrad", "", "Konrad",		  "rt:16ea9e5551f7606b14dcc7418d162545", 1031418, Common::SV_SWE, 601),
+	WINGAME2_l("konrad", "", "Start32.exe",	  "t:929e2931ffbfa6235cc861dcc0482695",  1511552,
+							 "MEDIA/X10.DXR", "f:9d1955cef4f98336a29590f242ad6321",    81104, Common::SV_SWE, 601),
 
 	WINGAME2_l("kontyngent99", "", "START.EXE",		"t:4bbdc40fcaaf25736b198ba8137d3b4d",  1513041,
 								   "DANE/MAIN.DXR",	"f:98b4f7339e1f8f6628035e6317f78912", 21043440, Common::PL_POL, 650),
