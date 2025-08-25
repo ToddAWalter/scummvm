@@ -369,7 +369,9 @@ void Scene300::postInit(SceneObjectList *OwnerList) {
 }
 
 void Scene300::signal() {
-	switch (_sceneMode) {
+	int sceneMode = _sceneMode;
+	++_sceneMode;
+	switch (sceneMode) {
 	case 300:
 		BF_GLOBALS._sound1.fadeSound(33);
 		BF_GLOBALS.clearFlag(onBike);
@@ -4636,6 +4638,28 @@ void Scene360::dispatch() {
  *
  *--------------------------------------------------------------------------*/
 
+void Scene370::SpeakerLaura370::setText(const Common::String& msg) {
+	_removeObject1 = _removeObject2 = true;
+
+	_object1.postInit();
+	_object1.setVisage(345);
+	_object1.setStrip2(5);
+	_object1.fixPriority(254);
+	_object1.setPosition(Common::Point(BF_GLOBALS._sceneManager._scene->_sceneBounds.left + 38,
+		BF_GLOBALS._sceneManager._scene->_sceneBounds.top + 166));
+
+	_object2.postInit();
+	_object2.setVisage(345);
+	_object2.setStrip2(3);
+	_object2.fixPriority(255);
+
+	_object2.setPosition(Common::Point(BF_GLOBALS._sceneManager._scene->_sceneBounds.left + 38,
+		BF_GLOBALS._sceneManager._scene->_sceneBounds.top + 166));
+
+	VisualSpeaker::setText(msg);
+	_object2.fixCountdown(8, _numFrames);
+}
+
 bool Scene370::GreensGun::startAction(CursorType action, Event &event) {
 	Scene370 *scene = (Scene370 *)BF_GLOBALS._sceneManager._scene;
 
@@ -5705,12 +5729,13 @@ bool Scene390::Green::startAction(CursorType action, Event &event) {
 
 bool Scene390::Object2::startAction(CursorType action, Event &event) {
 	Scene390 *scene = (Scene390 *)BF_GLOBALS._sceneManager._scene;
-
+	// Larry at the Jail
 	switch (action) {
 	case CURSOR_TALK:
-		if (!_flag)
+		if (_flag)
 			break;
 
+		BF_GLOBALS._player.disableControl();
 		if (!BF_GLOBALS.getFlag(onDuty)) {
 			scene->_sceneMode = 3917;
 		} else if (BF_GLOBALS.getFlag(fTalkedToBarry) && !BF_GLOBALS.getFlag(fTalkedToLarry)) {

@@ -258,7 +258,7 @@ bool Movie::loadArchive() {
 		} else if (_version < kFileVer600) {
 			r = new Common::MemoryReadStreamEndian(kBlankScoreD4, sizeof(kBlankScoreD4), true);
 		} else {
-			error("Movie::loadArchive(): score format not yet supported for version %d", _version);
+			error("Movie::loadArchive(): score format not yet supported for version v%d (%d)", humanVersion(_version), _version);
 		}
 	}
 
@@ -483,6 +483,8 @@ bool Movie::loadCastLibFrom(uint16 libId, Common::Path &filename) {
 CastMember *Movie::getCastMember(CastMemberID memberID) {
 	CastMember *result = nullptr;
 	if (_casts.contains(memberID.castLib)) {
+		if (memberID.member == 0)
+			return nullptr;
 		result = _casts.getVal(memberID.castLib)->getCastMember(memberID.member);
 		if (result == nullptr && _sharedCast) {
 			result = _sharedCast->getCastMember(memberID.member);

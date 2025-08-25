@@ -135,6 +135,7 @@ MODULE_OBJS = \
 	lingo/xlibs/paco.o \
 	lingo/xlibs/palxobj.o \
 	lingo/xlibs/panel.o \
+	lingo/xlibs/pharaohs.o \
 	lingo/xlibs/popupmenuxobj.o \
 	lingo/xlibs/porta.o \
 	lingo/xlibs/prefpath.o \
@@ -188,6 +189,7 @@ MODULE_OBJS += \
 	debugger/dt-cast.o \
 	debugger/dt-controlpanel.o \
 	debugger/dt-lists.o \
+	debugger/dt-save-state.o \
 	debugger/dt-score.o \
 	debugger/dt-script-d2.o \
 	debugger/dt-script-d4.o \

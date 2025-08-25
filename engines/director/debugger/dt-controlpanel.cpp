@@ -24,16 +24,19 @@
 
 #include "director/archive.h"
 #include "director/movie.h"
+#include "director/window.h"
 #include "director/score.h"
 
 namespace Director {
 namespace DT {
 
 static uint32 getLineFromPC() {
+	ScriptData *scriptData = &_state->_functions._windowScriptData.getOrCreateVal(g_director->getCurrentWindow());
+
 	const uint pc = g_lingo->_state->pc;
-	if (_state->_functions._scripts.empty())
+	if (scriptData->_scripts.empty())
 		return 0;
-	const Common::Array<uint> &offsets = _state->_functions._scripts[_state->_functions._current].startOffsets;
+	const Common::Array<uint> &offsets = scriptData->_scripts[scriptData->_current].startOffsets;
 	for (uint i = 0; i < offsets.size(); i++) {
 		if (pc <= offsets[i])
 			return i;
@@ -66,6 +69,7 @@ static bool stepInShouldPauseDebugger() {
 		_state->_dbg._lastLinePC = line;
 		return true;
 	}
+
 	return false;
 }
 
@@ -73,7 +77,6 @@ static bool stepOutShouldPause() {
 	const uint32 line = getLineFromPC();
 
 	// we stop when:
-	// - the statement line is different
 	// - OR we go up in the callstack
 	if (g_lingo->_state->callstack.size() < _state->_dbg._callstackSize) {
 		_state->_dbg._lastLinePC = line;

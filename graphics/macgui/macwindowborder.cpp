@@ -53,6 +53,11 @@ MacWindowBorder::MacWindowBorder() {
 	_borderOffsets.titleBottom = -1;
 	_borderOffsets.dark = false;
 	_borderOffsets.titlePos = 0;
+	_borderOffsets.closeButtonTop = -1;
+	_borderOffsets.closeButtonLeft = -1;
+	_borderOffsets.closeButtonWidth = 0;
+	_borderOffsets.resizeButtonTop = -1;
+	_borderOffsets.resizeButtonHeight = 0;
 	_borderOffsets.upperScrollHeight = 0;
 	_borderOffsets.lowerScrollHeight = 0;
 
@@ -227,13 +232,18 @@ void MacWindowBorder::loadBorder(Common::SeekableReadStream &file, uint32 flags,
 	offsets.titleBottom = -1;
 	offsets.titlePos = 0;
 	offsets.dark = false;
+	offsets.closeButtonTop = -1;
+	offsets.closeButtonLeft = -1;
+	offsets.closeButtonWidth = 0;
+	offsets.resizeButtonTop = -1;
+	offsets.resizeButtonHeight = 0;
 	offsets.upperScrollHeight = 0;
 	offsets.lowerScrollHeight = 0;
 
 	loadBorder(file, flags, offsets);
 }
 
-void MacWindowBorder::loadBorder(Common::SeekableReadStream &file, uint32 flags, BorderOffsets offsets) {
+void MacWindowBorder::loadBorder(Common::SeekableReadStream &file, uint32 flags, const BorderOffsets &offsets) {
 	Image::BitmapDecoder bmpDecoder;
 	bmpDecoder.loadStream(file);
 
@@ -266,12 +276,17 @@ void MacWindowBorder::setBorder(Graphics::ManagedSurface *surface, uint32 flags,
 	offsets.titleBottom = -1;
 	offsets.titlePos = 0;
 	offsets.dark = false;
+	offsets.closeButtonTop = -1;
+	offsets.closeButtonLeft = -1;
+	offsets.closeButtonWidth = 0;
+	offsets.resizeButtonTop = -1;
+	offsets.resizeButtonHeight = 0;
 	offsets.upperScrollHeight = 0;
 	offsets.lowerScrollHeight = 0;
 	setBorder(surface, flags, offsets);
 }
 
-void MacWindowBorder::setBorder(Graphics::ManagedSurface *surface, uint32 flags, BorderOffsets offsets) {
+void MacWindowBorder::setBorder(Graphics::ManagedSurface *surface, uint32 flags, const BorderOffsets &offsets) {
 	addBorder(surface, flags, offsets.titlePos);
 
 	if ((flags & kWindowBorderActive) && offsets.left + offsets.right + offsets.top + offsets.bottom > -4) { // Checking against default -1
@@ -291,7 +306,7 @@ void MacWindowBorder::loadInternalBorder(uint32 flags) {
 		warning("trying to load non-existing internal border type");
 		return;
 	}
-	BorderOffsets offsets = _wm->getBorderOffsets(_borderType);
+	const BorderOffsets &offsets = _wm->getBorderOffsets(_borderType);
 	Common::SeekableReadStream *file = _wm->getBorderFile(_borderType, flags);
 	if (file) {
 		loadBorder(*file, flags, offsets);

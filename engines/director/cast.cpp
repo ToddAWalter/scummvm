@@ -151,7 +151,7 @@ CastMember *Cast::getCastMember(int castId, bool load) {
 	if (result) {
 		debugC(4, kDebugSaving, "Returned castmember with castId: %d, type: %s", castId, castType2str(result->_type));
 	} else {
-		warning("No castmember with castId: %d, found for cast with libResourceID: %d", castId, _libResourceId);
+		debugC(4, kDebugSaving, "No castmember with castId: %d, found for cast with libResourceID: %d", castId, _libResourceId);
 	}
 	return result;
 }
@@ -180,6 +180,13 @@ CastMember *Cast::getCastMemberByScriptId(int scriptId) {
 	if (_castsScriptIds.contains(scriptId))
 		return getCastMember(_castsScriptIds[scriptId]);
 	return nullptr;
+}
+
+int Cast::getCastIdByScriptId(uint32 scriptId) const {
+	if (_castsScriptIds.contains(scriptId)) {
+		return _castsScriptIds.getVal(scriptId);
+	}
+	return -1;
 }
 
 CastMemberInfo *Cast::getCastMemberInfo(int castId) {
@@ -477,7 +484,7 @@ bool Cast::loadConfig() {
 				_defaultPalette.member -= 1;
 
 		} else {
-			warning("STUB: Cast::loadConfig(): Extended config not yet supported for version %d", _version);
+			warning("STUB: Cast::loadConfig(): Extended config not yet supported for version v%d (%d)", humanVersion(_version), _version);
 		}
 		debugC(1, kDebugLoading, "Cast::loadConfig(): platform: %s, defaultPalette: %s, frameRate: %d", getPlatformAbbrev(_platform), _defaultPalette.asString().c_str(), _frameRate);
 	}
@@ -1381,7 +1388,7 @@ void Cast::loadCastData(Common::SeekableReadStreamEndian &stream, uint16 id, Res
 		castInfoOffset = stream.pos();
 		castDataOffset = stream.pos() + castInfoSize;
 	} else {
-		error("Cast::loadCastData: unsupported Director version (%d)", _version);
+		error("Cast::loadCastData: unsupported Director version v%d (%d)", humanVersion(_version), _version);
 	}
 
 	debugC(3, kDebugLoading, "Cast::loadCastData(): CASt: id: %d type: %x castDataSize: %d castInfoSize: %d (%x) unk1: %d unk2: %d unk3: %d",
@@ -1638,7 +1645,7 @@ void Cast::loadLingoContext(Common::SeekableReadStreamEndian &stream) {
 			}
 		}
 	} else {
-		error("Cast::loadLingoContext: unsupported Director version (%d)", _version);
+		error("Cast::loadLingoContext: unsupported Director version v%d (%d)", humanVersion(_version), _version);
 	}
 
 	if (debugChannelSet(-1, kDebugImGui) || ConfMan.getBool("dump_scripts")) {
@@ -1651,7 +1658,7 @@ void Cast::loadLingoContext(Common::SeekableReadStreamEndian &stream) {
 		_lingodec->parseScripts();
 
 		for (auto it = _lingodec->scripts.begin(); it != _lingodec->scripts.end(); ++it) {
-			debugC(9, kDebugCompile, "[%d/%d] %s", it->second->castID, it->first, it->second->scriptText("\n", false).c_str());
+			debugC(9, kDebugCompile, "[%d/%d] %s", _castsScriptIds[it->first], it->first, it->second->scriptText("\n", false).c_str());
 		}
 
 		if (ConfMan.getBool("dump_scripts")) {
@@ -1659,17 +1666,15 @@ void Cast::loadLingoContext(Common::SeekableReadStreamEndian &stream) {
 				Common::DumpFile out;
 				ScriptType scriptType = kNoneScript;
 
-				if (_loadedCast->contains(it->second->castID)) {
-					CastMember *member = _loadedCast->getVal(it->second->castID);
-					if (member && member->_type == kCastLingoScript) {
-						scriptType = ((ScriptCastMember *)member)->_scriptType;
-					} else {
-						scriptType = kCastScript;
-					}
+				CastMember *member = getCastMemberByScriptId(it->first);
+				if (member && member->_type == kCastLingoScript) {
+					scriptType = ((ScriptCastMember *)member)->_scriptType;
+				} else if (member) {
+					scriptType = kCastScript;
 				}
 
 				Common::String filename = encodePathForDump(_macName);
-				Common::Path lingoPath(dumpScriptName(filename.c_str(), scriptType, it->second->castID, "lingo"));
+				Common::Path lingoPath(dumpScriptName(filename.c_str(), scriptType, _castsScriptIds[it->first], "lingo"));
 
 				if (out.open(lingoPath, true)) {
 					Common::String decompiled = it->second->scriptText("\n", false);
@@ -1874,7 +1879,7 @@ void Cast::loadCastInfo(Common::SeekableReadStreamEndian &stream, uint16 id) {
 	if (_version >= kFileVer400 && _version < kFileVer600 && member->_type == kCastSound) {
 		((SoundCastMember *)member)->_looping = castInfo.flags & 16 ? 0 : 1;
 	} else if (_version >= kFileVer600 && member->_type == kCastSound) {
-		warning("STUB: Cast::loadCastInfo(): Sound cast member info not yet supported for version %d", _version);
+		warning("STUB: Cast::loadCastInfo(): Sound cast member info not yet supported for version v%d (%d)", humanVersion(_version), _version);
 	}
 
 	// For PaletteCastMember, run load() as we need it right now

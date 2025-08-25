@@ -3014,9 +3014,6 @@ void Scene180::signal() {
 		break;
 	case 6:
 		loadScene(1180);
-		// Fix for color glitch (white / very bright color on House walls and the action/verb wheel popup) 
-		// after "The Next Day" message fade out (eg. after the transition between first day and second day morning)
-		BF_GLOBALS._scenePalette.refresh();
 		BF_GLOBALS._sound1.fadeSound(33);
 
 		switch (BF_GLOBALS._bookmark) {
@@ -3054,7 +3051,7 @@ void Scene180::signal() {
 		_palms.setDetails(6, 180, 12, 13, 14, 1);
 		_garage.setDetails(Rect(241, 85, 319, 121), 180, 30, 31, 32, 1, NULL);
 		_fence.setDetails(Rect(0, 109, 21, 125), 180, 9, 10, 11, 1, NULL);
-		_house.setDetails(4, 180, 24, 25, 26, 1);
+		_house.setDetails(5, 180, 24, 25, 26, 1);
 		_steps.setDetails(7, 180, 6, 7, 8, 1);
 		_curb.setDetails(2, 180, 3, 4, 5, 1);
 		_sky.setDetails(Rect(0, 0, 319, 190), 180, 0, 1, 2, 1, NULL);

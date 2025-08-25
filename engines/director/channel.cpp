@@ -32,6 +32,7 @@
 #include "director/castmember/bitmap.h"
 #include "director/castmember/digitalvideo.h"
 #include "director/castmember/filmloop.h"
+#include "director/castmember/movie.h"
 
 #include "graphics/macgui/mactext.h"
 #include "graphics/macgui/mactextwindow.h"
@@ -390,6 +391,7 @@ void Channel::setCast(CastMemberID memberID) {
 	if (_sprite->_cast)
 		_sprite->_cast->releaseWidget();
 
+	bool hasChanged = _sprite->_castId != memberID;
 	// Replace the cast member in the sprite.
 	// Only change the dimensions if the "stretch" flag is set,
 	// indicating that the sprite has already been warped away from cast
@@ -397,6 +399,24 @@ void Channel::setCast(CastMemberID memberID) {
 	// dimensions of the sprite, -then- change the cast ID, and expect
 	// those custom dimensions to stick around.
 	_sprite->setCast(memberID, !_sprite->_stretch);
+
+	// Duplicate of the special cases in setClean.
+	// Maybe it makes sense to force setClean to use setCast instead?
+	if (hasChanged && _sprite->_cast) {
+		if (_sprite->_cast->_type == kCastDigitalVideo) {
+			DigitalVideoCastMember *dv = (DigitalVideoCastMember *)_sprite->_cast;
+			if (dv->loadVideoFromCast()) {
+				_movieTime = 0;
+				dv->setChannel(this);
+				dv->startVideo();
+			}
+		} else if (_sprite->_cast->_type == kCastFilmLoop ||
+					_sprite->_cast->_type == kCastMovie) {
+			// brand new film loop, reset the frame counter.
+			_filmLoopFrame = 1;
+		}
+	}
+
 	replaceWidget();
 
 	// Based on Director in a Nutshell, page 15
@@ -741,12 +761,37 @@ bool Channel::hasSubChannels() {
 }
 
 Common::Array<Channel> *Channel::getSubChannels() {
-	if ((!_sprite->_cast) || (_sprite->_cast->_type != kCastFilmLoop && _sprite->_cast->_type != kCastMovie)) {
-		warning("Channel doesn't have any sub-channels");
-		return nullptr;
+	if (_sprite->_cast) {
+		Common::Rect bbox = getBbox();
+		if (_sprite->_cast->_type == kCastFilmLoop)
+			return ((FilmLoopCastMember *)_sprite->_cast)->getSubChannels(bbox, _filmLoopFrame);
+		else if (_sprite->_cast->_type == kCastMovie)
+			return ((MovieCastMember *)_sprite->_cast)->getSubChannels(bbox, _filmLoopFrame);
 	}
-	Common::Rect bbox = getBbox();
-	return ((FilmLoopCastMember *)_sprite->_cast)->getSubChannels(bbox, this);
+	warning("Channel doesn't have any sub-channels");
+	return nullptr;
+}
+
+CastMemberID Channel::getSubChannelSound1() {
+	if (_sprite->_cast) {
+		if (_sprite->_cast->_type == kCastFilmLoop)
+			return ((FilmLoopCastMember *)_sprite->_cast)->getSubChannelSound1(_filmLoopFrame);
+		else if (_sprite->_cast->_type == kCastMovie)
+			return ((MovieCastMember *)_sprite->_cast)->getSubChannelSound2(_filmLoopFrame);
+	}
+	warning("Channel doesn't have any sub-channels");
+	return CastMemberID();
+}
+
+CastMemberID Channel::getSubChannelSound2() {
+	if (_sprite->_cast) {
+		if (_sprite->_cast->_type == kCastFilmLoop)
+			return ((FilmLoopCastMember *)_sprite->_cast)->getSubChannelSound1(_filmLoopFrame);
+		else if (_sprite->_cast->_type == kCastMovie)
+			return ((MovieCastMember *)_sprite->_cast)->getSubChannelSound2(_filmLoopFrame);
+	}
+	warning("Channel doesn't have any sub-channels");
+	return CastMemberID();
 }
 
 } // End of namespace Director
