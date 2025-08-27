@@ -255,7 +255,7 @@ bool ScriptManager::checkPuzzleCriteria(Puzzle *puzzle, uint counter) {
 	if (counter == 0 && (getStateFlag(puzzle->key) & Puzzle::DO_ME_NOW) == 0) {
 		return true;
 	}
-	
+
 	// WORKAROUNDS:
 	switch (_engine->getGameId()) {
 	case GID_NEMESIS:
@@ -533,7 +533,7 @@ void ScriptManager::killSideFxType(ScriptingEffect::ScriptingEffectType type) {
 }
 
 void ScriptManager::onMouseDown(const Common::Point &screenSpacePos, const Common::Point &backgroundImageSpacePos) {
-	debugC(1, kDebugMouse, "Mouse panorama/script coordinates %d x %d", backgroundImageSpacePos.x, backgroundImageSpacePos.y);
+	debugC(1, kDebugMouse, "Mouse screen coordinates: %d, %d, background/script coordinates: %d, %d", screenSpacePos.x, screenSpacePos.y, backgroundImageSpacePos.x, backgroundImageSpacePos.y);
 	if (!_activeControls) {
 		return;
 	}
@@ -654,7 +654,7 @@ void ScriptManager::ChangeLocationReal(bool isLoading) {
 		}
 	}
 
-	// _engine->setRenderDelay(2); // TODO: Uncertain if this is necessary; doesn't seem to cause any problems when disabled, but keep an eye on it.
+	 _engine->setRenderDelay(2); // Necessary to ensure proper redraw in certain locations, in particular the infinite corridor in Zork Grand Inquisitor (room th20)
 
 	if (!leavingMenu) {
 		if (!isLoading && !enteringMenu) {
@@ -761,6 +761,9 @@ void ScriptManager::ChangeLocationReal(bool isLoading) {
 	}
 
 	_engine->getRenderManager()->checkBorders();
+
+	_engine->onMouseMove();	// Trigger a pseudo mouse movement to change cursor if we enter the new location with it already over a hotspot
+
 	debugC(1, kDebugScript, "\tLocation change complete");
 }
 

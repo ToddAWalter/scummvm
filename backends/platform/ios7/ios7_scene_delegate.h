@@ -19,35 +19,14 @@
  *
  */
 
-#ifndef MATH_VECTOR2D_H
-#define MATH_VECTOR2D_H
+#ifndef BACKENDS_PLATFORM_IOS7_IOS7_SCENE_DELEGATE_H
+#define BACKENDS_PLATFORM_IOS7_IOS7_SCENE_DELEGATE_H
 
-#include "math/vector.h"
-#include "math/vector3d.h"
+#include <UIKit/UIKit.h>
 
-namespace Math {
+API_AVAILABLE(ios(13.0))
+@interface iOS7SceneDelegate : NSObject<UIWindowSceneDelegate>
 
-typedef Matrix<2, 1> Vector2d;
-
-template<>
-class Matrix<2, 1> : public MatrixType<2, 1> {
-public:
-	Matrix();
-	Matrix(float x, float y);
-	Matrix(const MatrixBase<2, 1> &vec);
-	Matrix(const float *data);
-
-	inline float getX() const { return getValue(0); }
-	inline float getY() const { return getValue(1); }
-	inline void setX(float x) { setValue(0, x); }
-	inline void setY(float y) { setValue(1, y); }
-
-	void rotateAround(const Vector(2) &point, const Angle &angle);
-	Angle getAngle() const;
-
-	Vector3d toVector3d() const;
-};
-
-}
+@end
 
 #endif

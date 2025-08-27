@@ -315,21 +315,46 @@ void Cast::loadArchive() {
 	loadCast();
 }
 
+void configLenSanityCheck(uint16 len, uint16 fileVersion) {
+	int tlen = -1;
+
+	if (fileVersion < kFileVer300) {
+		tlen = 30;							// D2
+	} else if (fileVersion < kFileVer400) {
+		tlen = 48;							// D3
+	} else if (fileVersion < kFileVer600) {
+		tlen = 80;							// D4, D5
+	} else if (fileVersion < kFileVer1000) {
+		tlen = 84;							// D6, D7, D8, D9
+	} else if (fileVersion < kFileVer1100) {
+		tlen = 100;							// D10
+	}
+
+	if (tlen == -1) {
+		warning("BUILDBOT: Cast::loadConfig(): Unmapped config length for file version v%d (%d): %d", humanVersion(fileVersion), fileVersion, len);
+	} else if (len != tlen) {
+		warning("BUILDBOT: Cast::loadConfig(): Unexpected config length for file version v%d (%d): %d, expected %d", humanVersion(fileVersion), fileVersion, len, tlen);
+	}
+}
+
 bool Cast::loadConfig() {
 	if (!_castArchive) {
 		warning("Cast::loadConfig(): No archive specified");
 		return false;
 	}
 	Common::SeekableReadStreamEndian *stream = nullptr;
+	const char *chunkTag = "VWCF";
 	stream = _castArchive->getMovieResourceIfPresent(MKTAG('V', 'W', 'C', 'F'));
-	if (!stream)
+	if (!stream) {
 		stream = _castArchive->getMovieResourceIfPresent(MKTAG('D', 'R', 'C', 'F'));
+		chunkTag = "DRCF";
+	}
 	if (!stream) {
 		warning("Cast::loadConfig(): Wrong format. VWCF resource missing");
 		return false;
 	}
 
-	debugC(1, kDebugLoading, "****** Loading Config VWCF for cast libID %d (%s)", _castLibID, _castName.c_str());
+	debugC(1, kDebugLoading, "****** Loading Config %s (%d bytes) for cast libID %d (%s)", chunkTag, (uint)stream->size(), _castLibID, _castName.c_str());
 
 	if (debugChannelSet(5, kDebugLoading))
 		stream->hexdump(stream->size());
@@ -347,6 +372,8 @@ bool Cast::loadConfig() {
 
 	if (stream->size() <= 36)
 		_version = _fileVersion;				// Checking if we have already read the version
+
+	configLenSanityCheck(_len, _version);
 
 	uint humanVer = humanVersion(_version);
 
@@ -413,12 +440,13 @@ bool Cast::loadConfig() {
 	// uint16 stageColorG = stream.readUint16();
 	// uint16 stageColorB = stream.readUint16();
 
-	debugC(1, kDebugLoading, "Cast::loadConfig(): len: %d, fileVersion: %d, light: %d, unk: %d, font: %d, size: %d"
-			", style: %d", _len, _fileVersion, _lightswitch, _unk1, _commentFont, _commentSize, _commentStyle);
+	debugC(1, kDebugLoading, "Cast::loadConfig(): len: %d, fileVersion: %d (v%d), light: %d, unk: %d, font: %d, size: %d"
+			", style: %d", _len, _fileVersion, humanVersion(_fileVersion), _lightswitch, _unk1, _commentFont, _commentSize, _commentStyle);
 	debugC(1, kDebugLoading, "Cast::loadConfig(): stagecolor: %d, depth: %d",
 			_stageColor, _bitdepth);
 	if (debugChannelSet(1, kDebugLoading))
 		_movieRect.debugPrint(1, "Cast::loadConfig(): Movie rect: ");
+	debugC(1, kDebugLoading, "Cast::loadConfig(): directorVersion: %d", humanVer);
 
 	// Fields required for checksum calculation
 	// D3 fields - Macromedia did not increment the fileVersion from D2 to D3
@@ -435,9 +463,10 @@ bool Cast::loadConfig() {
 		_field21 = stream->readSint16();
 		_field22 = stream->readSint32();
 		_field23 = stream->readSint32();
-	}
 
-	debugC(1, kDebugLoading, "Cast::loadConfig(): directorVersion: %d", humanVer);
+		debugC(1, kDebugLoading, "Cast::loadConfig(): field17: %d, field18: %d, field19: %d, field21: %d, field22: %d field23: %d",
+			_field17, _field18, _field19, _field21, _field22, _field23);
+	}
 
 	if (_version >= kFileVer400) {
 		_field24 = stream->readSint32();
@@ -452,6 +481,11 @@ bool Cast::loadConfig() {
 		_isProtected = (_protection % 23) == 0;
 		_field29 = stream->readSint32();
 		_checksum = stream->readUint32();
+
+		debugC(1, kDebugLoading, "Cast::loadConfig(): field24: %d, field25: %d, field26: %d, frameRate: %d, platformID: %d",
+				_field24, _field25, _field26, _frameRate, _platformID);
+		debugC(1, kDebugLoading, "Cast::loadConfig(): protection: %d, field29: %d, checksum: 0x%08x",
+			_protection, _field29, _checksum);
 
 		//Calculation and verification of checksum
 		uint32 check = computeChecksum();
@@ -474,16 +508,47 @@ bool Cast::loadConfig() {
 			for (int i = 0; i < 0x08; i++) {
 				stream->readByte();
 			}
-		} else if (_version >= kFileVer500 && _version < kFileVer600) {
-			for (int i = 0; i < 0x08; i++) {
-				stream->readByte();
-			}
+
+			debugC(1, kDebugLoading, "Cast::loadConfig(): field30: %d, defaultPalette: %s", _field30, _defaultPalette.asString().c_str());
+		} else if (_version >= kFileVer500) {
+			_field30 = stream->readSint16();
+			_defPaletteNum = stream->readSint16();
+			_chunkBaseNum = stream->readSint32();
 			_defaultPalette.castLib = stream->readSint16();
 			_defaultPalette.member = stream->readSint16();
 			if (_defaultPalette.member <= 0)
 				_defaultPalette.member -= 1;
 
-		} else {
+			debugC(1, kDebugLoading, "Cast::loadConfig(): field30: %d, defPaletteNum: %d, chunkBaseNum: %d, defaultPalette: %s",
+				_field30, _defPaletteNum, _chunkBaseNum, _defaultPalette.asString().c_str());
+		}
+
+		// 80 bytes
+
+		if (_version >= kFileVer600 && _version < kFileVer1000) {
+			_netUnk1 = stream->readSByte();
+			_netUnk2 = stream->readSByte();
+			_netPreloadNumFrames = stream->readSint16();
+			debugC(1, kDebugLoading, "Cast::loadConfig(): netUnk1: %d, netUnk2: %d, netPreloadNumFrames: %d",
+				_netUnk1, _netUnk2, _netPreloadNumFrames);
+		}
+
+		// 84 bytes
+
+		if (_version >= kFileVer1000 && _version < kFileVer1100) {
+			_windowFlags = stream->readUint32();
+			_windowIconId.castLib = stream->readSint16();
+			_windowIconId.member = stream->readSint16();
+			_windowMaskId.castLib = stream->readSint16();
+			_windowMaskId.member = stream->readSint16();
+			_windowDragRegionMaskId.castLib = stream->readSint16();
+			_windowDragRegionMaskId.member = stream->readSint16();
+
+			debugC(1, kDebugLoading, "Cast::loadConfig(): windowFlags: %d, windowIconId: %s, windowMaskId: %s, windowDragRegionMaskId: %s",
+				_windowFlags, _windowIconId.asString().c_str(), _windowMaskId.asString().c_str(), _windowDragRegionMaskId.asString().c_str());
+
+			// 100 bytes
+		} else if (_version >= kFileVer1100) {
 			warning("STUB: Cast::loadConfig(): Extended config not yet supported for version v%d (%d)", humanVersion(_version), _version);
 		}
 		debugC(1, kDebugLoading, "Cast::loadConfig(): platform: %s, defaultPalette: %s, frameRate: %d", getPlatformAbbrev(_platform), _defaultPalette.asString().c_str(), _frameRate);
@@ -570,6 +635,22 @@ void Cast::saveConfig(Common::SeekableWriteStream *writeStream, uint32 offset) {
 
 		writeStream->writeSint16BE(_defaultPalette.castLib);    // 76
 		writeStream->writeSint16BE(_defaultPalette.member);     // 78
+	}
+
+	if (_version >= kFileVer600 && _version < kFileVer1000) {
+		writeStream->writeByte(_netUnk1);
+		writeStream->writeByte(_netUnk2);
+		writeStream->writeSint16BE(_netPreloadNumFrames);
+	}
+
+	if (_version >= kFileVer1000 && _version < kFileVer1100) {
+		writeStream->writeUint32BE(_windowFlags);
+		writeStream->writeSint16BE(_windowIconId.castLib);
+		writeStream->writeSint16BE(_windowIconId.member);
+		writeStream->writeSint16BE(_windowMaskId.castLib);
+		writeStream->writeSint16BE(_windowMaskId.member);
+		writeStream->writeSint16BE(_windowDragRegionMaskId.castLib);
+		writeStream->writeSint16BE(_windowDragRegionMaskId.member);
 	}
 
 	if (debugChannelSet(7, kDebugSaving)) {
@@ -1351,21 +1432,8 @@ void Cast::loadCastData(Common::SeekableReadStreamEndian &stream, uint16 id, Res
 
 	uint32 castDataSize, castInfoSize,  castType, castDataSizeToRead, castDataOffset, castInfoOffset;
 	uint8 flags1 = 0xFF;
-	byte unk1 = 0, unk2 = 0, unk3 = 0;
 
 	// D2-3 cast members should be loaded in loadCastDataVWCR
-#if 0
-	if (_version < kFileVer400) {
-		size1 = stream.readUint16();
-		sizeToRead = size1 +16; // 16 is for bounding rects
-		size2 = stream.readUint32();
-		castType = stream.readByte();
-		unk1 = stream.readByte();
-		unk2 = stream.readByte();
-		unk3 = stream.readByte();
-	}
-#endif
-
 	if (_version >= kFileVer400 && _version < kFileVer500) {
 		castDataSize = stream.readUint16();
 		castDataSizeToRead = castDataSize;
@@ -1380,7 +1448,7 @@ void Cast::loadCastData(Common::SeekableReadStreamEndian &stream, uint16 id, Res
 		}
 		castDataOffset = stream.pos();
 		castInfoOffset = stream.pos() + castDataSizeToRead;
-	} else if (_version >= kFileVer500 && _version < kFileVer600) {
+	} else if (_version >= kFileVer500 && _version < kFileVer1100) { // After D5 there are no changes, TODO: Check D11, D12
 		castType = stream.readUint32();
 		castInfoSize = stream.readUint32();
 		castDataSize = stream.readUint32();
@@ -1391,8 +1459,8 @@ void Cast::loadCastData(Common::SeekableReadStreamEndian &stream, uint16 id, Res
 		error("Cast::loadCastData: unsupported Director version v%d (%d)", humanVersion(_version), _version);
 	}
 
-	debugC(3, kDebugLoading, "Cast::loadCastData(): CASt: id: %d type: %x castDataSize: %d castInfoSize: %d (%x) unk1: %d unk2: %d unk3: %d",
-		id, castType, castDataSize, castInfoSize, castInfoSize, unk1, unk2, unk3);
+	debugC(3, kDebugLoading, "Cast::loadCastData(): CASt: id: %d type: %s (%x) castDataSize: %d castInfoSize: %d (%x)",
+		id, castType2str((CastType)castType), castType, castDataSize, castInfoSize, castInfoSize);
 
 	// read the cast member itself
 	byte *data = (byte *)calloc(castDataSizeToRead, 1);
