@@ -782,34 +782,26 @@ void readSpriteDataD4(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 }
 
 void writeSpriteDataD4(Common::SeekableWriteStream *writeStream, Sprite &sprite) {
-	// Writing 20 bytes of sprite data
-	// The original data for a certain sprite might be less
 	writeStream->writeByte(sprite._scriptId.member);			// 0
+	writeStream->writeByte((byte) sprite._spriteType);		// 1
+	writeStream->writeByte(sprite._foreColor);				// 2
+	writeStream->writeByte(sprite._backColor);				// 3
+	writeStream->writeByte(sprite._thickness);				// 4
+	writeStream->writeByte(sprite._inkData);				// 5
 
-	if (sprite._puppet) {
-		for (int i = 1; i < kSprChannelSizeD4; i++)
-			writeStream->writeByte(0);
+	if (sprite.isQDShape()) {
+		writeStream->writeUint16BE(sprite._pattern);		// 6, 7
 	} else {
-		writeStream->writeByte((byte) sprite._spriteType);		// 1
-		writeStream->writeByte(sprite._foreColor);				// 2
-		writeStream->writeByte(sprite._backColor);				// 3
-		writeStream->writeByte(sprite._thickness);				// 4
-		writeStream->writeByte(sprite._inkData);				// 5
-
-		if (sprite.isQDShape()) {
-			writeStream->writeUint16BE(sprite._pattern);		// 6, 7
-		} else {
-			writeStream->writeUint16BE(sprite._castId.member);	// 6, 7
-		}
-
-		writeStream->writeUint16BE(sprite._startPoint.y);		// 8, 9
-		writeStream->writeUint16BE(sprite._startPoint.x);		// 10, 11
-		writeStream->writeUint16BE(sprite._height);				// 12, 13
-		writeStream->writeUint16BE(sprite._width);				// 14, 15
-		writeStream->writeUint16BE(sprite._scriptId.member);	// 16, 17
-		writeStream->writeByte(sprite._colorcode);				// 18
-		writeStream->writeByte(sprite._blendAmount);			// 19
+		writeStream->writeUint16BE(sprite._castId.member);	// 6, 7
 	}
+
+	writeStream->writeUint16BE(sprite._startPoint.y);		// 8, 9
+	writeStream->writeUint16BE(sprite._startPoint.x);		// 10, 11
+	writeStream->writeUint16BE(sprite._height);				// 12, 13
+	writeStream->writeUint16BE(sprite._width);				// 14, 15
+	writeStream->writeUint16BE(sprite._scriptId.member);	// 16, 17
+	writeStream->writeByte(sprite._colorcode);				// 18
+	writeStream->writeByte(sprite._blendAmount);			// 19
 }
 
 /**************************
@@ -987,22 +979,22 @@ void Frame::writeMainChannelsD5(Common::SeekableWriteStream *writeStream) {
 	writeStream->writeByte(_mainChannels.colorScript);				// 19
 	writeStream->writeByte(_mainChannels.colorTrans);				// 20
 
-	writeStream->writeByte(_mainChannels.tempo);			// 21
-	writeStream->writeUint16BE(0);		// Unknown	// 22, 23
+	writeStream->writeByte(_mainChannels.tempo);					// 21
+	writeStream->writeUint16BE(0);									// Unknown	// 22, 23
 
-	writeStream->writeSint16BE(_mainChannels.palette.paletteId.castLib);		// 24, 25
-	writeStream->writeSint16BE(_mainChannels.palette.paletteId.member);			// 26, 27
-	writeStream->writeByte(_mainChannels.palette.speed);					// 28
-	writeStream->writeByte(_mainChannels.palette.flags);					// 29
-	writeStream->writeByte(_mainChannels.palette.firstColor ^ 0x80);		// 30
-	writeStream->writeByte(_mainChannels.palette.lastColor ^ 0x80);				// 31
+	writeStream->writeSint16BE(_mainChannels.palette.paletteId.castLib);	// 24, 25
+	writeStream->writeSint16BE(_mainChannels.palette.paletteId.member);		// 26, 27
+	writeStream->writeByte(_mainChannels.palette.speed);				// 28
+	writeStream->writeByte(_mainChannels.palette.flags);				// 29
+	writeStream->writeByte(_mainChannels.palette.firstColor ^ 0x80);	// 30
+	writeStream->writeByte(_mainChannels.palette.lastColor ^ 0x80);		// 31
 
-	writeStream->writeUint16BE(_mainChannels.palette.frameCount);			// 32, 33
-	writeStream->writeUint16BE(_mainChannels.palette.cycleCount);			// 34, 35
+	writeStream->writeUint16BE(_mainChannels.palette.frameCount);		// 32, 33
+	writeStream->writeUint16BE(_mainChannels.palette.cycleCount);		// 34, 35
 	writeStream->writeByte(_mainChannels.palette.fade);					// 36
-	writeStream->writeByte(_mainChannels.palette.delay);					// 37
-	writeStream->writeByte(_mainChannels.palette.style);					// 38
-	writeStream->writeByte(_mainChannels.palette.colorCode);				// 39
+	writeStream->writeByte(_mainChannels.palette.delay);				// 37
+	writeStream->writeByte(_mainChannels.palette.style);				// 38
+	writeStream->writeByte(_mainChannels.palette.colorCode);			// 39
 
 	writeStream->writeUint64BE(0);		// Unknown 	// 40, 41, 42, 43, 44, 45, 46, 47
 }
@@ -1166,30 +1158,22 @@ void readSpriteDataD5(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 }
 
 void writeSpriteDataD5(Common::SeekableWriteStream *writeStream, Sprite &sprite) {
-	// Writing 24 bytes of sprite data
-	// The original data for a certain sprite might be less
-	writeStream->writeByte(sprite._spriteType);			// 0
-
-	if (sprite._puppet) {
-		for (int i = 1; i < kSprChannelSizeD5; i++)
-			writeStream->writeByte(0);
-	} else {
-		writeStream->writeByte(sprite._inkData);				// 1
-		writeStream->writeSint16BE(sprite._castId.castLib);		// 2, 3
-		writeStream->writeUint16BE(sprite._castId.member);		// 4, 5
-		writeStream->writeSint16BE(sprite._scriptId.castLib);	// 6, 7
-		writeStream->writeUint16BE(sprite._scriptId.member);	// 8, 9
-		writeStream->writeByte(sprite._foreColor);				// 10
-		writeStream->writeByte(sprite._backColor);				// 11
-		writeStream->writeUint16BE(sprite._startPoint.y);		// 12, 13
-		writeStream->writeUint16BE(sprite._startPoint.x);		// 14, 15
-		writeStream->writeUint16BE(sprite._height);				// 16, 17
-		writeStream->writeUint16BE(sprite._width);				// 18, 19
-		writeStream->writeByte(sprite._colorcode);				// 20
-		writeStream->writeByte(sprite._blendAmount);			// 21
-		writeStream->writeByte(sprite._thickness);				// 22
-		writeStream->writeByte(0);								// 23, unused
-	}
+	writeStream->writeByte(sprite._spriteType);				// 0
+	writeStream->writeByte(sprite._inkData);				// 1
+	writeStream->writeSint16BE(sprite._castId.castLib);		// 2, 3
+	writeStream->writeUint16BE(sprite._castId.member);		// 4, 5
+	writeStream->writeSint16BE(sprite._scriptId.castLib);	// 6, 7
+	writeStream->writeUint16BE(sprite._scriptId.member);	// 8, 9
+	writeStream->writeByte(sprite._foreColor);				// 10
+	writeStream->writeByte(sprite._backColor);				// 11
+	writeStream->writeUint16BE(sprite._startPoint.y);		// 12, 13
+	writeStream->writeUint16BE(sprite._startPoint.x);		// 14, 15
+	writeStream->writeUint16BE(sprite._height);				// 16, 17
+	writeStream->writeUint16BE(sprite._width);				// 18, 19
+	writeStream->writeByte(sprite._colorcode);				// 20
+	writeStream->writeByte(sprite._blendAmount);			// 21
+	writeStream->writeByte(sprite._thickness);				// 22
+	writeStream->writeByte(0);								// 23, unused
 }
 
 /**************************
@@ -1264,6 +1248,9 @@ void Frame::readMainChannelsD6(Common::MemoryReadStreamEndian &stream, uint16 of
 		case 24+4:
 			_mainChannels.sound2SpriteListIdx = stream.readUint32();
 			break;
+		case 24+6:
+			_mainChannels.sound2SpriteListIdx = stream.readUint16();
+			break;
 		case 24+8:
 			_mainChannels.colorSound2 = stream.readByte();
 			break;
@@ -1316,6 +1303,9 @@ void Frame::readMainChannelsD6(Common::MemoryReadStreamEndian &stream, uint16 of
 		case 48+16:
 			_mainChannels.palette.spriteListIdx = stream.readUint32();
 			break;
+		case 48+18:
+			_mainChannels.palette.spriteListIdx = stream.readUint16();
+			break;
 		case 48+20:
 			stream.read(unk, 4); // alignment bytes
 			hexdumpIfNotZero(unk, 4, "Frame::readMainChannelsD6(): palette.unk: ");
@@ -1331,6 +1321,9 @@ void Frame::readMainChannelsD6(Common::MemoryReadStreamEndian &stream, uint16 of
 		case 72+4:
 			_mainChannels.transSpriteListIdx = stream.readUint32();
 			break;
+		case 72+6:
+			_mainChannels.transSpriteListIdx = stream.readUint16();
+			break;
 		case 72+8:
 			_mainChannels.colorTrans = stream.readByte();
 			break;
@@ -1342,6 +1335,9 @@ void Frame::readMainChannelsD6(Common::MemoryReadStreamEndian &stream, uint16 of
 		// Tempo
 		case 96+0:
 			_mainChannels.tempoSpriteListIdx = stream.readUint32();
+			break;
+		case 96+2:
+			_mainChannels.tempoSpriteListIdx = stream.readUint16();
 			break;
 		case 96+4:
 			_mainChannels.tempoD6Flags = stream.readUint16();
@@ -1369,12 +1365,15 @@ void Frame::readMainChannelsD6(Common::MemoryReadStreamEndian &stream, uint16 of
 		case 120+4:
 			_mainChannels.scriptSpriteListIdx = stream.readUint32();
 			break;
+		case 120+6:
+			_mainChannels.scriptSpriteListIdx = stream.readUint16();
+			break;
 		case 120+8:
 			_mainChannels.colorScript = stream.readByte();
 			break;
 		case 120+9:
 			stream.read(unk, 15); // alignment bytes
-			hexdumpIfNotZero(unk, 15, "Frame::readMainChannelsD6(): sound2.unk: ");
+			hexdumpIfNotZero(unk, 15, "Frame::readMainChannelsD6(): script.unk: ");
 			break;
 
 		// 144 bytes (24 * 6)
@@ -1395,8 +1394,63 @@ void Frame::readMainChannelsD6(Common::MemoryReadStreamEndian &stream, uint16 of
 	_mainChannels.transDuration = CLIP<uint16>(_mainChannels.transDuration, 0, 32000);  // restrict to 32 secs
 }
 
+static void writePadding(Common::SeekableWriteStream *writeStream, int size) {
+	for (int i = 0; i < size; i++) {
+		writeStream->writeByte(0);
+	}
+}
+
 void Frame::writeMainChannelsD6(Common::SeekableWriteStream *writeStream) {
-	warning("STUB: Frame::writeMainChannelsD6()");
+	// Sound1
+	writeStream->writeUint16BE(_mainChannels.sound1.castLib);			// 0
+	writeStream->writeUint16BE(_mainChannels.sound1.member);			// 2
+	writeStream->writeUint32BE(_mainChannels.sound1SpriteListIdx);		// 4
+	writeStream->writeByte(_mainChannels.colorSound1);					// 8
+	writePadding(writeStream, 15);										// 9-23
+
+	// Sound2
+	writeStream->writeUint16BE(_mainChannels.sound2.castLib);			// 24+0
+	writeStream->writeUint16BE(_mainChannels.sound2.member);			// 24+2
+	writeStream->writeUint32BE(_mainChannels.sound2SpriteListIdx);		// 24+4
+	writeStream->writeByte(_mainChannels.colorSound2);					// 24+8
+	writePadding(writeStream, 15);										// 24+9
+
+	// Palette
+	writeStream->writeUint16BE(_mainChannels.palette.paletteId.castLib);	// 48+0
+	writeStream->writeUint16BE(_mainChannels.palette.paletteId.member);		// 48+2
+	writeStream->writeByte(_mainChannels.palette.speed);					// 48+4
+	writeStream->writeByte(_mainChannels.palette.flags);					// 48+5
+	writeStream->writeByte(_mainChannels.palette.firstColor);				// 48+6
+	writeStream->writeByte(_mainChannels.palette.lastColor);				// 48+7
+	writeStream->writeUint16BE(_mainChannels.palette.frameCount);			// 48+8
+	writeStream->writeUint16BE(_mainChannels.palette.cycleCount);			// 48+10
+	writeStream->writeByte(_mainChannels.palette.fade);						// 48+12
+	writeStream->writeByte(_mainChannels.palette.delay);					// 48+13
+	writeStream->writeByte(_mainChannels.palette.style);					// 48+14
+	writeStream->writeByte(_mainChannels.palette.colorCode);				// 48+15
+	writeStream->writeUint32BE(_mainChannels.palette.spriteListIdx);		// 48+16
+	writePadding(writeStream, 4);											// 48+20
+
+	// Transition
+	writeStream->writeUint16BE(_mainChannels.trans.castLib);				// 72+0
+	writeStream->writeUint16BE(_mainChannels.trans.member);					// 72+2
+	writeStream->writeUint32BE(_mainChannels.transSpriteListIdx);			// 72+4
+	writeStream->writeByte(_mainChannels.colorTrans);						// 72+8
+	writePadding(writeStream, 15);											// 72+9
+
+	// Tempo
+	writeStream->writeUint32BE(_mainChannels.tempoSpriteListIdx);			// 96+0
+	writeStream->writeUint16BE(_mainChannels.tempoD6Flags);					// 96+4
+	writeStream->writeByte(_mainChannels.tempo);							// 96+6
+	writeStream->writeByte(_mainChannels.colorTempo);						// 96+7
+	writePadding(writeStream, 16);											// 96+8
+
+	// Script
+	writeStream->writeUint32BE(_mainChannels.actionId.castLib);				// 120+0
+	writeStream->writeUint16BE(_mainChannels.actionId.member);				// 120+2
+	writeStream->writeUint32BE(_mainChannels.scriptSpriteListIdx);			// 120+4
+	writeStream->writeByte(_mainChannels.colorScript);						// 120+8
+	writePadding(writeStream, 15);											// 120+9
 }
 
 void Frame::readSpriteD6(Common::MemoryReadStreamEndian &stream, uint16 offset, uint16 size) {
@@ -1562,29 +1616,21 @@ void readSpriteDataD6(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 }
 
 void writeSpriteDataD6(Common::SeekableWriteStream *writeStream, Sprite &sprite) {
-	// Writing 24 bytes of sprite data
-	// The original data for a certain sprite might be less
-	writeStream->writeByte(sprite._spriteType);			// 0
-
-	if (sprite._puppet) {
-		for (int i = 1; i < kSprChannelSizeD6; i++)
-			writeStream->writeByte(0);
-	} else {
-		writeStream->writeByte(sprite._inkData);				// 1
-		writeStream->writeByte(sprite._foreColor);				// 2
-		writeStream->writeByte(sprite._backColor);				// 3
-		writeStream->writeSint16BE(sprite._castId.castLib);		// 4, 5
-		writeStream->writeUint16BE(sprite._castId.member);		// 6, 7
-		writeStream->writeUint32BE(sprite._spriteListIdx);		// 8, 9, 10, 11
-		writeStream->writeUint16BE(sprite._startPoint.y);		// 12, 13
-		writeStream->writeUint16BE(sprite._startPoint.x);		// 14, 15
-		writeStream->writeUint16BE(sprite._height);				// 16, 17
-		writeStream->writeUint16BE(sprite._width);				// 18, 19
-		writeStream->writeByte(sprite._colorcode);				// 20
-		writeStream->writeByte(sprite._blendAmount);			// 21
-		writeStream->writeByte(sprite._thickness);				// 22
-		writeStream->writeByte(0);								// 23, unused
-	}
+	writeStream->writeByte(sprite._spriteType);				// 0
+	writeStream->writeByte(sprite._inkData);				// 1
+	writeStream->writeByte(sprite._foreColor);				// 2
+	writeStream->writeByte(sprite._backColor);				// 3
+	writeStream->writeSint16BE(sprite._castId.castLib);		// 4, 5
+	writeStream->writeUint16BE(sprite._castId.member);		// 6, 7
+	writeStream->writeUint32BE(sprite._spriteListIdx);		// 8, 9, 10, 11
+	writeStream->writeUint16BE(sprite._startPoint.y);		// 12, 13
+	writeStream->writeUint16BE(sprite._startPoint.x);		// 14, 15
+	writeStream->writeUint16BE(sprite._height);				// 16, 17
+	writeStream->writeUint16BE(sprite._width);				// 18, 19
+	writeStream->writeByte(sprite._colorcode);				// 20
+	writeStream->writeByte(sprite._blendAmount);			// 21
+	writeStream->writeByte(sprite._thickness);				// 22
+	writeStream->writeByte(0);								// 23, unused
 }
 
 /**************************
@@ -1621,11 +1667,241 @@ void Frame::readMainChannelsD7(Common::MemoryReadStreamEndian &stream, uint16 of
 		debugC(8, kDebugLoading, "Frame::readMainChannelsD7(): %d byte header", size);
 		stream.hexdump(size);
 	}
-	error("Frame::readMainChannelsD7(): Miscomputed field position: %d", offset);
+
+	uint32 initPos = stream.pos();
+	uint32 finishPosition = initPos + size;
+	byte unk[40];
+
+	while (stream.pos() < finishPosition) {
+		switch (stream.pos() - initPos + offset) {
+		// Sound1
+		case 0:
+			_mainChannels.sound1.castLib = stream.readUint16();
+			break;
+		case 2:
+			_mainChannels.sound1.member = stream.readUint16();
+			break;
+		case 4:
+			_mainChannels.sound1SpriteListIdx = stream.readUint32();
+			break;
+		case 6:
+			_mainChannels.sound1SpriteListIdx = stream.readUint16();
+			break;
+		case 8:
+			_mainChannels.colorSound1 = stream.readByte();
+			break;
+		case 9:
+			stream.read(unk, 39); // alignment bytes
+			hexdumpIfNotZero(unk, 39, "Frame::readMainChannelsD7(): sound1.unk: ");
+			break;
+
+		// Sound2
+		case 48+0:
+			_mainChannels.sound2.castLib = stream.readUint16();
+			break;
+		case 48+2:
+			_mainChannels.sound2.member = stream.readUint16();
+			break;
+		case 48+4:
+			_mainChannels.sound2SpriteListIdx = stream.readUint32();
+			break;
+		case 48+6:
+			_mainChannels.sound2SpriteListIdx = stream.readUint16();
+			break;
+		case 48+8:
+			_mainChannels.colorSound2 = stream.readByte();
+			break;
+		case 48+9:
+			stream.read(unk, 39); // alignment bytes
+			hexdumpIfNotZero(unk, 39, "Frame::readMainChannelsD7(): sound2.unk: ");
+			break;
+
+		// Palette
+		case 96+0:
+			_mainChannels.palette.paletteId.castLib = stream.readSint16();
+			break;
+		case 96+2:
+			_mainChannels.palette.paletteId.member = stream.readSint16();
+			if (!_mainChannels.palette.paletteId.isNull())
+				_mainChannels.scoreCachedPaletteId = _mainChannels.palette.paletteId;
+			break;
+		case 96+4:
+			_mainChannels.palette.speed = stream.readByte(); // 52
+			_mainChannels.palette.flags = stream.readByte(); // 53
+			_mainChannels.palette.colorCycling = (_mainChannels.palette.flags & 0x80) != 0;
+			_mainChannels.palette.normal = (_mainChannels.palette.flags & 0x60) == 0x00;
+			_mainChannels.palette.fadeToBlack = (_mainChannels.palette.flags & 0x60) == 0x60;
+			_mainChannels.palette.fadeToWhite = (_mainChannels.palette.flags & 0x60) == 0x40;
+			_mainChannels.palette.autoReverse = (_mainChannels.palette.flags & 0x10) != 0;
+			_mainChannels.palette.overTime = (_mainChannels.palette.flags & 0x04) != 0;
+			break;
+		case 96+6:
+			_mainChannels.palette.firstColor = g_director->transformColor(stream.readByte() ^ 0x80); // 51
+			_mainChannels.palette.lastColor = g_director->transformColor(stream.readByte() ^ 0x80); // 52
+			break;
+		case 96+8:
+			_mainChannels.palette.frameCount = stream.readUint16(); // 53
+			break;
+		case 96+10:
+			_mainChannels.palette.cycleCount = stream.readUint16(); // 55
+			break;
+		case 96+12:
+			_mainChannels.palette.fade = stream.readByte();
+			break;
+		case 96+13:
+			_mainChannels.palette.delay = stream.readByte();
+			break;
+		case 96+14:
+			_mainChannels.palette.style = stream.readByte();
+			break;
+		case 96+15:
+			_mainChannels.palette.colorCode = stream.readByte();
+			break;
+		case 96+16:
+			_mainChannels.palette.spriteListIdx = stream.readUint32();
+			break;
+		case 96+18:
+			_mainChannels.palette.spriteListIdx = stream.readUint16();
+			break;
+		case 96+20:
+			stream.read(unk, 28); // alignment bytes
+			hexdumpIfNotZero(unk, 28, "Frame::readMainChannelsD7(): palette.unk: ");
+			break;
+
+		// Transition
+		case 144+0:
+			_mainChannels.trans.castLib = stream.readUint16();
+			break;
+		case 144+2:
+			_mainChannels.trans.member = stream.readUint16();
+			break;
+		case 144+4:
+			_mainChannels.transSpriteListIdx = stream.readUint32();
+			break;
+		case 144+6:
+			_mainChannels.transSpriteListIdx = stream.readUint16();
+			break;
+		case 144+8:
+			_mainChannels.colorTrans = stream.readByte();
+			break;
+		case 144+9:
+			stream.read(unk, 39); // alignment bytes
+			hexdumpIfNotZero(unk, 39, "Frame::readMainChannelsD7(): trans.unk: ");
+			break;
+
+		// Tempo
+		case 192+0:
+			_mainChannels.tempoSpriteListIdx = stream.readUint32();
+			break;
+		case 192+2:
+			_mainChannels.tempoSpriteListIdx = stream.readUint16();
+			break;
+		case 192+4:
+			_mainChannels.tempoD6Flags = stream.readUint16();
+			break;
+		case 192+6:
+			_mainChannels.tempo = stream.readByte();
+			if (_mainChannels.tempo && _mainChannels.tempo <= 120)
+				_mainChannels.scoreCachedTempo = _mainChannels.tempo;
+			break;
+		case 192+7:
+			_mainChannels.colorTempo = stream.readByte();
+			break;
+		case 192+8:
+			stream.read(unk, 40); // alignment bytes
+			hexdumpIfNotZero(unk, 40, "Frame::readMainChannelsD7(): tempo.unk: ");
+			break;
+
+		// Script
+		case 240+0:
+			_mainChannels.actionId.castLib = stream.readUint16();
+			break;
+		case 240+2:
+			_mainChannels.actionId.member = stream.readUint16();
+			break;
+		case 240+4:
+			_mainChannels.scriptSpriteListIdx = stream.readUint32();
+			break;
+		case 240+6:
+			_mainChannels.scriptSpriteListIdx = stream.readUint16();
+			break;
+		case 240+8:
+			_mainChannels.colorScript = stream.readByte();
+			break;
+		case 240+9:
+			stream.read(unk, 39); // alignment bytes
+			hexdumpIfNotZero(unk, 39, "Frame::readMainChannelsD7(): script.unk: ");
+			break;
+
+		// 144 bytes (24 * 6)
+
+		default:
+			// This means that a `case` label has to be split at this position
+			error("Frame::readMainChannelsD7(): Miscomputed field position: %" PRId64, stream.pos() - initPos + offset);
+			break;
+		}
+	}
+
+	if (stream.pos() > finishPosition) {
+		// This means that the relevant `case` label reads too many bytes and must be split
+		error("Frame::readMainChannelsD7(): Read %" PRId64 "extra bytes", stream.pos() - finishPosition);
+	}
+
+	_mainChannels.transChunkSize = CLIP<byte>(_mainChannels.transChunkSize, 0, 128);
+	_mainChannels.transDuration = CLIP<uint16>(_mainChannels.transDuration, 0, 32000);  // restrict to 32 secs
 }
 
 void Frame::writeMainChannelsD7(Common::SeekableWriteStream *writeStream) {
-	warning("STUB: Frame::writeMainChannelsD7()");
+	// Sound1
+	writeStream->writeUint16BE(_mainChannels.sound1.castLib);			// 0
+	writeStream->writeUint16BE(_mainChannels.sound1.member);			// 2
+	writeStream->writeUint32BE(_mainChannels.sound1SpriteListIdx);		// 4
+	writeStream->writeByte(_mainChannels.colorSound1);					// 8
+	writePadding(writeStream, 39);										// 9-23
+
+	// Sound2
+	writeStream->writeUint16BE(_mainChannels.sound2.castLib);			// 48+0
+	writeStream->writeUint16BE(_mainChannels.sound2.member);			// 48+2
+	writeStream->writeUint32BE(_mainChannels.sound2SpriteListIdx);		// 48+4
+	writeStream->writeByte(_mainChannels.colorSound2);					// 48+8
+	writePadding(writeStream, 39);										// 48+9
+
+	// Palette
+	writeStream->writeUint16BE(_mainChannels.palette.paletteId.castLib);	// 96+0
+	writeStream->writeUint16BE(_mainChannels.palette.paletteId.member);		// 96+2
+	writeStream->writeByte(_mainChannels.palette.speed);					// 96+4
+	writeStream->writeByte(_mainChannels.palette.flags);					// 96+5
+	writeStream->writeByte(_mainChannels.palette.firstColor);				// 96+6
+	writeStream->writeByte(_mainChannels.palette.lastColor);				// 96+7
+	writeStream->writeUint16BE(_mainChannels.palette.frameCount);			// 96+8
+	writeStream->writeUint16BE(_mainChannels.palette.cycleCount);			// 96+10
+	writeStream->writeByte(_mainChannels.palette.fade);						// 96+12
+	writeStream->writeByte(_mainChannels.palette.delay);					// 96+13
+	writeStream->writeByte(_mainChannels.palette.style);					// 96+14
+	writeStream->writeByte(_mainChannels.palette.colorCode);				// 96+15
+	writeStream->writeUint32BE(_mainChannels.palette.spriteListIdx);		// 96+16
+	writePadding(writeStream, 28);											// 96+20
+
+	// Transition
+	writeStream->writeUint16BE(_mainChannels.trans.castLib);				// 144+0
+	writeStream->writeUint16BE(_mainChannels.trans.member);					// 144+2
+	writeStream->writeUint32BE(_mainChannels.transSpriteListIdx);			// 144+4
+	writeStream->writeByte(_mainChannels.colorTrans);						// 144+8
+	writePadding(writeStream, 39);											// 144+9
+
+	// Tempo
+	writeStream->writeUint32BE(_mainChannels.tempoSpriteListIdx);			// 192+0
+	writeStream->writeUint16BE(_mainChannels.tempoD6Flags);					// 192+4
+	writeStream->writeByte(_mainChannels.tempo);							// 192+6
+	writeStream->writeByte(_mainChannels.colorTempo);						// 192+7
+	writePadding(writeStream, 40);											// 192+8
+
+	// Script
+	writeStream->writeUint32BE(_mainChannels.actionId.castLib);				// 240+0
+	writeStream->writeUint16BE(_mainChannels.actionId.member);				// 240+2
+	writeStream->writeUint32BE(_mainChannels.scriptSpriteListIdx);			// 240+4
+	writeStream->writeByte(_mainChannels.colorScript);						// 240+8
+	writePadding(writeStream, 39);											// 240+9
 }
 
 void Frame::readSpriteD7(Common::MemoryReadStreamEndian &stream, uint16 offset, uint16 size) {
@@ -1658,6 +1934,8 @@ void Frame::readSpriteD7(Common::MemoryReadStreamEndian &stream, uint16 offset, 
 }
 
 void readSpriteDataD7(Common::SeekableReadStreamEndian &stream, Sprite &sprite, uint32 startPosition, uint32 finishPosition) {
+	byte unk[12];
+
 	while (stream.pos() < finishPosition) {
 		switch (stream.pos() - startPosition) {
 		case 0:
@@ -1667,35 +1945,29 @@ void readSpriteDataD7(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 				sprite._spriteType = (SpriteType)stream.readByte();
 			}
 			break;
-		case 1: {
-			byte inkData = stream.readByte();
+		case 1:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPInk)) {
+				stream.readByte();
+			} else {
+				sprite._inkData = stream.readByte();
 
-			if (sprite._puppet || sprite.getAutoPuppet(kAPInk))
-				continue;
-
-			sprite._inkData = inkData;
-
-			sprite._ink = static_cast<InkType>(sprite._inkData & 0x3f);
-			sprite._trails = sprite._inkData & 0x40 ? true : false;
-			sprite._stretch = sprite._inkData & 0x80 ? true : false;
+				sprite._ink = static_cast<InkType>(sprite._inkData & 0x3f);
+				sprite._trails = sprite._inkData & 0x40 ? true : false;
+				sprite._stretch = sprite._inkData & 0x80 ? true : false;
 			}
 			break;
-		case 2: {
-			uint8 foreColor = stream.readByte();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPForeColor))
-				continue;
-
-			sprite._foreColor = g_director->transformColor(foreColor);
+		case 2:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPForeColor)) {
+				stream.readByte();
+			} else {
+				sprite._foreColor = g_director->transformColor((uint8)stream.readByte());
 			}
 			break;
-		case 3: {
-			uint8 backColor = stream.readByte();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPBackColor))
-				continue;
-
-			sprite._backColor = g_director->transformColor(backColor);
+		case 3:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPBackColor)) {
+				stream.readByte();
+			} else {
+				sprite._backColor = g_director->transformColor((uint8)stream.readByte());
 			}
 			break;
 		case 4:
@@ -1714,73 +1986,69 @@ void readSpriteDataD7(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 				sprite._castId = CastMemberID(memberID, sprite._castId.castLib);  // Inherit castLib from previous frame
 			}
 			break;
-		case 8: {
-				int scriptCastLib = stream.readSint16();
-				sprite._scriptId = CastMemberID(sprite._scriptId.member, scriptCastLib);
+		case 8:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPCast)) {
+				stream.readUint32();
+			} else {
+				sprite._spriteListIdx = stream.readUint32();
 			}
 			break;
-		case 10: {
-				uint16 scriptMemberID = stream.readUint16();
-				sprite._scriptId = CastMemberID(scriptMemberID, sprite._scriptId.castLib);  // Inherit castLib from previous frame
+		case 10: // This field could be optimized
+			if (sprite._puppet || sprite.getAutoPuppet(kAPCast)) {
+				stream.readUint16();
+			} else {
+				sprite._spriteListIdx = stream.readUint16();
 			}
 			break;
-		case 12: {
-			uint16 startPointY = stream.readUint16();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPLocV) || sprite.getAutoPuppet(kAPLoc))
-				continue;
-
-			sprite._startPoint.y = startPointY;
-			break;
-			}
-		case 14: {
-			uint16 startPointX = stream.readUint16();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPLocH) || sprite.getAutoPuppet(kAPLoc))
-				continue;
-
-			sprite._startPoint.x = startPointX;
+		case 12:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPLoc)) {
+				stream.readUint16();
+			} else {
+				sprite._startPoint.y = (int16)stream.readUint16();
 			}
 			break;
-		case 16: {
-			uint16 height = stream.readUint16();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPHeight))
-				continue;
-
-			sprite._height = height;
+		case 14:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPLoc)) {
+				stream.readUint16();
+			} else {
+				sprite._startPoint.x = (int16)stream.readUint16();
 			}
 			break;
-		case 18: {
-			uint16 width = stream.readUint16();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPWidth))
-				continue;
-
-			sprite._width = width;
+		case 16:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPHeight)) {
+				stream.readUint16();
+			} else {
+				sprite._height = (int16)stream.readUint16();
+			}
+			break;
+		case 18:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPWidth)) {
+				stream.readUint16();
+			} else {
+				sprite._width = (int16)stream.readUint16();
 			}
 			break;
 		case 20:
-			// & 0x0f scorecolor
-			// 0x10 forecolor is rgb
-			// 0x20 bgcolor is rgb
-			// 0x40 editable
-			// 0x80 moveable
-			sprite._colorcode = stream.readByte();
+			if (sprite._puppet || sprite.getAutoPuppet(kAPMoveable)) {
+				stream.readByte();
+			} else {
+				// & 0x0f scorecolor
+				// 0x10 forecolor is rgb
+				// 0x20 bgcolor is rgb
+				// 0x40 editable
+				// 0x80 moveable
+				sprite._colorcode = stream.readByte();
 
-			if (sprite._puppet || sprite.getAutoPuppet(kAPMoveable))
-				continue;
-
-			sprite._editable = ((sprite._colorcode & 0x40) == 0x40);
-			sprite._moveable = ((sprite._colorcode & 0x80) == 0x80);
+				sprite._editable = ((sprite._colorcode & 0x40) == 0x40);
+				sprite._moveable = ((sprite._colorcode & 0x80) == 0x80);
+				sprite._moveable = ((sprite._colorcode & 0x80) == 0x80);
+			}
 			break;
-		case 21: {
-			byte blendAmount = stream.readByte();
-
-			if (sprite._puppet || sprite.getAutoPuppet(kAPBlend))
-				continue;
-
-			sprite._blendAmount = blendAmount;
+		case 21:
+			if (sprite._puppet) {
+				stream.readByte();
+			} else {
+				sprite._blendAmount = stream.readByte();
 			}
 			break;
 		case 22:
@@ -1791,7 +2059,45 @@ void readSpriteDataD7(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 			}
 			break;
 		case 23:
-			(void)stream.readByte(); // unused
+			sprite._flags = stream.readByte();
+			break;
+		case 24:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPForeColor)) {
+				stream.readByte();
+			} else {
+				sprite._fgColorG = (uint8)stream.readByte();
+			}
+			break;
+		case 25:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPBackColor)) {
+				stream.readByte();
+			} else {
+				sprite._bgColorG = (uint8)stream.readByte();
+			}
+			break;
+		case 26:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPForeColor)) {
+				stream.readByte();
+			} else {
+				sprite._fgColorB = (uint8)stream.readByte();
+			}
+			break;
+		case 27:
+			if (sprite._puppet || sprite.getAutoPuppet(kAPBackColor)) {
+				stream.readByte();
+			} else {
+				sprite._bgColorB = (uint8)stream.readByte();
+			}
+			break;
+		case 28:
+			sprite._angleRot = stream.readUint32();
+			break;
+		case 32:
+			sprite._angleSkew = stream.readUint32();
+			break;
+		case 36:
+			stream.read(unk, 12); // alignment bytes
+			hexdumpIfNotZero(unk, 12, "Frame::readSpriteDataD7(): sprite.unk: ");
 			break;
 		default:
 			// This means that a `case` label has to be split at this position
@@ -1801,7 +2107,28 @@ void readSpriteDataD7(Common::SeekableReadStreamEndian &stream, Sprite &sprite, 
 }
 
 void writeSpriteDataD7(Common::SeekableWriteStream *writeStream, Sprite &sprite) {
-	warning("STUB: writeSpriteDataD7()");
+	writeStream->writeByte(sprite._spriteType);				// 0
+	writeStream->writeByte(sprite._inkData);				// 1
+	writeStream->writeByte(sprite._foreColor);				// 2
+	writeStream->writeByte(sprite._backColor);				// 3
+	writeStream->writeSint16BE(sprite._castId.castLib);		// 4, 5
+	writeStream->writeUint16BE(sprite._castId.member);		// 6, 7
+	writeStream->writeUint32BE(sprite._spriteListIdx);		// 8, 9, 10, 11
+	writeStream->writeUint16BE(sprite._startPoint.y);		// 12, 13
+	writeStream->writeUint16BE(sprite._startPoint.x);		// 14, 15
+	writeStream->writeUint16BE(sprite._height);				// 16, 17
+	writeStream->writeUint16BE(sprite._width);				// 18, 19
+	writeStream->writeByte(sprite._colorcode);				// 20
+	writeStream->writeByte(sprite._blendAmount);			// 21
+	writeStream->writeByte(sprite._thickness);				// 22
+	writeStream->writeByte(sprite._flags);					// 23
+	writeStream->writeByte(sprite._fgColorG);				// 24
+	writeStream->writeByte(sprite._bgColorG);				// 25
+	writeStream->writeByte(sprite._fgColorB);				// 26
+	writeStream->writeByte(sprite._bgColorB);				// 27
+	writeStream->writeUint32BE(sprite._angleRot);			// 28
+	writeStream->writeUint32BE(sprite._angleSkew);			// 32
+	writePadding(writeStream, 12);							// 36-47
 }
 
 /**************************
