@@ -428,7 +428,7 @@ bool AdSceneGeometry::storeDrawingParams() {
 		_lastScrollY = 0;
 	}
 
-	Rect32 rc;
+	Common::Rect32 rc;
 	_gameRef->getCurrentViewportRect(&rc);
 	float width = (float)rc.right - (float)rc.left;
 	float height = (float)rc.bottom - (float)rc.top;
@@ -1373,6 +1373,20 @@ bool AdSceneGeometry::persist(BasePersistenceManager *persistMgr) {
 
 	if (!persistMgr->getIsSaving()) {
 		_maxLightsWarning = false;
+	}
+
+	// initialise to defaults
+	if (!persistMgr->getIsSaving()) {
+		memset(&_drawingViewport, 0, sizeof(DXViewport));
+
+		DXMatrixIdentity(&_lastWorldMat);
+		DXMatrixIdentity(&_lastViewMat);
+		DXMatrixIdentity(&_lastProjMat);
+
+		_lastOffsetX = _lastOffsetY = 0;
+		_lastScrollX = _lastScrollY = 0;
+
+		_PFAlternateDist = FLT_MAX; // this is not stored in original, lets restore to default
 	}
 
 	return true;

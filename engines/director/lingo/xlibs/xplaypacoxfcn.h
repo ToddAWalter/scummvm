@@ -19,34 +19,23 @@
  *
  */
 
-#ifndef DARKSEED_MIDIPARSER_SBR_H
-#define DARKSEED_MIDIPARSER_SBR_H
+#ifndef DIRECTOR_LINGO_XLIBS_XPLAYPACOXFCN_H
+#define DIRECTOR_LINGO_XLIBS_XPLAYPACOXFCN_H
 
-#include "audio/midiparser_smf.h"
+namespace Director {
 
-namespace Darkseed {
+namespace XPlayPACoXFCN {
 
-/**
- * MIDI parser for the SBR format used by Dark Seed floppy version.
- */
-class MidiParser_SBR : public MidiParser_SMF {
-public:
-	MidiParser_SBR(int8 source = -1, bool sfx = false);
+extern const char *xlibName;
+extern const XlibFileDesc fileNames[];
 
-	bool loadMusic(const byte *data, uint32 size) override;
+void open(ObjectType type, const Common::Path &path);
+void close(ObjectType type);
 
-protected:
-	void parseNextEvent(EventInfo &info) override;
-	bool processEvent(const EventInfo &info, bool fireEvents = true) override;
-	void onTrackStart(uint8 track) override;
+void m_XPlayPACo(int nargs);
 
-	bool _sfx = false;
-	uint8 _trackInstruments[10];
-	uint16 _trackDeltas[10];
-	uint8 _trackNoteActive[10];
-	uint16 _trackLoopCounter[10];
-};
+} // End of namespace XPlayPACoXFCN
 
-} // End of namespace Darkseed
+} // End of namespace Director
 
 #endif

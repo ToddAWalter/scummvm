@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-08-27 21:21+0000\n"
+"POT-Creation-Date: 2025-09-01 15:02+0000\n"
 "PO-Revision-Date: 2021-03-21 08:24+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Belarusian <https://translations.scummvm.org/projects/scummvm/"
@@ -118,7 +118,7 @@ msgstr "Уверх"
 #: engines/buried/saveload.cpp:83 engines/cine/saveload.cpp:857
 #: engines/director/lingo/xlibs/jitdraw3.cpp:123
 #: engines/drascula/saveload.cpp:51 engines/grim/inputdialog.cpp:84
-#: engines/mohawk/myst_stacks/menu.cpp:283
+#: engines/hypno/metaengine.cpp:225 engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/myst_stacks/menu.cpp:300
 #: engines/mohawk/myst_stacks/menu.cpp:318
 #: engines/mohawk/riven_stacks/aspit.cpp:349
@@ -335,12 +335,12 @@ msgstr "Цяпер працуе іншае сховішча. Перапыніц�
 #: engines/buried/buried.cpp:598 engines/chamber/metaengine.cpp:91
 #: engines/director/events.cpp:101
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/efh/metaengine.cpp:362
-#: engines/grim/grim.cpp:366 engines/kyra/gui/saveload_eob.cpp:611
-#: engines/kyra/gui/saveload_eob.cpp:644 engines/lab/metaengine.cpp:197
-#: engines/parallaction/metaengine.cpp:169
+#: engines/grim/grim.cpp:366 engines/hypno/metaengine.cpp:192
+#: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
+#: engines/lab/metaengine.cpp:197 engines/parallaction/metaengine.cpp:169
 #: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4246
 #: engines/sherlock/metaengine.cpp:638 engines/sherlock/metaengine.cpp:1240
-#: engines/toon/toon.cpp:1550 engines/zvision/zvision.cpp:318
+#: engines/toon/toon.cpp:1550 engines/zvision/zvision.cpp:321
 msgid "Yes"
 msgstr "Так"
 
@@ -351,12 +351,12 @@ msgstr "Так"
 #: engines/buried/buried.cpp:598 engines/chamber/metaengine.cpp:97
 #: engines/director/events.cpp:101
 #: engines/director/lingo/xlibs/jitdraw3.cpp:139 engines/efh/metaengine.cpp:368
-#: engines/grim/grim.cpp:366 engines/kyra/gui/saveload_eob.cpp:611
-#: engines/kyra/gui/saveload_eob.cpp:644 engines/lab/metaengine.cpp:204
-#: engines/parallaction/metaengine.cpp:175
+#: engines/grim/grim.cpp:366 engines/hypno/metaengine.cpp:198
+#: engines/kyra/gui/saveload_eob.cpp:611 engines/kyra/gui/saveload_eob.cpp:644
+#: engines/lab/metaengine.cpp:204 engines/parallaction/metaengine.cpp:175
 #: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4246
 #: engines/sherlock/metaengine.cpp:643 engines/sherlock/metaengine.cpp:1246
-#: engines/toon/toon.cpp:1550 engines/zvision/zvision.cpp:319
+#: engines/toon/toon.cpp:1550 engines/zvision/zvision.cpp:322
 msgid "No"
 msgstr "Не"
 
@@ -3287,8 +3287,8 @@ msgstr ""
 #: backends/events/default/default-events.cpp:358
 #: engines/adl/metaengine.cpp:352 engines/buried/metaengine.cpp:154
 #: engines/chamber/metaengine.cpp:84 engines/drascula/metaengine.cpp:304
-#: engines/hdb/metaengine.cpp:275 engines/lab/metaengine.cpp:172
-#: engines/mohawk/myst_stacks/menu.cpp:317
+#: engines/hdb/metaengine.cpp:275 engines/hypno/metaengine.cpp:251
+#: engines/lab/metaengine.cpp:172 engines/mohawk/myst_stacks/menu.cpp:317
 #: engines/mohawk/riven_stacks/aspit.cpp:454
 #: engines/neverhood/metaengine.cpp:200 engines/saga/metaengine.cpp:449
 #: engines/scumm/help.cpp:84 engines/scumm/help.cpp:86
@@ -3880,9 +3880,10 @@ msgstr "Правая пстрычка"
 #. I18N: Action in In Cold Blood
 #: engines/metaengine.cpp:99 engines/agos/metaengine.cpp:252
 #: engines/buried/metaengine.cpp:167 engines/crab/input/input.cpp:261
-#: engines/cruise/metaengine.cpp:217 engines/grim/grim.cpp:550
-#: engines/hdb/metaengine.cpp:258 engines/icb/icb.cpp:137
-#: engines/icb/icb.cpp:203 engines/mohawk/myst.cpp:595
+#: engines/cruise/metaengine.cpp:217 engines/dm/metaengine.cpp:180
+#: engines/grim/grim.cpp:550 engines/hdb/metaengine.cpp:258
+#: engines/hypno/metaengine.cpp:186 engines/hypno/metaengine.cpp:369
+#: engines/icb/icb.cpp:137 engines/icb/icb.cpp:203 engines/mohawk/myst.cpp:595
 #: engines/mohawk/riven.cpp:876 engines/sky/metaengine.cpp:126
 #: engines/sludge/keymapper_tables.h:52 engines/sludge/keymapper_tables.h:125
 #: engines/sludge/keymapper_tables.h:187 engines/sludge/keymapper_tables.h:243
@@ -4788,10 +4789,10 @@ msgstr "Y"
 #: backends/platform/sdl/opendingux/opendingux.cpp:57
 #: backends/platform/sdl/ps3/ps3.cpp:44 backends/platform/sdl/psp2/psp2.cpp:46
 #: engines/efh/metaengine.cpp:397 engines/got/metaengine.cpp:76
-#: engines/mm/mm1/metaengine.cpp:49 engines/mm/mm1/metaengine.cpp:92
-#: engines/sherlock/metaengine.cpp:660 engines/sherlock/metaengine.cpp:671
-#: engines/sherlock/metaengine.cpp:1010 engines/supernova/metaengine.cpp:303
-#: engines/titanic/metaengine.cpp:233
+#: engines/hypno/metaengine.cpp:363 engines/mm/mm1/metaengine.cpp:49
+#: engines/mm/mm1/metaengine.cpp:92 engines/sherlock/metaengine.cpp:660
+#: engines/sherlock/metaengine.cpp:671 engines/sherlock/metaengine.cpp:1010
+#: engines/supernova/metaengine.cpp:303 engines/titanic/metaengine.cpp:233
 msgid "Select"
 msgstr "Выбар"
 
@@ -5972,21 +5973,22 @@ msgstr "Правяраю абнаўленні..."
 #: engines/access/metaengine.cpp:192 engines/bbvs/metaengine.cpp:92
 #: engines/buried/metaengine.cpp:133 engines/chamber/metaengine.cpp:59
 #: engines/cine/metaengine.cpp:270 engines/cruise/metaengine.cpp:168
-#: engines/draci/metaengine.cpp:195 engines/drascula/metaengine.cpp:205
-#: engines/efh/metaengine.cpp:256 engines/hopkins/metaengine.cpp:206
-#: engines/hugo/metaengine.cpp:118 engines/illusions/metaengine.cpp:89
+#: engines/dm/metaengine.cpp:124 engines/draci/metaengine.cpp:195
+#: engines/drascula/metaengine.cpp:205 engines/efh/metaengine.cpp:256
+#: engines/hopkins/metaengine.cpp:206 engines/hugo/metaengine.cpp:118
+#: engines/hypno/metaengine.cpp:128 engines/illusions/metaengine.cpp:89
 #: engines/lab/metaengine.cpp:149 engines/lure/metaengine.cpp:168
 #: engines/made/metaengine.cpp:121 engines/mads/metaengine.cpp:274
 #: engines/neverhood/metaengine.cpp:185 engines/playground3d/metaengine.cpp:51
-#: engines/prince/metaengine.cpp:227 engines/queen/metaengine.cpp:146
-#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
-#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
-#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
-#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/trecision/metaengine.cpp:120
-#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
-#: engines/voyeur/metaengine.cpp:184
+#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:91
+#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
+#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
+#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
+#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
+#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
+#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
 #, fuzzy
 #| msgid "Default game keymap"
 msgid "Default keymappings"
@@ -6008,6 +6010,7 @@ msgstr "Прапусціць радок"
 #: engines/access/metaengine.cpp:214 engines/asylum/metaengine.cpp:171
 #: engines/asylum/metaengine.cpp:198 engines/cine/metaengine.cpp:377
 #: engines/efh/metaengine.cpp:286 engines/hdb/metaengine.cpp:213
+#: engines/hypno/metaengine.cpp:302 engines/hypno/metaengine.cpp:356
 #: engines/nancy/input.cpp:195 engines/tinsel/metaengine.cpp:263
 #: engines/titanic/metaengine.cpp:324 engines/ultima/ultima8/metaengine.cpp:53
 msgid "Move up"
@@ -6017,6 +6020,7 @@ msgstr "Рухацца ўгару"
 #: engines/access/metaengine.cpp:221 engines/asylum/metaengine.cpp:177
 #: engines/asylum/metaengine.cpp:205 engines/cine/metaengine.cpp:384
 #: engines/efh/metaengine.cpp:293 engines/hdb/metaengine.cpp:219
+#: engines/hypno/metaengine.cpp:290 engines/hypno/metaengine.cpp:342
 #: engines/nancy/input.cpp:201 engines/tinsel/metaengine.cpp:269
 #: engines/titanic/metaengine.cpp:330 engines/ultima/ultima8/metaengine.cpp:54
 msgid "Move down"
@@ -6027,6 +6031,7 @@ msgstr "Рухацца ўніз"
 #: engines/access/metaengine.cpp:228 engines/asylum/metaengine.cpp:183
 #: engines/asylum/metaengine.cpp:212 engines/cine/metaengine.cpp:391
 #: engines/efh/metaengine.cpp:300 engines/hdb/metaengine.cpp:225
+#: engines/hypno/metaengine.cpp:284 engines/hypno/metaengine.cpp:335
 #: engines/kyra/engine/eobcommon.cpp:371 engines/lure/metaengine.cpp:218
 #: engines/nancy/input.cpp:207 engines/tinsel/metaengine.cpp:275
 #: engines/titanic/metaengine.cpp:312 engines/titanic/metaengine.cpp:390
@@ -6039,6 +6044,7 @@ msgstr "Рухацца налева"
 #: engines/access/metaengine.cpp:235 engines/asylum/metaengine.cpp:189
 #: engines/asylum/metaengine.cpp:219 engines/cine/metaengine.cpp:398
 #: engines/efh/metaengine.cpp:307 engines/hdb/metaengine.cpp:231
+#: engines/hypno/metaengine.cpp:296 engines/hypno/metaengine.cpp:349
 #: engines/kyra/engine/eobcommon.cpp:372 engines/lure/metaengine.cpp:226
 #: engines/nancy/input.cpp:213 engines/tinsel/metaengine.cpp:281
 #: engines/titanic/metaengine.cpp:318 engines/titanic/metaengine.cpp:396
@@ -6537,8 +6543,10 @@ msgstr ""
 #: engines/agos/metaengine.cpp:228 engines/bbvs/metaengine.cpp:93
 #: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
-#: engines/draci/metaengine.cpp:196 engines/drascula/metaengine.cpp:206
-#: engines/hopkins/metaengine.cpp:207 engines/hugo/metaengine.cpp:119
+#: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
+#: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
+#: engines/hugo/metaengine.cpp:119 engines/hypno/metaengine.cpp:166
+#: engines/hypno/metaengine.cpp:267 engines/hypno/metaengine.cpp:311
 #: engines/illusions/metaengine.cpp:90 engines/lab/metaengine.cpp:152
 #: engines/lure/metaengine.cpp:169 engines/made/metaengine.cpp:122
 #: engines/mads/metaengine.cpp:275 engines/neverhood/metaengine.cpp:186
@@ -6602,11 +6610,11 @@ msgstr "Ісці наперад"
 msgid "Turn backward"
 msgstr "Бегчы назад"
 
-#: engines/agos/metaengine.cpp:302 engines/kyra/engine/eobcommon.cpp:373
-#: engines/kyra/engine/lol.cpp:514 engines/lab/metaengine.cpp:257
-#: engines/mm/mm1/metaengine.cpp:97 engines/mohawk/riven.cpp:901
-#: engines/pegasus/pegasus.cpp:2740 engines/twine/metaengine.cpp:353
-#: engines/ultima/ultima8/metaengine.cpp:49
+#: engines/agos/metaengine.cpp:302 engines/dm/metaengine.cpp:186
+#: engines/kyra/engine/eobcommon.cpp:373 engines/kyra/engine/lol.cpp:514
+#: engines/lab/metaengine.cpp:257 engines/mm/mm1/metaengine.cpp:97
+#: engines/mohawk/riven.cpp:901 engines/pegasus/pegasus.cpp:2740
+#: engines/twine/metaengine.cpp:353 engines/ultima/ultima8/metaengine.cpp:49
 #: engines/wintermute/keymapper_tables.h:161
 #: engines/wintermute/keymapper_tables.h:741
 #: engines/wintermute/keymapper_tables.h:2122
@@ -6615,11 +6623,11 @@ msgstr "Бегчы назад"
 msgid "Turn left"
 msgstr "Павярнуць налева"
 
-#: engines/agos/metaengine.cpp:308 engines/kyra/engine/eobcommon.cpp:374
-#: engines/kyra/engine/lol.cpp:515 engines/lab/metaengine.cpp:271
-#: engines/mm/mm1/metaengine.cpp:98 engines/mohawk/riven.cpp:907
-#: engines/pegasus/pegasus.cpp:2747 engines/twine/metaengine.cpp:346
-#: engines/ultima/ultima8/metaengine.cpp:50
+#: engines/agos/metaengine.cpp:308 engines/dm/metaengine.cpp:206
+#: engines/kyra/engine/eobcommon.cpp:374 engines/kyra/engine/lol.cpp:515
+#: engines/lab/metaengine.cpp:271 engines/mm/mm1/metaengine.cpp:98
+#: engines/mohawk/riven.cpp:907 engines/pegasus/pegasus.cpp:2747
+#: engines/twine/metaengine.cpp:346 engines/ultima/ultima8/metaengine.cpp:50
 #: engines/wintermute/keymapper_tables.h:167
 #: engines/wintermute/keymapper_tables.h:746
 #: engines/wintermute/keymapper_tables.h:2128
@@ -7144,9 +7152,10 @@ msgstr "Пераключыць гук"
 
 #. I18N: This keymap allows skipping video cutscenes
 #: engines/bladerunner/metaengine.cpp:229 engines/buried/metaengine.cpp:160
-#: engines/scumm/help.cpp:79 engines/scumm/metaengine.cpp:1046
-#: engines/supernova/metaengine.cpp:309 engines/toltecs/metaengine.cpp:246
-#: engines/twp/metaengine.cpp:162 engines/zvision/metaengine.cpp:304
+#: engines/hypno/metaengine.cpp:152 engines/scumm/help.cpp:79
+#: engines/scumm/metaengine.cpp:1046 engines/supernova/metaengine.cpp:309
+#: engines/toltecs/metaengine.cpp:246 engines/twp/metaengine.cpp:162
+#: engines/zvision/metaengine.cpp:304
 msgid "Skip cutscene"
 msgstr "Прапусціць застаўку"
 
@@ -7244,11 +7253,12 @@ msgstr "Пераключыць гук"
 #. SAVE GAME
 #: engines/bladerunner/metaengine.cpp:330 engines/buried/metaengine.cpp:179
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
-#: engines/dgds/metaengine.cpp:75 engines/drascula/metaengine.cpp:285
-#: engines/efh/metaengine.cpp:272 engines/freescape/games/castle/castle.cpp:246
+#: engines/dgds/metaengine.cpp:75 engines/dm/metaengine.cpp:174
+#: engines/drascula/metaengine.cpp:285 engines/efh/metaengine.cpp:272
+#: engines/freescape/games/castle/castle.cpp:246
 #: engines/freescape/games/dark/dark.cpp:186
 #: engines/freescape/games/driller/driller.cpp:135
-#: engines/freescape/games/eclipse/eclipse.cpp:231
+#: engines/freescape/games/eclipse/eclipse.cpp:235
 #: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:154
 #: engines/lure/metaengine.cpp:191 engines/made/metaengine.cpp:181
 #: engines/mads/metaengine.cpp:305 engines/pegasus/pegasus.cpp:2825
@@ -7275,7 +7285,7 @@ msgstr "Захаваць гульню"
 #: engines/freescape/games/castle/castle.cpp:251
 #: engines/freescape/games/dark/dark.cpp:191
 #: engines/freescape/games/driller/driller.cpp:140
-#: engines/freescape/games/eclipse/eclipse.cpp:236
+#: engines/freescape/games/eclipse/eclipse.cpp:240
 #: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:187
 #: engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/riven_stacks/aspit.cpp:349 engines/pegasus/pegasus.cpp:2831
@@ -7324,7 +7334,7 @@ msgstr ""
 #: engines/efh/metaengine.cpp:619 engines/freescape/games/castle/castle.cpp:259
 #: engines/freescape/games/dark/dark.cpp:196
 #: engines/freescape/games/driller/driller.cpp:145
-#: engines/freescape/games/eclipse/eclipse.cpp:241
+#: engines/freescape/games/eclipse/eclipse.cpp:245
 #: engines/saga/metaengine.cpp:437 engines/sherlock/metaengine.cpp:359
 #: engines/sherlock/metaengine.cpp:618 engines/sherlock/metaengine.cpp:848
 #: engines/sword1/metaengine.cpp:295 engines/trecision/metaengine.cpp:156
@@ -7355,8 +7365,8 @@ msgstr "Падтрымка пропускаў"
 msgid "Allow cutscenes to be skipped"
 msgstr "Уключае магчымасць прапускаць тэксты і застаўкі"
 
-#: engines/buried/metaengine.cpp:134 engines/supernova/metaengine.cpp:219
-#: engines/voyeur/metaengine.cpp:185
+#: engines/buried/metaengine.cpp:134 engines/hypno/metaengine.cpp:130
+#: engines/supernova/metaengine.cpp:219 engines/voyeur/metaengine.cpp:185
 #, fuzzy
 msgid "Cutscene keymappings"
 msgstr "~Н~алады..."
@@ -7374,6 +7384,7 @@ msgstr "~Н~алады..."
 
 #: engines/buried/metaengine.cpp:141 engines/chamber/metaengine.cpp:65
 #: engines/chamber/metaengine.cpp:71 engines/chamber/metaengine.cpp:77
+#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:94
 #: engines/sherlock/metaengine.cpp:1183
 #, fuzzy
 #| msgid "Interact"
@@ -7415,10 +7426,11 @@ msgstr "Глядзець на"
 msgid "Look right"
 msgstr "Глядзець на"
 
-#: engines/buried/metaengine.cpp:218 engines/kyra/engine/eobcommon.cpp:369
-#: engines/kyra/engine/lol.cpp:510 engines/mohawk/riven.cpp:881
-#: engines/titanic/metaengine.cpp:336 engines/titanic/metaengine.cpp:378
-#: engines/twine/metaengine.cpp:332 engines/ultima/ultima8/metaengine.cpp:51
+#: engines/buried/metaengine.cpp:218 engines/dm/metaengine.cpp:196
+#: engines/kyra/engine/eobcommon.cpp:369 engines/kyra/engine/lol.cpp:510
+#: engines/mohawk/riven.cpp:881 engines/titanic/metaengine.cpp:336
+#: engines/titanic/metaengine.cpp:378 engines/twine/metaengine.cpp:332
+#: engines/ultima/ultima8/metaengine.cpp:51
 #: engines/wintermute/keymapper_tables.h:149
 #: engines/wintermute/keymapper_tables.h:731
 #: engines/wintermute/keymapper_tables.h:2116
@@ -7999,6 +8011,77 @@ msgstr ""
 msgid "Use true color graphics mode, even if the game is not designed for it"
 msgstr ""
 
+#: engines/dm/metaengine.cpp:125
+#, fuzzy
+msgid "Dialog choice selection keymappings"
+msgstr "~Н~алады..."
+
+#. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. One of them can be assigned the "leader". This action toggles the inventory screen of the leader champion.
+#: engines/dm/metaengine.cpp:137
+#, fuzzy
+#| msgid "Toggle Inventory/IQ Points display"
+msgid "Toggle leader inventory"
+msgstr "Пераключыць паказ інвентара/ачкоў IQ"
+
+#. I18N: (Game name: Dungeon Master) The game has multi-choice dialogs. If there is only one choice, then this action can be used to select it.
+#: engines/dm/metaengine.cpp:144
+msgid "Select dialog choice (only works if there is a single choice)"
+msgstr ""
+
+#. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 1.
+#: engines/dm/metaengine.cpp:151
+#, fuzzy
+#| msgid "Toggle Inventory/IQ Points display"
+msgid "Toggle champion 1 inventory"
+msgstr "Пераключыць паказ інвентара/ачкоў IQ"
+
+#. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 2.
+#: engines/dm/metaengine.cpp:157
+#, fuzzy
+#| msgid "Toggle Inventory/IQ Points display"
+msgid "Toggle champion 2 inventory"
+msgstr "Пераключыць паказ інвентара/ачкоў IQ"
+
+#. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 3.
+#: engines/dm/metaengine.cpp:163
+#, fuzzy
+#| msgid "Toggle Inventory/IQ Points display"
+msgid "Toggle champion 3 inventory"
+msgstr "Пераключыць паказ інвентара/ачкоў IQ"
+
+#. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 4.
+#: engines/dm/metaengine.cpp:169
+#, fuzzy
+#| msgid "Toggle Inventory/IQ Points display"
+msgid "Toggle champion 4 inventory"
+msgstr "Пераключыць паказ інвентара/ачкоў IQ"
+
+#: engines/dm/metaengine.cpp:216 engines/hpl1/metaengine.cpp:78
+#: engines/mm/mm1/metaengine.cpp:99
+#, fuzzy
+#| msgid "Slide Left"
+msgid "Strafe left"
+msgstr "Слізгаць налева"
+
+#: engines/dm/metaengine.cpp:226 engines/titanic/metaengine.cpp:343
+#: engines/titanic/metaengine.cpp:384
+#, fuzzy
+#| msgid "Move backwards"
+msgid "Move backward"
+msgstr "Рухацца назад"
+
+#: engines/dm/metaengine.cpp:236 engines/hpl1/metaengine.cpp:79
+#: engines/mm/mm1/metaengine.cpp:100
+#, fuzzy
+#| msgid "Slide Right"
+msgid "Strafe right"
+msgstr "Слізгаць направа"
+
+#. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. The champions can be put to sleep. This action wakes up the sleeping champion.
+#: engines/dm/metaengine.cpp:247
+msgid "Wake up champion"
+msgstr ""
+
 #: engines/draci/metaengine.cpp:68 engines/prince/metaengine.cpp:64
 #, fuzzy
 msgid "Enable Text to Speech for Missing Voiceovers"
@@ -8283,8 +8366,8 @@ msgstr "Выбар"
 msgid "Select option 14"
 msgstr "Выбар"
 
-#: engines/efh/metaengine.cpp:257 engines/sludge/keymapper_tables.h:35
-#: engines/supernova/metaengine.cpp:218
+#: engines/efh/metaengine.cpp:257 engines/hypno/metaengine.cpp:312
+#: engines/sludge/keymapper_tables.h:35 engines/supernova/metaengine.cpp:218
 #, fuzzy
 msgid "Menu keymappings"
 msgstr "~Н~алады..."
@@ -8712,7 +8795,7 @@ msgstr "Абярыце тэму"
 #: engines/freescape/games/castle/castle.cpp:264
 #: engines/freescape/games/dark/dark.cpp:206
 #: engines/freescape/games/driller/driller.cpp:153
-#: engines/freescape/games/eclipse/eclipse.cpp:249
+#: engines/freescape/games/eclipse/eclipse.cpp:253
 #, fuzzy
 #| msgid "Toggle mute"
 msgid "Toggle Sound"
@@ -8721,7 +8804,7 @@ msgstr "Пераключыць гук"
 #: engines/freescape/games/castle/castle.cpp:269
 #: engines/freescape/games/dark/dark.cpp:212
 #: engines/freescape/games/driller/driller.cpp:159
-#: engines/freescape/games/eclipse/eclipse.cpp:254
+#: engines/freescape/games/eclipse/eclipse.cpp:258
 #, fuzzy
 #| msgid "Slide Left"
 msgid "Rotate Left"
@@ -8730,7 +8813,7 @@ msgstr "Слізгаць налева"
 #: engines/freescape/games/castle/castle.cpp:274
 #: engines/freescape/games/dark/dark.cpp:217
 #: engines/freescape/games/driller/driller.cpp:164
-#: engines/freescape/games/eclipse/eclipse.cpp:259
+#: engines/freescape/games/eclipse/eclipse.cpp:263
 #, fuzzy
 #| msgid "Slide Right"
 msgid "Rotate Right"
@@ -8741,7 +8824,7 @@ msgid "Crawl"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:296
-#: engines/freescape/games/eclipse/eclipse.cpp:286
+#: engines/freescape/games/eclipse/eclipse.cpp:290
 #, fuzzy
 #| msgid "Move Forward"
 msgid "Face Forward"
@@ -8821,27 +8904,27 @@ msgid "Collect drilling rig"
 msgstr ""
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/eclipse/eclipse.cpp:265
+#: engines/freescape/games/eclipse/eclipse.cpp:269
 #, fuzzy
 #| msgid "Change Command"
 msgid "Change Angle"
 msgstr "Змяніць каманду"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/eclipse/eclipse.cpp:271
+#: engines/freescape/games/eclipse/eclipse.cpp:275
 #, fuzzy
 #| msgid "Change font size"
 msgid "Change Step Size"
 msgstr "Змяніць памер шрыфта"
 
-#: engines/freescape/games/eclipse/eclipse.cpp:276
+#: engines/freescape/games/eclipse/eclipse.cpp:280
 #, fuzzy
 #| msgid "Toggle mute"
 msgid "Toggle Height"
 msgstr "Пераключыць гук"
 
 #. I18N: Action of hero party in Might & Magic 1
-#: engines/freescape/games/eclipse/eclipse.cpp:281
+#: engines/freescape/games/eclipse/eclipse.cpp:285
 #: engines/kyra/engine/lol.cpp:516 engines/mm/mm1/metaengine.cpp:109
 #: engines/ultima/nuvie/metaengine.cpp:192
 #: engines/ultima/nuvie/metaengine.cpp:197
@@ -9260,18 +9343,6 @@ msgstr "Ісці наперад"
 msgid "Backward"
 msgstr "Рухацца назад"
 
-#: engines/hpl1/metaengine.cpp:78 engines/mm/mm1/metaengine.cpp:99
-#, fuzzy
-#| msgid "Slide Left"
-msgid "Strafe left"
-msgstr "Слізгаць налева"
-
-#: engines/hpl1/metaengine.cpp:79 engines/mm/mm1/metaengine.cpp:100
-#, fuzzy
-#| msgid "Slide Right"
-msgid "Strafe right"
-msgstr "Слізгаць направа"
-
 #: engines/hpl1/metaengine.cpp:80
 #, fuzzy
 msgid "Lean left"
@@ -9426,49 +9497,149 @@ msgstr "Рухацца налева"
 msgid "Move to bottom right"
 msgstr "Рухацца направа"
 
-#: engines/hypno/metaengine.cpp:33
+#: engines/hypno/metaengine.cpp:37
 #, fuzzy
 msgid "Enable original cheats"
 msgstr "Уключыць рэжым c чытамі"
 
-#: engines/hypno/metaengine.cpp:34
+#: engines/hypno/metaengine.cpp:38
 msgid "Allow cheats using the C key."
 msgstr ""
 
-#: engines/hypno/metaengine.cpp:44
+#: engines/hypno/metaengine.cpp:48
 #, fuzzy
 msgid "Enable infinite health cheat"
 msgstr "Уключыць цэнзуру змесціва"
 
-#: engines/hypno/metaengine.cpp:45
+#: engines/hypno/metaengine.cpp:49
 msgid "Player health will never decrease (except for game over scenes)."
 msgstr ""
 
-#: engines/hypno/metaengine.cpp:55
+#: engines/hypno/metaengine.cpp:59
 #, fuzzy
 msgid "Enable infinite ammo cheat"
 msgstr "Уключыць рэжым c чытамі"
 
-#: engines/hypno/metaengine.cpp:56
+#: engines/hypno/metaengine.cpp:60
 msgid "Player ammo will never decrease."
 msgstr ""
 
-#: engines/hypno/metaengine.cpp:66
+#: engines/hypno/metaengine.cpp:70
 msgid "Unlock all levels"
 msgstr ""
 
-#: engines/hypno/metaengine.cpp:67
+#: engines/hypno/metaengine.cpp:71
 msgid "All levels will be available to play."
 msgstr ""
 
-#: engines/hypno/metaengine.cpp:77
+#: engines/hypno/metaengine.cpp:81
 #, fuzzy
 msgid "Enable restored content"
 msgstr "Уключыць цэнзуру змесціва"
 
-#: engines/hypno/metaengine.cpp:78
+#: engines/hypno/metaengine.cpp:82
 msgid "Add additional content that is not enabled the original implementation."
 msgstr ""
+
+#: engines/hypno/metaengine.cpp:129 engines/lab/metaengine.cpp:154
+#: engines/voyeur/metaengine.cpp:188
+#, fuzzy
+msgid "Intro keymappings"
+msgstr "~Н~алады..."
+
+#: engines/hypno/metaengine.cpp:134
+msgid "Primary shoot"
+msgstr ""
+
+#: engines/hypno/metaengine.cpp:140
+#, fuzzy
+msgid "Secondary shoot"
+msgstr "Другі герой"
+
+#: engines/hypno/metaengine.cpp:146 engines/lab/metaengine.cpp:209
+#: engines/teenagent/metaengine.cpp:232 engines/toon/metaengine.cpp:98
+#: engines/voyeur/metaengine.cpp:235
+#, fuzzy
+#| msgid "Skip line"
+msgid "Skip intro"
+msgstr "Прапусціць радок"
+
+#: engines/hypno/metaengine.cpp:167
+#, fuzzy
+msgid "Exit menu keymappings"
+msgstr "~Н~алады..."
+
+#: engines/hypno/metaengine.cpp:168
+#, fuzzy
+msgid "Difficulty selection menu keymappings"
+msgstr "~Н~алады..."
+
+#: engines/hypno/metaengine.cpp:169
+#, fuzzy
+msgid "Retry menu keymappings"
+msgstr "~Н~алады..."
+
+#: engines/hypno/metaengine.cpp:172 engines/hypno/metaengine.cpp:270
+#: engines/hypno/metaengine.cpp:322
+#, fuzzy
+#| msgid "Speech"
+msgid "Skip level (cheat)"
+msgstr "Агучка"
+
+#. I18N: (Game name: Soldier Boyz) player refers to the users own character.
+#. I18N: (Game name: Marvel Comics Spider-Man: The Sinister Six) player refers to the users own character.
+#. I18N: (Game name: Wetlands) player refers to the users own character.
+#: engines/hypno/metaengine.cpp:180 engines/hypno/metaengine.cpp:278
+#: engines/hypno/metaengine.cpp:329
+msgid "Kill player"
+msgstr ""
+
+#. I18N: (Game name: Soldier Boyz) the game has 3 difficulty levels: Chump, Punk and Badass. Chump is the easy mode.
+#: engines/hypno/metaengine.cpp:205
+msgid "Chump"
+msgstr ""
+
+#. I18N: (Game name: Soldier Boyz) the game has 3 difficulty levels: Chump, Punk and Badass. Punk is the medium mode.
+#: engines/hypno/metaengine.cpp:212
+msgid "Punk"
+msgstr ""
+
+#. I18N: (Game name: Soldier Boyz) the game has 3 difficulty levels: Chump, Punk and Badass. Badass is the hard mode.
+#: engines/hypno/metaengine.cpp:219
+msgid "Badass"
+msgstr ""
+
+#. I18N: (Game name: Soldier Boyz) This makes the player restart from the last checkpoint.
+#: engines/hypno/metaengine.cpp:232
+msgid "Retry sector"
+msgstr ""
+
+#. I18N: (Game name: Soldier Boyz) This makes the player restart the current mission / level.
+#: engines/hypno/metaengine.cpp:239
+#, fuzzy
+#| msgid "Transitions:"
+msgid "Restart territory"
+msgstr "Пераходы:"
+
+#: engines/hypno/metaengine.cpp:245
+msgid "Begin new mission"
+msgstr ""
+
+#: engines/hypno/metaengine.cpp:313
+#, fuzzy
+msgid "Pause keymappings"
+msgstr "~Н~алады..."
+
+#: engines/hypno/metaengine.cpp:314
+#, fuzzy
+msgid "Direction keymappings"
+msgstr "~Н~алады..."
+
+#: engines/hypno/metaengine.cpp:316 engines/mads/metaengine.cpp:349
+#: engines/tsage/metaengine.cpp:259
+#, fuzzy
+msgid "Show credits"
+msgstr "Паказаць аўтараў гульні"
 
 #. I18N: Action in In Cold Blood
 #: engines/icb/icb.cpp:107
@@ -9887,11 +10058,6 @@ msgstr ""
 msgid "Exit keymappings"
 msgstr "~Н~алады..."
 
-#: engines/lab/metaengine.cpp:154 engines/voyeur/metaengine.cpp:188
-#, fuzzy
-msgid "Intro keymappings"
-msgstr "~Н~алады..."
-
 #: engines/lab/metaengine.cpp:155 engines/sherlock/metaengine.cpp:339
 #: engines/sherlock/metaengine.cpp:778
 #, fuzzy
@@ -9924,13 +10090,6 @@ msgstr "Поўная назва гульні"
 #: engines/lab/metaengine.cpp:185
 msgid "Lower the sound volume"
 msgstr ""
-
-#: engines/lab/metaengine.cpp:209 engines/teenagent/metaengine.cpp:232
-#: engines/toon/metaengine.cpp:98 engines/voyeur/metaengine.cpp:235
-#, fuzzy
-#| msgid "Skip line"
-msgid "Skip intro"
-msgstr "Прапусціць радок"
 
 #: engines/lab/metaengine.cpp:216
 msgid "Interact with object with chosen action"
@@ -10235,11 +10394,6 @@ msgstr "Узнавіць гульню:"
 #| msgid "Show hints"
 msgid "Show intro"
 msgstr "Паказаць падказкі"
-
-#: engines/mads/metaengine.cpp:349 engines/tsage/metaengine.cpp:259
-#, fuzzy
-msgid "Show credits"
-msgstr "Паказаць аўтараў гульні"
 
 #: engines/mads/metaengine.cpp:355
 #, fuzzy
@@ -11180,6 +11334,32 @@ msgstr ""
 #: engines/prince/metaengine.cpp:263
 msgid "X key"
 msgstr ""
+
+#: engines/private/metaengine.cpp:37
+#, fuzzy
+msgid "Display subtitles"
+msgstr "Пераключыць гук"
+
+#: engines/private/metaengine.cpp:38
+#, fuzzy
+msgid "Use subtitles."
+msgstr "Пераключыць гук"
+
+#: engines/private/metaengine.cpp:48
+#, fuzzy
+msgid "Display SFX subtitles"
+msgstr "Пераключыць гук"
+
+#: engines/private/metaengine.cpp:49
+#, fuzzy
+msgid "Use SFX subtitles."
+msgstr "Пераключыць гук"
+
+#: engines/private/metaengine.cpp:100 engines/trecision/metaengine.cpp:137
+#, fuzzy
+#| msgid "Skip line"
+msgid "Skip video"
+msgstr "Прапусціць радок"
 
 #: engines/qdengine/dialogs.cpp:32
 #, fuzzy
@@ -14278,12 +14458,6 @@ msgstr "Пераходы:"
 msgid "Toggle between Star Map and photo of your home"
 msgstr ""
 
-#: engines/titanic/metaengine.cpp:343 engines/titanic/metaengine.cpp:384
-#, fuzzy
-#| msgid "Move backwards"
-msgid "Move backward"
-msgstr "Рухацца назад"
-
 #: engines/titanic/metaengine.cpp:350
 msgid "Stop moving"
 msgstr ""
@@ -14411,12 +14585,6 @@ msgstr ""
 #: engines/touche/metaengine.cpp:182
 msgid "Press \"Yes\" Key"
 msgstr ""
-
-#: engines/trecision/metaengine.cpp:137
-#, fuzzy
-#| msgid "Skip line"
-msgid "Skip video"
-msgstr "Прапусціць радок"
 
 #. I18N: Toggles walking speed of actor
 #: engines/trecision/metaengine.cpp:144
@@ -16779,7 +16947,7 @@ msgstr "Дастаць манету"
 msgid "Preferences"
 msgstr "Перавагі"
 
-#: engines/zvision/zvision.cpp:298
+#: engines/zvision/zvision.cpp:301
 msgid ""
 "Before playing this game, you'll need to copy the required fonts into "
 "ScummVM's extras directory, or into the game directory. On Windows, you'll "
@@ -16790,7 +16958,7 @@ msgid ""
 "LiberationSerif."
 msgstr ""
 
-#: engines/zvision/zvision.cpp:313
+#: engines/zvision/zvision.cpp:316
 msgid ""
 "MIDI playback is not available, or else improperly configured. Zork Nemesis "
 "contains several music puzzles which require MIDI audio in order to be "
@@ -17221,10 +17389,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Minutes"
 #~ msgstr "Мінус"
-
-#, fuzzy
-#~ msgid "Seconds"
-#~ msgstr "Другі герой"
 
 #, fuzzy
 #~ msgid "Invalid Scene ID!"

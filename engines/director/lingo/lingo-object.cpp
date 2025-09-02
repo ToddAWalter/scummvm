@@ -137,6 +137,7 @@
 #include "director/lingo/xlibs/xcmdglue.h"
 #include "director/lingo/xlibs/xio.h"
 #include "director/lingo/xlibs/xplayanim.h"
+#include "director/lingo/xlibs/xplaypacoxfcn.h"
 #include "director/lingo/xlibs/xsoundxfcn.h"
 #include "director/lingo/xlibs/xwin.h"
 #include "director/lingo/xlibs/yasix.h"
@@ -338,6 +339,7 @@ static const struct XLibProto {
 	XLIBDEF(WidgetXObj, 		kXObj,			400),	// D4
 	XLIBDEF(WindowXObj,			kXObj,			200),	// D2
 	XLIBDEF(XCMDGlueXObj,		kXObj,			200),	// D2
+	XLIBDEF(XPlayPACoXFCN,			kXObj,					300),	// D3
 	XLIBDEF(XSoundXFCN,			kXObj,			400),	// D4
 	XLIBDEF(XWINXObj,			kXObj,			300),	// D3
 	XLIBDEF(XioXObj,			kXObj,			400),	// D3
@@ -792,6 +794,11 @@ Datum Window::getField(int field) {
 	case kTheFileName:
 		return getFileName();
 	case kTheDrawRect:
+		warning("Window::getField: poorly handled getting field 'drawRect'");
+		ensureMovieIsLoaded();
+
+		// TODO: This should allow stretching or panning
+		return getStageRect();
 	case kTheSourceRect:
 	// case kTheImage:
 	// case kThePicture::
@@ -817,6 +824,9 @@ bool Window::setField(int field, const Datum &value) {
 	case kTheWindowType:
 		setWindowType(value.asInt());
 		return true;
+	case kTheDrawRect:
+		warning("Window::setField: poorly handled setting field 'drawRect'");
+		// fallthrough
 	case kTheRect:
 		return setStageRect(value);
 	case kTheModal:

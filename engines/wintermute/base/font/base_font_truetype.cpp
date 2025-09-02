@@ -34,6 +34,7 @@
 #include "engines/wintermute/base/base_engine.h"
 #include "engines/wintermute/base/base_file_manager.h"
 #include "engines/wintermute/utils/utils.h"
+#include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/wintermute.h"
 #include "graphics/fonts/ttf.h"
 #include "graphics/fontman.h"
@@ -209,8 +210,8 @@ void BaseFontTT::drawText(const byte *text, int x, int y, int width, TTextAlign 
 
 	// and paint it
 	if (surface) {
-		Rect32 rc;
-		rc.setRect(0, 0, surface->getWidth(), surface->getHeight());
+		Common::Rect32 rc;
+		BasePlatform::setRect(&rc, 0, 0, surface->getWidth(), surface->getHeight());
 		for (int32 i = 0; i < _layers.getSize(); i++) {
 			uint32 color = _layers[i]->_color;
 			uint32 origForceAlpha = renderer->_forceAlphaColor;
@@ -521,7 +522,13 @@ bool BaseFontTT::persist(BasePersistenceManager *persistMgr) {
 		for (int i = 0; i < NUM_CACHED_TEXTS; i++) {
 			_cachedTexts[i] = nullptr;
 		}
+	}
+
+	// initialise to defaults
+	if (!persistMgr->getIsSaving()) {
 		_fallbackFont = _font = _deletableFont = nullptr;
+		_lineHeight = 0;
+		_maxCharWidth = _maxCharHeight = 0;
 	}
 
 	return STATUS_OK;

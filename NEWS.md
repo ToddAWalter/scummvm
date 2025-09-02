@@ -25,6 +25,7 @@ For a more comprehensive changelog of the latest experimental code, see:
      others, 12 titles so far.
    - Added support for Adibou 2: Nature & Sciences.
    - Added support for WAGE-based game. More than 160 titles so far.
+   - Added support for Penumbra: Overture.
 
  Access:
    - Added keymapper support.
@@ -65,6 +66,13 @@ For a more comprehensive changelog of the latest experimental code, see:
  Gob:
    - Added Text-to-Speech support.
 
+ Hugo:
+   - Added Text-to-Speech support.
+   - Fixed closing the top menu.
+
+ Hypno:
+   - Added keymapper support.
+
  Kyra:
    - Reduce CPU usage in the LoL main menu.
    - Reduce CPU usage in EoB 1 and 2.
@@ -102,11 +110,17 @@ For a more comprehensive changelog of the latest experimental code, see:
  Parallaction:
    - Added Text-to-Speech support.
 
+ Petka:
+   - Added keymapper support.
+
  Pink:
    - Added keymapper support.
 
  Prince:
    - Added Text-to-Speech support.
+   - Added keymapper support.
+
+ Private:
    - Added keymapper support.
 
  Queen:

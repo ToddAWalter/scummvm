@@ -69,7 +69,7 @@ BaseRenderer::BaseRenderer(BaseGame *inGame) : BaseClass(inGame) {
 	_loadImageX = _loadImageY = 0;
 
 	_width = _height = _bPP = 0;
-	_monitorRect.setEmpty();
+	BasePlatform::setRectEmpty(&_monitorRect);
 
 	_realWidth = _realHeight = 0;
 	_drawOffsetX = _drawOffsetY = 0;
@@ -89,7 +89,7 @@ void BaseRenderer::initLoop() {
 
 //////////////////////////////////////////////////////////////////////
 BaseObject *BaseRenderer::getObjectAt(int x, int y) {
-	Point32 point;
+	Common::Point32 point;
 	point.x = x;
 	point.y = y;
 
@@ -287,7 +287,7 @@ bool BaseRenderer::setScreenViewport() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseRenderer::setViewport(Rect32 *rect) {
+bool BaseRenderer::setViewport(Common::Rect32 *rect) {
 	return setViewport(rect->left + _drawOffsetX,
 	                   rect->top + _drawOffsetY,
 	                   rect->right + _drawOffsetX,
@@ -299,7 +299,7 @@ bool BaseRenderer::clipCursor() {
 	// TODO: Reimplement this. (Currently aspect-indpendence isn't quite finished)
 	/*
 	if (!_windowed) {
-	    Rect32 rc;
+	    Common::Rect32 rc;
 	    GetWindowRect(_window, &rc);
 
 	    // if "maintain aspect ratio" is in effect, lock mouse to visible area
@@ -323,7 +323,7 @@ bool BaseRenderer::unclipCursor() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseRenderer::pointInViewport(Point32 *p) {
+bool BaseRenderer::pointInViewport(Common::Point32 *p) {
 	if (p->x < _drawOffsetX) {
 		return false;
 	}
@@ -366,8 +366,8 @@ bool BaseRenderer::displayIndicator() {
 //////////////////////////////////////////////////////////////////////////
 bool BaseRenderer::displaySaveloadImage() {
 	if (_saveLoadImage && !_hasDrawnSaveLoadImage) {
-		Rect32 rc;
-		rc.setRect(0, 0, _saveLoadImage->getWidth(), _saveLoadImage->getHeight());
+		Common::Rect32 rc;
+		BasePlatform::setRect(&rc, 0, 0, _saveLoadImage->getWidth(), _saveLoadImage->getHeight());
 		if (_loadInProgress) {
 			_saveLoadImage->displayTrans(_loadImageX, _loadImageY, rc);
 		} else {

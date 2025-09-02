@@ -44,7 +44,7 @@ PartParticle::PartParticle(BaseGame *inGame) : BaseClass(inGame) {
 	_creationTime = 0;
 	_lifeTime = 0;
 	_isDead = true;
-	_border.setEmpty();
+	BasePlatform::setRectEmpty(&_border);
 
 	_state = PARTICLE_NORMAL;
 	_fadeStart = 0;
@@ -124,8 +124,8 @@ bool PartParticle::update(PartEmitter *emitter, uint32 currentTime, uint32 timer
 		}
 
 		// particle hit the border
-		if (!_isDead && !_border.isRectEmpty()) {
-			Point32 p;
+		if (!_isDead && !BasePlatform::isRectEmpty(&_border)) {
+			Common::Point32 p;
 			p.x = (int32)_pos.x;
 			p.y = (int32)_pos.y;
 			if (!BasePlatform::ptInRect(&_border, p)) {
@@ -263,6 +263,11 @@ bool PartParticle::persist(BasePersistenceManager *persistMgr) {
 		SystemClassRegistry::getInstance()->_disabled = false;
 		delete[] filename;
 		filename = nullptr;
+	}
+
+	// initialise to default
+	if (!persistMgr->getIsSaving()) {
+		_fadeStartAlpha = 0;
 	}
 
 	return STATUS_OK;

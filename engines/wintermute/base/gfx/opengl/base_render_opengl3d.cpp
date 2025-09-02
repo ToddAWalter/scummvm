@@ -30,6 +30,7 @@
 #include "engines/wintermute/base/gfx/base_image.h"
 #include "engines/wintermute/base/gfx/3dcamera.h"
 #include "engines/wintermute/base/gfx/3dlight.h"
+#include "engines/wintermute/platform_osystem.h"
 
 #include "graphics/opengl/system_headers.h"
 
@@ -312,7 +313,7 @@ bool BaseRenderOpenGL3D::setupLines() {
 	return true;
 }
 
-bool BaseRenderOpenGL3D::drawSpriteEx(BaseSurface *tex, const Wintermute::Rect32 &rect,
+bool BaseRenderOpenGL3D::drawSpriteEx(BaseSurface *tex, const Common::Rect32 &rect,
 	                              const Wintermute::Vector2 &pos, const Wintermute::Vector2 &rot,
 	                              const Wintermute::Vector2 &scale,
 	                              float angle, uint32 color, bool alphaDisable,
@@ -506,7 +507,7 @@ bool BaseRenderOpenGL3D::setProjection() {
 	bool customViewport;
 	getProjectionParams(&resWidth, &resHeight, &layerWidth, &layerHeight, &modWidth, &modHeight, &customViewport);
 
-	Rect32 rc;
+	Common::Rect32 rc;
 	_gameRef->getCurrentViewportRect(&rc);
 	float viewportWidth = (float)rc.right - (float)rc.left;
 	float viewportHeight = (float)rc.bottom - (float)rc.top;
@@ -926,7 +927,7 @@ void BaseRenderOpenGL3D::disableCulling() {
 
 // implements D3D SetViewport() for 2D renderer
 bool BaseRenderOpenGL3D::setViewport(int left, int top, int right, int bottom) {
-	_viewportRect.setRect(left, top, right, bottom);
+	BasePlatform::setRect(&_viewportRect, left, top, right, bottom);
 	_viewport._x = left;
 	_viewport._y = top;
 	_viewport._width = right - left;

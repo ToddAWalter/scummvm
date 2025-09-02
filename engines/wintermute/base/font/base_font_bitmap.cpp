@@ -37,6 +37,7 @@
 #include "engines/wintermute/base/base_frame.h"
 #include "engines/wintermute/base/base_sprite.h"
 #include "engines/wintermute/base/base_file_manager.h"
+#include "engines/wintermute/platform_osystem.h"
 
 namespace Wintermute {
 
@@ -251,7 +252,7 @@ void BaseFontBitmap::drawChar(byte c, int x, int y) {
 	row = c / _numColumns;
 	col = c % _numColumns;
 
-	Rect32 rect;
+	Common::Rect32 rect;
 	/* l t r b */
 	int tileWidth;
 	if (_wholeCell) {
@@ -260,7 +261,7 @@ void BaseFontBitmap::drawChar(byte c, int x, int y) {
 		tileWidth = _widths[c];
 	}
 
-	rect.setRect(col * _tileWidth, row * _tileHeight, col * _tileWidth + tileWidth, (row + 1) * _tileHeight);
+	BasePlatform::setRect(&rect, col * _tileWidth, row * _tileHeight, col * _tileWidth + tileWidth, (row + 1) * _tileHeight);
 	bool handled = false;
 	if (_sprite) {
 		_sprite->getCurrentFrame();

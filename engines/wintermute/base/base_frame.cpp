@@ -168,7 +168,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 	char *params;
 	int cmd;
 	BaseParser parser;
-	Rect32 rect;
+	Common::Rect32 rect;
 	int r = 255, g = 255, b = 255;
 	int ar = 255, ag = 255, ab = 255, alpha = 255;
 	int hotspotX = 0, hotspotY = 0;
@@ -179,7 +179,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 	bool decoration = false;
 	bool mirrorX = false;
 	bool mirrorY = false;
-	rect.setEmpty();
+	BasePlatform::setRectEmpty(&rect);
 	char *surface_file = nullptr;
 
 	while ((cmd = parser.getCommand(&buffer, commands, &params)) > 0) {
@@ -327,7 +327,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 		}
 	}
 
-	if (rect.isRectEmpty()) {
+	if (BasePlatform::isRectEmpty(&rect)) {
 		sub->setDefaultRect();
 	} else {
 		sub->setRect(rect);
@@ -350,13 +350,13 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseFrame::getBoundingRect(Rect32 *rect, int x, int y, float scaleX, float scaleY) {
+bool BaseFrame::getBoundingRect(Common::Rect32 *rect, int x, int y, float scaleX, float scaleY) {
 	if (!rect) {
 		return false;
 	}
-	rect->setEmpty();
+	BasePlatform::setRectEmpty(rect);
 
-	Rect32 subRect;
+	Common::Rect32 subRect;
 
 	for (int32 i = 0; i < _subframes.getSize(); i++) {
 		_subframes[i]->getBoundingRect(&subRect, x, y, scaleX, scaleY);

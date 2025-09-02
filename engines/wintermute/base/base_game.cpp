@@ -237,7 +237,7 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	m_AccessGlobalPaused = false;
 	m_AccessShieldWin = NULL;*/
 
-	_mouseLockRect.setEmpty();
+	BasePlatform::setRectEmpty(&_mouseLockRect);
 
 	_suppressScriptErrors = false;
 	_lastMiniUpdate = 0;
@@ -1264,7 +1264,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		x = MIN(x, _renderer->getWidth());
 		y = MAX<int32>(y, 0);
 		y = MIN(y, _renderer->getHeight());
-		Point32 p;
+		Common::Point32 p;
 		p.x = x + _renderer->_drawOffsetX;
 		p.y = y + _renderer->_drawOffsetY;
 
@@ -1291,7 +1291,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			BaseUtils::swap(&top, &bottom);
 		}
 
-		_mouseLockRect.setRect(left, top, right, bottom);
+		BasePlatform::setRect(&_mouseLockRect, left, top, right, bottom);
 
 		stack->pushNULL();
 		return STATUS_OK;
@@ -4210,7 +4210,7 @@ bool BaseGame::popViewport() {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::getCurrentViewportRect(Rect32 *rect, bool *custom) const {
+bool BaseGame::getCurrentViewportRect(Common::Rect32 *rect, bool *custom) const {
 	if (rect == nullptr) {
 		return STATUS_FAILED;
 	} else {
@@ -4220,7 +4220,7 @@ bool BaseGame::getCurrentViewportRect(Rect32 *rect, bool *custom) const {
 				*custom = true;
 			}
 		} else {
-			rect->setRect(_renderer->_drawOffsetX,
+			BasePlatform::setRect(rect, _renderer->_drawOffsetX,
 			              _renderer->_drawOffsetY,
 			              _renderer->getWidth() + _renderer->_drawOffsetX,
 			              _renderer->getHeight() + _renderer->_drawOffsetY);
@@ -4427,7 +4427,7 @@ bool BaseGame::onActivate(bool activate, bool refreshMouse) {
 	_renderer->_active = activate;
 
 	if (refreshMouse) {
-		Point32 p;
+		Common::Point32 p;
 		getMousePos(&p);
 		setActiveObject(_renderer->getObjectAt(p.x, p.y));
 	}
@@ -4681,12 +4681,12 @@ TShadowType BaseGame::getMaxShadowType(BaseObject *object) {
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::getLayerSize(int *layerWidth, int *layerHeight, Rect32 *viewport, bool *customViewport) {
+bool BaseGame::getLayerSize(int *layerWidth, int *layerHeight, Common::Rect32 *viewport, bool *customViewport) {
 	if (_renderer) {
 		*layerWidth = _renderer->getWidth();
 		*layerHeight = _renderer->getHeight();
 		*customViewport = false;
-		viewport->setRect(0, 0, _renderer->getWidth(), _renderer->getHeight());
+		BasePlatform::setRect(viewport, 0, 0, _renderer->getWidth(), _renderer->getHeight());
 		return true;
 	} else
 		return false;
@@ -4700,7 +4700,7 @@ uint32 BaseGame::getAmbientLightColor() {
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-void BaseGame::getMousePos(Point32 *pos) {
+void BaseGame::getMousePos(Common::Point32 *pos) {
 	BasePlatform::getCursorPos(pos);
 
 	pos->x -= _renderer->_drawOffsetX;
@@ -4727,7 +4727,7 @@ void BaseGame::getMousePos(Point32 *pos) {
 			pos->x = MIN(_mouseLockRect.right, pos->x);
 			pos->y = MIN(_mouseLockRect.bottom, pos->y);
 
-			Point32 newPos = *pos;
+			Common::Point32 newPos = *pos;
 
 			newPos.x += _renderer->_drawOffsetX;
 			newPos.y += _renderer->_drawOffsetY;
@@ -4777,7 +4777,7 @@ bool BaseGame::isDoubleClick(int32 buttonIndex) {
 	int maxMoveX = 4;
 	int maxMoveY = 4;
 
-	Point32 pos;
+	Common::Point32 pos;
 	BasePlatform::getCursorPos(&pos);
 
 	int moveX = abs(pos.x - _lastClick[buttonIndex].posX);
