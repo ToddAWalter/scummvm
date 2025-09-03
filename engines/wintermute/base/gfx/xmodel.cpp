@@ -47,6 +47,7 @@
 #include "engines/wintermute/utils/path_util.h"
 #include "engines/wintermute/utils/utils.h"
 #include "engines/wintermute/wintermute.h"
+#include "engines/wintermute/dcgf.h"
 
 namespace Wintermute {
 
@@ -83,8 +84,7 @@ XModel::~XModel() {
 void XModel::cleanup(bool complete) {
 	// empty animation channels
 	for (int i = 0; i < X_NUM_ANIMATION_CHANNELS; i++) {
-		delete _channels[i];
-		_channels[i] = nullptr;
+		SAFE_DELETE(_channels[i]);
 	}
 
 	// remove animation sets
@@ -95,20 +95,18 @@ void XModel::cleanup(bool complete) {
 
 	if (complete) {
 		for (int32 i = 0; i < _mergedModels.getSize(); ++i) {
-			delete[] _mergedModels[i];
+			SAFE_DELETE_ARRAY(_mergedModels[i]);
 		}
 		_mergedModels.removeAll();
 	}
 
 	for (int32 i = 0; i < _matSprites.getSize(); i++) {
-		delete _matSprites[i];
-		_matSprites[i] = nullptr;
+		SAFE_DELETE(_matSprites[i]);
 	}
 	_matSprites.removeAll();
 
 	// remove root frame
-	delete _rootFrame;
-	_rootFrame = nullptr;
+	SAFE_DELETE(_rootFrame);
 
 	_parentModel = nullptr;
 
@@ -238,7 +236,7 @@ bool XModel::loadAnimationSet(const Common::String &filename, XFileData *xobj) {
 	AnimationSet *animSet = new AnimationSet(_gameRef, this);
 	res = loadName(animSet, xobj);
 	if (!res) {
-		delete animSet;
+		SAFE_DELETE(animSet);
 		return res;
 	}
 
@@ -261,7 +259,7 @@ bool XModel::loadAnimationSet(const Common::String &filename, XFileData *xobj) {
 		if (res) {
 			res = xchildData.getType(objectType);
 			if (!res) {
-				delete animSet;
+				SAFE_DELETE(animSet);
 				BaseEngine::LOG(0, "Error getting object type while loading animation set");
 				return res;
 			}
@@ -269,7 +267,7 @@ bool XModel::loadAnimationSet(const Common::String &filename, XFileData *xobj) {
 			if (objectType == kXClassAnimation) {
 				res = loadAnimation(filename, &xchildData, animSet);
 				if (!res) {
-					delete animSet;
+					SAFE_DELETE(animSet);
 					return res;
 				}
 			}
@@ -306,19 +304,17 @@ bool XModel::loadAnimation(const Common::String &filename, XFileData *xobj, Anim
 		if (res) {
 			res = anim->load(&xchildData, parentAnimSet);
 			if (!res) {
-				delete anim;
-				if (newAnimSet) {
-					delete parentAnimSet;
-				}
+				SAFE_DELETE(anim);
+				if (newAnimSet)
+					SAFE_DELETE(parentAnimSet);
 				return res;
 			}
 		}
 	}
 	parentAnimSet->addAnimation(anim);
 
-	if (newAnimSet) {
+	if (newAnimSet)
 		_animationSets.add(parentAnimSet);
-	}
 
 	return true;
 }
@@ -398,7 +394,7 @@ bool XModel::playAnim(int channel, const Common::String &name, uint32 transition
 	AnimationSet *anim = getAnimationSetByName(name);
 	if (anim) {
 		char *currentAnim = _channels[channel]->getName();
-		if (_owner && currentAnim) {
+		if (_owner && currentAnim && !name.empty()) {
 			transitionTime = _owner->getAnimTransitionTime(currentAnim, const_cast<char *>(name.c_str()));
 		}
 
@@ -472,21 +468,23 @@ bool XModel::updateShadowVol(ShadowVolume *shadow, DXMatrix *modelMat, DXVector3
 
 //////////////////////////////////////////////////////////////////////////
 bool XModel::render() {
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
+
 	if (_rootFrame) {
 		// set culling
 		if (_owner && !_owner->_drawBackfaces) {
-			_gameRef->_renderer3D->enableCulling();
+			renderer->enableCulling();
 		} else {
-			_gameRef->_renderer3D->disableCulling();
+			renderer->disableCulling();
 		}
 
 		// render everything
 		bool res = _rootFrame->render(this);
 
 		// remember matrices for object picking purposes
-		_gameRef->_renderer3D->getWorldTransform(&_lastWorldMat);
-		_gameRef->_renderer3D->getViewTransform(&_lastViewMat);
-		_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
+		renderer->getWorldTransform(&_lastWorldMat);
+		renderer->getViewTransform(&_lastViewMat);
+		renderer->getProjectionTransform(&_lastProjMat);
 
 		// remember scene offset
 		Common::Rect32 rc;
@@ -496,9 +494,9 @@ bool XModel::render() {
 
 		// margins
 		int mleft = rc.left;
-		int mright = _gameRef->_renderer->getWidth() - width - rc.left;
+		int mright = renderer->getWidth() - width - rc.left;
 		int mtop = rc.top;
-		int mbottom = _gameRef->_renderer->getHeight() - height - rc.top;
+		int mbottom = renderer->getHeight() - height - rc.top;
 
 		_lastOffsetX = _gameRef->_offsetX + (mleft - mright) / 2;
 		_lastOffsetY = _gameRef->_offsetY + (mtop - mbottom) / 2;
@@ -551,6 +549,7 @@ bool XModel::isTransparentAt(int x, int y) {
 	x += _lastOffsetX;
 	y += _lastOffsetY;
 
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
 	if (!_gameRef->_renderer3D->_camera)
 		return true;
 
@@ -564,8 +563,8 @@ bool XModel::isTransparentAt(int x, int y) {
 	y -= _drawingViewport._y + modHeight;
 
 	if (customViewport) {
-		x += _gameRef->_renderer3D->_drawOffsetX;
-		y += _gameRef->_renderer3D->_drawOffsetY;
+		x += renderer->_drawOffsetX;
+		y += renderer->_drawOffsetY;
 	}
 
 	DXVector3 pickRayDir;
@@ -610,13 +609,15 @@ void XModel::updateBoundingRect() {
 	_boundingRect.left = _boundingRect.top = INT_MAX_VALUE;
 	_boundingRect.right = _boundingRect.bottom = INT_MIN_VALUE;
 
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
+
 	DXMatrix viewMat, projMat, worldMat;
 	DXVector3 vec2d(0, 0, 0);
-	_gameRef->_renderer3D->getViewTransform(&viewMat);
-	_gameRef->_renderer3D->getProjectionTransform(&projMat);
-	_gameRef->_renderer3D->getWorldTransform(&worldMat);
+	renderer->getViewTransform(&viewMat);
+	renderer->getProjectionTransform(&projMat);
+	renderer->getWorldTransform(&worldMat);
 
-	_drawingViewport = _gameRef->_renderer3D->getViewPort();
+	_drawingViewport = renderer->getViewPort();
 
 	float x1 = _BBoxStart._x;
 	float x2 = _BBoxEnd._x;
@@ -651,10 +652,10 @@ void XModel::updateBoundingRect() {
 	DXVec3Project(&vec2d, &v222, &_drawingViewport, &projMat, &viewMat, &worldMat);
 	updateRect(&_boundingRect, &vec2d);
 
-	_boundingRect.left -= _gameRef->_renderer3D->_drawOffsetX;
-	_boundingRect.right -= _gameRef->_renderer3D->_drawOffsetX;
-	_boundingRect.bottom -= _gameRef->_renderer3D->_drawOffsetY;
-	_boundingRect.top -= _gameRef->_renderer3D->_drawOffsetY;
+	_boundingRect.left -= renderer->_drawOffsetX;
+	_boundingRect.right -= renderer->_drawOffsetX;
+	_boundingRect.bottom -= renderer->_drawOffsetY;
+	_boundingRect.top -= renderer->_drawOffsetY;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -775,14 +776,14 @@ bool XModel::parseEvent(AnimationSet *anim, char *buffer) {
 	}
 
 	if (cmd != PARSERR_EOF) {
-		delete event;
+		SAFE_DELETE(event);
 		return false;
 	}
 
 	if (event->_eventName) {
 		anim->addEvent(event);
 	} else {
-		delete event;
+		SAFE_DELETE(event);
 	}
 
 	return true;
@@ -800,7 +801,7 @@ bool XModel::setMaterialSprite(const char *materialName, const char *spriteFilen
 
 	BaseSprite *sprite = new BaseSprite(_gameRef);
 	if (!sprite || !sprite->loadFile(spriteFilename)) {
-		delete sprite;
+		SAFE_DELETE(sprite);
 		return false;
 	}
 
@@ -835,7 +836,7 @@ bool XModel::setMaterialTheora(const char *materialName, const char *theoraFilen
 
 	VideoTheoraPlayer *theora = new VideoTheoraPlayer(_gameRef);
 	if (!theora || theora->initialize(theoraFilename)) {
-		delete theora;
+		SAFE_DELETE(theora);
 		return false;
 	}
 
@@ -870,7 +871,7 @@ bool XModel::setMaterialEffect(const char *materialName, const char *effectFilen
 
 	Effect3D *effect = new Effect3D(_gameRef);
 	if (!effect->createFromFile(effectFilename)) {
-		delete effect;
+		SAFE_DELETE(effect);
 		return false;
 	}
 
@@ -901,8 +902,7 @@ bool XModel::removeMaterialEffect(const char *materialName) {
 
 	for (int32 i = 0; i < _matSprites.getSize(); i++) {
 		if (scumm_stricmp(_matSprites[i]->_matName, materialName) == 0) {
-			delete _matSprites[i];
-			_matSprites[i] = nullptr;
+			SAFE_DELETE(_matSprites[i]);
 			_matSprites.removeAt(i);
 			_rootFrame->removeMaterialEffect(materialName);
 			return true;
@@ -971,8 +971,7 @@ bool XModel::initializeSimple() {
 				_matSprites[i]->_effect = effect;
 				_rootFrame->setMaterialEffect(_matSprites[i]->_matName, _matSprites[i]->_effect, _matSprites[i]->_effectParams);
 			} else {
-				delete effect;
-				effect = nullptr;
+				SAFE_DELETE(effect);
 			}
 		}
 	}
@@ -1106,13 +1105,13 @@ bool XModel::unloadAnimation(const char *animName) {
 	bool found = false;
 	for (int32 i = 0; i < _animationSets.getSize(); i++) {
 		if (scumm_stricmp(animName, _animationSets[i]->_name) == 0) {
-			for (int j = 0; j < X_NUM_ANIMATION_CHANNELS; j++) {
+			for (int32 j = 0; j < X_NUM_ANIMATION_CHANNELS; j++) {
 				if (_channels[j])
 					_channels[j]->unloadAnim(_animationSets[i]);
 			}
 
 			found = true;
-			delete _animationSets[i];
+			SAFE_DELETE(_animationSets[i]);
 			_animationSets.removeAt(i);
 			i++;
 		}

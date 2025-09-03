@@ -53,6 +53,7 @@
 #include "engines/wintermute/utils/utils.h"
 #include "engines/wintermute/system/sys_class_registry.h"
 #include "engines/wintermute/wintermute.h"
+#include "engines/wintermute/dcgf.h"
 
 namespace Wintermute {
 
@@ -89,8 +90,7 @@ AdSceneGeometry::AdSceneGeometry(BaseGame *gameRef) : BaseObject(gameRef) {
 //////////////////////////////////////////////////////////////////////////
 AdSceneGeometry::~AdSceneGeometry() {
 	cleanup();
-	delete _wptMarker;
-	_wptMarker = nullptr;
+	SAFE_DELETE(_wptMarker);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -118,8 +118,9 @@ void AdSceneGeometry::cleanup() {
 	_waypointGroups.removeAll();
 
 	for (i = 0; i < _cameras.getSize(); i++) {
-		if (_gameRef->_renderer3D->_camera == _cameras[i])
-			_gameRef->_renderer3D->_camera = nullptr;
+		BaseRenderer3D *renderer = _gameRef->_renderer3D;
+		if (renderer->_camera == _cameras[i])
+			renderer->_camera = nullptr;
 		delete _cameras[i];
 	}
 	_cameras.removeAll();
@@ -411,13 +412,14 @@ DXMatrix *AdSceneGeometry::getViewMatrix() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::storeDrawingParams() {
+    BaseRenderer3D *renderer = _gameRef->_renderer3D;
+
 	// store values
-	_drawingViewport = _gameRef->_renderer3D->getViewPort();
+	_drawingViewport = renderer->getViewPort();
 
-	_gameRef->_renderer3D->getWorldTransform(&_lastWorldMat);
-	_gameRef->_renderer3D->getViewTransform(&_lastViewMat);
-	_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
-
+	renderer->getWorldTransform(&_lastWorldMat);
+	renderer->getViewTransform(&_lastViewMat);
+	renderer->getProjectionTransform(&_lastProjMat);
 
 	AdScene *scene = ((AdGame *)_gameRef)->_scene;
 	if (scene) {
@@ -478,7 +480,8 @@ float AdSceneGeometry::getHeightAt(DXVector3 pos, float tolerance, bool *intFoun
 
 	for (int32 i = 0; i < _planes.getSize(); i++) {
 		for (uint32 j = 0; j < _planes[i]->_mesh->_numFaces; j++) {
-			if (C3DUtils::intersectTriangle(pos, dir,
+			if (C3DUtils::intersectTriangle(
+				                        pos, dir,
 				                        _planes[i]->_mesh->_vertices[_planes[i]->_mesh->_faces[j]._vertices[0]]._pos,
 				                        _planes[i]->_mesh->_vertices[_planes[i]->_mesh->_faces[j]._vertices[1]]._pos,
 				                        _planes[i]->_mesh->_vertices[_planes[i]->_mesh->_faces[j]._vertices[2]]._pos,
@@ -544,13 +547,11 @@ bool AdSceneGeometry::directPathExists(DXVector3 *p1, DXVector3 *p2) {
 			float dist;
 
 			if (C3DUtils::pickGetIntersect(*p1, *p2, v0, v1, v2, &intersection, &dist)) {
-				if (C3DUtils::intersectTriangle(*p1, *p1 - *p2, v0, v1, v2,
-				                                &intersection._x, &intersection._y, &intersection._z)) {
+				if (C3DUtils::intersectTriangle(*p1, *p1 - *p2, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 					return false;
 				}
 
-				if (C3DUtils::intersectTriangle(*p2, *p2 - *p1, v0, v1, v2,
-				                                &intersection._x, &intersection._y, &intersection._z)) {
+				if (C3DUtils::intersectTriangle(*p2, *p2 - *p1, v0, v1, v2, &intersection._x, &intersection._y, &intersection._z)) {
 					return false;
 				}
 			}
@@ -679,9 +680,11 @@ bool AdSceneGeometry::convert2Dto3DTolerant(int x, int y, DXVector3 *pos) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::convert2Dto3D(int x, int y, DXVector3 *pos) {
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
+
 	if (!_lastValuesInitialized) {
-		_drawingViewport = _gameRef->_renderer3D->getViewPort();
-		_gameRef->_renderer3D->getProjectionTransform(&_lastProjMat);
+		_drawingViewport = renderer->getViewPort();
+		renderer->getProjectionTransform(&_lastProjMat);
 	}
 
 	float resWidth, resHeight;
@@ -698,7 +701,6 @@ bool AdSceneGeometry::convert2Dto3D(int x, int y, DXVector3 *pos) {
 
 	x -= (mleft + mright) / 2 + modWidth;
 	y -= (mtop + mbottom) / 2 + modHeight;
-
 
 	DXVector3 vPickRayDir;
 	DXVector3 vPickRayOrig;
@@ -727,7 +729,8 @@ bool AdSceneGeometry::convert2Dto3D(int x, int y, DXVector3 *pos) {
 	DXVector3 intersection, ray;
 	for (int32 i = 0; i < _planes.getSize(); i++) {
 		for (int32 j = 0; j < _planes[i]->_mesh->_numFaces; j++) {
-			if (C3DUtils::intersectTriangle(vPickRayOrig, vPickRayDir,
+			if (C3DUtils::intersectTriangle(
+								  vPickRayOrig, vPickRayDir,
 								  _planes[i]->_mesh->_vertices[_planes[i]->_mesh->_faces[j]._vertices[0]]._pos,
 								  _planes[i]->_mesh->_vertices[_planes[i]->_mesh->_faces[j]._vertices[1]]._pos,
 								  _planes[i]->_mesh->_vertices[_planes[i]->_mesh->_faces[j]._vertices[2]]._pos,
@@ -889,14 +892,13 @@ bool AdSceneGeometry::initLoop() {
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::createLights() {
 	// disable all lights
-	int32 maxLights = _gameRef->_renderer3D->getMaxActiveLights();
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
+	int32 maxLights = renderer->getMaxActiveLights();
 	for (int32 i = 0; i < maxLights; i++) {
-		_gameRef->_renderer3D->lightEnable(i, false);
+		renderer->lightEnable(i, false);
 	}
 
-	int32 lightCount = MIN(_lights.getSize(), maxLights);
-
-	for (int32 i = 0; i < lightCount; i++) {
+	for (int32 i = 0; i < MIN(_lights.getSize(), maxLights); i++) {
 		_lights[i]->setLight(i);
 	}
 
@@ -906,7 +908,8 @@ bool AdSceneGeometry::createLights() {
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::enableLights(DXVector3 point, BaseArray<char *> &ignoreLights) {
 	const int maxLightCount = 100;
-	int maxLights = _gameRef->_renderer3D->getMaxActiveLights();
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
+	int maxLights = renderer->getMaxActiveLights();
 
 	int32 numActiveLights = 0;
 	for (int32 i = 0; i < _lights.getSize(); i++) {
@@ -953,14 +956,14 @@ bool AdSceneGeometry::enableLights(DXVector3 point, BaseArray<char *> &ignoreLig
 			qsort_msvc(activeLights.getData(), activeLights.getSize(), sizeof(Light3D *), AdSceneGeometry::compareLights);
 
 			for (int32 i = 0; i < activeLights.getSize(); i++) {
-				activeLights[i]->_isAvailable = static_cast<int32>(i) < maxLights;
+				activeLights[i]->_isAvailable = i < maxLights;
 			}
 		}
 	}
 
 	// light all available lights
 	for (int32 i = 0; i < maxLightCount; i++) {
-		_gameRef->_renderer3D->lightEnable(i, false);
+		renderer->lightEnable(i, false);
 	}
 
 	numActiveLights = 0;
@@ -984,8 +987,8 @@ bool AdSceneGeometry::enableLights(DXVector3 point, BaseArray<char *> &ignoreLig
 		}
 
 		if (_lights[i]->_isAvailable) {
+			renderer->lightEnable(i, _lights[i]->_active);
 			if (_lights[i]->_active) {
-				_gameRef->_renderer3D->lightEnable(i, _lights[i]->_active);
 				numActiveLights++;
 			}
 		}
@@ -1011,7 +1014,6 @@ int AdSceneGeometry::compareLights(const void *obj1, const void *obj2) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdSceneGeometry::correctTargetPoint(const DXVector3 &source, DXVector3 *target) {
-	// the source parameter is not even used in wme3d
 	int32 i;
 	int32 MaxLen = 1000;
 	int32 Step = 10;

@@ -35,6 +35,7 @@
 #include "engines/wintermute/base/base_file_manager.h"
 #include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/base/scriptables/script_ext_file.h"
+#include "engines/wintermute/dcgf.h"
 
 // Note: This code is completely untested, as I have yet to find a game that uses SXFile.
 
@@ -71,8 +72,7 @@ SXFile::~SXFile() {
 
 //////////////////////////////////////////////////////////////////////////
 void SXFile::cleanup() {
-	delete[] _filename;
-	_filename = nullptr;
+	SAFE_DELETE_ARRAY(_filename);
 	close();
 }
 
@@ -85,8 +85,7 @@ void SXFile::close() {
 	}
 	if (_writeFile) {
 		_writeFile->finalize();
-		delete _writeFile;
-		_writeFile = nullptr;
+		SAFE_DELETE(_writeFile);
 	}
 	_mode = 0;
 	_textMode = false;
@@ -747,12 +746,12 @@ uint32 SXFile::getLength() {
 	} else if ((_mode == 2 || _mode == 3) && _writeFile) {
 		error("SXFile - reading length for WriteFile not supported");
 		return 0;
-		/*
-		        uint32 currentPos = ftell((FILE *)_writeFile);
-		        fseek((FILE *)_writeFile, 0, SEEK_END);
-		        int ret = ftell((FILE *)_writeFile);
-		        fseek((FILE *)_writeFile, CurrentPos, SEEK_SET);
-		        return Ret;*/
+/*
+		uint32 currentPos = ftell((FILE *)_writeFile);
+		fseek((FILE *)_writeFile, 0, SEEK_END);
+		int ret = ftell((FILE *)_writeFile);
+		fseek((FILE *)_writeFile, CurrentPos, SEEK_SET);
+		return Ret;*/
 	} else {
 		return 0;
 	}

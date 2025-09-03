@@ -65,8 +65,7 @@ AdObject3D::AdObject3D(BaseGame *inGame) : AdObject(inGame) {
 //////////////////////////////////////////////////////////////////////////
 AdObject3D::~AdObject3D() {
 	_tempSkelAnim = nullptr; // ref only
-	delete _shadowVolume;
-	_shadowVolume = nullptr;
+	SAFE_DELETE(_shadowVolume);
 
 	clearIgnoredLights();
 }
@@ -76,7 +75,6 @@ void AdObject3D::clearIgnoredLights() {
 	for (int32 i = 0; i < _ignoredLights.getSize(); ++i) {
 		delete _ignoredLights[i];
 	}
-
 	_ignoredLights.removeAll();
 }
 
@@ -127,14 +125,15 @@ bool AdObject3D::update() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdObject3D::convert3DTo2D(DXMatrix *worldMat, int32 *posX, int32 *posY) {
+	BaseRenderer3D *renderer = _gameRef->_renderer3D;
 	DXMatrix viewMat, projMat;
 	DXVector3 vec2d(0.0f, 0.0f, 0.0f);
+	renderer->getViewTransform(&viewMat);
+	renderer->getProjectionTransform(&projMat);
+
+	DXViewport viewport = renderer->getViewPort();
+
 	DXVector3 origin(0.0f, 0.0f, 0.0f);
-	_gameRef->_renderer3D->getViewTransform(&viewMat);
-	_gameRef->_renderer3D->getProjectionTransform(&projMat);
-
-	DXViewport viewport = _gameRef->_renderer3D->getViewPort();
-
 	DXVec3Project(&vec2d, &origin, &viewport, &projMat, &viewMat, worldMat);
 
 	*posX = vec2d._x + _gameRef->_offsetX - _gameRef->_renderer3D->_drawOffsetX;
@@ -216,7 +215,6 @@ bool AdObject3D::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		getBonePosition3D(boneName, &pos);
 
 		ScValue *val = stack->getPushValue();
-
 		if (val) {
 			val->setProperty("X", pos._x);
 			val->setProperty("Y", pos._y);
@@ -471,7 +469,6 @@ bool AdObject3D::scSetProperty(const char *name, ScValue *value) {
 		if (_shadowType < 0) {
 			_shadowType = SHADOW_NONE;
 		}
-
 		if (_shadowType > SHADOW_STENCIL) {
 			_shadowType = SHADOW_STENCIL;
 		}
@@ -586,10 +583,8 @@ bool AdObject3D::skipTo(int x, int y, bool tolerant) {
 
 //////////////////////////////////////////////////////////////////////////
 ShadowVolume *AdObject3D::getShadowVolume() {
-	if (_shadowVolume == nullptr) {
+	if (_shadowVolume == nullptr)
 		_shadowVolume = _gameRef->_renderer3D->createShadowVolume();
-	}
-
 	return _shadowVolume;
 }
 
@@ -631,8 +626,8 @@ bool AdObject3D::getBonePosition3D(const char *boneName, DXVector3 *pos, DXVecto
 		return false;
 	}
 
-	DXVector3 vz(0, 0, 0);
 	if (!offset) {
+		DXVector3 vz(0, 0, 0);
 		offset = &vz;
 	}
 

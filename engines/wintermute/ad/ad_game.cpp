@@ -67,6 +67,7 @@
 #include "engines/wintermute/video/video_player.h"
 #include "engines/wintermute/video/video_theora_player.h"
 #include "engines/wintermute/platform_osystem.h"
+#include "engines/wintermute/dcgf.h"
 
 #include "common/config-manager.h"
 #include "common/str.h"
@@ -177,20 +178,13 @@ bool AdGame::cleanup() {
 		_inventoryBox = nullptr;
 	}
 
-	delete[] _prevSceneName;
-	delete[] _prevSceneFilename;
-	delete[] _scheduledScene;
-	delete[] _debugStartupScene;
-	delete[] _itemsFile;
-	_prevSceneName = nullptr;
-	_prevSceneFilename = nullptr;
-	_scheduledScene = nullptr;
-	_debugStartupScene = nullptr;
-	_startupScene = nullptr;
-	_itemsFile = nullptr;
+	SAFE_DELETE_ARRAY(_prevSceneName);
+	SAFE_DELETE_ARRAY(_prevSceneFilename);
+	SAFE_DELETE_ARRAY(_scheduledScene);
+	SAFE_DELETE_ARRAY(_debugStartupScene);
+	SAFE_DELETE_ARRAY(_itemsFile);
 
-	delete _sceneViewport;
-	_sceneViewport = nullptr;
+	SAFE_DELETE(_sceneViewport);
 
 	for (int32 i = 0; i < _sceneStates.getSize(); i++) {
 		delete _sceneStates[i];
@@ -215,8 +209,7 @@ bool AdGame::cleanup() {
 bool AdGame::initLoop() {
 	if (_scheduledScene && _transMgr->isReady()) {
 		changeScene(_scheduledScene, _scheduledFadeIn);
-		delete[] _scheduledScene;
-		_scheduledScene = nullptr;
+		SAFE_DELETE_ARRAY(_scheduledScene);
 
 		_gameRef->_activeObject = nullptr;
 	}
@@ -362,6 +355,7 @@ void AdGame::finishSentences() {
 			}
 		}
 	}
+	//Game->m_AccessMgr->Stop();
 }
 
 
@@ -404,8 +398,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			addObject(act);
 			stack->pushNative(act, true);
 		} else {
-			delete act;
-			act = nullptr;
+			SAFE_DELETE(act);
 			stack->pushNULL();
 		}
 		return STATUS_OK;
@@ -425,8 +418,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			addObject(act);
 			stack->pushNative(act, true);
 		} else {
-			delete act;
-			act = nullptr;
+			SAFE_DELETE(act);
 			stack->pushNULL();
 		}
 		return STATUS_OK;
@@ -443,8 +435,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			addObject(ent);
 			stack->pushNative(ent, true);
 		} else {
-			delete ent;
-			ent = nullptr;
+			SAFE_DELETE(ent);
 			stack->pushNULL();
 		}
 		return STATUS_OK;
@@ -834,8 +825,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			registerObject(_responseBox);
 			stack->pushBool(true);
 		} else {
-			delete _responseBox;
-			_responseBox = nullptr;
+			SAFE_DELETE(_responseBox);
 			stack->pushBool(false);
 		}
 		return STATUS_OK;
@@ -854,8 +844,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			registerObject(_inventoryBox);
 			stack->pushBool(true);
 		} else {
-			delete _inventoryBox;
-			_inventoryBox = nullptr;
+			SAFE_DELETE(_inventoryBox);
 			stack->pushBool(false);
 		}
 		return STATUS_OK;
@@ -1253,8 +1242,7 @@ bool AdGame::scSetProperty(const char *name, ScValue *value) {
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "StartupScene") == 0) {
 		if (value == nullptr) {
-			delete[] _startupScene;
-			_startupScene = nullptr;
+			SAFE_DELETE_ARRAY(_startupScene);
 		} else {
 			BaseUtils::setString(&_startupScene, value->getString());
 		}
@@ -1405,25 +1393,23 @@ bool AdGame::loadBuffer(char *buffer, bool complete) {
 			while (cmd > 0 && (cmd = parser.getCommand(&params, commands, &params2)) > 0) {
 				switch (cmd) {
 				case TOKEN_RESPONSE_BOX:
-					delete _responseBox;
+					SAFE_DELETE(_responseBox);
 					_responseBox = new AdResponseBox(_gameRef);
 					if (_responseBox && !DID_FAIL(_responseBox->loadFile(params2))) {
 						registerObject(_responseBox);
 					} else {
-						delete _responseBox;
-						_responseBox = nullptr;
+						SAFE_DELETE(_responseBox);
 						cmd = PARSERR_GENERIC;
 					}
 					break;
 
 				case TOKEN_INVENTORY_BOX:
-					delete _inventoryBox;
+					SAFE_DELETE(_inventoryBox);
 					_inventoryBox = new AdInventoryBox(_gameRef);
 					if (_inventoryBox && !DID_FAIL(_inventoryBox->loadFile(params2))) {
 						registerObject(_inventoryBox);
 					} else {
-						delete _inventoryBox;
-						_inventoryBox = nullptr;
+						SAFE_DELETE(_inventoryBox);
 						cmd = PARSERR_GENERIC;
 					}
 					break;
@@ -1432,8 +1418,7 @@ bool AdGame::loadBuffer(char *buffer, bool complete) {
 					itemsFound = true;
 					BaseUtils::setString(&_itemsFile, params2);
 					if (DID_FAIL(loadItemsFile(_itemsFile))) {
-						delete[] _itemsFile;
-						_itemsFile = nullptr;
+						SAFE_DELETE_ARRAY(_itemsFile);
 						cmd = PARSERR_GENERIC;
 					}
 					break;
@@ -1570,8 +1555,7 @@ bool AdGame::persist(BasePersistenceManager *persistMgr) {
 
 //////////////////////////////////////////////////////////////////////////
 void AdGame::setPrevSceneName(const char *name) {
-	delete[] _prevSceneName;
-	_prevSceneName = nullptr;
+	SAFE_DELETE_ARRAY(_prevSceneName);
 	if (name) {
 		size_t nameSize = strlen(name) + 1;
 		_prevSceneName = new char[nameSize];
@@ -1582,8 +1566,7 @@ void AdGame::setPrevSceneName(const char *name) {
 
 //////////////////////////////////////////////////////////////////////////
 void AdGame::setPrevSceneFilename(const char *name) {
-	delete[] _prevSceneFilename;
-	_prevSceneFilename = nullptr;
+	SAFE_DELETE_ARRAY(_prevSceneFilename);
 	if (name) {
 		size_t nameSize = strlen(name) + 1;
 		_prevSceneFilename = new char[nameSize];
@@ -1594,8 +1577,7 @@ void AdGame::setPrevSceneFilename(const char *name) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::scheduleChangeScene(const char *filename, bool fadeIn) {
-	delete[] _scheduledScene;
-	_scheduledScene = nullptr;
+	SAFE_DELETE_ARRAY(_scheduledScene);
 
 	if (_scene && !_scene->_initialized) {
 		return changeScene(filename, fadeIn);
@@ -1794,8 +1776,7 @@ bool AdGame::loadItemsBuffer(char *buffer, bool merge) {
 				}
 				addItem(item);
 			} else {
-				delete item;
-				item = nullptr;
+				SAFE_DELETE(item);
 				cmd = PARSERR_GENERIC;
 			}
 		}
@@ -1866,8 +1847,7 @@ bool AdGame::windowLoadHook(UIWindow *win, char **buffer, char **params) {
 	case TOKEN_ENTITY_CONTAINER: {
 		UIEntity *ent = new UIEntity(_gameRef);
 		if (!ent || DID_FAIL(ent->loadBuffer(*params, false))) {
-			delete ent;
-			ent = nullptr;
+			SAFE_DELETE(ent);
 			cmd = PARSERR_GENERIC;
 		} else {
 			ent->_parent = win;
@@ -2004,6 +1984,7 @@ bool AdGame::branchResponseUsed(int id) const {
 	char *context = _dlgPendingBranches.getSize() > 0 ? _dlgPendingBranches[_dlgPendingBranches.getSize() - 1] : nullptr;
 	for (int32 i = 0; i < _responsesBranch.getSize(); i++) {
 		if (_responsesBranch[i]->_id == id) {
+			// make sure context != nullptr	
 			if ((context == nullptr && _responsesBranch[i]->_context == nullptr) || (context != nullptr && scumm_stricmp(context, _responsesBranch[i]->_context) == 0)) {
 				return true;
 			}
@@ -2032,6 +2013,7 @@ bool AdGame::gameResponseUsed(int id) const {
 	for (int32 i = 0; i < _responsesGame.getSize(); i++) {
 		const AdResponseContext *respContext = _responsesGame[i];
 		if (respContext->_id == id) {
+			// make sure context != nullptr	
 			if ((context == nullptr && respContext->_context == nullptr) || ((context != nullptr && respContext->_context != nullptr) && (context != nullptr && scumm_stricmp(context, respContext->_context) == 0))) {
 				return true;
 			}
@@ -2047,6 +2029,7 @@ bool AdGame::resetResponse(int id) {
 
 	for (int32 i = 0; i < _responsesGame.getSize(); i++) {
 		if (_responsesGame[i]->_id == id) {
+			// make sure context != nullptr	
 			if ((context == nullptr && _responsesGame[i]->_context == nullptr) || (context != nullptr && scumm_stricmp(context, _responsesGame[i]->_context) == 0)) {
 				delete _responsesGame[i];
 				_responsesGame.removeAt(i);
@@ -2057,6 +2040,7 @@ bool AdGame::resetResponse(int id) {
 
 	for (int32 i = 0; i < _responsesBranch.getSize(); i++) {
 		if (_responsesBranch[i]->_id == id) {
+			// make sure context != nullptr	
 			if ((context == nullptr && _responsesBranch[i]->_context == nullptr) || (context != nullptr && scumm_stricmp(context, _responsesBranch[i]->_context) == 0)) {
 				delete _responsesBranch[i];
 				_responsesBranch.removeAt(i);
@@ -2095,8 +2079,7 @@ bool AdGame::displayContent(bool doUpdate, bool displayAll) {
 			_theoraPlayer->display();
 		}
 		if (_theoraPlayer->isFinished()) {
-			delete _theoraPlayer;
-			_theoraPlayer = nullptr;
+			SAFE_DELETE(_theoraPlayer);
 		}
 	} else {
 
@@ -2120,22 +2103,27 @@ bool AdGame::displayContent(bool doUpdate, bool displayAll) {
 
 		// display in-game windows
 		displayWindows(true);
-		if (_inventoryBox) {
+		if (_inventoryBox)
 			_inventoryBox->display();
-		}
-		if (_stateEx == GAME_WAITING_RESPONSE) {
+		if (_stateEx == GAME_WAITING_RESPONSE)
 			_responseBox->display();
-		}
 		_renderer->displayIndicator();
 
 
 		if (doUpdate || displayAll) {
+			//m_AccessMgr->DisplayBeforeGUI();
+
 			// display normal windows
 			displayWindows(false);
+
+			//m_AccessMgr->DisplayAfterGUI();
 
 			setActiveObject(_gameRef->_renderer->getObjectAt(p.x, p.y));
 
 			// textual info
+			//if (m_AccessGlobalPaused)
+			//	DisplaySentences(false);
+			//else
 			displaySentences(_state == GAME_FROZEN);
 
 			showCursor();
@@ -2150,8 +2138,7 @@ bool AdGame::displayContent(bool doUpdate, bool displayAll) {
 	if (_loadingIcon) {
 		_loadingIcon->display(_loadingIconX, _loadingIconY);
 		if (!_loadingIconPersistent) {
-			delete _loadingIcon;
-			_loadingIcon = nullptr;
+			SAFE_DELETE(_loadingIcon);
 		}
 	}
 
@@ -2370,6 +2357,30 @@ bool AdGame::renderShadowGeometry() {
 #endif
 
 //////////////////////////////////////////////////////////////////////////
+/*CBObject *CAdGame::GetNextAccessObject(CBObject *CurrObject) {
+	CBObject *Ret = CBGame::GetNextAccessObject(CurrObject);
+	if (!Ret) {
+		if (m_ResponseBox && m_StateEx == GAME_WAITING_RESPONSE)
+			return m_ResponseBox->GetNextAccessObject(CurrObject);
+		if (m_Scene)
+			return m_Scene->GetNextAccessObject(CurrObject);
+	}
+	return Ret;
+}
+
+//////////////////////////////////////////////////////////////////////////
+CBObject *CAdGame::GetPrevAccessObject(CBObject *CurrObject) {
+	CBObject *Ret = CBGame::GetPrevAccessObject(CurrObject);
+	if (!Ret) {
+		if (m_ResponseBox && m_StateEx == GAME_WAITING_RESPONSE)
+			return m_ResponseBox->GetPrevAccessObject(CurrObject);
+		if (m_Scene)
+			return m_Scene->GetPrevAccessObject(CurrObject);
+	}
+	return Ret;
+}*/
+
+//////////////////////////////////////////////////////////////////////////
 bool AdGame::validMouse() {
 	Common::Point32 pos;
 	BasePlatform::getCursorPos(&pos);
@@ -2386,6 +2397,11 @@ bool AdGame::onMouseLeftDown() {
 		if (_talkSkipButton == TALK_SKIP_LEFT || _talkSkipButton == TALK_SKIP_BOTH) {
 			finishSentences();
 		}
+		return STATUS_OK;
+	}
+
+	if ((_videoSkipButton == VIDEO_SKIP_LEFT || _videoSkipButton == VIDEO_SKIP_BOTH) && isVideoPlaying()) {
+		_gameRef->stopVideo();
 		return STATUS_OK;
 	}
 
@@ -2412,6 +2428,9 @@ bool AdGame::onMouseLeftDown() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::onMouseLeftUp() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_LEFT);
 	}
@@ -2439,6 +2458,10 @@ bool AdGame::onMouseLeftUp() {
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::onMouseLeftDblClick() {
 	if (!validMouse()) {
+		return STATUS_OK;
+	}
+
+	if (isVideoPlaying()) {
 		return STATUS_OK;
 	}
 
@@ -2473,6 +2496,11 @@ bool AdGame::onMouseRightDown() {
 		return STATUS_OK;
 	}
 
+	if ((_videoSkipButton == VIDEO_SKIP_RIGHT || _videoSkipButton == VIDEO_SKIP_BOTH) && isVideoPlaying()) {
+		_gameRef->stopVideo();
+		return STATUS_OK;
+	}
+
 	if ((_state == GAME_RUNNING && !_interactive) || _stateEx == GAME_WAITING_RESPONSE) {
 		return STATUS_OK;
 	}
@@ -2494,6 +2522,9 @@ bool AdGame::onMouseRightDown() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::onMouseRightUp() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_RIGHT);
 	}

@@ -59,6 +59,7 @@
 #include "engines/wintermute/ui/ui_window.h"
 #include "engines/wintermute/utils/utils.h"
 #include "engines/wintermute/wintermute.h"
+#include "engines/wintermute/dcgf.h"
 
 #ifdef ENABLE_WME3D
 #include "engines/wintermute/ad/ad_actor_3dx.h"
@@ -83,8 +84,7 @@ AdScene::AdScene(BaseGame *inGame) : BaseObject(inGame) {
 AdScene::~AdScene() {
 	cleanup();
 	_gameRef->unregisterObject(_fader);
-	delete _pfTarget;
-	_pfTarget = nullptr;
+	SAFE_DELETE(_pfTarget);
 }
 
 
@@ -179,8 +179,7 @@ void AdScene::cleanup() {
 
 	_mainLayer = nullptr; // reference only
 
-	delete _shieldWindow;
-	_shieldWindow = nullptr;
+	SAFE_DELETE(_shieldWindow);
 
 	_gameRef->unregisterObject(_fader);
 	_fader = nullptr;
@@ -219,11 +218,9 @@ void AdScene::cleanup() {
 	_objects.removeAll();
 
 #ifdef ENABLE_WME3D
-	delete _geom;
-	_geom = nullptr;
+	SAFE_DELETE(_geom);
 #endif
-	delete _viewport;
-	_viewport = nullptr;
+	SAFE_DELETE(_viewport);
 
 	setDefaults();
 }
@@ -751,7 +748,7 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 			AdLayer *layer = new AdLayer(_gameRef);
 			if (!layer || DID_FAIL(layer->loadBuffer(params, false))) {
 				cmd = PARSERR_GENERIC;
-				delete layer;
+				SAFE_DELETE(layer);
 			} else {
 				_gameRef->registerObject(layer);
 				_layers.add(layer);
@@ -768,7 +765,7 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 			AdWaypointGroup *wpt = new AdWaypointGroup(_gameRef);
 			if (!wpt || DID_FAIL(wpt->loadBuffer(params, false))) {
 				cmd = PARSERR_GENERIC;
-				delete wpt;
+				SAFE_DELETE(wpt);
 			} else {
 				_gameRef->registerObject(wpt);
 				_waypointGroups.add(wpt);
@@ -780,7 +777,7 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 			AdScaleLevel *sl = new AdScaleLevel(_gameRef);
 			if (!sl || DID_FAIL(sl->loadBuffer(params, false))) {
 				cmd = PARSERR_GENERIC;
-				delete sl;
+				SAFE_DELETE(sl);
 			} else {
 				_gameRef->registerObject(sl);
 				_scaleLevels.add(sl);
@@ -792,7 +789,7 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 			AdRotLevel *rl = new AdRotLevel(_gameRef);
 			if (!rl || DID_FAIL(rl->loadBuffer(params, false))) {
 				cmd = PARSERR_GENERIC;
-				delete rl;
+				SAFE_DELETE(rl);
 			} else {
 				_gameRef->registerObject(rl);
 				_rotLevels.add(rl);
@@ -804,7 +801,7 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 			AdEntity *entity = new AdEntity(_gameRef);
 			if (!entity || DID_FAIL(entity->loadBuffer(params, false))) {
 				cmd = PARSERR_GENERIC;
-				delete entity;
+				SAFE_DELETE(entity);
 			} else {
 				addObject(entity);
 			}
@@ -812,25 +809,23 @@ bool AdScene::loadBuffer(char *buffer, bool complete) {
 		break;
 
 		case TOKEN_CURSOR:
-			delete _cursor;
+			SAFE_DELETE(_cursor);
 			_cursor = new BaseSprite(_gameRef);
 			if (!_cursor || DID_FAIL(_cursor->loadFile(params))) {
-				delete _cursor;
+				SAFE_DELETE(_cursor);
 				cmd = PARSERR_GENERIC;
 			}
 			break;
 
 #ifdef ENABLE_WME3D
 		case TOKEN_GEOMETRY:
-			delete _geom;
-			_geom = nullptr;
+			SAFE_DELETE(_geom);
 			if (!_gameRef->_useD3D) {
 				break;
 			}
 			_geom = new AdSceneGeometry(_gameRef);
-			if (_geom == nullptr || !_geom->loadFile(params)) {
-				delete _geom;
-				_geom = nullptr;
+			if (!_geom || !_geom->loadFile(params)) {
+				SAFE_DELETE(_geom);
 				cmd = PARSERR_GENERIC;
 			}
 			break;
@@ -1097,11 +1092,13 @@ bool AdScene::traverseNodes(bool doUpdate) {
 		if (_autoScroll) {
 			// adjust horizontal scroll
 			if (_gameRef->getTimer()->getTime() - _lastTimeH >= _scrollTimeH) {
-				int timesMissed = (_gameRef->getTimer()->getTime() - _lastTimeH) / _scrollTimeH;
+
 				// Cap the amount of catch-up to avoid jittery characters.
+				int timesMissed = (_gameRef->getTimer()->getTime() - _lastTimeH) / _scrollTimeH;
 				if (timesMissed > 2) {
 					timesMissed = 2;
 				}
+
 				_lastTimeH = _gameRef->getTimer()->getTime();
 				if (_offsetLeft < _targetOffsetLeft) {
 					_offsetLeft += _scrollPixelsH * timesMissed;
@@ -1114,11 +1111,13 @@ bool AdScene::traverseNodes(bool doUpdate) {
 
 			// adjust vertical scroll
 			if (_gameRef->getTimer()->getTime() - _lastTimeV >= _scrollTimeV) {
-				int timesMissed = (_gameRef->getTimer()->getTime() - _lastTimeV) / _scrollTimeV;
+
 				// Cap the amount of catch-up to avoid jittery characters.
+				int timesMissed = (_gameRef->getTimer()->getTime() - _lastTimeV) / _scrollTimeV;
 				if (timesMissed > 2) {
 					timesMissed = 2;
 				}
+
 				_lastTimeV = _gameRef->getTimer()->getTime();
 				if (_offsetTop < _targetOffsetTop) {
 					_offsetTop += _scrollPixelsV * timesMissed;
@@ -2366,7 +2365,6 @@ bool AdScene::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack,
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 ScValue *AdScene::scGetProperty(const Common::String &name) {
 	_scValue->setNULL();
@@ -2488,7 +2486,6 @@ ScValue *AdScene::scGetProperty(const Common::String &name) {
 		return _scValue;
 	}
 
-
 	//////////////////////////////////////////////////////////////////////////
 	// ScrollSpeedX
 	//////////////////////////////////////////////////////////////////////////
@@ -2531,7 +2528,6 @@ ScValue *AdScene::scGetProperty(const Common::String &name) {
 		} else {
 			_scValue->setNULL();
 		}
-
 		return _scValue;
 	}
 
@@ -2544,7 +2540,6 @@ ScValue *AdScene::scGetProperty(const Common::String &name) {
 		} else {
 			_scValue->setFloat(0.0f);
 		}
-
 		return _scValue;
 	}
 #endif
@@ -2599,7 +2594,6 @@ ScValue *AdScene::scGetProperty(const Common::String &name) {
 		} else {
 			_scValue->setInt(_geom->_lights.getSize());
 		}
-
 		return _scValue;
 	}
 #endif
@@ -2608,7 +2602,6 @@ ScValue *AdScene::scGetProperty(const Common::String &name) {
 		return BaseObject::scGetProperty(name);
 	}
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool AdScene::scSetProperty(const char *name, ScValue *value) {
@@ -2735,7 +2728,6 @@ bool AdScene::scSetProperty(const char *name, ScValue *value) {
 			_geom->_waypointHeight = value->getFloat();
 			_geom->dropWaypoints();
 		}
-
 		return STATUS_OK;
 	}
 
@@ -2859,8 +2851,6 @@ bool AdScene::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "VIEWPORT { %d, %d, %d, %d }\n", rc->left, rc->top, rc->right, rc->bottom);
 	}
 
-
-
 	// editor settings
 	buffer->putTextIndent(indent + 2, "; ----- editor settings\n");
 	buffer->putTextIndent(indent + 2, "EDITOR_MARGIN_H=%d\n", _editorMarginH);
@@ -2914,7 +2904,6 @@ bool AdScene::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		_rotLevels[i]->saveAsText(buffer, indent + 2);
 	}
 
-
 	buffer->putTextIndent(indent + 2, "\n");
 
 	// free entities
@@ -2922,7 +2911,6 @@ bool AdScene::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 	for (int32 i = 0; i < _objects.getSize(); i++) {
 		if (_objects[i]->_type == OBJECT_ENTITY) {
 			_objects[i]->saveAsText(buffer, indent + 2);
-
 		}
 	}
 
@@ -2933,9 +2921,11 @@ bool AdScene::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdScene::sortScaleLevels() {
+
 	if (_scaleLevels.getSize() == 0) {
 		return STATUS_OK;
 	}
+
 	bool changed;
 	do {
 		changed = false;
@@ -2957,9 +2947,11 @@ bool AdScene::sortScaleLevels() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdScene::sortRotLevels() {
+
 	if (_rotLevels.getSize() == 0) {
 		return STATUS_OK;
 	}
+
 	bool changed;
 	do {
 		changed = false;
@@ -3083,13 +3075,18 @@ bool AdScene::persist(BasePersistenceManager *persistMgr) {
 	if (BaseEngine::instance().getFlags() & GF_3D) {
 		persistMgr->transferSint32(TMEMBER(_editorResolutionWidth));
 		persistMgr->transferSint32(TMEMBER(_editorResolutionHeight));
+
 		persistMgr->transferFloat(TMEMBER(_fov));
 		persistMgr->transferFloat(TMEMBER(_nearClipPlane));
 		persistMgr->transferFloat(TMEMBER(_farClipPlane));
+
 		persistMgr->transferBool(TMEMBER(_2DPathfinding));
 		persistMgr->transferSint32(TMEMBER_INT(_maxShadowType));
+
 		persistMgr->transferBool(TMEMBER(_scroll3DCompatibility));
+
 		persistMgr->transferUint32(TMEMBER(_ambientLightColor));
+
 		persistMgr->transferBool(TMEMBER(_fogEnabled));
 		persistMgr->transferUint32(TMEMBER(_fogColor));
 		persistMgr->transferFloat(TMEMBER(_fogStart));
@@ -3131,7 +3128,6 @@ bool AdScene::correctTargetPoint2(int32 startX, int32 startY, int32 *targetX, in
 	y1 = *targetY;
 	x2 = startX;
 	y2 = startY;
-
 
 	xLength = abs(x2 - x1);
 	yLength = abs(y2 - y1);
@@ -3587,7 +3583,7 @@ bool AdScene::getRegionsAt(int x, int y, AdRegion **regionList, int numRegions) 
 			}
 		}
 	}
-	for (int i = numUsed; i < numRegions; i++) {
+	for (int32 i = numUsed; i < numRegions; i++) {
 		regionList[i] = nullptr;
 	}
 

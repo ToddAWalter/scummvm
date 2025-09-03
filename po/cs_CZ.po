@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.7.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-09-01 15:02+0000\n"
+"POT-Creation-Date: 2025-09-03 15:34+0000\n"
 "PO-Revision-Date: 2023-12-14 14:27+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Czech <https://translations.scummvm.org/projects/scummvm/"
@@ -130,7 +130,7 @@ msgstr "Jít nahoru"
 #: engines/scumm/dialog-createsession.cpp:47
 #: engines/scumm/dialog-sessionselector.cpp:67
 #: engines/scumm/he/moonbase/dialog-mapgenerator.cpp:138
-#: engines/sword1/control.cpp:2816 engines/wintermute/wintermute.cpp:186
+#: engines/sword1/control.cpp:2816 engines/wintermute/wintermute.cpp:177
 msgid "Cancel"
 msgstr "Zrušit"
 
@@ -992,7 +992,7 @@ msgid "Sine"
 msgstr "Sinus"
 
 #: gui/fluidsynth-dialog.cpp:137 backends/platform/sdl/ps3/ps3.cpp:43
-#: backends/platform/sdl/psp2/psp2.cpp:45 engines/dragons/metaengine.cpp:189
+#: backends/platform/sdl/psp2/psp2.cpp:45 engines/dragons/metaengine.cpp:188
 msgid "Triangle"
 msgstr "Trojúhelník"
 
@@ -1053,7 +1053,7 @@ msgstr "Interakce"
 
 #: gui/gui-manager.cpp:174 engines/metaengine.cpp:137
 #: engines/awe/metaengine.cpp:57 engines/crab/input/input.cpp:95
-#: engines/crab/input/input.cpp:145 engines/dragons/metaengine.cpp:159
+#: engines/crab/input/input.cpp:145 engines/dragons/metaengine.cpp:158
 #: engines/freescape/movement.cpp:35 engines/got/metaengine.cpp:70
 #: engines/griffon/metaengine.cpp:121 engines/grim/grim.cpp:481
 #: engines/grim/grim.cpp:563 engines/icb/icb.cpp:68 engines/icb/icb.cpp:152
@@ -1072,7 +1072,7 @@ msgstr "Nahoru"
 
 #: gui/gui-manager.cpp:180 engines/metaengine.cpp:143
 #: engines/awe/metaengine.cpp:58 engines/crab/input/input.cpp:101
-#: engines/crab/input/input.cpp:151 engines/dragons/metaengine.cpp:165
+#: engines/crab/input/input.cpp:151 engines/dragons/metaengine.cpp:164
 #: engines/freescape/movement.cpp:42 engines/got/metaengine.cpp:71
 #: engines/griffon/metaengine.cpp:127 engines/grim/grim.cpp:486
 #: engines/grim/grim.cpp:568 engines/icb/icb.cpp:73 engines/icb/icb.cpp:157
@@ -1091,7 +1091,7 @@ msgstr "Dolů"
 
 #: gui/gui-manager.cpp:186 engines/metaengine.cpp:149
 #: engines/awe/metaengine.cpp:59 engines/crab/input/input.cpp:107
-#: engines/crab/input/input.cpp:157 engines/dragons/metaengine.cpp:171
+#: engines/crab/input/input.cpp:157 engines/dragons/metaengine.cpp:170
 #: engines/got/metaengine.cpp:72 engines/griffon/metaengine.cpp:133
 #: engines/grim/grim.cpp:491 engines/grim/grim.cpp:573 engines/icb/icb.cpp:78
 #: engines/icb/icb.cpp:162 engines/scumm/metaengine.cpp:1000
@@ -1110,7 +1110,7 @@ msgstr "Doleva"
 
 #: gui/gui-manager.cpp:192 engines/metaengine.cpp:155
 #: engines/awe/metaengine.cpp:60 engines/crab/input/input.cpp:113
-#: engines/crab/input/input.cpp:163 engines/dragons/metaengine.cpp:177
+#: engines/crab/input/input.cpp:163 engines/dragons/metaengine.cpp:176
 #: engines/got/metaengine.cpp:73 engines/griffon/metaengine.cpp:139
 #: engines/grim/grim.cpp:496 engines/grim/grim.cpp:578 engines/icb/icb.cpp:83
 #: engines/icb/icb.cpp:167 engines/scumm/metaengine.cpp:1007
@@ -2615,8 +2615,9 @@ msgid ""
 msgstr "Přidat Hru..."
 
 #: gui/options.cpp:2967 engines/engine.cpp:655
-#: engines/drascula/metaengine.cpp:255 engines/queen/metaengine.cpp:269
-#: engines/sherlock/metaengine.cpp:410 engines/ultima/nuvie/metaengine.cpp:71
+#: engines/access/metaengine.cpp:281 engines/drascula/metaengine.cpp:255
+#: engines/queen/metaengine.cpp:269 engines/sherlock/metaengine.cpp:410
+#: engines/ultima/nuvie/metaengine.cpp:71
 #, fuzzy
 msgid "Move"
 msgstr "Vzad"
@@ -3357,7 +3358,7 @@ msgstr ""
 msgid "Shift"
 msgstr ""
 
-#: dists/android.strings.xml.cpp:51 engines/dragons/metaengine.cpp:153
+#: dists/android.strings.xml.cpp:51 engines/dragons/metaengine.cpp:152
 #: engines/scumm/help.cpp:88 engines/scumm/help.cpp:91
 #: engines/ultima/ultima4/metaengine.cpp:53
 msgid "Enter"
@@ -3715,7 +3716,7 @@ msgstr ""
 "fungovat v budoucích verzích ScummVM."
 
 #: engines/engine.cpp:808 engines/engine.cpp:833
-#: engines/wintermute/wintermute.cpp:186
+#: engines/wintermute/wintermute.cpp:177
 msgid "Start anyway"
 msgstr "Přesto spustit"
 
@@ -3884,7 +3885,7 @@ msgstr "Menu hry"
 
 #. I18N: Skipping cutscene plaback
 #. I18N: Skipping cutscene playback
-#: engines/metaengine.cpp:112 engines/access/metaengine.cpp:202
+#: engines/metaengine.cpp:112 engines/access/metaengine.cpp:208
 #: engines/composer/metaengine.cpp:125 engines/drascula/metaengine.cpp:224
 #: engines/efh/metaengine.cpp:379 engines/freescape/movement.cpp:87
 #: engines/grim/grim.cpp:533 engines/grim/grim.cpp:633
@@ -5691,7 +5692,7 @@ msgstr "Minimalizovat"
 #. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
 #. ONLINE HELP
 #: backends/platform/sdl/macosx/appmenu_osx.mm:312
-#: engines/access/metaengine.cpp:298 engines/bladerunner/metaengine.cpp:321
+#: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
 #: engines/supernova/metaengine.cpp:238 engines/tucker/metaengine.cpp:215
 #: engines/zvision/metaengine.cpp:246
 msgid "Help"
@@ -5790,7 +5791,8 @@ msgstr ""
 
 #. I18N: Hardware key
 #: backends/platform/sdl/miyoo/miyoo.cpp:83
-#: backends/platform/sdl/miyoo/miyoo.cpp:114 engines/grim/grim.cpp:545
+#: backends/platform/sdl/miyoo/miyoo.cpp:114
+#: engines/alcachofa/metaengine.cpp:99 engines/grim/grim.cpp:545
 #: engines/grim/grim.cpp:645 engines/hdb/metaengine.cpp:264
 #: engines/made/metaengine.cpp:175 engines/toltecs/metaengine.cpp:252
 msgid "Menu"
@@ -5812,17 +5814,17 @@ msgid "R3"
 msgstr ""
 
 #: backends/platform/sdl/ps3/ps3.cpp:40 backends/platform/sdl/psp2/psp2.cpp:42
-#: engines/dragons/metaengine.cpp:201
+#: engines/dragons/metaengine.cpp:200
 msgid "Cross"
 msgstr ""
 
 #: backends/platform/sdl/ps3/ps3.cpp:41 backends/platform/sdl/psp2/psp2.cpp:43
-#: engines/dragons/metaengine.cpp:195
+#: engines/dragons/metaengine.cpp:194
 msgid "Circle"
 msgstr ""
 
 #: backends/platform/sdl/ps3/ps3.cpp:42 backends/platform/sdl/psp2/psp2.cpp:44
-#: engines/dragons/metaengine.cpp:183
+#: engines/dragons/metaengine.cpp:182
 msgid "Square"
 msgstr ""
 
@@ -5980,44 +5982,45 @@ msgstr "Spouštěč"
 msgid "Check for Updates..."
 msgstr "Zkontrolovat Aktualizace..."
 
-#: engines/access/metaengine.cpp:192 engines/bbvs/metaengine.cpp:92
-#: engines/buried/metaengine.cpp:133 engines/chamber/metaengine.cpp:59
-#: engines/cine/metaengine.cpp:270 engines/cruise/metaengine.cpp:168
-#: engines/dm/metaengine.cpp:124 engines/draci/metaengine.cpp:195
-#: engines/drascula/metaengine.cpp:205 engines/efh/metaengine.cpp:256
-#: engines/hopkins/metaengine.cpp:206 engines/hugo/metaengine.cpp:118
-#: engines/hypno/metaengine.cpp:128 engines/illusions/metaengine.cpp:89
-#: engines/lab/metaengine.cpp:149 engines/lure/metaengine.cpp:168
-#: engines/made/metaengine.cpp:121 engines/mads/metaengine.cpp:274
-#: engines/neverhood/metaengine.cpp:185 engines/playground3d/metaengine.cpp:51
-#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:91
-#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
-#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
-#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
-#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
-#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
-#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/access/metaengine.cpp:198 engines/alcachofa/metaengine.cpp:83
+#: engines/bbvs/metaengine.cpp:92 engines/buried/metaengine.cpp:133
+#: engines/chamber/metaengine.cpp:59 engines/cine/metaengine.cpp:270
+#: engines/cruise/metaengine.cpp:168 engines/dm/metaengine.cpp:124
+#: engines/draci/metaengine.cpp:195 engines/drascula/metaengine.cpp:205
+#: engines/efh/metaengine.cpp:256 engines/hopkins/metaengine.cpp:206
+#: engines/hugo/metaengine.cpp:118 engines/hypno/metaengine.cpp:128
+#: engines/illusions/metaengine.cpp:89 engines/lab/metaengine.cpp:149
+#: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:121
+#: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
+#: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
+#: engines/private/metaengine.cpp:91 engines/queen/metaengine.cpp:146
+#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
+#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
+#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
+#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
+#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
+#: engines/toon/metaengine.cpp:81 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 #, fuzzy
 #| msgid "Default game keymap"
 msgid "Default keymappings"
 msgstr "Výchozí rozložení kláves"
 
-#: engines/access/metaengine.cpp:196
+#: engines/access/metaengine.cpp:202
 #, fuzzy
 #| msgid "Highlight next dialogue"
 msgid "Move / Interact / Skip"
 msgstr "Zvýraznit následující dialog"
 
-#: engines/access/metaengine.cpp:208 engines/sherlock/metaengine.cpp:483
+#: engines/access/metaengine.cpp:214 engines/sherlock/metaengine.cpp:483
 #, fuzzy
 #| msgid "Skip line"
 msgid "Skip movie"
 msgstr "Přeskočit řádek"
 
 #. I18N: Move Actor to upwards direction
-#: engines/access/metaengine.cpp:214 engines/asylum/metaengine.cpp:171
+#: engines/access/metaengine.cpp:220 engines/asylum/metaengine.cpp:171
 #: engines/asylum/metaengine.cpp:198 engines/cine/metaengine.cpp:377
 #: engines/efh/metaengine.cpp:286 engines/hdb/metaengine.cpp:213
 #: engines/hypno/metaengine.cpp:302 engines/hypno/metaengine.cpp:356
@@ -6028,7 +6031,7 @@ msgid "Move up"
 msgstr "Vzad"
 
 #. I18N: Move Actor to downwards direction
-#: engines/access/metaengine.cpp:221 engines/asylum/metaengine.cpp:177
+#: engines/access/metaengine.cpp:227 engines/asylum/metaengine.cpp:177
 #: engines/asylum/metaengine.cpp:205 engines/cine/metaengine.cpp:384
 #: engines/efh/metaengine.cpp:293 engines/hdb/metaengine.cpp:219
 #: engines/hypno/metaengine.cpp:290 engines/hypno/metaengine.cpp:342
@@ -6040,7 +6043,7 @@ msgstr "Zrušit stahování"
 
 #. I18N: Move Actor to left direction
 #. I18N: Move actor left during fight
-#: engines/access/metaengine.cpp:228 engines/asylum/metaengine.cpp:183
+#: engines/access/metaengine.cpp:234 engines/asylum/metaengine.cpp:183
 #: engines/asylum/metaengine.cpp:212 engines/cine/metaengine.cpp:391
 #: engines/efh/metaengine.cpp:300 engines/hdb/metaengine.cpp:225
 #: engines/hypno/metaengine.cpp:284 engines/hypno/metaengine.cpp:335
@@ -6054,7 +6057,7 @@ msgstr "Přesunout se doleva"
 
 #. I18N: Move Actor to right direction
 #. I18N: Move actor right during fight
-#: engines/access/metaengine.cpp:235 engines/asylum/metaengine.cpp:189
+#: engines/access/metaengine.cpp:241 engines/asylum/metaengine.cpp:189
 #: engines/asylum/metaengine.cpp:219 engines/cine/metaengine.cpp:398
 #: engines/efh/metaengine.cpp:307 engines/hdb/metaengine.cpp:231
 #: engines/hypno/metaengine.cpp:296 engines/hypno/metaengine.cpp:349
@@ -6067,35 +6070,35 @@ msgid "Move right"
 msgstr "Přesunout se doprava"
 
 #. I18N: Move Actor to top-left direction
-#: engines/access/metaengine.cpp:242 engines/cine/metaengine.cpp:405
+#: engines/access/metaengine.cpp:248 engines/cine/metaengine.cpp:405
 #: engines/efh/metaengine.cpp:314
 #, fuzzy
 msgid "Move up-left"
 msgstr "Přesunout se doleva"
 
 #. I18N: Move Actor to top-right direction
-#: engines/access/metaengine.cpp:247 engines/cine/metaengine.cpp:411
+#: engines/access/metaengine.cpp:253 engines/cine/metaengine.cpp:411
 #: engines/efh/metaengine.cpp:320
 #, fuzzy
 msgid "Move up-right"
 msgstr "Přesunout se doprava"
 
 #. I18N: Move Actor to bottom-left direction
-#: engines/access/metaengine.cpp:252 engines/cine/metaengine.cpp:417
+#: engines/access/metaengine.cpp:258 engines/cine/metaengine.cpp:417
 #: engines/efh/metaengine.cpp:326
 #, fuzzy
 msgid "Move down-left"
 msgstr "Zrušit stahování"
 
 #. I18N: Move Actor to bottom-right direction
-#: engines/access/metaengine.cpp:257 engines/cine/metaengine.cpp:423
+#: engines/access/metaengine.cpp:263 engines/cine/metaengine.cpp:423
 #: engines/efh/metaengine.cpp:332
 #, fuzzy
 msgid "Move down-right"
 msgstr "Přesunout se doprava"
 
 #. I18N: (Game name: The Lost Files of Sherlock Holmes: The Case of the Rose Tattoo) This action is used to look at an object or npc in the game
-#: engines/access/metaengine.cpp:262 engines/bbvs/metaengine.cpp:124
+#: engines/access/metaengine.cpp:268 engines/bbvs/metaengine.cpp:124
 #: engines/dgds/metaengine.cpp:83 engines/drascula/metaengine.cpp:230
 #: engines/scumm/help.cpp:167 engines/scumm/help.cpp:231
 #: engines/sherlock/metaengine.cpp:405 engines/sherlock/metaengine.cpp:556
@@ -6105,26 +6108,59 @@ msgstr "Přesunout se doprava"
 msgid "Look"
 msgstr "Dívat se"
 
+#: engines/access/metaengine.cpp:276 engines/drascula/metaengine.cpp:240
+#: engines/queen/metaengine.cpp:259 engines/saga/metaengine.cpp:369
+#: engines/scumm/help.cpp:125 engines/scumm/help.cpp:140
+#: engines/scumm/help.cpp:165 engines/scumm/help.cpp:193
+#: engines/scumm/help.cpp:211 engines/sherlock/metaengine.cpp:425
+#: engines/supernova/metaengine.cpp:336 engines/twp/metaengine.cpp:178
+msgid "Open"
+msgstr "Otevřít"
+
+#: engines/access/metaengine.cpp:286 engines/scumm/help.cpp:128
+#: engines/ultima/nuvie/metaengine.cpp:70
+msgid "Get"
+msgstr "Vzít"
+
 #. I18N: Combat command in Might & Magic 1
-#: engines/access/metaengine.cpp:268 engines/bbvs/metaengine.cpp:136
-#: engines/cine/metaengine.cpp:342 engines/efh/metaengine.cpp:462
-#: engines/hdb/metaengine.cpp:237 engines/lab/metaengine.cpp:323
-#: engines/mm/mm1/metaengine.cpp:81 engines/queen/metaengine.cpp:294
-#: engines/saga/metaengine.cpp:379 engines/scumm/help.cpp:129
-#: engines/scumm/help.cpp:153 engines/scumm/help.cpp:171
-#: engines/scumm/help.cpp:201 engines/scumm/help.cpp:216
-#: engines/scumm/help.cpp:227 engines/scumm/help.cpp:253
-#: engines/sherlock/metaengine.cpp:440 engines/sherlock/metaengine.cpp:561
-#: engines/sky/metaengine.cpp:95 engines/sludge/keymapper_tables.h:333
-#: engines/supernova/metaengine.cpp:356 engines/tsage/metaengine.cpp:211
-#: engines/twp/metaengine.cpp:186 engines/ultima/ultima4/metaengine.cpp:71
+#: engines/access/metaengine.cpp:291 engines/access/metaengine.cpp:312
+#: engines/bbvs/metaengine.cpp:136 engines/cine/metaengine.cpp:342
+#: engines/efh/metaengine.cpp:462 engines/hdb/metaengine.cpp:237
+#: engines/lab/metaengine.cpp:323 engines/mm/mm1/metaengine.cpp:81
+#: engines/queen/metaengine.cpp:294 engines/saga/metaengine.cpp:379
+#: engines/scumm/help.cpp:129 engines/scumm/help.cpp:153
+#: engines/scumm/help.cpp:171 engines/scumm/help.cpp:201
+#: engines/scumm/help.cpp:216 engines/scumm/help.cpp:227
+#: engines/scumm/help.cpp:253 engines/sherlock/metaengine.cpp:440
+#: engines/sherlock/metaengine.cpp:561 engines/sky/metaengine.cpp:95
+#: engines/sludge/keymapper_tables.h:333 engines/supernova/metaengine.cpp:356
+#: engines/tsage/metaengine.cpp:211 engines/twp/metaengine.cpp:186
+#: engines/ultima/ultima4/metaengine.cpp:71
 #: engines/ultima/nuvie/metaengine.cpp:69
 #: engines/wintermute/keymapper_tables.h:140
 #: engines/wintermute/keymapper_tables.h:1552
 msgid "Use"
 msgstr "Použít"
 
-#: engines/access/metaengine.cpp:273 engines/cine/metaengine.cpp:332
+#: engines/access/metaengine.cpp:296
+msgid "Goto"
+msgstr ""
+
+#: engines/access/metaengine.cpp:301 engines/access/metaengine.cpp:332
+#: engines/bbvs/metaengine.cpp:130 engines/drascula/metaengine.cpp:250
+#: engines/efh/metaengine.cpp:506 engines/scumm/help.cpp:174
+#: engines/scumm/help.cpp:226 engines/sherlock/metaengine.cpp:415
+#: engines/supernova/metaengine.cpp:361 engines/tsage/metaengine.cpp:216
+#: engines/ultima/ultima4/metaengine.cpp:70
+#: engines/ultima/nuvie/metaengine.cpp:68
+msgid "Talk"
+msgstr "Mluvit"
+
+#: engines/access/metaengine.cpp:306 engines/scumm/help.cpp:175
+msgid "Travel"
+msgstr "Cestovat"
+
+#: engines/access/metaengine.cpp:317 engines/cine/metaengine.cpp:332
 #: engines/saga/metaengine.cpp:394 engines/supernova/metaengine.cpp:331
 #, fuzzy
 #| msgid "Take off"
@@ -6132,13 +6168,14 @@ msgid "Take"
 msgstr "Svléct"
 
 #. I18N: Action in In Cold Blood
-#: engines/access/metaengine.cpp:278 engines/cine/metaengine.cpp:337
-#: engines/crab/input/input.cpp:251 engines/cruise/metaengine.cpp:192
-#: engines/draci/metaengine.cpp:237 engines/dragons/metaengine.cpp:148
-#: engines/drascula/metaengine.cpp:218 engines/griffon/metaengine.cpp:152
-#: engines/grim/grim.cpp:521 engines/grim/grim.cpp:621
-#: engines/hdb/metaengine.cpp:251 engines/hpl1/metaengine.cpp:94
-#: engines/icb/icb.cpp:101 engines/icb/icb.cpp:179 engines/scumm/help.cpp:228
+#: engines/access/metaengine.cpp:322 engines/alcachofa/metaengine.cpp:105
+#: engines/cine/metaengine.cpp:337 engines/crab/input/input.cpp:251
+#: engines/cruise/metaengine.cpp:192 engines/draci/metaengine.cpp:237
+#: engines/dragons/metaengine.cpp:147 engines/drascula/metaengine.cpp:218
+#: engines/griffon/metaengine.cpp:152 engines/grim/grim.cpp:521
+#: engines/grim/grim.cpp:621 engines/hdb/metaengine.cpp:251
+#: engines/hpl1/metaengine.cpp:94 engines/icb/icb.cpp:101
+#: engines/icb/icb.cpp:179 engines/scumm/help.cpp:228
 #: engines/scumm/help.cpp:237 engines/scumm/help.cpp:244
 #: engines/scumm/help.cpp:252 engines/sherlock/metaengine.cpp:435
 #: engines/sludge/keymapper_tables.h:58 engines/sludge/keymapper_tables.h:119
@@ -6150,24 +6187,20 @@ msgstr "Svléct"
 msgid "Inventory"
 msgstr "Inventář"
 
-#: engines/access/metaengine.cpp:283 engines/ultima/ultima4/metaengine.cpp:51
+#: engines/access/metaengine.cpp:327 engines/ultima/ultima4/metaengine.cpp:51
 msgid "Climb"
 msgstr ""
 
-#: engines/access/metaengine.cpp:288 engines/bbvs/metaengine.cpp:130
-#: engines/drascula/metaengine.cpp:250 engines/efh/metaengine.cpp:506
-#: engines/scumm/help.cpp:174 engines/scumm/help.cpp:226
-#: engines/sherlock/metaengine.cpp:415 engines/supernova/metaengine.cpp:361
-#: engines/tsage/metaengine.cpp:216 engines/ultima/ultima4/metaengine.cpp:70
-#: engines/ultima/nuvie/metaengine.cpp:68
-msgid "Talk"
-msgstr "Mluvit"
-
-#: engines/access/metaengine.cpp:293 engines/bbvs/metaengine.cpp:142
+#: engines/access/metaengine.cpp:337 engines/bbvs/metaengine.cpp:142
 #: engines/freescape/games/castle/castle.cpp:284 engines/scumm/help.cpp:225
 #: engines/tsage/metaengine.cpp:201
 msgid "Walk"
 msgstr "Jít"
+
+#: engines/access/metaengine.cpp:348
+#, fuzzy
+msgid "Open save/load menu"
+msgstr "Vložte herní disk pro uložení/načtení"
 
 #: engines/access/resources.cpp:43 engines/drascula/drascula.cpp:993
 #: engines/hugo/hugo.cpp:442 engines/lure/lure.cpp:57
@@ -6829,6 +6862,38 @@ msgid ""
 "2. Any .sav file inside the QfG2 Remake game directory"
 msgstr ""
 
+#: engines/alcachofa/metaengine.cpp:40
+msgid "High Quality"
+msgstr ""
+
+#: engines/alcachofa/metaengine.cpp:41
+#, fuzzy
+#| msgid "Special sound effects volume"
+msgid "Toggles some optional graphical effects"
+msgstr "Hlasitost speciálních zvukových efektů"
+
+#: engines/alcachofa/metaengine.cpp:51
+msgid "32 Bits"
+msgstr ""
+
+#: engines/alcachofa/metaengine.cpp:52
+msgid "Uses 32bit textures instead of 16bit ones (currently not implemented)"
+msgstr ""
+
+#: engines/alcachofa/metaengine.cpp:87 engines/cine/metaengine.cpp:347
+#, fuzzy
+#| msgid "Active"
+msgid "Activate"
+msgstr "Aktivní"
+
+#: engines/alcachofa/metaengine.cpp:93 engines/queen/metaengine.cpp:279
+#: engines/saga/metaengine.cpp:354 engines/scumm/help.cpp:202
+#: engines/scumm/help.cpp:214 engines/twp/metaengine.cpp:182
+#: engines/wintermute/keymapper_tables.h:122
+#: engines/wintermute/keymapper_tables.h:1534
+msgid "Look at"
+msgstr "Dívat se na"
+
 #: engines/alg/metaengine.cpp:34
 msgid "Use lower quality single speed CD-ROM video"
 msgstr ""
@@ -7329,7 +7394,7 @@ msgstr ""
 #. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
 #. QUIT GAME
 #: engines/bladerunner/metaengine.cpp:375 engines/darkseed/metaengine.cpp:93
-#: engines/dragons/metaengine.cpp:224 engines/efh/metaengine.cpp:373
+#: engines/dragons/metaengine.cpp:223 engines/efh/metaengine.cpp:373
 #: engines/efh/metaengine.cpp:619 engines/freescape/games/castle/castle.cpp:259
 #: engines/freescape/games/dark/dark.cpp:196
 #: engines/freescape/games/driller/driller.cpp:145
@@ -7733,12 +7798,6 @@ msgstr "Zvýšená rychlost videa"
 msgid "Examine"
 msgstr "Prohlédnout"
 
-#: engines/cine/metaengine.cpp:347
-#, fuzzy
-#| msgid "Active"
-msgid "Activate"
-msgstr "Aktivní"
-
 #: engines/cine/metaengine.cpp:352
 msgid "Speak"
 msgstr ""
@@ -7919,13 +7978,13 @@ msgid ""
 msgstr ""
 
 #. I18N: Perform action on object where cursor points
-#: engines/darkseed/metaengine.cpp:75 engines/dragons/metaengine.cpp:136
+#: engines/darkseed/metaengine.cpp:75 engines/dragons/metaengine.cpp:135
 #: engines/tinsel/metaengine.cpp:294 engines/twp/metaengine.cpp:150
 #, fuzzy
 msgid "Action"
 msgstr "Aktivní"
 
-#: engines/darkseed/metaengine.cpp:81 engines/dragons/metaengine.cpp:142
+#: engines/darkseed/metaengine.cpp:81 engines/dragons/metaengine.cpp:141
 #, fuzzy
 #| msgid "Fast mode"
 msgid "Change command"
@@ -8126,7 +8185,7 @@ msgstr "Otevřít/Zavřít Inventář"
 msgid "Next item in inventory"
 msgstr "Otevřít/Zavřít Inventář"
 
-#: engines/dragons/dragons.cpp:1884
+#: engines/dragons/dragons.cpp:1887
 #, c-format
 msgid ""
 "Error: The file '%s' hasn't been extracted properly.\n"
@@ -8135,7 +8194,7 @@ msgid ""
 "from your game disc."
 msgstr ""
 
-#: engines/dragons/metaengine.cpp:121
+#: engines/dragons/metaengine.cpp:120
 #, c-format
 msgid ""
 "Error: It appears that the game data files were extracted incorrectly.\n"
@@ -8146,16 +8205,16 @@ msgid ""
 " See %s"
 msgstr ""
 
-#: engines/dragons/metaengine.cpp:207
+#: engines/dragons/metaengine.cpp:206
 #, fuzzy
 msgid "Left shoulder"
 msgstr "Vyberte Vzhled"
 
-#: engines/dragons/metaengine.cpp:213
+#: engines/dragons/metaengine.cpp:212
 msgid "Right shoulder"
 msgstr ""
 
-#: engines/dragons/metaengine.cpp:219
+#: engines/dragons/metaengine.cpp:218
 #, fuzzy
 msgid "Debug graphics"
 msgstr "Obraz"
@@ -8176,15 +8235,6 @@ msgstr "Přesunout se doleva"
 #| msgid "Pick up"
 msgid "Pick"
 msgstr "Sebrat"
-
-#: engines/drascula/metaengine.cpp:240 engines/queen/metaengine.cpp:259
-#: engines/saga/metaengine.cpp:369 engines/scumm/help.cpp:125
-#: engines/scumm/help.cpp:140 engines/scumm/help.cpp:165
-#: engines/scumm/help.cpp:193 engines/scumm/help.cpp:211
-#: engines/sherlock/metaengine.cpp:425 engines/supernova/metaengine.cpp:336
-#: engines/twp/metaengine.cpp:178
-msgid "Open"
-msgstr "Otevřít"
 
 #: engines/drascula/metaengine.cpp:266
 #, fuzzy
@@ -11346,13 +11396,6 @@ msgstr "Přeskočit řádek"
 msgid "Use journal"
 msgstr "Zobrazit Vše"
 
-#: engines/queen/metaengine.cpp:279 engines/saga/metaengine.cpp:354
-#: engines/scumm/help.cpp:202 engines/scumm/help.cpp:214
-#: engines/twp/metaengine.cpp:182 engines/wintermute/keymapper_tables.h:122
-#: engines/wintermute/keymapper_tables.h:1534
-msgid "Look at"
-msgstr "Dívat se na"
-
 #: engines/queen/metaengine.cpp:284 engines/saga/metaengine.cpp:359
 #: engines/scumm/help.cpp:144 engines/scumm/help.cpp:169
 #: engines/scumm/help.cpp:198 engines/scumm/help.cpp:213
@@ -12340,10 +12383,6 @@ msgstr "Táhnout"
 msgid "Go to"
 msgstr "Jít do"
 
-#: engines/scumm/help.cpp:128 engines/ultima/nuvie/metaengine.cpp:70
-msgid "Get"
-msgstr "Vzít"
-
 #: engines/scumm/help.cpp:130 engines/scumm/help.cpp:142
 msgid "Read"
 msgstr "Přečíst"
@@ -12381,10 +12420,6 @@ msgstr "Spravit"
 #: engines/scumm/help.cpp:159
 msgid "Switch"
 msgstr "Přepnout"
-
-#: engines/scumm/help.cpp:175
-msgid "Travel"
-msgstr "Cestovat"
 
 #: engines/scumm/help.cpp:176
 msgid "To Henry / To Indy"
@@ -16097,20 +16132,20 @@ msgstr "Zakompilované funkce:"
 msgid "Wintermute3D support is not compiled in"
 msgstr "Zakompilované funkce:"
 
-#: engines/wintermute/wintermute.cpp:152
+#: engines/wintermute/wintermute.cpp:143
 #, fuzzy
 msgid "This game requires PNG, JPEG and Vorbis support."
 msgstr "Id hry není podporováno"
 
-#: engines/wintermute/wintermute.cpp:163
+#: engines/wintermute/wintermute.cpp:154
 msgid "This game requires the FoxTail subengine, which is not compiled in."
 msgstr ""
 
-#: engines/wintermute/wintermute.cpp:174
+#: engines/wintermute/wintermute.cpp:165
 msgid "This game requires the HeroCraft subengine, which is not compiled in."
 msgstr ""
 
-#: engines/wintermute/wintermute.cpp:185
+#: engines/wintermute/wintermute.cpp:176
 msgid ""
 "This game requires 3D capabilities, which is not compiled in. As such, it is "
 "likely to be unplayable totally or partially."
