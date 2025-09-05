@@ -82,7 +82,7 @@ bool BaseFrame::draw(int x, int y, BaseObject *registerOwner, float zoomX, float
 	for (int32 i = 0; i < _subframes.getSize(); i++) {
 		// filter out subframes unsupported by current renderer
 		if (!allFrames) {
-			if ((_subframes[i]->_2DOnly && _gameRef->_useD3D) || (_subframes[i]->_3DOnly && !_gameRef->_useD3D))
+			if ((_subframes[i]->_2DOnly && _game->_useD3D) || (_subframes[i]->_3DOnly && !_game->_useD3D))
 				continue;
 		}
 		res = _subframes[i]->draw(x, y, registerOwner, zoomX, zoomY, precise, alpha, rotate, blendMode);
@@ -101,7 +101,7 @@ bool BaseFrame::oneTimeDisplay(BaseObject *owner, bool muted) {
 		}
 		_sound->play();
 		/*
-		if (_gameRef->_state == GAME_FROZEN) {
+		if (_game->_state == GAME_FROZEN) {
 		    _sound->Pause(true);
 		}
 		*/
@@ -167,7 +167,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 
 	char *params;
 	int cmd;
-	BaseParser parser;
+	BaseParser parser(_game);
 	Common::Rect32 rect;
 	int r = 255, g = 255, b = 255;
 	int ar = 255, ag = 255, ab = 255, alpha = 255;
@@ -246,7 +246,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 			break;
 
 		case TOKEN_SUBFRAME: {
-			BaseSubFrame *subframe = new BaseSubFrame(_gameRef);
+			BaseSubFrame *subframe = new BaseSubFrame(_game);
 			if (!subframe || DID_FAIL(subframe->loadBuffer(params, lifeTime, keepLoaded))) {
 				delete subframe;
 				cmd = PARSERR_GENERIC;
@@ -260,7 +260,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 			if (_sound) {
 				SAFE_DELETE(_sound);
 			}
-			_sound = new BaseSound(_gameRef);
+			_sound = new BaseSound(_game);
 			if (!_sound || DID_FAIL(_sound->setSound(params, Audio::Mixer::kSFXSoundType, false))) {
 				if (BaseEngine::instance().getSoundMgr()->_soundAvailable) {
 					BaseEngine::LOG(0, "Error loading sound '%s'.", params);
@@ -305,7 +305,7 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 	}
 
 
-	BaseSubFrame *sub = new BaseSubFrame(_gameRef);
+	BaseSubFrame *sub = new BaseSubFrame(_game);
 	if (surface_file != nullptr) {
 		if (customTrans) {
 			sub->setSurface(surface_file, false, r, g, b, lifeTime, keepLoaded);
@@ -455,7 +455,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 		SAFE_DELETE(_sound);
 
 		if (!val->isNULL()) {
-			_sound = new BaseSound(_gameRef);
+			_sound = new BaseSound(_game);
 			if (!_sound || DID_FAIL(_sound->setSound(val->getString(), Audio::Mixer::kSFXSoundType, false))) {
 				stack->pushBool(false);
 				SAFE_DELETE(_sound);
@@ -520,7 +520,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 			filename = val->getString();
 		}
 
-		BaseSubFrame *sub = new BaseSubFrame(_gameRef);
+		BaseSubFrame *sub = new BaseSubFrame(_game);
 		if (filename != nullptr) {
 			sub->setSurface(filename);
 			sub->setDefaultRect();
@@ -547,7 +547,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 			filename = val->getString();
 		}
 
-		BaseSubFrame *sub = new BaseSubFrame(_gameRef);
+		BaseSubFrame *sub = new BaseSubFrame(_game);
 		if (filename != nullptr) {
 			sub->setSurface(filename);
 		}
@@ -623,16 +623,16 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 
 
 //////////////////////////////////////////////////////////////////////////
-ScValue *BaseFrame::scGetProperty(const Common::String &name) {
+ScValue *BaseFrame::scGetProperty(const char *name) {
 	if (!_scValue) {
-		_scValue = new ScValue(_gameRef);
+		_scValue = new ScValue(_game);
 	}
 	_scValue->setNULL();
 
 	//////////////////////////////////////////////////////////////////////////
 	// Type (RO)
 	//////////////////////////////////////////////////////////////////////////
-	if (name == "Type") {
+	if (strcmp(name, "Type") == 0) {
 		_scValue->setString("frame");
 		return _scValue;
 	}
@@ -640,7 +640,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Delay
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Delay") {
+	else if (strcmp(name, "Delay") == 0) {
 		_scValue->setInt(_delay);
 		return _scValue;
 	}
@@ -648,7 +648,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Keyframe
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Keyframe") {
+	else if (strcmp(name, "Keyframe") == 0) {
 		_scValue->setBool(_keyframe);
 		return _scValue;
 	}
@@ -656,7 +656,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// KillSounds
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "KillSounds") {
+	else if (strcmp(name, "KillSounds") == 0) {
 		_scValue->setBool(_killSound);
 		return _scValue;
 	}
@@ -664,7 +664,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MoveX
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MoveX") {
+	else if (strcmp(name, "MoveX") == 0) {
 		_scValue->setInt(_moveX);
 		return _scValue;
 	}
@@ -672,7 +672,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MoveY
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MoveY") {
+	else if (strcmp(name, "MoveY") == 0) {
 		_scValue->setInt(_moveY);
 		return _scValue;
 	}
@@ -680,7 +680,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// NumSubframes (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "NumSubframes") {
+	else if (strcmp(name, "NumSubframes") == 0) {
 		_scValue->setInt(_subframes.getSize());
 		return _scValue;
 	}
@@ -688,7 +688,7 @@ ScValue *BaseFrame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// NumEvents (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "NumEvents") {
+	else if (strcmp(name, "NumEvents") == 0) {
 		_scValue->setInt(_applyEvent.getSize());
 		return _scValue;
 	}

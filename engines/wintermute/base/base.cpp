@@ -36,14 +36,14 @@ namespace Wintermute {
 
 //////////////////////////////////////////////////////////////////////
 BaseClass::BaseClass(BaseGame *gameOwner) {
-	_gameRef = gameOwner;
+	_game = gameOwner;
 	_persistable = true;
 }
 
 
 //////////////////////////////////////////////////////////////////////////
 BaseClass::BaseClass() {
-	_gameRef = nullptr;
+	_game = nullptr;
 	_persistable = true;
 }
 
@@ -95,14 +95,14 @@ bool BaseClass::parseEditorProperty(char *buffer, bool complete) {
 	TOKEN_TABLE_END
 
 
-	if (!_gameRef->_editorMode) {
+	if (!_game->_editorMode) {
 		return STATUS_OK;
 	}
 
 
 	char *params;
 	int cmd;
-	BaseParser parser;
+	BaseParser parser(_game);
 
 	if (complete) {
 		if (parser.getCommand(&buffer, commands, &params) != TOKEN_EDITOR_PROPERTY) {

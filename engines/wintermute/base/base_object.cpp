@@ -72,7 +72,7 @@ BaseObject::BaseObject(BaseGame *inGame) : BaseScriptHolder(inGame) {
 
 	_soundEvent = nullptr;
 
-	_iD = _gameRef->getSequence();
+	_iD = _game->getSequence();
 
 	BasePlatform::setRectEmpty(&_rect);
 	_rectSet = false;
@@ -135,8 +135,8 @@ BaseObject::~BaseObject() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseObject::cleanup() {
-	if (_gameRef && _gameRef->_activeObject == this) {
-		_gameRef->_activeObject = nullptr;
+	if (_game && _game->_activeObject == this) {
+		_game->_activeObject = nullptr;
 	}
 
 	BaseScriptHolder::cleanup();
@@ -157,7 +157,7 @@ bool BaseObject::cleanup() {
 	SAFE_DELETE(_shadowModel);
 
 	if (_shadowImage) {
-		_gameRef->_surfaceStorage->removeSurface(_shadowImage);
+		_game->_surfaceStorage->removeSurface(_shadowImage);
 		_shadowImage = nullptr;
 	}
 #endif
@@ -182,7 +182,7 @@ void BaseObject::setCaption(const char *caption, int caseVal) {
 	size_t captionSize = strlen(caption) + 1;
 	_caption[caseVal - 1] = new char[captionSize];
 	Common::strcpy_s(_caption[caseVal - 1], captionSize, caption);
-	_gameRef->expandStringByStringTable(&_caption[caseVal - 1]);
+	_game->_stringTable->expand(&_caption[caseVal - 1]);
 }
 
 
@@ -517,12 +517,12 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		ScValue *val = stack->pop();
 
 		if (_shadowImage) {
-			_gameRef->_surfaceStorage->removeSurface(_shadowImage);
+			_game->_surfaceStorage->removeSurface(_shadowImage);
 			_shadowImage = nullptr;
 		}
 
 		if (val->isString()) {
-			_shadowImage = _gameRef->_surfaceStorage->addSurface(val->getString());
+			_shadowImage = _game->_surfaceStorage->addSurface(val->getString());
 			stack->pushBool(_shadowImage != nullptr);
 		} else {
 			stack->pushBool(true);
@@ -630,13 +630,13 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 
 
 //////////////////////////////////////////////////////////////////////////
-ScValue *BaseObject::scGetProperty(const Common::String &name) {
+ScValue *BaseObject::scGetProperty(const char *name) {
 	_scValue->setNULL();
 
 	//////////////////////////////////////////////////////////////////////////
 	// Type
 	//////////////////////////////////////////////////////////////////////////
-	if (name == "Type") {
+	if (strcmp(name, "Type") == 0) {
 		_scValue->setString("object");
 		return _scValue;
 	}
@@ -644,7 +644,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Caption
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Caption") {
+	else if (strcmp(name, "Caption") == 0) {
 		_scValue->setString(getCaption(1));
 		return _scValue;
 	}
@@ -652,7 +652,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// X
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "X") {
+	else if (strcmp(name, "X") == 0) {
 		_scValue->setInt(_posX);
 		return _scValue;
 	}
@@ -660,7 +660,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Y
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Y") {
+	else if (strcmp(name, "Y") == 0) {
 		_scValue->setInt(_posY);
 		return _scValue;
 	}
@@ -668,7 +668,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Height (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Height") {
+	else if (strcmp(name, "Height") == 0) {
 		_scValue->setInt(getHeight());
 		return _scValue;
 	}
@@ -676,7 +676,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Ready (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Ready") {
+	else if (strcmp(name, "Ready") == 0) {
 		_scValue->setBool(_ready);
 		return _scValue;
 	}
@@ -684,7 +684,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Movable
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Movable") {
+	else if (strcmp(name, "Movable") == 0) {
 		_scValue->setBool(_movable);
 		return _scValue;
 	}
@@ -692,7 +692,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Registrable/Interactive
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Registrable" || name == "Interactive") {
+	else if (strcmp(name, "Registrable") == 0 || strcmp(name, "Interactive") == 0) {
 		_scValue->setBool(_registrable);
 		return _scValue;
 	}
@@ -700,21 +700,21 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Zoomable/Scalable
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Zoomable" || name == "Scalable") {
+	else if (strcmp(name, "Zoomable") == 0 || strcmp(name, "Scalable") == 0) {
 		_scValue->setBool(_zoomable);
 		return _scValue;
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// Rotatable
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Rotatable") {
+	else if (strcmp(name, "Rotatable") == 0) {
 		_scValue->setBool(_rotatable);
 		return _scValue;
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// AlphaColor
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AlphaColor") {
+	else if (strcmp(name, "AlphaColor") == 0) {
 		_scValue->setInt((int)_alphaColor);
 		return _scValue;
 	}
@@ -722,7 +722,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// BlendMode
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "BlendMode") {
+	else if (strcmp(name, "BlendMode") == 0) {
 		_scValue->setInt((int)_blendMode);
 		return _scValue;
 	}
@@ -730,7 +730,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Scale
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Scale") {
+	else if (strcmp(name, "Scale") == 0) {
 		if (_scale < 0) {
 			_scValue->setNULL();
 		} else {
@@ -742,7 +742,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// ScaleX
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "ScaleX") {
+	else if (strcmp(name, "ScaleX") == 0) {
 		if (_scaleX < 0) {
 			_scValue->setNULL();
 		} else {
@@ -754,7 +754,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// ScaleY
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "ScaleY") {
+	else if (strcmp(name, "ScaleY") == 0) {
 		if (_scaleY < 0) {
 			_scValue->setNULL();
 		} else {
@@ -766,7 +766,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// RelativeScale
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "RelativeScale") {
+	else if (strcmp(name, "RelativeScale") == 0) {
 		_scValue->setFloat((double)_relativeScale);
 		return _scValue;
 	}
@@ -774,7 +774,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Rotate
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Rotate") {
+	else if (strcmp(name, "Rotate") == 0) {
 		if (!_rotateValid) {
 			_scValue->setNULL();
 		} else {
@@ -786,7 +786,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// RelativeRotate
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "RelativeRotate") {
+	else if (strcmp(name, "RelativeRotate") == 0) {
 		_scValue->setFloat((double)_relativeRotate);
 		return _scValue;
 	}
@@ -794,14 +794,14 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Colorable
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Colorable") {
+	else if (strcmp(name, "Colorable") == 0) {
 		_scValue->setBool(_shadowable);
 		return _scValue;
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// SoundPanning
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SoundPanning") {
+	else if (strcmp(name, "SoundPanning") == 0) {
 		_scValue->setBool(_autoSoundPanning);
 		return _scValue;
 	}
@@ -809,7 +809,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SaveState
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SaveState") {
+	else if (strcmp(name, "SaveState") == 0) {
 		_scValue->setBool(_saveState);
 		return _scValue;
 	}
@@ -817,7 +817,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// NonIntMouseEvents
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "NonIntMouseEvents") {
+	else if (strcmp(name, "NonIntMouseEvents") == 0) {
 		_scValue->setBool(_nonIntMouseEvents);
 		return _scValue;
 	}
@@ -825,7 +825,7 @@ ScValue *BaseObject::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccCaption
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccCaption") {
+	else if (strcmp(name, "AccCaption") == 0) {
 /*		if (m_AccessCaption)
 			m_ScValue->SetString(m_AccessCaption);
 		else*/
@@ -1043,7 +1043,7 @@ const char *BaseObject::scToString() {
 //////////////////////////////////////////////////////////////////////////
 bool BaseObject::showCursor() {
 	if (_cursor) {
-		return _gameRef->drawCursor(_cursor);
+		return _game->drawCursor(_cursor);
 	} else {
 		return STATUS_FAILED;
 	}
@@ -1130,7 +1130,7 @@ bool BaseObject::persist(BasePersistenceManager *persistMgr) {
 			if (persistMgr->checkVersion(1, 6, 1)) {
 				persistMgr->transferString(TMEMBER(tempString));
 				if (!tempString.empty()) {
-					_shadowImage = _gameRef->_surfaceStorage->addSurface(tempString);
+					_shadowImage = _game->_surfaceStorage->addSurface(tempString);
 				}
 			}
 		}
@@ -1154,7 +1154,7 @@ bool BaseObject::setCursor(const char *filename) {
 	}
 
 	_sharedCursors = false;
-	_cursor = new BaseSprite(_gameRef);
+	_cursor = new BaseSprite(_game);
 	if (!_cursor || DID_FAIL(_cursor->loadFile(filename))) {
 		SAFE_DELETE(_cursor);
 		return STATUS_FAILED;
@@ -1167,7 +1167,7 @@ bool BaseObject::setCursor(const char *filename) {
 //////////////////////////////////////////////////////////////////////////
 bool BaseObject::setActiveCursor(const char *filename) {
 	SAFE_DELETE(_activeCursor);
-	_activeCursor = new BaseSprite(_gameRef);
+	_activeCursor = new BaseSprite(_game);
 	if (!_activeCursor || DID_FAIL(_activeCursor->loadFile(filename))) {
 		SAFE_DELETE(_activeCursor);
 		return STATUS_FAILED;
@@ -1205,10 +1205,10 @@ bool BaseObject::handleMouseWheel(int32 delta) {
 bool BaseObject::playSFX(const char *filename, bool looping, bool playNow, const char *eventName, uint32 loopStart) {
 	// just play loaded sound
 	if (filename == nullptr && _sFX) {
-		if (_gameRef->_editorMode || _sFXStart) {
+		if (_game->_editorMode || _sFXStart) {
 			_sFX->setVolumePercent(_sFXVolume);
 			_sFX->setPositionTime(_sFXStart);
-			if (!_gameRef->_editorMode) {
+			if (!_game->_editorMode) {
 				_sFXStart = 0;
 			}
 		}
@@ -1230,7 +1230,7 @@ bool BaseObject::playSFX(const char *filename, bool looping, bool playNow, const
 	// create new sound
 	delete _sFX;
 
-	_sFX = new BaseSound(_gameRef);
+	_sFX = new BaseSound(_game);
 	if (_sFX && DID_SUCCEED(_sFX->setSound(filename, Audio::Mixer::kSFXSoundType, true))) {
 		_sFX->setVolumePercent(_sFXVolume);
 		if (_sFXStart) {
@@ -1332,7 +1332,7 @@ bool BaseObject::updateOneSound(BaseSound *sound) {
 
 	if (sound) {
 		if (_autoSoundPanning) {
-			ret = sound->setPan(_gameRef->_soundMgr->posToPan(_posX  - _gameRef->_offsetX, _posY - _gameRef->_offsetY));
+			ret = sound->setPan(_game->_soundMgr->posToPan(_posX  - _game->_offsetX, _posY - _game->_offsetY));
 		}
 
 		ret = sound->applyFX(_sFXType, _sFXParam1, _sFXParam2, _sFXParam3, _sFXParam4);
@@ -1399,7 +1399,7 @@ bool BaseObject::renderModel() {
 	DXMatrix objectMat;
 	getMatrix(&objectMat);
 
-	_gameRef->_renderer3D->setWorldTransform(objectMat);
+	_game->_renderer3D->setWorldTransform(objectMat);
 
 	if (_xmodel)
 		return _xmodel->render();

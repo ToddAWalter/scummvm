@@ -28,7 +28,6 @@
 #include "engines/wintermute/dcgf.h"
 #include "engines/wintermute/base/base_engine.h"
 #include "engines/wintermute/base/base_game.h"
-#include "engines/wintermute/base/base_game_settings.h"
 #include "engines/wintermute/base/base_fader.h"
 #include "engines/wintermute/base/base_file_manager.h"
 #include "engines/wintermute/base/font/base_font.h"
@@ -38,6 +37,7 @@
 #include "engines/wintermute/base/gfx/base_renderer3d.h"
 #endif
 #include "engines/wintermute/base/gfx/base_image.h"
+#include "engines/wintermute/base/gfx/base_surface.h"
 #include "engines/wintermute/base/base_keyboard_state.h"
 #include "engines/wintermute/base/base_parser.h"
 #include "engines/wintermute/base/base_quick_msg.h"
@@ -48,7 +48,6 @@
 #include "engines/wintermute/base/base_viewport.h"
 #include "engines/wintermute/base/base_region.h"
 #include "engines/wintermute/base/base_surface_storage.h"
-#include "engines/wintermute/base/saveload.h"
 #include "engines/wintermute/base/save_thumb_helper.h"
 #include "engines/wintermute/base/scriptables/script_ext_array.h"
 #include "engines/wintermute/base/scriptables/script_value.h"
@@ -67,6 +66,8 @@
 #include "engines/wintermute/ui/ui_window.h"
 #include "engines/wintermute/wintermute.h"
 #include "engines/wintermute/platform_osystem.h"
+#include "engines/wintermute/ad/ad_scene.h"
+
 #include "base/version.h"
 #include "common/config-manager.h"
 #include "common/savefile.h"
@@ -84,6 +85,7 @@
 #ifdef ENABLE_WME3D
 #include "graphics/renderer.h"
 #include "engines/util.h"
+#include "engines/wintermute/base/gfx/xmodel.h"
 #if defined(USE_OPENGL_GAME) || defined(USE_OPENGL_SHADERS)
 #include "graphics/opengl/context.h"
 #endif
@@ -99,7 +101,7 @@ IMPLEMENT_PERSISTENT(BaseGame, true)
 
 
 //////////////////////////////////////////////////////////////////////
-BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _targetName(targetName), _timerNormal(), _timerLive() {
+BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _targetName(targetName) {
 	_shuttingDown = false;
 
 	_state = GAME_RUNNING;
@@ -144,6 +146,14 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_subtitles = true;
 	_videoSubtitles = true;
 
+	_timer = 0;
+	_timerDelta = 0;
+	_timerLast = 0;
+
+	_liveTimer = 0;
+	_liveTimerDelta = 0;
+	_liveTimerLast = 0;
+
 	_sequence = 0;
 
 	_mousePos.x = _mousePos.y = 0;
@@ -162,11 +172,24 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_useD3D = false;
 #endif
 
+	_stringTable = new BaseStringTable(this);
+
 	for (int i = 0; i < NUM_MUSIC_CHANNELS; i++) {
 		_music[i] = nullptr;
 		_musicStartTime[i] = 0;
 	}
 
+	_settingsResWidth = 800;
+	_settingsResHeight = 600;
+	_settingsRequireAcceleration = false;
+	_settingsRequireSound = false;
+	_settingsTLMode = 0;
+	_settingsAllowWindowed = true;
+	_settingsGameFile = nullptr;
+	_settingsAllowAdvanced = false;
+	_settingsAllowAccessTab = true;
+	_settingsAllowAboutTab = true;
+	_settingsAllowDesktopRes = false;
 
 	_editorForceScripts = false;
 	_editorAlwaysRegister = false;
@@ -180,6 +203,7 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_scheduledLoadSlot = -1;
 
 	_personalizedSave = false;
+	_compressedSavegames = true;
 
 	_editorMode = false;
 
@@ -204,6 +228,17 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_thumbnailWidth = kThumbnailWidth;
 	_thumbnailHeight = kThumbnailHeight2;
 
+	_indicatorDisplay = false;
+	_indicatorColor = BYTETORGBA(255, 0, 0, 128);
+	_indicatorProgress = 0;
+	_indicatorX = -1;
+	_indicatorY = -1;
+	_indicatorWidth = -1;
+	_indicatorHeight = 8;
+	_richSavedGames = false;
+	_savedGameExt = "dsv";
+
+
 	_musicCrossfadeRunning = false;
 	_musicCrossfadeStartTime = 0;
 	_musicCrossfadeLength = 0;
@@ -213,6 +248,15 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_musicCrossfadeVolume1 = 0;
 	_musicCrossfadeVolume2 = 100;
 
+	_loadImageName = "";
+	_saveImageName = "";
+	_saveLoadImage = nullptr;
+
+	_saveImageX = _saveImageY = 0;
+	_loadImageX = _loadImageY = 0;
+
+	_hasDrawnSaveLoadImage = false;
+
 #ifdef ENABLE_WME3D
 	_maxShadowType = SHADOW_STENCIL;
 	_supportsRealTimeShadows = false;
@@ -221,7 +265,8 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_editorResolutionHeight = 0;
 #endif
 
-	_localSaveDir = "saves";
+	_localSaveDir = nullptr;
+	BaseUtils::setString(&_localSaveDir, "saves");
 
 	_saveDirChecked = false;
 
@@ -269,8 +314,6 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_autoSaveSlot = 999;
 	_cursorHidden = false;
 
-	_settings = new BaseGameSettings(this);
-
 #ifdef ENABLE_HEROCRAFT
 	_rndHc = new Common::RandomSource("HeroCraft");
 #endif
@@ -289,6 +332,10 @@ BaseGame::~BaseGame() {
 
 	cleanup();
 
+	SAFE_DELETE_ARRAY(_settingsGameFile);
+	SAFE_DELETE(_cachedThumbnail);
+
+	SAFE_DELETE(_saveLoadImage);
 	SAFE_DELETE(_mathClass);
 	SAFE_DELETE(_directoryClass);
 
@@ -303,7 +350,8 @@ BaseGame::~BaseGame() {
 
 	SAFE_DELETE(_renderer);
 	//SAFE_DELETE(m_AccessMgr);
-	SAFE_DELETE(_settings);
+
+	SAFE_DELETE(_stringTable);
 
 #ifdef ENABLE_HEROCRAFT
 	SAFE_DELETE(_rndHc);
@@ -317,8 +365,6 @@ BaseGame::~BaseGame() {
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::cleanup() {
 	SAFE_DELETE(_loadingIcon);
-
-	deleteSaveThumbnail();
 
 	_engineLogCallback = nullptr;
 	_engineLogCallbackData = nullptr;
@@ -384,7 +430,8 @@ bool BaseGame::cleanup() {
 
 	SAFE_DELETE(_keyboardState);
 
-	//if(m_AccessMgr) m_AccessMgr->SetActiveObject(NULL);
+	//if (m_AccessMgr)
+	//	m_AccessMgr->SetActiveObject(NULL);
 	
 	return STATUS_OK;
 }
@@ -432,13 +479,9 @@ bool BaseGame::initConfManSettings() {
 //////////////////////////////////////////////////////////////////////
 bool BaseGame::initRenderer() {
 	bool windowedMode = !ConfMan.getBool("fullscreen");
-	return _renderer->initRenderer(_settings->getResWidth(), _settings->getResHeight(), windowedMode);
+	return _renderer->initRenderer(_settingsResWidth, _settingsResHeight, windowedMode);
 }
 
-//////////////////////////////////////////////////////////////////////
-bool BaseGame::loadGameSettingsFile() {
-	return loadFile(_settings->getGameFile());
-}
 
 //////////////////////////////////////////////////////////////////////
 bool BaseGame::initialize1() {
@@ -556,13 +599,13 @@ bool BaseGame::initialize2() { // we know whether we are going to be accelerated
 	bool force2dRenderer = _force2dRenderer && !_playing3DGame;
 #if defined(USE_OPENGL_SHADERS)
 	if (!force2dRenderer && matchingRendererType == Graphics::kRendererTypeOpenGLShaders) {
-		initGraphics3d(_settings->getResWidth(), _settings->getResHeight());
+		initGraphics3d(_settingsResWidth, _settingsResHeight);
 		_renderer3D = makeOpenGL3DShaderRenderer(this);
 	}
 #endif // defined(USE_OPENGL_SHADERS)
 #if defined(USE_OPENGL_GAME)
 	if (!force2dRenderer && matchingRendererType == Graphics::kRendererTypeOpenGL) {
-		initGraphics3d(_settings->getResWidth(), _settings->getResHeight());
+		initGraphics3d(_settingsResWidth, _settingsResHeight);
 		_renderer3D = makeOpenGL3DRenderer(this);
 	}
 #endif // defined(USE_OPENGL)
@@ -589,18 +632,23 @@ bool BaseGame::initialize2() { // we know whether we are going to be accelerated
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////
 bool BaseGame::initialize3() { // renderer is initialized
 	_posX = _renderer->getWidth() / 2;
 	_posY = _renderer->getHeight() / 2;
-	_renderer->initIndicator();
 
-	//if(m_AccessMgr) Game->m_AccessMgr->Initialize();
+	if (_indicatorY == -1)
+		_indicatorY = _renderer->getHeight() - _indicatorHeight;
+	if (_indicatorX == -1)
+		_indicatorX = 0;
+	if (_indicatorWidth == -1)
+		_indicatorWidth = _renderer->getWidth();
+
+	//if (m_AccessMgr)
+	//	Game->m_AccessMgr->Initialize();
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////
 void BaseGame::DEBUG_DebugEnable(const char *filename) {
@@ -625,7 +673,6 @@ void BaseGame::DEBUG_DebugEnable(const char *filename) {
 	LOG(0, "");
 }
 
-
 //////////////////////////////////////////////////////////////////////
 void BaseGame::DEBUG_DebugDisable() {
 	if (_debugLogFile != nullptr) {
@@ -635,7 +682,6 @@ void BaseGame::DEBUG_DebugDisable() {
 	}
 	_debugDebugMode = false;
 }
-
 
 //////////////////////////////////////////////////////////////////////
 void BaseGame::LOG(bool res, const char *fmt, ...) {
@@ -671,7 +717,6 @@ void BaseGame::setEngineLogCallback(ENGINE_LOG_CALLBACK callback, void *data) {
 	_engineLogCallbackData = data;
 }
 
-
 //////////////////////////////////////////////////////////////////////
 bool BaseGame::initLoop() {
 	_viewportSP = -1;
@@ -683,7 +728,8 @@ bool BaseGame::initLoop() {
 
 	_surfaceStorage->initLoop();
 
-	//if(m_AccessMgr) m_AccessMgr->InitLoop();
+	//if (m_AccessMgr)
+	//	m_AccessMgr->InitLoop();
 
 	_fontStorage->initLoop();
 
@@ -695,12 +741,16 @@ bool BaseGame::initLoop() {
 	_lastTime  = _currentTime;
 	_fpsTime += _deltaTime;
 
-	_timerLive.updateTime(_deltaTime, 1000);
+	_liveTimerDelta = _liveTimer - _liveTimerLast;
+	_liveTimerLast = _liveTimer;
+	_liveTimer += MIN((uint32)1000, _deltaTime);
 
 	if (_state != GAME_FROZEN) {
-		_timerNormal.updateTime(_deltaTime, 1000);
+		_timerDelta = _timer - _timerLast;
+		_timerLast = _timer;
+		_timer += MIN((uint32)1000, _deltaTime);
 	} else {
-		_timerNormal.setTimeDelta(0);
+		_timerDelta = 0;
 	}
 
 	_framesRendered++;
@@ -709,7 +759,7 @@ bool BaseGame::initLoop() {
 		_framesRendered  = 0;
 		_fpsTime = 0;
 	}
-	//_gameRef->LOG(0, "%d", _fps);
+	//_game->LOG(0, "%d", _fps);
 
 	getMousePos(&_mousePos);
 
@@ -730,18 +780,15 @@ bool BaseGame::initLoop() {
 	return STATUS_OK;
 }
 
-
 //////////////////////////////////////////////////////////////////////
 bool BaseGame::initInput() {
 	return STATUS_OK;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 int BaseGame::getSequence() {
 	return ++_sequence;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::setOffset(int32 offsetX, int32 offsetY) {
@@ -759,12 +806,11 @@ void BaseGame::getOffset(int *offsetX, int *offsetY) const {
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::loadFile(const char *filename) {
 	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_gameRef->LOG(0, "BaseGame::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "BaseGame::LoadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -773,14 +819,13 @@ bool BaseGame::loadFile(const char *filename) {
 	setFilename(filename);
 
 	if (DID_FAIL(ret = loadBuffer(buffer, true))) {
-		_gameRef->LOG(0, "Error parsing GAME file '%s'", filename);
+		_game->LOG(0, "Error parsing GAME file '%s'", filename);
 	}
 
 	delete[] buffer;
 
 	return ret;
 }
-
 
 TOKEN_DEF_START
 TOKEN_DEF(GAME)
@@ -874,27 +919,13 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 	TOKEN_TABLE(COMPAT_KILL_METHOD_THREADS)
 	TOKEN_TABLE_END
 
-	// Declare a few variables necessary for moving data from these settings over to the renderer:
-	// The values are the same as the defaults set in BaseRenderer.
-	int loadImageX = 0;
-	int loadImageY = 0;
-	int saveImageX = 0;
-	int saveImageY = 0;
-	int indicatorX = -1;
-	int indicatorY = -1;
-	int indicatorWidth = -1;
-	int indicatorHeight = 8;
-	uint32 indicatorColor = BYTETORGBA(255, 0, 0, 128);
-	Common::String loadImageName = "";
-	Common::String saveImageName = "";
-
 	char *params;
 	int cmd;
-	BaseParser parser;
+	BaseParser parser(_game);
 
 	if (complete) {
 		if (parser.getCommand(&buffer, commands, &params) != TOKEN_GAME) {
-			_gameRef->LOG(0, "'GAME' keyword expected.");
+			_game->LOG(0, "'GAME' keyword expected.");
 			return STATUS_FAILED;
 		}
 		buffer = params;
@@ -922,7 +953,7 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 			}
 			_systemFont = nullptr;
 
-			_systemFont = _gameRef->_fontStorage->addFont(params);
+			_systemFont = _game->_fontStorage->addFont(params);
 			break;
 
 		case TOKEN_VIDEO_FONT:
@@ -931,9 +962,8 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 			}
 			_videoFont = nullptr;
 
-			_videoFont = _gameRef->_fontStorage->addFont(params);
+			_videoFont = _game->_fontStorage->addFont(params);
 			break;
-
 
 #ifdef ENABLE_WME3D
 		case TOKEN_SHADOW_IMAGE:
@@ -942,13 +972,13 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 			}
 			_shadowImage = nullptr;
 
-			_shadowImage = _gameRef->_surfaceStorage->addSurface(params);
+			_shadowImage = _game->_surfaceStorage->addSurface(params);
 			break;
 #endif
 
 		case TOKEN_CURSOR:
 			SAFE_DELETE(_cursor);
-			_cursor = new BaseSprite(_gameRef);
+			_cursor = new BaseSprite(_game);
 			if (!_cursor || DID_FAIL(_cursor->loadFile(params))) {
 				SAFE_DELETE(_cursor);
 				cmd = PARSERR_GENERIC;
@@ -957,7 +987,7 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_ACTIVE_CURSOR:
 			SAFE_DELETE(_activeCursor);
-			_activeCursor = new BaseSprite(_gameRef);
+			_activeCursor = new BaseSprite(_game);
 			if (!_activeCursor || DID_FAIL(_activeCursor->loadFile(params))) {
 				SAFE_DELETE(_activeCursor);
 				cmd = PARSERR_GENERIC;
@@ -966,7 +996,7 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_NONINTERACTIVE_CURSOR:
 			SAFE_DELETE(_cursorNoninteractive);
-			_cursorNoninteractive = new BaseSprite(_gameRef);
+			_cursorNoninteractive = new BaseSprite(_game);
 			if (!_cursorNoninteractive || DID_FAIL(_cursorNoninteractive->loadFile(params))) {
 				SAFE_DELETE(_cursorNoninteractive);
 				cmd = PARSERR_GENERIC;
@@ -1010,50 +1040,50 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 			break;
 
 		case TOKEN_INDICATOR_X:
-			parser.scanStr(params, "%d", &indicatorX);
+			parser.scanStr(params, "%d", &_indicatorX);
 			break;
 
 		case TOKEN_INDICATOR_Y:
-			parser.scanStr(params, "%d", &indicatorY);
+			parser.scanStr(params, "%d", &_indicatorY);
 			break;
 
 		case TOKEN_INDICATOR_COLOR: {
 			int r, g, b, a;
 			parser.scanStr(params, "%d,%d,%d,%d", &r, &g, &b, &a);
-			indicatorColor = BYTETORGBA(r, g, b, a);
+			_indicatorColor = BYTETORGBA(r, g, b, a);
 		}
 		break;
 
 		case TOKEN_INDICATOR_WIDTH:
-			parser.scanStr(params, "%d", &indicatorWidth);
+			parser.scanStr(params, "%d", &_indicatorWidth);
 			break;
 
 		case TOKEN_INDICATOR_HEIGHT:
-			parser.scanStr(params, "%d", &indicatorHeight);
+			parser.scanStr(params, "%d", &_indicatorHeight);
 			break;
 
 		case TOKEN_SAVE_IMAGE:
-			saveImageName = params;
+			_saveImageName = params;
 			break;
 
 		case TOKEN_SAVE_IMAGE_X:
-			parser.scanStr(params, "%d", &saveImageX);
+			parser.scanStr(params, "%d", &_saveImageX);
 			break;
 
 		case TOKEN_SAVE_IMAGE_Y:
-			parser.scanStr(params, "%d", &saveImageY);
+			parser.scanStr(params, "%d", &_saveImageY);
 			break;
 
 		case TOKEN_LOAD_IMAGE:
-			loadImageName = params;
+			_loadImageName = params;
 			break;
 
 		case TOKEN_LOAD_IMAGE_X:
-			parser.scanStr(params, "%d", &loadImageX);
+			parser.scanStr(params, "%d", &_loadImageX);
 			break;
 
 		case TOKEN_LOAD_IMAGE_Y:
-			parser.scanStr(params, "%d", &loadImageY);
+			parser.scanStr(params, "%d", &_loadImageY);
 			break;
 
 		case TOKEN_LOCAL_SAVE_DIR:
@@ -1069,32 +1099,26 @@ bool BaseGame::loadBuffer(char *buffer, bool complete) {
 		}
 	}
 
-	_renderer->setIndicator(indicatorWidth, indicatorHeight, indicatorX, indicatorY, indicatorColor);
-	_renderer->initIndicator(); // In case we just reset the values.
-	_renderer->setSaveImage(saveImageName.c_str(), saveImageX, saveImageY);
-	_renderer->setLoadingScreen(loadImageName.c_str(), loadImageX, loadImageY);
-
 	if (!_systemFont) {
-		_systemFont = _gameRef->_fontStorage->addFont("system_font.fnt");
+		_systemFont = _game->_fontStorage->addFont("system_font.fnt");
 	}
 #ifdef ENABLE_WME3D
 	if (!_shadowImage) {
-		_shadowImage = _gameRef->_surfaceStorage->addSurface("shadow.png");
+		_shadowImage = _game->_surfaceStorage->addSurface("shadow.png");
 	}
 #endif
 
 	if (cmd == PARSERR_TOKENNOTFOUND) {
-		_gameRef->LOG(0, "Syntax error in GAME definition");
+		_game->LOG(0, "Syntax error in GAME definition");
 		return STATUS_FAILED;
 	}
 	if (cmd == PARSERR_GENERIC) {
-		_gameRef->LOG(0, "Error loading GAME definition");
+		_game->LOG(0, "Error loading GAME definition");
 		return STATUS_FAILED;
 	}
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 // high level scripting interface
@@ -1133,7 +1157,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	// RunScript
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "RunScript") == 0) {
-		_gameRef->LOG(0, "**Warning** The 'RunScript' method is now obsolete. Use 'AttachScript' instead (same syntax)");
+		_game->LOG(0, "**Warning** The 'RunScript' method is now obsolete. Use 'AttachScript' instead (same syntax)");
 		stack->correctParams(1);
 		if (DID_FAIL(addScript(stack->pop()->getString()))) {
 			stack->pushBool(false);
@@ -1159,7 +1183,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			clearOld = val->getBool();
 		}
 
-		if (DID_FAIL(_settings->loadStringTable(filename, clearOld))) {
+		if (DID_FAIL(_stringTable->loadFile(filename, clearOld))) {
 			stack->pushBool(false);
 		} else {
 			stack->pushBool(true);
@@ -1194,7 +1218,6 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		return STATUS_OK;
 	}
 
-
 	//////////////////////////////////////////////////////////////////////////
 	// UnloadObject
 	//////////////////////////////////////////////////////////////////////////
@@ -1216,7 +1239,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "LoadWindow") == 0) {
 		stack->correctParams(1);
-		UIWindow *win = new UIWindow(_gameRef);
+		UIWindow *win = new UIWindow(_game);
 		if (win && DID_SUCCEED(win->loadFile(stack->pop()->getString()))) {
 			_windows.add(win);
 			registerObject(win);
@@ -1237,7 +1260,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		size_t strSize = strlen(val->getString()) + 1;
 		char *str = new char[strSize];
 		Common::strcpy_s(str, strSize, val->getString());
-		expandStringByStringTable(&str);
+		_stringTable->expand(&str);
 		stack->pushString(str);
 		delete[] str;
 		return STATUS_OK;
@@ -1483,7 +1506,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			return STATUS_OK;
 		}
 
-		_musicCrossfadeStartTime = _gameRef->getLiveTimer()->getTime();
+		_musicCrossfadeStartTime = _liveTimer;
 		_musicCrossfadeChannel1 = channel1;
 		_musicCrossfadeChannel2 = channel2;
 		_musicCrossfadeLength = fadeLength;
@@ -1491,6 +1514,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		_musicCrossfadeRunning = true;
 
+		 // FoxTail:
 		_musicCrossfadeVolume1 = 0;
 		_musicCrossfadeVolume2 = 100;
 
@@ -1515,7 +1539,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			return STATUS_OK;
 		}
 
-		_musicCrossfadeStartTime = _gameRef->getLiveTimer()->getTime();
+		_musicCrossfadeStartTime = _game->_liveTimer;
 		_musicCrossfadeChannel1 = channel;
 		_musicCrossfadeChannel2 = channel;
 		_musicCrossfadeLength = fadeLength;
@@ -1540,7 +1564,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		int length = 0;
 		const char *filename = stack->pop()->getString();
 
-		BaseSound *sound = new BaseSound(_gameRef);
+		BaseSound *sound = new BaseSound(_game);
 		if (sound && DID_SUCCEED(sound->setSound(filename, Audio::Mixer::kMusicSoundType, true))) {
 			length = sound->getLength();
 			delete sound;
@@ -1565,6 +1589,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		p.x = x + _renderer->_drawOffsetX;
 		p.y = y + _renderer->_drawOffsetY;
 
+		//CBPlatform::ClientToScreen(m_Renderer->m_Window, &p);
 		BasePlatform::setCursorPos(p.x, p.y);
 
 		stack->pushNULL();
@@ -1598,6 +1623,8 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	// PlayVideo
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "PlayVideo") == 0) {
+		//Game->LOG(0, "Warning: Game.PlayVideo() is now deprecated. Use Game.PlayTheora() instead.");
+
 		stack->correctParams(6);
 		const char *filename = stack->pop()->getString();
 		ScValue *valType = stack->pop();
@@ -1619,8 +1646,8 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			type = (int)VID_PLAY_STRETCH;
 		}
 
-		if (DID_SUCCEED(_gameRef->_videoPlayer->initialize(filename, subtitleFile))) {
-			if (DID_SUCCEED(_gameRef->_videoPlayer->play((TVideoPlayback)type, xVal, yVal, freezeMusic))) {
+		if (DID_SUCCEED(_game->_videoPlayer->initialize(filename, subtitleFile))) {
+			if (DID_SUCCEED(_game->_videoPlayer->play((TVideoPlayback)type, xVal, yVal, freezeMusic))) {
 				stack->pushBool(true);
 				script->sleep(0);
 			} else {
@@ -1700,6 +1727,173 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->pushNULL();
 		return STATUS_OK;
 	}
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] GetSaveSlotDescriptionTimestamp
+	// Return struct with "Description" and "Timestamp" fields in 1.2.362-
+	// Return array  with "Description" and "Timestamp" items  in 1.2.527+
+	// Timestamps should be comparable types
+	// Used to sort saved games by timestamps at save.script & load.script
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetSaveSlotDescriptionTimestamp") == 0) {
+		stack->correctParams(1);
+		int slot = stack->pop()->getInt();
+
+		TimeDate time;
+		getSaveSlotTimestamp(slot, &time);
+		stack->pushInt(time.tm_sec);
+		stack->pushInt(time.tm_min);
+		stack->pushInt(time.tm_hour);
+		stack->pushInt(time.tm_mday);
+		stack->pushInt(time.tm_mon + 1);
+		stack->pushInt(time.tm_year + 1900);
+		stack->pushInt(6);
+		BaseScriptable *date = makeSXDate(_game, stack);
+		stack->pushNative(date, false);
+
+		Common::String desc;
+		getSaveSlotDescription(slot, desc);
+		stack->pushString(desc.c_str());
+
+		BaseScriptable *obj;
+		if (BaseEngine::instance().isFoxTail(FOXTAIL_1_2_527, FOXTAIL_LATEST_VERSION)) {
+			stack->pushInt(2);
+			obj = makeSXArray(_game, stack);
+		} else {
+			stack->pushInt(0);
+			obj = makeSXObject(_game, stack);
+			obj->scSetProperty("Description", stack->pop());
+			obj->scSetProperty("Timestamp", stack->pop());
+		}
+		stack->pushNative(obj, false);
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] ValidSaveSlotVersion
+	// Checks if given slot stores game state of compatible game version
+	// This version always returs true
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "ValidSaveSlotVersion") == 0) {
+		stack->correctParams(1);
+		/* int slot = */ stack->pop()->getInt();
+		// do nothing
+		stack->pushBool(true);
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] GetScreenType
+	// Returns 0 on fullscreen and 1 on window
+	// Used to init and update controls at options.script and methods.script
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetScreenType") == 0) {
+		stack->correctParams(0);
+		int type = _renderer->isWindowed() ? 1 : 0;
+		stack->pushInt(type);
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] GetScreenMode
+	// Returns integer to be used as a pixelization mode multiplier
+	// (e.g. it returns 2 for 640x360, 3 for 960x540, etc...)
+	// Used to init and update controls at options.script and methods.script
+	// This implementation always return 2 to fake window size of 2*320 x 2*180
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetScreenMode") == 0) {
+		stack->correctParams(0);
+		stack->pushInt(2);
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] GetDesktopDisplayMode
+	// Return struct with "w" and "h" fields in 1.2.362-
+	// Return array  with "w" and "h" items  in 1.2.527+
+	// Used to init and update controls at options.script and methods.script
+	// w,h of actual desktop size expected to calcucate maximum available size
+	// Available screen modes are calcucated as 2...N, N*320<w and N*180<h
+	// This implementation fakes available size as 2*320 x 2*180 only
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetDesktopDisplayMode") == 0) {
+		stack->correctParams(0);
+		stack->pushInt(2 * 180 + 1);
+		stack->pushInt(2 * 320 + 1);
+
+		BaseScriptable *obj;
+		if (BaseEngine::instance().isFoxTail(FOXTAIL_1_2_527, FOXTAIL_LATEST_VERSION)) {
+			stack->pushInt(2);
+			obj = makeSXArray(_game, stack);
+		} else {
+			stack->pushInt(0);
+			obj = makeSXObject(_game, stack);
+			obj->scSetProperty("w", stack->pop());
+			obj->scSetProperty("h", stack->pop());
+		}
+		stack->pushNative(obj, false);
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] SetScreenTypeMode
+	// This implementation ignores mode, toggles screen type only
+	// Used to change screen type&mode at options.script and methods.script
+	// Return value is never used
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "SetScreenTypeMode") == 0) {
+		stack->correctParams(2);
+		int type = stack->pop()->getInt();
+		stack->pop()->getInt(); // mode is unused
+
+		_renderer->setWindowed(type);
+		stack->pushNULL();
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] ChangeWindowGrab
+	// Used at game.script on "Keypress" event on F11
+	// Readme of FoxTail says: "F11 - free the mouse pointer from the window"
+	// This implementation does nothing
+	// Return value is never used
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "ChangeWindowGrab") == 0) {
+		stack->correctParams(0);
+		stack->pushNULL();
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [FoxTail] GetFiles
+	// Used at kalimba.script on F9 keypress to reload list of available music
+	// Known params: "*.mb"
+	// Original implementation does not seem to look up at DCP packages
+	// This implementation looks up at savegame storage and for actual files
+	// Return value expected to be an Array of Strings
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetFiles") == 0) {
+		stack->correctParams(1);
+		const char *pattern = stack->pop()->getString();
+
+		Common::StringArray fnames;
+		BaseFileManager::getEngineInstance()->listMatchingFiles(fnames, pattern);
+
+		stack->pushInt(0);
+		BaseScriptable *arr = makeSXArray(_game, stack);
+		for (uint32 i = 0; i < fnames.size(); i++) {
+			stack->pushString(fnames[i].c_str());
+			((SXArray *)arr)->push(stack->pop());
+		}
+
+ 		stack->pushNative(arr, false);
+ 		return STATUS_OK;
+	}
 #endif
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1757,6 +1951,94 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		return STATUS_OK;
 	}
 
+#ifdef ENABLE_HEROCRAFT
+	//////////////////////////////////////////////////////////////////////////
+	// [HeroCraft] GetSpriteControl
+	// Returns some internal state
+	// Known return values are:
+	// * 44332211: MUST be returned at "game.script" to allow game start
+	// * 77885566: may be returned at "mainMenu.script" to force open registration window
+	// * 90123679: may be returned at "mainMenu.script" to make "Buy Game" button visible
+	// Used at "Pole Chudes" only
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetSpriteControl") == 0) {
+		stack->correctParams(0);
+		stack->pushInt(44332211L);
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [HeroCraft] RandomInitSeed
+	// Additional method to be called before RandomSeed()
+	// Used at "Pole Chudes" only
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "RandomInitSeed") == 0) {
+		stack->correctParams(1);
+		int seed = stack->pop()->getInt();
+
+		_rndHc->setSeed(seed);
+
+		stack->pushNULL();
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [HeroCraft] RandomSeed
+	// Similar to usual Random() function, but using seed provided earlier
+	// Used at "Pole Chudes" only
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "RandomSeed") == 0) {
+		stack->correctParams(2);
+
+		int from = stack->pop()->getInt();
+		int to   = stack->pop()->getInt();
+		int rnd  = _rndHc->getRandomNumberRng(from, to);
+
+		stack->pushInt(rnd);
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [HeroCraft] GetImageInfo
+	// Returns image size in "<width>;<height>" format, e.g. "800;600"
+	// Known params: "fsdata\\splash1.jpg"
+	// Game script turn off scaling if returned value is "1024;768"
+	// Used at "Papa's Daughters 1" only
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "GetImageInfo") == 0) {
+		stack->correctParams(1);
+		/*const char *filename =*/ stack->pop()->getString();
+		stack->pushString("1024;768");
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// [HeroCraft] A lot of functions used for self-check
+	// Used at "Papa's Daughters 2" only
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "DeleteItems") == 0 || strcmp(name, "CreateActorItems") == 0 || strcmp(name, "DeleteActorItems") == 0 || strcmp(name, "PrepareItems") == 0 || strcmp(name, "CreateEntityItems") == 0 || strcmp(name, "DeleteEntityItems") == 0 || strcmp(name, "PrepareItemsWin") == 0 || strcmp(name, "CreateItems") == 0) {
+		stack->correctParams(3);
+		uint32 a = (uint32)stack->pop()->getInt();
+		uint32 b = (uint32)stack->pop()->getInt();
+		uint32 c = (uint32)stack->pop()->getInt();
+
+		uint32 result = 0;
+		const char* fname = "PapasDaughters2.wrp.exe";
+		if (strcmp(name, "PrepareItems") == 0 || strcmp(name, "CreateEntityItems") == 0 || strcmp(name, "DeleteEntityItems") == 0) {
+			result = getFilePartChecksumHc(fname, b, a);
+		} else if (strcmp(name, "PrepareItemsWin") == 0) {
+			result = getFilePartChecksumHc(fname, b, c);
+		} else if (strcmp(name, "CreateItems") == 0) {
+			result = getFilePartChecksumHc(fname, a, c);
+		} else {
+			result = getFilePartChecksumHc(fname, a, b);
+		}
+
+		stack->pushInt(result);
+		return STATUS_OK;
+	}
+#endif
+
 	//////////////////////////////////////////////////////////////////////////
 	// SaveGame
 	//////////////////////////////////////////////////////////////////////////
@@ -1764,11 +2046,11 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->correctParams(3);
 		int slot = stack->pop()->getInt();
 		const char *xdesc = stack->pop()->getString();
-		bool quick = stack->pop()->getBool(false);
-
 		size_t descSize = strlen(xdesc) + 1;
 		char *desc = new char[descSize];
 		Common::strcpy_s(desc, descSize, xdesc);
+		bool quick = stack->pop()->getBool(false);
+
 		stack->pushBool(true);
 		if (DID_FAIL(saveGame(slot, desc, quick))) {
 			stack->pop();
@@ -1796,7 +2078,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "IsSaveSlotUsed") == 0) {
 		stack->correctParams(1);
 		int slot = stack->pop()->getInt();
-		stack->pushBool(SaveLoad::isSaveSlotUsed(slot));
+		stack->pushBool(isSaveSlotUsed(slot));
 		return STATUS_OK;
 	}
 
@@ -1806,66 +2088,11 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "GetSaveSlotDescription") == 0) {
 		stack->correctParams(1);
 		int slot = stack->pop()->getInt();
-		Common::String desc = SaveLoad::getSaveSlotDescription(slot);
+		Common::String desc;
+		getSaveSlotDescription(slot, desc);
 		stack->pushString(desc.c_str());
 		return STATUS_OK;
 	}
-
-#ifdef ENABLE_FOXTAIL
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] GetSaveSlotDescriptionTimestamp
-	// Return struct with "Description" and "Timestamp" fields in 1.2.362-
-	// Return array  with "Description" and "Timestamp" items  in 1.2.527+
-	// Timestamps should be comparable types
-	// Used to sort saved games by timestamps at save.script & load.script
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetSaveSlotDescriptionTimestamp") == 0) {
-		stack->correctParams(1);
-		int slot = stack->pop()->getInt();
-
-		TimeDate time;
-		SaveLoad::getSaveSlotTimestamp(slot, &time);
-		stack->pushInt(time.tm_sec);
-		stack->pushInt(time.tm_min);
-		stack->pushInt(time.tm_hour);
-		stack->pushInt(time.tm_mday);
-		stack->pushInt(time.tm_mon + 1);
-		stack->pushInt(time.tm_year + 1900);
-		stack->pushInt(6);
-		BaseScriptable *date = makeSXDate(_gameRef, stack);
-		stack->pushNative(date, false);
-
-		Common::String desc = SaveLoad::getSaveSlotDescription(slot);
-		stack->pushString(desc.c_str());
-
-		BaseScriptable *obj;
-		if (BaseEngine::instance().isFoxTail(FOXTAIL_1_2_527, FOXTAIL_LATEST_VERSION)) {
-			stack->pushInt(2);
-			obj = makeSXArray(_gameRef, stack);
-		} else {
-			stack->pushInt(0);
-			obj = makeSXObject(_gameRef, stack);
-			obj->scSetProperty("Description", stack->pop());
-			obj->scSetProperty("Timestamp", stack->pop());
-		}
-		stack->pushNative(obj, false);
-
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] ValidSaveSlotVersion
-	// Checks if given slot stores game state of compatible game version
-	// This version always returs true
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "ValidSaveSlotVersion") == 0) {
-		stack->correctParams(1);
-		/* int slot = */ stack->pop()->getInt();
-		// do nothing
-		stack->pushBool(true);
-		return STATUS_OK;
-	}
-#endif
 
 	//////////////////////////////////////////////////////////////////////////
 	// EmptySaveSlot
@@ -1873,7 +2100,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "EmptySaveSlot") == 0) {
 		stack->correctParams(1);
 		int slot = stack->pop()->getInt();
-		SaveLoad::emptySaveSlot(slot);
+		emptySaveSlot(slot);
 		stack->pushNULL();
 		return STATUS_OK;
 	}
@@ -1883,7 +2110,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "SetGlobalSFXVolume") == 0) {
 		stack->correctParams(1);
-		_gameRef->_soundMgr->setVolumePercent(Audio::Mixer::kSFXSoundType, (byte)stack->pop()->getInt());
+		_game->_soundMgr->setVolumePercent(Audio::Mixer::kSFXSoundType, (byte)stack->pop()->getInt());
 		stack->pushNULL();
 		return STATUS_OK;
 	}
@@ -1893,7 +2120,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "SetGlobalSpeechVolume") == 0) {
 		stack->correctParams(1);
-		_gameRef->_soundMgr->setVolumePercent(Audio::Mixer::kSpeechSoundType, (byte)stack->pop()->getInt());
+		_game->_soundMgr->setVolumePercent(Audio::Mixer::kSpeechSoundType, (byte)stack->pop()->getInt());
 		stack->pushNULL();
 		return STATUS_OK;
 	}
@@ -1903,7 +2130,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "SetGlobalMusicVolume") == 0) {
 		stack->correctParams(1);
-		_gameRef->_soundMgr->setVolumePercent(Audio::Mixer::kMusicSoundType, (byte)stack->pop()->getInt());
+		_game->_soundMgr->setVolumePercent(Audio::Mixer::kMusicSoundType, (byte)stack->pop()->getInt());
 		stack->pushNULL();
 		return STATUS_OK;
 	}
@@ -1913,7 +2140,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "SetGlobalMasterVolume") == 0) {
 		stack->correctParams(1);
-		_gameRef->_soundMgr->setMasterVolumePercent((byte)stack->pop()->getInt());
+		_game->_soundMgr->setMasterVolumePercent((byte)stack->pop()->getInt());
 		stack->pushNULL();
 		return STATUS_OK;
 	}
@@ -2054,7 +2281,11 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		// Thus, we get black screenshots when saving game from in-game menus
 		// Let's take & keep screenshot before entering main menu
 		if (duration == 750 && BaseEngine::instance().getGameId() == "corrosion") {
-			storeSaveThumbnail();
+			SAFE_DELETE(_cachedThumbnail);
+			_cachedThumbnail = new SaveThumbHelper(this);
+			if (DID_FAIL(_cachedThumbnail->storeThumbnail())) {
+				SAFE_DELETE(_cachedThumbnail);
+			}
 		}
 
 		bool system = (strcmp(name, "SystemFadeOut") == 0 || strcmp(name, "SystemFadeOutAsync") == 0);
@@ -2118,10 +2349,10 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		}
 
 		// redraw before taking screenshot
-		_gameRef->displayContent(false);
+		_game->displayContent(false);
 
 		bool ret = false;
-		BaseImage *image = _gameRef->_renderer->takeScreenshot();
+		BaseImage *image = _game->_renderer->takeScreenshot();
 		if (image) {
 			ret = image->saveBMPFile(filename);
 			delete image;
@@ -2141,10 +2372,10 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		int sizeY = stack->pop()->getInt(_renderer->getHeight());
 
 		// redraw before taking screenshot
-		_gameRef->displayContent(false);
+		_game->displayContent(false);
 
 		bool ret = false;
-		BaseImage *image = _gameRef->_renderer->takeScreenshot(sizeX, sizeY);
+		BaseImage *image = _game->_renderer->takeScreenshot(sizeX, sizeY);
 		if (image) {
 			ret = image->saveBMPFile(filename);
 			delete image;
@@ -2161,7 +2392,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->correctParams(1);
 		ScValue *val = stack->pop();
 
-		UIWindow *win = new UIWindow(_gameRef);
+		UIWindow *win = new UIWindow(_game);
 		_windows.add(win);
 		registerObject(win);
 		if (!val->isNULL()) {
@@ -2214,13 +2445,13 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "SetLoadingScreen") == 0) {
 		stack->correctParams(3);
 		ScValue *val = stack->pop();
-		int loadImageX = stack->pop()->getInt();
-		int loadImageY = stack->pop()->getInt();
+		_loadImageX = stack->pop()->getInt();
+		_loadImageY = stack->pop()->getInt();
 
 		if (val->isNULL()) {
-			_renderer->setLoadingScreen(NULL, loadImageX, loadImageY);
+			_saveImageName = "";
 		} else {
-			_renderer->setLoadingScreen(val->getString(), loadImageX, loadImageY);
+			_loadImageName = val->getString();
 		}
 		stack->pushNULL();
 		return STATUS_OK;
@@ -2232,13 +2463,13 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "SetSavingScreen") == 0) {
 		stack->correctParams(3);
 		ScValue *val = stack->pop();
-		int saveImageX = stack->pop()->getInt();
-		int saveImageY = stack->pop()->getInt();
+		_saveImageX = stack->pop()->getInt();
+		_saveImageY = stack->pop()->getInt();
 
 		if (val->isNULL()) {
-			_renderer->setSaveImage(NULL, saveImageX, saveImageY);
+			_saveImageName = "";
 		} else {
-			_renderer->setSaveImage(val->getString(), saveImageX, saveImageY);
+			_loadImageName = val->getString();
 		}
 		stack->pushNULL();
 		return STATUS_OK;
@@ -2323,8 +2554,8 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			SAFE_DELETE(_loadingIcon);
 		} else {
 			displayContent(false, true);
-			_gameRef->_renderer->flip();
-			_gameRef->_renderer->initLoop();
+			_game->_renderer->flip();
+			_game->_renderer->initLoop();
 		}
 		stack->pushNULL();
 
@@ -2403,7 +2634,14 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "StoreSaveThumbnail") == 0) {
 		stack->correctParams(0);
-		stack->pushBool(storeSaveThumbnail());
+		SAFE_DELETE(_cachedThumbnail);
+		_cachedThumbnail = new SaveThumbHelper(this);
+		if (DID_FAIL(_cachedThumbnail->storeThumbnail())) {
+			SAFE_DELETE(_cachedThumbnail);
+			stack->pushBool(false);
+		} else
+			stack->pushBool(true);
+
 		return STATUS_OK;
 	}
 
@@ -2412,8 +2650,9 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "DeleteSaveThumbnail") == 0) {
 		stack->correctParams(0);
-		deleteSaveThumbnail();
+		SAFE_DELETE(_cachedThumbnail);
 		stack->pushNULL();
+
 		return STATUS_OK;
 	}
 
@@ -2458,94 +2697,6 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		return STATUS_OK;
 	}
 
-#ifdef ENABLE_HEROCRAFT
-	//////////////////////////////////////////////////////////////////////////
-	// [HeroCraft] GetSpriteControl
-	// Returns some internal state
-	// Known return values are:
-	// * 44332211: MUST be returned at "game.script" to allow game start
-	// * 77885566: may be returned at "mainMenu.script" to force open registration window
-	// * 90123679: may be returned at "mainMenu.script" to make "Buy Game" button visible
-	// Used at "Pole Chudes" only
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetSpriteControl") == 0) {
-		stack->correctParams(0);
-		stack->pushInt(44332211L);
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [HeroCraft] RandomInitSeed
-	// Additional method to be called before RandomSeed()
-	// Used at "Pole Chudes" only
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "RandomInitSeed") == 0) {
-		stack->correctParams(1);
-		int seed = stack->pop()->getInt();
-
-		_rndHc->setSeed(seed);
-
-		stack->pushNULL();
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [HeroCraft] RandomSeed
-	// Similar to usual Random() function, but using seed provided earlier
-	// Used at "Pole Chudes" only
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "RandomSeed") == 0) {
-		stack->correctParams(2);
-
-		int from = stack->pop()->getInt();
-		int to   = stack->pop()->getInt();
-		int rnd  = _rndHc->getRandomNumberRng(from, to);
-
-		stack->pushInt(rnd);
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [HeroCraft] GetImageInfo
-	// Returns image size in "<width>;<height>" format, e.g. "800;600"
-	// Known params: "fsdata\\splash1.jpg"
-	// Game script turn off scaling if returned value is "1024;768"
-	// Used at "Papa's Daughters 1" only
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetImageInfo") == 0) {
-		stack->correctParams(1);
-		/*const char *filename =*/ stack->pop()->getString();
-		stack->pushString("1024;768");
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [HeroCraft] A lot of functions used for self-check
-	// Used at "Papa's Daughters 2" only
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "DeleteItems") == 0 || strcmp(name, "CreateActorItems") == 0 || strcmp(name, "DeleteActorItems") == 0 || strcmp(name, "PrepareItems") == 0 || strcmp(name, "CreateEntityItems") == 0 || strcmp(name, "DeleteEntityItems") == 0 || strcmp(name, "PrepareItemsWin") == 0 || strcmp(name, "CreateItems") == 0) {
-		stack->correctParams(3);
-		uint32 a = (uint32)stack->pop()->getInt();
-		uint32 b = (uint32)stack->pop()->getInt();
-		uint32 c = (uint32)stack->pop()->getInt();
-
-		uint32 result = 0;
-		const char* fname = "PapasDaughters2.wrp.exe";
-		if (strcmp(name, "PrepareItems") == 0 || strcmp(name, "CreateEntityItems") == 0 || strcmp(name, "DeleteEntityItems") == 0) {
-			result = getFilePartChecksumHc(fname, b, a);
-		} else if (strcmp(name, "PrepareItemsWin") == 0) {
-			result = getFilePartChecksumHc(fname, b, c);
-		} else if (strcmp(name, "CreateItems") == 0) {
-			result = getFilePartChecksumHc(fname, a, c);
-		} else {
-			result = getFilePartChecksumHc(fname, a, b);
-		}
-
-		stack->pushInt(result);
-		return STATUS_OK;
-	}
-#endif
-
 	//////////////////////////////////////////////////////////////////////////
 	// EnableScriptProfiling
 	//////////////////////////////////////////////////////////////////////////
@@ -2568,120 +2719,6 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		return STATUS_OK;
 	}
 
-#ifdef ENABLE_FOXTAIL
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] GetScreenType
-	// Returns 0 on fullscreen and 1 on window
-	// Used to init and update controls at options.script and methods.script
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetScreenType") == 0) {
-		stack->correctParams(0);
-		int type = _renderer->isWindowed() ? 1 : 0;
-		stack->pushInt(type);
-
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] GetScreenMode
-	// Returns integer to be used as a pixelization mode multiplier
-	// (e.g. it returns 2 for 640x360, 3 for 960x540, etc...)
-	// Used to init and update controls at options.script and methods.script
-	// This implementation always return 2 to fake window size of 2*320 x 2*180
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetScreenMode") == 0) {
-		stack->correctParams(0);
-		stack->pushInt(2);
-
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] GetDesktopDisplayMode
-	// Return struct with "w" and "h" fields in 1.2.362-
-	// Return array  with "w" and "h" items  in 1.2.527+
-	// Used to init and update controls at options.script and methods.script
-	// w,h of actual desktop size expected to calcucate maximum available size
-	// Available screen modes are calcucated as 2...N, N*320<w and N*180<h
-	// This implementation fakes available size as 2*320 x 2*180 only
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetDesktopDisplayMode") == 0) {
-		stack->correctParams(0);
-		stack->pushInt(2 * 180 + 1);
-		stack->pushInt(2 * 320 + 1);
-
-		BaseScriptable *obj;
-		if (BaseEngine::instance().isFoxTail(FOXTAIL_1_2_527, FOXTAIL_LATEST_VERSION)) {
-			stack->pushInt(2);
-			obj = makeSXArray(_gameRef, stack);
-		} else {
-			stack->pushInt(0);
-			obj = makeSXObject(_gameRef, stack);
-			obj->scSetProperty("w", stack->pop());
-			obj->scSetProperty("h", stack->pop());
-		}
-		stack->pushNative(obj, false);
-
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] SetScreenTypeMode
-	// This implementation ignores mode, toggles screen type only
-	// Used to change screen type&mode at options.script and methods.script
-	// Return value is never used
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "SetScreenTypeMode") == 0) {
-		stack->correctParams(2);
-		int type = stack->pop()->getInt();
-		stack->pop()->getInt(); // mode is unused
-
-		_renderer->setWindowed(type);
-		stack->pushNULL();
-
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] ChangeWindowGrab
-	// Used at game.script on "Keypress" event on F11
-	// Readme of FoxTail says: "F11 - free the mouse pointer from the window"
-	// This implementation does nothing
-	// Return value is never used
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "ChangeWindowGrab") == 0) {
-		stack->correctParams(0);
-		stack->pushNULL();
-
-		return STATUS_OK;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// [FoxTail] GetFiles
-	// Used at kalimba.script on F9 keypress to reload list of available music
-	// Known params: "*.mb"
-	// Original implementation does not seem to look up at DCP packages
-	// This implementation looks up at savegame storage and for actual files
-	// Return value expected to be an Array of Strings
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "GetFiles") == 0) {
-		stack->correctParams(1);
-		const char *pattern = stack->pop()->getString();
-
-		Common::StringArray fnames;
-		BaseFileManager::getEngineInstance()->listMatchingFiles(fnames, pattern);
-
-		stack->pushInt(0);
-		BaseScriptable *arr = makeSXArray(_gameRef, stack);
-		for (uint32 i = 0; i < fnames.size(); i++) {
-			stack->pushString(fnames[i].c_str());
-			((SXArray *)arr)->push(stack->pop());
-		}
-
- 		stack->pushNative(arr, false);
- 		return STATUS_OK;
-	}
-#endif
 
 	//////////////////////////////////////////////////////////////////////////
 	// ShowStatusLine
@@ -2708,27 +2745,27 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 
 //////////////////////////////////////////////////////////////////////////
-ScValue *BaseGame::scGetProperty(const Common::String &name) {
+ScValue *BaseGame::scGetProperty(const char *name) {
 	_scValue->setNULL();
 
 	//////////////////////////////////////////////////////////////////////////
 	// Type
 	//////////////////////////////////////////////////////////////////////////
-	if (name == "Type") {
+	if (strcmp(name, "Type") == 0) {
 		_scValue->setString("game");
 		return _scValue;
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// Name
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Name") {
+	else if (strcmp(name, "Name") == 0) {
 		_scValue->setString(_name);
 		return _scValue;
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// Hwnd (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Hwnd") {
+	else if (strcmp(name, "Hwnd") == 0) {
 		_scValue->setInt((int)_renderer->_window);
 		return _scValue;
 	}
@@ -2736,15 +2773,15 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// CurrentTime (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "CurrentTime") {
-		_scValue->setInt((int)getTimer()->getTime());
+	else if (strcmp(name, "CurrentTime") == 0) {
+		_scValue->setInt((int)_timer);
 		return _scValue;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// WindowsTime (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "WindowsTime") {
+	else if (strcmp(name, "WindowsTime") == 0) {
 		_scValue->setInt((int)g_system->getMillis());
 		return _scValue;
 	}
@@ -2752,7 +2789,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// WindowedMode (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "WindowedMode") {
+	else if (strcmp(name, "WindowedMode") == 0) {
 		_scValue->setBool(_renderer->isWindowed());
 		return _scValue;
 	}
@@ -2760,7 +2797,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MouseX
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MouseX") {
+	else if (strcmp(name, "MouseX") == 0) {
 		_scValue->setInt(_mousePos.x);
 		return _scValue;
 	}
@@ -2768,7 +2805,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MouseY
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MouseY") {
+	else if (strcmp(name, "MouseY") == 0) {
 		_scValue->setInt(_mousePos.y);
 		return _scValue;
 	}
@@ -2776,7 +2813,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MainObject
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MainObject") {
+	else if (strcmp(name, "MainObject") == 0) {
 		_scValue->setNative(_mainObject, true);
 		return _scValue;
 	}
@@ -2784,7 +2821,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// ActiveObject (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "ActiveObject") {
+	else if (strcmp(name, "ActiveObject") == 0) {
 		_scValue->setNative(_activeObject, true);
 		return _scValue;
 	}
@@ -2792,7 +2829,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// ScreenWidth (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "ScreenWidth") {
+	else if (strcmp(name, "ScreenWidth") == 0) {
 		_scValue->setInt(_renderer->getWidth());
 		return _scValue;
 	}
@@ -2800,7 +2837,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// ScreenHeight (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "ScreenHeight") {
+	else if (strcmp(name, "ScreenHeight") == 0) {
 		_scValue->setInt(_renderer->getHeight());
 		return _scValue;
 	}
@@ -2808,7 +2845,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Interactive
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Interactive") {
+	else if (strcmp(name, "Interactive") == 0) {
 		_scValue->setBool(_interactive);
 		return _scValue;
 	}
@@ -2816,7 +2853,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// DebugMode (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "DebugMode") {
+	else if (strcmp(name, "DebugMode") == 0) {
 		_scValue->setBool(_debugDebugMode);
 		return _scValue;
 	}
@@ -2824,7 +2861,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SoundAvailable (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SoundAvailable") {
+	else if (strcmp(name, "SoundAvailable") == 0) {
 		_scValue->setBool(_soundMgr->_soundAvailable);
 		return _scValue;
 	}
@@ -2832,8 +2869,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SFXVolume
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SFXVolume") {
-		_gameRef->LOG(0, "**Warning** The SFXVolume attribute is obsolete");
+	else if (strcmp(name, "SFXVolume") == 0) {
+		_game->LOG(0, "**Warning** The SFXVolume attribute is obsolete");
 		_scValue->setInt(_soundMgr->getVolumePercent(Audio::Mixer::kSFXSoundType));
 		return _scValue;
 	}
@@ -2841,8 +2878,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SpeechVolume
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SpeechVolume") {
-		_gameRef->LOG(0, "**Warning** The SpeechVolume attribute is obsolete");
+	else if (strcmp(name, "SpeechVolume") == 0) {
+		_game->LOG(0, "**Warning** The SpeechVolume attribute is obsolete");
 		_scValue->setInt(_soundMgr->getVolumePercent(Audio::Mixer::kSpeechSoundType));
 		return _scValue;
 	}
@@ -2850,8 +2887,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MusicVolume
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MusicVolume") {
-		_gameRef->LOG(0, "**Warning** The MusicVolume attribute is obsolete");
+	else if (strcmp(name, "MusicVolume") == 0) {
+		_game->LOG(0, "**Warning** The MusicVolume attribute is obsolete");
 		_scValue->setInt(_soundMgr->getVolumePercent(Audio::Mixer::kMusicSoundType));
 		return _scValue;
 	}
@@ -2859,8 +2896,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MasterVolume
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MasterVolume") {
-		_gameRef->LOG(0, "**Warning** The MasterVolume attribute is obsolete");
+	else if (strcmp(name, "MasterVolume") == 0) {
+		_game->LOG(0, "**Warning** The MasterVolume attribute is obsolete");
 		_scValue->setInt(_soundMgr->getMasterVolumePercent());
 		return _scValue;
 	}
@@ -2868,12 +2905,11 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Keyboard (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Keyboard") {
-		if (_keyboardState) {
+	else if (strcmp(name, "Keyboard") == 0) {
+		if (_keyboardState)
 			_scValue->setNative(_keyboardState, true);
-		} else {
+		else
 			_scValue->setNULL();
-		}
 
 		return _scValue;
 	}
@@ -2881,7 +2917,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Subtitles
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Subtitles") {
+	else if (strcmp(name, "Subtitles") == 0) {
 		_scValue->setBool(_subtitles);
 		return _scValue;
 	}
@@ -2889,14 +2925,14 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SubtitlesSpeed
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SubtitlesSpeed") {
+	else if (strcmp(name, "SubtitlesSpeed") == 0) {
 		_scValue->setInt(_subtitlesSpeed);
 		return _scValue;
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// VideoSubtitles
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "VideoSubtitles") {
+	else if (strcmp(name, "VideoSubtitles") == 0) {
 		_scValue->setBool(_videoSubtitles);
 		return _scValue;
 	}
@@ -2904,7 +2940,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// FPS (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "FPS") {
+	else if (strcmp(name, "FPS") == 0) {
 		_scValue->setInt(_fps);
 		return _scValue;
 	}
@@ -2913,7 +2949,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Shadows (obsolete)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Shadows") {
+	else if (strcmp(name, "Shadows") == 0) {
 		_scValue->setBool(_maxShadowType > SHADOW_NONE);
 		return _scValue;
 	}
@@ -2921,7 +2957,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SimpleShadows (obsolete)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SimpleShadows") {
+	else if (strcmp(name, "SimpleShadows") == 0) {
 		_scValue->setBool(_maxShadowType == SHADOW_SIMPLE);
 		return _scValue;
 	}
@@ -2929,7 +2965,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SupportsRealTimeShadows (obsolete)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SupportsRealTimeShadows") {
+	else if (strcmp(name, "SupportsRealTimeShadows") == 0) {
 		_renderer3D->enableShadows();
 		_scValue->setBool(_supportsRealTimeShadows);
 		return _scValue;
@@ -2938,7 +2974,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MaxShadowType
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MaxShadowType") {
+	else if (strcmp(name, "MaxShadowType") == 0) {
 		_scValue->setInt(_maxShadowType);
 		return _scValue;
 	}
@@ -2947,7 +2983,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AcceleratedMode / Accelerated (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AcceleratedMode" || name == "Accelerated") {
+	else if (strcmp(name, "AcceleratedMode") == 0 || strcmp(name, "Accelerated") == 0) {
 		_scValue->setBool(_useD3D);
 		return _scValue;
 	}
@@ -2955,7 +2991,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// TextEncoding
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "TextEncoding") {
+	else if (strcmp(name, "TextEncoding") == 0) {
 		_scValue->setInt(_textEncoding);
 		return _scValue;
 	}
@@ -2963,7 +2999,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// TextRTL
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "TextRTL") {
+	else if (strcmp(name, "TextRTL") == 0) {
 		_scValue->setBool(_textRTL);
 		return _scValue;
 	}
@@ -2971,7 +3007,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SoundBufferSize
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SoundBufferSize") {
+	else if (strcmp(name, "SoundBufferSize") == 0) {
 		_scValue->setInt(_soundBufferSizeSec);
 		return _scValue;
 	}
@@ -2979,7 +3015,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SuspendedRendering
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SuspendedRendering") {
+	else if (strcmp(name, "SuspendedRendering") == 0) {
 		_scValue->setBool(_suspendedRendering);
 		return _scValue;
 	}
@@ -2987,16 +3023,15 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SuppressScriptErrors
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SuppressScriptErrors") {
+	else if (strcmp(name, "SuppressScriptErrors") == 0) {
 		_scValue->setBool(_suppressScriptErrors);
 		return _scValue;
 	}
 
-
 	//////////////////////////////////////////////////////////////////////////
 	// Frozen
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Frozen") {
+	else if (strcmp(name, "Frozen") == 0) {
 		_scValue->setBool(_state == GAME_FROZEN);
 		return _scValue;
 	}
@@ -3005,8 +3040,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Direct3DDevice
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Direct3DDevice") {
-		if (_gameRef->_useD3D)
+	else if (strcmp(name, "Direct3DDevice") == 0) {
+		if (_game->_useD3D)
 			_scValue->setInt((int)('D3DH'));
 		else
 			_scValue->setNULL();
@@ -3016,8 +3051,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// DirectDrawInterface
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "DirectDrawInterface") {
-		if (!_gameRef->_useD3D)
+	else if (strcmp(name, "DirectDrawInterface") == 0) {
+		if (!_game->_useD3D)
 			_scValue->setInt((int)('DDIH'));
 		else
 			_scValue->setNULL();
@@ -3028,7 +3063,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccTTSEnabled
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccTTSEnabled") {
+	else if (strcmp(name, "AccTTSEnabled") == 0) {
 		//m_ScValue->SetBool(m_AccessTTSEnabled);
 		_scValue->setBool(false);
 		return _scValue;
@@ -3037,7 +3072,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccTTSTalk
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccTTSTalk") {
+	else if (strcmp(name, "AccTTSTalk") == 0) {
 		//m_ScValue->SetBool(m_AccessTTSTalk);
 		_scValue->setBool(false);
 		return _scValue;
@@ -3046,7 +3081,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccTTSCaptions
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccTTSCaptions") {
+	else if (strcmp(name, "AccTTSCaptions") == 0) {
 		_scValue->setBool(false);
 		return _scValue;
 	}
@@ -3054,7 +3089,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccTTSKeypress
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccTTSKeypress") {
+	else if (strcmp(name, "AccTTSKeypress") == 0) {
 		_scValue->setBool(false);
 		return _scValue;
 	}
@@ -3062,7 +3097,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccKeyboardEnabled
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccKeyboardEnabled") {
+	else if (strcmp(name, "AccKeyboardEnabled") == 0) {
 		_scValue->setBool(false);
 		return _scValue;
 	}
@@ -3070,7 +3105,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccKeyboardCursorSkip
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccKeyboardCursorSkip") {
+	else if (strcmp(name, "AccKeyboardCursorSkip") == 0) {
 		_scValue->setBool(false);
 		return _scValue;
 	}
@@ -3078,7 +3113,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AccKeyboardPause
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AccKeyboardPause") {
+	else if (strcmp(name, "AccKeyboardPause") == 0) {
 		_scValue->setBool(false);
 		return _scValue;
 	}
@@ -3087,7 +3122,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// UsedMemory
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "UsedMemory") {
+	else if (strcmp(name, "UsedMemory") == 0) {
 		// wme only returns a non-zero value in debug mode
 		_scValue->setInt(0);
 		return _scValue;
@@ -3096,9 +3131,9 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MaxActiveLights
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MaxActiveLights") {
+	else if (strcmp(name, "MaxActiveLights") == 0) {
 		if (_useD3D) {
-			BaseRenderer3D *renderer = _gameRef->_renderer3D;
+			BaseRenderer3D *renderer = _game->_renderer3D;
 			_scValue->setInt(renderer->getMaxActiveLights());
 		} else {
 			_scValue->setInt(0);
@@ -3110,7 +3145,8 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// HardwareTL
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "HardwareTL") {
+	else if (strcmp(name, "HardwareTL") == 0) {
+		// always support hardware transformations and lights
 		_scValue->setBool(true);
 		return _scValue;
 	}
@@ -3119,7 +3155,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AutorunDisabled
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AutorunDisabled") {
+	else if (strcmp(name, "AutorunDisabled") == 0) {
 		_scValue->setBool(_autorunDisabled);
 		return _scValue;
 	}
@@ -3127,7 +3163,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// SaveDirectory (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SaveDirectory") {
+	else if (strcmp(name, "SaveDirectory") == 0) {
 		AnsiString dataDir = "saves"; // See also: SXDirectory::scGetProperty("TempDirectory")
 		_scValue->setString(dataDir.c_str());
 		return _scValue;
@@ -3136,7 +3172,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// MostRecentSaveSlot (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "MostRecentSaveSlot") {
+	else if (strcmp(name, "MostRecentSaveSlot") == 0) {
 		if (!ConfMan.hasKey("most_recent_saveslot")) {
 			_scValue->setInt(-1);
 		} else {
@@ -3148,7 +3184,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AutoSaveOnExit
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AutoSaveOnExit") {
+	else if (strcmp(name, "AutoSaveOnExit") == 0) {
 		_scValue->setBool(_autoSaveOnExit);
 		return _scValue;
 	}
@@ -3156,7 +3192,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// AutoSaveSlot
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "AutoSaveSlot") {
+	else if (strcmp(name, "AutoSaveSlot") == 0) {
 		_scValue->setInt(_autoSaveSlot);
 		return _scValue;
 	}
@@ -3164,7 +3200,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// CursorHidden
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "CursorHidden") {
+	else if (strcmp(name, "CursorHidden") == 0) {
 		_scValue->setBool(_cursorHidden);
 		return _scValue;
 	}
@@ -3174,7 +3210,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	// [FoxTail] SystemLanguage (RO)
 	// Returns Steam API language name string
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "SystemLanguage") {
+	else if (strcmp(name, "SystemLanguage") == 0) {
 		switch (Common::parseLanguage(ConfMan.get("language"))) {
 		case Common::CS_CZE:
 			_scValue->setString("czech");
@@ -3251,7 +3287,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	// Used to display full game version at options.script in UpdateControls()
 	// Returns FoxTail engine version number as a dotted string
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "BuildVersion") {
+	else if (strcmp(name, "BuildVersion") == 0) {
 		if (BaseEngine::instance().getTargetExecutable() == FOXTAIL_1_2_227) {
 			_scValue->setString("1.2.227");
 		} else if (BaseEngine::instance().getTargetExecutable() == FOXTAIL_1_2_230) {
@@ -3277,7 +3313,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	// Used to display full game version at options.script in UpdateControls()
 	// Returns FoxTail version number as a string
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "GameVersion") {
+	else if (strcmp(name, "GameVersion") == 0) {
 		uint32 gameVersion = 0;
 		BaseFileManager *fileManager = BaseEngine::instance().getFileManager();
 		if (fileManager) {
@@ -3293,7 +3329,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Platform (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Platform") {
+	else if (strcmp(name, "Platform") == 0) {
 		_scValue->setString(BasePlatform::getPlatformName().c_str());
 		return _scValue;
 	}
@@ -3301,7 +3337,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// DeviceType (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "DeviceType") {
+	else if (strcmp(name, "DeviceType") == 0) {
 		_scValue->setString(getDeviceType().c_str());
 		return _scValue;
 	}
@@ -3309,7 +3345,7 @@ ScValue *BaseGame::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Store (RO)
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Store") {
+	else if (strcmp(name, "Store") == 0) {
 		_scValue->setNULL();
 		error("Request for a SXStore-object, which is not supported by ScummVM");
 
@@ -3381,8 +3417,8 @@ bool BaseGame::scSetProperty(const char *name, ScValue *value) {
 	// SFXVolume
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "SFXVolume") == 0) {
-		_gameRef->LOG(0, "**Warning** The SFXVolume attribute is obsolete");
-		_gameRef->_soundMgr->setVolumePercent(Audio::Mixer::kSFXSoundType, (byte)value->getInt());
+		_game->LOG(0, "**Warning** The SFXVolume attribute is obsolete");
+		_game->_soundMgr->setVolumePercent(Audio::Mixer::kSFXSoundType, (byte)value->getInt());
 		return STATUS_OK;
 	}
 
@@ -3390,8 +3426,8 @@ bool BaseGame::scSetProperty(const char *name, ScValue *value) {
 	// SpeechVolume
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "SpeechVolume") == 0) {
-		_gameRef->LOG(0, "**Warning** The SpeechVolume attribute is obsolete");
-		_gameRef->_soundMgr->setVolumePercent(Audio::Mixer::kSpeechSoundType, (byte)value->getInt());
+		_game->LOG(0, "**Warning** The SpeechVolume attribute is obsolete");
+		_game->_soundMgr->setVolumePercent(Audio::Mixer::kSpeechSoundType, (byte)value->getInt());
 		return STATUS_OK;
 	}
 
@@ -3399,8 +3435,8 @@ bool BaseGame::scSetProperty(const char *name, ScValue *value) {
 	// MusicVolume
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "MusicVolume") == 0) {
-		_gameRef->LOG(0, "**Warning** The MusicVolume attribute is obsolete");
-		_gameRef->_soundMgr->setVolumePercent(Audio::Mixer::kMusicSoundType, (byte)value->getInt());
+		_game->LOG(0, "**Warning** The MusicVolume attribute is obsolete");
+		_game->_soundMgr->setVolumePercent(Audio::Mixer::kMusicSoundType, (byte)value->getInt());
 		return STATUS_OK;
 	}
 
@@ -3408,8 +3444,8 @@ bool BaseGame::scSetProperty(const char *name, ScValue *value) {
 	// MasterVolume
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "MasterVolume") == 0) {
-		_gameRef->LOG(0, "**Warning** The MasterVolume attribute is obsolete");
-		_gameRef->_soundMgr->setMasterVolumePercent((byte)value->getInt());
+		_game->LOG(0, "**Warning** The MasterVolume attribute is obsolete");
+		_game->_soundMgr->setMasterVolumePercent((byte)value->getInt());
 		return STATUS_OK;
 	}
 
@@ -3562,8 +3598,6 @@ const char *BaseGame::scToString() {
 	return "[game object]";
 }
 
-
-
 #define QUICK_MSG_DURATION 3000
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::displayQuickMsg() {
@@ -3590,7 +3624,6 @@ bool BaseGame::displayQuickMsg() {
 	return STATUS_OK;
 }
 
-
 #define MAX_QUICK_MSG 5
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::quickMessage(const char *text) {
@@ -3600,7 +3633,6 @@ void BaseGame::quickMessage(const char *text) {
 	}
 	_quickMessages.add(new BaseQuickMsg(_currentTime,  text));
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::quickMessageForm(char *fmt, ...) {
@@ -3613,7 +3645,6 @@ void BaseGame::quickMessageForm(char *fmt, ...) {
 
 	quickMessage(buff);
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::registerObject(BaseObject *object) {
@@ -3652,7 +3683,8 @@ bool BaseGame::unregisterObject(BaseObject *object) {
 		_mainObject = nullptr;
 	}
 	// is it active accessibility object?
-	//if(m_AccessMgr && m_AccessMgr->GetActiveObject()==Object) m_AccessMgr->SetActiveObject(NULL);
+	//if (m_AccessMgr && m_AccessMgr->GetActiveObject() == Object)
+	//	m_AccessMgr->SetActiveObject(NULL);
 
 	// destroy object
 	for (int32 i = 0; i < _regObjects.getSize(); i++) {
@@ -3669,7 +3701,6 @@ bool BaseGame::unregisterObject(BaseObject *object) {
 	return STATUS_FAILED;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::invalidateValues(void *value, void *data) {
 	ScValue *val = (ScValue *)value;
@@ -3681,8 +3712,6 @@ void BaseGame::invalidateValues(void *value, void *data) {
 		val->setNULL();
 	}
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::validObject(BaseObject *object) {
@@ -3701,7 +3730,6 @@ bool BaseGame::validObject(BaseObject *object) {
 	return false;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack, char *name) {
 	ScValue *thisObj;
@@ -3711,7 +3739,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	if (strcmp(name, "LOG") == 0) {
 		stack->correctParams(1);
-		_gameRef->LOG(0, "sc: %s", stack->pop()->getString());
+		_game->LOG(0, "sc: %s", stack->pop()->getString());
 		stack->pushNULL();
 	}
 
@@ -3721,7 +3749,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "String") == 0) {
 		thisObj = thisStack->getTop();
 
-		thisObj->setNative(makeSXString(_gameRef,  stack));
+		thisObj->setNative(makeSXString(_game,  stack));
 		stack->pushNULL();
 	}
 
@@ -3731,7 +3759,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "MemBuffer") == 0) {
 		thisObj = thisStack->getTop();
 
-		thisObj->setNative(makeSXMemBuffer(_gameRef,  stack));
+		thisObj->setNative(makeSXMemBuffer(_game,  stack));
 		stack->pushNULL();
 	}
 
@@ -3741,17 +3769,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "File") == 0) {
 		thisObj = thisStack->getTop();
 
-		thisObj->setNative(makeSXFile(_gameRef,  stack));
-		stack->pushNULL();
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// Directory
-	//////////////////////////////////////////////////////////////////////////
-	else if (strcmp(name, "Directory") == 0) {
-		thisObj = thisStack->getTop();
-
-		thisObj->setNative(makeSXDirectory(_gameRef));
+		thisObj->setNative(makeSXFile(_game,  stack));
 		stack->pushNULL();
 	}
 
@@ -3761,7 +3779,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "Date") == 0) {
 		thisObj = thisStack->getTop();
 
-		thisObj->setNative(makeSXDate(_gameRef,  stack));
+		thisObj->setNative(makeSXDate(_game,  stack));
 		stack->pushNULL();
 	}
 
@@ -3771,7 +3789,17 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "Array") == 0) {
 		thisObj = thisStack->getTop();
 
-		thisObj->setNative(makeSXArray(_gameRef,  stack));
+		thisObj->setNative(makeSXArray(_game,  stack));
+		stack->pushNULL();
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// Directory
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "Directory") == 0) {
+		thisObj = thisStack->getTop();
+
+		thisObj->setNative(makeSXDirectory(_game));
 		stack->pushNULL();
 	}
 
@@ -3781,7 +3809,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "Object") == 0) {
 		thisObj = thisStack->getTop();
 
-		thisObj->setNative(makeSXObject(_gameRef,  stack));
+		thisObj->setNative(makeSXObject(_game,  stack));
 		stack->pushNULL();
 	}
 
@@ -4027,7 +4055,7 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 		// There is no way to makeSXArray() with exactly 1 given element
 		// That's why we are creating empty Array and SXArray::push() later
 		stack->pushInt(0);
-		BaseScriptable *arr = makeSXArray(_gameRef, stack);
+		BaseScriptable *arr = makeSXArray(_game, stack);
 
 		// Iterating string copy, replacing delimeter with '\0' and pushing matches
 		// Only non-empty matches should be pushed
@@ -4073,11 +4101,10 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 		delete[] copy;
 	}
 #endif
-
 	//////////////////////////////////////////////////////////////////////////
 	// Plugins: emulate object constructors from known "wme_*.dll" plugins
 	//////////////////////////////////////////////////////////////////////////
-	else if(!DID_FAIL(EmulatePluginCall(_gameRef, stack, thisStack, name))) {
+	else if(!DID_FAIL(EmulatePluginCall(_game, stack, thisStack, name))) {
 		return STATUS_OK;
 	}
 
@@ -4095,11 +4122,12 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::showCursor() {
+	// FoxTail:
 	if (_cursorHidden) {
 		return STATUS_OK;
 	}
 
-	if (!_interactive && _gameRef->_state == GAME_RUNNING) {
+	if (!_interactive && _game->_state == GAME_RUNNING) {
 		if (_cursorNoninteractive) {
 			return drawCursor(_cursorNoninteractive);
 		}
@@ -4117,29 +4145,182 @@ bool BaseGame::showCursor() {
 	return STATUS_FAILED;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::saveGame(int32 slot, const char *desc, bool quickSave) {
-	return SaveLoad::saveGame(slot, desc, quickSave, _gameRef);
-}
+	Common::String filename;
+	getSaveSlotFilename(slot, filename);
 
+	_game->LOG(0, "Saving game '%s'...", filename.c_str());
+
+	pluginEvents().applyEvent(WME_EVENT_GAME_BEFORE_SAVE, nullptr);
+	applyEvent("BeforeSave", true);
+
+	bool ret;
+
+	_indicatorDisplay = true;
+	_indicatorProgress = 0;
+	_hasDrawnSaveLoadImage = false;
+
+	BasePersistenceManager *pm = new BasePersistenceManager();
+	if (DID_SUCCEED(ret = pm->initSave(desc))) {
+		if (!quickSave) {
+			SAFE_DELETE(_saveLoadImage);
+			if (_saveImageName.size())
+				_saveLoadImage = _game->_renderer->createSurface();
+			if (!_saveLoadImage || DID_FAIL(_saveLoadImage->create(_saveImageName, true, 0, 0, 0))) {
+				SAFE_DELETE(_saveLoadImage);
+			}
+		}
+		if (DID_SUCCEED(ret = SystemClassRegistry::getInstance()->saveTable(_game, pm, quickSave))) {
+			if (DID_SUCCEED(ret = SystemClassRegistry::getInstance()->saveInstances(_game, pm, quickSave))) {
+				pm->putDWORD(BaseEngine::instance().getRandomSource()->getSeed());
+				if (DID_SUCCEED(ret = pm->saveFile(filename))) {
+					ConfMan.setInt("most_recent_saveslot", slot);
+					ConfMan.flushToDisk();
+				}
+			}
+		}
+	}
+
+	delete pm;
+	_indicatorDisplay = false;
+
+	// added render step after saving game
+	_renderer->endSaveLoad();
+
+	SAFE_DELETE(_saveLoadImage);
+
+	return ret;
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::loadGame(uint32 slot) {
-	//_gameRef->LOG(0, "Load start %d", BaseUtils::GetUsedMemMB());
+	//_game->LOG(0, "Load start %d", BaseUtils::GetUsedMemMB());
 
 	_loading = false;
 	_scheduledLoadSlot = -1;
 
-	Common::String filename = SaveLoad::getSaveSlotFilename(slot);
+	Common::String filename;
+	getSaveSlotFilename(slot, filename);
 
 	return loadGame(filename.c_str());
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::loadGame(const char *filename) {
-	return SaveLoad::loadGame(filename, _gameRef);
+	LOG(0, "Loading game '%s'...", filename);
+
+	bool ret;
+
+	// added stopping video before load save
+	stopVideo();
+
+	SAFE_DELETE(_saveLoadImage);
+	if (_loadImageName.size()) {
+		_saveLoadImage = _game->_renderer->createSurface();
+
+		if (!_saveLoadImage || DID_FAIL(_saveLoadImage->create(_loadImageName, true, 0, 0, 0))) {
+			SAFE_DELETE(_saveLoadImage);
+		}
+	}
+
+	_loadInProgress = true;
+	_indicatorDisplay = true;
+	_indicatorProgress = 0;
+	_hasDrawnSaveLoadImage = false;
+
+	pluginEvents().clearEvents();
+
+	BasePersistenceManager *pm = new BasePersistenceManager();
+	if (DID_SUCCEED(ret = pm->initLoad(filename))) {
+		//if (DID_SUCCEED(ret = cleanup())) {
+		if (DID_SUCCEED(ret = SystemClassRegistry::getInstance()->loadTable(_game, pm))) {
+			if (DID_SUCCEED(ret = SystemClassRegistry::getInstance()->loadInstances(_game, pm))) {
+				// Restore random-seed:
+				BaseEngine::instance().getRandomSource()->setSeed(pm->getDWORD());
+
+				// data initialization after load
+				initAfterLoad();
+
+				pluginEvents().applyEvent(WME_EVENT_GAME_AFTER_LOAD, nullptr);
+				applyEvent("AfterLoad", true);
+
+				displayContent(true, false);
+				//_renderer->flip();
+
+				//accessUnpause();
+			}
+		}
+	}
+
+	_indicatorDisplay = false;
+	delete pm;
+	_loadInProgress = false;
+
+	// added render step after loadng game
+	_renderer->endSaveLoad();
+
+	SAFE_DELETE(_saveLoadImage);
+
+	//BaseEngine::LOG(0, "Load end %d", BaseUtils::GetUsedMemMB());
+
+	// AdGame:
+	if (DID_SUCCEED(ret)) {
+		SystemClassRegistry::getInstance()->enumInstances(afterLoadRegion, "AdRegion", nullptr);
+	}
+	return ret;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::initAfterLoad() {
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadRegion,   "BaseRegion",   nullptr);
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadSubFrame, "BaseSubFrame", nullptr);
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadSound,    "BaseSound",    nullptr);
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadFont,     "BaseFontTT",   nullptr);
+#ifdef ENABLE_WME3D
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadXModel,   "XModel",       nullptr);
+#endif
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadScript,   "ScScript",     nullptr);
+	// AdGame:
+	SystemClassRegistry::getInstance()->enumInstances(afterLoadScene,    "AdScene",      nullptr);
+	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadScene(void *scene, void *data) {
+	((AdScene *)scene)->afterLoad();
+}
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadRegion(void *region, void *data) {
+	((BaseRegion *)region)->createRegion();
+}
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadSubFrame(void *subframe, void *data) {
+	((BaseSubFrame *)subframe)->setSurfaceSimple();
+}
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadSound(void *sound, void *data) {
+	((BaseSound *)sound)->setSoundSimple();
+}
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadFont(void *font, void *data) {
+	((BaseFont *)font)->afterLoad();
+}
+
+#ifdef ENABLE_WME3D
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadXModel(void *model, void *data) {
+	((XModel *)model)->initializeSimple();
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::afterLoadScript(void *script, void *data) {
+	((ScScript *)script)->afterLoad();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -4178,10 +4359,9 @@ bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32
 		return STATUS_FAILED;
 	}
 
-	delete _music[channel];
-	_music[channel] = nullptr;
+	SAFE_DELETE(_music[channel]);
 
-	_music[channel] = new BaseSound(_gameRef);
+	_music[channel] = new BaseSound(_game);
 	if (_music[channel] && DID_SUCCEED(_music[channel]->setSound(filename, Audio::Mixer::kMusicSoundType, true))) {
 		if (_musicStartTime[channel]) {
 			_music[channel]->setPositionTime(_musicStartTime[channel]);
@@ -4196,7 +4376,6 @@ bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32
 		return STATUS_FAILED;
 	}
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::stopMusic(int channel) {
@@ -4214,7 +4393,6 @@ bool BaseGame::stopMusic(int channel) {
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::pauseMusic(int channel) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
@@ -4229,7 +4407,6 @@ bool BaseGame::pauseMusic(int channel) {
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::resumeMusic(int channel) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
@@ -4243,7 +4420,6 @@ bool BaseGame::resumeMusic(int channel) {
 		return STATUS_FAILED;
 	}
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::setMusicStartTime(int channel, uint32 time) {
@@ -4261,75 +4437,130 @@ bool BaseGame::setMusicStartTime(int channel, uint32 time) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::updateMusicCrossfade() {
-	if (!_musicCrossfadeRunning) {
-		return STATUS_OK;
-	}
-	if (_gameRef->_state == GAME_FROZEN) {
-		return STATUS_OK;
+bool BaseGame::loadSettings(const char *filename) {
+	TOKEN_TABLE_START(commands)
+	TOKEN_TABLE(SETTINGS)
+	TOKEN_TABLE(GAME)
+	TOKEN_TABLE(STRING_TABLE)
+	TOKEN_TABLE(RESOLUTION)
+	TOKEN_TABLE(REQUIRE_3D_ACCELERATION)
+	TOKEN_TABLE(REQUIRE_SOUND)
+	TOKEN_TABLE(HWTL_MODE)
+	TOKEN_TABLE(ALLOW_WINDOWED_MODE)
+	TOKEN_TABLE(ALLOW_ACCESSIBILITY_TAB)
+	TOKEN_TABLE(ALLOW_ABOUT_TAB)
+	TOKEN_TABLE(ALLOW_ADVANCED)
+	TOKEN_TABLE(ALLOW_DESKTOP_RES)
+	TOKEN_TABLE(REGISTRY_PATH)
+	TOKEN_TABLE(RICH_SAVED_GAMES)
+	TOKEN_TABLE(SAVED_GAME_EXT)
+	TOKEN_TABLE(GUID)
+	TOKEN_TABLE_END
+
+	char *origBuffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	if (origBuffer == nullptr) {
+		BaseEngine::LOG(0, "BaseGame::LoadSettings failed for file '%s'", filename);
+		return STATUS_FAILED;
 	}
 
-	if (_musicCrossfadeChannel1 < 0 || _musicCrossfadeChannel1 >= NUM_MUSIC_CHANNELS || !_music[_musicCrossfadeChannel1]) {
-		_musicCrossfadeRunning = false;
-		return STATUS_OK;
+	bool ret = STATUS_OK;
+
+	char *buffer = origBuffer;
+	char *params;
+	int cmd;
+	BaseParser parser(_game);
+
+	if (parser.getCommand(&buffer, commands, &params) != TOKEN_SETTINGS) {
+		BaseEngine::LOG(0, "'SETTINGS' keyword expected in game settings file.");
+		return STATUS_FAILED;
 	}
-	if (_musicCrossfadeChannel2 < 0 || _musicCrossfadeChannel2 >= NUM_MUSIC_CHANNELS || !_music[_musicCrossfadeChannel2]) {
-		_musicCrossfadeRunning = false;
-		return STATUS_OK;
-	}
-
-	if (!_music[_musicCrossfadeChannel1]->isPlaying()) {
-		_music[_musicCrossfadeChannel1]->play();
-	}
-	if (!_music[_musicCrossfadeChannel2]->isPlaying()) {
-		_music[_musicCrossfadeChannel2]->play();
-	}
-
-	uint32 currentTime = _gameRef->getLiveTimer()->getTime() - _musicCrossfadeStartTime;
-
-	if (currentTime >= _musicCrossfadeLength) {
-		_musicCrossfadeRunning = false;
-
-		if (_musicCrossfadeVolume2 == 0) {
-			_music[_musicCrossfadeChannel2]->stop();
-			_music[_musicCrossfadeChannel2]->setVolumePercent(100);
-		} else {
-			_music[_musicCrossfadeChannel2]->setVolumePercent(_musicCrossfadeVolume2);
-		}
-
-		if (_musicCrossfadeChannel1 != _musicCrossfadeChannel2) {
-			if (_musicCrossfadeVolume1 == 0) {
-				_music[_musicCrossfadeChannel1]->stop();
-				_music[_musicCrossfadeChannel1]->setVolumePercent(100);
-			} else {
-				_music[_musicCrossfadeChannel1]->setVolumePercent(_musicCrossfadeVolume1);
+	buffer = params;
+	while ((cmd = parser.getCommand(&buffer, commands, &params)) > 0) {
+		switch (cmd) {
+			case TOKEN_GAME: {
+				SAFE_DELETE_ARRAY(_settingsGameFile);
+				size_t gameFileSize = strlen(params) + 1;
+				_settingsGameFile = new char[gameFileSize];
+				Common::strcpy_s(_settingsGameFile, gameFileSize, params);
+				break;
 			}
-		}
 
-		if (_musicCrossfadeSwap) {
-			// swap channels
-			BaseSound *dummy = _music[_musicCrossfadeChannel1];
-			int dummyInt = _musicStartTime[_musicCrossfadeChannel1];
+			case TOKEN_STRING_TABLE:
+				if (DID_FAIL(_stringTable->loadFile(params))) {
+					cmd = PARSERR_GENERIC;
+				}
+				break;
 
-			_music[_musicCrossfadeChannel1] = _music[_musicCrossfadeChannel2];
-			_musicStartTime[_musicCrossfadeChannel1] = _musicStartTime[_musicCrossfadeChannel2];
+			case TOKEN_RESOLUTION:
+				parser.scanStr(params, "%d,%d", &_settingsResWidth, &_settingsResHeight);
+				break;
 
-			_music[_musicCrossfadeChannel2] = dummy;
-			_musicStartTime[_musicCrossfadeChannel2] = dummyInt;
-		}
-	} else {
-		float progress = (float)currentTime / (float)_musicCrossfadeLength;
-		int volumeDelta = (int)((_musicCrossfadeVolume1 - _musicCrossfadeVolume2)*progress);
-		_music[_musicCrossfadeChannel2]->setVolumePercent(_musicCrossfadeVolume1 - volumeDelta);
-		BaseEngine::LOG(0, "Setting music channel %d volume to %d", _musicCrossfadeChannel2, _musicCrossfadeVolume1 - volumeDelta);
+			case TOKEN_REQUIRE_3D_ACCELERATION:
+				parser.scanStr(params, "%b", &_settingsRequireAcceleration);
+				break;
 
-		if (_musicCrossfadeChannel1 != _musicCrossfadeChannel2) {
-			_music[_musicCrossfadeChannel1]->setVolumePercent(_musicCrossfadeVolume2 + volumeDelta);
-			BaseEngine::LOG(0, "Setting music channel %d volume to %d", _musicCrossfadeChannel1, _musicCrossfadeVolume2 + volumeDelta);
+			case TOKEN_REQUIRE_SOUND:
+				parser.scanStr(params, "%b", &_settingsRequireSound);
+				break;
+
+			case TOKEN_HWTL_MODE:
+				parser.scanStr(params, "%d", &_settingsTLMode);
+				break;
+
+			case TOKEN_ALLOW_WINDOWED_MODE:
+				parser.scanStr(params, "%b", &_settingsAllowWindowed);
+				break;
+
+			case TOKEN_ALLOW_DESKTOP_RES:
+				parser.scanStr(params, "%b", &_settingsAllowDesktopRes);
+				break;
+
+			case TOKEN_ALLOW_ADVANCED:
+				parser.scanStr(params, "%b", &_settingsAllowAdvanced);
+				break;
+
+			case TOKEN_ALLOW_ACCESSIBILITY_TAB:
+				parser.scanStr(params, "%b", &_settingsAllowAccessTab);
+				break;
+
+			case TOKEN_ALLOW_ABOUT_TAB:
+				parser.scanStr(params, "%b", &_settingsAllowAboutTab);
+				break;
+
+			case TOKEN_REGISTRY_PATH:
+				//BaseEngine::instance().getRegistry()->setBasePath(params);
+				break;
+
+			case TOKEN_RICH_SAVED_GAMES:
+				parser.scanStr(params, "%b", &_richSavedGames);
+				break;
+
+			case TOKEN_SAVED_GAME_EXT:
+				_savedGameExt = params;
+				break;
+
+			case TOKEN_GUID:
+				break;
+
+			default:
+				break;
 		}
 	}
+	if (cmd == PARSERR_TOKENNOTFOUND) {
+		BaseEngine::LOG(0, "Syntax error in game settings '%s'", filename);
+		ret = STATUS_FAILED;
+	}
+	if (cmd == PARSERR_GENERIC) {
+		BaseEngine::LOG(0, "Error loading game settings '%s'", filename);
+		ret = STATUS_FAILED;
+	}
 
-	return STATUS_OK;
+	_settingsAllowWindowed = true;
+	_compressedSavegames = true;
+
+	delete[] origBuffer;
+
+	return ret;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -4390,10 +4621,20 @@ bool BaseGame::persist(BasePersistenceManager *persistMgr) {
 	persistMgr->transferPtr(TMEMBER_PTR(_videoFont));
 	persistMgr->transferBool(TMEMBER(_videoSubtitles));
 
-	_timerNormal.persist(persistMgr);
-	_timerLive.persist(persistMgr);
+	persistMgr->transferUint32(TMEMBER(_timer));
+	persistMgr->transferUint32(TMEMBER(_timerDelta));
+	persistMgr->transferUint32(TMEMBER(_timerLast));
 
-	_renderer->persistSaveLoadImages(persistMgr);
+	persistMgr->transferUint32(TMEMBER(_liveTimer));
+	persistMgr->transferUint32(TMEMBER(_liveTimerDelta));
+	persistMgr->transferUint32(TMEMBER(_liveTimerLast));
+
+	persistMgr->transferString(TMEMBER(_loadImageName));
+	persistMgr->transferString(TMEMBER(_saveImageName));
+	persistMgr->transferSint32(TMEMBER(_saveImageX));
+	persistMgr->transferSint32(TMEMBER(_saveImageY));
+	persistMgr->transferSint32(TMEMBER(_loadImageX));
+	persistMgr->transferSint32(TMEMBER(_loadImageY));
 
 #ifdef ENABLE_WME3D
 	if (BaseEngine::instance().getFlags() & GF_3D) {
@@ -4423,8 +4664,9 @@ bool BaseGame::persist(BasePersistenceManager *persistMgr) {
 	persistMgr->transferBool(TMEMBER(_cursorHidden));
 
 	if (persistMgr->checkVersion(1, 3, 1)) {
-		_settings->persist(persistMgr);
+		_stringTable->persist(persistMgr);
 	}
+
 	//PersistMgr->Transfer(TMEMBER(m_AccessShieldWin));
 
 	if (!persistMgr->getIsSaving()) {
@@ -4433,7 +4675,6 @@ bool BaseGame::persist(BasePersistenceManager *persistMgr) {
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::focusWindow(UIWindow *window) {
@@ -4445,10 +4686,10 @@ bool BaseGame::focusWindow(UIWindow *window) {
 				_windows.removeAt(i);
 				_windows.add(window);
 
-				_gameRef->_focusedWindow = window;
+				_game->_focusedWindow = window;
 			}
 
-			if (window->_mode == WINDOW_NORMAL && prev != window && _gameRef->validObject(prev) && (prev->_mode == WINDOW_EXCLUSIVE || prev->_mode == WINDOW_SYSTEM_EXCLUSIVE)) {
+			if (window->_mode == WINDOW_NORMAL && prev != window && _game->validObject(prev) && (prev->_mode == WINDOW_EXCLUSIVE || prev->_mode == WINDOW_SYSTEM_EXCLUSIVE)) {
 				return focusWindow(prev);
 			} else {
 				return STATUS_OK;
@@ -4457,7 +4698,6 @@ bool BaseGame::focusWindow(UIWindow *window) {
 	}
 	return STATUS_FAILED;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::freeze(bool includingMusic) {
@@ -4473,7 +4713,6 @@ bool BaseGame::freeze(bool includingMusic) {
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::unfreeze() {
@@ -4507,15 +4746,17 @@ bool BaseGame::handleKeypress(Common::Event *event, bool printable) {
 		return true;
 	}
 
+	//if (HandleAccessKey(Printable, CharCode, KeyData))
+	//	return true;
+
 	_keyboardState->handleKeyPress(event);
 	_keyboardState->readKey(event);
-// TODO
 
 	if (_focusedWindow) {
-		if (!_gameRef->_focusedWindow->handleKeypress(event, _keyboardState->isCurrentPrintable())) {
+		if (!_game->_focusedWindow->handleKeypress(event, _keyboardState->isCurrentPrintable())) {
 			/*if (event->type != SDL_TEXTINPUT) {*/
-			if (_gameRef->_focusedWindow->canHandleEvent("Keypress")) {
-				_gameRef->_focusedWindow->applyEvent("Keypress");
+			if (_game->_focusedWindow->canHandleEvent("Keypress")) {
+				_game->_focusedWindow->applyEvent("Keypress");
 			} else {
 				applyEvent("Keypress");
 			}
@@ -4534,22 +4775,89 @@ void BaseGame::handleKeyRelease(Common::Event *event) {
 	_keyboardState->handleKeyRelease(event);
 }
 
+//////////////////////////////////////////////////////////////////////////
+/*bool CBGame::HandleAccessKey(bool Printable, DWORD CharCode, DWORD KeyData) {
+	if (m_AccessKeyboardEnabled) {
+		if (CharCode == VK_TAB && (CBUtils::IsKeyDown(VK_CONTROL) || CBUtils::IsKeyDown(VK_RCONTROL))) {
+			CBObject *obj = NULL;
+			if (CBUtils::IsKeyDown(VK_SHIFT) || CBUtils::IsKeyDown(VK_RSHIFT)) {
+				obj = m_AccessMgr->GetPrevObject();
+			} else {
+				obj = m_AccessMgr->GetNextObject();
+			}
+			return true;
+		}
+	}
+	if (Printable && m_AccessKeyboardPause) {
+		if (CharCode == VK_SPACE && (CBUtils::IsKeyDown(VK_CONTROL) || CBUtils::IsKeyDown(VK_RCONTROL))) {
+			m_AccessGlobalPaused = !m_AccessGlobalPaused;
+			if (m_AccessGlobalPaused)
+				AccessPause();
+			else
+				AccessUnpause();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+HRESULT CBGame::AccessPause() {
+	m_AccessGlobalPaused = true;
+
+	if (m_AccessShieldWin)
+		UnregisterObject(m_AccessShieldWin);
+
+	m_AccessShieldWin = new CUIWindow(this);
+	m_Windows.Add(m_AccessShieldWin);
+	RegisterObject(m_AccessShieldWin);
+
+	m_AccessShieldWin->m_PosX = m_AccessShieldWin->m_PosY = 0;
+	m_AccessShieldWin->m_Width = m_Renderer->m_Width;
+	m_AccessShieldWin->m_Height = m_Renderer->m_Height;
+
+	CUIText *Sta = new CUIText(Game);
+	Sta->m_Parent = m_AccessShieldWin;
+	m_AccessShieldWin->m_Widgets.Add(Sta);
+	Sta->SetText((char *)m_StringTable->ExpandStatic("/SYSENG0040/Game paused. Press Ctrl+Space to resume."));
+	Sta->m_SharedFonts = true;
+	Sta->m_Font = m_SystemFont;
+	Sta->SizeToFit();
+	Sta->m_PosY = m_AccessShieldWin->m_Height - Sta->m_Height;
+	Sta->m_PosX = (m_AccessShieldWin->m_Width - Sta->m_Width) / 2;
+
+	m_AccessShieldWin->m_Visible = true;
+	m_AccessShieldWin->GoSystemExclusive();
+
+	return S_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+HRESULT CBGame::AccessUnpause() {
+	m_AccessGlobalPaused = false;
+	if (m_AccessShieldWin) {
+		m_AccessShieldWin->Close();
+		UnregisterObject(m_AccessShieldWin);
+		m_AccessShieldWin = NULL;
+	}
+	return S_OK;
+}*/
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::handleMouseWheel(int32 delta) {
 	bool handled = false;
 	if (_focusedWindow) {
-		handled = _gameRef->_focusedWindow->handleMouseWheel(delta);
+		handled = _game->_focusedWindow->handleMouseWheel(delta);
 
 		if (!handled) {
-			if (delta < 0 && _gameRef->_focusedWindow->canHandleEvent("MouseWheelDown")) {
-				_gameRef->_focusedWindow->applyEvent("MouseWheelDown");
+			if (delta < 0 && _game->_focusedWindow->canHandleEvent("MouseWheelDown")) {
+				_game->_focusedWindow->applyEvent("MouseWheelDown");
 				handled = true;
-			} else if (_gameRef->_focusedWindow->canHandleEvent("MouseWheelUp")) {
-				_gameRef->_focusedWindow->applyEvent("MouseWheelUp");
+			} else if (_game->_focusedWindow->canHandleEvent("MouseWheelUp")) {
+				_game->_focusedWindow->applyEvent("MouseWheelUp");
 				handled = true;
 			}
-
 		}
 	}
 
@@ -4565,16 +4873,6 @@ bool BaseGame::handleMouseWheel(int32 delta) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::handleCustomActionStart(BaseGameCustomAction action) {
-	return false;
-}
-
-//////////////////////////////////////////////////////////////////////////
-bool BaseGame::handleCustomActionEnd(BaseGameCustomAction action) {
-	return false;
-}
-
-//////////////////////////////////////////////////////////////////////////
 bool BaseGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor) const {
 	if (verMajor) {
 		*verMajor = DCGF_VER_MAJOR;
@@ -4583,46 +4881,91 @@ bool BaseGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *
 		*verMinor = DCGF_VER_MINOR;
 	}
 
-	if (extMajor) {
+	if (extMajor)
 		*extMajor = 0;
-	}
-	if (extMinor) {
+	if (extMinor)
 		*extMinor = 0;
-	}
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::setWindowTitle() {
 	if (_renderer) {
 		char title[512];
 		Common::strlcpy(title, _caption[0], 512);
-		if (title[0] != '\0') {
+		if (title[0] != '\0')
 			Common::strlcat(title, " - ", 512);
-		}
 		Common::strlcat(title, "Wintermute Engine", 512);
 
-
-		Utf8String utf8Title;
-		if (_textEncoding == TEXT_UTF8) {
-			utf8Title = Utf8String(title);
-		} else {
-			warning("BaseGame::SetWindowTitle - Ignoring textencoding");
-			utf8Title = Utf8String(title);
-			/*WideString wstr = StringUtil::AnsiToWide(Title);
-			title = StringUtil::WideToUtf8(wstr);*/
-		}
-		warning("BaseGame::SetWindowTitle: Ignoring value: %s", utf8Title.c_str());
+		// ignoring setting window title
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::getSaveSlotFilename(int slot, Common::String &filename) {
+	BasePersistenceManager *pm = new BasePersistenceManager();
+	if (pm) {
+		filename = pm->getFilenameForSlot(slot);
+		delete pm;
+		debugC(kWintermuteDebugSaveGame, "getSaveSlotFileName(%d) = %s", slot, filename.c_str());
+	}
+
+	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::getSaveDir(char *buffer) {
+	// this should not be used
+	return STATUS_FAILED;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::getSaveSlotDescription(int slot, Common::String &description) {
+	Common::String filename;
+	getSaveSlotFilename(slot, filename);
+	BasePersistenceManager *pm = new BasePersistenceManager();
+	if (!pm)
+		return STATUS_FAILED;
+		
+	if (DID_FAIL(pm->initLoad(filename))) {
+		delete pm;
+		return STATUS_FAILED;
+	}
+
+	description = pm->_savedDescription;
+	delete pm;
+
+	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::isSaveSlotUsed(int slot) {
+	Common::String filename;
+	getSaveSlotFilename(slot, filename);
+	BasePersistenceManager *pm = new BasePersistenceManager();
+	bool ret = pm->getSaveExists(slot);
+	delete pm;
+
+	return ret;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::emptySaveSlot(int slot) {
+	Common::String filename;
+	getSaveSlotFilename(slot, filename);
+	BasePersistenceManager *pm = new BasePersistenceManager();
+
+	((WintermuteEngine *)g_engine)->getSaveFileMan()->removeSavefile(pm->getFilenameForSlot(slot));
+	delete pm;
+
+	return STATUS_OK;
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::setActiveObject(BaseObject *obj) {
 	// not-active when game is frozen
-	if (obj && !_gameRef->_interactive && !obj->_nonIntMouseEvents) {
+	if (obj && !_game->_interactive && !obj->_nonIntMouseEvents) {
 		obj = nullptr;
 	}
 
@@ -4633,15 +4976,15 @@ bool BaseGame::setActiveObject(BaseObject *obj) {
 	if (_activeObject) {
 		_activeObject->applyEvent("MouseLeave");
 	}
-	//if (ValidObject(_activeObject)) _activeObject->applyEvent("MouseLeave");
+	// if (ValidObject(_activeObject)) _activeObject->applyEvent("MouseLeave");
 	_activeObject = obj;
 	if (_activeObject) {
+		//m_AccessMgr->Speak(m_ActiveObject->GetAccessCaption(), TTS_CAPTION);
 		_activeObject->applyEvent("MouseEntry");
 	}
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::pushViewport(BaseViewport *viewport) {
@@ -4657,94 +5000,80 @@ bool BaseGame::pushViewport(BaseViewport *viewport) {
 	return STATUS_OK;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::popViewport() {
 	_viewportSP--;
-	if (_viewportSP < -1) {
-		_gameRef->LOG(0, "Fatal: Viewport stack underflow!");
-	}
+	if (_viewportSP < -1)
+		_game->LOG(0, "Fatal: Viewport stack underflow!");
 
-	if (_viewportSP >= 0 && _viewportSP < _viewportStack.getSize()) {
+	if (_viewportSP >= 0 && _viewportSP < _viewportStack.getSize())
 		_renderer->setViewport(_viewportStack[_viewportSP]->getRect());
-	} else {
+	else
 		_renderer->setViewport(_renderer->_drawOffsetX,
 		                      _renderer->_drawOffsetY,
 		                      _renderer->getWidth() + _renderer->_drawOffsetX,
 		                      _renderer->getHeight() + _renderer->_drawOffsetY);
-	}
 
 	return STATUS_OK;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::getCurrentViewportRect(Common::Rect32 *rect, bool *custom) const {
-	if (rect == nullptr) {
+	if (rect == nullptr)
 		return STATUS_FAILED;
-	} else {
+	else {
 		if (_viewportSP >= 0) {
 			BasePlatform::copyRect(rect, _viewportStack[_viewportSP]->getRect());
 			if (custom) {
 				*custom = true;
 			}
 		} else {
+			// SetRect(Rect, 0, 0, m_Renderer->m_Width, m_Renderer->m_Height);
 			BasePlatform::setRect(rect, _renderer->_drawOffsetX,
 			              _renderer->_drawOffsetY,
 			              _renderer->getWidth() + _renderer->_drawOffsetX,
 			              _renderer->getHeight() + _renderer->_drawOffsetY);
-			if (custom) {
+			if (custom)
 				*custom = false;
-			}
 		}
 
 		return STATUS_OK;
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::getCurrentViewportOffset(int *offsetX, int *offsetY) const {
 	if (_viewportSP >= 0) {
-		if (offsetX) {
+		if (offsetX)
 			*offsetX = _viewportStack[_viewportSP]->_offsetX;
-		}
-		if (offsetY) {
+		if (offsetY)
 			*offsetY = _viewportStack[_viewportSP]->_offsetY;
-		}
 	} else {
-		if (offsetX) {
+		if (offsetX)
 			*offsetX = 0;
-		}
-		if (offsetY) {
+		if (offsetY)
 			*offsetY = 0;
-		}
 	}
 
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::windowLoadHook(UIWindow *win, char **buf, char **params) {
 	return STATUS_FAILED;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::windowScriptMethodHook(UIWindow *win, ScScript *script, ScStack *stack, const char *name) {
 	return STATUS_FAILED;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::setInteractive(bool state) {
 	_interactive = state;
-	if (_transMgr) {
+	if (_transMgr)
 		_transMgr->_origInteractive = state;
-	}
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 void BaseGame::resetMousePos() {
@@ -4752,21 +5081,128 @@ void BaseGame::resetMousePos() {
 	p.x = _mousePos.x + _renderer->_drawOffsetX;
 	p.y = _mousePos.y + _renderer->_drawOffsetY;
 
+	//CBPlatform::ClientToScreen(Game->m_Renderer->m_Window, &p);
 	BasePlatform::setCursorPos(p.x, p.y);
 }
 
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::setResourceModule(void *resModule) {
+	// empty
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::displayContent(bool doUpdate, bool displayAll) {
 	return STATUS_OK;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::displayContentSimple() {
 	// clear screen
 	_renderer->clear();
-	_renderer->displayIndicator();
+	if (_indicatorDisplay) {
+#ifdef ENABLE_FOXTAIL
+		if (BaseEngine::instance().isFoxTail())
+			displayIndicatorFoxTail();
+		else
+#endif
+		displayIndicator();
+	}
+
+	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::displayIndicator() {
+	if (_saveLoadImage && !_hasDrawnSaveLoadImage) {
+		Common::Rect32 rc;
+		BasePlatform::setRect(&rc, 0, 0, _saveLoadImage->getWidth(), _saveLoadImage->getHeight());
+		if (_loadInProgress)
+			_saveLoadImage->displayTrans(_loadImageX, _loadImageY, rc);
+		else
+			_saveLoadImage->displayTrans(_saveImageX, _saveImageY, rc);
+		_renderer->flip();
+		_hasDrawnSaveLoadImage = true;
+	}
+
+	// Original whole condition seems has typo with '&&' instead '||' for first part.
+	// Added _indicatorProgress to avoid draw on 0 progress
+	if (!_indicatorDisplay || !_indicatorProgress || _indicatorWidth <= 0 || _indicatorHeight <= 0)
+		return STATUS_OK;
+	int curWidth = (int)(_indicatorWidth * (float)((float)_indicatorProgress / 100.0f));
+	_renderer->fillRect(_indicatorX, _indicatorY, curWidth, _indicatorHeight, _indicatorColor);
+	_renderer->indicatorFlip(_indicatorX, _indicatorY, curWidth, _indicatorHeight);
+
+	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::updateMusicCrossfade() {
+	if (!_musicCrossfadeRunning) {
+		return STATUS_OK;
+	}
+	if (_state == GAME_FROZEN) {
+		return STATUS_OK;
+	}
+
+	if (_musicCrossfadeChannel1 < 0 || _musicCrossfadeChannel1 >= NUM_MUSIC_CHANNELS || !_music[_musicCrossfadeChannel1]) {
+		_musicCrossfadeRunning = false;
+		return STATUS_OK;
+	}
+	if (_musicCrossfadeChannel2 < 0 || _musicCrossfadeChannel2 >= NUM_MUSIC_CHANNELS || !_music[_musicCrossfadeChannel2]) {
+		_musicCrossfadeRunning = false;
+		return STATUS_OK;
+	}
+
+	if (!_music[_musicCrossfadeChannel1]->isPlaying()) {
+		_music[_musicCrossfadeChannel1]->play();
+	}
+	if (!_music[_musicCrossfadeChannel2]->isPlaying()) {
+		_music[_musicCrossfadeChannel2]->play();
+	}
+
+	uint32 currentTime = _game->_liveTimer - _musicCrossfadeStartTime;
+
+	if (currentTime >= _musicCrossfadeLength) {
+		_musicCrossfadeRunning = false;
+
+		if (_musicCrossfadeVolume2 == 0) {
+			_music[_musicCrossfadeChannel2]->stop();
+			_music[_musicCrossfadeChannel2]->setVolumePercent(100);
+		} else {
+			_music[_musicCrossfadeChannel2]->setVolumePercent(_musicCrossfadeVolume2);
+		}
+
+		if (_musicCrossfadeChannel1 != _musicCrossfadeChannel2) {
+			if (_musicCrossfadeVolume1 == 0) {
+				_music[_musicCrossfadeChannel1]->stop();
+				_music[_musicCrossfadeChannel1]->setVolumePercent(100);
+			} else {
+				_music[_musicCrossfadeChannel1]->setVolumePercent(_musicCrossfadeVolume1);
+			}
+		}
+
+		if (_musicCrossfadeSwap) {
+			// swap channels
+			BaseSound *dummy = _music[_musicCrossfadeChannel1];
+			int dummyInt = _musicStartTime[_musicCrossfadeChannel1];
+
+			_music[_musicCrossfadeChannel1] = _music[_musicCrossfadeChannel2];
+			_musicStartTime[_musicCrossfadeChannel1] = _musicStartTime[_musicCrossfadeChannel2];
+
+			_music[_musicCrossfadeChannel2] = dummy;
+			_musicStartTime[_musicCrossfadeChannel2] = dummyInt;
+		}
+	} else {
+		float progress = (float)currentTime / (float)_musicCrossfadeLength;
+		int volumeDelta = (int)((_musicCrossfadeVolume1 - _musicCrossfadeVolume2)*progress);
+		_music[_musicCrossfadeChannel2]->setVolumePercent(_musicCrossfadeVolume1 - volumeDelta);
+		BaseEngine::LOG(0, "Setting music channel %d volume to %d", _musicCrossfadeChannel2, _musicCrossfadeVolume1 - volumeDelta);
+
+		if (_musicCrossfadeChannel1 != _musicCrossfadeChannel2) {
+			_music[_musicCrossfadeChannel1]->setVolumePercent(_musicCrossfadeVolume2 + volumeDelta);
+			BaseEngine::LOG(0, "Setting music channel %d volume to %d", _musicCrossfadeChannel1, _musicCrossfadeVolume2 + volumeDelta);
+		}
+	}
 
 	return STATUS_OK;
 }
@@ -4785,14 +5221,11 @@ void BaseGame::DEBUG_DumpClassRegistry() {
 	warning("DEBUG_DumpClassRegistry - untested");
 	Common::DumpFile *f = new Common::DumpFile;
 	f->open("zz_class_reg_dump.log");
-
 	SystemClassRegistry::getInstance()->dumpClasses(f);
-
 	f->close();
 	delete f;
-	_gameRef->quickMessage("Classes dump completed.");
+	_game->quickMessage("Classes dump completed.");
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::invalidateDeviceObjects() {
@@ -4801,7 +5234,6 @@ bool BaseGame::invalidateDeviceObjects() {
 	}
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::restoreDeviceObjects() {
@@ -4813,10 +5245,9 @@ bool BaseGame::restoreDeviceObjects() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::setWaitCursor(const char *filename) {
-	delete _cursorNoninteractive;
-	_cursorNoninteractive = nullptr;
+	SAFE_DELETE(_cursorNoninteractive);
 
-	_cursorNoninteractive = new BaseSprite(_gameRef);
+	_cursorNoninteractive = new BaseSprite(_game);
 	if (!_cursorNoninteractive || DID_FAIL(_cursorNoninteractive->loadFile(filename))) {
 		SAFE_DELETE(_cursorNoninteractive);
 		return STATUS_FAILED;
@@ -4824,6 +5255,97 @@ bool BaseGame::setWaitCursor(const char *filename) {
 		return STATUS_OK;
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+/*HRESULT CBGame::BindDirectX() {
+	memset(&m_DirectX, 0, sizeof(TDirectXBindings));
+
+	// load libraries
+	m_DirectX.hDDraw = CBPlatform::LoadLibrary("ddraw.dll");
+#ifdef WME_D3D9
+	m_DirectX.hD3D = CBPlatform::LoadLibrary("d3d9.dll");
+#else
+	m_DirectX.hD3D = CBPlatform::LoadLibrary("d3d8.dll");
+	m_DirectX.hDXof = CBPlatform::LoadLibrary("d3dxof.dll");
+#endif
+	m_DirectX.hDSound = CBPlatform::LoadLibrary("dsound.dll");
+
+	// bind DirectDraw
+	if (m_DirectX.hDDraw) {
+		m_DirectX.DirectDrawCreateEx = (DLL_DirectDrawCreateEx)CBPlatform::GetProcAddress(m_DirectX.hDDraw, "DirectDrawCreateEx");
+		m_DirectX.DirectDrawEnumerateEx = (DLL_DirectDrawEnumerateEx)CBPlatform::GetProcAddress(m_DirectX.hDDraw, "DirectDrawEnumerateExA");
+	}
+
+	// bind Direct3D
+	if (m_DirectX.hD3D) {
+#ifdef WME_D3D9
+		m_DirectX.Direct3DCreate = (DLL_Direct3DCreate)CBPlatform::GetProcAddress(m_DirectX.hD3D, "Direct3DCreate9");
+#else
+		m_DirectX.Direct3DCreate = (DLL_Direct3DCreate)CBPlatform::GetProcAddress(m_DirectX.hD3D, "Direct3DCreate8");
+#endif
+	}
+
+	// bind DirectSound
+	if (m_DirectX.hDSound) {
+		m_DirectX.DirectSoundCreate8 = (DLL_DirectSoundCreate8)CBPlatform::GetProcAddress(m_DirectX.hDSound, "DirectSoundCreate8");
+		m_DirectX.DirectSoundEnumerate = (DLL_DirectSoundEnumerate)CBPlatform::GetProcAddress(m_DirectX.hDSound, "DirectSoundEnumerateA");
+	}
+
+#ifndef WME_D3D9
+	// bind DirectXFile
+	if (m_DirectX.hDXof) {
+		m_DirectX.DirectXFileCreate = (DLL_DirectXFileCreate)CBPlatform::GetProcAddress(m_DirectX.hDXof, "DirectXFileCreate");
+	}
+#endif
+	return S_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+HRESULT CBGame::UnBindDirectX() {
+	if (m_DirectX.hDDraw)
+		CBPlatform::FreeLibrary(m_DirectX.hDDraw);
+	if (m_DirectX.hD3D)
+		CBPlatform::FreeLibrary(m_DirectX.hD3D);
+	if (m_DirectX.hDSound)
+		CBPlatform::FreeLibrary(m_DirectX.hDSound);
+#ifndef WME_D3D9
+	if (m_DirectX.hDXof)
+		CBPlatform::FreeLibrary(m_DirectX.hDXof);
+#endif
+	memset(&m_DirectX, 0, sizeof(TDirectXBindings));
+	return S_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::IsDirectXBound() {
+	if (!m_DirectX.hDDraw)
+		return false;
+	if (!m_DirectX.hD3D)
+		return false;
+	if (!m_DirectX.hDSound)
+		return false;
+
+	if (!m_DirectX.Direct3DCreate)
+		return false;
+	if (!m_DirectX.DirectDrawCreateEx)
+		return false;
+	if (!m_DirectX.DirectDrawEnumerateEx)
+		return false;
+	if (!m_DirectX.DirectSoundCreate8)
+		return false;
+	if (!m_DirectX.DirectSoundEnumerate)
+		return false;
+
+#ifndef WME_D3D9
+	if (!m_DirectX.hDXof)
+		return false;
+	if (!m_DirectX.DirectXFileCreate)
+		return false;
+#endif
+
+	return true;
+}*/
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::isVideoPlaying() {
@@ -4838,16 +5360,14 @@ bool BaseGame::isVideoPlaying() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::stopVideo() {
-	if (_videoPlayer->isPlaying()) {
+	if (_videoPlayer->isPlaying())
 		_videoPlayer->stop();
-	}
 	if (_theoraPlayer && _theoraPlayer->isPlaying()) {
 		_theoraPlayer->stop();
 		SAFE_DELETE(_theoraPlayer);
 	}
 	return STATUS_OK;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::drawCursor(BaseSprite *cursor) {
@@ -4867,21 +5387,159 @@ bool BaseGame::renderShadowGeometry() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::storeSaveThumbnail() {
-	delete _cachedThumbnail;
-	_cachedThumbnail = new SaveThumbHelper(this);
-	if (DID_FAIL(_cachedThumbnail->storeThumbnail())) {
-		deleteSaveThumbnail();
-		return false;
-	}
+// IWmeGame
+//////////////////////////////////////////////////////////////////////////
+/*IWmeValue *CBGame::CreateValue() {
+	return new CScValue(this);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::DeleteValue(IWmeValue *Value) {
+	if (Value)
+		delete (CScValue *)Value;
 	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
-void BaseGame::deleteSaveThumbnail() {
-	SAFE_DELETE(_cachedThumbnail);
+IWmeParamSet *CBGame::CreateParamSet() {
+	return new CBParamSet(this);
 }
 
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::DeleteParamSet(IWmeParamSet *ParamSet) {
+	if (ParamSet)
+		delete (CBParamSet *)ParamSet;
+	return true;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SubscribeEvent(IWmeObject *Object, EWmeEvent Event) {
+	return m_PluginMgr->SubscribeEvent(Object, Event);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::UnsubscribeEvent(IWmeObject *Object, EWmeEvent Event) {
+	return m_PluginMgr->UnsubscribeEvent(Object, Event);
+}
+
+//////////////////////////////////////////////////////////////////////////
+IWmeFile *CBGame::OpenFile(const char *Filename) {
+	return (IWmeFile *)m_FileManager->OpenFile((char *)Filename);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::CloseFile(IWmeFile *File) {
+	return SUCCEEDED(m_FileManager->CloseFile((CBFile *)File));
+}
+
+//////////////////////////////////////////////////////////////////////////
+IWmeObject *CBGame::CreateObject(const char *ClassName, IWmeParamSet *Params) {
+	// CScValue* Ret = new CScValue(Game);
+	IWmeObject *Ret = NULL;
+
+	CScStack *Stack = new CScStack(Game);
+	if (Params)
+		((CBParamSet *)Params)->PushToStack(Stack);
+	else
+		Stack->PushInt(0);
+
+	CScStack *ThisStack = new CScStack(Game);
+	ThisStack->PushNULL();
+
+	CScScript *Script = new CScScript(Game, Game->m_ScEngine);
+	CBUtils::SetString(&Script->m_Filename, "<temp script>");
+
+	if (SUCCEEDED(ExternalCall(Script, Stack, ThisStack, (char *)ClassName))) {
+		CBScriptable *Obj = ThisStack->Pop()->GetNative();
+		if (Obj) {
+			// Ret->SetNative(Obj);
+			Obj->m_RefCount++;
+			Ret = Obj;
+		}
+	}
+
+	delete Stack;
+	delete ThisStack;
+	delete Script;
+
+	if (Ret)
+		((CBScriptable *)Ret)->m_RefCount--;
+	return Ret;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// IWmeObject
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SendEvent(const char *EventName) {
+	return CBScriptHolder::SendEvent(EventName);
+}
+
+//////////////////////////////////////////////////////////////////////////
+IWmeValue *CBGame::CallMethod(const char *MethodName, IWmeParamSet *Params) {
+	return CBScriptHolder::CallMethod(MethodName, Params);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName, IWmeValue *Value) {
+	return CBScriptHolder::SetProperty(PropName, Value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName, int Value) {
+	return CBScriptHolder::SetProperty(PropName, Value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName, const char *Value) {
+	return CBScriptHolder::SetProperty(PropName, Value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName, double Value) {
+	return CBScriptHolder::SetProperty(PropName, Value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName, bool Value) {
+	return CBScriptHolder::SetProperty(PropName, Value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName, IWmeObject *Value) {
+	return CBScriptHolder::SetProperty(PropName, Value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool CBGame::SetProperty(const char *PropName) {
+	return CBScriptHolder::SetProperty(PropName);
+}
+
+//////////////////////////////////////////////////////////////////////////
+IWmeValue *CBGame::GetProperty(const char *PropName) {
+	return CBScriptHolder::GetProperty(PropName);
+}
+
+//////////////////////////////////////////////////////////////////////////
+void *CBGame::GetInterface(const char *ClassName) {
+	return CBScriptHolder::GetInterface(ClassName);
+}*/
+
+//////////////////////////////////////////////////////////////////////////
+/*CBObject *CBGame::GetNextAccessObject(CBObject *CurrObject) {
+	if (m_FocusedWindow) {
+		return m_FocusedWindow->GetNextAccessObject(CurrObject);
+	} else
+		return NULL;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+CBObject *CBGame::GetPrevAccessObject(CBObject *CurrObject) {
+	if (m_FocusedWindow) {
+		return m_FocusedWindow->GetPrevAccessObject(CurrObject);
+	} else
+		return NULL;
+}*/
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -4909,6 +5567,11 @@ bool BaseGame::onActivate(bool activate, bool refreshMouse) {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseLeftDown() {
+	if (isVideoPlaying()) {
+		stopVideo ();
+		return STATUS_OK;
+	}
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_CLICK, MOUSE_BUTTON_LEFT);
 	}
@@ -4924,16 +5587,21 @@ bool BaseGame::onMouseLeftDown() {
 		_capturedObject = _activeObject;
 	}
 	_mouseLeftDown = true;
+	//CBPlatform::SetCapture(m_Renderer->m_Window);
 
 	return STATUS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseLeftUp() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_LEFT);
 	}
 
+	//ReleaseCapture();
 	_capturedObject = nullptr;
 	_mouseLeftDown = false;
 
@@ -4948,6 +5616,9 @@ bool BaseGame::onMouseLeftUp() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseLeftDblClick() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_state == GAME_RUNNING && !_interactive) {
 		return STATUS_OK;
 	}
@@ -4967,6 +5638,9 @@ bool BaseGame::onMouseLeftDblClick() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseRightDblClick() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_state == GAME_RUNNING && !_interactive) {
 		return STATUS_OK;
 	}
@@ -4986,6 +5660,9 @@ bool BaseGame::onMouseRightDblClick() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseRightDown() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_CLICK, MOUSE_BUTTON_RIGHT);
 	}
@@ -5001,6 +5678,9 @@ bool BaseGame::onMouseRightDown() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseRightUp() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_RIGHT);
 	}
@@ -5016,6 +5696,9 @@ bool BaseGame::onMouseRightUp() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseMiddleDown() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_state == GAME_RUNNING && !_interactive) {
 		return STATUS_OK;
 	}
@@ -5035,6 +5718,9 @@ bool BaseGame::onMouseMiddleDown() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseMiddleUp() {
+	if (isVideoPlaying())
+		return STATUS_OK;
+
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_MIDDLE);
 	}
@@ -5063,7 +5749,7 @@ bool BaseGame::onPaint() {
 bool BaseGame::onWindowClose() {
 	if (canHandleEvent("QuitGame")) {
 		if (_state != GAME_FROZEN) {
-			_gameRef->applyEvent("QuitGame");
+			_game->applyEvent("QuitGame");
 		}
 		return STATUS_OK;
 	} else {
@@ -5077,12 +5763,12 @@ bool BaseGame::displayDebugInfo() {
 	char str[strLength];
 
 	if (_debugShowFPS) {
-		Common::sprintf_s(str, "FPS: %d", _gameRef->_fps);
+		Common::sprintf_s(str, "FPS: %d", _game->_fps);
 		_systemFont->drawText((byte *)str, 0, 0, 100, TAL_LEFT);
 	}
 
-	if (_gameRef->_debugDebugMode) {
-		if (!_gameRef->_renderer->isWindowed()) {
+	if (_game->_debugDebugMode) {
+		if (!_game->_renderer->isWindowed()) {
 			Common::sprintf_s(str, "Mode: %dx%dx%d", _renderer->getWidth(), _renderer->getHeight(), _renderer->getBPP());
 		} else {
 			Common::sprintf_s(str, "Mode: %dx%d windowed", _renderer->getWidth(), _renderer->getHeight());
@@ -5100,17 +5786,16 @@ bool BaseGame::displayDebugInfo() {
 		Common::sprintf_s(str, "Running scripts: %d (r:%d w:%d p:%d)", scrTotal, scrRunning, scrWaiting, scrPersistent);
 		_systemFont->drawText((byte *)str, 0, 70, _renderer->getWidth(), TAL_RIGHT);
 
-
-		Common::sprintf_s(str, "Timer: %d", getTimer()->getTime());
-		_gameRef->_systemFont->drawText((byte *)str, 0, 130, _renderer->getWidth(), TAL_RIGHT);
+		Common::sprintf_s(str, "Timer: %d", _timer);
+		_game->_systemFont->drawText((byte *)str, 0, 130, _renderer->getWidth(), TAL_RIGHT);
 
 		if (_activeObject != nullptr) {
 			_systemFont->drawText((const byte *)_activeObject->_name, 0, 150, _renderer->getWidth(), TAL_RIGHT);
 		}
 
+		// Display used memory
 		Common::sprintf_s(str, "GfxMem: %dMB", _usedMem / (1024 * 1024));
 		_systemFont->drawText((byte *)str, 0, 170, _renderer->getWidth(), TAL_RIGHT);
-
 	}
 
 	return STATUS_OK;
@@ -5122,7 +5807,6 @@ bool BaseGame::setMaxShadowType(TShadowType maxShadowType) {
 	if (maxShadowType > SHADOW_STENCIL) {
 		maxShadowType = SHADOW_STENCIL;
 	}
-
 	if (maxShadowType < 0) {
 		maxShadowType = SHADOW_NONE;
 	}
@@ -5130,7 +5814,6 @@ bool BaseGame::setMaxShadowType(TShadowType maxShadowType) {
 	if (maxShadowType == SHADOW_FLAT && !_supportsRealTimeShadows) {
 		maxShadowType = SHADOW_SIMPLE;
 	}
-
 	_maxShadowType = maxShadowType;
 
 	return STATUS_OK;
@@ -5138,11 +5821,10 @@ bool BaseGame::setMaxShadowType(TShadowType maxShadowType) {
 
 //////////////////////////////////////////////////////////////////////////
 TShadowType BaseGame::getMaxShadowType(BaseObject *object) {
-	if (!object) {
+	if (!object)
 		return _maxShadowType;
-	} else {
+	else
 		return MIN(_maxShadowType, object->_shadowType);
-	}
 }
 #endif
 
@@ -5178,9 +5860,9 @@ void BaseGame::getMousePos(Common::Point32 *pos) {
 	if (_renderer->_windowed && ::IsZoomed(_renderer->_window)) {
 	    Common::Rect rc;
 	    ::GetClientRect(_renderer->_window, &rc);
-	    Pos->x *= _gameRef->_renderer->_realWidth;
+	    Pos->x *= _game->_renderer->_realWidth;
 	    Pos->x /= (rc.right - rc.left);
-	    Pos->y *= _gameRef->_renderer->_realHeight;
+	    Pos->y *= _game->_renderer->_realHeight;
 	    Pos->y /= (rc.bottom - rc.top);
 	}
 	*/
@@ -5198,6 +5880,7 @@ void BaseGame::getMousePos(Common::Point32 *pos) {
 			newPos.x += _renderer->_drawOffsetX;
 			newPos.y += _renderer->_drawOffsetY;
 
+			//CBPlatform::ClientToScreen(Game->m_Renderer->m_Window, &NewPos);
 			BasePlatform::setCursorPos(newPos.x, newPos.y);
 		}
 	}
@@ -5212,19 +5895,28 @@ bool BaseGame::getFogParams(bool *fogEnabled, uint32 *, float *, float *) {
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-void BaseGame::miniUpdate() { // TODO: Is this really necessary, it used to update sound, but the mixer does that now.
+bool BaseGame::miniUpdate() {
 	if (!_miniUpdateEnabled) {
-		return;
+		return true;
 	}
 
 	if (g_system->getMillis() - _lastMiniUpdate > 200) {
 		_lastMiniUpdate = g_system->getMillis();
 	}
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onScriptShutdown(ScScript *script) {
 	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+void BaseGame::setIndicatorVal(int value) {
+	bool redisplay = (_indicatorProgress != value);
+	_indicatorProgress = value;
+	if (redisplay)
+		displayIndicator();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -5262,6 +5954,16 @@ bool BaseGame::isDoubleClick(int32 buttonIndex) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+bool BaseGame::handleCustomActionStart(BaseGameCustomAction action) {
+	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::handleCustomActionEnd(BaseGameCustomAction action) {
+	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
 void BaseGame::autoSaveOnExit() {
 	_soundMgr->saveSettings();
 
@@ -5283,25 +5985,6 @@ void BaseGame::addMem(int32 bytes) {
 //////////////////////////////////////////////////////////////////////////
 AnsiString BaseGame::getDeviceType() const {
 	return "computer";
-}
-
-//////////////////////////////////////////////////////////////////////////
-bool BaseGame::loadSettings(const char *filename) {
-	return _settings->loadSettings(filename);
-}
-
-//////////////////////////////////////////////////////////////////////////
-void BaseGame::expandStringByStringTable(char **str) const {
-	_settings->expandStringByStringTable(str);
-}
-
-//////////////////////////////////////////////////////////////////////////
-void BaseGame::expandStringByStringTable(Common::String &str) const {
-	_settings->expandStringByStringTable(str);
-}
-
-char *BaseGame::getKeyFromStringTable(const char *str) const {
-	return _settings->getKeyFromStringTable(str);
 }
 
 #ifdef ENABLE_HEROCRAFT
@@ -5337,6 +6020,44 @@ uint8 BaseGame::getFilePartChecksumHc(const char *filename, uint32 begin, uint32
 	return result;
 }
 #endif
+
+#ifdef ENABLE_FOXTAIL
+//////////////////////////////////////////////////////////////////////////
+bool BaseGame::displayIndicatorFoxTail() {
+	_renderer->clear();
+
+	// Original whole condition seems has typo with '&&' instead '||' for first part.
+	// Added _indicatorProgress to avoid draw on 0 progress
+	if (!_indicatorDisplay || !_indicatorProgress || _indicatorWidth <= 0 || _indicatorHeight <= 0)
+		return STATUS_OK;
+	int curWidth = (int)(_indicatorWidth * (float)((float)_indicatorProgress / 100.0f));
+	_renderer->fillRect(_indicatorX, _indicatorY, curWidth, _indicatorHeight, _indicatorColor);
+
+	if (_saveLoadImage) {
+		Common::Rect32 rc;
+		BasePlatform::setRect(&rc, 0, 0, _saveLoadImage->getWidth(), _saveLoadImage->getHeight());
+		if (_loadInProgress)
+			_saveLoadImage->displayTrans(_loadImageX, _loadImageY, rc);
+		else
+			_saveLoadImage->displayTrans(_saveImageX, _saveImageY, rc);
+		_renderer->flip();
+	}
+	_renderer->forcedFlip();
+
+	return STATUS_OK;
+}
+#endif
+
+void BaseGame::getSaveSlotTimestamp(int slot, TimeDate *time) {
+	memset(time, 0, sizeof(TimeDate));
+	Common::String filename;
+	getSaveSlotFilename(slot, filename);
+	BasePersistenceManager *pm = new BasePersistenceManager();
+	if ((pm->initLoad(filename))) {
+		*time = pm->getSavedTimestamp();
+	}
+	delete pm;
+}
 
 Common::String BaseGame::readRegistryString(const Common::String &key, const Common::String &initValue) const {
 	// Game specific hacks:

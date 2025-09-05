@@ -66,6 +66,13 @@ const LingoDec::Handler *getHandler(const Cast *cast, CastMemberID id, const Com
 				return &handler;
 			}
 		}
+		for (const LingoDec::Script *factoryScript : p.second->factories) {
+			for (const LingoDec::Handler &handler : factoryScript->handlers) {
+				if (handler.name == handlerId) {
+					return &handler;
+				}
+			}
+		}
 	}
 	return nullptr;
 }
@@ -379,6 +386,7 @@ void setScriptToDisplay(const ImGuiScript &script) {
 	scriptData->_scripts.push_back(script);
 	scriptData->_current = index;
 	scriptData->_showScript = true;
+	_state->_dbg._scrollToPC = true;
 }
 
 void displayScriptRef(CastMemberID &scriptId) {
@@ -392,6 +400,14 @@ void displayScriptRef(CastMemberID &scriptId) {
 	} else {
 		ImGui::Selectable("  ");
 	}
+}
+
+ImColor brightenColor(const ImColor& color, float factor) {
+	ImVec4 col = color.Value;
+	col.x = CLIP<float>(col.x * factor, 0.0f, 1.0f);
+	col.y = CLIP<float>(col.y * factor, 0.0f, 1.0f);
+	col.z = CLIP<float>(col.z * factor, 0.0f, 1.0f);
+	return ImColor(col);
 }
 
 static void showSettings() {
@@ -561,6 +577,17 @@ void onImGuiCleanup() {
 
 int getSelectedChannel(){
 	return _state ? _state->_selectedChannel : -1;
+}
+
+Common::String formatHandlerName(int scriptId, int castId, Common::String handlerName, ScriptType scriptType, bool childScript) {
+	Common::String formatted = Common::String();
+	// Naming convention: <script id> (<cast id/cast id of parent script>): name of handler: script type
+	if (childScript) {
+		formatted = Common::String::format("%d (p<%d>):%s :%s", scriptId, castId, handlerName.size() ? handlerName.c_str() : "<unnamed>", scriptType2str(scriptType));
+	} else {
+		formatted = Common::String::format("%d (%d) :%s :%s", scriptId, castId, handlerName.size() ? handlerName.c_str() : "<unnamed>", scriptType2str(scriptType));
+	}
+	return formatted;
 }
 
 } // namespace DT

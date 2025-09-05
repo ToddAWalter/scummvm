@@ -47,15 +47,81 @@ const char *modes2[] = {
 	ICON_MS_FORMS_APPS_SCRIPT, "Script",	// forms_apps_script
 };
 
-// These are the score channel colors coming from the Authoring Tool
-const uint32 scoreColors[6] = {
-	0xceceff,
-	0xffffce,
-	0xceffce,
-	0xceffff,
-	0xffceff,
-	0xffce9c,
-};
+#define FRAME_PAGE_SIZE 100
+
+static void buildContinuationData() {
+	if (_state->_loadedContinuationData) {
+		return;
+	}
+
+	Score *score = g_director->getCurrentMovie()->getScore();
+	uint numFrames = score->_scoreCache.size();
+
+	uint numChannels = score->_scoreCache[0]->_sprites.size();
+	_state->_continuationData.resize(numChannels);
+
+	for (int ch = 0; ch < (int)numChannels; ch++) {
+		_state->_continuationData[ch].resize(numFrames);
+
+		uint currentContinuation = 1;
+		for (int f = 0; f < (int)numFrames; f++) {
+			const Frame &frame = *score->_scoreCache[f];
+			Sprite &sprite = *frame._sprites[ch];
+
+			const Frame *prevFrame = (f == 0) ? nullptr : score->_scoreCache[f - 1];
+			Sprite *prevSprite = (prevFrame) ? prevFrame->_sprites[ch] : nullptr;
+
+			if (prevSprite) {
+				if (!(*prevSprite == sprite)) {
+					currentContinuation = f;
+				}
+			} else {
+				currentContinuation = f;
+			}
+
+			_state->_continuationData[ch][f].first = currentContinuation;
+
+#if 0
+			if (ch == 3 && prevSprite && f >= 20 && f < 49) {
+				warning("%02d: st: %d cid: %d sp: %d w: %d h: %d i: %d f: %d b: %d bl: %d in: %d t: %d",
+					f,
+					prevSprite->_spriteType == sprite._spriteType,
+					prevSprite->_castId == sprite._castId,
+					prevSprite->_startPoint == sprite._startPoint,
+					prevSprite->_width == sprite._width,
+					prevSprite->_height == sprite._height,
+					prevSprite->_ink == sprite._ink,
+					prevSprite->_foreColor == sprite._foreColor,
+					prevSprite->_backColor == sprite._backColor,
+					prevSprite->_blendAmount == sprite._blendAmount,
+					prevSprite->_ink == sprite._ink,
+					prevSprite->_thickness == sprite._thickness
+				);
+			}
+#endif
+		}
+
+		currentContinuation = 1;
+		for (int f = (int)numFrames - 1; f >= 0; f--) {
+			const Frame &frame = *score->_scoreCache[f];
+			Sprite &sprite = *frame._sprites[ch];
+
+			const Frame *nextFrame = (f == (int)numFrames - 1) ? nullptr : score->_scoreCache[f + 1];
+			Sprite *nextSprite = (nextFrame) ? nextFrame->_sprites[ch] : nullptr;
+
+			if (nextSprite) {
+				if (!(*nextSprite == sprite)) {
+					currentContinuation = f;
+				}
+			} else {
+				currentContinuation = f;
+			}
+			_state->_continuationData[ch][f].second = currentContinuation;
+		}
+	}
+
+	_state->_loadedContinuationData = true;
+}
 
 static void displayScoreChannel(int ch, int mode, int modeSel) {
 	Score *score = g_director->getCurrentMovie()->getScore();
@@ -109,21 +175,68 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 	numFrames = MIN<uint>(numFrames, kMaxColumnsInTable - 2);
 
 	for (int f = 0; f < (int)numFrames; f++) {
-		Frame &frame = *score->_scoreCache[f + _state->_scoreFrameOffset - 1];
+		int rf = f + _state->_scoreFrameOffset - 1;
+		Frame &frame = *score->_scoreCache[rf];
 		Sprite &sprite = *frame._sprites[ch];
+
+		_state->_colors._contColorIndex = frame._sprites[ch]->_colorcode & 0x07;
+		if (_state->_colors._contColorIndex > 5)
+			_state->_colors._contColorIndex = 0;
 
 		ImGui::TableNextColumn();
 
-		ImGui::PushID(ch * 10000 + f);
+		int startCont = _state->_continuationData[ch][rf].first;
+		int endCont = _state->_continuationData[ch][rf].second;
 
-		if (f + _state->_scoreFrameOffset == (int)currentFrameNum)
+		if (rf + 1 == (int)currentFrameNum)
 			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
 
 		if (f == _state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 &&
 		  ch == _state->_selectedScoreCast.channel && mode <= kModeExtended)
 			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 0.3f, 0.3f, 0.6f)));
 
-		switch (mode) {
+		if (!(startCont == endCont) && (sprite._castId.member || sprite.isQDShape())) {
+			if (_state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 >= startCont &&
+				_state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 <= endCont &&
+				ch == _state->_selectedScoreCast.channel &&
+				mode <= kModeExtended) {
+				ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, _state->_colors._channel_selected_col);
+			} else if (_state->_hoveredScoreCast.frame >= startCont &&
+				_state->_hoveredScoreCast.frame <= endCont &&
+				ch == _state->_hoveredScoreCast.channel) {
+				ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, _state->_colors._channel_hovered_col);
+			} else {
+				if (mode == modeSel)
+					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, _state->_colors._contColors[_state->_colors._contColorIndex]);
+				else
+					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, brightenColor(_state->_colors._contColors[_state->_colors._contColorIndex], 1.5));
+			}
+		}
+
+		int mode1 = mode;
+
+		ImGui::PushID((ch + 10 - mode) * 10000 + f);
+
+		// If the frame is not the start, then don't render any text
+		if (rf != startCont || !(sprite._castId.member || sprite.isQDShape())) {
+			if (rf == endCont && sprite._castId.member && mode == _state->_scoreMode) {
+				ImGui::PushFont(ImGui::GetIO().FontDefault);
+				ImGui::TextUnformatted("\uf819");
+				ImGui::PopFont();
+			} else {
+				if (sprite._castId.member) {
+					ImGui::Selectable("─");
+				} else {
+					ImGui::Selectable("  ");
+				}
+			}
+			mode1 = -1; // Skip cell data rendering
+		}
+
+		switch (mode1) {
+		case -1:
+			break;
+
 		case kModeMember:
 			if (sprite._castId.member)
 				ImGui::Selectable(Common::String::format("%d", sprite._castId.member).c_str());
@@ -151,27 +264,27 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 
 		case kChTempo:
 			if (frame._mainChannels.tempo)
-				ImGui::Text(Common::String::format("%d", frame._mainChannels.tempo).c_str());
+				ImGui::Selectable(Common::String::format("%d", frame._mainChannels.tempo).c_str());
 			break;
 
 		case kChPalette:
 			if (frame._mainChannels.palette.paletteId.member)
-				ImGui::Text(frame._mainChannels.palette.paletteId.asString().c_str());
+				ImGui::Selectable(Common::String::format("%d", frame._mainChannels.palette.paletteId.member).c_str());
 			break;
 
 		case kChTransition:
 			if (frame._mainChannels.transType)
-				ImGui::Text(Common::String::format("%d", frame._mainChannels.transType).c_str());
+				ImGui::Selectable(Common::String::format("%d", frame._mainChannels.transType).c_str());
 			break;
 
 		case kChSound1:
 			if (frame._mainChannels.sound1.member)
-				ImGui::Text(Common::String::format("%d", frame._mainChannels.sound1.member).c_str());
+				ImGui::Selectable(Common::String::format("%d", frame._mainChannels.sound1.member).c_str());
 			break;
 
 		case kChSound2:
 			if (frame._mainChannels.sound2.member)
-				ImGui::Text(Common::String::format("%d", frame._mainChannels.sound2.member).c_str());
+				ImGui::Selectable(Common::String::format("%d", frame._mainChannels.sound2.member).c_str());
 			break;
 
 		case kChScript:
@@ -185,9 +298,23 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 
 		ImGui::PopID();
 
-		if (ImGui::IsItemClicked(0)) {
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
 			_state->_selectedScoreCast.frame = f + _state->_scoreFrameOffset - 1;
 			_state->_selectedScoreCast.channel = ch;
+
+			if (f + _state->_scoreFrameOffset == (int)currentFrameNum) {
+				if (_state->_selectedChannel == ch)
+					_state->_selectedChannel = -1;
+				else
+					_state->_selectedChannel = ch;
+
+				g_director->getCurrentWindow()->render(true);
+			}
+		}
+
+		if (ImGui::IsItemHovered()) {
+			_state->_hoveredScoreCast.frame = f;
+			_state->_hoveredScoreCast.channel = ch;
 		}
 	}
 
@@ -197,6 +324,8 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 void showScore() {
 	if (!_state->_w.score)
 		return;
+
+	buildContinuationData();
 
 	ImVec2 pos(40, 40);
 	ImGui::SetNextWindowPos(pos, ImGuiCond_FirstUseEver);
@@ -222,7 +351,7 @@ void showScore() {
 		if (!numFrames || _state->_selectedScoreCast.channel >= (int)score->_scoreCache[0]->_sprites.size())
 			_state->_selectedScoreCast.channel = 0;
 
-		if (_state->_scoreFrameOffset >= (int) numFrames)
+		if (_state->_scoreFrameOffset >= (int)numFrames)
 			_state->_scoreFrameOffset = 1;
 
 		{ // Render sprite details
@@ -303,11 +432,13 @@ void showScore() {
 			ImGui::BeginChild("Range", ImVec2(100.0f, 20.0f));
 
 			if (castMember || shape) {
-				ImGui::Text("\uf816"); ImGui::SameLine();	// line_start_circle
-				ImGui::Text("  ?"); ImGui::SameLine(50);
+				ImGui::TextUnformatted("\uf816"); ImGui::SameLine();	// line_start_circle
+				// the continuation data is 0-indexed but the frames are 1-indexed
+				ImGui::Text("%4d", _state->_continuationData[_state->_selectedScoreCast.channel][_state->_selectedScoreCast.frame].first + 1); ImGui::SameLine(50);
 				ImGui::SetItemTooltip("Start Frame");
-				ImGui::Text("\uf819"); ImGui::SameLine();	// line_end_square
-				ImGui::Text("  ?"); ImGui::SameLine();
+				ImGui::TextUnformatted("\uf819"); ImGui::SameLine();	// line_end_square
+				// the continuation data is 0-indexed but the frames are 1-indexed
+				ImGui::Text("%4d", _state->_continuationData[_state->_selectedScoreCast.channel][_state->_selectedScoreCast.frame].second + 1); ImGui::SameLine();
 				ImGui::SetItemTooltip("End Frame");
 			}
 
@@ -407,36 +538,16 @@ void showScore() {
 		uint numChannels = score->_scoreCache[0]->_sprites.size();
 		uint tableColumns = MAX(numFrames + 5, 25U); // Set minimal table width to 25
 
-		{  // Render pagination
-			uint frame = 1;
-
-			ImGui::Text("   Jump to frame: ");
-
-			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-
-			do {
-				ImGui::SameLine(0, 20);
-
-				if (ImGui::Selectable(Common::String::format("%d", frame).c_str(), (int) frame == _state->_scoreFrameOffset, 0, ImVec2(30, 10)))
-					_state->_scoreFrameOffset = frame;
-
-				frame += 300;
-			} while (frame < numFrames);
-
-			ImGui::PopStyleVar();
-
-			ImGui::SameLine();
-			ImGui::Text(" of %d", numFrames);
-		}
-
 		if (tableColumns > kMaxColumnsInTable - 2) // Current restriction of ImGui
 			tableColumns = kMaxColumnsInTable - 2;
 
 		ImGuiTableFlags addonFlags = _state->_scoreMode == kModeExtended ? 0 : ImGuiTableFlags_RowBg;
 
+		ImGui::BeginChild("Score table", ImVec2(0, -20));
+
 		if (ImGui::BeginTable("Score", tableColumns + 1,
-							  ImGuiTableFlags_Borders | ImGuiTableFlags_HighlightHoveredColumn |
-								  ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | addonFlags)) {
+					ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY |
+					ImGuiTableFlags_SizingStretchProp | addonFlags)) {
 			ImGuiTableFlags flags = ImGuiTableColumnFlags_WidthFixed;
 
 			ImGui::TableSetupScrollFreeze(1, 2);
@@ -445,7 +556,7 @@ void showScore() {
 
 			ImGui::TableSetupColumn("##", flags);
 			for (uint i = 0; i < tableColumns; i++) {
-				Common::String label = (i + _state->_scoreFrameOffset) % 5 ? " " : Common::String::format("%-2d", i + _state->_scoreFrameOffset);
+				Common::String label = Common::String::format("%-2d", i + _state->_scoreFrameOffset);
 				label += Common::String::format("##l%d", i);
 
 				ImGui::TableSetupColumn(label.c_str(), flags);
@@ -461,7 +572,7 @@ void showScore() {
 
 			const char *selMode = modes[_state->_scoreMode];
 
-			if (ImGui::BeginCombo("##", selMode)) {
+			if (ImGui::BeginCombo("##mode", selMode)) {
 				for (int n = 0; n < ARRAYSIZE(modes); n++) {
 					const bool selected = (_state->_scoreMode == n);
 					if (ImGui::Selectable(modes[n], selected))
@@ -548,6 +659,22 @@ void showScore() {
 			}
 			ImGui::EndTable();
 		}
+
+		ImGui::EndChild();
+
+		{  // Render pagination
+			ImGui::BeginDisabled(numFrames <= FRAME_PAGE_SIZE);
+			ImGui::Text("   Jump to frame:", numFrames);
+			ImGui::SameLine();
+			ImGui::SliderInt("##scorepage", &_state->_scorePageSlider, 0, numFrames / FRAME_PAGE_SIZE, "%d00");
+			_state->_scoreFrameOffset = _state->_scorePageSlider * FRAME_PAGE_SIZE + 1;
+			ImGui::EndDisabled();
+
+			ImGui::SameLine();
+			ImGui::Button(ICON_MS_ALIGN_JUSTIFY_CENTER, ImVec2(20, 20));
+			ImGui::SetItemTooltip("Center View");
+		}
+
 	}
 	ImGui::End();
 }
@@ -564,7 +691,7 @@ void showChannels() {
 
 	if (ImGui::Begin("Channels", &_state->_w.channels)) {
 		Score *score = g_director->getCurrentMovie()->getScore();
-		Frame &frame = *score->_currentFrame;
+		const Frame &frame = *score->_currentFrame;
 
 		CastMemberID defaultPalette = g_director->getCurrentMovie()->_defaultPalette;
 		ImGui::Text("TMPO:   tempo: %d, skipFrameFlag: %d, blend: %d, currentFPS: %d",
@@ -620,10 +747,11 @@ void showChannels() {
 				if (ImGui::Selectable(Common::String::format("%-3d", i + 1).c_str(), isSelected, ImGuiSelectableFlags_SpanAllColumns)) {
 					if (isSelected) {
 						_state->_selectedChannel = -1;
-						g_director->getCurrentWindow()->render(true);
 					 } else {
 						_state->_selectedChannel = i + 1;
 					 }
+
+					g_director->getCurrentWindow()->render(true);
 				}
 
 				ImGui::TableNextColumn();
@@ -669,7 +797,7 @@ void showChannels() {
 						displayScriptRef(sprite._scriptId);
 					} else {
 						ImGui::PushID(i + 1);
-						ImGui::Selectable("  ");
+						ImGui::TextUnformatted("  ");
 						ImGui::PopID();
 					}
 					ImGui::TableNextColumn();

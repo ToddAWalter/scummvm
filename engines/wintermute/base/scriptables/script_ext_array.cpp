@@ -43,7 +43,7 @@ BaseScriptable *makeSXArray(BaseGame *inGame, ScStack *stack) {
 //////////////////////////////////////////////////////////////////////////
 SXArray::SXArray(BaseGame *inGame, ScStack *stack) : BaseScriptable(inGame) {
 	_length = 0;
-	_values = new ScValue(_gameRef);
+	_values = new ScValue(_game);
 
 	int numParams = stack->pop()->getInt(0);
 
@@ -62,7 +62,7 @@ SXArray::SXArray(BaseGame *inGame, ScStack *stack) : BaseScriptable(inGame) {
 //////////////////////////////////////////////////////////////////////////
 SXArray::SXArray(BaseGame *inGame) : BaseScriptable(inGame) {
 	_length = 0;
-	_values = new ScValue(_gameRef);
+	_values = new ScValue(_game);
 }
 
 
@@ -167,13 +167,13 @@ bool SXArray::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack,
 
 
 //////////////////////////////////////////////////////////////////////////
-ScValue *SXArray::scGetProperty(const Common::String &name) {
+ScValue *SXArray::scGetProperty(const char *name) {
 	_scValue->setNULL();
 
 	//////////////////////////////////////////////////////////////////////////
 	// Type
 	//////////////////////////////////////////////////////////////////////////
-	if (name == "Type") {
+	if (strcmp(name, "Type") == 0) {
 		_scValue->setString("array");
 		return _scValue;
 	}
@@ -181,7 +181,7 @@ ScValue *SXArray::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// Length
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "Length") {
+	else if (strcmp(name, "Length") == 0) {
 		_scValue->setInt(_length);
 		return _scValue;
 	}
@@ -191,7 +191,7 @@ ScValue *SXArray::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	else {
 		char paramName[20];
-		if (validNumber(name.c_str(), paramName)) { // TODO: Change to Common::String
+		if (validNumber(name, paramName)) {
 			return _values->getProp(paramName);
 		} else {
 			return _scValue;

@@ -31,7 +31,6 @@
 #include "engines/wintermute/base/base_engine.h"
 #include "engines/wintermute/base/base_persistence_manager.h"
 #include "engines/wintermute/platform_osystem.h"
-#include "engines/wintermute/math/vector2.h"
 #include "engines/wintermute/base/gfx/base_image.h"
 #include "engines/wintermute/base/save_thumb_helper.h"
 #include "engines/wintermute/base/sound/base_sound.h"
@@ -61,9 +60,9 @@ BasePersistenceManager::BasePersistenceManager(const Common::String &savePrefix,
 	_loadStream = nullptr;
 	_deleteSingleton = deleteSingleton;
 	if (BaseEngine::instance().getGameRef()) {
-		_gameRef = BaseEngine::instance().getGameRef();
+		_game = BaseEngine::instance().getGameRef();
 	} else {
-		_gameRef = nullptr;
+		_game = nullptr;
 	}
 
 	_richBuffer = nullptr;
@@ -91,8 +90,8 @@ BasePersistenceManager::BasePersistenceManager(const Common::String &savePrefix,
 	_thumbnailData = nullptr;
 	if (savePrefix != "") {
 		_savePrefix = savePrefix;
-	} else if (_gameRef) {
-		_savePrefix = _gameRef->_targetName.c_str();
+	} else if (_game) {
+		_savePrefix = _game->_targetName.c_str();
 	} else {
 		_savePrefix = "wmesav";
 	}
@@ -229,11 +228,10 @@ bool BasePersistenceManager::initSave(const Common::String &desc) {
 
 	if (_saveStream) {
 		// get thumbnails
-		if (!_gameRef->_cachedThumbnail) {
-			_gameRef->_cachedThumbnail = new SaveThumbHelper(_gameRef);
-			if (DID_FAIL(_gameRef->_cachedThumbnail->storeThumbnail(true))) {
-				delete _gameRef->_cachedThumbnail;
-				_gameRef->_cachedThumbnail = nullptr;
+		if (!_game->_cachedThumbnail) {
+			_game->_cachedThumbnail = new SaveThumbHelper(_game);
+			if (DID_FAIL(_game->_cachedThumbnail->storeThumbnail(true))) {
+				SAFE_DELETE(_game->_cachedThumbnail);
 			}
 		}
 
@@ -244,7 +242,7 @@ bool BasePersistenceManager::initSave(const Common::String &desc) {
 		putDWORD(magic);
 
 		byte verMajor, verMinor, extMajor, extMinor;
-		_gameRef->getVersion(&verMajor, &verMinor, &extMajor, &extMinor);
+		_game->getVersion(&verMajor, &verMinor, &extMajor, &extMinor);
 		_saveStream->writeByte(verMajor);
 		_saveStream->writeByte(verMinor);
 		_saveStream->writeByte(extMajor);
@@ -252,15 +250,15 @@ bool BasePersistenceManager::initSave(const Common::String &desc) {
 
 		// new in ver 2
 		putDWORD((uint32)DCGF_VER_BUILD);
-		putString(_gameRef->_name);
+		putString(_game->_name);
 
 		// thumbnail data size
 		bool thumbnailOK = false;
 
-		if (_gameRef->_cachedThumbnail) {
-			if (_gameRef->_cachedThumbnail->_thumbnail) {
+		if (_game->_cachedThumbnail) {
+			if (_game->_cachedThumbnail->_thumbnail) {
 				Common::MemoryWriteStreamDynamic thumbStream(DisposeAfterUse::YES);
-				if (_gameRef->_cachedThumbnail->_thumbnail->writeBMPToStream(&thumbStream)) {
+				if (_game->_cachedThumbnail->_thumbnail->writeBMPToStream(&thumbStream)) {
 					_saveStream->writeUint32LE(thumbStream.size());
 					_saveStream->write(thumbStream.getData(), thumbStream.size());
 				} else {
@@ -275,10 +273,10 @@ bool BasePersistenceManager::initSave(const Common::String &desc) {
 		}
 		thumbnailOK = false;
 		// Again for the ScummVM-thumb:
-		if (_gameRef->_cachedThumbnail) {
-			if (_gameRef->_cachedThumbnail->_scummVMThumb) {
+		if (_game->_cachedThumbnail) {
+			if (_game->_cachedThumbnail->_scummVMThumb) {
 				Common::MemoryWriteStreamDynamic scummVMthumbStream(DisposeAfterUse::YES);
-				if (_gameRef->_cachedThumbnail->_scummVMThumb->writeBMPToStream(&scummVMthumbStream)) {
+				if (_game->_cachedThumbnail->_scummVMThumb->writeBMPToStream(&scummVMthumbStream)) {
 					_saveStream->writeUint32LE(scummVMthumbStream.size());
 					_saveStream->write(scummVMthumbStream.getData(), scummVMthumbStream.size());
 				} else {
@@ -294,7 +292,7 @@ bool BasePersistenceManager::initSave(const Common::String &desc) {
 
 
 		// in any case, destroy the cached thumbnail once used
-		SAFE_DELETE(_gameRef->_cachedThumbnail);
+		SAFE_DELETE(_game->_cachedThumbnail);
 
 		uint32 dataOffset = _offset +
 		                    sizeof(uint32) + // data offset
@@ -382,7 +380,7 @@ bool BasePersistenceManager::initLoad(const Common::String &filename) {
 	}
 	_saving = false;
 
-	if (_savedName == "" || scumm_stricmp(_savedName.c_str(), _gameRef->_name) != 0) {
+	if (_savedName == "" || scumm_stricmp(_savedName.c_str(), _game->_name) != 0) {
 		debugC(kWintermuteDebugSaveGame, "ERROR: Saved game name doesn't match current game");
 		cleanup();
 		return STATUS_FAILED;
@@ -816,17 +814,17 @@ bool BasePersistenceManager::transferPoint32(const char *name, Common::Point32 *
 
 //////////////////////////////////////////////////////////////////////////
 // Vector2
-bool BasePersistenceManager::transferVector2(const char *name, Vector2 *val) {
+bool BasePersistenceManager::transferVector2(const char *name, DXVector2 *val) {
 	if (_saving) {
-		putFloat(val->x);
-		putFloat(val->y);
+		putFloat(val->_x);
+		putFloat(val->_y);
 		if (_saveStream->err()) {
 			return STATUS_FAILED;
 		}
 		return STATUS_OK;
 	} else {
-		val->x = getFloat();
-		val->y = getFloat();
+		val->_x = getFloat();
+		val->_y = getFloat();
 		if (_loadStream->err()) {
 			return STATUS_FAILED;
 		}

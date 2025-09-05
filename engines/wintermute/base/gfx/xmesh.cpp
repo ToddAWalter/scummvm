@@ -67,7 +67,7 @@ XMesh::~XMesh() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool XMesh::loadFromXData(const Common::String &filename, XFileData *xobj) {
+bool XMesh::loadFromXData(const char *filename, XFileData *xobj) {
 	// get name
 	if (!XModel::loadName(this, xobj)) {
 		BaseEngine::LOG(0, "Error loading mesh name");
@@ -113,7 +113,7 @@ bool XMesh::loadFromXData(const Common::String &filename, XFileData *xobj) {
 	// check for materials
 	if ((bufMaterials.ptr() == nullptr) || (numMaterials == 0)) {
 		// no materials are found, create default material
-		Material *mat = new Material(_gameRef);
+		Material *mat = new Material(_game);
 		mat->_material._diffuse.color._r = 0.5f;
 		mat->_material._diffuse.color._g = 0.5f;
 		mat->_material._diffuse.color._b = 0.5f;
@@ -125,7 +125,7 @@ bool XMesh::loadFromXData(const Common::String &filename, XFileData *xobj) {
 		// load the materials
 		DXMaterial *fileMats = (DXMaterial *)bufMaterials.ptr();
 		for (uint i = 0; i < numMaterials; i++) {
-			Material *mat = new Material(_gameRef);
+			Material *mat = new Material(_game);
 			mat->_material = fileMats[i];
 			mat->_material._ambient = mat->_material._diffuse;
 
@@ -302,9 +302,9 @@ bool XMesh::pickPoly(DXVector3 *pickRayOrig, DXVector3 *pickRayDir) {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-bool XMesh::setMaterialSprite(const Common::String &matName, BaseSprite *sprite) {
+bool XMesh::setMaterialSprite(const char *matName, BaseSprite *sprite) {
 	for (int32 i = 0; i < _materials.getSize(); i++) {
-		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name,  matName.c_str()) == 0) {
+		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name,  matName) == 0) {
 			_materials[i]->setSprite(sprite);
 		}
 	}
@@ -312,9 +312,9 @@ bool XMesh::setMaterialSprite(const Common::String &matName, BaseSprite *sprite)
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool XMesh::setMaterialTheora(const Common::String &matName, VideoTheoraPlayer *theora) {
+bool XMesh::setMaterialTheora(const char *matName, VideoTheoraPlayer *theora) {
 	for (int32 i = 0; i < _materials.getSize(); i++) {
-		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name, matName.c_str()) == 0) {
+		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name, matName) == 0) {
 			_materials[i]->setTheora(theora);
 		}
 	}
@@ -322,9 +322,9 @@ bool XMesh::setMaterialTheora(const Common::String &matName, VideoTheoraPlayer *
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool XMesh::setMaterialEffect(const Common::String &matName, Effect3D *effect, Effect3DParams *params) {
+bool XMesh::setMaterialEffect(const char *matName, Effect3D *effect, Effect3DParams *params) {
 	for (int32 i = 0; i < _materials.getSize(); i++) {
-		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name, matName.c_str()) == 0) {
+		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name, matName) == 0) {
 			_materials[i]->setEffect(effect, params);
 		}
 	}
@@ -332,9 +332,9 @@ bool XMesh::setMaterialEffect(const Common::String &matName, Effect3D *effect, E
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool XMesh::removeMaterialEffect(const Common::String &matName) {
+bool XMesh::removeMaterialEffect(const char *matName) {
 	for (int32 i = 0; i < _materials.getSize(); i++) {
-		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name, matName.c_str()) == 0) {
+		if (_materials[i]->_name && scumm_stricmp(_materials[i]->_name, matName) == 0) {
 			_materials[i]->setEffect(nullptr, nullptr);
 		}
 	}

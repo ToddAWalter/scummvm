@@ -69,7 +69,7 @@ bool UIText::display(int offsetX, int offsetY) {
 
 	BaseFont *font = _font;
 	if (!font) {
-		font = _gameRef->_systemFont;
+		font = _game->_systemFont;
 	}
 
 	if (_back) {
@@ -94,7 +94,7 @@ bool UIText::display(int offsetX, int offsetY) {
 		font->drawText((byte *)_text, offsetX + _posX, offsetY + _posY + textOffset, _width, _textAlign, _height);
 	}
 
-	//_gameRef->_renderer->_rectList.add(new BaseActiveRect(_gameRef,  this, NULL, OffsetX + _posX, OffsetY + _posY, _width, _height, 100, 100, false));
+	//_game->_renderer->_rectList.add(new BaseActiveRect(_game,  this, NULL, OffsetX + _posX, OffsetY + _posY, _width, _height, 100, 100, false));
 
 	return STATUS_OK;
 }
@@ -105,7 +105,7 @@ bool UIText::display(int offsetX, int offsetY) {
 bool UIText::loadFile(const char *filename) {
 	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_gameRef->LOG(0, "UIText::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "UIText::LoadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -114,7 +114,7 @@ bool UIText::loadFile(const char *filename) {
 	setFilename(filename);
 
 	if (DID_FAIL(ret = loadBuffer(buffer, true))) {
-		_gameRef->LOG(0, "Error parsing STATIC file '%s'", filename);
+		_game->LOG(0, "Error parsing STATIC file '%s'", filename);
 	}
 
 	delete[] buffer;
@@ -172,11 +172,11 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 
 	char *params;
 	int cmd = 2;
-	BaseParser parser;
+	BaseParser parser(_game);
 
 	if (complete) {
 		if (parser.getCommand(&buffer, commands, &params) != TOKEN_STATIC) {
-			_gameRef->LOG(0, "'STATIC' keyword expected.");
+			_game->LOG(0, "'STATIC' keyword expected.");
 			return STATUS_FAILED;
 		}
 		buffer = params;
@@ -200,7 +200,7 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_BACK:
 			SAFE_DELETE(_back);
-			_back = new UITiledImage(_gameRef);
+			_back = new UITiledImage(_game);
 			if (!_back || DID_FAIL(_back->loadFile(params))) {
 				SAFE_DELETE(_back);
 				cmd = PARSERR_GENERIC;
@@ -209,7 +209,7 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_IMAGE:
 			SAFE_DELETE(_image);
-			_image = new BaseSprite(_gameRef);
+			_image = new BaseSprite(_game);
 			if (!_image || DID_FAIL(_image->loadFile(params))) {
 				SAFE_DELETE(_image);
 				cmd = PARSERR_GENERIC;
@@ -218,9 +218,9 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_FONT:
 			if (_font) {
-				_gameRef->_fontStorage->removeFont(_font);
+				_game->_fontStorage->removeFont(_font);
 			}
-			_font = _gameRef->_fontStorage->addFont(params);
+			_font = _game->_fontStorage->addFont(params);
 			if (!_font) {
 				cmd = PARSERR_GENERIC;
 			}
@@ -228,7 +228,7 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_TEXT:
 			setText(params);
-			_gameRef->expandStringByStringTable(&_text);
+			_game->_stringTable->expand(&_text);
 			break;
 
 		case TOKEN_TEXT_ALIGN:
@@ -269,7 +269,7 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 
 		case TOKEN_CURSOR:
 			SAFE_DELETE(_cursor);
-			_cursor = new BaseSprite(_gameRef);
+			_cursor = new BaseSprite(_game);
 			if (!_cursor || DID_FAIL(_cursor->loadFile(params))) {
 				SAFE_DELETE(_cursor);
 				cmd = PARSERR_GENERIC;
@@ -301,11 +301,11 @@ bool UIText::loadBuffer(char *buffer, bool complete) {
 		}
 	}
 	if (cmd == PARSERR_TOKENNOTFOUND) {
-		_gameRef->LOG(0, "Syntax error in STATIC definition");
+		_game->LOG(0, "Syntax error in STATIC definition");
 		return STATUS_FAILED;
 	}
 	if (cmd == PARSERR_GENERIC) {
-		_gameRef->LOG(0, "Error loading STATIC definition");
+		_game->LOG(0, "Error loading STATIC definition");
 		return STATUS_FAILED;
 	}
 
@@ -431,13 +431,13 @@ bool UIText::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 
 
 //////////////////////////////////////////////////////////////////////////
-ScValue *UIText::scGetProperty(const Common::String &name) {
+ScValue *UIText::scGetProperty(const char *name) {
 	_scValue->setNULL();
 
 	//////////////////////////////////////////////////////////////////////////
 	// Type
 	//////////////////////////////////////////////////////////////////////////
-	if (name == "Type") {
+	if (strcmp(name, "Type") == 0) {
 		_scValue->setString("static");
 		return _scValue;
 	}
@@ -445,7 +445,7 @@ ScValue *UIText::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// TextAlign
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "TextAlign") {
+	else if (strcmp(name, "TextAlign") == 0) {
 		_scValue->setInt(_textAlign);
 		return _scValue;
 	}
@@ -453,7 +453,7 @@ ScValue *UIText::scGetProperty(const Common::String &name) {
 	//////////////////////////////////////////////////////////////////////////
 	// VerticalAlign
 	//////////////////////////////////////////////////////////////////////////
-	else if (name == "VerticalAlign") {
+	else if (strcmp(name, "VerticalAlign") == 0) {
 		_scValue->setInt(_verticalAlign);
 		return _scValue;
 	} else {

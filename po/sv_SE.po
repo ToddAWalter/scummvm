@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.5.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-09-03 15:34+0000\n"
-"PO-Revision-Date: 2025-09-02 18:21+0000\n"
+"POT-Creation-Date: 2025-09-03 16:43+0000\n"
+"PO-Revision-Date: 2025-09-04 19:24+0000\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/sv/>\n"
@@ -123,7 +123,7 @@ msgstr "Gå uppåt"
 #: engines/scumm/dialog-createsession.cpp:47
 #: engines/scumm/dialog-sessionselector.cpp:67
 #: engines/scumm/he/moonbase/dialog-mapgenerator.cpp:138
-#: engines/sword1/control.cpp:2816 engines/wintermute/wintermute.cpp:177
+#: engines/sword1/control.cpp:2816 engines/wintermute/wintermute.cpp:178
 msgid "Cancel"
 msgstr "Avbryt"
 
@@ -3748,7 +3748,7 @@ msgstr ""
 "möjligtvis vara inkompatibla med framtida versioner av ScummVM."
 
 #: engines/engine.cpp:808 engines/engine.cpp:833
-#: engines/wintermute/wintermute.cpp:177
+#: engines/wintermute/wintermute.cpp:178
 msgid "Start anyway"
 msgstr "Starta ändå"
 
@@ -6435,10 +6435,8 @@ msgid "Walk"
 msgstr "Gå"
 
 #: engines/access/metaengine.cpp:348
-#, fuzzy
-#| msgid "Page up in save / load menu"
 msgid "Open save/load menu"
-msgstr "Sida upp i spara/läs in-meny"
+msgstr "Öppna menyn för spara/läs in"
 
 #: engines/access/resources.cpp:43 engines/drascula/drascula.cpp:993
 #: engines/hugo/hugo.cpp:442 engines/lure/lure.cpp:57
@@ -7100,24 +7098,22 @@ msgstr ""
 "2. Alla .sav-filer i spelkatalogen för QfG2 Remake"
 
 #: engines/alcachofa/metaengine.cpp:40
-#, fuzzy
-#| msgid "Music Quality:"
 msgid "High Quality"
-msgstr "Musikkvalitet:"
+msgstr "Hög kvalitet"
 
 #: engines/alcachofa/metaengine.cpp:41
-#, fuzzy
-#| msgid "Toggle sound effects"
 msgid "Toggles some optional graphical effects"
-msgstr "Växla ljudeffekter"
+msgstr "Växlar några valfria grafiska effekter"
 
 #: engines/alcachofa/metaengine.cpp:51
 msgid "32 Bits"
-msgstr ""
+msgstr "32-bitars"
 
 #: engines/alcachofa/metaengine.cpp:52
 msgid "Uses 32bit textures instead of 16bit ones (currently not implemented)"
 msgstr ""
+"Använder 32-bitars texturer istället för 16-bitars (för närvarande inte "
+"implementerat)"
 
 #: engines/alcachofa/metaengine.cpp:87 engines/cine/metaengine.cpp:347
 msgid "Activate"
@@ -15733,19 +15729,19 @@ msgstr "Stöd för Hero Craft har inte kompilerats in"
 msgid "Wintermute3D support is not compiled in"
 msgstr "Stöd för Wintermute3D har inte kompilerats in"
 
-#: engines/wintermute/wintermute.cpp:143
+#: engines/wintermute/wintermute.cpp:144
 msgid "This game requires PNG, JPEG and Vorbis support."
 msgstr "Detta spel kräver PNG-, JPEG- och Vorbis-stöd."
 
-#: engines/wintermute/wintermute.cpp:154
+#: engines/wintermute/wintermute.cpp:155
 msgid "This game requires the FoxTail subengine, which is not compiled in."
 msgstr "Detta spel kräver FoxTail-undermotorn, vilken inte kompilerats in."
 
-#: engines/wintermute/wintermute.cpp:165
+#: engines/wintermute/wintermute.cpp:166
 msgid "This game requires the HeroCraft subengine, which is not compiled in."
 msgstr "Detta spel kräver HeroCraft-undermotorn, vilken inte kompilerats in."
 
-#: engines/wintermute/wintermute.cpp:176
+#: engines/wintermute/wintermute.cpp:177
 msgid ""
 "This game requires 3D capabilities, which is not compiled in. As such, it is "
 "likely to be unplayable totally or partially."

@@ -69,17 +69,17 @@ public:
 	bool loadBuffer(char *buffer, bool complete = true);
 
 	// new anim system
-	Common::String _talkAnimName;
-	Common::String _idleAnimName;
-	Common::String _walkAnimName;
-	Common::String _turnLeftAnimName;
-	Common::String _turnRightAnimName;
+	char *_talkAnimName;
+	char *_idleAnimName;
+	char *_walkAnimName;
+	char *_turnLeftAnimName;
+	char *_turnRightAnimName;
 	BaseArray<AdSpriteSet *> _anims;
 	bool playAnim(const char *filename) override;
-	AdSpriteSet *getAnimByName(const Common::String &animName);
+	AdSpriteSet *getAnimByName(const char *animName);
 
 	// scripting interface
-	ScValue *scGetProperty(const Common::String &name) override;
+	ScValue *scGetProperty(const char *name) override;
 	bool scSetProperty(const char *name, ScValue *value) override;
 	bool scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, const char *name) override;
 	const char *scToString() override;
