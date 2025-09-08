@@ -30,8 +30,7 @@
 
 
 #define TOKEN_DEF_START         \
-	enum                  \
-	{                 \
+	enum {                      \
 		TOKEN_NONE = 0,
 #define TOKEN_DEF(name)         \
 	TOKEN_ ## name,
@@ -69,7 +68,7 @@ public:
 	void skipToken(char **buf, char *tok, char *msg = nullptr);
 	int32 getTokenInt(char **buf);
 	float getTokenFloat(char **buf);
-	Common::String getToken(char **buf);
+	char *getToken(char **buf);
 	char *getAssignmentText(char **buf);
 	char *getSubText(char **buf, char open, char close);
 	void skipCharacters(char **buf, const char *toSkip);

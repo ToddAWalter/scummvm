@@ -181,6 +181,7 @@ bool AdGame::cleanup() {
 	SAFE_DELETE_ARRAY(_prevSceneFilename);
 	SAFE_DELETE_ARRAY(_scheduledScene);
 	SAFE_DELETE_ARRAY(_debugStartupScene);
+	SAFE_DELETE_ARRAY(_startupScene);
 	SAFE_DELETE_ARRAY(_itemsFile);
 
 	SAFE_DELETE(_sceneViewport);
@@ -277,7 +278,7 @@ bool AdGame::changeScene(const char *filename, bool fadeIn) {
 		_scene->applyEvent("SceneShutdown", true);
 
 		setPrevSceneName(_scene->_name);
-		setPrevSceneFilename(_scene->getFilename());
+		setPrevSceneFilename(_scene->_filename);
 
 		if (!_tempDisableSaveState) {
 			_scene->saveState();
@@ -298,7 +299,7 @@ bool AdGame::changeScene(const char *filename, bool fadeIn) {
 		}
 
 		bool ret;
-		if (_initialScene && _debugDebugMode && _debugStartupScene) {
+		if (_initialScene && _debugMode && _debugStartupScene) {
 			_initialScene = false;
 			ret = _scene->loadFile(_debugStartupScene);
 		} else {
@@ -456,7 +457,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 		// Unused screenshots must be deleted, after main menu is closed
 		if (obj && BaseEngine::instance().getGameId() == "corrosion") {
 			const char *mm = "interface\\system\\mainmenu.window";
-			const char *fn = obj->getFilename();
+			const char *fn = obj->_filename;
 			if (fn && strcmp(fn, mm) == 0) {
 				SAFE_DELETE(_cachedThumbnail);
 			}
@@ -1367,6 +1368,7 @@ bool AdGame::loadBuffer(char *buffer, bool complete) {
 	TOKEN_TABLE(INVENTORY_BOX)
 	TOKEN_TABLE(ITEMS)
 	TOKEN_TABLE(TALK_SKIP_BUTTON)
+	TOKEN_TABLE(VIDEO_SKIP_BUTTON)
 	TOKEN_TABLE(SCENE_VIEWPORT)
 	TOKEN_TABLE(EDITOR_PROPERTY)
 	TOKEN_TABLE(STARTUP_SCENE)
@@ -1589,119 +1591,6 @@ bool AdGame::scheduleChangeScene(const char *filename, bool fadeIn) {
 
 		return STATUS_OK;
 	}
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-bool AdGame::handleCustomActionStart(BaseGameCustomAction action) {
-	bool isCorrosion = BaseEngine::instance().getGameId() == "corrosion";
-
-	if (isCorrosion) {
-		// Corrosion Enhanced Edition contain city map screen, which is
-		// mouse controlled and conflicts with those custom actions
-		const char *m = "items\\street_map\\windows\\street_map_window.script";
-		if (_scEngine->isRunningScript(m)) {
-			return false;
-		}
-	}
-
-	int xLeft   = 30;
-	int xCenter = _renderer->getWidth() / 2;
-	int xRight  = _renderer->getWidth() - 30;
-
-	int yTop    = 35;
-	int yCenter = _renderer->getHeight() / 2;
-	int yBottom = _renderer->getHeight() - 35;
-	if (isCorrosion && !(ConfMan.get("extra").contains("Enhanced"))) {
-		// original version of Corrosion has a toolbar under the game screen
-		yBottom -= 60;
-	}
-
-	BaseArray<AdObject *> objects;
-
-	Common::Point32 p;
-	int distance = xCenter * xCenter + yCenter * yCenter;
-
-	switch (action) {
-	case kClickAtCenter:
-		p.x = xCenter;
-		p.y = yCenter;
-		break;
-	case kClickAtLeft:
-		p.x = xLeft;
-		p.y = yCenter;
-		break;
-	case kClickAtRight:
-		p.x = xRight;
-		p.y = yCenter;
-		break;
-	case kClickAtTop:
-		p.x = xCenter;
-		p.y = yTop;
-		break;
-	case kClickAtBottom:
-		p.x = xCenter;
-		p.y = yBottom;
-		break;
-	case kClickAtEntityNearestToCenter:
-		p.x = xCenter;
-		p.y = yCenter;
-		// Looking through all objects for entities near to the center
-		if (_scene && _scene->getSceneObjects(objects, true)) {
-			for (int32 i = 0; i < objects.getSize(); i++) {
-				BaseRegion *region;
-				if (objects[i]->_type != OBJECT_ENTITY ||
-					!objects[i]->_active ||
-					!objects[i]->_registrable ||
-					(!(region = ((AdEntity *)objects[i])->_region))
-				) {
-					continue;
-				}
-
-				// Something exactly at center? Great!
-				if (region->pointInRegion(xCenter, yCenter)) {
-					distance = 0;
-					p.x = xCenter;
-					p.y = yCenter;
-					break;
-				}
-
-				// Something at the edge? Available with other actions.
-				if (region->pointInRegion(xLeft, yCenter) ||
-					region->pointInRegion(xRight, yCenter) ||
-					region->pointInRegion(xCenter, yBottom) ||
-					region->pointInRegion(xCenter, yTop)
-				) {
-					continue;
-				}
-
-				// Keep entities that has less distance to center
-				int x = ((AdEntity *)objects[i])->_posX;
-				int y = ((AdEntity *)objects[i])->_posY - ((AdEntity *)objects[i])->getHeight() / 2;
-				int d = (x - xCenter) * (x - xCenter) + (y - yCenter) * (y - yCenter);
-				if (distance > d) {
-					distance = d;
-					p.x = x;
-					p.y = y;
-				}
-			}
-		}
-		break;
-	default:
-		return false;
-	}
-
-	BasePlatform::setCursorPos(p.x, p.y);
-	setActiveObject(_game->_renderer->getObjectAt(p.x, p.y));
-	onMouseLeftDown();
-	onMouseLeftUp();
-	return true;
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-bool AdGame::handleCustomActionEnd(BaseGameCustomAction action) {
-	return false;
 }
 
 
@@ -1929,7 +1818,7 @@ bool AdGame::endDlgBranch(const char *branchName, const char *scriptName, const 
 	}
 	if (startIndex >= 0) {
 		for (int32 i = startIndex; i < _dlgPendingBranches.getSize(); i++) {
-			//ClearBranchResponses(_dlgPendingBranches[i]);
+			// clearBranchResponses(_dlgPendingBranches[i]);
 			delete[] _dlgPendingBranches[i];
 			_dlgPendingBranches[i] = nullptr;
 		}
@@ -2388,6 +2277,7 @@ CBObject *CAdGame::GetPrevAccessObject(CBObject *CurrObject) {
 bool AdGame::validMouse() {
 	Common::Point32 pos;
 	BasePlatform::getCursorPos(&pos);
+	//CBPlatform::ScreenToClient(Game->m_Renderer->m_Window, &Pos);
 
 	return _renderer->pointInViewport(&pos);
 }
@@ -2426,6 +2316,7 @@ bool AdGame::onMouseLeftDown() {
 		_game->_capturedObject = _game->_activeObject;
 	}
 	_mouseLeftDown = true;
+	//BasePlatform::setCapture(_renderer->_window);
 
 	return STATUS_OK;
 }
@@ -2547,7 +2438,7 @@ bool AdGame::onMouseRightUp() {
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::displayDebugInfo() {
 	char str[100];
-	if (_game->_debugDebugMode) {
+	if (_game->_debugMode) {
 		Common::sprintf_s(str, "Mouse: %d, %d (scene: %d, %d)", _mousePos.x, _mousePos.y, _mousePos.x + (_scene ? _scene->getOffsetLeft() : 0), _mousePos.y + (_scene ? _scene->getOffsetTop() : 0));
 		_systemFont->drawText((byte *)str, 0, 90, _renderer->getWidth(), TAL_RIGHT);
 
@@ -2632,6 +2523,118 @@ bool AdGame::onScriptShutdown(ScScript *script) {
 	}
 
 	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool AdGame::handleCustomActionStart(BaseGameCustomAction action) {
+	bool isCorrosion = BaseEngine::instance().getGameId() == "corrosion";
+
+	if (isCorrosion) {
+		// Corrosion Enhanced Edition contain city map screen, which is
+		// mouse controlled and conflicts with those custom actions
+		const char *m = "items\\street_map\\windows\\street_map_window.script";
+		if (_scEngine->isRunningScript(m)) {
+			return false;
+		}
+	}
+
+	int xLeft   = 30;
+	int xCenter = _renderer->getWidth() / 2;
+	int xRight  = _renderer->getWidth() - 30;
+
+	int yTop    = 35;
+	int yCenter = _renderer->getHeight() / 2;
+	int yBottom = _renderer->getHeight() - 35;
+	if (isCorrosion && !(ConfMan.get("extra").contains("Enhanced"))) {
+		// original version of Corrosion has a toolbar under the game screen
+		yBottom -= 60;
+	}
+
+	BaseArray<AdObject *> objects;
+
+	Common::Point32 p;
+	int distance = xCenter * xCenter + yCenter * yCenter;
+
+	switch (action) {
+	case kClickAtCenter:
+		p.x = xCenter;
+		p.y = yCenter;
+		break;
+	case kClickAtLeft:
+		p.x = xLeft;
+		p.y = yCenter;
+		break;
+	case kClickAtRight:
+		p.x = xRight;
+		p.y = yCenter;
+		break;
+	case kClickAtTop:
+		p.x = xCenter;
+		p.y = yTop;
+		break;
+	case kClickAtBottom:
+		p.x = xCenter;
+		p.y = yBottom;
+		break;
+	case kClickAtEntityNearestToCenter:
+		p.x = xCenter;
+		p.y = yCenter;
+		// Looking through all objects for entities near to the center
+		if (_scene && _scene->getSceneObjects(objects, true)) {
+			for (int32 i = 0; i < objects.getSize(); i++) {
+				BaseRegion *region;
+				if (objects[i]->_type != OBJECT_ENTITY ||
+					!objects[i]->_active ||
+					!objects[i]->_registrable ||
+					(!(region = ((AdEntity *)objects[i])->_region))
+				) {
+					continue;
+				}
+
+				// Something exactly at center? Great!
+				if (region->pointInRegion(xCenter, yCenter)) {
+					distance = 0;
+					p.x = xCenter;
+					p.y = yCenter;
+					break;
+				}
+
+				// Something at the edge? Available with other actions.
+				if (region->pointInRegion(xLeft, yCenter) ||
+					region->pointInRegion(xRight, yCenter) ||
+					region->pointInRegion(xCenter, yBottom) ||
+					region->pointInRegion(xCenter, yTop)
+				) {
+					continue;
+				}
+
+				// Keep entities that has less distance to center
+				int x = ((AdEntity *)objects[i])->_posX;
+				int y = ((AdEntity *)objects[i])->_posY - ((AdEntity *)objects[i])->getHeight() / 2;
+				int d = (x - xCenter) * (x - xCenter) + (y - yCenter) * (y - yCenter);
+				if (distance > d) {
+					distance = d;
+					p.x = x;
+					p.y = y;
+				}
+			}
+		}
+		break;
+	default:
+		return false;
+	}
+
+	BasePlatform::setCursorPos(p.x, p.y);
+	setActiveObject(_game->_renderer->getObjectAt(p.x, p.y));
+	onMouseLeftDown();
+	onMouseLeftUp();
+	return true;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+bool AdGame::handleCustomActionEnd(BaseGameCustomAction action) {
+	return false;
 }
 
 Common::String AdGame::debuggerToString() const {

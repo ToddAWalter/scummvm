@@ -57,8 +57,8 @@ BaseSubFrame::BaseSubFrame(BaseGame *inGame) : BaseScriptable(inGame, true) {
 	_editorSelected = false;
 
 	_surfaceFilename = nullptr;
-	_cKDefault = true;
-	_cKRed = _cKBlue = _cKGreen = 0;
+	_ckDefault = true;
+	_ckRed = _ckBlue = _ckGreen = 0;
 	_lifeTime = -1;
 	_keepLoaded = false;
 
@@ -297,8 +297,8 @@ bool BaseSubFrame::saveAsText(BaseDynamicBuffer *buffer, int indent, bool comple
 		buffer->putTextIndent(indent, "SUBFRAME {\n");
 	}
 
-	if (_surface && _surface->getFileNameStr() != "") {
-		buffer->putTextIndent(indent + 2, "IMAGE = \"%s\"\n", _surface->getFileName());
+	if (_surface && _surface->_filename != "") {
+		buffer->putTextIndent(indent + 2, "IMAGE = \"%s\"\n", _surface->_filename.c_str());
 	}
 
 	if (_transparent != 0xFFFF00FF) {
@@ -385,10 +385,10 @@ bool BaseSubFrame::persist(BasePersistenceManager *persistMgr) {
 	persistMgr->transferBool(TMEMBER(_wantsDefaultRect));
 
 	persistMgr->transferCharPtr(TMEMBER(_surfaceFilename));
-	persistMgr->transferBool(TMEMBER(_cKDefault));
-	persistMgr->transferByte(TMEMBER(_cKRed));
-	persistMgr->transferByte(TMEMBER(_cKGreen));
-	persistMgr->transferByte(TMEMBER(_cKBlue));
+	persistMgr->transferBool(TMEMBER(_ckDefault));
+	persistMgr->transferByte(TMEMBER(_ckRed));
+	persistMgr->transferByte(TMEMBER(_ckGreen));
+	persistMgr->transferByte(TMEMBER(_ckBlue));
 	persistMgr->transferSint32(TMEMBER(_lifeTime));
 
 	persistMgr->transferBool(TMEMBER(_keepLoaded));
@@ -679,7 +679,7 @@ const char *BaseSubFrame::scToString() {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseSubFrame::setSurface(const Common::String &filename, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime, bool keepLoaded) {
+bool BaseSubFrame::setSurface(const char *filename, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime, bool keepLoaded) {
 	if (_surface) {
 		_game->_surfaceStorage->removeSurface(_surface);
 		_surface = nullptr;
@@ -689,13 +689,14 @@ bool BaseSubFrame::setSurface(const Common::String &filename, bool defaultCK, by
 
 	_surface = _game->_surfaceStorage->addSurface(filename, defaultCK, ckRed, ckGreen, ckBlue, lifeTime, keepLoaded);
 	if (_surface) {
-		_surfaceFilename = new char[filename.size() + 1];
-		Common::strcpy_s(_surfaceFilename, filename.size() + 1, filename.c_str());
+		size_t filenameSize = strlen(filename) + 1;
+		_surfaceFilename = new char[filenameSize];
+		Common::strcpy_s(_surfaceFilename, filenameSize, filename);
 
-		_cKDefault = defaultCK;
-		_cKRed = ckRed;
-		_cKGreen = ckGreen;
-		_cKBlue = ckBlue;
+		_ckDefault = defaultCK;
+		_ckRed = ckRed;
+		_ckGreen = ckGreen;
+		_ckBlue = ckBlue;
 		_lifeTime = lifeTime;
 		_keepLoaded = keepLoaded;
 
@@ -712,7 +713,7 @@ bool BaseSubFrame::setSurfaceSimple() {
 		_surface = nullptr;
 		return STATUS_OK;
 	}
-	_surface = _game->_surfaceStorage->addSurface(_surfaceFilename, _cKDefault, _cKRed, _cKGreen, _cKBlue, _lifeTime, _keepLoaded);
+	_surface = _game->_surfaceStorage->addSurface(_surfaceFilename, _ckDefault, _ckRed, _ckGreen, _ckBlue, _lifeTime, _keepLoaded);
 	if (_surface) {
 		return STATUS_OK;
 	} else {

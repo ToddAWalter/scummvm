@@ -38,6 +38,7 @@ class AdRegion;
 class BaseViewport;
 class AdLayer;
 class BasePoint;
+class Light3D;
 class AdWaypointGroup;
 class AdPath;
 class AdScaleLevel;
@@ -79,6 +80,7 @@ public:
 	float _fov;
 	int32 _editorResolutionWidth;
 	int32 _editorResolutionHeight;
+	Light3D *getActiveLight();
 #endif
 	bool getRegionsAt(int x, int y, AdRegion **regionList, int numRegions);
 	bool handleItemAssociations(const char *itemName, bool show);
@@ -147,7 +149,7 @@ public:
 	bool isWalkableAt(int x, int y, bool checkFreeObjects = false, BaseObject *requester = nullptr);
 	AdLayer *_mainLayer;
 	float getZoomAt(int x, int y);
-	bool getPath(const BasePoint &source, const BasePoint &target, AdPath *path, BaseObject *requester = nullptr);
+	bool getPath(BasePoint source, BasePoint target, AdPath *path, BaseObject *requester = nullptr);
 	AdScene(BaseGame *inGame);
 	~AdScene() override;
 	BaseArray<AdLayer *> _layers;
@@ -157,8 +159,8 @@ public:
 	bool loadBuffer(char *buffer, bool complete = true);
 	int32 _width{};
 	int32 _height{};
-	bool addObject(AdObject *Object);
-	bool removeObject(AdObject *Object);
+	bool addObject(AdObject *object);
+	bool removeObject(AdObject *object);
 	int32 _editorMarginH;
 	int32 _editorMarginV;
 	uint32 _editorColFrame;
@@ -184,7 +186,7 @@ public:
 
 	bool restoreDeviceObjects() override;
 	void setMaxShadowType(TShadowType shadowType);
-	int getPointsDist(const BasePoint &p1, const BasePoint &p2, BaseObject *requester = nullptr);
+	int getPointsDist(BasePoint p1, BasePoint p2, BaseObject *requester = nullptr);
 
 	void onLayerResized(AdLayer *layer);
 

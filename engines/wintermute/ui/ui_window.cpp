@@ -136,12 +136,13 @@ bool UIWindow::display(int offsetX, int offsetY) {
 			_shieldButton->setListener(this, _shieldButton, 0);
 			_shieldButton->_parent = this;
 		}
+		if (_shieldButton) {
+			_shieldButton->_posX = _shieldButton->_posY = 0;
+			_shieldButton->_width = _game->_renderer->getWidth();
+			_shieldButton->_height = _game->_renderer->getHeight();
 
-		_shieldButton->_posX = _shieldButton->_posY = 0;
-		_shieldButton->_width = _game->_renderer->getWidth();
-		_shieldButton->_height = _game->_renderer->getHeight();
-
-		_shieldButton->display();
+			_shieldButton->display();
+		}
 	}
 
 	if (!_visible) {
@@ -235,7 +236,7 @@ bool UIWindow::display(int offsetX, int offsetY) {
 bool UIWindow::loadFile(const char *filename) {
 	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "UIWindow::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "UIWindow::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -373,7 +374,7 @@ bool UIWindow::loadBuffer(char *buffer, bool complete) {
 			break;
 
 		case TOKEN_BACK_INACTIVE:
-			delete _backInactive;
+			SAFE_DELETE(_backInactive);
 			_backInactive = new UITiledImage(_game);
 			if (!_backInactive || DID_FAIL(_backInactive->loadFile(params))) {
 				SAFE_DELETE(_backInactive);
@@ -621,29 +622,29 @@ bool UIWindow::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 
 	buffer->putTextIndent(indent + 2, "\n");
 
-	if (_back && _back->getFilename()) {
-		buffer->putTextIndent(indent + 2, "BACK=\"%s\"\n", _back->getFilename());
+	if (_back && _back->_filename) {
+		buffer->putTextIndent(indent + 2, "BACK=\"%s\"\n", _back->_filename);
 	}
-	if (_backInactive && _backInactive->getFilename()) {
-		buffer->putTextIndent(indent + 2, "BACK_INACTIVE=\"%s\"\n", _backInactive->getFilename());
-	}
-
-	if (_image && _image->getFilename()) {
-		buffer->putTextIndent(indent + 2, "IMAGE=\"%s\"\n", _image->getFilename());
-	}
-	if (_imageInactive && _imageInactive->getFilename()) {
-		buffer->putTextIndent(indent + 2, "IMAGE_INACTIVE=\"%s\"\n", _imageInactive->getFilename());
+	if (_backInactive && _backInactive->_filename) {
+		buffer->putTextIndent(indent + 2, "BACK_INACTIVE=\"%s\"\n", _backInactive->_filename);
 	}
 
-	if (_font && _font->getFilename()) {
-		buffer->putTextIndent(indent + 2, "FONT=\"%s\"\n", _font->getFilename());
+	if (_image && _image->_filename) {
+		buffer->putTextIndent(indent + 2, "IMAGE=\"%s\"\n", _image->_filename);
 	}
-	if (_fontInactive && _fontInactive->getFilename()) {
-		buffer->putTextIndent(indent + 2, "FONT_INACTIVE=\"%s\"\n", _fontInactive->getFilename());
+	if (_imageInactive && _imageInactive->_filename) {
+		buffer->putTextIndent(indent + 2, "IMAGE_INACTIVE=\"%s\"\n", _imageInactive->_filename);
 	}
 
-	if (_cursor && _cursor->getFilename()) {
-		buffer->putTextIndent(indent + 2, "CURSOR=\"%s\"\n", _cursor->getFilename());
+	if (_font && _font->_filename) {
+		buffer->putTextIndent(indent + 2, "FONT=\"%s\"\n", _font->_filename);
+	}
+	if (_fontInactive && _fontInactive->_filename) {
+		buffer->putTextIndent(indent + 2, "FONT_INACTIVE=\"%s\"\n", _fontInactive->_filename);
+	}
+
+	if (_cursor && _cursor->_filename) {
+		buffer->putTextIndent(indent + 2, "CURSOR=\"%s\"\n", _cursor->_filename);
 	}
 
 	buffer->putTextIndent(indent + 2, "\n");
@@ -814,10 +815,10 @@ bool UIWindow::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "GetInactiveImage") == 0) {
 		stack->correctParams(0);
-		if (!_imageInactive || !_imageInactive->getFilename()) {
+		if (!_imageInactive || !_imageInactive->_filename) {
 			stack->pushNULL();
 		} else {
-			stack->pushString(_imageInactive->getFilename());
+			stack->pushString(_imageInactive->_filename);
 		}
 
 		return STATUS_OK;
@@ -1202,9 +1203,9 @@ bool UIWindow::handleKeypress(Common::Event *event, bool printable) {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool UIWindow::handleMouseWheel(int32 Delta) {
+bool UIWindow::handleMouseWheel(int32 delta) {
 	if (_focusedWidget) {
-		return _focusedWidget->handleMouseWheel(Delta);
+		return _focusedWidget->handleMouseWheel(delta);
 	} else {
 		return false;
 	}

@@ -300,13 +300,13 @@ bool BaseScriptHolder::addScript(const char *filename) {
 	for (int32 i = 0; i < _scripts.getSize(); i++) {
 		if (scumm_stricmp(_scripts[i]->_filename, filename) == 0) {
 			if (_scripts[i]->_state != SCRIPT_FINISHED) {
-				BaseEngine::LOG(0, "BaseScriptHolder::AddScript - trying to add script '%s' multiple times (obj: '%s')", filename, _name);
+				BaseEngine::LOG(0, "BaseScriptHolder::addScript - trying to add script '%s' multiple times (obj: '%s')", filename, _name);
 				return STATUS_OK;
 			}
 		}
 	}
 
-	ScScript *scr =  _game->_scEngine->runScript(filename, this);
+	ScScript *scr = _game->_scEngine->runScript(filename, this);
 	if (!scr) {
 		if (_game->_editorForceScripts) {
 			// editor hack

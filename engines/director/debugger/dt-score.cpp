@@ -137,7 +137,34 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 	if (modeSel == kModeExtended && mode == kModeExtended)
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
 
-	{
+	{ // Playback toggle
+		ImGui::TableNextColumn();
+
+		ImGui::PushID(ch + 20000 - mode);
+		ImDrawList *dl = ImGui::GetWindowDrawList();
+		const ImVec2 pos = ImGui::GetCursorScreenPos();
+		const ImVec2 mid(pos.x + 7, pos.y + 7);
+
+		ImGui::InvisibleButton("Line", ImVec2(16, ImGui::GetFontSize()));
+		ImGui::SetItemTooltip("Playback toggle");
+
+		if (ImGui::IsItemClicked(0)) {
+			if (mode == kModeMember) {
+				score->_channels[ch]->_visible = !score->_channels[ch]->_visible;
+
+				g_director->getCurrentWindow()->render(true);
+			}
+		}
+
+		if (mode != kModeMember || score->_channels[ch]->_visible)
+			dl->AddCircleFilled(mid, 4.0f, ImColor(_state->_colors._channel_toggle));
+		else
+			dl->AddCircle(mid, 4.0f, ImColor(_state->_colors._channel_toggle));
+
+		ImGui::PopID();
+	}
+
+	{	// Channel name / number
 		ImGui::TableNextColumn();
 
 		float indentSize = 17.0f;
@@ -188,13 +215,6 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 		int startCont = _state->_continuationData[ch][rf].first;
 		int endCont = _state->_continuationData[ch][rf].second;
 
-		if (rf + 1 == (int)currentFrameNum)
-			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
-
-		if (f == _state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 &&
-		  ch == _state->_selectedScoreCast.channel && mode <= kModeExtended)
-			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 0.3f, 0.3f, 0.6f)));
-
 		if (!(startCont == endCont) && (sprite._castId.member || sprite.isQDShape())) {
 			if (_state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 >= startCont &&
 				_state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 <= endCont &&
@@ -213,24 +233,33 @@ static void displayScoreChannel(int ch, int mode, int modeSel) {
 			}
 		}
 
+		if (rf + 1 == (int)currentFrameNum)
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
+
+		if (f == _state->_selectedScoreCast.frame + _state->_scoreFrameOffset - 1 &&
+		  ch == _state->_selectedScoreCast.channel && mode <= kModeExtended)
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 0.3f, 0.3f, 0.6f)));
+
 		int mode1 = mode;
 
 		ImGui::PushID((ch + 10 - mode) * 10000 + f);
 
 		// If the frame is not the start, then don't render any text
-		if (rf != startCont || !(sprite._castId.member || sprite.isQDShape())) {
-			if (rf == endCont && sprite._castId.member && mode == _state->_scoreMode) {
-				ImGui::PushFont(ImGui::GetIO().FontDefault);
-				ImGui::TextUnformatted("\uf819");
-				ImGui::PopFont();
-			} else {
-				if (sprite._castId.member) {
-					ImGui::Selectable("─");
+		if (mode == kModeMember) {
+			if (rf != startCont || !(sprite._castId.member || sprite.isQDShape())) {
+				if (rf == endCont && sprite._castId.member && mode == _state->_scoreMode) {
+					ImGui::PushFont(ImGui::GetIO().FontDefault);
+					ImGui::TextUnformatted("\uf819");
+					ImGui::PopFont();
 				} else {
-					ImGui::Selectable("  ");
+					if (sprite._castId.member) {
+						ImGui::Selectable("─");
+					} else {
+						ImGui::Selectable("  ");
+					}
 				}
+				mode1 = -1; // Skip cell data rendering
 			}
-			mode1 = -1; // Skip cell data rendering
 		}
 
 		switch (mode1) {
@@ -538,23 +567,25 @@ void showScore() {
 		uint numChannels = score->_scoreCache[0]->_sprites.size();
 		uint tableColumns = MAX(numFrames + 5, 25U); // Set minimal table width to 25
 
-		if (tableColumns > kMaxColumnsInTable - 2) // Current restriction of ImGui
-			tableColumns = kMaxColumnsInTable - 2;
+		if (tableColumns > kMaxColumnsInTable - 3) // Current restriction of ImGui
+			tableColumns = kMaxColumnsInTable - 3;
 
 		ImGuiTableFlags addonFlags = _state->_scoreMode == kModeExtended ? 0 : ImGuiTableFlags_RowBg;
 
 		ImGui::BeginChild("Score table", ImVec2(0, -20));
 
-		if (ImGui::BeginTable("Score", tableColumns + 1,
+		if (ImGui::BeginTable("Score", tableColumns + 2,
 					ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY |
-					ImGuiTableFlags_SizingStretchProp | addonFlags)) {
+					addonFlags)) {
 			ImGuiTableFlags flags = ImGuiTableColumnFlags_WidthFixed;
 
-			ImGui::TableSetupScrollFreeze(1, 2);
+			ImGui::TableSetupScrollFreeze(2, 2);
 
 			ImGui::PushFont(_state->_tinyFont);
 
-			ImGui::TableSetupColumn("##", flags);
+			ImGui::TableSetupColumn("##disable", flags); // disable button
+
+			ImGui::TableSetupColumn("##", flags);   // Number
 			for (uint i = 0; i < tableColumns; i++) {
 				Common::String label = Common::String::format("%-2d", i + _state->_scoreFrameOffset);
 				label += Common::String::format("##l%d", i);
@@ -566,6 +597,9 @@ void showScore() {
 			ImGui::TableNextRow(0);
 
 			ImGui::TableSetColumnIndex(0);
+			ImGui::SetNextItemWidth(20);
+
+			ImGui::TableSetColumnIndex(1);
 			ImGui::PushID(0);
 
 			ImGui::SetNextItemWidth(50);
@@ -588,8 +622,8 @@ void showScore() {
 			ImGui::PopID();
 
 			for (uint i = 0; i < tableColumns; i++) {
-				ImGui::TableSetColumnIndex(i + 1);
-				const char *column_name = ImGui::TableGetColumnName(i + 1);
+				ImGui::TableSetColumnIndex(i + 2);
+				const char *column_name = ImGui::TableGetColumnName(i + 2);
 
 				ImGui::SetNextItemWidth(20);
 				ImGui::TableHeader(column_name);
@@ -597,7 +631,9 @@ void showScore() {
 
 			ImGui::TableNextRow();
 
-			ImGui::TableNextColumn();
+			ImGui::TableNextColumn(); // Enable/Disable switch
+
+			ImGui::TableNextColumn(); // Label column
 
 			float indentSize = 10.0;
 			ImGui::Indent(indentSize);
@@ -710,8 +746,9 @@ void showChannels() {
 		ImGui::Text("SND: 2  sound2: %d, soundType2: %d", frame._mainChannels.sound2.member, frame._mainChannels.soundType2);
 		ImGui::Text("LSCR:   actionId: %s", frame._mainChannels.actionId.asString().c_str());
 
-		if (ImGui::BeginTable("Channels", 21, ImGuiTableFlags_Borders)) {
+		if (ImGui::BeginTable("Channels", 22, ImGuiTableFlags_Borders)) {
 			ImGuiTableFlags flags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_AngledHeader;
+			ImGui::TableSetupColumn("##toggle", flags);
 			ImGui::TableSetupColumn("CH", flags);
 			ImGui::TableSetupColumn("castId", flags);
 			ImGui::TableSetupColumn("vis", flags);
@@ -740,6 +777,31 @@ void showChannels() {
 				Sprite &sprite = *channel._sprite;
 
 				ImGui::TableNextRow();
+
+				{ // Playback toggle
+					ImGui::TableNextColumn();
+
+					ImGui::PushID(i + 20000);
+					ImDrawList *dl = ImGui::GetWindowDrawList();
+					const ImVec2 pos1 = ImGui::GetCursorScreenPos();
+					const ImVec2 mid(pos1.x + 7, pos1.y + 7);
+
+					ImGui::InvisibleButton("Line", ImVec2(16, ImGui::GetFontSize()));
+					ImGui::SetItemTooltip("Playback toggle");
+
+					if (ImGui::IsItemClicked(0)) {
+						score->_channels[i]->_visible = !score->_channels[i]->_visible;
+
+						g_director->getCurrentWindow()->render(true);
+					}
+
+					if (score->_channels[i]->_visible)
+						dl->AddCircleFilled(mid, 4.0f, ImColor(_state->_colors._channel_toggle));
+					else
+						dl->AddCircle(mid, 4.0f, ImColor(_state->_colors._channel_toggle));
+
+					ImGui::PopID();
+				}
 
 				ImGui::TableNextColumn();
 

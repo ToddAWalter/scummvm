@@ -107,7 +107,7 @@ public:
 	bool _miniUpdateEnabled;
 	virtual bool miniUpdate();
 
-	void getMousePos(Common::Point32 *Pos);
+	void getMousePos(Common::Point32 *pos);
 	Common::Rect32 _mouseLockRect;
 
 	bool _shuttingDown;
@@ -150,7 +150,7 @@ public:
 	int32 _indicatorWidth;
 	int32 _indicatorHeight;
 
-	Common::String _savedGameExt;
+	char *_savedGameExt;
 	bool _richSavedGames;
 
 #ifdef ENABLE_WME3D
@@ -158,8 +158,8 @@ public:
 	int32 _editorResolutionHeight;
 #endif
 
-	Common::String _loadImageName;
-	Common::String _saveImageName;
+	char *_loadImageName;
+	char *_saveImageName;
 	int32 _saveImageX;
 	int32 _saveImageY;
 	int32 _loadImageX;
@@ -222,9 +222,9 @@ public:
 	BaseFontStorage *_fontStorage;
 	BaseGame(const Common::String &targetName);
 	~BaseGame() override;
-	void DEBUG_DebugDisable();
-	void DEBUG_DebugEnable(const char *filename = nullptr);
-	bool _debugDebugMode;
+	void debugDisable();
+	void debugEnable(const char *filename = nullptr);
+	bool _debugMode;
 	void *_debugLogFile;
 	int32 _sequence;
 	virtual bool loadFile(const char *filename);
@@ -266,8 +266,8 @@ public:
 	// compatibility bits
 	bool _compatKillMethodThreads;
 
-	// FPS stuff
 private:
+	// FPS stuff
 	uint32 _lastTime;
 	uint32 _fpsTime;
 	uint32 _framesRendered;
@@ -396,11 +396,11 @@ public:
 	bool getCurrentViewportOffset(int *offsetX = nullptr, int *offsetY = nullptr) const;
 	bool getCurrentViewportRect(Common::Rect32 *rect, bool *custom = nullptr) const;
 	bool popViewport();
-	bool pushViewport(BaseViewport *Viewport);
-	bool setActiveObject(BaseObject *Obj);
+	bool pushViewport(BaseViewport *viewport);
+	bool setActiveObject(BaseObject *obj);
 
 	BaseSprite *_lastCursor;
-	bool drawCursor(BaseSprite *Cursor);
+	bool drawCursor(BaseSprite *cursor);
 
 	virtual bool initAfterLoad();
 

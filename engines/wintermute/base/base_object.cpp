@@ -72,7 +72,7 @@ BaseObject::BaseObject(BaseGame *inGame) : BaseScriptHolder(inGame) {
 
 	_soundEvent = nullptr;
 
-	_iD = _game->getSequence();
+	_id = _game->getSequence();
 
 	BasePlatform::setRectEmpty(&_rect);
 	_rectSet = false;
@@ -188,12 +188,14 @@ void BaseObject::setCaption(const char *caption, int caseVal) {
 
 //////////////////////////////////////////////////////////////////////////
 const char *BaseObject::getCaption(int caseVal) {
-	if (caseVal == 0)
+	if (caseVal == 0) {
 		caseVal = 1;
-	if (caseVal < 1 || caseVal > 7 || _caption[caseVal - 1] == nullptr)
+	}
+	if (caseVal < 1 || caseVal > 7 || _caption[caseVal - 1] == nullptr) {
 		return "";
-	else
+	} else {
 		return _caption[caseVal - 1];
+	}
 }
 
 
@@ -266,10 +268,10 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "GetCursor") == 0) {
 		stack->correctParams(0);
-		if (!_cursor || !_cursor->getFilename()) {
+		if (!_cursor || !_cursor->_filename) {
 			stack->pushNULL();
 		} else {
-			stack->pushString(_cursor->getFilename());
+			stack->pushString(_cursor->_filename);
 		}
 
 		return STATUS_OK;
@@ -538,7 +540,7 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		stack->correctParams(0);
 
 		if (_shadowImage) {
-			stack->pushString(_shadowImage->getFileName());
+			stack->pushString(_shadowImage->_filename.c_str());
 		} else {
 			stack->pushNULL();
 		}
@@ -574,7 +576,7 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		if (!_sFX) {
 			stack->pushNULL();
 		} else {
-			stack->pushString(_sFX->_soundFilename.c_str());
+			stack->pushString(_sFX->_soundFilename);
 		}
 		return STATUS_OK;
 	}
@@ -1071,7 +1073,7 @@ bool BaseObject::persist(BasePersistenceManager *persistMgr) {
 	persistMgr->transferBool(TMEMBER(_editorAlwaysRegister));
 	persistMgr->transferBool(TMEMBER(_editorOnly));
 	persistMgr->transferBool(TMEMBER(_editorSelected));
-	persistMgr->transferSint32(TMEMBER(_iD));
+	persistMgr->transferSint32(TMEMBER(_id));
 	persistMgr->transferBool(TMEMBER(_is3D));
 	persistMgr->transferBool(TMEMBER(_movable));
 	persistMgr->transferSint32(TMEMBER(_posX));
@@ -1122,7 +1124,7 @@ bool BaseObject::persist(BasePersistenceManager *persistMgr) {
 		Common::String tempString;
 		if (persistMgr->getIsSaving()) {
 			if (_shadowImage) {
-				tempString = _shadowImage->getFileName();
+				tempString = _shadowImage->_filename.c_str();
 			}
 			persistMgr->transferString(TMEMBER(tempString));
 		} else {
@@ -1130,7 +1132,7 @@ bool BaseObject::persist(BasePersistenceManager *persistMgr) {
 			if (persistMgr->checkVersion(1, 6, 1)) {
 				persistMgr->transferString(TMEMBER(tempString));
 				if (!tempString.empty()) {
-					_shadowImage = _game->_surfaceStorage->addSurface(tempString);
+					_shadowImage = _game->_surfaceStorage->addSurface(tempString.c_str());
 				}
 			}
 		}
@@ -1228,7 +1230,7 @@ bool BaseObject::playSFX(const char *filename, bool looping, bool playNow, const
 	}
 
 	// create new sound
-	delete _sFX;
+	SAFE_DELETE(_sFX);
 
 	_sFX = new BaseSound(_game);
 	if (_sFX && DID_SUCCEED(_sFX->setSound(filename, Audio::Mixer::kSFXSoundType, true))) {

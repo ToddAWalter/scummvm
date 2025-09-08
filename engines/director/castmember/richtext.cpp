@@ -104,6 +104,10 @@ void RichTextCastMember::load() {
 	if (_loaded)
 		return;
 
+	// RichText casts consist of 3 files:
+	// RTE0: Editor data, used only by the Authoring Tool
+	// RTE1: Plain text data
+	// RTE2: Bitmap representation for rendering
 	uint rte0id = 0;
 	uint rte1id = 0;
 	uint rte2id = 0;
@@ -216,19 +220,19 @@ Datum RichTextCastMember::getField(int field) {
 	return d;
 }
 
-bool RichTextCastMember::setField(int field, const Datum &d) {
+void RichTextCastMember::setField(int field, const Datum &d) {
 	switch (field) {
 	case kTheText:
 		_plainText = Common::U32String(d.asString());
 		warning("STUB: RichTextCastMember::setField: text set to \"%s\", but won't rerender!", d.asString().c_str());
-		break;
+		return;
 	case kThePageHeight:
 	case kTheScrollTop:
 	default:
 		break;
 	}
 
-	return CastMember::setField(field, d);
+	CastMember::setField(field, d);
 }
 
 Common::String RichTextCastMember::formatInfo() {
