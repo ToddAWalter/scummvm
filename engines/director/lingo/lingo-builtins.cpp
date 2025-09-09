@@ -210,6 +210,8 @@ static const BuiltinProto builtins[] = {
 	{ "updateFrame",	LB::b_updateFrame,	0, 0, 500, CBLTIN },	//				D5 c
 	// Point
 	{ "point",			LB::b_point,		2, 2, 400, FBLTIN },	//			D4 f
+	// Rect
+	{ "inflate",        LB::b_inflate,      2, 3, 400, FBLTIN },    //			D4 f
 	{ "inside",			LB::b_inside,		2, 2, 400, FBLTIN },	//			D4 f
 	{ "intersect",		LB::b_intersect,	2, 2, 400, FBLTIN },	//			D4 f
 	{ "map",			LB::b_map,			3, 3, 400, FBLTIN },	//			D4 f
@@ -1490,6 +1492,10 @@ void LB::b_getNthFileNameInFolder(int nargs) {
 
 	Datum r("");
 	Common::Array<Common::String> fileNameList;
+
+	// Update the game quirks archive in case our save state has changed.
+	// This is necessary because we may save a game and then try to open a game in the same session.
+	g_director->gameQuirks(g_director->getGameId(), g_director->getPlatform());
 
 	// First, mix in any files injected from the quirks
 	Common::Archive *cache = SearchMan.getArchive(kQuirksCacheArchive);
@@ -3338,6 +3344,35 @@ void LB::b_intersect(int nargs) {
 	d = rect1.intersects(rect2);
 
 	g_lingo->push(d);
+}
+
+void LB::b_inflate(int nargs) {
+	int inflateHeight = g_lingo->pop().asInt();
+	int inflateWidth = g_lingo->pop().asInt();
+	Datum sR = g_lingo->pop();
+
+	TYPECHECK(sR, RECT);
+
+	Common::Rect sourceRect(sR.u.farr->arr[0].asInt(),
+		                    sR.u.farr->arr[1].asInt(),
+		                    sR.u.farr->arr[2].asInt(),
+		                    sR.u.farr->arr[3].asInt());
+
+	int inflatedLeft = sourceRect.left - inflateWidth;
+	int inflatedTop = sourceRect.top - inflateHeight;
+	int inflatedRight = sourceRect.right + inflateWidth;
+	int inflatedBottom = sourceRect.bottom + inflateHeight;
+
+	Datum inflatedRect;
+	inflatedRect.type = RECT;
+
+	inflatedRect.u.farr = new FArray();
+	inflatedRect.u.farr->arr.push_back(Datum(inflatedLeft));
+	inflatedRect.u.farr->arr.push_back(Datum(inflatedTop));
+	inflatedRect.u.farr->arr.push_back(Datum(inflatedRight));
+	inflatedRect.u.farr->arr.push_back(Datum(inflatedBottom));
+
+	g_lingo->push(inflatedRect);
 }
 
 void LB::b_inside(int nargs) {

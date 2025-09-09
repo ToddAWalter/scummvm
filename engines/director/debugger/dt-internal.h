@@ -203,8 +203,11 @@ typedef struct ImGuiState {
 	} _hoveredScoreCast;
 
 	Common::Array<Common::Array<Common::Pair<uint, uint>>> _continuationData;
-	bool _loadedContinuationData = false;
+	Common::String _loadedContinuationData;
 
+	Common::String _scoreWindow;
+	Common::String _channelsWindow;
+	Common::String _castWindow;
 	int _scoreMode = 0;
 	int _scoreFrameOffset = 1;
 	int _scorePageSlider = 0;
@@ -242,6 +245,7 @@ void showImage(const ImGuiImage &image, const char *name, float thumbnailSize);
 ImVec4 convertColor(uint32 color);
 void displayVariable(const Common::String &name, bool changed, bool outOfScope = false);
 ImColor brightenColor(const ImColor &color, float factor);
+Window *windowListCombo(Common::String *target);
 Common::String formatHandlerName(int scriptId, int castId, Common::String handlerName, ScriptType scriptType, bool childScript);
 
 void showCast();        // dt-cast.cpp

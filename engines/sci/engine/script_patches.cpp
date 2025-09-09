@@ -102,6 +102,7 @@ static const char *const selectorNameTable[] = {
 	"setCycle",     // system selector
 	"setStep",      // system selector
 	"cycleSpeed",   // system selector
+	"moveSpeed",    // system selector
 	"handsOff",     // system selector
 	"handsOn",      // system selector
 	"type",         // system selector
@@ -213,7 +214,6 @@ static const char *const selectorNameTable[] = {
 	"drop",         // QFG4
 	"getCursor",    // QFG4
 	"heading",      // QFG4
-	"moveSpeed",    // QFG4
 	"retreat",      // QFG4
 	"sayMessage",   // QFG4
 	"setLooper",    // QFG4
@@ -248,6 +248,7 @@ enum ScriptPatcherSelectors {
 	SELECTOR_setCycle,
 	SELECTOR_setStep,
 	SELECTOR_cycleSpeed,
+	SELECTOR_moveSpeed,
 	SELECTOR_handsOff,
 	SELECTOR_handsOn,
 	SELECTOR_type,
@@ -360,7 +361,6 @@ enum ScriptPatcherSelectors {
 	SELECTOR_drop,
 	SELECTOR_getCursor,
 	SELECTOR_heading,
-	SELECTOR_moveSpeed,
 	SELECTOR_retreat,
 	SELECTOR_sayMessage,
 	SELECTOR_setLooper,
@@ -2159,17 +2159,17 @@ static const uint16 fangamePatchVolumeSlider2[] = {
 // Fan games based on the SCI Studio template reset their volume to 15 (max) in
 //  the init method of their game object in script 0. As with most SCI32 games,
 //  we patch this out so that the volume stored in ScummVM is used.
-// 
+//
 // Applies to: Fan games built with the SCI Studio / SCI Companion SCI0 template
 // Responsible method: Template:init (the Game object in script 0)
 // Fixes bug: #13795
 static const uint16 fangameSignatureVolumeReset1[] = {
 	0x35, 0x0f,                      // ldi 0f
-	SIG_ADDTOOFFSET(+1), 0x1d,       // sag 1d   [ sag or sal depending on compiler ] 
+	SIG_ADDTOOFFSET(+1), 0x1d,       // sag 1d   [ sag or sal depending on compiler ]
 	SIG_ADDTOOFFSET(+1),             // push2    [ opcode 7b instead of 7a in some games ]
 	0x39, 0x08,                      // pushi 08 [ volume ]
 	SIG_ADDTOOFFSET(+1),             // lsg 1d   [ lsg or lsl depending on compiler ]
-	SIG_MAGICDWORD, 0x1d,      
+	SIG_MAGICDWORD, 0x1d,
 	0x43, 0x31, 0x04,                // callk DoSound 04
 	SIG_END
 };
@@ -2738,13 +2738,13 @@ static const uint16 hoyle4PatchEuchreHandsOff[] = {
 static const uint16 hoyle4SignatureHeartsStrategy[] = {
 	0x8d, 0x00,                        // lst 00  [ temp0, uninitialized ]
 	0x81, SIG_MAGICDWORD, 0x75,        // lag 75  [ theHands ]
-	0x4a, 0x06,                        // send 06 [ theHands at: temp0 ] 
+	0x4a, 0x06,                        // send 06 [ theHands at: temp0 ]
 	0x48,                              // ret
 	SIG_END
 };
 
 static const uint16 hoyle4PatchHeartsStrategy[] = {
-	0x8f, 0x01,                        // lsp 01 [ param1, the player (0-3) ] 
+	0x8f, 0x01,                        // lsp 01 [ param1, the player (0-3) ]
 	PATCH_END
 };
 
@@ -3024,13 +3024,13 @@ static const uint16 hoyle5PatchSolitaireInit[] = {
 static const uint16 hoyle5SignatureHeartsStrategy[] = {
 	0x8d, 0x00,                        // lst 00  [ temp0, uninitialized ]
 	0x81, SIG_MAGICDWORD, 0x75,        // lag 75  [ theHands ]
-	0x4a, SIG_UINT16(0x0006),          // send 06 [ theHands at: temp0 ] 
+	0x4a, SIG_UINT16(0x0006),          // send 06 [ theHands at: temp0 ]
 	0x48,                              // ret
 	SIG_END
 };
 
 static const uint16 hoyle5PatchHeartsStrategy[] = {
-	0x8f, 0x01,                        // lsp 01 [ param1, the player (0-3) ] 
+	0x8f, 0x01,                        // lsp 01 [ param1, the player (0-3) ]
 	PATCH_END
 };
 
@@ -4560,7 +4560,7 @@ static const uint16 gk1EndGameFontPatch[] = {
 //  version does use a SCI2.1 interpreter.
 //
 // Applies to: Italian fan translation, PC CD version
-// Responsible methods: DEdit:hilite, DText:dispose, DText:draw, DSelector:dispose, 
+// Responsible methods: DEdit:hilite, DText:dispose, DText:draw, DSelector:dispose,
 //                      SRDialog:update, BookButton:hilite, TapeButton:doit
 //                      TellerButton:hilite, TopicButton:hilite
 static const uint16 gk1ItalianTranslationSignature[] = {
@@ -9536,7 +9536,7 @@ static const uint16 larry5PatchUpdateStopGroopClient[] = {
 	0x89, 0x00,                         // lsg 00
 	0x81, 0x64,                         // lag 64
 	0x4a, 0x06,                         // send 06 [ stopGroop client: ego ]
-	0x33, 0x05,                         // jmp 05  [ toss, ret ] 
+	0x33, 0x05,                         // jmp 05  [ toss, ret ]
 	PATCH_END
 };
 
@@ -10012,7 +10012,7 @@ static const uint16 larry6HiresMacVolumeRestorePatch[] = {
 //  This shouldn't affect ScummVM since we don't use RESOURCE.CFG, but something
 //  about the way the collection was packaged causes players to continue to miss
 //  this directory and not realize until it's too late. The lockup occurs late
-//  in the game and adding the missing patch files invalidates all saves. 
+//  in the game and adding the missing patch files invalidates all saves.
 //
 // We don't generally fix "bugs" that are consequences of not providing all of
 //  the game's data files, but this is a severe case that keeps coming up.
@@ -12176,7 +12176,7 @@ static const uint16 laurabow2CDPatchFixBugsWithMeat[] = {
 //  itself doesn't work, instead the player has to click on the surrounding area
 //  to look at it or pick it up. bone:doVerb calls dinoBones:doVerb but doesn't
 //  pass the verb parameter. We fix this by increasing the &rest parameter.
-//  
+//
 // Applies to: All versions
 // Responsible method: bone:doVerb
 static const uint16 laurabow2SignatureFixDinosaurBone[] = {
@@ -14093,7 +14093,7 @@ static const uint16 pepperPatchGlassJar[] = {
 //  goal state. The puzzle can only be completed by pressing the Help button,
 //  because it "solves" the puzzle one tile at a time by swapping them instead
 //  of sliding. Swapping tiles can place the puzzle in a solvable state.
-//  
+//
 // We have verified this with sliding tile puzzle solver programs. They reject
 //  the initial state as unsolvable. There is no indication that this was the
 //  intention for the puzzle box.
@@ -17192,7 +17192,7 @@ static const uint16 qfg3PatchRingRopePrize[] = {
 //  events that they've met the preconditions for. Note that these changes are
 //  broken up into smaller patches to be compatible with the many different
 //  versions of these scripts, including the NRS fan patches that GOG includes,
-//  and the comprehensive QFG3 Unofficial Update fan patches. 
+//  and the comprehensive QFG3 Unofficial Update fan patches.
 //
 // Applies to: All versions
 // Responsible methods: rm450:init, rm420:init
@@ -17240,7 +17240,7 @@ static const uint16 qfg3SignatureLaibonHutEvents3[] = {
 	SIG_MAGICDWORD,
 	0x35, 0x05,                         // ldi 05
 	0xa3, 0x0b,                         // sal 0b [ room event = 5 ]
-	0x33,                               // jmp [ exit cond ] 
+	0x33,                               // jmp [ exit cond ]
 	SIG_END
 };
 
@@ -17254,7 +17254,7 @@ static const uint16 qfg3PatchLaibonHutEvents3[] = {
 	0x31, 0x06,                         // bnt 06
 	0x35, 0x05,                         // ldi 05
 	0xa3, 0x0b,                         // sal 0b [ room event = 5 ]
-	0x33, 0x06,                         // jmp 06 [ exit cond ] 
+	0x33, 0x06,                         // jmp 06 [ exit cond ]
 	0x8a, PATCH_UINT16(0x000b),         // lsl 000b
 	0x35, 0x06,                         // ldi 06
 	0x1a,                               // eq? [ is room event 6? ]
@@ -17278,7 +17278,7 @@ static const uint16 qfg3SignatureNrsLaibonHutEvents3[] = {
 	SIG_MAGICDWORD,
 	0x35, 0x05,                         // ldi 05
 	0xa3, 0x0b,                         // sal 0b [ room event = 5 ]
-	0x32,                               // jmp [ exit cond ] 
+	0x32,                               // jmp [ exit cond ]
 	SIG_END
 };
 
@@ -17292,7 +17292,7 @@ static const uint16 qfg3PatchNrsLaibonHutEvents3[] = {
 	0x30, PATCH_UINT16(0x0007),         // bnt 0007
 	0x35, 0x05,                         // ldi 05
 	0xa3, 0x0b,                         // sal 0b [ room event = 5 ]
-	0x32, PATCH_UINT16(0x0006),         // jmp 0006 [ exit cond ] 
+	0x32, PATCH_UINT16(0x0006),         // jmp 0006 [ exit cond ]
 	0x8a, PATCH_UINT16(0x000b),         // lsl 000b
 	0x35, 0x06,                         // ldi 06
 	0x1a,                               // eq? [ is room event 6? ]
