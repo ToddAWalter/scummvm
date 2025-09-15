@@ -140,6 +140,7 @@ void AlcachofaEngine::playVideo(int32 videoId) {
 	FakeLock lock("playVideo", _eventLoopSemaphore);
 	File *file = new File();
 	if (!file->open(Path(Common::String::format("Data/DATA%02d.BIN", videoId + 1)))) {
+		delete file;
 		game().invalidVideo(videoId, "open file");
 		return;
 	}
@@ -297,10 +298,11 @@ Common::Error AlcachofaEngine::syncGame(MySerializer &s) {
 		thumbnail = new Graphics::ManagedSurface();
 		getSavegameThumbnail(*thumbnail->surfacePtr());
 	}
-	if (!syncThumbnail(s, thumbnail))
-		return { kUnknownError, "Could not read thumbnail" };
+	bool couldSyncThumbnail = syncThumbnail(s, thumbnail);
 	if (thumbnail != nullptr)
 		delete thumbnail;
+	if (!couldSyncThumbnail)
+		return { kUnknownError, "Could not read thumbnail" };
 
 	uint32 millis = menu().isOpen()
 		? menu().millisBeforeMenu()

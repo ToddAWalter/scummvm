@@ -278,7 +278,7 @@ bool SXMemBuffer::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSt
 			stack->pushNULL();
 		} else {
 			void *pointer = *(void **)((byte *)_buffer + start);
-			SXMemBuffer *buf = new SXMemBuffer(_game,  pointer);
+			SXMemBuffer *buf = new SXMemBuffer(_game, pointer);
 			stack->pushNative(buf, false);
 		}
 		return STATUS_OK;
@@ -478,7 +478,7 @@ bool SXMemBuffer::scSetProperty(const char *name, ScValue *value) {
 	//////////////////////////////////////////////////////////////////////////
 	if (strcmp(name, "Length")==0) {
 	    int origLength = _length;
-	    _length = max(value->getInt(0), 0);
+	    _length = MAX(value->getInt(0), 0);
 
 	    char propName[20];
 	    if (_length < origLength) {

@@ -60,7 +60,7 @@ class Shape;
 class ITexture {
 public:
 	ITexture(Common::Point size);
-	virtual ~ITexture() = default;
+	virtual ~ITexture() {}
 
 	virtual void update(const Graphics::Surface &surface) = 0;
 	inline void update(const Graphics::ManagedSurface &surface) { update(surface.rawSurface()); }
@@ -73,7 +73,7 @@ private:
 
 class IRenderer {
 public:
-	virtual ~IRenderer() = default;
+	virtual ~IRenderer() {}
 
 	virtual Common::ScopedPtr<ITexture> createTexture(int32 w, int32 h, bool withMipmaps = true) = 0;
 
@@ -93,6 +93,9 @@ public:
 	virtual void end() = 0;
 
 	static IRenderer *createOpenGLRenderer(Common::Point resolution);
+	static IRenderer *createOpenGLRendererClassic(Common::Point resolution);
+	static IRenderer *createOpenGLRendererShaders(Common::Point resolution);
+	static IRenderer *createTinyGLRenderer(Common::Point resolution);
 };
 
 class IDebugRenderer : public virtual IRenderer {
@@ -305,7 +308,7 @@ private:
 class IDrawRequest {
 public:
 	IDrawRequest(int8 order);
-	virtual ~IDrawRequest() = default;
+	virtual ~IDrawRequest() {}
 
 	inline int8 order() const { return _order; }
 	virtual void draw() = 0;

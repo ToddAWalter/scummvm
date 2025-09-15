@@ -35,11 +35,12 @@
 #include "engines/wintermute/persistent.h"
 #include "engines/wintermute/coll_templ.h"
 #include "engines/wintermute/debugger.h"
-#include "common/events.h"
-#include "common/random.h"
 #if EXTENDED_DEBUGGER_ENABLED
 #include "engines/wintermute/base/scriptables/debuggable/debuggable_script_engine.h"
 #endif
+
+#include "common/events.h"
+#include "common/random.h"
 
 namespace Wintermute {
 
@@ -74,7 +75,7 @@ struct FogParameters;
 
 #define NUM_MUSIC_CHANNELS 5
 
-class BaseGame: public BaseObject {
+class BaseGame : public BaseObject {
 public:
 
 
@@ -101,6 +102,9 @@ public:
 	virtual bool onMouseMiddleUp();
 	virtual bool onPaint();
 	virtual bool onWindowClose();
+
+	bool isLeftDoubleClick();
+	bool isRightDoubleClick();
 
 	bool _autorunDisabled;
 	uint32 _lastMiniUpdate;
@@ -150,8 +154,8 @@ public:
 	int32 _indicatorWidth;
 	int32 _indicatorHeight;
 
-	char *_savedGameExt;
 	bool _richSavedGames;
+	char *_savedGameExt;
 
 #ifdef ENABLE_WME3D
 	int32 _editorResolutionWidth;
@@ -175,7 +179,6 @@ public:
 	uint32 _thumbnailHeight;
 
 	bool _reportTextureFormat;
-	void setResourceModule(void *resModule);
 
 	void setEngineLogCallback(ENGINE_LOG_CALLBACK callback = nullptr, void *data = nullptr);
 	ENGINE_LOG_CALLBACK _engineLogCallback;
@@ -202,6 +205,7 @@ public:
 	bool initialize2();
 	bool initialize3();
 	//CBAccessMgr *m_AccessMgr;
+	BaseFileManager *_fileManager;
 	BaseTransitionMgr *_transMgr;
 
 	void LOG(bool res, const char *fmt, ...);
@@ -290,7 +294,7 @@ public:
 	void setWindowTitle();
 	bool handleMouseWheel(int32 delta) override;
 	bool _quitting;
-	virtual bool getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor) const;
+	virtual bool getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor);
 	bool handleKeypress(Common::Event *event, bool printable = false) override;
 	virtual void handleKeyRelease(Common::Event *event);
 	//bool HandleAccessKey(bool Printable, DWORD CharCode, DWORD KeyData);
@@ -305,7 +309,6 @@ public:
 	bool _loadInProgress;
 	UIWindow *_focusedWindow;
 	bool _editorForceScripts;
-	static void afterLoadScene(void *scene, void *data);
 	static void afterLoadRegion(void *region, void *data);
 	static void afterLoadSubFrame(void *subframe, void *data);
 	static void afterLoadSound(void *sound, void *data);
@@ -314,6 +317,7 @@ public:
 	static void afterLoadXModel(void *model, void *data);
 #endif
 	static void afterLoadScript(void *script, void *data);
+	static void afterLoadScene(void *scene, void *data);
 	static void invalidateValues(void *value, void *data);
 	bool loadSettings(const char *filename);
 	bool resumeMusic(int channel);
@@ -393,8 +397,8 @@ public:
 	void setInteractive(bool state);
 	virtual bool windowLoadHook(UIWindow *win, char **buf, char **params);
 	virtual bool windowScriptMethodHook(UIWindow *win, ScScript *script, ScStack *stack, const char *name);
-	bool getCurrentViewportOffset(int *offsetX = nullptr, int *offsetY = nullptr) const;
-	bool getCurrentViewportRect(Common::Rect32 *rect, bool *custom = nullptr) const;
+	bool getCurrentViewportOffset(int *offsetX = nullptr, int *offsetY = nullptr);
+	bool getCurrentViewportRect(Common::Rect32 *rect, bool *custom = nullptr);
 	bool popViewport();
 	bool pushViewport(BaseViewport *viewport);
 	bool setActiveObject(BaseObject *obj);
@@ -411,23 +415,15 @@ private:
 
 
 
-protected:
-	// WME Lite specific
-	bool _autoSaveOnExit;
-	uint32 _autoSaveSlot;
-	bool _cursorHidden;
-
 public:
 	BaseGameMusic *_musicSystem;
 	Common::String _targetName;
-
-	bool isLeftDoubleClick();
-	bool isRightDoubleClick();
 
 	void setIndicatorVal(int value);
 	bool getBilinearFiltering() { return _bilinearFiltering; }
 	void addMem(int32 bytes);
 
+	bool _touchInterface;
 	bool _bilinearFiltering{};
 #ifdef ENABLE_WME3D
 	bool _force2dRenderer{};
@@ -450,6 +446,13 @@ public:
 	bool isDoubleClick(int32 buttonIndex);
 	uint32 _usedMem;
 
+protected:
+	// WME Lite specific
+	bool _autoSaveOnExit;
+	uint32 _autoSaveSlot;
+	bool _cursorHidden;
+
+public:
 	void autoSaveOnExit();
 	PluginEvent &pluginEvents() { return _pluginEvents; }
 

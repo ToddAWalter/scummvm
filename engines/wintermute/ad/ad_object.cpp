@@ -926,7 +926,7 @@ void AdObject::talk(const char *text, const char *sound, uint32 duration, const 
 
 	// set duration by text length
 	if (_sentence->_duration <= 0) {
-		_sentence->_duration = MAX<int32>((size_t)1000, _game->_subtitlesSpeed * strlen(_sentence->_text));
+		_sentence->_duration = MAX<int32>(1000, _game->_subtitlesSpeed * (int32)strlen(_sentence->_text));
 	}
 
 
@@ -944,7 +944,7 @@ void AdObject::talk(const char *text, const char *sound, uint32 duration, const 
 	if (_subtitlesWidth > 0) {
 		width = _subtitlesWidth;
 	} else {
-		if ((x < _game->_renderer->getWidth() / 4 || x > _game->_renderer->getWidth() * 0.75)) {
+		if ((x < _game->_renderer->getWidth() / 4 || x > _game->_renderer->getWidth() * 0.75) && !_game->_touchInterface) {
 			width = MAX(_game->_renderer->getWidth() / 4, MIN(x * 2, (_game->_renderer->getWidth() - x) * 2));
 		} else {
 			width = _game->_renderer->getWidth() / 2;
@@ -988,8 +988,9 @@ void AdObject::talk(const char *text, const char *sound, uint32 duration, const 
 
 	_state = STATE_TALKING;
 
-	if (deleteSound)
+	if (deleteSound) {
 		delete[] sound;
+	}
 
 	//if (!m_Sentence->m_Sound)
 	//	Game->m_AccessMgr->Speak(m_Sentence->m_Text, TTS_TALK);

@@ -27,13 +27,13 @@ namespace Bagel {
 namespace HodjNPodj {
 namespace DFA {
 
-#define GAMETIMEMAX         5
-#define GAMETIMEMIN         1
-#define GAMESTEP            1
+constexpr int GAMETIMEMAX         = 5;
+constexpr int GAMETIMEMIN         = 1;
+constexpr int GAMESTEP            = 1;
 
-#define BEAVERTIMEMAX       4
-#define BEAVERTIMEMIN       1
-#define BEAVERSTEP          1
+constexpr int BEAVERTIMEMAX       = 4;
+constexpr int BEAVERTIMEMIN       = 1;
+constexpr int BEAVERSTEP = 1;
 
 static CPalette     *pPackRatOptPalette;
 CText               *ptxtGTime;
@@ -71,8 +71,8 @@ CColorButton    *pDFACancelButton = nullptr;
  ****************************************************************/
 CDFAOptDlg::CDFAOptDlg(CWnd *pParent, CPalette *pPalette, unsigned int nID)
 	:  CBmpDialog(pParent, pPalette, nID, ".\\ART\\SSCROLL.BMP"),
-		rDisplayGTime(43, 85, 174, 97),
-		rDisplayBTime(43, 35, 174, 47) {
+		rDisplayGTime(43, 85, 174, 98),
+		rDisplayBTime(43, 35, 174, 48) {
 	CDC     *pDC = GetDC();
 
 	pPackRatOptPalette = pPalette;
@@ -266,8 +266,8 @@ void CDFAOptDlg::OnPaint() {
 
 //      now paint in my text with a transparent background
 	nOldBkMode = pDC->SetBkMode(TRANSPARENT);
-	pDC->TextOut(43, 20, strBTime);
-	pDC->TextOut(43, 65, strGTime);
+	pDC->TextOut(43, 24, strBTime);
+	pDC->TextOut(43, 69, strGTime);
 	pDC->SetBkMode(nOldBkMode);
 
 	switch (m_nGameTime) {
@@ -360,11 +360,8 @@ void CDFAOptDlg::OnHScroll(unsigned int nSBCode, unsigned int nPos, CScrollBar* 
 	int     oldAmnt = 0;
 	int     newAmnt = 0;
 	CDC     *pDC;
-	//int     nJunk = 0;
 	char    cGDisplay[12];
 	char    cBDisplay[12];
-
-	//nJunk = pScrollBar->GetDlgCtrlID();
 
 // first set the range of the scoll bar
 	if (pScrollBar->GetDlgCtrlID() == IDC_GAMETIME)

@@ -59,6 +59,7 @@
 #include "engines/wintermute/ui/ui_window.h"
 #include "engines/wintermute/utils/utils.h"
 #include "engines/wintermute/wintermute.h"
+#include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/dcgf.h"
 
 #ifdef ENABLE_WME3D
@@ -254,7 +255,7 @@ bool AdScene::getPath(BasePoint source, BasePoint target, AdPath *path, BaseObje
 			for (int xxx = startX - tolerance; xxx <= startX + tolerance; xxx++) {
 				for (int yyy = startY - tolerance; yyy <= startY + tolerance; yyy++) {
 					if (isWalkableAt(xxx, yyy, true, requester)) {
-						int distance = abs(xxx - source.x) + abs(yyy - source.y);
+						int distance = ABS(xxx - source.x) + ABS(yyy - source.y);
 						if (distance < bestDistance) {
 							startX = xxx;
 							startY = yyy;
@@ -271,7 +272,7 @@ bool AdScene::getPath(BasePoint source, BasePoint target, AdPath *path, BaseObje
 		// correctTargetPoint(&target.x, &target.y);
 
 		// last point
-		//_pfPath.add(new AdPathPoint(target.x, target.y, INT_MAX));
+		//_pfPath.add(new AdPathPoint(target.x, target.y, INT_MAX_VALUE));
 		pfPointsAdd(target.x, target.y, INT_MAX_VALUE);
 
 		// active waypoints
@@ -311,7 +312,7 @@ void AdScene::pfAddWaypointGroup(AdWaypointGroup *wpt, BaseObject *requester) {
 			continue;
 		}
 
-		//_pfPath.add(new AdPathPoint(wpt->_points[i]->x, wpt->_points[i]->y, INT_MAX));
+		//_pfPath.add(new AdPathPoint(wpt->_points[i]->x, wpt->_points[i]->y, INT_MAX_VALUE));
 		pfPointsAdd(wpt->_points[i]->x, wpt->_points[i]->y, INT_MAX_VALUE);
 	}
 }
@@ -371,8 +372,8 @@ uint32 AdScene::getAlphaAt(int x, int y, bool colorCheck) {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool AdScene::isBlockedAt(int x, int y, bool checkFreeObjects, BaseObject *requester) {
-	bool ret = true;
+bool AdScene::isBlockedAt(int x, int y, bool checkFreeObjects, BaseObject *requester, bool defaultBlock) {
+	bool ret = defaultBlock;
 
 	if (checkFreeObjects) {
 		for (int32 i = 0; i < _objects.getSize(); i++) {
@@ -468,8 +469,8 @@ int AdScene::getPointsDist(BasePoint p1, BasePoint p2, BaseObject *requester) {
 	x2 = p2.x;
 	y2 = p2.y;
 
-	xLength = abs(x2 - x1);
-	yLength = abs(y2 - y1);
+	xLength = ABS(x2 - x1);
+	yLength = ABS(y2 - y1);
 
 	if (xLength > yLength) {
 		if (x1 > x2) {
@@ -556,18 +557,18 @@ void AdScene::pathFinderStep() {
 //////////////////////////////////////////////////////////////////////////
 bool AdScene::initLoop() {
 #ifdef _DEBUGxxxx
-	int nu_steps = 0;
+	int numSteps = 0;
 	uint32 start = _game->_currentTime;
-	while (!_pfReady && g_system->getMillis() - start <= _pfMaxTime) {
+	while (!_pfReady && BasePlatform::getTime() - start <= _pfMaxTime) {
 		pathFinderStep();
-		nu_steps++;
+		numSteps++;
 	}
-	if (nu_steps > 0) {
-		_game->LOG(0, "STAT: PathFinder iterations in one loop: %d (%s)  _pfMaxTime=%d", nu_steps, _pfReady ? "finished" : "not yet done", _pfMaxTime);
+	if (numSteps > 0) {
+		_game->LOG(0, "STAT: PathFinder iterations in one loop: %d (%s)  _pfMaxTime=%d", numSteps, _pfReady ? "finished" : "not yet done", _pfMaxTime);
 	}
 #else
 	uint32 start = _game->_currentTime;
-	while (!_pfReady && g_system->getMillis() - start <= _pfMaxTime) {
+	while (!_pfReady && BasePlatform::getTime() - start <= _pfMaxTime) {
 		pathFinderStep();
 	}
 #endif
@@ -583,7 +584,7 @@ bool AdScene::initLoop() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdScene::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
 		_game->LOG(0, "AdScene::LoadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
@@ -1266,7 +1267,6 @@ bool AdScene::traverseNodes(bool doUpdate) {
 			break;
 
 			default:
-				error("AdScene::TraverseNodes - Unhandled enum");
 				break;
 			} // switch
 		} // each node
@@ -1574,10 +1574,10 @@ void AdScene::scrollTo(int offsetX, int offsetY) {
 
 
 	if (_game->_mainObject && _game->_mainObject->_is3D) {
-		if (abs(origOffsetLeft - _targetOffsetLeft) < 5) {
+		if (ABS(origOffsetLeft - _targetOffsetLeft) < 5) {
 			_targetOffsetLeft = origOffsetLeft;
 		}
-		if (abs(origOffsetTop - _targetOffsetTop) < 5) {
+		if (ABS(origOffsetTop - _targetOffsetTop) < 5) {
 			_targetOffsetTop = origOffsetTop;
 		}
 		//_targetOffsetTop = 0;
@@ -3132,8 +3132,8 @@ bool AdScene::correctTargetPoint2(int32 startX, int32 startY, int32 *targetX, in
 	x2 = startX;
 	y2 = startY;
 
-	xLength = abs(x2 - x1);
-	yLength = abs(y2 - y1);
+	xLength = ABS(x2 - x1);
+	yLength = ABS(y2 - y1);
 
 	if (xLength > yLength) {
 
@@ -3222,7 +3222,7 @@ bool AdScene::correctTargetPoint(int32 startX, int32 startY, int32 *argX, int32 
 	int offsetX = INT_MAX_VALUE, offsetY = INT_MAX_VALUE;
 
 	if (foundLeft && foundRight) {
-		if (abs(lengthLeft) < abs(lengthRight)) {
+		if (ABS(lengthLeft) < ABS(lengthRight)) {
 			offsetX = lengthLeft;
 		} else {
 			offsetX = lengthRight;
@@ -3234,7 +3234,7 @@ bool AdScene::correctTargetPoint(int32 startX, int32 startY, int32 *argX, int32 
 	}
 
 	if (foundUp && foundDown) {
-		if (abs(lengthUp) < abs(lengthDown)) {
+		if (ABS(lengthUp) < ABS(lengthDown)) {
 			offsetY = lengthUp;
 		} else {
 			offsetY = lengthDown;
@@ -3245,7 +3245,7 @@ bool AdScene::correctTargetPoint(int32 startX, int32 startY, int32 *argX, int32 
 		offsetY = lengthDown;
 	}
 
-	if (abs(offsetX) < abs(offsetY)) {
+	if (ABS(offsetX) < ABS(offsetY)) {
 		*argX = *argX + offsetX;
 	} else {
 		*argY = *argY + offsetY;
@@ -3476,7 +3476,6 @@ bool AdScene::persistState(bool saving) {
 				}
 				break;
 			default:
-				warning("AdScene::PersistState - unhandled enum");
 				break;
 			}
 		}
@@ -3624,7 +3623,7 @@ BaseObject *AdScene::getNextAccessObject(BaseObject *currObject) {
 		if (currObject != nullptr) {
 			for (int32 i = 0; i < objects.getSize(); i++) {
 				if (objects[i] == currObject) {
-					if (i < (int32)objects.getSize() - 1) {
+					if (i < objects.getSize() - 1) {
 						return objects[i + 1];
 					} else {
 						break;
@@ -3702,7 +3701,6 @@ bool AdScene::getSceneObjects(BaseArray<AdObject *> &objects, bool interactiveOn
 			break;
 
 			default:
-				debugC(kWintermuteDebugGeneral, "AdScene::GetSceneObjects - Unhandled enum");
 				break;
 			}
 		}

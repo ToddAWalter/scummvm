@@ -11,7 +11,7 @@ MODULE_OBJS = \
 	general-objects.o \
 	global-ui.o \
 	graphics.o \
-	graphics-opengl.o \
+	graphics-opengl-base.o \
 	input.o \
 	menu.o \
 	metaengine.o \
@@ -24,6 +24,14 @@ MODULE_OBJS = \
 	ui-objects.o
 
 ifdef USE_OPENGL_GAME
+MODULE_OBJS += graphics-opengl.o
+else # create_project cannot handle else and ifdef on the same line
+ifdef USE_OPENGL_SHADERS
+MODULE_OBJS += graphics-opengl.o
+endif
+endif
+
+ifdef USE_OPENGL_GAME
 MODULE_OBJS += \
 	graphics-opengl-classic.o
 endif
@@ -31,6 +39,11 @@ endif
 ifdef USE_OPENGL_SHADERS
 MODULE_OBJS += \
 	graphics-opengl-shaders.o
+endif
+
+ifdef USE_TINYGL
+MODULE_OBJS += \
+	graphics-tinygl.o
 endif
 
 # This module can be built as a plugin

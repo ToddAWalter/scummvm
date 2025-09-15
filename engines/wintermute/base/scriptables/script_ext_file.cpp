@@ -80,7 +80,7 @@ void SXFile::cleanup() {
 //////////////////////////////////////////////////////////////////////////
 void SXFile::close() {
 	if (_readFile) {
-		BaseFileManager::getEngineInstance()->closeFile(_readFile);
+		_game->_fileManager->closeFile(_readFile);
 		_readFile = nullptr;
 	}
 	if (_writeFile) {
@@ -127,9 +127,9 @@ bool SXFile::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			_mode = 1;
 		}
 		if (_mode == 1) {
-			_readFile = BaseFileManager::getEngineInstance()->openFile(_filename);
+			_readFile = _game->_fileManager->openFile(_filename);
 			if (!_readFile) {
-				//script->runtimeError("File.%s: Error opening file '%s' for reading.", Name, _filename);
+				//script->runtimeError("File.%s: Error opening file '%s' for reading.", name, _filename);
 				close();
 			} else {
 				_textMode = strcmp(name, "OpenAsText") == 0;
@@ -150,7 +150,7 @@ bool SXFile::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 			}
 
 			if (!_writeFile) {
-				//script->runtimeError("File.%s: Error opening file '%s' for writing.", Name, _filename);
+				//script->runtimeError("File.%s: Error opening file '%s' for writing.", name, _filename);
 				close();
 			} else {
 				_textMode = strcmp(name, "OpenAsText") == 0;
@@ -699,7 +699,7 @@ bool SXFile::scSetProperty(const char *name, ScValue *value) {
 	//////////////////////////////////////////////////////////////////////////
 	if (strcmp(name, "Length")==0) {
 	    int origLength = _length;
-	    _length = max(value->getInt(0), 0);
+	    _length = MAX(value->getInt(0), 0);
 
 	    char propName[20];
 	    if (_length < OrigLength) {
@@ -780,7 +780,7 @@ bool SXFile::persist(BasePersistenceManager *persistMgr) {
 		if (_mode != 0) {
 			// open for reading
 			if (_mode == 1) {
-				_readFile = BaseFileManager::getEngineInstance()->openFile(_filename);
+				_readFile = _game->_fileManager->openFile(_filename);
 				if (!_readFile) {
 					close();
 				}

@@ -94,8 +94,10 @@ bool WintermuteEngine::hasFeature(EngineFeature f) const {
 }
 
 Common::Error WintermuteEngine::run() {
+#if EXTENDED_DEBUGGER_ENABLED
 	// Create debugger console. It requires GFX to be initialized
 	_dbgController = new DebuggerController(this);
+#endif
 	_debugger = new Console(this);
 	setDebugger(_debugger);
 
@@ -143,8 +145,6 @@ int WintermuteEngine::init() {
 		if (!(instance.getFlags() & GF_LOWSPEC_ASSETS)) {
 			GUI::MessageDialog dialog(_("This game requires PNG, JPEG and Vorbis support."));
 			dialog.runModal();
-			delete _game;
-			_game = nullptr;
 			return false;
 		}
 	#endif
@@ -154,8 +154,6 @@ int WintermuteEngine::init() {
 		if (BaseEngine::isFoxTailCheck(instance.getTargetExecutable())) {
 			GUI::MessageDialog dialog(_("This game requires the FoxTail subengine, which is not compiled in."));
 			dialog.runModal();
-			delete _game;
-			_game = nullptr;
 			return false;
 		}
 	#endif
@@ -165,8 +163,6 @@ int WintermuteEngine::init() {
 		if (instance.getTargetExecutable() == WME_HEROCRAFT) {
 			GUI::MessageDialog dialog(_("This game requires the HeroCraft subengine, which is not compiled in."));
 			dialog.runModal();
-			delete _game;
-			_game = nullptr;
 			return false;
 		}
 	#endif
@@ -177,8 +173,6 @@ int WintermuteEngine::init() {
 		GUI::MessageDialog dialog(_("This game requires 3D capabilities, which is not compiled in. As such, it"
 			" is likely to be unplayable totally or partially."), _("Start anyway"), _("Cancel"));
 		if (dialog.runModal() != GUI::kMessageOK) {
-			delete _game;
-			_game = nullptr;
 			return 1;
 		}
 	}
@@ -266,8 +260,10 @@ int WintermuteEngine::init() {
 		}
 	}
 
+#if EXTENDED_DEBUGGER_ENABLED
 	_game->_scEngine->attachMonitor(_dbgController);
-
+#endif
+	
 	// all set, ready to go
 	return 0;
 }

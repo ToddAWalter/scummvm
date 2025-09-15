@@ -33,6 +33,7 @@
 #include "engines/wintermute/base/base_game.h"
 #include "engines/wintermute/base/base_file_manager.h"
 #include "engines/wintermute/utils/utils.h"
+#include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/dcgf.h"
 
 namespace Wintermute {
@@ -84,7 +85,7 @@ ScEngine::ScEngine(BaseGame *inGame) : BaseClass(inGame) {
 	_isProfiling = false;
 	_profilingStartTime = 0;
 
-	//EnableProfiling();
+	//enableProfiling();
 }
 
 
@@ -123,7 +124,8 @@ bool ScEngine::cleanup() {
 
 //////////////////////////////////////////////////////////////////////////
 byte *ScEngine::loadFile(void *data, char *filename, uint32 *size) {
-	return BaseFileManager::getEngineInstance()->readWholeFile(filename, size);
+	BaseGame *game = (BaseGame *)data;
+	return game->_fileManager->readWholeFile(filename, size);
 }
 
 
@@ -200,7 +202,7 @@ byte *ScEngine::getCompiledScript(const char *filename, uint32 *outSize, bool ig
 	if (!ignoreCache) {
 		for (int i = 0; i < MAX_CACHED_SCRIPTS; i++) {
 			if (_cachedScripts[i] && scumm_stricmp(_cachedScripts[i]->_filename, filename) == 0) {
-				_cachedScripts[i]->_timestamp = g_system->getMillis();
+				_cachedScripts[i]->_timestamp = BasePlatform::getTime();
 				*outSize = _cachedScripts[i]->_size;
 				return _cachedScripts[i]->_buffer;
 			}
@@ -213,9 +215,9 @@ byte *ScEngine::getCompiledScript(const char *filename, uint32 *outSize, bool ig
 
 	uint32 size;
 
-	byte *buffer = BaseEngine::instance().getFileManager()->readWholeFile(filename, &size);
+	byte *buffer = _game->_fileManager->readWholeFile(filename, &size);
 	if (!buffer) {
-		_game->LOG(0, "ScEngine::GetCompiledScript - error opening script '%s'", filename);
+		_game->LOG(0, "ScEngine::getCompiledScript - error opening script '%s'", filename);
 		return nullptr;
 	}
 
@@ -225,7 +227,7 @@ byte *ScEngine::getCompiledScript(const char *filename, uint32 *outSize, bool ig
 		compSize = size;
 	} else {
 		if (!_compilerAvailable) {
-			_game->LOG(0, "ScEngine::GetCompiledScript - script '%s' needs to be compiled but compiler is not available", filename);
+			_game->LOG(0, "ScEngine::getCompiledScript - script '%s' needs to be compiled but compiler is not available", filename);
 			delete[] buffer;
 			return nullptr;
 		}
@@ -240,7 +242,7 @@ byte *ScEngine::getCompiledScript(const char *filename, uint32 *outSize, bool ig
 	CScCachedScript *cachedScript = new CScCachedScript(filename, compBuffer, compSize);
 	if (cachedScript) {
 		int index = 0;
-		uint32 minTime = g_system->getMillis();
+		uint32 minTime = BasePlatform::getTime();
 		for (int i = 0; i < MAX_CACHED_SCRIPTS; i++) {
 			if (_cachedScripts[i] == nullptr) {
 				index = i;
@@ -306,7 +308,7 @@ bool ScEngine::tick() {
 
 		case SCRIPT_SLEEPING: {
 			if (_scripts[i]->_waitFrozen) {
-				if (_scripts[i]->_waitTime <= g_system->getMillis()) {
+				if (_scripts[i]->_waitTime <= BasePlatform::getTime()) {
 					_scripts[i]->run();
 				}
 			} else {
@@ -350,13 +352,13 @@ bool ScEngine::tick() {
 
 		// time sliced script
 		if (_scripts[i]->_timeSlice > 0) {
-			uint32 startTime = g_system->getMillis();
-			while (_scripts[i]->_state == SCRIPT_RUNNING && g_system->getMillis() - startTime < _scripts[i]->_timeSlice) {
+			uint32 startTime = BasePlatform::getTime();
+			while (_scripts[i]->_state == SCRIPT_RUNNING && BasePlatform::getTime() - startTime < _scripts[i]->_timeSlice) {
 				_currentScript = _scripts[i];
 				_scripts[i]->executeInstruction();
 			}
 			if (_isProfiling && _scripts[i]->_filename) {
-				addScriptTime(_scripts[i]->_filename, g_system->getMillis() - startTime);
+				addScriptTime(_scripts[i]->_filename, BasePlatform::getTime() - startTime);
 			}
 		}
 
@@ -365,7 +367,7 @@ bool ScEngine::tick() {
 			uint32 startTime = 0;
 			bool isProfiling = _isProfiling;
 			if (isProfiling) {
-				startTime = g_system->getMillis();
+				startTime = BasePlatform::getTime();
 			}
 
 			while (_scripts[i]->_state == SCRIPT_RUNNING) {
@@ -373,7 +375,7 @@ bool ScEngine::tick() {
 				_scripts[i]->executeInstruction();
 			}
 			if (isProfiling && _scripts[i]->_filename) {
-				addScriptTime(_scripts[i]->_filename, g_system->getMillis() - startTime);
+				addScriptTime(_scripts[i]->_filename, BasePlatform::getTime() - startTime);
 			}
 		}
 		_currentScript = nullptr;
@@ -450,15 +452,6 @@ int ScEngine::getNumScripts(int *running, int *waiting, int *persistent) {
 			numPersistent++;
 			break;
 		default:
-			// Those states were not handled in original WME as well:
-			// * SCRIPT_FINISHED,
-			// * SCRIPT_ERROR,
-			// * SCRIPT_WAITING_SCRIPT,
-			// * SCRIPT_THREAD_FINISHED
-			debugN("ScEngine::GetNumScripts - unhandled enum: %d\n", _scripts[i]->_state);
-
-			// This method calculates thread counts to be shown at debug screen only
-			// Extend BaseGame::displayDebugInfo() if you want to handle those states
 			break;
 		}
 		numTotal++;
@@ -489,10 +482,10 @@ bool ScEngine::emptyScriptCache() {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool ScEngine::resetObject(BaseObject *Object) {
+bool ScEngine::resetObject(BaseObject *object) {
 	// terminate all scripts waiting for this object
 	for (int32 i = 0; i < _scripts.getSize(); i++) {
-		if (_scripts[i]->_state == SCRIPT_WAITING && _scripts[i]->_waitObject == Object) {
+		if (_scripts[i]->_state == SCRIPT_WAITING && _scripts[i]->_waitObject == object) {
 			if (!_game->_compatKillMethodThreads) {
 				resetScript(_scripts[i]);
 			}
@@ -607,7 +600,7 @@ void ScEngine::enableProfiling() {
 	// destroy old data, if any
 	_scriptTimes.clear();
 
-	_profilingStartTime = g_system->getMillis();
+	_profilingStartTime = BasePlatform::getTime();
 	_isProfiling = true;
 }
 
@@ -626,7 +619,7 @@ void ScEngine::disableProfiling() {
 //////////////////////////////////////////////////////////////////////////
 void ScEngine::dumpStats() {
 	error("DumpStats not ported to ScummVM yet");
-	/*  uint32 totalTime = g_system->getMillis() - _profilingStartTime;
+	/*  uint32 totalTime = BasePlatform::getTime() - _profilingStartTime;
 
 	    typedef std::vector <std::pair<uint32, std::string> > TimeVector;
 	    TimeVector times;

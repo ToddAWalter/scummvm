@@ -44,6 +44,7 @@
 #include "engines/wintermute/base/scriptables/script_stack.h"
 #include "engines/wintermute/base/scriptables/script.h"
 #include "engines/wintermute/utils/utils.h"
+#include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/dcgf.h"
 
 #include "common/util.h"
@@ -94,9 +95,9 @@ UIEdit::~UIEdit() {
 
 //////////////////////////////////////////////////////////////////////////
 bool UIEdit::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "UIEdit::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "UIEdit::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -482,7 +483,7 @@ bool UIEdit::scSetProperty(const char *name, ScValue *value) {
 	if (strcmp(name, "SelStart") == 0) {
 		_selStart = value->getInt();
 		_selStart = MAX<int32>(_selStart, 0);
-		_selStart = (int32)MIN((size_t)_selStart, strlen(_text));
+		_selStart = MIN(_selStart, (int32)strlen(_text));
 		return STATUS_OK;
 	}
 
@@ -492,7 +493,7 @@ bool UIEdit::scSetProperty(const char *name, ScValue *value) {
 	else if (strcmp(name, "SelEnd") == 0) {
 		_selEnd = value->getInt();
 		_selEnd = MAX<int32>(_selEnd, 0);
-		_selEnd = (int32)MIN((size_t)_selEnd, strlen(_text));
+		_selEnd = MIN(_selEnd, (int32)strlen(_text));
 		return STATUS_OK;
 	}
 
@@ -602,8 +603,8 @@ bool UIEdit::display(int offsetX, int offsetY) {
 	_selStart = MAX<int32>(_selStart, 0);
 	_selEnd   = MAX<int32>(_selEnd, 0);
 
-	_selStart = (int32)MIN((size_t)_selStart, strlen(_text));
-	_selEnd   = (int32)MIN((size_t)_selEnd,   strlen(_text));
+	_selStart = MIN(_selStart, (int32)strlen(_text));
+	_selEnd   = MIN(_selEnd, (int32)strlen(_text));
 
 	//int cursorWidth = font->getCharWidth(_cursorChar[0]);
 	int cursorWidth = font->getTextWidth((byte *)_cursorChar);
@@ -673,8 +674,8 @@ bool UIEdit::display(int offsetX, int offsetY) {
 		// cursor
 		if (focused && curFirst) {
 			if (count) {
-				if (g_system->getMillis() - _lastBlinkTime >= _cursorBlinkRate) {
-					_lastBlinkTime = g_system->getMillis();
+				if (BasePlatform::getTime() - _lastBlinkTime >= _cursorBlinkRate) {
+					_lastBlinkTime = BasePlatform::getTime();
 					_cursorVisible = !_cursorVisible;
 				}
 				if (_cursorVisible) {
@@ -699,8 +700,8 @@ bool UIEdit::display(int offsetX, int offsetY) {
 		// cursor
 		if (focused && !curFirst) {
 			if (count) {
-				if (g_system->getMillis() - _lastBlinkTime >= _cursorBlinkRate) {
-					_lastBlinkTime = g_system->getMillis();
+				if (BasePlatform::getTime() - _lastBlinkTime >= _cursorBlinkRate) {
+					_lastBlinkTime = BasePlatform::getTime();
 					_cursorVisible = !_cursorVisible;
 				}
 				if (_cursorVisible) {
@@ -724,10 +725,10 @@ bool UIEdit::display(int offsetX, int offsetY) {
 	}
 
 
-	_game->_renderer->_rectList.add(new BaseActiveRect(_game,  this, nullptr, offsetX + _posX, offsetY + _posY, _width, _height, 100, 100, false));
+	_game->_renderer->_rectList.add(new BaseActiveRect(_game, this, nullptr, offsetX + _posX, offsetY + _posY, _width, _height, 100, 100, false));
 
 /*	if (Game->m_AccessMgr->GetActiveObject() == this) {
-		RECT rc;
+		Common::Rect32 rc;
 		SetRect(&rc, OffsetX + m_PosX, OffsetY + m_PosY, OffsetX + m_PosX + m_Width, OffsetY + m_PosY + m_Height);
 		Game->m_AccessMgr->SetHintRect(&rc, true);
 	}*/
@@ -857,7 +858,7 @@ int UIEdit::deleteChars(int start, int end) {
 	}
 
 	start = MAX(start, (int)0);
-	end = MIN((size_t)end, strlen(_text));
+	end = MIN(end, (int)strlen(_text));
 
 	char *str = new char[strlen(_text) - (end - start) + 1];
 	if (str) {
@@ -884,7 +885,7 @@ int UIEdit::insertChars(int pos, const byte *chars, int num) {
 	}
 
 	pos = MAX(pos, (int)0);
-	pos = MIN((size_t)pos, strlen(_text));
+	pos = MIN(pos, (int)strlen(_text));
 
 	char *str = new char[strlen(_text) + num + 1];
 	if (str) {

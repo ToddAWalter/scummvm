@@ -63,6 +63,7 @@ enum ThicknessFlags {
 	kTTweened   = 0x80,
 };
 
+struct BehaviorElement;
 class Sprite {
 public:
 	Sprite(Frame *frame = nullptr);
@@ -156,6 +157,8 @@ public:
 	byte _bgColorG, _bgColorB;		// R component sits in _backColor
 	int32 _angleRot;
 	int32 _angleSkew;
+
+	Common::Array<BehaviorElement> _behaviors;
 };
 
 } // End of namespace Director

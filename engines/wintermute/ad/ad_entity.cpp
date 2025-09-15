@@ -99,9 +99,9 @@ int32 AdEntity::getHintY() const {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdEntity::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "AdEntity::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "AdEntity::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -494,7 +494,6 @@ bool AdEntity::loadBuffer(char *buffer, bool complete) {
 			break;
 #endif
 		}
-		break;
 
 		default:
 			break;
@@ -592,7 +591,7 @@ bool AdEntity::display() {
 			float ScaleX, ScaleY;
 			GetScale(&ScaleX, &ScaleY);
 
-			RECT rc;
+			Common::Rect32 rc;
 			SetRectEmpty(&rc);
 			if (m_CurrentSprite) {
 				m_CurrentSprite->GetBoundingRect(&rc, m_PosX - Game->m_OffsetX, m_PosY - Game->m_OffsetY, ScaleX, ScaleY);

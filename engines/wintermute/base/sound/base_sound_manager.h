@@ -41,7 +41,7 @@ public:
 	bool resumeAll();
 	bool pauseAll(bool includingMusic = true);
 	bool cleanup();
-	//DECLARE_PERSISTENT(BaseSoundMgr, BaseClass);
+	//DECLARE_PERSISTENT(BaseSoundMgr, BaseClass)
 	byte getMasterVolumePercent();
 	byte getMasterVolume();
 	bool setMasterVolumePercent(byte percent);
@@ -52,6 +52,7 @@ public:
 	bool removeSound(BaseSoundBuffer *sound);
 	BaseSoundBuffer *addSound(const Common::String &filename, Audio::Mixer::SoundType type = Audio::Mixer::kSFXSoundType, bool streamed = false);
 	bool addSound(BaseSoundBuffer *sound, Audio::Mixer::SoundType type = Audio::Mixer::kSFXSoundType);
+	bool initLoop();
 	bool initialize();
 	bool _soundAvailable;
 	BaseSoundMgr(BaseGame *inGame);

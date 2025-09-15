@@ -60,18 +60,18 @@ Common::String BaseClass::getEditorProp(const Common::String &propName, const Co
 	if (_editorPropsIter != _editorProps.end()) {
 		return _editorPropsIter->_value.c_str();
 	} else {
-		return initVal; // Used to be NULL
+		return initVal;
 	}
 }
 
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseClass::setEditorProp(const Common::String &propName, const Common::String &propValue) {
-	if (propName.size() == 0) {
+	if (propName.empty()) {
 		return STATUS_FAILED;
 	}
 
-	if (propValue.size() == 0) {
+	if (propValue.empty()) {
 		_editorProps.erase(propName);
 	} else {
 		_editorProps[propName] = propValue;
@@ -106,7 +106,7 @@ bool BaseClass::parseEditorProperty(char *buffer, bool complete) {
 
 	if (complete) {
 		if (parser.getCommand(&buffer, commands, &params) != TOKEN_EDITOR_PROPERTY) {
-			BaseEngine::LOG(0, "'EDITOR_PROPERTY' keyword expected.");
+			_game->LOG(0, "'EDITOR_PROPERTY' keyword expected.");
 			return STATUS_FAILED;
 		}
 		buffer = params;
@@ -139,13 +139,13 @@ bool BaseClass::parseEditorProperty(char *buffer, bool complete) {
 	if (cmd == PARSERR_TOKENNOTFOUND) {
 		SAFE_DELETE_ARRAY(propName);
 		SAFE_DELETE_ARRAY(propValue);
-		BaseEngine::LOG(0, "Syntax error in EDITOR_PROPERTY definition");
+		_game->LOG(0, "Syntax error in EDITOR_PROPERTY definition");
 		return STATUS_FAILED;
 	}
 	if (cmd == PARSERR_GENERIC || propName == nullptr || propValue == nullptr) {
 		SAFE_DELETE_ARRAY(propName);
 		SAFE_DELETE_ARRAY(propValue);
-		BaseEngine::LOG(0, "Error loading EDITOR_PROPERTY definition");
+		_game->LOG(0, "Error loading EDITOR_PROPERTY definition");
 		return STATUS_FAILED;
 	}
 

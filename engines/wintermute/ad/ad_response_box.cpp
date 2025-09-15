@@ -161,6 +161,10 @@ bool AdResponseBox::createButtons() {
 				btn->_fontPress = btn->_fontHover;
 				btn->_align = _align;
 
+				if (_game->_touchInterface) {
+					btn->_fontHover = btn->_font;
+				}
+
 				if (_responses[i]->_font) {
 					btn->_font = _responses[i]->_font;
 				}
@@ -184,7 +188,13 @@ bool AdResponseBox::createButtons() {
 
 			btn->setName("response");
 			btn->correctSize();
-			//btn->SetListener(this, btn, _responses[i]->_iD);
+
+			// make the responses touchable
+			if (_game->_touchInterface) {
+				btn->_height = MAX<int32>(btn->_height, 50);
+			}
+
+			//btn->setListener(this, btn, _responses[i]->_id);
 			btn->setListener(this, btn, i);
 			btn->_visible = false;
 			_respButtons.add(btn);
@@ -203,9 +213,9 @@ bool AdResponseBox::createButtons() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdResponseBox::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "AdResponseBox::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "AdResponseBox::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -403,13 +413,11 @@ bool AdResponseBox::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "TEXT_ALIGN=\"%s\"\n", "center");
 		break;
 	default:
-		error("AdResponseBox::SaveAsText - Unhandled enum");
 		break;
 	}
 
 	switch (_verticalAlign) {
 	case VAL_TOP:
-	default:
 		buffer->putTextIndent(indent + 2, "VERTICAL_ALIGN=\"%s\"\n", "top");
 		break;
 	case VAL_BOTTOM:
@@ -417,6 +425,8 @@ bool AdResponseBox::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		break;
 	case VAL_CENTER:
 		buffer->putTextIndent(indent + 2, "VERTICAL_ALIGN=\"%s\"\n", "center");
+		break;
+	default:
 		break;
 	}
 
@@ -560,7 +570,7 @@ bool AdResponseBox::listen(BaseScriptHolder *param1, uint32 param2) {
 			_scrollOffset++;
 		} else if (scumm_stricmp(obj->_name, "response") == 0) {
 			if (_waitingScript) {
-				_waitingScript->_stack->pushInt(_responses[param2]->_iD);
+				_waitingScript->_stack->pushInt(_responses[param2]->_id);
 			}
 			handleResponse(_responses[param2]);
 			_waitingScript = nullptr;
@@ -574,7 +584,7 @@ bool AdResponseBox::listen(BaseScriptHolder *param1, uint32 param2) {
 		}
 		break;
 	default:
-		error("AdResponseBox::Listen - Unhandled enum");
+		break;
 	}
 
 	return STATUS_OK;
@@ -613,7 +623,7 @@ bool AdResponseBox::weedResponses() {
 	for (int32 i = 0; i < _responses.getSize(); i++) {
 		switch (_responses[i]->_responseType) {
 		case RESPONSE_ONCE:
-			if (adGame->branchResponseUsed(_responses[i]->_iD)) {
+			if (adGame->branchResponseUsed(_responses[i]->_id)) {
 				delete _responses[i];
 				_responses.removeAt(i);
 				i--;
@@ -621,14 +631,13 @@ bool AdResponseBox::weedResponses() {
 			break;
 
 		case RESPONSE_ONCE_GAME:
-			if (adGame->gameResponseUsed(_responses[i]->_iD)) {
+			if (adGame->gameResponseUsed(_responses[i]->_id)) {
 				delete _responses[i];
 				_responses.removeAt(i);
 				i--;
 			}
 			break;
 		default:
-			debugC(kWintermuteDebugGeneral, "AdResponseBox::WeedResponses - Unhandled enum");
 			break;
 		}
 	}
@@ -643,21 +652,21 @@ void AdResponseBox::setLastResponseText(const char *text, const char *textOrig) 
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool AdResponseBox::handleResponse(const AdResponse *response) {
+bool AdResponseBox::handleResponse(AdResponse *response) {
 	setLastResponseText(response->_text, response->_textOrig);
 
 	AdGame *adGame = (AdGame *)_game;
 
 	switch (response->_responseType) {
 	case RESPONSE_ONCE:
-		adGame->addBranchResponse(response->_iD);
+		adGame->addBranchResponse(response->_id);
 		break;
 
 	case RESPONSE_ONCE_GAME:
-		adGame->addGameResponse(response->_iD);
+		adGame->addGameResponse(response->_id);
 		break;
 	default:
-		debugC(kWintermuteDebugGeneral, "AdResponseBox::HandleResponse - Unhandled enum");
+		break;
 	}
 
 	return STATUS_OK;

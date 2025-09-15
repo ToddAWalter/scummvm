@@ -81,7 +81,7 @@ AdItem::~AdItem() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdItem::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
 		_game->LOG(0, "AdItem::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
@@ -779,10 +779,11 @@ bool AdItem::scSetProperty(const char *name, ScValue *value) {
 	// AmountString
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AmountString") == 0) {
-		if (value->isNULL())
+		if (value->isNULL()) {
 			SAFE_DELETE_ARRAY(_amountString);
-		else
+		} else {
 			BaseUtils::setString(&_amountString, value->getString());
+		}
 		return STATUS_OK;
 	}
 

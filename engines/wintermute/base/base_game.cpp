@@ -118,6 +118,8 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_renderer3D = nullptr;
 #endif
 	_soundMgr = nullptr;
+	_videoPlayer = nullptr;
+	_fileManager = nullptr;
 	_transMgr = nullptr;
 	_scEngine = nullptr;
 	_keyboardState = nullptr;
@@ -132,7 +134,6 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_systemFont = nullptr;
 	_videoFont = nullptr;
 
-	_videoPlayer = nullptr;
 	_theoraPlayer = nullptr;
 
 	_mainObject = nullptr;
@@ -245,7 +246,6 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_musicCrossfadeChannel1 = -1;
 	_musicCrossfadeChannel2 = -1;
 	_musicCrossfadeSwap = false;
-	// FoxTail:
 	_musicCrossfadeVolume1 = 0;
 	_musicCrossfadeVolume2 = 100;
 
@@ -318,6 +318,8 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 #ifdef ENABLE_HEROCRAFT
 	_rndHc = new Common::RandomSource("HeroCraft");
 #endif
+
+	_touchInterface = false;
 }
 
 
@@ -346,12 +348,13 @@ BaseGame::~BaseGame() {
 	SAFE_DELETE(_scEngine);
 	SAFE_DELETE(_fontStorage);
 	SAFE_DELETE(_surfaceStorage);
-	SAFE_DELETE(_videoPlayer);
 	SAFE_DELETE(_theoraPlayer);
+	SAFE_DELETE(_videoPlayer);
 	SAFE_DELETE(_soundMgr);
 	//SAFE_DELETE(_keyboardState);
 
 	SAFE_DELETE(_renderer);
+	_fileManager = nullptr;
 	//SAFE_DELETE(m_AccessMgr);
 
 	SAFE_DELETE(_stringTable);
@@ -502,6 +505,11 @@ bool BaseGame::initialize1() {
 		if (_fontStorage == nullptr) {
 			break;
 		}
+		_fileManager = BaseFileManager::getEngineInstance();
+		if (_fileManager == nullptr) {
+			break;
+		}
+
 		//m_AccessMgr = new CBAccessMgr(this);
 		//if(m_AccessMgr == nullptr) {
 		//	break;
@@ -509,6 +517,11 @@ bool BaseGame::initialize1() {
 
 		_soundMgr = new BaseSoundMgr(this);
 		if (_soundMgr == nullptr) {
+			break;
+		}
+
+		_videoPlayer = new VideoPlayer(this);
+		if (_videoPlayer == nullptr) {
 			break;
 		}
 
@@ -528,11 +541,6 @@ bool BaseGame::initialize1() {
 		_scEngine = new ScEngine(this);
 #endif
 		if (_scEngine == nullptr) {
-			break;
-		}
-
-		_videoPlayer = new VideoPlayer(this);
-		if (_videoPlayer == nullptr) {
 			break;
 		}
 
@@ -565,10 +573,11 @@ bool BaseGame::initialize1() {
 		delete _transMgr;
 		delete _surfaceStorage;
 		delete _fontStorage;
+		delete _videoPlayer;
 		delete _soundMgr;
 		//delete m_AccessMgr;
+		_fileManager = nullptr;
 		delete _scEngine;
-		delete _videoPlayer;
 		return STATUS_FAILED;
 	}
 }
@@ -645,10 +654,12 @@ bool BaseGame::initialize3() { // renderer is initialized
 
 	if (_indicatorY == -1)
 		_indicatorY = _renderer->getHeight() - _indicatorHeight;
-	if (_indicatorX == -1)
+	if (_indicatorX == -1) {
 		_indicatorX = 0;
-	if (_indicatorWidth == -1)
+	}
+	if (_indicatorWidth == -1) {
 		_indicatorWidth = _renderer->getWidth();
+	}
 
 	//if (m_AccessMgr)
 	//	Game->m_AccessMgr->Initialize();
@@ -660,7 +671,7 @@ bool BaseGame::initialize3() { // renderer is initialized
 void BaseGame::debugEnable(const char *filename) {
 	_debugMode = true;
 
-	int secs = g_system->getMillis() / 1000;
+	int secs = BasePlatform::getTime() / 1000;
 	int hours = secs / 3600;
 	secs = secs % 3600;
 	int mins = secs / 60;
@@ -691,7 +702,7 @@ void BaseGame::debugDisable() {
 
 //////////////////////////////////////////////////////////////////////
 void BaseGame::LOG(bool res, const char *fmt, ...) {
-	uint32 secs = g_system->getMillis() / 1000;
+	uint32 secs = BasePlatform::getTime() / 1000;
 	uint32 hours = secs / 3600;
 	secs = secs % 3600;
 	uint32 mins = secs / 60;
@@ -714,7 +725,7 @@ void BaseGame::LOG(bool res, const char *fmt, ...) {
 	//fprintf((FILE *)_debugLogFile, "%02d:%02d:%02d: %s\n", hours, mins, secs, buff);
 	//fflush((FILE *)_debugLogFile);
 
-	//QuickMessage(buff);
+	//quickMessage(buff);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -727,9 +738,10 @@ void BaseGame::setEngineLogCallback(ENGINE_LOG_CALLBACK callback, void *data) {
 bool BaseGame::initLoop() {
 	_viewportSP = -1;
 
-	_currentTime = g_system->getMillis();
+	_currentTime = BasePlatform::getTime();
 
 	_renderer->initLoop();
+	_soundMgr->initLoop();
 	updateMusicCrossfade();
 
 	_surfaceStorage->initLoop();
@@ -814,9 +826,9 @@ void BaseGame::getOffset(int *offsetX, int *offsetY) const {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "BaseGame::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "BaseGame::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -1204,7 +1216,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "ValidObject") == 0) {
 		stack->correctParams(1);
 		BaseScriptable *obj = stack->pop()->getNative();
-		if (validObject((BaseObject *) obj)) {
+		if (validObject((BaseObject *)obj)) {
 			stack->pushBool(true);
 		} else {
 			stack->pushBool(false);
@@ -1251,7 +1263,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			registerObject(win);
 			stack->pushNative(win, true);
 		} else {
-			delete win;
+			SAFE_DELETE(win);
 			stack->pushNULL();
 		}
 		return STATUS_OK;
@@ -1275,7 +1287,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	// PlayMusic / PlayMusicChannel
 	//////////////////////////////////////////////////////////////////////////
-	if (strcmp(name, "PlayMusic") == 0 || strcmp(name, "PlayMusicChannel") == 0) {
+	else if (strcmp(name, "PlayMusic") == 0 || strcmp(name, "PlayMusicChannel") == 0) {
 		int channel = 0;
 		if (strcmp(name, "PlayMusic") == 0) {
 			stack->correctParams(3);
@@ -1520,7 +1532,6 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		_musicCrossfadeRunning = true;
 
-		 // FoxTail:
 		_musicCrossfadeVolume1 = 0;
 		_musicCrossfadeVolume2 = 100;
 
@@ -1691,6 +1702,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			type = (int)VID_PLAY_STRETCH;
 		}
 
+		bool videoLoaded = false;
 		SAFE_DELETE(_theoraPlayer);
 		_theoraPlayer = new VideoTheoraPlayer(this);
 		if (_theoraPlayer && DID_SUCCEED(_theoraPlayer->initialize(filename, subtitleFile))) {
@@ -1698,11 +1710,15 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 			if (DID_SUCCEED(_theoraPlayer->play((TVideoPlayback)type, xVal, yVal, true, freezeMusic))) {
 				stack->pushBool(true);
 				script->sleep(0);
+				videoLoaded = true;
 			} else {
 				stack->pushBool(false);
 			}
 		} else {
 			stack->pushBool(false);
+		}
+
+		if (!videoLoaded) {
 			SAFE_DELETE(_theoraPlayer);
 		}
 
@@ -2261,7 +2277,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->correctParams(1);
 		const char *filename = stack->pop()->getString();
 
-		bool exists = BaseFileManager::getEngineInstance()->hasFile(filename); // Had absPathWarning = false
+		bool exists = _fileManager->hasFile(filename); // Had absPathWarning = false
 
 		// Used for screenshot files in "Stroke of Fate" duology
 		if (!exists)
@@ -2644,8 +2660,9 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (DID_FAIL(_cachedThumbnail->storeThumbnail())) {
 			SAFE_DELETE(_cachedThumbnail);
 			stack->pushBool(false);
-		} else
+		} else {
 			stack->pushBool(true);
+		}
 
 		return STATUS_OK;
 	}
@@ -2669,17 +2686,17 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		const char *filename = stack->pop()->getString();
 		bool asHex = stack->pop()->getBool(false);
 
-		Common::SeekableReadStream *file = BaseFileManager::getEngineInstance()->openFile(filename, false);
+		Common::SeekableReadStream *file = _fileManager->openFile(filename, false);
 		if (file) {
 			crc remainder = crc_initialize();
 			byte buf[1024];
 			int bytesRead = 0;
 
 			while (bytesRead < file->size()) {
-				int bufSize = MIN((uint32)1024, (uint32)(file->size() - bytesRead));
+				uint32 bufSize = MIN((uint32)1024, (uint32)(file->size() - bytesRead));
 				bytesRead += file->read(buf, bufSize);
 
-				for (int i = 0; i < bufSize; i++) {
+				for (uint32 i = 0; i < bufSize; i++) {
 					remainder = crc_process_byte(buf[i], remainder);
 				}
 			}
@@ -2693,7 +2710,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 				stack->pushInt(checksum);
 			}
 
-			BaseFileManager::getEngineInstance()->closeFile(file);
+			_fileManager->closeFile(file);
 			file = nullptr;
 		} else {
 			stack->pushNULL();
@@ -2743,6 +2760,46 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->pushNULL();
 
 		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// ShowURLInBrowser
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "ShowURLInBrowser") == 0) {
+		stack->correctParams(1);
+
+		/*const char *URLToShow = */stack->pop()->getString();
+		stack->pushNULL();
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// advertisementPrepare
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "advertisementPrepare") == 0) {
+		stack->correctParams(2);
+
+		/*const char *key = */stack->pop()->getString();
+		/*int32 number = */stack->pop()->getInt();
+		int32 ret = 0;
+		stack->pushInt(ret);
+
+		return STATUS_OK;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// advertisementShow
+	//////////////////////////////////////////////////////////////////////////
+	else if (strcmp(name, "advertisementShow") == 0) {
+		stack->correctParams(2);
+
+		/*const char *key = */stack->pop()->getString();
+		/*int32 number = */stack->pop()->getInt();
+		int32 ret = 0;
+		stack->pushInt(ret);
+
+		return STATUS_OK;
 	} else {
 		return BaseObject::scCallMethod(script, stack, thisStack, name);
 	}
@@ -2787,7 +2844,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// WindowsTime (RO)
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "WindowsTime") == 0) {
-		_scValue->setInt((int)g_system->getMillis());
+		_scValue->setInt((int)BasePlatform::getTime());
 		return _scValue;
 	}
 
@@ -2911,10 +2968,11 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// Keyboard (RO)
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "Keyboard") == 0) {
-		if (_keyboardState)
+		if (_keyboardState) {
 			_scValue->setNative(_keyboardState, true);
-		else
+		} else {
 			_scValue->setNULL();
+		}
 
 		return _scValue;
 	}
@@ -3637,7 +3695,7 @@ void BaseGame::quickMessage(const char *text) {
 		delete _quickMessages[0];
 		_quickMessages.removeAt(0);
 	}
-	_quickMessages.add(new BaseQuickMsg(_currentTime,  text));
+	_quickMessages.add(new BaseQuickMsg(_game, text));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -3688,6 +3746,7 @@ bool BaseGame::unregisterObject(BaseObject *object) {
 	if (_mainObject == object) {
 		_mainObject = nullptr;
 	}
+
 	// is it active accessibility object?
 	//if (m_AccessMgr && m_AccessMgr->GetActiveObject() == Object)
 	//	m_AccessMgr->SetActiveObject(NULL);
@@ -4128,7 +4187,6 @@ bool BaseGame::externalCall(ScScript *script, ScStack *stack, ScStack *thisStack
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::showCursor() {
-	// FoxTail:
 	if (_cursorHidden) {
 		return STATUS_OK;
 	}
@@ -4156,7 +4214,7 @@ bool BaseGame::saveGame(int32 slot, const char *desc, bool quickSave) {
 	Common::String filename;
 	getSaveSlotFilename(slot, filename);
 
-	_game->LOG(0, "Saving game '%s'...", filename.c_str());
+	LOG(0, "Saving game '%s'...", filename.c_str());
 
 	pluginEvents().applyEvent(WME_EVENT_GAME_BEFORE_SAVE, nullptr);
 	applyEvent("BeforeSave", true);
@@ -4171,8 +4229,9 @@ bool BaseGame::saveGame(int32 slot, const char *desc, bool quickSave) {
 	if (DID_SUCCEED(ret = pm->initSave(desc))) {
 		if (!quickSave) {
 			SAFE_DELETE(_saveLoadImage);
-			if (_saveImageName)
+			if (_saveImageName) {
 				_saveLoadImage = _game->_renderer->createSurface();
+			}
 			if (!_saveLoadImage || DID_FAIL(_saveLoadImage->create(_saveImageName, true, 0, 0, 0))) {
 				SAFE_DELETE(_saveLoadImage);
 			}
@@ -4361,7 +4420,7 @@ bool BaseGame::displayWindows(bool inGame) {
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32 loopStart) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
-		BaseEngine::LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
+		_game->LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
 		return STATUS_FAILED;
 	}
 
@@ -4386,7 +4445,7 @@ bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::stopMusic(int channel) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
-		BaseEngine::LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
+		_game->LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
 		return STATUS_FAILED;
 	}
 
@@ -4402,7 +4461,7 @@ bool BaseGame::stopMusic(int channel) {
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::pauseMusic(int channel) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
-		BaseEngine::LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
+		_game->LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
 		return STATUS_FAILED;
 	}
 
@@ -4416,7 +4475,7 @@ bool BaseGame::pauseMusic(int channel) {
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::resumeMusic(int channel) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
-		BaseEngine::LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
+		_game->LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
 		return STATUS_FAILED;
 	}
 
@@ -4430,7 +4489,7 @@ bool BaseGame::resumeMusic(int channel) {
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::setMusicStartTime(int channel, uint32 time) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
-		BaseEngine::LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
+		_game->LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
 		return STATUS_FAILED;
 	}
 
@@ -4463,9 +4522,9 @@ bool BaseGame::loadSettings(const char *filename) {
 	TOKEN_TABLE(GUID)
 	TOKEN_TABLE_END
 
-	char *origBuffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *origBuffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (origBuffer == nullptr) {
-		BaseEngine::LOG(0, "BaseGame::loadSettings failed for file '%s'", filename);
+		_game->LOG(0, "BaseGame::loadSettings failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -4477,7 +4536,7 @@ bool BaseGame::loadSettings(const char *filename) {
 	BaseParser parser(_game);
 
 	if (parser.getCommand(&buffer, commands, &params) != TOKEN_SETTINGS) {
-		BaseEngine::LOG(0, "'SETTINGS' keyword expected in game settings file.");
+		_game->LOG(0, "'SETTINGS' keyword expected in game settings file.");
 		return STATUS_FAILED;
 	}
 	buffer = params;
@@ -4553,11 +4612,11 @@ bool BaseGame::loadSettings(const char *filename) {
 		}
 	}
 	if (cmd == PARSERR_TOKENNOTFOUND) {
-		BaseEngine::LOG(0, "Syntax error in game settings '%s'", filename);
+		_game->LOG(0, "Syntax error in game settings '%s'", filename);
 		ret = STATUS_FAILED;
 	}
 	if (cmd == PARSERR_GENERIC) {
-		BaseEngine::LOG(0, "Error loading game settings '%s'", filename);
+		_game->LOG(0, "Error loading game settings '%s'", filename);
 		ret = STATUS_FAILED;
 	}
 
@@ -4879,7 +4938,7 @@ bool BaseGame::handleMouseWheel(int32 delta) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor) const {
+bool BaseGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor) {
 	if (verMajor) {
 		*verMajor = DCGF_VER_MAJOR;
 	}
@@ -4934,9 +4993,10 @@ bool BaseGame::getSaveSlotDescription(int slot, Common::String &description) {
 	Common::String filename;
 	getSaveSlotFilename(slot, filename);
 	BasePersistenceManager *pm = new BasePersistenceManager();
-	if (!pm)
+	if (!pm) {
 		return STATUS_FAILED;
-		
+	}
+
 	if (DID_FAIL(pm->initLoad(filename))) {
 		delete pm;
 		return STATUS_FAILED;
@@ -5028,10 +5088,10 @@ bool BaseGame::popViewport() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::getCurrentViewportRect(Common::Rect32 *rect, bool *custom) const {
-	if (rect == nullptr)
+bool BaseGame::getCurrentViewportRect(Common::Rect32 *rect, bool *custom) {
+	if (rect == nullptr) {
 		return STATUS_FAILED;
-	else {
+	} else {
 		if (_viewportSP >= 0) {
 			BasePlatform::copyRect(rect, _viewportStack[_viewportSP]->getRect());
 			if (custom) {
@@ -5043,8 +5103,9 @@ bool BaseGame::getCurrentViewportRect(Common::Rect32 *rect, bool *custom) const 
 			              _renderer->_drawOffsetY,
 			              _renderer->getWidth() + _renderer->_drawOffsetX,
 			              _renderer->getHeight() + _renderer->_drawOffsetY);
-			if (custom)
+			if (custom) {
 				*custom = false;
+			}
 		}
 
 		return STATUS_OK;
@@ -5052,7 +5113,7 @@ bool BaseGame::getCurrentViewportRect(Common::Rect32 *rect, bool *custom) const 
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::getCurrentViewportOffset(int *offsetX, int *offsetY) const {
+bool BaseGame::getCurrentViewportOffset(int *offsetX, int *offsetY) {
 	if (_viewportSP >= 0) {
 		if (offsetX)
 			*offsetX = _viewportStack[_viewportSP]->_offsetX;
@@ -5099,11 +5160,6 @@ void BaseGame::resetMousePos() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-void BaseGame::setResourceModule(void *resModule) {
-	// empty
-}
-
-//////////////////////////////////////////////////////////////////////////
 bool BaseGame::displayContent(bool doUpdate, bool displayAll) {
 	return STATUS_OK;
 }
@@ -5129,10 +5185,11 @@ bool BaseGame::displayIndicator() {
 	if (_saveLoadImage && !_hasDrawnSaveLoadImage) {
 		Common::Rect32 rc;
 		BasePlatform::setRect(&rc, 0, 0, _saveLoadImage->getWidth(), _saveLoadImage->getHeight());
-		if (_loadInProgress)
+		if (_loadInProgress) {
 			_saveLoadImage->displayTrans(_loadImageX, _loadImageY, rc);
-		else
+		} else {
 			_saveLoadImage->displayTrans(_saveImageX, _saveImageY, rc);
+		}
 		_renderer->flip();
 		_hasDrawnSaveLoadImage = true;
 	}
@@ -5195,7 +5252,7 @@ bool BaseGame::updateMusicCrossfade() {
 		}
 
 		if (_musicCrossfadeSwap) {
-			// swap channels
+			// Swap channels
 			BaseSound *dummy = _music[_musicCrossfadeChannel1];
 			int dummyInt = _musicStartTime[_musicCrossfadeChannel1];
 
@@ -5284,8 +5341,9 @@ bool BaseGame::isVideoPlaying() {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::stopVideo() {
-	if (_videoPlayer->isPlaying())
+	if (_videoPlayer->isPlaying()) {
 		_videoPlayer->stop();
+	}
 	if (_theoraPlayer && _theoraPlayer->isPlaying()) {
 		_theoraPlayer->stop();
 		SAFE_DELETE(_theoraPlayer);
@@ -5310,7 +5368,6 @@ bool BaseGame::renderShadowGeometry() {
 	return STATUS_OK;
 }
 
-//////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onActivate(bool activate, bool refreshMouse) {
 	if (_shuttingDown || !_renderer) {
@@ -5337,7 +5394,7 @@ bool BaseGame::onActivate(bool activate, bool refreshMouse) {
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::onMouseLeftDown() {
 	if (isVideoPlaying()) {
-		stopVideo ();
+		stopVideo();
 		return STATUS_OK;
 	}
 
@@ -5676,8 +5733,8 @@ bool BaseGame::miniUpdate() {
 		return true;
 	}
 
-	if (g_system->getMillis() - _lastMiniUpdate > 200) {
-		_lastMiniUpdate = g_system->getMillis();
+	if (BasePlatform::getTime() - _lastMiniUpdate > 200) {
+		_lastMiniUpdate = BasePlatform::getTime();
 	}
 	return true;
 }
@@ -5714,12 +5771,11 @@ bool BaseGame::isDoubleClick(int32 buttonIndex) {
 	Common::Point32 pos;
 	BasePlatform::getCursorPos(&pos);
 
-	int moveX = abs(pos.x - _lastClick[buttonIndex].posX);
-	int moveY = abs(pos.y - _lastClick[buttonIndex].posY);
+	int moveX = ABS(pos.x - _lastClick[buttonIndex].posX);
+	int moveY = ABS(pos.y - _lastClick[buttonIndex].posY);
 
-
-	if (_lastClick[buttonIndex].time == 0 || g_system->getMillis() - _lastClick[buttonIndex].time > maxDoubleCLickTime || moveX > maxMoveX || moveY > maxMoveY) {
-		_lastClick[buttonIndex].time = g_system->getMillis();
+	if (_lastClick[buttonIndex].time == 0 || BasePlatform::getTime() - _lastClick[buttonIndex].time > maxDoubleCLickTime || moveX > maxMoveX || moveY > maxMoveY) {
+		_lastClick[buttonIndex].time = BasePlatform::getTime();
 		_lastClick[buttonIndex].posX = pos.x;
 		_lastClick[buttonIndex].posY = pos.y;
 		return false;

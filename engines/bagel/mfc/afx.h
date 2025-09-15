@@ -59,7 +59,7 @@ class CFileException;
 
 #define ASSERT_KINDOF(class_name, object) \
 	assert((object)->IsKindOf(RUNTIME_CLASS(class_name)))
-#define ASSERT_VALID(X) ((X) != nullptr)
+#define ASSERT_VALID(X) assert((X) != nullptr)
 
 struct CRuntimeClass {
 	const char *m_lpszClassName;
@@ -80,7 +80,8 @@ public:
 	static const CRuntimeClass classCObject;
 public:
 	CObject();
-	CObject(const CObject &objectSrc);
+	CObject(const CObject &) = default;
+	CObject &operator=(const CObject &) = default;
 	virtual ~CObject() = 0;
 	virtual const CRuntimeClass *GetRuntimeClass() const;
 

@@ -107,7 +107,7 @@ int BaseFontTT::getTextWidth(const byte *text, int maxLength) {
 		textStr = StringUtil::ansiToWide((const char *)text, _charset);
 	}
 
-	if (maxLength >= 0 && textStr.size() > (uint32)maxLength) {
+	if (maxLength >= 0 && (int)textStr.size() > maxLength) {
 		textStr = textStr.substr(0, (uint32)maxLength);
 	}
 	//text = text.substr(0, MaxLength); // TODO: Remove
@@ -175,7 +175,7 @@ void BaseFontTT::drawText(const byte *text, int x, int y, int width, TTextAlign 
 				surface = _cachedTexts[i]->_surface;
 				textOffset = _cachedTexts[i]->_textOffset;
 				_cachedTexts[i]->_marked = true;
-				_cachedTexts[i]->_lastUsed = g_system->getMillis();
+				_cachedTexts[i]->_lastUsed = BasePlatform::getTime();
 				break;
 			} else {
 				if (_cachedTexts[i]->_lastUsed < minUseTime) {
@@ -205,7 +205,7 @@ void BaseFontTT::drawText(const byte *text, int x, int y, int width, TTextAlign 
 			_cachedTexts[minIndex]->_text = textStr;
 			_cachedTexts[minIndex]->_textOffset = textOffset;
 			_cachedTexts[minIndex]->_marked = true;
-			_cachedTexts[minIndex]->_lastUsed = g_system->getMillis();
+			_cachedTexts[minIndex]->_lastUsed = BasePlatform::getTime();
 		}
 	}
 
@@ -291,9 +291,9 @@ int BaseFontTT::getLetterHeight() {
 
 //////////////////////////////////////////////////////////////////////
 bool BaseFontTT::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "BaseFontTT::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "BaseFontTT::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 

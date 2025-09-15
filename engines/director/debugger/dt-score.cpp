@@ -19,6 +19,8 @@
  *
  */
 
+#include "common/memstream.h"
+
 #include "backends/imgui/IconsMaterialSymbols.h"
 #include "director/director.h"
 #include "director/debugger/dt-internal.h"
@@ -340,7 +342,7 @@ static void displayScoreChannel(int ch, int mode, int modeSel, Window *window) {
 				else
 					_state->_selectedChannel = ch;
 
-					window->render(true);
+				window->render(true);
 			}
 		}
 
@@ -569,7 +571,7 @@ void showScore() {
 			ImGui::EndChild();
 		}
 
-		uint numChannels = score->_scoreCache[0]->_sprites.size();
+		uint numChannels = MIN<int>(score->_scoreCache[0]->_sprites.size(), score->_maxChannelsUsed + 10);
 		uint tableColumns = MAX(numFrames + 5, 25U); // Set minimal table width to 25
 
 		if (tableColumns > kMaxColumnsInTable - 3) // Current restriction of ImGui
@@ -753,7 +755,13 @@ void showChannels() {
 		ImGui::Text("SND: 2  sound2: %d, soundType2: %d", frame._mainChannels.sound2.member, frame._mainChannels.soundType2);
 		ImGui::Text("LSCR:   actionId: %s", frame._mainChannels.actionId.asString().c_str());
 
-		if (ImGui::BeginTable("Channels", 22, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg)) {
+		int columns = 22;
+
+		if (score->_version >= kFileVer600) {
+			columns += 1; // sprite name
+		}
+
+		if (ImGui::BeginTable("Channels", columns, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg)) {
 			ImGuiTableFlags flags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_AngledHeader;
 			ImGui::TableSetupColumn("##toggle", flags);
 			ImGui::TableSetupColumn("CH", flags);
@@ -768,7 +776,13 @@ void showChannels() {
 			ImGui::TableSetupColumn("type", flags);
 			ImGui::TableSetupColumn("fg", flags);
 			ImGui::TableSetupColumn("bg", flags);
-			ImGui::TableSetupColumn("script", flags);
+			if (score->_version >= kFileVer600) {
+				ImGui::TableSetupColumn("behaviors", flags);
+			} else {
+				ImGui::TableSetupColumn("script", flags);
+			}
+			if (score->_version >= kFileVer600)
+				ImGui::TableSetupColumn("name", flags);
 			ImGui::TableSetupColumn("colorcode", flags);
 			ImGui::TableSetupColumn("blendAmount", flags);
 			ImGui::TableSetupColumn("unk3", flags);
@@ -779,7 +793,8 @@ void showChannels() {
 			ImGui::TableSetupColumn("movieTime", flags);
 
 			ImGui::TableAngledHeadersRow();
-			for (int i = 0; i < frame._numChannels; i++) {
+
+			for (int i = 0; i < MIN<int>(frame._numChannels, score->_maxChannelsUsed + 10); i++) {
 				Channel &channel = *score->_channels[i + 1];
 				Sprite &sprite = *channel._sprite;
 
@@ -861,14 +876,47 @@ void showChannels() {
 					ImGui::ColorButton("backColor", convertColor(sprite._backColor));
 					ImGui::PopID();
 					ImGui::TableNextColumn();
-					// Check early for non integer script ids
-					if (sprite._scriptId.member) {
-						displayScriptRef(sprite._scriptId);
+
+					if (score->_version >= kFileVer600) {
+						if (sprite._behaviors.size() > 0) {
+							for (uint j = 0; j < sprite._behaviors.size(); j++) {
+								displayScriptRef(sprite._behaviors[j].memberID);
+								ImGui::SameLine();
+								if (sprite._behaviors[j].initializerIndex) {
+									ImGui::Text("(%s)", sprite._behaviors[j].initializerParams.c_str());
+								} else {
+									ImGui::Text("(\"\")");
+								}
+							}
+						} else {
+							ImGui::PushID(i + 1);
+							ImGui::TextUnformatted("  ");
+							ImGui::PopID();
+						}
 					} else {
-						ImGui::PushID(i + 1);
-						ImGui::TextUnformatted("  ");
-						ImGui::PopID();
+						// Check early for non integer script ids
+						if (sprite._scriptId.member) {
+							displayScriptRef(sprite._scriptId);
+						} else {
+							ImGui::PushID(i + 1);
+							ImGui::TextUnformatted("  ");
+							ImGui::PopID();
+						}
 					}
+
+					if (score->_version >= kFileVer600) {
+						ImGui::TableNextColumn();
+						if (sprite._spriteListIdx) {
+							Common::MemoryReadStreamEndian *stream = score->getSpriteDetailsStream(sprite._spriteListIdx + 2);
+							Common::String name;
+							if (stream)
+								name = stream->readPascalString();
+							ImGui::Text("%s", name.c_str());
+						} else {
+							ImGui::Text(" ");
+						}
+					}
+
 					ImGui::TableNextColumn();
 					ImGui::Text("0x%x", sprite._colorcode);
 					ImGui::TableNextColumn();

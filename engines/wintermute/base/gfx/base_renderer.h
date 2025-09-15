@@ -50,7 +50,7 @@ class Camera3D;
  * this interface is mainly intended to wrap away any differencies between
  * software-rendering/hardware-rendering.
  */
-class BaseRenderer: public BaseClass {
+class BaseRenderer : public BaseClass {
 public:
 	int _realWidth;
 	int _realHeight;
@@ -75,7 +75,7 @@ public:
 	 *
 	 * @param alpha amount to fade by (alpha value of black)
 	 */
-	virtual void fade(uint16 alpha) = 0;
+	virtual bool fade(uint16 alpha) = 0;
 	/**
 	 * Fade a portion of the screen to a specific color
 	 *
@@ -85,7 +85,7 @@ public:
 	 * @param a the alpha component to fade too.
 	 * @param rect the portion of the screen to fade (if nullptr, the entire screen will be faded).
 	 */
-	virtual void fadeToColor(byte r, byte g, byte b, byte a) = 0;
+	virtual bool fadeToColor(byte r, byte g, byte b, byte a) = 0;
 
 	virtual bool fillRect(int x, int y, int w, int h, uint32 color); // Unused outside indicator-display
 	BaseRenderer(BaseGame *inGame = nullptr);

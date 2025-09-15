@@ -213,7 +213,7 @@ bool UIWindow::display(int offsetX, int offsetY) {
 	}
 
 	if (!_transparent && !image) {
-		_game->_renderer->_rectList.add(new BaseActiveRect(_game,  this, nullptr, _posX + offsetX, _posY + offsetY, _width, _height, 100, 100, false));
+		_game->_renderer->_rectList.add(new BaseActiveRect(_game, this, nullptr, _posX + offsetX, _posY + offsetY, _width, _height, 100, 100, false));
 	}
 
 	for (int32 i = 0; i < _widgets.getSize(); i++) {
@@ -234,7 +234,7 @@ bool UIWindow::display(int offsetX, int offsetY) {
 
 //////////////////////////////////////////////////////////////////////////
 bool UIWindow::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
 		_game->LOG(0, "UIWindow::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
@@ -664,7 +664,7 @@ bool UIWindow::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "TITLE_ALIGN=\"%s\"\n", "center");
 		break;
 	default:
-		error("UIWindow::SaveAsText - Unhandled enum-value NUM_TEXT_ALIGN");
+		break;
 	}
 
 	if (!BasePlatform::isRectEmpty(&_titleRect)) {
@@ -995,9 +995,7 @@ bool UIWindow::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		return STATUS_OK;
 	} else if DID_SUCCEED(_game->windowScriptMethodHook(this, script, stack, name)) {
 		return STATUS_OK;
-	}
-
-	else {
+	} else {
 		return UIObject::scCallMethod(script, stack, thisStack, name);
 	}
 }

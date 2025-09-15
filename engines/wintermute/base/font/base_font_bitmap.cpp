@@ -91,7 +91,7 @@ int BaseFontBitmap::getTextWidth(const byte *text, int maxLength) {
 		str = AnsiString((const char *)text);
 	}
 
-	if (maxLength >= 0 && str.size() > (uint32)maxLength) {
+	if (maxLength >= 0 && (int)str.size() > maxLength) {
 		str = Common::String(str.c_str(), (uint32)maxLength);
 	}
 	//str.substr(0, maxLength); // TODO: Remove
@@ -150,7 +150,7 @@ int BaseFontBitmap::textHeightDraw(const byte *text, int x, int y, int width, TT
 	}
 
 	while (!done) {
-		if (maxHeight > 0 && (numLines + 1)*_tileHeight > maxHeight) {
+		if (maxHeight > 0 && (numLines + 1) * _tileHeight > maxHeight) {
 			if (draw) {
 				_game->_renderer->endSpriteBatch();
 			}
@@ -192,7 +192,7 @@ int BaseFontBitmap::textHeightDraw(const byte *text, int x, int y, int width, TT
 			if (end < 0) {
 				done = true;
 			}
-			int startX;
+			int startX = x;
 			switch (align) {
 			case TAL_CENTER:
 				startX = x + (width - realLength) / 2;
@@ -204,7 +204,6 @@ int BaseFontBitmap::textHeightDraw(const byte *text, int x, int y, int width, TT
 				startX = x;
 				break;
 			default:
-				error("BaseFontBitmap::TextHeightDraw - Unhandled enum");
 				break;
 			}
 			for (i = start; i < end + 1; i++) {
@@ -279,9 +278,9 @@ void BaseFontBitmap::drawChar(byte c, int x, int y) {
 
 //////////////////////////////////////////////////////////////////////
 bool BaseFontBitmap::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "BaseFontBitmap::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "BaseFontBitmap::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -509,7 +508,7 @@ bool BaseFontBitmap::loadBuffer(char *buffer) {
 			_widths[spaceChar] = spaceWidth;
 		} else {
 			if (_widths[spaceChar] == expandWidth || _widths[spaceChar] == 0) {
-				_widths[spaceChar] = (_widths[(uint)'m'] + _widths[(uint)'i']) / 2;
+				_widths[spaceChar] = (_widths[(uint32)'m'] + _widths[(uint32)'i']) / 2;
 			}
 		}
 	} else {

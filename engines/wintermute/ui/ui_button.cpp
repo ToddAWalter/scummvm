@@ -40,6 +40,7 @@
 #include "engines/wintermute/base/scriptables/script_value.h"
 #include "engines/wintermute/base/scriptables/script.h"
 #include "engines/wintermute/base/scriptables/script_stack.h"
+#include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/dcgf.h"
 
 namespace Wintermute {
@@ -103,9 +104,9 @@ UIButton::~UIButton() {
 
 //////////////////////////////////////////////////////////////////////////
 bool UIButton::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "UIButton::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "UIButton::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -544,7 +545,6 @@ bool UIButton::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "TEXT_ALIGN=\"%s\"\n", "center");
 		break;
 	default:
-		warning("UIButton::SaveAsText - unhandled enum");
 		break;
 	}
 
@@ -615,10 +615,11 @@ void UIButton::correctSize() {
 
 	if (_text) {
 		int textHeight;
-		if (_font)
+		if (_font) {
 			textHeight = _font->getTextHeight((byte *)_text, _width);
-		else
+		} else {
 			textHeight = _game->_systemFont->getTextHeight((byte *)_text, _width);
+		}
 
 		if (textHeight > _height) {
 			_height = textHeight;
@@ -645,13 +646,13 @@ bool UIButton::display(int offsetX, int offsetY) {
 	BaseSprite *image = nullptr;
 	BaseFont *font = 0;
 
-	//RECT rect;
+	//Common::Rect32 rect;
 	//BasePlatform::setRect(&rect, offsetX + _posX, offsetY + _posY, offsetX+_posX+_width, offsetY+_posY+_height);
 	//_hover = (!_disable && BasePlatform::ptInRect(&rect, _game->_mousePos)!=FALSE);
 	_hover = (!_disable && _game->_activeObject == this && (_game->_interactive || _game->_state == GAME_SEMI_FROZEN));
 
 	if ((_press && _hover && !_game->_mouseLeftDown) ||
-			(_oneTimePress && g_system->getMillis() - _oneTimePressTime >= 100)) {
+			(_oneTimePress && BasePlatform::getTime() - _oneTimePressTime >= 100)) {
 		press();
 	}
 
@@ -756,7 +757,7 @@ bool UIButton::display(int offsetX, int offsetY) {
 		_imageHover->reset();
 
 /*	if (Game->m_AccessMgr->GetActiveObject() == this) {
-		RECT rc;
+		Common::Rect32 rc;
 		SetRect(&rc, OffsetX + m_PosX, OffsetY + m_PosY, OffsetX + m_PosX + m_Width, OffsetY + m_PosY + m_Height);
 		Game->m_AccessMgr->SetHintRect(&rc, true);
 	}*/
@@ -1078,7 +1079,7 @@ bool UIButton::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		if (_visible && !_disable) {
 			_oneTimePress = true;
-			_oneTimePressTime = g_system->getMillis();
+			_oneTimePressTime = BasePlatform::getTime();
 		}
 		stack->pushNULL();
 

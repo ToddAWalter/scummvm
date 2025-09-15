@@ -31,24 +31,26 @@ namespace HodjNPodj {
 namespace Metagame {
 namespace Demo {
 
-class CHodjPodjWindow : public CFrameWnd {
+class CHodjPodjDemoWindow : public CFrameWnd {
 private:
 	Frame::CMovieWindow pMovie;
 	CPalette *pGamePalette = nullptr;
 	CSound *pBackgroundMidi = nullptr;
 	int _currentCommand = -1;
+	int _minigame = -1;
 
 	void drawBitmap(const char *filename);
 	void startBackgroundMidi();
 	void stopBackgroundMidi();
 
 public:
-	CHodjPodjWindow();
+	CHodjPodjDemoWindow();
 
 	void blackScreen();
 
 	void playMovie(const int, const char *, bool);
 	void skipSplash();
+	void loadNewDLL(LPARAM lParam);
 
 protected:
 	bool OnCommand(WPARAM wParam, LPARAM lParam) override;
@@ -57,6 +59,7 @@ protected:
 	void OnKeyDown(unsigned int nChar, unsigned int nRepCnt, unsigned int nFlags);
 	void OnSysChar(unsigned int nChar, unsigned int nRepCnt, unsigned int nFlags);
 	void OnClose();
+	void OnParentNotify(unsigned int msg, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 };

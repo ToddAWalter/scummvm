@@ -63,6 +63,8 @@ void SoundCastMember::load() {
 	uint32 tag = 0;
 	uint16 sndId = 0;
 
+	MoaSoundFormatDecoder *sndFormat = nullptr;
+
 	if (_cast->_version < kFileVer400) {
 		tag = MKTAG('S', 'N', 'D', ' ');
 		sndId = (uint16)(_castId + _cast->_castIDoffset);
@@ -79,8 +81,39 @@ void SoundCastMember::load() {
 			tag = MKTAG('S', 'N', 'D', ' ');
 			sndId = (uint16)(_castId + _cast->_castIDoffset);
 		}
+	} else if (_cast->_version >= kFileVer600 && _cast->_version < kFileVer700) {
+		for (auto &it : _children) {
+			if (it.tag == MKTAG('s', 'n', 'd', ' ')) {
+				sndId = it.index;
+				tag = it.tag;
+			} else if (it.tag == MKTAG('s', 'n', 'd', 'H')) {
+				Common::SeekableReadStreamEndian *sndData = _cast->getResource(it.tag, it.index);
+				if (!sndFormat)
+					sndFormat = new MoaSoundFormatDecoder();
+				sndFormat->loadHeaderStream(*sndData);
+				delete sndData;
+			} else if (it.tag == MKTAG('s', 'n', 'd', 'S')) {
+				Common::SeekableReadStreamEndian *sndData = _cast->getResource(it.tag, it.index);
+				if (!sndFormat)
+					sndFormat = new MoaSoundFormatDecoder();
+				sndFormat->loadSampleStream(*sndData);
+				delete sndData;
+			} else if (it.tag == MKTAG('e', 'd', 'i', 'M')) {
+				Common::SeekableReadStreamEndian *sndData = _cast->getResource(it.tag, it.index);
+				warning("SoundCastMember::load(): STUB: ediM resource in sound cast member %d", _castId);
+				delete sndData;
+			}
+		}
+
 	} else {
 		warning("STUB: SoundCastMember::SoundCastMember(): Sounds not yet supported for version v%d (%d)", humanVersion(_cast->_version), _cast->_version);
+	}
+
+
+	if (sndFormat) {
+		_audio = sndFormat;
+		_loaded = true;
+		return;
 	}
 
 	Common::SeekableReadStreamEndian *sndData = _cast->getResource(tag, sndId);

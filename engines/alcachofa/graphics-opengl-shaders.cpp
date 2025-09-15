@@ -65,7 +65,7 @@ public:
 		for (int i = 0; i < 4; i++)
 			_vbos.emplace_back(Shader::createBuffer(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW));
 
-		_vertices.resize(8 * 6);
+		_vertices.resize(8 * 6); // heuristic, we should be lucky if we can batch 8 quads together
 
 		_whiteTexture.reset(new OpenGLTexture(1, 1, false));
 		const byte whiteData[] = { 0xff, 0xff, 0xff, 0xff };
@@ -74,11 +74,13 @@ public:
 
 	void begin() override {
 		resetState();
+		_currentTexture = nullptr;
 		_needsNewBatch = true;
 	}
 
 	void end() override {
-		checkFirstDrawCommand();
+		if (!_vertices.empty()) // submit last batch
+			checkFirstDrawCommand();
 		OpenGLRenderer::end();
 	}
 
@@ -246,7 +248,7 @@ private:
 		})";
 };
 
-IRenderer *createOpenGLRendererShaders(Point resolution) {
+IRenderer *IRenderer::createOpenGLRendererShaders(Point resolution) {
 	debug("Use OpenGL shaders renderer");
 	return new OpenGLRendererShaders(resolution);
 }

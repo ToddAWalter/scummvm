@@ -1162,7 +1162,7 @@ uint32 ScScript::getFuncPos(const char *name) {
 
 
 //////////////////////////////////////////////////////////////////////////
-uint32 ScScript::getMethodPos(const char *name) const {
+uint32 ScScript::getMethodPos(const char *name) {
 	for (uint32 i = 0; i < _numMethods; i++) {
 		if (strcmp(name, _methods[i].name) == 0) {
 			return _methods[i].pos;
@@ -1198,7 +1198,7 @@ ScValue *ScScript::getVar(char *name) {
 	}
 
 	if (ret == nullptr) {
-		//RuntimeError("Variable '%s' is inaccessible in the current block. Consider changing the script.", name);
+		//runtimeError("Variable '%s' is inaccessible in the current block. Consider changing the script.", name);
 		_game->LOG(0, "Warning: variable '%s' is inaccessible in the current block. Consider changing the script (script:%s, line:%d)", name, _filename, _currentLine);
 		ScValue *val = new ScValue(_game);
 		ScValue *scope = _scopeStack->getTop();
@@ -1245,7 +1245,7 @@ bool ScScript::sleep(uint32 duration) {
 
 	_state = SCRIPT_SLEEPING;
 	if (_game->_state == GAME_FROZEN) {
-		_waitTime = g_system->getMillis() + duration;
+		_waitTime = BasePlatform::getTime() + duration;
 		_waitFrozen = true;
 	} else {
 		_waitTime = _game->_timer + duration;
@@ -1346,7 +1346,7 @@ bool ScScript::persist(BasePersistenceManager *persistMgr) {
 	persistMgr->transferBool(TMEMBER(_waitFrozen));
 
 	persistMgr->transferBool(TMEMBER(_methodThread));
-	persistMgr->transferBool(TMEMBER(_methodThread)); // TODO-SAVE: Deduplicate.
+	persistMgr->transferBool(TMEMBER(_methodThread));
 	persistMgr->transferBool(TMEMBER(_unbreakable));
 	persistMgr->transferPtr(TMEMBER_PTR(_parentScript));
 
@@ -1366,28 +1366,6 @@ bool ScScript::persist(BasePersistenceManager *persistMgr) {
 	return STATUS_OK;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-void ScScript::afterLoad() {
-	if (_buffer == nullptr) {
-		byte *buffer = _engine->getCompiledScript(_filename, &_bufferSize);
-		if (!buffer) {
-			_game->LOG(0, "Error reinitializing script '%s' after load. Script will be terminated.", _filename);
-			_state = SCRIPT_ERROR;
-			return;
-		}
-
-		_buffer = new byte[_bufferSize];
-		memcpy(_buffer, buffer, _bufferSize);
-
-		delete _scriptStream;
-		_scriptStream = new Common::MemoryReadStream(_buffer, _bufferSize);
-
-		initTables();
-	}
-}
-
-
 //////////////////////////////////////////////////////////////////////////
 ScScript *ScScript::invokeEventHandler(const char *eventName, bool unbreakable) {
 	//if (_state!=SCRIPT_PERSISTENT) return nullptr;
@@ -1401,9 +1379,9 @@ ScScript *ScScript::invokeEventHandler(const char *eventName, bool unbreakable) 
 	DebuggableScEngine* debuggableEngine;
 	debuggableEngine = dynamic_cast<DebuggableScEngine*>(_engine);
 	assert(debuggableEngine);
-	ScScript *thread = new DebuggableScript(_game,  debuggableEngine);
+	ScScript *thread = new DebuggableScript(_game, debuggableEngine);
 #else
-	ScScript *thread = new ScScript(_game,  _engine);
+	ScScript *thread = new ScScript(_game, _engine);
 #endif
 	if (thread) {
 		bool ret = thread->createThread(this, pos, eventName);
@@ -1423,7 +1401,7 @@ ScScript *ScScript::invokeEventHandler(const char *eventName, bool unbreakable) 
 
 
 //////////////////////////////////////////////////////////////////////////
-uint32 ScScript::getEventPos(const char *name) const {
+uint32 ScScript::getEventPos(const char *name) {
 	for (int i = _numEvents - 1; i >= 0; i--) {
 		if (scumm_stricmp(name, _events[i].name) == 0) {
 			return _events[i].pos;
@@ -1434,13 +1412,13 @@ uint32 ScScript::getEventPos(const char *name) const {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool ScScript::canHandleEvent(const char *eventName) const {
+bool ScScript::canHandleEvent(const char *eventName) {
 	return getEventPos(eventName) != 0;
 }
 
 
 //////////////////////////////////////////////////////////////////////////
-bool ScScript::canHandleMethod(const char *methodName) const {
+bool ScScript::canHandleMethod(const char *methodName) {
 	return getMethodPos(methodName) != 0;
 }
 
@@ -1452,8 +1430,9 @@ bool ScScript::pause() {
 		return STATUS_FAILED;
 	}
 
-	if (!_freezable || _state == SCRIPT_PERSISTENT)
+	if (!_freezable || _state == SCRIPT_PERSISTENT) {
 		return STATUS_OK;
+	}
 
 	_origState = _state;
 	_state = SCRIPT_PAUSED;
@@ -1464,8 +1443,9 @@ bool ScScript::pause() {
 
 //////////////////////////////////////////////////////////////////////////
 bool ScScript::resume() {
-	if (_state != SCRIPT_PAUSED)
+	if (_state != SCRIPT_PAUSED) {
 		return STATUS_OK;
+	}
 
 	_state = _origState;
 	return STATUS_OK;
@@ -1526,6 +1506,26 @@ bool ScScript::finishThreads() {
 	return STATUS_OK;
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+void ScScript::afterLoad() {
+	if (_buffer == nullptr) {
+		byte *buffer = _engine->getCompiledScript(_filename, &_bufferSize);
+		if (!buffer) {
+			_game->LOG(0, "Error reinitializing script '%s' after load. Script will be terminated.", _filename);
+			_state = SCRIPT_ERROR;
+			return;
+		}
+
+		_buffer = new byte[_bufferSize];
+		memcpy(_buffer, buffer, _bufferSize);
+
+		delete _scriptStream;
+		_scriptStream = new Common::MemoryReadStream(_buffer, _bufferSize);
+
+		initTables();
+	}
+}
 
 void ScScript::preInstHook(uint32 inst) {}
 

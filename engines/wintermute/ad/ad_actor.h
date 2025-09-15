@@ -78,18 +78,23 @@ public:
 	bool playAnim(const char *filename) override;
 	AdSpriteSet *getAnimByName(const char *animName);
 
+	// alternative behaviour when actor is blocked
+	bool _stopOnBlocked;
+	bool _actorIsBlocked;
+
 	// scripting interface
 	ScValue *scGetProperty(const char *name) override;
 	bool scSetProperty(const char *name, ScValue *value) override;
 	bool scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, const char *name) override;
 	const char *scToString() override;
 
+private:
 	bool setDefaultAnimNames();
 	BaseSprite *getTalkStanceOld(const char *stance);
 	bool mergeAnims(const char *animsFilename);
 	BaseSprite *_animSprite2;
 
-	void initLine(const BasePoint &startPt, const BasePoint &endPt);
+	void initLine(BasePoint startPt, BasePoint endPt);
 	void getNextStep();
 	void followPath();
 	double _pFStepX{};

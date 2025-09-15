@@ -568,7 +568,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 		if (_responseBox) {
 			AdResponse *res = new AdResponse(_game);
 			if (res) {
-				res->_iD = id;
+				res->_id = id;
 				res->setText(text);
 				_stringTable->expand(&res->_text);
 
@@ -640,7 +640,7 @@ bool AdGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, 
 
 
 			if (_responseBox->_responses.getSize() == 1 && autoSelectLast) {
-				stack->pushInt(_responseBox->_responses[0]->_iD);
+				stack->pushInt(_responseBox->_responses[0]->_id);
 				_responseBox->handleResponse(_responseBox->_responses[0]);
 				_responseBox->clearResponses();
 				return STATUS_OK;
@@ -1323,9 +1323,9 @@ bool AdGame::showCursor() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "AdGame::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "AdGame::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -1435,12 +1435,13 @@ bool AdGame::loadBuffer(char *buffer, bool complete) {
 					break;
 
 				case TOKEN_VIDEO_SKIP_BUTTON:
-					if (scumm_stricmp(params2, "right") == 0)
+					if (scumm_stricmp(params2, "right") == 0) {
 						_videoSkipButton = VIDEO_SKIP_RIGHT;
-					else if (scumm_stricmp(params2, "both") == 0)
+					} else if (scumm_stricmp(params2, "both") == 0) {
 						_videoSkipButton = VIDEO_SKIP_BOTH;
-					else
+					} else {
 						_videoSkipButton = VIDEO_SKIP_LEFT;
+					}
 					break;
 
 				case TOKEN_SCENE_VIEWPORT: {
@@ -1595,7 +1596,7 @@ bool AdGame::scheduleChangeScene(const char *filename, bool fadeIn) {
 
 
 //////////////////////////////////////////////////////////////////////////
-bool AdGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor) const {
+bool AdGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *extMinor) {
 	BaseGame::getVersion(verMajor, verMinor, nullptr, nullptr);
 
 	if (extMajor) {
@@ -1611,7 +1612,7 @@ bool AdGame::getVersion(byte *verMajor, byte *verMinor, byte *extMajor, byte *ex
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::loadItemsFile(const char *filename, bool merge) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *)_game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
 		_game->LOG(0, "AdGame::LoadItemsFile failed for file '%s'", filename);
 		return STATUS_FAILED;
@@ -1899,7 +1900,7 @@ bool AdGame::addGameResponse(int id) {
 bool AdGame::gameResponseUsed(int id) const {
 	char *context = _dlgPendingBranches.getSize() > 0 ? _dlgPendingBranches[_dlgPendingBranches.getSize() - 1] : nullptr;
 	for (int32 i = 0; i < _responsesGame.getSize(); i++) {
-		const AdResponseContext *respContext = _responsesGame[i];
+		AdResponseContext *respContext = _responsesGame[i];
 		if (respContext->_id == id) {
 			// make sure context != nullptr	
 			if ((context == nullptr && respContext->_context == nullptr) || ((context != nullptr && respContext->_context != nullptr) && (context != nullptr && scumm_stricmp(context, respContext->_context) == 0))) {
@@ -1991,17 +1992,20 @@ bool AdGame::displayContent(bool doUpdate, bool displayAll) {
 
 		// display in-game windows
 		displayWindows(true);
-		if (_inventoryBox)
+		if (_inventoryBox) {
 			_inventoryBox->display();
-		if (_stateEx == GAME_WAITING_RESPONSE)
+		}
+		if (_stateEx == GAME_WAITING_RESPONSE) {
 			_responseBox->display();
+		}
+		if (_indicatorDisplay) {
 #ifdef ENABLE_FOXTAIL
 		if (BaseEngine::instance().isFoxTail())
 			displayIndicatorFoxTail();
 		else
 #endif
-		displayIndicator();
-
+			displayIndicator();
+		}
 
 		if (doUpdate || displayAll) {
 			//m_AccessMgr->DisplayBeforeGUI();
@@ -2323,13 +2327,15 @@ bool AdGame::onMouseLeftDown() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::onMouseLeftUp() {
-	if (isVideoPlaying())
+	if (isVideoPlaying()) {
 		return STATUS_OK;
+	}
 
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_LEFT);
 	}
 
+	//BasePlatform::releaseCapture();
 	_capturedObject = nullptr;
 	_mouseLeftDown = false;
 
@@ -2417,8 +2423,9 @@ bool AdGame::onMouseRightDown() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::onMouseRightUp() {
-	if (isVideoPlaying())
+	if (isVideoPlaying()) {
 		return STATUS_OK;
+	}
 
 	if (_activeObject) {
 		_activeObject->handleMouse(MOUSE_RELEASE, MOUSE_BUTTON_RIGHT);

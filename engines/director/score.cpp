@@ -322,7 +322,7 @@ void Score::startPlay() {
 		return;
 	}
 
-	if (_vm->getVersion() >= 300)
+	if (_version >= kFileVer300)
 		_movie->processEvent(kEventStartMovie);
 
 	// load first frame (either 1 or _nextFrame)
@@ -349,7 +349,7 @@ void Score::step() {
 	if (!_movie->_inputEventQueue.empty() && !_window->frozenLingoStateCount()) {
 		_lingo->processEvents(_movie->_inputEventQueue, true);
 	}
-	if (_vm->getVersion() >= 300 && !_window->_newMovieStarted && _playState != kPlayStopped) {
+	if (_version >= kFileVer300 && !_window->_newMovieStarted && _playState != kPlayStopped) {
 		_movie->processEvent(kEventIdle);
 	}
 
@@ -374,7 +374,7 @@ void Score::stopPlay() {
 	if (_stopPlayCalled)
 		return;
 	_stopPlayCalled = true;
-	if (_vm->getVersion() >= 300)
+	if (_version >= kFileVer300)
 		_movie->processEvent(kEventStopMovie);
 	_lingo->executePerFrameHook(-1, 0);
 }
@@ -482,7 +482,7 @@ void Score::updateCurrentFrame() {
 		// Cache the previous bounding box for the purposes of rollOver.
 		// If the sprite is blank, D4 and below will use whatever the previous valid bounding
 		// box was for rollOver testing.
-		if (g_director->getVersion() < 500) {
+		if (_version < kFileVer500) {
 			for (uint ch = 0; ch < _channels.size(); ch++) {
 				if (_channels[ch]->_sprite->_castId.member != 0) {
 					_channels[ch]->_rollOverBbox = _channels[ch]->getBbox();
@@ -524,11 +524,11 @@ void Score::updateNextFrameTime() {
 	}
 
 	if (tempo) {
-		const bool waitForClickOnly = _vm->getVersion() < 300;
+		const bool waitForClickOnly = _version < kFileVer300;
 		int maxDelay = 60;
-		if (_vm->getVersion() < 300) {
+		if (_version < kFileVer300) {
 			maxDelay = 120;
-		} else if (_vm->getVersion() < 400) {
+		} else if (_version < kFileVer400) {
 			// Director 3 has a slider that goes up to 120, but any value
 			// beyond 95 gets converted into a video wait instruction.
 			maxDelay = 95;
@@ -650,7 +650,7 @@ void Score::update() {
 	uint32 count = _window->frozenLingoStateCount();
 
 	// Director 4 and below will allow infinite recursion via the perFrameHook.
-	if (_vm->getVersion() < 500) {
+	if (_version < kFileVer500) {
 		// new frame, first call the perFrameHook (if one exists)
 		if (!_window->_newMovieStarted && !_vm->_playbackPaused) {
 			// Call the perFrameHook as soon as a frame switch is done.
@@ -665,7 +665,7 @@ void Score::update() {
 	}
 
 	// Check to see if we've hit the recursion limit
-	if (_vm->getVersion() >= 400 && _window->frozenLingoRecursionCount() >= 2) {
+	if (_version >= kFileVer400 && _window->frozenLingoRecursionCount() >= 2) {
 		debugC(1, kDebugEvents, "Score::update(): hitting D4 recursion depth limit, defrosting");
 		processFrozenScripts(true);
 		return;
@@ -676,7 +676,7 @@ void Score::update() {
 	}
 
 	// Director 5 and above actually check for recursion for the perFrameHook.
-	if (_vm->getVersion() >= 500) {
+	if (_version >= kFileVer500) {
 		// new frame, first call the perFrameHook (if one exists)
 		if (!_window->_newMovieStarted && !_vm->_playbackPaused) {
 			// Call the perFrameHook as soon as a frame switch is done.
@@ -690,7 +690,7 @@ void Score::update() {
 			return;
 	}
 
-	if (_vm->getVersion() >= 600) {
+	if (_version >= kFileVer600) {
 		// _movie->processEvent(kEventBeginSprite);
 		// TODO: Director 6 step: send beginSprite event to any sprites whose span begin in the upcoming frame
 		// _movie->processEvent(kEventPrepareFrame);
@@ -704,7 +704,7 @@ void Score::update() {
 	// then call the stepMovie hook (if one exists)
 	// D4 and above only call it if _allowOutdatedLingo is enabled.
 	count = _window->frozenLingoStateCount();
-	if (!_vm->_playbackPaused && (_vm->getVersion() < 400 || _movie->_allowOutdatedLingo)) {
+	if (!_vm->_playbackPaused && (_version < kFileVer400 || _movie->_allowOutdatedLingo)) {
 		_movie->processEvent(kEventStepMovie);
 	}
 	// If this stepMovie call is frozen, drop the next enterFrame event
@@ -712,7 +712,7 @@ void Score::update() {
 		return;
 
 	// If we've hit the recursion limit, don't enterFrame
-	if (_vm->getVersion() >= 400 && _window->frozenLingoRecursionCount() >= 2) {
+	if (_version >= kFileVer400 && _window->frozenLingoRecursionCount() >= 2) {
 		debugC(1, kDebugEvents, "Score::update: exiting early due to recursion depth limit");
 		return;
 	}
@@ -721,7 +721,7 @@ void Score::update() {
 	count = _window->frozenLingoStateCount();
 	if (!_vm->_playbackPaused) {
 		_exitFrameCalled = false;
-		if (_vm->getVersion() >= 400) {
+		if (_version >= kFileVer400) {
 			_movie->processEvent(kEventEnterFrame);
 		}
 	}
@@ -930,7 +930,7 @@ bool Score::renderPrePaletteCycle(RenderMode mode) {
 
 		int frameDelay = 1000 / 60;
 		int fadeFrames = kFadeColorFrames[frameRate - 1];
-		if (_vm->getVersion() >= 500)
+		if (_version >= kFileVer500)
 			fadeFrames = kFadeColorFramesD5[frameRate - 1];
 		byte calcPal[768];
 
@@ -1260,7 +1260,7 @@ void Score::renderPaletteCycle(RenderMode mode) {
 
 				int frameDelay = 1000 / 60;
 				int fadeFrames = kFadeColorFrames[frameRate - 1];
-				if (_vm->getVersion() >= 500)
+				if (_version >= kFileVer500)
 					fadeFrames = kFadeColorFramesD5[frameRate - 1];
 
 				// Wait for a fixed time
@@ -1725,7 +1725,7 @@ void Score::playSoundChannel(bool puppetOnly) {
 	}
 
 	// Channels above 2 are only usable by Lingo.
-	if (g_director->getVersion() >= 300) {
+	if (_version >= kFileVer300) {
 		sound->playPuppetSound(3);
 		sound->playPuppetSound(4);
 	}
@@ -1751,6 +1751,7 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 	}
 
 	_frameDataOffset = 0;
+	_maxChannelsUsed = 0;
 
 	if (version < kFileVer400) {
 		_framesStreamSize = _framesStream->readUint32();
@@ -1770,18 +1771,22 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 		int32 listSize = (int32)_framesStream->readUint32();
 		int32 maxDataLen = (int32)_framesStream->readUint32();
 
-		debugC(1, kDebugLoading, "Score::loadFrames(): numEntries: %d, maxVar: %d, maxDataLen: 0x%x",
+		debugC(1, kDebugLoading, "Score::loadFrames(): Sprite Details: numEntries: %d, maxVar: %d, maxDataLen: 0x%x",
 			numEntries, listSize, maxDataLen);
 
 		// 3 * 4 = 3 int32 from above
 		_indexStart = listStart + 3 * 4;
 		_frameDataOffset = _indexStart + listSize * 4;
 
+		_spriteDetailOffsets.resize(numEntries);
+
 		int prevOff = 0;
 		for (int i = 0; i < numEntries; i++) {
 			uint32 off = _framesStream->readUint32();
+			_spriteDetailOffsets[i] = _frameDataOffset + off;
+
 			if (i > 0) {
-				debugC(2, kDebugLoading, "  Score::loadFrames(): entry %d offset: 0x%x (%d) -> 0x%x, size: %d",
+				debugC(2, kDebugLoading, "  Detail entry %d offset: 0x%x (%d) -> 0x%x, size: %d",
 					i - 1, prevOff, prevOff, _frameDataOffset + prevOff, off - prevOff);
 			}
 			prevOff = off;
@@ -1840,6 +1845,11 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 	// numOfFrames in the header is often incorrect
 	for (_numFrames = 1; loadFrame(_numFrames, false); _numFrames++) {
 		_scoreCache.push_back(new Frame(*_currentFrame));
+
+		for (int i = 0; i < _currentFrame->_sprites.size(); i++) {
+			if (_currentFrame->_sprites[i]->_castId.member && i > _maxChannelsUsed)
+				_maxChannelsUsed = i;
+		}
 	}
 
 	debugC(1, kDebugLoading, "Score::loadFrames(): Calculated, total number of frames %d!", _numFrames);
@@ -1850,6 +1860,52 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 
 	debugC(1, kDebugLoading, "Score::loadFrames(): Number of frames: %d, framesStreamSize: %d", _numFrames, _framesStreamSize);
 }
+
+void Score::loadFrameSpriteDetails() {
+	for (int i = 0; i < _currentFrame->_sprites.size(); i++) {
+		Sprite *sprite = _currentFrame->_sprites[i];
+		if (sprite->_spriteListIdx) {
+			Common::MemoryReadStreamEndian *stream = getSpriteDetailsStream(sprite->_spriteListIdx + 1);
+			if (stream) {
+				BehaviorElement behavior;
+
+				while (stream->pos() < stream->size()) {
+					behavior.read(*stream);
+
+					if (behavior.initializerIndex) {
+						Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(behavior.initializerIndex);
+
+						if (stream1) {
+							behavior.initializerParams = stream1->readString();
+							delete stream1;
+						}
+					}
+
+					sprite->_behaviors.push_back(behavior);
+				}
+				delete stream;
+			}
+		}
+	}
+
+	if (_currentFrame->_mainChannels.scriptSpriteListIdx) {
+		Common::MemoryReadStreamEndian *stream = getSpriteDetailsStream(_currentFrame->_mainChannels.scriptSpriteListIdx);
+		if (stream) {
+			_currentFrame->_mainChannels.behavior.read(*stream);
+			delete stream;
+
+			if (_currentFrame->_mainChannels.behavior.initializerIndex) {
+				Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(_currentFrame->_mainChannels.behavior.initializerIndex);
+
+				if (stream1) {
+					_currentFrame->_mainChannels.behavior.initializerParams = stream1->readString();
+					delete stream1;
+				}
+			}
+		}
+	}
+}
+
 
 void Score::seekToMemberInList(int frameNum) {
 	if (frameNum < 1 || frameNum >= _numOfFrames) {
@@ -1897,6 +1953,9 @@ bool Score::loadFrame(int frameNum, bool loadCast) {
 	if (!isFrameRead)
 		return false;
 
+	if (_version >= kFileVer600)
+		loadFrameSpriteDetails();
+
 	// We have read the frame, now update current frame number
 	_curFrameNumber = targetFrame;
 
@@ -1928,7 +1987,7 @@ bool Score::readOneFrame() {
 
 		while (frameSize != 0) {
 
-			if (_vm->getVersion() < 400) {
+			if (_version < kFileVer400) {
 				channelSize = _framesStream->readByte() * 2;
 				channelOffset = _framesStream->readByte() * 2;
 				frameSize -= channelSize + 2;
@@ -2246,6 +2305,27 @@ uint32 Score::getVWSCResourceSize() {
 	// _firstFramePosition is the header size
 	// header + frames (main channel + sprite channels) (20 bytes)
 	return _firstFramePosition + framesSize;
+}
+
+Common::MemoryReadStreamEndian *Score::getSpriteDetailsStream(int spriteIdx) {
+	Common::MemoryReadStreamEndian *stream = nullptr;
+
+	if (!_framesStream || _spriteDetailOffsets.size() == 0)
+		return nullptr;
+
+	if (spriteIdx >= 0 && spriteIdx < (int)_spriteDetailOffsets.size() - 1) {
+		uint32 size = _spriteDetailOffsets[spriteIdx + 1] - _spriteDetailOffsets[spriteIdx];
+
+		if (!size)
+			return nullptr;
+
+		byte *data = new byte[size];
+		_framesStream->seek(_spriteDetailOffsets[spriteIdx], SEEK_SET);
+		_framesStream->read(data, size);
+		stream = new Common::MemoryReadStreamEndian(data, size, _framesStream->isBE(), DisposeAfterUse::YES);
+	}
+
+	return stream;
 }
 
 } // End of namespace Director

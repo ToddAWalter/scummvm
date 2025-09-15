@@ -94,7 +94,7 @@ bool UIText::display(int offsetX, int offsetY) {
 		font->drawText((byte *)_text, offsetX + _posX, offsetY + _posY + textOffset, _width, _textAlign, _height);
 	}
 
-	//_game->_renderer->_rectList.add(new BaseActiveRect(_game,  this, NULL, OffsetX + _posX, OffsetY + _posY, _width, _height, 100, 100, false));
+	//_game->_renderer->_rectList.add(new BaseActiveRect(_game,  this, nullptr, offsetX + _posX, offsetY + _posY, _width, _height, 100, 100, false));
 
 	return STATUS_OK;
 }
@@ -103,9 +103,9 @@ bool UIText::display(int offsetX, int offsetY) {
 
 //////////////////////////////////////////////////////////////////////////
 bool UIText::loadFile(const char *filename) {
-	char *buffer = (char *)BaseFileManager::getEngineInstance()->readWholeFile(filename);
+	char *buffer = (char *) _game->_fileManager->readWholeFile(filename);
 	if (buffer == nullptr) {
-		_game->LOG(0, "UIText::LoadFile failed for file '%s'", filename);
+		_game->LOG(0, "UIText::loadFile failed for file '%s'", filename);
 		return STATUS_FAILED;
 	}
 
@@ -355,7 +355,6 @@ bool UIText::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "TEXT_ALIGN=\"%s\"\n", "center");
 		break;
 	default:
-		error("UIText::SaveAsText - Unhandled enum");
 		break;
 	}
 
@@ -370,7 +369,7 @@ bool UIText::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "VERTICAL_ALIGN=\"%s\"\n", "center");
 		break;
 	default:
-		error("UIText::SaveAsText - Unhandled enum value: NUM_VERTICAL_ALIGN");
+		break;
 	}
 
 	buffer->putTextIndent(indent + 2, "\n");
