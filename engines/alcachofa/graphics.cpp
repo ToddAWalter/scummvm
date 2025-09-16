@@ -522,6 +522,21 @@ Graphic::Graphic(const Graphic &other)
 	, _frameI(other._frameI)
 	, _depthScale(other._depthScale) {}
 
+Graphic &Graphic::operator= (const Graphic &other) {
+	_ownedAnimation.reset();
+	_animation = other._animation;
+	_topLeft = other._topLeft;
+	_scale = other._scale;
+	_order = other._order;
+	_color = other._color;
+	_isPaused = other._isPaused;
+	_isLooping = other._isLooping;
+	_lastTime = other._lastTime;
+	_frameI = other._frameI;
+	_depthScale = other._depthScale;
+	return *this;
+}
+
 void Graphic::loadResources() {
 	if (_animation != nullptr)
 		_animation->load();
@@ -549,7 +564,8 @@ void Graphic::update() {
 			curTime %= totalDuration;
 		else {
 			pause();
-			curTime = _lastTime = totalDuration ? totalDuration - 1 : 0;
+			curTime = totalDuration ? totalDuration - 1 : 0;
+			_lastTime = curTime;
 		}
 	}
 
@@ -795,7 +811,7 @@ void FadeDrawRequest::draw() {
 	g_engine->renderer().quad(Vector2d(0, 0), as2D(Point(g_system->getWidth(), g_system->getHeight())), color);
 }
 
-struct FadeTask : public Task {
+struct FadeTask final : public Task {
 	FadeTask(Process &process, FadeType fadeType,
 		float from, float to,
 		uint32 duration, EasingType easingType,
@@ -812,7 +828,7 @@ struct FadeTask : public Task {
 
 	FadeTask(Process &process, Serializer &s)
 		: Task(process) {
-		syncGame(s);
+		FadeTask::syncGame(s);
 	}
 
 	TaskReturn run() override {

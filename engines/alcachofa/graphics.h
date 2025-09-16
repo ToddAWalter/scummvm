@@ -168,7 +168,7 @@ protected:
 	bool _isLoaded = false;
 	uint32 _totalDuration = 0;
 
-	int32 _spriteIndexMapping[kMaxSpriteIDs] = { -1 };
+	int32 _spriteIndexMapping[kMaxSpriteIDs] = { 0 };
 	Common::Array<uint32>
 		_spriteOffsets, ///< index offset per sprite and animation frame
 		_spriteBases; ///< base index per sprite
@@ -259,6 +259,7 @@ public:
 	Graphic();
 	Graphic(Common::ReadStream &stream);
 	Graphic(const Graphic &other); // animation reference is taken, so keep other alive
+	Graphic &operator= (const Graphic &other);
 
 	inline Common::Point &topLeft() { return _topLeft; }
 	inline int8 &order() { return _order; }

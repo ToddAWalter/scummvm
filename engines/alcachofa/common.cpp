@@ -100,6 +100,16 @@ void FakeLock::operator= (FakeLock &&other) {
 	debug("move-assign");
 }
 
+FakeLock &FakeLock::operator= (const FakeLock &other) {
+	release();
+	_name = other._name;
+	_semaphore = other._semaphore;
+	if (_semaphore != nullptr)
+		_semaphore->_counter++;
+	debug("copy-assign");
+	return *this;
+}
+
 void FakeLock::release() {
 	if (_semaphore == nullptr)
 		return;
@@ -157,7 +167,7 @@ String readVarString(ReadStream &stream) {
 		return Common::String();
 
 	char *buffer = new char[length];
-	if (buffer == nullptr)
+	if (buffer == nullptr) //-V668
 		error("Out of memory in readVarString");
 	if (stream.read(buffer, length) != length)
 		error("Could not read all %u bytes in readVarString", length);

@@ -1779,11 +1779,13 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 		_frameDataOffset = _indexStart + listSize * 4;
 
 		_spriteDetailOffsets.resize(numEntries);
+		_spriteDetailAccessed.resize(numEntries);
 
 		int prevOff = 0;
 		for (int i = 0; i < numEntries; i++) {
 			uint32 off = _framesStream->readUint32();
 			_spriteDetailOffsets[i] = _frameDataOffset + off;
+			_spriteDetailAccessed[i] = false;
 
 			if (i > 0) {
 				debugC(2, kDebugLoading, "  Detail entry %d offset: 0x%x (%d) -> 0x%x, size: %d",
@@ -1796,6 +1798,7 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 		_framesStream->seek(_indexStart, SEEK_SET);
 		uint32 off = _framesStream->readUint32();
 		_framesStream->seek(_frameDataOffset + off, SEEK_SET);
+		_spriteDetailAccessed[0] = true;
 	}
 
 	if (version >= kFileVer400 && version < kFileVer1100) {
@@ -1841,6 +1844,19 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 	debugC(1, kDebugLoading, "Score::loadFrames(): Precomputing total number of frames! First frame pos: 0x%x",
 			_firstFramePosition);
 
+	// Index 1 in the list contains the sprite order. We are not using it,
+	if (_version >= kFileVer600) {
+		Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(1);
+		int numSprites = stream1->readUint32();
+		debugCN(2, kDebugLoading, "Sprites order: ");
+		for (int i = 0; i < numSprites; i++) {
+			int spriteId = stream1->readUint32();
+			debugCN(2, kDebugLoading, "%d ", spriteId);
+		}
+		debugC(2, kDebugLoading, "");
+		delete stream1;
+	}
+
 	// Calculate number of frames and their positions
 	// numOfFrames in the header is often incorrect
 	for (_numFrames = 1; loadFrame(_numFrames, false); _numFrames++) {
@@ -1852,7 +1868,24 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 		}
 	}
 
-	debugC(1, kDebugLoading, "Score::loadFrames(): Calculated, total number of frames %d!", _numFrames);
+	debugC(1, kDebugLoading, "Score::loadFrames(): Calculated, total number of frames %d", _numFrames);
+
+	if (_version >= kFileVer600) {
+		for (int i = 0; i < _spriteDetailAccessed.size() - 1; i++) {
+			int size = _spriteDetailOffsets[i + 1] - _spriteDetailOffsets[i];
+			if (!_spriteDetailAccessed[i] && size > 0) {
+				int type = i % 3;
+				const char *purpose = (type == 0) ? "spriteInfo" : (type == 1) ? "behavior" : "name";
+				debugC(2, kDebugLoading, "Sprite detail %d not accessed, size: %d (%s)", i, size, purpose);
+
+				Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(i);
+				if (stream1) {
+					stream1->hexdump(stream1->size());
+					delete stream1;
+				}
+			}
+		}
+	}
 
 	_currentFrame->reset();
 
@@ -1861,25 +1894,60 @@ void Score::loadFrames(Common::SeekableReadStreamEndian &stream, uint16 version)
 	debugC(1, kDebugLoading, "Score::loadFrames(): Number of frames: %d, framesStreamSize: %d", _numFrames, _framesStreamSize);
 }
 
-void Score::loadFrameSpriteDetails() {
+BehaviorElement Score::loadSpriteBehavior(Common::MemoryReadStreamEndian *stream, bool skipLog) {
+	BehaviorElement behavior;
+	behavior.read(*stream);
+
+	if (behavior.initializerIndex) {
+		Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(behavior.initializerIndex);
+
+		if (stream1) {
+			behavior.initializerParams = stream1->readString();
+			delete stream1;
+		}
+	}
+
+	if (!skipLog)
+		debugC(2, kDebugLoading, "    Behavior: %s", behavior.toString().c_str());
+
+	return behavior;
+}
+
+SpriteInfo Score::loadSpriteInfo(int spriteId, bool skipLog) {
+	SpriteInfo info;
+
+	Common::MemoryReadStreamEndian *stream = getSpriteDetailsStream(spriteId);
+	if (stream) {
+		info.read(*stream);
+		delete stream;
+	}
+
+	stream = getSpriteDetailsStream(spriteId + 2);
+	if (stream) {
+		info.name = stream->readString();
+		delete stream;
+	}
+
+	if (!skipLog)
+		debugC(2, kDebugLoading, "  SpriteInfo: %s", info.toString().c_str());
+
+	return info;
+}
+
+void Score::loadFrameSpriteDetails(bool skipLog) {
+	Common::MemoryReadStreamEndian *stream = nullptr;
 	for (int i = 0; i < _currentFrame->_sprites.size(); i++) {
 		Sprite *sprite = _currentFrame->_sprites[i];
 		if (sprite->_spriteListIdx) {
-			Common::MemoryReadStreamEndian *stream = getSpriteDetailsStream(sprite->_spriteListIdx + 1);
+			if (!skipLog)
+				debugC(2, kDebugLoading, "Sprite %d", i);
+
+			sprite->_spriteInfo = loadSpriteInfo(sprite->_spriteListIdx, skipLog);
+
+			stream = getSpriteDetailsStream(sprite->_spriteListIdx + 1);
 			if (stream) {
-				BehaviorElement behavior;
-
 				while (stream->pos() < stream->size()) {
-					behavior.read(*stream);
-
-					if (behavior.initializerIndex) {
-						Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(behavior.initializerIndex);
-
-						if (stream1) {
-							behavior.initializerParams = stream1->readString();
-							delete stream1;
-						}
-					}
+					BehaviorElement behavior = loadSpriteBehavior(stream, skipLog);
 
 					sprite->_behaviors.push_back(behavior);
 				}
@@ -1888,21 +1956,53 @@ void Score::loadFrameSpriteDetails() {
 		}
 	}
 
+	// Script channel
 	if (_currentFrame->_mainChannels.scriptSpriteListIdx) {
-		Common::MemoryReadStreamEndian *stream = getSpriteDetailsStream(_currentFrame->_mainChannels.scriptSpriteListIdx);
+		if (!skipLog)
+			debugC(2, kDebugLoading, "Script channel");
+
+		_currentFrame->_mainChannels.scriptSpriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.scriptSpriteListIdx, skipLog);
+
+		stream = getSpriteDetailsStream(_currentFrame->_mainChannels.scriptSpriteListIdx + 1);
 		if (stream) {
-			_currentFrame->_mainChannels.behavior.read(*stream);
+			_currentFrame->_mainChannels.behavior = loadSpriteBehavior(stream, skipLog);
 			delete stream;
-
-			if (_currentFrame->_mainChannels.behavior.initializerIndex) {
-				Common::MemoryReadStreamEndian *stream1 = getSpriteDetailsStream(_currentFrame->_mainChannels.behavior.initializerIndex);
-
-				if (stream1) {
-					_currentFrame->_mainChannels.behavior.initializerParams = stream1->readString();
-					delete stream1;
-				}
-			}
 		}
+	}
+
+	// Tempo channel
+	if (_currentFrame->_mainChannels.tempoSpriteListIdx) {
+		if (!skipLog)
+			debugC(2, kDebugLoading, "Tempo channel");
+		_currentFrame->_mainChannels.tempoSpriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.tempoSpriteListIdx, skipLog);
+	}
+
+	// Transition channel
+	if (_currentFrame->_mainChannels.transSpriteListIdx) {
+		if (!skipLog)
+			debugC(2, kDebugLoading, "Transition channel");
+		_currentFrame->_mainChannels.transSpriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.transSpriteListIdx, skipLog);
+	}
+
+	// Sound2 channel
+	if (_currentFrame->_mainChannels.sound2SpriteListIdx) {
+		if (!skipLog)
+			debugC(2, kDebugLoading, "Sound2 channel");
+		_currentFrame->_mainChannels.sound2SpriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.sound2SpriteListIdx, skipLog);
+	}
+
+	// Sound1 channel
+	if (_currentFrame->_mainChannels.sound1SpriteListIdx) {
+		if (!skipLog)
+			debugC(2, kDebugLoading, "Sound1 channel");
+		_currentFrame->_mainChannels.sound1SpriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.sound1SpriteListIdx, skipLog);
+	}
+
+	// Palette channel
+	if (_currentFrame->_mainChannels.palette.spriteListIdx) {
+		if (!skipLog)
+			debugC(2, kDebugLoading, "Palette channel");
+		_currentFrame->_mainChannels.palette.spriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.palette.spriteListIdx, skipLog);
 	}
 }
 
@@ -1953,8 +2053,12 @@ bool Score::loadFrame(int frameNum, bool loadCast) {
 	if (!isFrameRead)
 		return false;
 
+	int64 pos = _framesStream->pos();
+
 	if (_version >= kFileVer600)
-		loadFrameSpriteDetails();
+		loadFrameSpriteDetails(loadCast);
+
+	_framesStream->seek(pos, SEEK_SET);
 
 	// We have read the frame, now update current frame number
 	_curFrameNumber = targetFrame;
@@ -2315,6 +2419,8 @@ Common::MemoryReadStreamEndian *Score::getSpriteDetailsStream(int spriteIdx) {
 
 	if (spriteIdx >= 0 && spriteIdx < (int)_spriteDetailOffsets.size() - 1) {
 		uint32 size = _spriteDetailOffsets[spriteIdx + 1] - _spriteDetailOffsets[spriteIdx];
+
+		_spriteDetailAccessed[spriteIdx] = true;
 
 		if (!size)
 			return nullptr;

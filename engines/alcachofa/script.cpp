@@ -130,14 +130,14 @@ bool Script::hasProcedure(const Common::String &procedure) const {
 	return _procedures.contains(procedure);
 }
 
-struct ScriptTimerTask : public Task {
+struct ScriptTimerTask final : public Task {
 	ScriptTimerTask(Process &process, int32 durationSec)
 		: Task(process)
 		, _durationSec(durationSec) {}
 
 	ScriptTimerTask(Process &process, Serializer &s)
 		: Task(process) {
-		syncGame(s);
+		ScriptTimerTask::syncGame(s);
 	}
 
 	TaskReturn run() override {
@@ -152,7 +152,7 @@ struct ScriptTimerTask : public Task {
 			g_engine->player().drawCursor();
 		}
 		TASK_YIELD(1); // Wait a frame to not produce an endless loop
-		TASK_RETURN(_result);
+		TASK_RETURN(_result); //-V779
 		TASK_END;
 	}
 
@@ -201,7 +201,7 @@ struct StackEntry {
 	};
 };
 
-struct ScriptTask : public Task {
+struct ScriptTask final : public Task {
 	ScriptTask(Process &process, const String &name, uint32 pc, FakeLock &&lock)
 		: Task(process)
 		, _script(g_engine->script())
@@ -227,7 +227,7 @@ struct ScriptTask : public Task {
 	ScriptTask(Process &process, Serializer &s)
 		: Task(process)
 		, _script(g_engine->script()) {
-		syncGame(s);
+		ScriptTask::syncGame(s);
 	}
 
 	TaskReturn run() override {
@@ -337,28 +337,28 @@ struct ScriptTask : public Task {
 				pushNumber(-popNumber() + popNumber());
 				break;
 			case ScriptOp::Less:
-				pushNumber(popNumber() > popNumber());
+				pushNumber(popNumber() > popNumber()); //-V501
 				break;
 			case ScriptOp::Greater:
-				pushNumber(popNumber() < popNumber());
+				pushNumber(popNumber() < popNumber()); //-V501
 				break;
 			case ScriptOp::LessEquals:
-				pushNumber(popNumber() >= popNumber());
+				pushNumber(popNumber() >= popNumber()); //-V501
 				break;
 			case ScriptOp::GreaterEquals:
-				pushNumber(popNumber() <= popNumber());
+				pushNumber(popNumber() <= popNumber()); //-V501
 				break;
 			case ScriptOp::Equals:
-				pushNumber(popNumber() == popNumber());
+				pushNumber(popNumber() == popNumber()); //-V501
 				break;
 			case ScriptOp::NotEquals:
-				pushNumber(popNumber() != popNumber());
+				pushNumber(popNumber() != popNumber()); //-V501
 				break;
 			case ScriptOp::BitAnd:
-				pushNumber(popNumber() & popNumber());
+				pushNumber(popNumber() & popNumber()); //-V501
 				break;
 			case ScriptOp::BitOr:
-				pushNumber(popNumber() | popNumber());
+				pushNumber(popNumber() | popNumber()); //-V501
 				break;
 			case ScriptOp::Return: {
 				int32 returnValue = popNumber();

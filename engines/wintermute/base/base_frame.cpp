@@ -261,8 +261,8 @@ bool BaseFrame::loadBuffer(char *buffer, int lifeTime, bool keepLoaded) {
 				SAFE_DELETE(_sound);
 			}
 			_sound = new BaseSound(_game);
-			if (!_sound || DID_FAIL(_sound->setSound(params, Audio::Mixer::kSFXSoundType, false))) {
-				if (BaseEngine::instance().getSoundMgr()->_soundAvailable) {
+			if (!_sound || DID_FAIL(_sound->setSound(params, TSoundType::SOUND_SFX, false))) {
+				if (_game->_soundMgr->_soundAvailable) {
 					_game->LOG(0, "Error loading sound '%s'.", params);
 				}
 				SAFE_DELETE(_sound);
@@ -456,7 +456,7 @@ bool BaseFrame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStac
 
 		if (!val->isNULL()) {
 			_sound = new BaseSound(_game);
-			if (!_sound || DID_FAIL(_sound->setSound(val->getString(), Audio::Mixer::kSFXSoundType, false))) {
+			if (!_sound || DID_FAIL(_sound->setSound(val->getString(), TSoundType::SOUND_SFX, false))) {
 				stack->pushBool(false);
 				SAFE_DELETE(_sound);
 			} else {
