@@ -70,8 +70,8 @@ void drawText(uint x, uint y, const Common::String &str1, const Common::String &
 
 void removeText(uint xTextLine1, uint yTextLine1, uint xTextLine2, uint yTextLine2, byte fillColor) {
 
-	for (int j = yTextLine1; j < yTextLine2 + 1; j++) {
-		for (int i = xTextLine1; i < xTextLine2 + 1; i++) {
+	for (uint j = yTextLine1; j < yTextLine2 + 1; j++) {
+		for (uint i = xTextLine1; i < xTextLine2 + 1; i++) {
 			*((byte *)g_engine->_screen->getBasePtr(i, j)) = 0;
 		}
 	}
@@ -950,7 +950,9 @@ void drawFlc(
 							palette[1] = 0;
 							palette[2] = 0;
 							if (fullPalette) {
-								g_engine->_graphics->fadePalettes(g_engine->_graphics->getPalette(), palette);
+								byte *gamePalette = g_engine->_graphics->getPalette();
+								g_engine->_graphics->fadePalettes(gamePalette, palette);
+								free(gamePalette);
 								g_engine->_graphics->copyPalette(palette, g_engine->_graphics->_pal);
 							} else if (limitPaletteTo200) {
 								g_engine->_graphics->setPalette(palette, 0, 200);
@@ -967,8 +969,8 @@ void drawFlc(
 								g_engine->_graphics->setPalette(palette);
 								g_engine->_graphics->copyPalette(palette, g_engine->_graphics->_pal);
 							}
+							free(palette);
 						}
-
 						g_engine->_chrono->_gameTick = false;
 					} else {
 						break;
@@ -988,6 +990,7 @@ void drawFlc(
 	flic->stop();
 Lexit_proc:
 	animationsFile.close();
+	delete flic;
 }
 
 void clearAnims() {
