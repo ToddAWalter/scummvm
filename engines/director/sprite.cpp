@@ -28,6 +28,7 @@
 #include "director/sprite.h"
 #include "director/castmember/castmember.h"
 #include "director/castmember/shape.h"
+#include "director/castmember/text.h"
 
 namespace Director {
 
@@ -127,6 +128,7 @@ Sprite& Sprite::operator=(const Sprite &sprite) {
 	_volume = sprite._volume;
 	_stretch = sprite._stretch;
 
+	_spriteInfo = sprite._spriteInfo;
 	_spriteListIdx = sprite._spriteListIdx;
 
 	_flags = sprite._flags;
@@ -554,6 +556,24 @@ void Sprite::setCast(CastMemberID memberID, bool replaceDims) {
 			case kCastText:
 				_spriteType = kTextSprite;
 				break;
+			case kCastButton:
+				{
+					TextCastMember *text = (TextCastMember *)_cast;
+					switch (text->_buttonType) {
+					case kTypeButton:
+						_spriteType = kButtonSprite;
+						break;
+					case kTypeCheckBox:
+						_spriteType = kCheckboxSprite;
+						break;
+					case kTypeRadio:
+						_spriteType = kRadioButtonSprite;
+						break;
+					default:
+						break;
+					}
+					break;
+				}
 			default:
 				break;
 			}

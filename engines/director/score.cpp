@@ -439,8 +439,7 @@ void Score::updateCurrentFrame() {
 			// With the advent of demand loading frames and due to partial updates, we rebuild our channel data
 			// when jumping.
 			nextFrameNumberToLoad = _nextFrame;
-		}
-		else if (!_window->_newMovieStarted)
+		} else if (!_window->_newMovieStarted)
 			nextFrameNumberToLoad = (_curFrameNumber+1);
 	}
 
@@ -591,7 +590,7 @@ void Score::update() {
 
 			// Don't process frozen script if we use jump instructions
 			// like "go to frame", or open a new movie.
-			if (!_nextFrame) {
+			if (!_nextFrame && _window->_nextMovie.movie.empty()) {
 				processFrozenScripts();
 			}
 			return;
@@ -619,7 +618,7 @@ void Score::update() {
 
 		// Don't process frozen script if we use jump instructions
 		// like "go to frame", or open a new movie.
-		if (!_nextFrame || _nextFrame == _curFrameNumber) {
+		if ((!_nextFrame && _window->_nextMovie.movie.empty()) || _nextFrame == _curFrameNumber) {
 			processFrozenScripts();
 		}
 
@@ -631,6 +630,10 @@ void Score::update() {
 	if (_playState == kPlayStopped) {
 		return;
 	}
+
+	// Kill behaviors if they are going to expire next frame
+	if (!_vm->_playbackPaused)
+		killScriptInstances(_curFrameNumber + 1);
 
 	// change current frame and load frame data, if required
 	updateCurrentFrame();
@@ -737,7 +740,7 @@ void Score::update() {
 	// Attempt to thaw and continue any frozen execution after startMovie and enterFrame.
 	// If they don't complete (i.e. another freezing event like a "go to frame"),
 	// force another cycle of Score::update().
-	if (!_nextFrame && !processFrozenScripts())
+	if (!_nextFrame && _window->_nextMovie.movie.empty() && !processFrozenScripts())
 		return;
 
 	if (!_vm->_playbackPaused) {
@@ -2010,7 +2013,6 @@ void Score::loadFrameSpriteDetails(bool skipLog) {
 	}
 }
 
-
 void Score::seekToMemberInList(int frameNum) {
 	if (frameNum < 1 || frameNum >= _numOfFrames) {
 		warning("Score::seekToMemberInList(): frameNum %d out of bounds [1, %d)", frameNum, _numOfFrames);
@@ -2070,6 +2072,8 @@ bool Score::loadFrame(int frameNum, bool loadCast) {
 	if (loadCast) {
 		// Load frame cast
 		setSpriteCasts();
+
+		createScriptInstances(_curFrameNumber);
 	}
 
 	return true;
@@ -2436,6 +2440,49 @@ Common::MemoryReadStreamEndian *Score::getSpriteDetailsStream(int spriteIdx) {
 	}
 
 	return stream;
+}
+
+void Score::killScriptInstances(int frameNum) {
+	if (_version < kFileVer600) // No-op for early Directors
+		return;
+
+	for (int i = 0; i < (int)_channels.size(); i++) {
+		Channel *channel = _channels[i];
+
+		if (channel->_scriptInstanceList.size() == 0)
+			continue;
+
+		if (frameNum < channel->_startFrame || frameNum > channel->_endFrame) {
+			channel->_scriptInstanceList.clear();
+			channel->_startFrame = channel->_endFrame = -1;
+
+			debugC(1, kDebugLingoExec, "Score::killScriptInstances(): Killed script instances for channel %d", i + 1);
+		}
+	}
+}
+
+void Score::createScriptInstances(int frameNum) {
+	if (_version < kFileVer600) // No-op for early Directors
+		return;
+
+	for (int i = 0; i < (int)_channels.size(); i++) {
+		Channel *channel = _channels[i];
+		Sprite *sprite = channel->_sprite;
+
+		if (frameNum >= channel->_startFrame && frameNum <= channel->_endFrame) {
+			// We create scriptInstance only for new sprites
+			if (channel->_scriptInstanceList.size() == 0) {
+				if (sprite->_behaviors.size() > 0) {
+					for (uint j = 0; j < sprite->_behaviors.size(); j++) {
+						// TODO: Here we should do proper instantiation
+						channel->_scriptInstanceList.push_back(sprite->_behaviors[j]);
+						debugC(1, kDebugLingoExec, "Score::createScriptInstances(): Instantiating behavior %s for channel %d",
+							sprite->_behaviors[j].toString().c_str(), i + 1);
+					}
+				}
+			}
+		}
+	}
 }
 
 } // End of namespace Director

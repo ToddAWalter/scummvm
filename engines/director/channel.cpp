@@ -62,6 +62,14 @@ Channel::Channel(Score *sc, Sprite *sp, int priority) {
 
 	_visible = true;
 	_dirty = true;
+
+	if (sp) {
+		_startFrame = sp->_spriteInfo.startFrame;
+		_endFrame = sp->_spriteInfo.endFrame;
+	} else {
+		_startFrame = -1;
+		_endFrame = -1;
+	}
 }
 
 Channel::Channel(const Channel &channel) {
@@ -87,6 +95,9 @@ Channel& Channel::operator=(const Channel &channel) {
 
 	_visible = channel._visible;
 	_dirty = channel._dirty;
+
+	_startFrame = channel._startFrame;
+	_endFrame = channel._endFrame;
 
 	return *this;
 }
@@ -603,6 +614,11 @@ void Channel::replaceSprite(Sprite *nextSprite) {
 		_sprite->_width = width;
 		_sprite->_height = height;
 	}
+
+	if (g_director->getVersion() >= 600) {
+		_startFrame = _sprite->_spriteInfo.startFrame;
+		_endFrame = _sprite->_spriteInfo.endFrame;
+	}
 }
 
 void Channel::setPosition(int x, int y, bool force) {
@@ -661,6 +677,10 @@ void Channel::replaceWidget(CastMemberID previousCastId, bool force) {
 		// if the type don't match, then we will set it as transparent. i.e. don't create widget
 		if (!_sprite->checkSpriteType())
 			return;
+
+		if (_sprite->_cast->needsReload()) {
+			_sprite->_cast->load();
+		}
 		// always use the unstretched dims.
 		// because only the stretched sprite will have different channel size and sprite size
 		// we need the original image to scale the sprite.
