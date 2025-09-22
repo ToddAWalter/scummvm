@@ -268,6 +268,16 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 				immediate = sprite->_immediate;
 			}
 
+			if (_vm->getVersion() >= 600) {
+				event.scriptType = kScoreScript;
+				event.scriptId = scriptId;
+				if (event.behaviorIndex >= 0 && event.behaviorIndex < (int)_score->_channels[event.channelId]->_scriptInstanceList.size())
+					event.scriptInstance = _score->_channels[event.channelId]->_scriptInstanceList[event.behaviorIndex].u.obj;
+				else
+					warning("resolveScriptEvent: behaviorIndex %d out of range", event.behaviorIndex);
+				return;
+			}
+
 			// Sprite (score) script
 			ScriptContext *script = getScriptContext(kScoreScript, scriptId);
 			if (script) {
@@ -605,7 +615,7 @@ void Lingo::processEvents(Common::Queue<LingoEvent> &queue, bool isInputEvent) {
 		debugC(5, kDebugEvents, "Lingo::processEvents: starting event script (%s, %s, %s, %d)",
 			_eventHandlerTypes[el.event], scriptType2str(el.scriptType), el.scriptId.asString().c_str(), el.channelId
 		);
-		bool completed = processEvent(el.event, el.scriptType, el.scriptId, el.channelId);
+		bool completed = processEvent(el.event, el.scriptType, el.scriptId, el.channelId, el.scriptInstance);
 		movie->_lastEventId[el.event] = el.eventId;
 
 		if (isInputEvent && !completed) {
@@ -620,11 +630,18 @@ void Lingo::processEvents(Common::Queue<LingoEvent> &queue, bool isInputEvent) {
 	}
 }
 
-bool Lingo::processEvent(LEvent event, ScriptType st, CastMemberID scriptId, int channelId) {
+bool Lingo::processEvent(LEvent event, ScriptType st, CastMemberID scriptId, int channelId, AbstractObject *obj) {
 	_currentChannelId = channelId;
 
 	if (!_eventHandlerTypes.contains(event))
 		error("processEvent: Unknown event %d", event);
+
+
+	if (g_director->getVersion() >= 600 && st == kScoreScript && obj) {
+		push(Datum(obj));
+		LC::call(_eventHandlerTypes[event], 1, true);
+		return execute();
+	}
 
 	ScriptContext *script = g_director->getCurrentMovie()->getScriptContext(st, scriptId);
 	int nargs = 0;

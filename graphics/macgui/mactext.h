@@ -167,6 +167,7 @@ public:
 	void clearSelection();
 	Common::U32String cutSelection();
 	const SelectedText *getSelectedText() { return &_selectedText; }
+	bool hasSelection() { return _selectedText.endY != -1; }
 
 	int getLineSpacing() { return _canvas._interLinear; }
 
@@ -245,6 +246,7 @@ private:
 
 	bool _inTextSelection;
 	SelectedText _selectedText;
+	bool _selectionIsDirty;
 
 	MacMenu *_menu;
 };

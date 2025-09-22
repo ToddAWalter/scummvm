@@ -94,6 +94,7 @@ Gui::Gui(WageEngine *engine) {
 	_screen.create(g_system->getWidth(), g_system->getHeight(), Graphics::PixelFormat::createFormatCLUT8());
 
 	_wm = new Graphics::MacWindowManager(Graphics::kWMNoScummVMWallpaper);
+	_wm->_fontMan->loadFonts(Common::Path(engine->getGameFile()));
 	_wm->setScreen(&_screen);
 
 	_menu = _wm->addMenu();
@@ -131,8 +132,9 @@ Gui::Gui(WageEngine *engine) {
 
 	uint maxWidth = _screen.w;
 
-	_consoleWindow = _wm->addTextWindow(font, kColorBlack, kColorWhite, maxWidth, Graphics::kTextAlignLeft, _menu);
+	_consoleWindow = _wm->addTextWindow(font, kColorBlack, kColorWhite, maxWidth, Graphics::kTextAlignLeft, _menu, 4);
 	_consoleWindow->setCallback(consoleWindowCallback, this);
+	_consoleWindow->setBorderColor(kColorWhite);
 	_consoleWindow->setEditable(true);
 
 	_selectedMenuItem = -1;
@@ -219,6 +221,10 @@ bool Gui::processSceneEvents(WindowClick click, Common::Event &event) {
 	if (click == kBorderCloseButton && event.type == Common::EVENT_LBUTTONUP) {
 		_engine->quitGame();
 		return true;
+	}
+
+	if (event.type == Common::EVENT_KEYDOWN) {
+		return _consoleWindow->processEvent(event);
 	}
 
 	return false;

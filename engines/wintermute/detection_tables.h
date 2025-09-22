@@ -1800,17 +1800,17 @@ static const WMEGameDescription gameDescriptions[] = {
 	// Mental Repairs Inc (English)
 	WME_WINENTRY("mentalrepairs", "",
 		WME_ENTRY2s("data.dcp", "414d423bbff697f22fb38932f030e897", 59518068,
-					"english.dcp", "7573eb584e662adbc5fa3b1448e56106", 3160232), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_8_6),
+					"english.dcp", "7573eb584e662adbc5fa3b1448e56106", 3160232), Common::EN_ANY, GF_3D, WME_1_8_6),
 
 	// Mental Repairs Inc (German)
 	WME_WINENTRY("mentalrepairs", "",
 		WME_ENTRY2s("data.dcp", "414d423bbff697f22fb38932f030e897", 59518068,
-					"german.dcp", "af59a05ef29768e7fced3794a7a380a3", 3249142), Common::DE_DEU, ADGF_UNSTABLE | GF_3D, WME_1_8_6),
+					"german.dcp", "af59a05ef29768e7fced3794a7a380a3", 3249142), Common::DE_DEU, GF_3D, WME_1_8_6),
 
 	// Mental Repairs Inc (Polish)
 	WME_WINENTRY("mentalrepairs", "",
 		WME_ENTRY2s("data.dcp", "414d423bbff697f22fb38932f030e897", 59518068,
-					"string.tab", "d3393ba2445fc7e6a1cdf8fe95c59659", 72143), Common::PL_POL, ADGF_UNSTABLE | GF_3D, WME_1_8_6),
+					"string.tab", "d3393ba2445fc7e6a1cdf8fe95c59659", 72143), Common::PL_POL, GF_3D, WME_1_8_6),
 
 	// Mirage
 	WME_WINENTRY("mirage", "",
@@ -1818,15 +1818,15 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Miskatonic. Part One
 	WME_WINENTRY("miskatonic1", "",
-		WME_ENTRY1s("Miskatonic.exe", "21d1ed0375f64c13688e2d082ed1aaa1", 340306712), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_9_1),
+		WME_ENTRY1s("Miskatonic.exe", "21d1ed0375f64c13688e2d082ed1aaa1", 340306712), Common::EN_ANY, GF_3D, WME_1_9_1),
 
 	// Miskatonic. Part One (alt)
 	WME_WINENTRY("miskatonic1", "",
-		WME_ENTRY1s("Miskatonic.exe", "4c52d1cdc6dc708f47049b5c88a5b866", 339002997), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_9_1),
+		WME_ENTRY1s("Miskatonic.exe", "4c52d1cdc6dc708f47049b5c88a5b866", 339002997), Common::EN_ANY, GF_3D, WME_1_9_1),
 
 	// Miskatonic. Part One (demo)
 	WME_WINENTRY("miskatonic1", "Demo",
-		WME_ENTRY1s("MiskatonicDemo.exe", "4c52d1cdc6dc708f47049b5c88a5b866", 177066565), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_9_1),
+		WME_ENTRY1s("MiskatonicDemo.exe", "4c52d1cdc6dc708f47049b5c88a5b866", 177066565), Common::EN_ANY, GF_3D, WME_1_9_1),
 
 	// Monday Starts on Saturday
 	WME_WINENTRY("msos", "",
@@ -1943,7 +1943,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Palladion (Alpha6h)
 	WME_WINENTRY("palladion", "Alpha6h",
-		WME_ENTRY1s("Palladion_Alpha6h.exe", "55aec582159410ec6221d4c3fd53db24", 95240860), Common::DE_DEU, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_8_6),
+		WME_ENTRY1s("Palladion_Alpha6h.exe", "55aec582159410ec6221d4c3fd53db24", 95240860), Common::DE_DEU, ADGF_DEMO | GF_3D, WME_1_8_6),
 
 	// Pangea 1/2
 	WME_WINENTRY("pangea", "",
@@ -2017,17 +2017,17 @@ static const WMEGameDescription gameDescriptions[] = {
 	// On the Tracks of Dinosaurs (Beta 2.5) (English)
 	WME_WINENTRY("reptilesquest", "Beta 2.5",
 		WME_ENTRY2s("data.dcp", "b624d3b19e37c094801a28d817bc3d76", 27345755,
-					"english.dcp", "42188d46ee079b555d578ea2b406fa19", 3897), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_9_1),
+					"english.dcp", "42188d46ee079b555d578ea2b406fa19", 3897), Common::EN_ANY, ADGF_DEMO | GF_3D, WME_1_9_1),
 
 	// On the Tracks of Dinosaurs (Beta 2.5) (Italian)
 	WME_WINENTRY("reptilesquest", "Beta 2.5",
 		WME_ENTRY2s("data.dcp", "b624d3b19e37c094801a28d817bc3d76", 27345755,
-					"italian.dcp", "361f41b1151119f66de851f07b78b7cc", 4132), Common::IT_ITA, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_9_1),
+					"italian.dcp", "361f41b1151119f66de851f07b78b7cc", 4132), Common::IT_ITA, ADGF_DEMO | GF_3D, WME_1_9_1),
 
 	// On the Tracks of Dinosaurs (Beta 2.5) (Russian)
 	WME_WINENTRY("reptilesquest", "Beta 2.5",
 		WME_ENTRY2s("data.dcp", "b624d3b19e37c094801a28d817bc3d76", 27345755,
-					"russian.dcp", "90d2bf541ba381bbb3375aa7d31613fb", 42175), Common::RU_RUS, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_9_1),
+					"russian.dcp", "90d2bf541ba381bbb3375aa7d31613fb", 42175), Common::RU_RUS, ADGF_DEMO | GF_3D, WME_1_9_1),
 
 	// Reversion: The Escape Version 1.0
 	WME_WINENTRY("reversion1", "Version 1.0",
@@ -5497,7 +5497,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Strange Change
 	WME_WINENTRY("strangechange", "",
-		WME_ENTRY1s("data.dcp", "818e53c1584dac28f336195d7dcfb97d", 3762512), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "818e53c1584dac28f336195d7dcfb97d", 3762512), Common::EN_ANY, GF_3D, WME_1_8_6),
 
 	// Sunny (Demo)
 	WME_WINENTRY("sunny", "Demo",
@@ -5580,7 +5580,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// TeTRIks
 	WME_WINENTRY("tetriks", "",
-		WME_ENTRY1s("data.dcp", "94040eb5ae132ac2ef1d40888934f9fa", 2289693), Common::CS_CZE, ADGF_UNSTABLE, WME_1_1_38),
+		WME_ENTRY1s("data.dcp", "94040eb5ae132ac2ef1d40888934f9fa", 2289693), Common::CS_CZE, ADGF_NO_FLAGS, WME_1_1_38),
 
 	// The Box
 	WME_WINENTRY("thebox", "",
@@ -5712,11 +5712,11 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Wilma Tetris
 	WME_WINENTRY("wtetris", "",
-		WME_ENTRY1s("data.dcp", "0898412c1d7c5b759089b2408a9591fe", 2779976), Common::EN_ANY, ADGF_UNSTABLE, WME_1_1_39),
+		WME_ENTRY1s("data.dcp", "0898412c1d7c5b759089b2408a9591fe", 2779976), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_1_39),
 
 	// Wilma Tetris
 	WME_WINENTRY("wtetris", "",
-		WME_ENTRY1s("data.dcp", "946e3a0496e6c12fb344c9ed861ff015", 2780093), Common::EN_ANY, ADGF_UNSTABLE, WME_1_1_39),
+		WME_ENTRY1s("data.dcp", "946e3a0496e6c12fb344c9ed861ff015", 2780093), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_1_39),
 
 	// WME 3D characters technology demo
 	WME_WINENTRY("wmedemo3d", "Demo",
@@ -5724,19 +5724,19 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Wilma Tetris
 	WME_WINENTRY("wtetris", "",
-		WME_ENTRY1s("wtetris.exe", "fb89ec8c4fa2279120a8939449c0bda9", 3918669), Common::EN_ANY, ADGF_UNSTABLE, WME_1_1_39),
+		WME_ENTRY1s("wtetris.exe", "fb89ec8c4fa2279120a8939449c0bda9", 3918669), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_1_39),
 
 	// Zilm: A Game of Reflex
 	WME_WINENTRY("zilm", "",
-		WME_ENTRY1s("data.dcp", "81cece0c8105b4725fc35064a32b4b52", 351726), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "81cece0c8105b4725fc35064a32b4b52", 351726), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// Zilm: A Game of Reflex 1.0
 	WME_WINENTRY("zilm", "1.0",
-		WME_ENTRY1s("data.dcp", "098dffaf03d8adbb4cb5633e4733e63c", 351726), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "098dffaf03d8adbb4cb5633e4733e63c", 351726), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// Zbang! The Game (Demo)
 	WME_WINENTRY("zbang", "0.89",
-		WME_ENTRY1s("data.dcp", "db9101f08d12ab95c81042d154bb0ea8", 7210044), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_7_1),
+		WME_ENTRY1s("data.dcp", "db9101f08d12ab95c81042d154bb0ea8", 7210044), Common::EN_ANY, ADGF_DEMO | GF_3D, WME_1_7_1),
 	{
 		AD_TABLE_END_MARKER,
 		LATEST_VERSION
