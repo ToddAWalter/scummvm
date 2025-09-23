@@ -22,6 +22,7 @@
 #include "director/director.h"
 #include "director/debugger.h"
 #include "director/lingo/lingo.h"
+#include "director/lingo/lingo-builtins.h"
 #include "director/lingo/lingo-code.h"
 #include "director/lingo/lingo-object.h"
 #include "director/cast.h"
@@ -586,6 +587,8 @@ void Lingo::processEvents(Common::Queue<LingoEvent> &queue, bool isInputEvent) {
 	Movie *movie = _vm->getCurrentMovie();
 	Score *sc = movie->getScore();
 
+	bool behavioursCompleted = false;
+
 	while (!queue.empty()) {
 		LingoEvent el = queue.pop();
 
@@ -618,6 +621,17 @@ void Lingo::processEvents(Common::Queue<LingoEvent> &queue, bool isInputEvent) {
 		bool completed = processEvent(el.event, el.scriptType, el.scriptId, el.channelId, el.scriptInstance);
 		movie->_lastEventId[el.event] = el.eventId;
 
+		if (_vm->getVersion() >= 600) {
+			// We need to execute all behaviours before deciding if we pass
+			// through or not
+			if (el.scriptType == kScoreScript && el.passByDefault == true) {
+				behavioursCompleted |= completed;
+				completed = true;
+			} else {
+				completed |= behavioursCompleted;
+			}
+		}
+
 		if (isInputEvent && !completed) {
 			debugC(5, kDebugEvents, "Lingo::processEvents: context frozen on an input event, stopping");
 			LingoState *state = g_director->getCurrentWindow()->getLastFrozenLingoState();
@@ -639,7 +653,7 @@ bool Lingo::processEvent(LEvent event, ScriptType st, CastMemberID scriptId, int
 
 	if (g_director->getVersion() >= 600 && st == kScoreScript && obj) {
 		push(Datum(obj));
-		LC::call(_eventHandlerTypes[event], 1, true);
+		LC::call(_eventHandlerTypes[event], 1, false);
 		return execute();
 	}
 
@@ -664,6 +678,88 @@ bool Lingo::processEvent(LEvent event, ScriptType st, CastMemberID scriptId, int
 		debugC(9, kDebugEvents, "Lingo::processEvent(%s, %s, %s): no handler", _eventHandlerTypes[event], scriptType2str(st), scriptId.asString().c_str());
 	}
 	return true;
+}
+
+void Score::killScriptInstances(int frameNum) {
+	if (_version < kFileVer600) // No-op for early Directors
+		return;
+
+	for (int i = 0; i < (int)_channels.size(); i++) {
+		Channel *channel = _channels[i];
+
+		if (channel->_scriptInstanceList.size() == 0)
+			continue;
+
+		if (frameNum < channel->_startFrame || frameNum > channel->_endFrame) {
+			channel->_scriptInstanceList.clear();
+			channel->_startFrame = channel->_endFrame = -1;
+
+			debugC(1, kDebugLingoExec, "Score::killScriptInstances(): Killed script instances for channel %d", i + 1);
+		}
+	}
+}
+
+void Score::createScriptInstances(int frameNum) {
+	if (_version < kFileVer600) // No-op for early Directors
+		return;
+
+	for (int i = 0; i < (int)_channels.size(); i++) {
+		Channel *channel = _channels[i];
+		Sprite *sprite = channel->_sprite;
+
+		if (frameNum >= channel->_startFrame && frameNum <= channel->_endFrame) {
+			// We create scriptInstance only for new sprites
+			if (channel->_scriptInstanceList.size() == 0) {
+				if (sprite->_behaviors.size() > 0) {
+					for (uint j = 0; j < sprite->_behaviors.size(); j++) {
+
+						// Instantiate the behavior
+						g_lingo->push(_movie->getScriptContext(kScoreScript, sprite->_behaviors[j].memberID));
+						LC::call("new", 1, true);
+						Datum inst = g_lingo->pop();
+
+						if (inst.type != OBJECT) {
+							warning("Score::createScriptInstances(): Could not instantiate behavior %s for channel %d",
+								sprite->_behaviors[j].toString().c_str(), i + 1);
+							continue;
+						}
+
+						channel->_scriptInstanceList.push_back(inst);
+
+						debugC(1, kDebugLingoExec, "Score::createScriptInstances(): Instantiated behavior %s for channel %d",
+							sprite->_behaviors[j].toString().c_str(), i + 1);
+
+						if (sprite->_behaviors[j].initializerIndex) {
+							// Evaluate the params
+							g_lingo->push(sprite->_behaviors[j].initializerParams);
+							if (debugChannelSet(2, kDebugLingoExec)) {
+								g_lingo->printStack("Stack before:", 0);
+							}
+							LB::b_value(1);
+
+							if (debugChannelSet(2, kDebugLingoExec)) {
+								g_lingo->printStack("Stack after", 0);
+							}
+
+							if (g_lingo->_state->stack.size() == 0) {
+								warning("Score::createScriptInstances(): Could not evaluate initializer params '%s' for behavior %s for channel %d",
+									sprite->_behaviors[j].initializerParams.c_str(), sprite->_behaviors[j].toString().c_str(), i + 1);
+								continue;
+							}
+
+							Datum proplist = _lingo->pop();
+
+							if (proplist.type != PARRAY) {
+								warning("Score::createScriptInstances(): Could not evaluate initializer params '%s' for behavior %s for channel %d",
+									sprite->_behaviors[j].initializerParams.c_str(), sprite->_behaviors[j].toString().c_str(), i + 1);
+								continue;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 } // End of namespace Director
