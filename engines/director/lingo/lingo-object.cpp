@@ -126,6 +126,7 @@
 #include "director/lingo/xlibs/tengu.h"
 #include "director/lingo/xlibs/unittest.h"
 #include "director/lingo/xlibs/valkyrie.h"
+#include "director/lingo/xlibs/versions.h"
 #include "director/lingo/xlibs/videodiscxobj.h"
 #include "director/lingo/xlibs/vmisonxfcn.h"
 #include "director/lingo/xlibs/vmpresent.h"
@@ -147,6 +148,7 @@
 #include "director/lingo/xtras/keypoll.h"
 #include "director/lingo/xtras/masterapp.h"
 #include "director/lingo/xtras/openurl.h"
+#include "director/lingo/xtras/oscheck.h"
 #include "director/lingo/xtras/qtvrxtra.h"
 #include "director/lingo/xtras/rtk.h"
 #include "director/lingo/xtras/scrnutil.h"
@@ -300,6 +302,7 @@ static const struct XLibProto {
 	XLIBDEF(MovUtilsXObj,		kXObj,			400),	// D4
 	XLIBDEF(MSFile,             kXObj,          400),   // D4
 	XLIBDEF(MystIsleXObj,		kXObj,			400),	// D4
+	XLIBDEF(OSCheckXtra,			kXtraObj,					400),	// D4
 	XLIBDEF(OpenBleedWindowXCMD,kXObj,			300),	// D3
 	XLIBDEF(OpenURLXtra,		kXtraObj,		500),	// D5
 	XLIBDEF(OrthoPlayXObj,		kXObj,			400),	// D4
@@ -334,6 +337,7 @@ static const struct XLibProto {
 	XLIBDEF(VMPresentXObj,		kXObj,			400),	// D4
 	XLIBDEF(VMisOnXFCN,			kXObj,			400),	// D4
 	XLIBDEF(ValkyrieXObj,		kXObj,			400),	// D4
+	XLIBDEF(VersionsXObj,			kXObj,					400),	// D4
 	XLIBDEF(VideodiscXObj,		kXObj,			200),	// D2
 	XLIBDEF(VolumeList,			kXObj,			300),	// D3
 	XLIBDEF(VoyagerXSoundXObj,	kXObj,			400),	// D4
@@ -885,7 +889,11 @@ void LM::m_forget(int nargs) {
 
 void LM::m_open(int nargs) {
 	Window *me = static_cast<Window *>(g_lingo->_state->me.u.obj);
+	bool wasVisible = me->isVisible();
 	me->setVisible(true);
+
+	if (!wasVisible)
+		me->sendWindowEvent(kEventOpenWindow);
 }
 
 void LM::m_moveToBack(int nargs) {
@@ -897,7 +905,11 @@ void LM::m_moveToFront(int nargs) {
 	Window *me = static_cast<Window *>(g_lingo->_state->me.u.obj);
 	me->ensureMovieIsLoaded();
 
+	bool wasActive = (g_director->_wm->getActiveWindow() == me->getId());
 	g_director->_wm->setActiveWindow(me->getId());
+
+	if (!wasActive)
+		me->sendWindowEvent(kEventOpenWindow);
 }
 
 } // End of namespace Director

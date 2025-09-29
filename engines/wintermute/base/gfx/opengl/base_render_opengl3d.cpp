@@ -52,10 +52,6 @@ BaseRenderer3D *makeOpenGL3DRenderer(BaseGame *inGame) {
 }
 
 BaseRenderOpenGL3D::BaseRenderOpenGL3D(BaseGame *inGame) : BaseRenderer3D(inGame) {
-	setDefaultAmbientLightColor();
-
-	_lightPositions.resize(getMaxActiveLights());
-	_lightDirections.resize(getMaxActiveLights());
 }
 
 BaseRenderOpenGL3D::~BaseRenderOpenGL3D() {
@@ -112,6 +108,8 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 	_width = width;
 	_height = height;
 
+	g_system->showMouse(false);
+
 	setViewport(0, 0, width, height);
 
 	setProjection();
@@ -121,6 +119,10 @@ bool BaseRenderOpenGL3D::initRenderer(int width, int height, bool windowed) {
 	_active = true;
 
 	_game->_supportsRealTimeShadows = true;
+
+	setDefaultAmbientLightColor();
+	_lightPositions.resize(getMaxActiveLights());
+	_lightDirections.resize(getMaxActiveLights());
 
 	return true;
 }
@@ -539,6 +541,44 @@ bool BaseRenderOpenGL3D::setProjection() {
 	return setProjectionTransform(matProj);
 }
 
+bool BaseRenderOpenGL3D::drawLine(int x1, int y1, int x2, int y2, uint32 color) {
+	setupLines();
+
+	x1 += _drawOffsetX;
+	x2 += _drawOffsetX;
+	y1 += _drawOffsetY;
+	y2 += _drawOffsetY;
+
+	// position coords
+	RectangleVertex vertices[2];
+	vertices[0].x = x1;
+	vertices[0].y = y1;
+	vertices[0].z = 0.9f;
+	vertices[1].x = x2;
+	vertices[1].y = y2;
+	vertices[1].z = 0.9f;
+
+	byte a = RGBCOLGetA(color);
+	byte r = RGBCOLGetR(color);
+	byte g = RGBCOLGetG(color);
+	byte b = RGBCOLGetB(color);
+
+	glViewport(0, 0, _width, _height);
+	setProjection2D();
+
+	glColor4ub(r, g, b, a);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glVertexPointer(3, GL_FLOAT, sizeof(RectangleVertex), &vertices[0].x);
+
+	glDrawArrays(GL_LINES, 0, 2);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	return true;
+}
+
 bool BaseRenderOpenGL3D::fillRect(int x, int y, int w, int h, uint32 color) {
 	setupLines();
 
@@ -736,7 +776,7 @@ int BaseRenderOpenGL3D::getMaxActiveLights() {
 	return maxLightCount;
 }
 
-bool BaseRenderOpenGL3D::invalidateTexture(BaseSurfaceOpenGL3D *texture) {
+bool BaseRenderOpenGL3D::invalidateTexture(BaseSurface *texture) {
 	if (_lastTexture == texture)
 		_lastTexture = nullptr;
 

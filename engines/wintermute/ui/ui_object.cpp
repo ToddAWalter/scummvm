@@ -205,7 +205,7 @@ bool UIObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "GetImage") == 0) {
 		stack->correctParams(0);
-		if (!_image || !_image->_filename) {
+		if (!_image || !_image->_filename || !_image->_filename[0]) {
 			stack->pushNULL();
 		} else {
 			stack->pushString(_image->_filename);
@@ -639,16 +639,16 @@ bool UIObject::persist(BasePersistenceManager *persistMgr) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-/*char *CUIObject::GetAccessCaption() {
-	if (m_AccessCaption)
-		return m_AccessCaption;
+const char *UIObject::getAccessCaption() {
+	if (_accessCaption)
+		return _accessCaption;
 	else {
-		if (m_Text)
-			return m_Text;
+		if (_text && _text[0])
+			return _text;
 		else
-			return GetCaption();
+			return getCaption();
 	}
-}*/
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool UIObject::saveAsText(BaseDynamicBuffer *buffer, int indent) {

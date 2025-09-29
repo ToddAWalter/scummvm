@@ -40,7 +40,7 @@ namespace MFC {
 class CTempGdiObject : public CGdiObject {
 	DECLARE_DYNCREATE(CTempGdiObject)
 };
-IMPLEMENT_DYNCREATE(CTempGdiObject, CGdiObject);
+IMPLEMENT_DYNCREATE(CTempGdiObject, CGdiObject)
 
 IMPLEMENT_DYNAMIC(CWinApp, CWinThread)
 
@@ -152,6 +152,9 @@ bool CWinApp::SaveAllModified() {
 }
 
 int CWinApp::Run() {
+	if (isQuitting())
+		return 0;
+
 	// Ensure app has been initialized
 	assert(_defaultFont.font());
 

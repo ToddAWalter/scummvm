@@ -121,9 +121,18 @@ const Font *MacWindow::getTitleFont() {
 }
 
 void MacWindow::setActive(bool active) {
+	bool changed = (active != _active);
+
 	MacWidget::setActive(active);
 
 	_borderIsDirty = true;
+
+	if (changed) {
+		WindowClick click = active ? kBorderActivate : kBorderDeactivate;
+		Common::Event event;
+		if (_callback)
+			_callback(click, event, _dataPtr);
+	}
 }
 
 bool MacWindow::isActive() const { return _active; }
@@ -589,6 +598,12 @@ bool MacWindow::processEvent(Common::Event &event) {
 
 		break;
 	case Common::EVENT_LBUTTONUP:
+		if (_beingDragged || _beingResized) {
+			WindowClick click1 = _beingDragged ? kBorderDragged : kBorderResized;
+			if (_callback)
+				_callback(click1, event, _dataPtr);
+		}
+
 		_beingDragged = false;
 		_beingResized = false;
 

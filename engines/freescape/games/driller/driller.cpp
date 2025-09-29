@@ -94,21 +94,6 @@ DrillerEngine::DrillerEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_endArea = 127;
 	_endEntrance = 0;
 
-	_soundIndexShoot = 1;
-	_soundIndexCollide = -1;
-	_soundIndexFall = 3;
-	_soundIndexClimb = -1;
-	_soundIndexMenu = -1;
-	_soundIndexStart = 9;
-	_soundIndexAreaChange = 5;
-
-	_soundIndexNoShield = 20;
-	_soundIndexNoEnergy = 20;
-	_soundIndexFallen = 20;
-	_soundIndexTimeout = 20;
-	_soundIndexForceEndGame = 20;
-	_soundIndexCrushed = 20;
-
 	_borderExtra = nullptr;
 	_borderExtraTexture = nullptr;
 	_playerSid = nullptr;
@@ -595,6 +580,8 @@ void DrillerEngine::pressedKey(const int keycode) {
 		} else
 			_drillStatusByArea[_currentArea->getAreaID()] = kDrillerRigOutOfPlace;
 		executeMovementConditions();
+		if (isDOS())
+			playSound(_soundIndexAreaChange, false, _soundFxHandle);
 	} else if (keycode == kActionCollectDrillingRig) {
 		if (isDOS() && isDemo()) // No support for drilling here yet
 			return;
@@ -636,6 +623,8 @@ void DrillerEngine::pressedKey(const int keycode) {
 		assert(scoreToRemove <= uint32(_gameStateVars[k8bitVariableScore]));
 		_gameStateVars[k8bitVariableScore] -= scoreToRemove;
 		executeMovementConditions();
+		if (isDOS())
+			playSound(_soundIndexAreaChange, false, _soundFxHandle);
 	}
 }
 
@@ -965,7 +954,7 @@ bool DrillerEngine::onScreenControls(Common::Point mouse) {
 }
 
 void DrillerEngine::drawSensorShoot(Sensor *sensor) {
-	if (_gameStateControl == kFreescapeGameStatePlaying) {
+	if (_underFireFrames == 1 && _gameStateControl == kFreescapeGameStatePlaying) {
 		// Avoid playing new sounds, so the endgame can progress
 		playSound(_soundIndexHit, true, _soundFxHandle);
 	}

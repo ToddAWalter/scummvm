@@ -27,6 +27,7 @@
 #include "bagel/hodjnpodj/metagame/grand_tour/dialogs.h"
 #include "bagel/hodjnpodj/metagame/grand_tour/grand_tour.h"
 #include "bagel/hodjnpodj/hodjnpodj.h"
+#include "bagel/metaengine.h"
 
 namespace Bagel {
 namespace HodjNPodj {
@@ -75,41 +76,41 @@ namespace GrandTour {
 // Globals
 extern HCURSOR          hGameCursor;
 
-CBitmap     *pSplashScreen = nullptr;
-CPalette    *pGamePalette = nullptr;        // Palette to be used throughout the game
+static CBitmap     *pSplashScreen = nullptr;
+static CPalette    *pGamePalette = nullptr;        // Palette to be used throughout the game
 
 
-CColorButton    *pScoresResetButton = nullptr;
-CColorButton    *pScoresLeaveButton = nullptr;
+static CColorButton    *pScoresResetButton = nullptr;
+static CColorButton    *pScoresLeaveButton = nullptr;
 
-CColorButton    *pPlayButton = nullptr;
-CColorButton    *pSaveButton = nullptr;
-CColorButton    *pRestoreButton = nullptr;
-CColorButton    *pLeaveButton = nullptr;
+static CColorButton    *pPlayButton = nullptr;
+static CColorButton    *pSaveButton = nullptr;
+static CColorButton    *pRestoreButton = nullptr;
+static CColorButton    *pLeaveButton = nullptr;
 
-CColorButton    *pAudioButton = nullptr;
-CColorButton    *pTop10Button = nullptr;
+static CColorButton    *pAudioButton = nullptr;
+static CColorButton    *pTop10Button = nullptr;
 
-CRadioButton *pHSHButton = nullptr; // Hodj Skill High Radio Button
-CRadioButton *pHSMButton = nullptr; // Hodj Skill Medium Radio Button
-CRadioButton *pHSLButton = nullptr; // Hodj Skill Low Radio Button
-CRadioButton *pHSNPButton = nullptr;    // Hodj Not Playing Radio Button
+static CRadioButton *pHSHButton = nullptr; // Hodj Skill High Radio Button
+static CRadioButton *pHSMButton = nullptr; // Hodj Skill Medium Radio Button
+static CRadioButton *pHSLButton = nullptr; // Hodj Skill Low Radio Button
+static CRadioButton *pHSNPButton = nullptr;    // Hodj Not Playing Radio Button
 
-CRadioButton *pPSHButton = nullptr; // Podj Skill High Radio Button
-CRadioButton *pPSMButton = nullptr; // Podj Skill Medium Radio Button
-CRadioButton *pPSLButton = nullptr; // Podj Skill Low Radio Button
-CRadioButton *pPSNPButton = nullptr;    // Podj Not Playing Radio Button
+static CRadioButton *pPSHButton = nullptr; // Podj Skill High Radio Button
+static CRadioButton *pPSMButton = nullptr; // Podj Skill Medium Radio Button
+static CRadioButton *pPSLButton = nullptr; // Podj Skill Low Radio Button
+static CRadioButton *pPSNPButton = nullptr;    // Podj Not Playing Radio Button
 
-CRadioButton *pGAButton = nullptr;  // Game Played in Alphabetical Order Radio Button
-CRadioButton *pGGButton = nullptr;  // Game Played in Geographical Order Radio Button
-CRadioButton *pGRButton = nullptr;  // Game Played in Random Order Radio Button
+static CRadioButton *pGAButton = nullptr;  // Game Played in Alphabetical Order Radio Button
+static CRadioButton *pGGButton = nullptr;  // Game Played in Geographical Order Radio Button
+static CRadioButton *pGRButton = nullptr;  // Game Played in Random Order Radio Button
 
 static  bool        bActiveWindow = false;          // whether our window is active
 
 int     nReturnValue = -1;       // the values to return to the main EXE to tell it what
 // DLL to dispatch to
 
-int     GAME_VALUES[18] = {        // set the game values to return
+static const int GAME_VALUES[18] = {        // set the game values to return
 	MG_GAME_ARCHEROIDS, MG_GAME_ARTPARTS, MG_GAME_BARBERSHOP, MG_GAME_BATTLEFISH,
 	MG_GAME_BEACON, MG_GAME_CRYPTOGRAMS, MG_GAME_DAMFURRY, MG_GAME_FUGE,
 	MG_GAME_GARFUNKEL, MG_GAME_LIFE, MG_GAME_MANKALA, MG_GAME_MAZEODOOM,
@@ -123,20 +124,18 @@ static const char *aszGames[18] = {      // set the display names for when the c
 	"No Vacancy", "Pack-Rat", "Peggleboz", "Riddles", "TH GESNG GAM", "Word Search"
 };
 
-int     anGeoOrder[18] = { 9, 12, 11, 0, 7, 13, 5, 16, 17, 1, 4, 14, 3, 10, 15, 2, 6, 8 };
+static const int anGeoOrder[18] = { 9, 12, 11, 0, 7, 13, 5, 16, 17, 1, 4, 14, 3, 10, 15, 2, 6, 8 };
 
-SCORESTRUCT astTopTenScores[10];
-bool        bDisplayTopTen = false;
-bool        bInsertPlayer = false;
-int         nNewRank = -1;
-int         nCurChar = 0;
-int         tmWidth = 0;
-int         tmHeight = 0;
-bool        bDonePodj = false;
-CText       *pText = nullptr;
+static SCORESTRUCT astTopTenScores[10];
+static bool        bDisplayTopTen = false;
+static bool        bInsertPlayer = false;
+static int         nNewRank = -1;
+static int         nCurChar = 0;
+static int         tmWidth = 0;
+static int         tmHeight = 0;
+static bool        bDonePodj = false;
+static CText       *pText = nullptr;
 
-int         nHLastScore;
-int         nPLastScore;
 /*****************************************************************
  *
  * CMainGTWindow
@@ -204,6 +203,8 @@ CMainGTWindow::CMainGTWindow(HWND hCallingWnd, LPGRANDTRSTRUCT  pgtGrandTourStru
 	TEXTMETRIC  sTextMetic;
 
 	BeginWaitCursor();
+	initStatics();
+
 	// Define a special window class which traps double-clicks, is byte aligned
 	// to maximize BITBLT performance, and creates "owned" DCs rather than sharing
 	// the five system defined DCs which are not guaranteed to be available;
@@ -288,7 +289,7 @@ CMainGTWindow::CMainGTWindow(HWND hCallingWnd, LPGRANDTRSTRUCT  pgtGrandTourStru
 				int j;
 
 				nNewRank = i;
-				for (j = 10; j > i; j--) {
+				for (j = 9; j > i; j--) {
 					Common::strcpy_s(astTopTenScores[j].acName, astTopTenScores[j - 1].acName);
 					astTopTenScores[j].nScore = astTopTenScores[j - 1].nScore;
 					astTopTenScores[j].nSkillLevel = astTopTenScores[j - 1].nSkillLevel;
@@ -545,6 +546,43 @@ CMainGTWindow::CMainGTWindow(HWND hCallingWnd, LPGRANDTRSTRUCT  pgtGrandTourStru
 
 CMainGTWindow::~CMainGTWindow() {
 	AfxGetApp()->removeResources("hnpgt.dll");
+}
+
+void CMainGTWindow::initStatics() {
+	pSplashScreen = nullptr;
+	pGamePalette = nullptr;
+
+	pScoresResetButton = nullptr;
+	pScoresLeaveButton = nullptr;
+	pPlayButton = nullptr;
+	pSaveButton = nullptr;
+	pRestoreButton = nullptr;
+	pLeaveButton = nullptr;
+	pAudioButton = nullptr;
+	pTop10Button = nullptr;
+	pHSHButton = nullptr;
+	pHSMButton = nullptr;
+	pHSLButton = nullptr;
+	pHSNPButton = nullptr;
+	pPSHButton = nullptr;
+	pPSMButton = nullptr;
+	pPSLButton = nullptr;
+	pPSNPButton = nullptr;
+	pGAButton = nullptr;
+	pGGButton = nullptr;
+	pGRButton = nullptr;
+
+	bActiveWindow = false;
+	nReturnValue = -1;
+
+	bDisplayTopTen = false;
+	bInsertPlayer = false;
+	nNewRank = -1;
+	nCurChar = 0;
+	tmWidth = 0;
+	tmHeight = 0;
+	bDonePodj = false;
+	pText = nullptr;
 }
 
 /*****************************************************************
@@ -913,12 +951,12 @@ void CMainGTWindow::SplashScreen() {
  ****************************************************************/
 bool CMainGTWindow::OnCommand(WPARAM wParam, LPARAM lParam) {
 	// Redraw rect for Hodj/Podj difficulties
-	const RECT r11 = pHSHButton->GetWindowRectInParentCoords();
-	const RECT r12 = pPSNPButton->GetWindowRectInParentCoords();
+	const CRect r11 = pHSHButton ? pHSHButton->GetWindowRectInParentCoords() : CRect();
+	const CRect r12 = pPSNPButton ? pPSNPButton->GetWindowRectInParentCoords() : CRect();
 	const CRect cRect1(r11.left, r11.top, r12.right, r12.bottom);
 	// Redraw rect for Game Order and everything below it
-	const RECT r21 = pGAButton->GetWindowRectInParentCoords();
-	const RECT r22 = pLeaveButton->GetWindowRectInParentCoords();
+	const CRect r21 = pGAButton ? pGAButton->GetWindowRectInParentCoords() : CRect();
+	const CRect r22 = pLeaveButton ? pLeaveButton->GetWindowRectInParentCoords() : CRect();
 	const CRect cRect2(r21.left, r21.top, r22.right, r22.bottom);
 
 	if (HIWORD(lParam) == BN_CLICKED) {
@@ -1727,13 +1765,21 @@ void CMainGTWindow::OnActivate(unsigned int nState, CWnd *pWndOther, bool bMinim
 	switch (nState) {
 	case WA_INACTIVE:
 		bActiveWindow = false;
+		BagelMetaEngine::setKeybindingMode(KBMODE_NORMAL);
 		break;
+
 	case WA_ACTIVE:
 	case WA_CLICKACTIVE:
 		bActiveWindow = true;
 		bUpdateNeeded = GetUpdateRect(nullptr, false);
 		if (bUpdateNeeded)
 			InvalidateRect(nullptr, false);
+
+		BagelMetaEngine::setKeybindingMode(KBMODE_MINIMAL);
+		break;
+
+	default:
+		break;
 	}
 }
 

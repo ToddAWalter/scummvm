@@ -312,7 +312,7 @@ bool FreescapeEngine::rise() {
 			if (_currentArea->getAreaID() == previousAreaID) {
 				_playerHeightNumber--;
 				changePlayerHeight(_playerHeightNumber);
-
+				setGameBit(31);
 			}
 		} else
 			result = true;
@@ -515,10 +515,11 @@ void FreescapeEngine::resolveCollisions(Math::Vector3d const position) {
 	}
 
 	// Check for falling
-	lastPosition = newPosition;
-	newPosition.y() = -8192;
-	newPosition = _currentArea->resolveCollisions(lastPosition, newPosition, _playerHeight);
-	int fallen = lastPosition.y() - newPosition.y();
+	Math::Vector3d fallStart = newPosition;   // current standing point
+	Math::Vector3d fallEnd   = fallStart;     // copy for downward probe
+	fallEnd.y() = -8192;                      // probe way down below
+	newPosition = _currentArea->resolveCollisions(fallStart, fallEnd, _playerHeight);
+	int fallen = _lastPosition.y() - newPosition.y();
 
 	if (fallen > _maxFallingDistance) {
 		_hasFallen = !_disableFalling;
@@ -532,6 +533,8 @@ void FreescapeEngine::resolveCollisions(Math::Vector3d const position) {
 		_endGameDelayTicks = 60 * 5;
 		if (isEclipse()) // No need for an variable index, since these are special types of sound
 			playSoundFx(0, true);
+		else 
+			playSound(_soundIndexFall, false, _movementSoundHandle);
 
 		if (_hasFallen)
 			stopMovement();
@@ -540,19 +543,28 @@ void FreescapeEngine::resolveCollisions(Math::Vector3d const position) {
 	if (!_hasFallen && fallen > 0) {
 		isSteppingDown = true;
 		// Position in Y was changed, let's re-run effects
-		if (runCollisionConditions(lastPosition, newPosition))
+		if (runCollisionConditions(_lastPosition, newPosition))
 			stopMovement();
 	}
 
+	if (isSteppingUp && (newPosition - _lastPosition).length() <= 1) {
+		isCollidingWithWall = true;
+		isSteppingUp = false;
+	}
+
+	if (isSteppingDown && (newPosition - _lastPosition).length() <= 1) {
+		isCollidingWithWall = true;
+		isSteppingDown = false;
+	}
 
 	if (isSteppingUp)  {
 		debug("Stepping up sound!");
 		if (!_mixer->isSoundHandleActive(_movementSoundHandle))
-			playSound(_soundIndexClimb, false, _movementSoundHandle);
+			playSound(_soundIndexStepUp, false, _movementSoundHandle);
 	} else if (isSteppingDown) {
 		debug("Stepping down sound!");
 		if (!_mixer->isSoundHandleActive(_movementSoundHandle))
-			playSound(_soundIndexFall, false, _movementSoundHandle);
+			playSound(_soundIndexStepDown, false, _movementSoundHandle);
 	} else if (isCollidingWithWall) {
 		debug("Colliding with wall sound!");
 		if (!_mixer->isSoundHandleActive(_movementSoundHandle))
@@ -573,17 +585,22 @@ void FreescapeEngine::stopMovement() {
 }
 
 bool FreescapeEngine::runCollisionConditions(Math::Vector3d const lastPosition, Math::Vector3d const newPosition) {
-	bool executed = false;
+	bool floorExecuted = false;
+	bool wallExecuted = false;
+
 	GeometricObject *gobj = nullptr;
 	Object *collided = nullptr;
 	_gotoExecuted = false;
+
+	if (!_smoothMovement)
+		_speaker->stop();
 
 	Math::Ray ray(newPosition, -_upVector);
 	collided = _currentArea->checkCollisionRay(ray, _playerHeight + 3);
 	if (collided) {
 		gobj = (GeometricObject *)collided;
 		debugC(1, kFreescapeDebugMove, "Collided down with object id %d of size %f %f %f", gobj->getObjectID(), gobj->getSize().x(), gobj->getSize().y(), gobj->getSize().z());
-		executed |= executeObjectConditions(gobj, false, true, false);
+		floorExecuted |= executeObjectConditions(gobj, false, true, false);
 	}
 
 	if (_gotoExecuted) {
@@ -608,16 +625,17 @@ bool FreescapeEngine::runCollisionConditions(Math::Vector3d const lastPosition, 
 		if (collided) {
 			gobj = (GeometricObject *)collided;
 			debugC(1, kFreescapeDebugMove, "Collided with object id %d of size %f %f %f", gobj->getObjectID(), gobj->getSize().x(), gobj->getSize().y(), gobj->getSize().z());
-			executed |= executeObjectConditions(gobj, false, true, false);
-			//break;
+			wallExecuted |= executeObjectConditions(gobj, false, true, false);
 		}
 		if (_gotoExecuted) {
 			executeMovementConditions();
 			return true;
 		}
+		if (wallExecuted)
+			break;
 	}
 
-	return executed;
+	return floorExecuted || wallExecuted;
 }
 
 } // namespace Freescape

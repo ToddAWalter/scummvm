@@ -135,6 +135,15 @@ bool Movie::processEvent(Common::Event &event) {
 	}
 	uint16 spriteId = 0;
 
+	if (event.mouse != Common::Point(-1, -1)) {
+		if (g_director->getVersion() < 400)
+			spriteId = _score->getActiveSpriteIDFromPos(event.mouse);
+		else
+			spriteId = _score->getMouseSpriteIDFromPos(event.mouse);
+
+		_currentHoveredSpriteId = spriteId;
+	}
+
 	Common::Point pos;
 
 	switch (event.type) {
@@ -162,11 +171,6 @@ bool Movie::processEvent(Common::Event &event) {
 
 		// for the list style button, we still have chance to trigger events though button.
 		if (!(g_director->_wm->_mode & Graphics::kWMModeButtonDialogStyle) && g_director->_wm->_mouseDown && g_director->_wm->_hilitingWidget) {
-			if (g_director->getVersion() < 400)
-				spriteId = sc->getActiveSpriteIDFromPos(pos);
-			else
-				spriteId = sc->getMouseSpriteIDFromPos(pos);
-
 			if (spriteId > 0 && sc->_channels[spriteId]->_sprite->shouldHilite()) {
 				_currentHiliteChannelId = spriteId;
 				g_director->getCurrentWindow()->setDirty(true);
@@ -187,6 +191,26 @@ bool Movie::processEvent(Common::Event &event) {
 				_currentDraggedChannel = nullptr;
 			}
 		}
+
+		// TODO: In the original, these events are generated only
+		// along with the kEventIdle event which depends on the idleHandlerPeriod property
+		if (g_director->getVersion() >= 600) {
+			if (spriteId > 0) {
+				if (spriteId != _lastEnteredChannelId) {
+					if (_lastEnteredChannelId) {
+						processEvent(kEventMouseLeave, _lastEnteredChannelId);
+					}
+
+					_lastEnteredChannelId = spriteId;
+					processEvent(kEventMouseEnter, spriteId);
+				}
+			} else {
+				if (_lastEnteredChannelId) {
+					processEvent(kEventMouseLeave, _lastEnteredChannelId);
+					_lastEnteredChannelId = 0;
+				}
+			}
+		}
 		return true;
 
 	case Common::EVENT_LBUTTONDOWN:
@@ -197,6 +221,14 @@ bool Movie::processEvent(Common::Event &event) {
 			sc->renderCursor(pos, true);
 		} else {
 			pos = event.mouse;
+
+			if (g_director->getVersion() >= 600) {
+				if (_lastClickedSpriteId && _lastClickedSpriteId != spriteId) {
+					queueInputEvent(kEventMouseUpOutSide, _lastClickedSpriteId, pos);
+				}
+			}
+
+			_lastClickedSpriteId = spriteId; // for 'the clickOn'
 
 			// FIXME: Check if these are tracked with the right mouse button
 			_lastEventTime = g_director->getMacTicks();
@@ -211,6 +243,16 @@ bool Movie::processEvent(Common::Event &event) {
 			// They are caught by the rightMouseDown handler only.
 			if ((g_director->getVersion() >= 500) && event.type == Common::EVENT_RBUTTONDOWN)
 				ev = kEventRightMouseDown;
+
+			if (g_director->getVersion() >= 500 && event.type == Common::EVENT_LBUTTONDOWN && _vm->_emulateMultiButtonMouse) {
+				if (g_director->getPlatform() == Common::kPlatformMacintosh) {
+					// On Mac, when the mouse button and Control key are pressed
+					// at the same time, this simulates right button click
+					if (_keyFlags & Common::KBD_CTRL) {
+						ev = kEventRightMouseDown;
+					}
+				}
+			}
 
 			debugC(3, kDebugEvents, "Movie::processEvent(): Button Down @(%d, %d), movie '%s'", pos.x, pos.y, _macName.c_str());
 			queueInputEvent(ev, 0, pos);
@@ -230,6 +272,16 @@ bool Movie::processEvent(Common::Event &event) {
 			// They are caught by the rightMouseUp handler only.
 			if ((g_director->getVersion() >= 500) && event.type == Common::EVENT_RBUTTONUP)
 				ev = kEventRightMouseUp;
+
+			if (g_director->getVersion() >= 500 && event.type == Common::EVENT_LBUTTONUP && _vm->_emulateMultiButtonMouse) {
+				if (g_director->getPlatform() == Common::kPlatformMacintosh) {
+					// On Mac, when the mouse button and Control key are pressed
+					// at the same time, this simulates right button click
+					if (_keyFlags & Common::KBD_CTRL) {
+						ev = kEventRightMouseUp;
+					}
+				}
+			}
 
 			queueInputEvent(ev, 0, pos);
 			sc->renderCursor(pos);
@@ -271,5 +323,56 @@ bool Movie::processEvent(Common::Event &event) {
 
 	return false;
 }
+
+bool Window::processWMEvent(Graphics::WindowClick click, Common::Event &event) {
+	switch (click) {
+	case Graphics::kBorderCloseButton:
+		if (_currentMovie && event.type == Common::EVENT_LBUTTONUP) {
+			_currentMovie->processEvent(kEventCloseWindow, 0);
+			setVisible(false);
+
+			return true;
+		}
+		break;
+
+	case Graphics::kBorderActivate:
+		sendWindowEvent(kEventActivateWindow);
+		return true;
+
+	case Graphics::kBorderDeactivate:
+		sendWindowEvent(kEventDeactivateWindow);
+		return true;
+
+	case Graphics::kBorderDragged:
+		sendWindowEvent(kEventMoveWindow);
+		return true;
+
+	case Graphics::kBorderResized:
+		sendWindowEvent(kEventResizeWindow);
+		return true;
+
+	case Graphics::kBorderMaximizeButton:
+		if (event.type == Common::EVENT_LBUTTONUP) {
+			sendWindowEvent(kEventZoomWindow);
+
+			return true;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+void Window::sendWindowEvent(LEvent event) {
+	if (_currentMovie && _visible && !_isStage) {
+		// We cannot call processEvent here directly because it might
+		// be called from within another event processing (like 'on startMovie'	)
+		// which would mess up the Lingo state.
+		_currentMovie->queueInputEvent(event, 0, Common::Point(-1, -1));
+	}
+}
+
 
 } // End of namespace Director

@@ -39,6 +39,7 @@
 #include "engines/wintermute/base/base_sprite.h"
 #include "engines/wintermute/base/base_sub_frame.h"
 #include "engines/wintermute/base/base_surface_storage.h"
+#include "engines/wintermute/base/base_access_mgr.h"
 #include "engines/wintermute/base/font/base_font.h"
 #include "engines/wintermute/base/font/base_font_storage.h"
 #include "engines/wintermute/base/gfx/base_renderer.h"
@@ -353,7 +354,7 @@ bool AdObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "GetFont") == 0) {
 		stack->correctParams(0);
-		if (_font && _font->_filename) {
+		if (_font && _font->_filename && _font->_filename[0]) {
 			stack->pushString(_font->_filename);
 		} else {
 			stack->pushNULL();
@@ -877,7 +878,7 @@ void AdObject::talk(const char *text, const char *sound, uint32 duration, const 
 		return;
 	}
 
-	if (_forcedTalkAnimName && _forcedTalkAnimUsed) {
+	if (_forcedTalkAnimName && _forcedTalkAnimName[0] && _forcedTalkAnimUsed) {
 		SAFE_DELETE_ARRAY(_forcedTalkAnimName);
 		_forcedTalkAnimUsed = false;
 	}
@@ -992,8 +993,9 @@ void AdObject::talk(const char *text, const char *sound, uint32 duration, const 
 		delete[] sound;
 	}
 
-	//if (!m_Sentence->m_Sound)
-	//	Game->m_AccessMgr->Speak(m_Sentence->m_Text, TTS_TALK);
+	if (!_sentence->_sound) {
+		_game->_accessMgr->speak(_sentence->_text, TTS_TALK);
+	}
 }
 
 

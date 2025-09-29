@@ -34,23 +34,24 @@ namespace Freescape {
 
 DarkEngine::DarkEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEngine(syst, gd) {
 	// These sounds can be overriden by the class of each platform
-	_soundIndexShoot = 8;
+	_soundIndexShoot = 1;
 	_soundIndexCollide = -1;
-	_soundIndexFall = 3;
-	_soundIndexClimb = 4;
+	_soundIndexStepDown = 3;
+	_soundIndexStepUp = 4;
 	_soundIndexMenu = -1;
 	_soundIndexStart = 9;
 	_soundIndexAreaChange = 5;
 	_soundIndexHit = 2;
+	_soundIndexFall = 14;
 	_soundIndexRestoreECD = 19;
 	_soundIndexDestroyECD = -1;
 
-	_soundIndexNoShield = -1;
-	_soundIndexNoEnergy = -1;
-	_soundIndexFallen = -1;
-	_soundIndexTimeout = -1;
-	_soundIndexForceEndGame = -1;
-	_soundIndexCrushed = -1;
+	_soundIndexNoShield = 20;
+	_soundIndexNoEnergy = 20;
+	_soundIndexFallen = 20;
+	_soundIndexTimeout = 20;
+	_soundIndexForceEndGame = 20;
+	_soundIndexCrushed = 20;
 	_soundIndexMissionComplete = -1;
 
 	if (isDOS())

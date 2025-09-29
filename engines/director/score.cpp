@@ -91,6 +91,8 @@ Score::Score(Movie *movie) {
 	_curFrameNumber = 1;
 	_framesStream = nullptr;
 	_currentFrame = nullptr;
+
+	_disableGoPlayUpdateStage = false;
 }
 
 Score::~Score() {
@@ -351,6 +353,12 @@ void Score::step() {
 	}
 	if (_version >= kFileVer300 && !_window->_newMovieStarted && _playState != kPlayStopped) {
 		_movie->processEvent(kEventIdle);
+
+		if (_version >= kFileVer600) {
+			if (_movie->_currentHoveredSpriteId) {
+				_movie->processEvent(kEventMouseWithin, _movie->_currentHoveredSpriteId);
+			}
+		}
 	}
 
 	update();
@@ -633,7 +641,7 @@ void Score::update() {
 
 	// Kill behaviors if they are going to expire next frame
 	if (!_vm->_playbackPaused)
-		killScriptInstances(_curFrameNumber + 1);
+		killScriptInstances(_nextFrame ? _nextFrame : _curFrameNumber + 1);
 
 	// change current frame and load frame data, if required
 	updateCurrentFrame();
@@ -685,6 +693,8 @@ void Score::update() {
 			// Call the perFrameHook as soon as a frame switch is done.
 			// If there is a transition, the perFrameHook is called
 			// after each transition subframe instead of here.
+			//
+			// This also sends stepFrame message to actorList
 			if (_currentFrame->_mainChannels.transType == 0 && _currentFrame->_mainChannels.trans.isNull()) {
 				_lingo->executePerFrameHook(_curFrameNumber, 0);
 			}
@@ -694,10 +704,12 @@ void Score::update() {
 	}
 
 	if (_version >= kFileVer600) {
-		// _movie->processEvent(kEventBeginSprite);
-		// TODO: Director 6 step: send beginSprite event to any sprites whose span begin in the upcoming frame
-		// _movie->processEvent(kEventPrepareFrame);
-		// TODO: Director 6 step: send prepareFrame event to all sprites and the script channel in upcoming frame
+		bool prevDis = _disableGoPlayUpdateStage;
+		_disableGoPlayUpdateStage = true;
+
+		_movie->broadcastEvent(kEventPrepareFrame);
+
+		_disableGoPlayUpdateStage = prevDis;
 	}
 
 	// Window is drawn between the prepareFrame and enterFrame events (Lingo in a Nutshell, p.100)
@@ -1947,10 +1959,10 @@ void Score::loadFrameSpriteDetails(bool skipLog) {
 	Common::MemoryReadStreamEndian *stream = nullptr;
 	for (uint i = 0; i < _currentFrame->_sprites.size(); i++) {
 		Sprite *sprite = _currentFrame->_sprites[i];
+		sprite->_behaviors.clear();
 		if (sprite->_spriteListIdx) {
 			if (!skipLog)
 				debugC(2, kDebugLoading, "Sprite %d", i);
-
 			sprite->_spriteInfo = loadSpriteInfo(sprite->_spriteListIdx, skipLog);
 
 			stream = getSpriteDetailsStream(sprite->_spriteListIdx + 1);
@@ -1966,6 +1978,7 @@ void Score::loadFrameSpriteDetails(bool skipLog) {
 	}
 
 	// Script channel
+	_currentFrame->_mainChannels.behaviors.clear();
 	if (_currentFrame->_mainChannels.scriptSpriteListIdx) {
 		if (!skipLog)
 			debugC(2, kDebugLoading, "Script channel");
@@ -1973,8 +1986,9 @@ void Score::loadFrameSpriteDetails(bool skipLog) {
 		_currentFrame->_mainChannels.scriptSpriteInfo = loadSpriteInfo(_currentFrame->_mainChannels.scriptSpriteListIdx, skipLog);
 
 		stream = getSpriteDetailsStream(_currentFrame->_mainChannels.scriptSpriteListIdx + 1);
+		// We can have only one behavior here
 		if (stream) {
-			_currentFrame->_mainChannels.behavior = loadSpriteBehavior(stream, skipLog);
+			_currentFrame->_mainChannels.behaviors.push_back(loadSpriteBehavior(stream, skipLog));
 			delete stream;
 		}
 	}
@@ -2057,6 +2071,8 @@ bool Score::loadFrame(int frameNum, bool loadCast) {
 	}
 
 	// Finally read the target frame!
+	debugC(2, kDebugLoading, "Loading target frame %d", targetFrame);
+
 	bool isFrameRead = readOneFrame();
 	if (!isFrameRead)
 		return false;
@@ -2298,13 +2314,20 @@ Common::String Score::formatChannelInfo() {
 		Sprite &sprite = *channel._sprite;
 		Common::Point position = channel.getPosition();
 		if (sprite._castId.member) {
-			result += Common::String::format("CH: %-3d castId: %s, visible: %d, [inkData: 0x%02x [ink: %d, trails: %d, stretch: %d, line: %d], %dx%d@%d,%d type: %d (%s) fg: %d bg: %d], script: %s, colorcode: 0x%x, blendAmount: 0x%x, unk3: 0x%x, constraint: %d, puppet: %d, moveable: %d, movieRate: %f, movieTime: %d (%f), filmLoopFrame: %d\n",
+			result += Common::String::format("CH: %-3d castId: %s, visible: %d, [inkData: 0x%02x [ink: %d, trails: %d, stretch: %d, line: %d], %dx%d@%d,%d type: %d (%s) fg: %08x bg: %08x], script: %s, colorcode: 0x%x, blendAmount: 0x%x, unk3: 0x%x, constraint: %d, puppet: %d, moveable: %d, movieRate: %f, movieTime: %d (%f), filmLoopFrame: %d\n",
 				i + 1, sprite._castId.asString().c_str(), channel._visible, sprite._inkData,
 				sprite._ink, sprite._trails, sprite._stretch, sprite._thickness,
 				channel.getWidth(), channel.getHeight(), position.x, position.y,
 				sprite._spriteType, spriteType2str(sprite._spriteType), sprite._foreColor, sprite._backColor,
 				sprite._scriptId.asString().c_str(), sprite._colorcode, sprite._blendAmount, sprite._unk3,
 				channel._constraint, sprite._puppet, sprite._moveable, channel._movieRate, channel._movieTime, (float)(channel._movieTime/60.0f), channel._filmLoopFrame);
+			if (!sprite._behaviors.empty()) {
+				result += Common::String::format("        behaviours: ");
+				for (auto &it : sprite._behaviors) {
+					result += Common::String::format("(%s), ", it.toString().c_str());
+				}
+				result += Common::String::format("\n");
+			}
 		} else {
 			result += Common::String::format("CH: %-3d castId: 000\n", i + 1);
 		}

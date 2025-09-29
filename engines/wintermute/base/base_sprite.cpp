@@ -149,7 +149,7 @@ bool BaseSprite::loadFile(const char *filename, int lifeTime, TSpriteCacheType c
 			delete frame;
 			delete subframe;
 		} else {
-			subframe->setDefaultRect();
+			BasePlatform::setRect(&subframe->_rect, 0, 0, subframe->_surface->getWidth(), subframe->_surface->getHeight());
 			frame->_subframes.add(subframe);
 			_frames.add(frame);
 			_currentFrame = 0;
@@ -490,7 +490,7 @@ bool BaseSprite::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 		buffer->putTextIndent(indent + 2, "EDITOR_MUTED=%s\n", _editorMuted ? "TRUE" : "FALSE");
 	}
 
-	if (_editorBgFile) {
+	if (_editorBgFile && _editorBgFile[0]) {
 		buffer->putTextIndent(indent + 2, "EDITOR_BG_FILE=\"%s\"\n", _editorBgFile);
 		buffer->putTextIndent(indent + 2, "EDITOR_BG_OFFSET_X=%d\n", _editorBgOffsetX);
 		buffer->putTextIndent(indent + 2, "EDITOR_BG_OFFSET_Y=%d\n", _editorBgOffsetY);

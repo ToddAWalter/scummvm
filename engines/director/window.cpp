@@ -42,6 +42,11 @@
 
 namespace Director {
 
+bool commandsWindowCallback(Graphics::WindowClick click, Common::Event &event, void *window) {
+	Window *w = (Window*)window;
+	return w->processWMEvent(click, event);
+}
+
 Window::Window(int id, bool scrollable, bool resizable, bool editable, Graphics::MacWindowManager *wm, DirectorEngine *vm, bool isStage)
 	: MacWindow(id, scrollable, resizable, editable, wm), Object<Window>("Window") {
 	_vm = vm;
@@ -66,6 +71,8 @@ Window::Window(int id, bool scrollable, bool resizable, bool editable, Graphics:
 	updateBorderType();
 
 	_draggable = !_isStage;
+
+	setCallback(commandsWindowCallback, this);
 }
 
 Window::~Window() {
@@ -615,6 +622,15 @@ bool Window::step() {
 		case kPlayLoaded:
 			if (!debugChannelSet(-1, kDebugCompileOnly)) {
 				debugC(1, kDebugEvents, "Starting playback of movie '%s'", _currentMovie->getMacName().c_str());
+
+				if (_vm->getVersion() >= 600) {
+					// We need to call this before behavior scripts are instantiated
+					// or cast loaded
+					_currentMovie->getScore()->_disableGoPlayUpdateStage = true;
+					_currentMovie->processEvent(kEventPrepareMovie);
+					_currentMovie->getScore()->_disableGoPlayUpdateStage = false;
+				}
+
 				_currentMovie->getScore()->startPlay();
 				if (_startFrame != -1) {
 					_currentMovie->getScore()->setCurrentFrame(_startFrame);

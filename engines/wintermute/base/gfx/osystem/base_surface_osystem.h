@@ -42,10 +42,10 @@ public:
 	BaseSurfaceOSystem(BaseGame *inGame);
 	~BaseSurfaceOSystem() override;
 
-	bool create(const Common::String &filename, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime = -1, bool keepLoaded = false) override;
+	bool create(const char *filename, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime = -1, bool keepLoaded = false) override;
 	bool create(int width, int height) override;
 
-	bool setAlphaImage(const Common::String &filename) override;
+	bool setAlphaImage(const char *filename) override;
 
 	bool invalidate() override;
 
@@ -60,15 +60,9 @@ public:
 	bool displayTiled(int x, int y, Common::Rect32 rect, int numTimesX, int numTimesY) override;
 	bool putSurface(const Graphics::Surface &surface, bool hasAlpha = false) override;
 	int getWidth() override {
-		if (_width == 0) {
-			finishLoad();
-		}
 		return _width;
 	}
 	int getHeight() override {
-		if (_height == 0) {
-			finishLoad();
-		}
 		return _height;
 	}
 	bool putPixel(int x, int y, byte r, byte g, byte b, byte a) override {
@@ -96,7 +90,7 @@ public:
 	Graphics::AlphaType getAlphaType() const { return _alphaType; }
 private:
 	Graphics::Surface *_surface;
-	bool finishLoad();
+	bool loadImage();
 	bool drawSprite(int x, int y, Common::Rect32 *rect, Common::Rect32 *newRect, Graphics::TransformStruct transformStruct);
 	void writeAlpha(Graphics::Surface *surface, const Graphics::Surface *mask);
 

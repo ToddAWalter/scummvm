@@ -173,6 +173,8 @@ public:
 
 	// events.cpp
 	bool processEvent(Common::Event &event) override;
+	bool processWMEvent(Graphics::WindowClick click, Common::Event &event);
+	void sendWindowEvent(LEvent event);
 
 	// tests.cpp
 	Common::HashMap<Common::String, Movie *> *scanMovies(const Common::Path &folder);

@@ -55,7 +55,7 @@ BaseSurfaceStorage::~BaseSurfaceStorage() {
 bool BaseSurfaceStorage::cleanup(bool warn) {
 	for (int32 i = 0; i < _surfaces.getSize(); i++) {
 		if (warn) {
-			_game->LOG(0, "BaseSurfaceStorage warning: purging surface '%s', usage:%d", _surfaces[i]->_filename.c_str(), _surfaces[i]->_referenceCount);
+			_game->LOG(0, "BaseSurfaceStorage warning: purging surface '%s', usage:%d", _surfaces[i]->_filename, _surfaces[i]->_referenceCount);
 		}
 		delete _surfaces[i];
 	}
@@ -104,7 +104,7 @@ bool BaseSurfaceStorage::removeSurface(BaseSurface *surface) {
 //////////////////////////////////////////////////////////////////////
 BaseSurface *BaseSurfaceStorage::addSurface(const char *filename, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime, bool keepLoaded) {
 	for (int32 i = 0; i < _surfaces.getSize(); i++) {
-		if (scumm_stricmp(_surfaces[i]->_filename.c_str(), filename) == 0) {
+		if (scumm_stricmp(_surfaces[i]->_filename, filename) == 0) {
 			_surfaces[i]->_referenceCount++;
 			return _surfaces[i];
 		}
@@ -177,7 +177,7 @@ bool BaseSurfaceStorage::sortSurfaces() {
 
 
 //////////////////////////////////////////////////////////////////////////
-int BaseSurfaceStorage::surfaceSortCB(const void *arg1, const void *arg2) {
+int32 BaseSurfaceStorage::surfaceSortCB(const void *arg1, const void *arg2) {
 	void *o1 = const_cast<void *>(arg1);
 	void *o2 = const_cast<void *>(arg2);
 	BaseSurface *s1 = *((BaseSurface **)o1);

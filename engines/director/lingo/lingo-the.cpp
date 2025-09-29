@@ -65,6 +65,7 @@ TheEntity entities[] = {					//	hasId  ver.	isFunction
 	{ kTheColorQD,			"colorQD",			false, 200, true },	// D2 f
 	{ kTheCommandDown,		"commandDown",		false, 200, true },	// D2 f
 	{ kTheControlDown,		"controlDown",		false, 200, true },	// D2 f
+	{ kTheCurrentSpriteNum,	"currentSpriteNum",	false, 600, true },	//						D6 p
 	{ kTheDate,				"date",				false, 300, true },	//		D3 f
 	{ kTheDeskTopRectList,	"deskTopRectList",	false, 500, true },	//					D5 p
 	{ kTheDigitalVideoTimeScale,"digitalVideoTimeScale",false, 500, false },//			D5 p
@@ -487,6 +488,16 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	Score *score = movie->getScore();
 
 	switch (entity) {
+	case kTheActiveWindow:
+		{
+			Window *win = (Window *)g_director->_wm->getWindow(g_director->_wm->getActiveWindow());
+			if (win) {
+				d = Datum(win);
+			} else {
+				d.type = VOID;
+			}
+		}
+		break;
 	case kTheActorList:
 		d = g_lingo->_actorList;
 		break;
@@ -533,7 +544,7 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		break;
 	case kTheClickOn:
 		// Even in D4, `the clickOn` uses the old "active" sprite instead of mouse sprite.
-		d = (int)movie->_currentActiveSpriteId;
+		d = (int)movie->_lastClickedSpriteId;
 		break;
 	case kTheColorDepth:
 		// bpp. 1, 2, 4, 8, 32
@@ -551,6 +562,9 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	case kTheControlDown:
 		d = (movie->_keyFlags & Common::KBD_CTRL) ? 1 : 0;
 		break;
+	case kTheCurrentSpriteNum:
+		d = (int)movie->_currentSpriteNum;
+		break;
 	case kTheDate:
 		d = getTheDate(field);
 		break;
@@ -561,6 +575,9 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		// Always measured against the last two clicks.
 		// 25 ticks seems to be the threshold for a double click.
 		d = (movie->_lastClickTime - movie->_lastClickTime2) <= 25 ? 1 : 0;
+		break;
+	case kTheEmulateMultiButtonMouse:
+		d = g_director->_emulateMultiButtonMouse ? 1 : 0;
 		break;
 	case kTheExitLock:
 		d = g_lingo->_exitLock;
@@ -1152,6 +1169,9 @@ void Lingo::setTheEntity(int entity, Datum &id, int field, Datum &d) {
 		break;
 	case kTheExitLock:
 		g_lingo->_exitLock = bool(d.asInt());
+		break;
+	case kTheEmulateMultiButtonMouse:
+		g_director->_emulateMultiButtonMouse = (bool)d.asInt();
 		break;
 	case kTheFixStageSize:
 		g_director->_fixStageSize = (bool)d.u.i;

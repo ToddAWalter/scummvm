@@ -56,6 +56,7 @@
 #include "engines/wintermute/base/scriptables/script.h"
 #include "engines/wintermute/base/sound/base_sound.h"
 #include "engines/wintermute/base/file/base_savefile_manager_file.h"
+#include "engines/wintermute/base/base_access_mgr.h"
 #include "engines/wintermute/ext/plugins.h"
 #include "engines/wintermute/video/video_player.h"
 #include "engines/wintermute/video/video_theora_player.h"
@@ -64,6 +65,7 @@
 #include "engines/wintermute/utils/path_util.h"
 #include "engines/wintermute/utils/string_util.h"
 #include "engines/wintermute/ui/ui_window.h"
+#include "engines/wintermute/ui/ui_text.h"
 #include "engines/wintermute/wintermute.h"
 #include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/ad/ad_scene.h"
@@ -284,16 +286,16 @@ BaseGame::BaseGame(const Common::String &targetName) : BaseObject(this), _target
 	_lastCursor = nullptr;
 
 	// accessibility flags
-/*	m_AccessTTSEnabled = false;
-	m_AccessTTSTalk = true;
-	m_AccessTTSCaptions = true;
-	m_AccessTTSKeypress = true;
-	m_AccessKeyboardEnabled = false;
-	m_AccessKeyboardCursorSkip = true;
-	m_AccessKeyboardPause = false;
+	_accessTTSEnabled = false;
+	_accessTTSTalk = true;
+	_accessTTSCaptions = true;
+	_accessTTSKeypress = true;
+	_accessKeyboardEnabled = true;//false;
+	_accessKeyboardCursorSkip = true;
+	_accessKeyboardPause = false;
 
-	m_AccessGlobalPaused = false;
-	m_AccessShieldWin = NULL;*/
+	_accessGlobalPaused = false;
+	_accessShieldWin = nullptr;
 
 	BasePlatform::setRectEmpty(&_mouseLockRect);
 
@@ -355,7 +357,7 @@ BaseGame::~BaseGame() {
 
 	SAFE_DELETE(_renderer);
 	_fileManager = nullptr;
-	//SAFE_DELETE(m_AccessMgr);
+	SAFE_DELETE(_accessMgr);
 
 	SAFE_DELETE(_stringTable);
 
@@ -390,7 +392,7 @@ bool BaseGame::cleanup() {
 
 	_windows.removeAll(); // refs only
 	_focusedWindow = nullptr; // ref only
-	//m_AccessShieldWin = nullptr;
+	_accessShieldWin = nullptr;
 
 	SAFE_DELETE_ARRAY(_saveImageName);
 	SAFE_DELETE_ARRAY(_loadImageName);
@@ -439,8 +441,9 @@ bool BaseGame::cleanup() {
 
 	SAFE_DELETE(_keyboardState);
 
-	//if (m_AccessMgr)
-	//	m_AccessMgr->SetActiveObject(NULL);
+	if (_accessMgr) {
+		_accessMgr->setActiveObject(nullptr);
+	}
 	
 	return STATUS_OK;
 }
@@ -511,10 +514,10 @@ bool BaseGame::initialize1() {
 			break;
 		}
 
-		//m_AccessMgr = new CBAccessMgr(this);
-		//if(m_AccessMgr == nullptr) {
-		//	break;
-		//}
+		_accessMgr = new BaseAccessMgr(this);
+		if (_accessMgr == nullptr) {
+			break;
+		}
 
 		_soundMgr = new BaseSoundMgr(this);
 		if (_soundMgr == nullptr) {
@@ -576,7 +579,7 @@ bool BaseGame::initialize1() {
 		delete _fontStorage;
 		delete _videoPlayer;
 		delete _soundMgr;
-		//delete m_AccessMgr;
+		delete _accessMgr;
 		_fileManager = nullptr;
 		delete _scEngine;
 		return STATUS_FAILED;
@@ -662,8 +665,9 @@ bool BaseGame::initialize3() { // renderer is initialized
 		_indicatorWidth = _renderer->getWidth();
 	}
 
-	//if (m_AccessMgr)
-	//	Game->m_AccessMgr->Initialize();
+	if (_accessMgr) {
+		_game->_accessMgr->initialize();
+	}
 
 	return STATUS_OK;
 }
@@ -747,8 +751,9 @@ bool BaseGame::initLoop() {
 
 	_surfaceStorage->initLoop();
 
-	//if (m_AccessMgr)
-	//	m_AccessMgr->InitLoop();
+	if (_accessMgr) {
+		_accessMgr->initLoop();
+	}
 
 	_fontStorage->initLoop();
 
@@ -1291,9 +1296,9 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	else if (strcmp(name, "PlayMusic") == 0 || strcmp(name, "PlayMusicChannel") == 0) {
 		int channel = 0;
 		if (strcmp(name, "PlayMusic") == 0) {
-			stack->correctParams(3);
-		} else {
 			stack->correctParams(4);
+		} else {
+			stack->correctParams(5);
 			channel = stack->pop()->getInt();
 		}
 
@@ -1304,10 +1309,10 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		ScValue *valLoopStart = stack->pop();
 		uint32 loopStart = (uint32)(valLoopStart->isNULL() ? 0 : valLoopStart->getInt());
 
-		//CScValue* ValPrivVolume = Stack->Pop();
-		//DWORD PrivVolume = (DWORD)(ValPrivVolume->IsNULL()?100:ValPrivVolume->GetInt());
+		ScValue *valPrivVolume = stack->pop();
+		uint32 privVolume = (uint32)(valPrivVolume->isNULL() ? 100 : valPrivVolume->getInt());
 
-		if (DID_FAIL(playMusic(channel, filename, looping, loopStart))) {
+		if (DID_FAIL(playMusic(channel, filename, looping, loopStart, privVolume))) {
 			stack->pushBool(false);
 		} else {
 			stack->pushBool(true);
@@ -1391,7 +1396,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (channel < 0 || channel >= NUM_MUSIC_CHANNELS) {
 			stack->pushNULL();
 		} else {
-			if (!_music[channel] || !_music[channel]->_soundFilename) {
+			if (!_music[channel] || !_music[channel]->_soundFilename || !_music[channel]->_soundFilename[0]) {
 				stack->pushNULL();
 			} else {
 				stack->pushString(_music[channel]->_soundFilename);
@@ -1479,7 +1484,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (channel < 0 || channel >= NUM_MUSIC_CHANNELS || !_music[channel]) {
 			stack->pushBool(false);
 		} else {
-			if (DID_FAIL(_music[channel]->setVolumePercent(volume))) {
+			if (DID_FAIL(_music[channel]->setVolume(volume))) {
 				stack->pushBool(false);
 			} else {
 				stack->pushBool(true);
@@ -1503,7 +1508,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (channel < 0 || channel >= NUM_MUSIC_CHANNELS || !_music[channel]) {
 			stack->pushInt(0);
 		} else {
-			stack->pushInt(_music[channel]->getVolumePercent());
+			stack->pushInt(_music[channel]->getVolume());
 		}
 
 		return STATUS_OK;
@@ -2222,7 +2227,7 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "GetActiveCursor") == 0) {
 		stack->correctParams(0);
-		if (!_activeCursor || !_activeCursor->_filename) {
+		if (!_activeCursor || !_activeCursor->_filename || !_activeCursor->_filename[0]) {
 			stack->pushNULL();
 		} else {
 			stack->pushString(_activeCursor->_filename);
@@ -3132,8 +3137,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccTTSEnabled
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccTTSEnabled") == 0) {
-		//m_ScValue->SetBool(m_AccessTTSEnabled);
-		_scValue->setBool(false);
+		_scValue->setBool(_accessTTSEnabled);
 		return _scValue;
 	}
 
@@ -3141,8 +3145,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccTTSTalk
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccTTSTalk") == 0) {
-		//m_ScValue->SetBool(m_AccessTTSTalk);
-		_scValue->setBool(false);
+		_scValue->setBool(_accessTTSTalk);
 		return _scValue;
 	}
 
@@ -3150,7 +3153,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccTTSCaptions
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccTTSCaptions") == 0) {
-		_scValue->setBool(false);
+		_scValue->setBool(_accessTTSCaptions);
 		return _scValue;
 	}
 
@@ -3158,7 +3161,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccTTSKeypress
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccTTSKeypress") == 0) {
-		_scValue->setBool(false);
+		_scValue->setBool(_accessTTSKeypress);
 		return _scValue;
 	}
 
@@ -3166,7 +3169,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccKeyboardEnabled
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccKeyboardEnabled") == 0) {
-		_scValue->setBool(false);
+		_scValue->setBool(_accessKeyboardEnabled);
 		return _scValue;
 	}
 
@@ -3174,7 +3177,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccKeyboardCursorSkip
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccKeyboardCursorSkip") == 0) {
-		_scValue->setBool(false);
+		_scValue->setBool(_accessKeyboardCursorSkip);
 		return _scValue;
 	}
 
@@ -3182,7 +3185,7 @@ ScValue *BaseGame::scGetProperty(const char *name) {
 	// AccKeyboardPause
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccKeyboardPause") == 0) {
-		_scValue->setBool(false);
+		_scValue->setBool(_accessKeyboardPause);
 		return _scValue;
 	}
 
@@ -3753,8 +3756,9 @@ bool BaseGame::unregisterObject(BaseObject *object) {
 	}
 
 	// is it active accessibility object?
-	//if (m_AccessMgr && m_AccessMgr->GetActiveObject() == Object)
-	//	m_AccessMgr->SetActiveObject(NULL);
+	if (_accessMgr && _accessMgr->getActiveObject() == object) {
+		_accessMgr->setActiveObject(nullptr);
+	}
 
 	// destroy object
 	for (int32 i = 0; i < _regObjects.getSize(); i++) {
@@ -4234,11 +4238,11 @@ bool BaseGame::saveGame(int32 slot, const char *desc, bool quickSave) {
 	if (DID_SUCCEED(ret = pm->initSave(desc))) {
 		if (!quickSave) {
 			SAFE_DELETE(_saveLoadImage);
-			if (_saveImageName) {
+			if (_saveImageName && _saveImageName[0] != '\0') {
 				_saveLoadImage = _game->_renderer->createSurface();
-			}
-			if (!_saveLoadImage || DID_FAIL(_saveLoadImage->create(_saveImageName, true, 0, 0, 0))) {
-				SAFE_DELETE(_saveLoadImage);
+				if (!_saveLoadImage || DID_FAIL(_saveLoadImage->create(_saveImageName, true, 0, 0, 0))) {
+					SAFE_DELETE(_saveLoadImage);
+				}
 			}
 		}
 		if (DID_SUCCEED(ret = SystemClassRegistry::getInstance()->saveTable(_game, pm, quickSave))) {
@@ -4286,7 +4290,7 @@ bool BaseGame::loadGame(const char *filename) {
 	stopVideo();
 
 	SAFE_DELETE(_saveLoadImage);
-	if (_loadImageName) {
+	if (_loadImageName && _loadImageName[0] != '\0') {
 		_saveLoadImage = _game->_renderer->createSurface();
 
 		if (!_saveLoadImage || DID_FAIL(_saveLoadImage->create(_loadImageName, true, 0, 0, 0))) {
@@ -4318,7 +4322,7 @@ bool BaseGame::loadGame(const char *filename) {
 				displayContent(true, false);
 				//_renderer->flip();
 
-				//accessUnpause();
+				accessUnpause();
 			}
 		}
 	}
@@ -4423,7 +4427,7 @@ bool BaseGame::displayWindows(bool inGame) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32 loopStart) {
+bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32 loopStart, uint32 privVolume) {
 	if (channel >= NUM_MUSIC_CHANNELS) {
 		_game->LOG(0, "**Error** Attempting to use music channel %d (max num channels: %d)", channel, NUM_MUSIC_CHANNELS);
 		return STATUS_FAILED;
@@ -4432,7 +4436,7 @@ bool BaseGame::playMusic(int channel, const char *filename, bool looping, uint32
 	SAFE_DELETE(_music[channel]);
 
 	_music[channel] = new BaseSound(_game);
-	if (_music[channel] && DID_SUCCEED(_music[channel]->setSound(filename, TSoundType::SOUND_MUSIC, true))) {
+	if (_music[channel] && DID_SUCCEED(_music[channel]->setSound(filename, TSoundType::SOUND_MUSIC, true, privVolume))) {
 		if (_musicStartTime[channel]) {
 			_music[channel]->setPositionTime(_musicStartTime[channel]);
 			_musicStartTime[channel] = 0;
@@ -4737,10 +4741,25 @@ bool BaseGame::persist(BasePersistenceManager *persistMgr) {
 		_stringTable->persist(persistMgr);
 	}
 
-	//PersistMgr->Transfer(TMEMBER(m_AccessShieldWin));
+	if (persistMgr->checkVersion(1, 10, 1)) {
+		persistMgr->transferPtr(TMEMBER(_accessShieldWin));
+	} else {
+		if (!persistMgr->getIsSaving()) {
+			_accessShieldWin = nullptr;
+		}
+	}
 
+	// initialise to defaults
 	if (!persistMgr->getIsSaving()) {
 		_quitting = false;
+		_accessTTSEnabled = false;
+		_accessTTSTalk = true;
+		_accessTTSCaptions = true;
+		_accessTTSKeypress = true;
+		_accessKeyboardEnabled = false;
+		_accessKeyboardCursorSkip = true;
+		_accessKeyboardPause = false;
+		_accessGlobalPaused = false;
 	}
 
 	return STATUS_OK;
@@ -4816,8 +4835,9 @@ bool BaseGame::handleKeypress(Common::Event *event, bool printable) {
 		return true;
 	}
 
-	//if (HandleAccessKey(Printable, CharCode, KeyData))
-	//	return true;
+	if (handleAccessKey(event, printable)) {
+		return true;
+	}
 
 	_keyboardState->handleKeyPress(event);
 	_keyboardState->readKey(event);
@@ -4846,25 +4866,32 @@ void BaseGame::handleKeyRelease(Common::Event *event) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-/*bool CBGame::HandleAccessKey(bool Printable, DWORD CharCode, DWORD KeyData) {
-	if (m_AccessKeyboardEnabled) {
-		if (CharCode == VK_TAB && (CBUtils::IsKeyDown(VK_CONTROL) || CBUtils::IsKeyDown(VK_RCONTROL))) {
-			CBObject *obj = NULL;
-			if (CBUtils::IsKeyDown(VK_SHIFT) || CBUtils::IsKeyDown(VK_RSHIFT)) {
-				obj = m_AccessMgr->GetPrevObject();
+bool BaseGame::handleAccessKey(Common::Event *event, bool printable) {
+	if (event->kbd.flags & Common::KBD_CTRL) {
+		_accessMgr->_ctrlPressed = event->type == Common::EVENT_KEYDOWN;
+	}
+
+	if (_accessKeyboardEnabled) {
+		if (event->kbd.keycode == Common::KEYCODE_TAB &&
+		   (event->kbd.flags & Common::KBD_CTRL)) {
+			//BaseObject *obj = nullptr;
+			if (event->kbd.flags & Common::KBD_SHIFT) {
+				/*obj = */_accessMgr->getPrevObject();
 			} else {
-				obj = m_AccessMgr->GetNextObject();
+				/*obj = */_accessMgr->getNextObject();
 			}
 			return true;
 		}
 	}
-	if (Printable && m_AccessKeyboardPause) {
-		if (CharCode == VK_SPACE && (CBUtils::IsKeyDown(VK_CONTROL) || CBUtils::IsKeyDown(VK_RCONTROL))) {
-			m_AccessGlobalPaused = !m_AccessGlobalPaused;
-			if (m_AccessGlobalPaused)
-				AccessPause();
-			else
-				AccessUnpause();
+	if (printable && _accessKeyboardPause) {
+		if (event->kbd.keycode == Common::KEYCODE_SPACE &&
+		   (event->kbd.flags & Common::KBD_CTRL)) {
+			_accessGlobalPaused = !_accessGlobalPaused;
+			if (_accessGlobalPaused) {
+				accessPause();
+			} else {
+				accessUnpause();
+			}
 			return true;
 		}
 	}
@@ -4873,46 +4900,46 @@ void BaseGame::handleKeyRelease(Common::Event *event) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-HRESULT CBGame::AccessPause() {
-	m_AccessGlobalPaused = true;
+bool BaseGame::accessPause() {
+	_accessGlobalPaused = true;
 
-	if (m_AccessShieldWin)
-		UnregisterObject(m_AccessShieldWin);
+	if (_accessShieldWin)
+		unregisterObject(_accessShieldWin);
 
-	m_AccessShieldWin = new CUIWindow(this);
-	m_Windows.Add(m_AccessShieldWin);
-	RegisterObject(m_AccessShieldWin);
+	_accessShieldWin = new UIWindow(this);
+	_windows.add(_accessShieldWin);
+	registerObject(_accessShieldWin);
 
-	m_AccessShieldWin->m_PosX = m_AccessShieldWin->m_PosY = 0;
-	m_AccessShieldWin->m_Width = m_Renderer->m_Width;
-	m_AccessShieldWin->m_Height = m_Renderer->m_Height;
+	_accessShieldWin->_posX = _accessShieldWin->_posY = 0;
+	_accessShieldWin->_width = _renderer->_width;
+	_accessShieldWin->_height = _renderer->_height;
 
-	CUIText *Sta = new CUIText(Game);
-	Sta->m_Parent = m_AccessShieldWin;
-	m_AccessShieldWin->m_Widgets.Add(Sta);
-	Sta->SetText((char *)m_StringTable->ExpandStatic("/SYSENG0040/Game paused. Press Ctrl+Space to resume."));
-	Sta->m_SharedFonts = true;
-	Sta->m_Font = m_SystemFont;
-	Sta->SizeToFit();
-	Sta->m_PosY = m_AccessShieldWin->m_Height - Sta->m_Height;
-	Sta->m_PosX = (m_AccessShieldWin->m_Width - Sta->m_Width) / 2;
+	UIText *sta = new UIText(_game);
+	sta->_parent = _accessShieldWin;
+	_accessShieldWin->_widgets.add(sta);
+	sta->setText(_stringTable->expandStatic("/SYSENG0040/Game paused. Press Ctrl+Space to resume."));
+	sta->_sharedFonts = true;
+	sta->_font = _systemFont;
+	sta->sizeToFit();
+	sta->_posY = _accessShieldWin->_height - sta->_height;
+	sta->_posX = (_accessShieldWin->_width - sta->_width) / 2;
 
-	m_AccessShieldWin->m_Visible = true;
-	m_AccessShieldWin->GoSystemExclusive();
+	_accessShieldWin->_visible = true;
+	_accessShieldWin->goSystemExclusive();
 
-	return S_OK;
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
-HRESULT CBGame::AccessUnpause() {
-	m_AccessGlobalPaused = false;
-	if (m_AccessShieldWin) {
-		m_AccessShieldWin->Close();
-		UnregisterObject(m_AccessShieldWin);
-		m_AccessShieldWin = NULL;
+bool BaseGame::accessUnpause() {
+	_accessGlobalPaused = false;
+	if (_accessShieldWin) {
+		_accessShieldWin->close();
+		unregisterObject(_accessShieldWin);
+		_accessShieldWin = nullptr;
 	}
-	return S_OK;
-}*/
+	return true;
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseGame::handleMouseWheel(int32 delta) {
@@ -5053,7 +5080,7 @@ bool BaseGame::setActiveObject(BaseObject *obj) {
 	// if (validObject(_activeObject)) _activeObject->applyEvent("MouseLeave");
 	_activeObject = obj;
 	if (_activeObject) {
-		//m_AccessMgr->Speak(m_ActiveObject->GetAccessCaption(), TTS_CAPTION);
+		_accessMgr->speak(_activeObject->getAccessCaption(), TTS_CAPTION);
 		_activeObject->applyEvent("MouseEntry");
 	}
 
@@ -5242,17 +5269,17 @@ bool BaseGame::updateMusicCrossfade() {
 
 		if (_musicCrossfadeVolume2 == 0) {
 			_music[_musicCrossfadeChannel2]->stop();
-			_music[_musicCrossfadeChannel2]->setVolumePercent(100);
+			_music[_musicCrossfadeChannel2]->setVolume(100);
 		} else {
-			_music[_musicCrossfadeChannel2]->setVolumePercent(_musicCrossfadeVolume2);
+			_music[_musicCrossfadeChannel2]->setVolume(_musicCrossfadeVolume2);
 		}
 
 		if (_musicCrossfadeChannel1 != _musicCrossfadeChannel2) {
 			if (_musicCrossfadeVolume1 == 0) {
 				_music[_musicCrossfadeChannel1]->stop();
-				_music[_musicCrossfadeChannel1]->setVolumePercent(100);
+				_music[_musicCrossfadeChannel1]->setVolume(100);
 			} else {
-				_music[_musicCrossfadeChannel1]->setVolumePercent(_musicCrossfadeVolume1);
+				_music[_musicCrossfadeChannel1]->setVolume(_musicCrossfadeVolume1);
 			}
 		}
 
@@ -5270,11 +5297,11 @@ bool BaseGame::updateMusicCrossfade() {
 	} else {
 		float progress = (float)currentTime / (float)_musicCrossfadeLength;
 		int volumeDelta = (int)((_musicCrossfadeVolume1 - _musicCrossfadeVolume2)*progress);
-		_music[_musicCrossfadeChannel2]->setVolumePercent(_musicCrossfadeVolume1 - volumeDelta);
+		_music[_musicCrossfadeChannel2]->setVolume(_musicCrossfadeVolume1 - volumeDelta);
 		BaseEngine::LOG(0, "Setting music channel %d volume to %d", _musicCrossfadeChannel2, _musicCrossfadeVolume1 - volumeDelta);
 
 		if (_musicCrossfadeChannel1 != _musicCrossfadeChannel2) {
-			_music[_musicCrossfadeChannel1]->setVolumePercent(_musicCrossfadeVolume2 + volumeDelta);
+			_music[_musicCrossfadeChannel1]->setVolume(_musicCrossfadeVolume2 + volumeDelta);
 			BaseEngine::LOG(0, "Setting music channel %d volume to %d", _musicCrossfadeChannel1, _musicCrossfadeVolume2 + volumeDelta);
 		}
 	}
@@ -5394,6 +5421,24 @@ bool BaseGame::onActivate(bool activate, bool refreshMouse) {
 	}
 
 	return STATUS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+BaseObject *BaseGame::getNextAccessObject(BaseObject *currObject) {
+	if (_focusedWindow) {
+		return _focusedWindow->getNextAccessObject(currObject);
+	} else {
+		return nullptr;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+BaseObject* BaseGame::getPrevAccessObject(BaseObject *currObject) {
+	if(_focusedWindow) {
+		return _focusedWindow->getPrevAccessObject(currObject);
+	} else {
+		return nullptr;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

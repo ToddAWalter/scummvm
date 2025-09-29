@@ -33,6 +33,7 @@
 #include "engines/wintermute/base/sound/base_sound_manager.h"
 #include "engines/wintermute/base/base_game.h"
 #include "engines/wintermute/base/base_sprite.h"
+#include "engines/wintermute/utils/utils.h"
 #include "engines/wintermute/platform_osystem.h"
 #include "engines/wintermute/dcgf.h"
 
@@ -165,7 +166,7 @@ bool BaseObject::cleanup() {
 	_sFXType = SFX_NONE;
 	_sFXParam1 = _sFXParam2 = _sFXParam3 = _sFXParam4 = 0;
 
-	//SAFE_DELETE_ARRAY(m_AccessCaption);
+	SAFE_DELETE_ARRAY(_accessCaption);
 
 	return STATUS_OK;
 }
@@ -270,7 +271,7 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "GetCursor") == 0) {
 		stack->correctParams(0);
-		if (!_cursor || !_cursor->_filename) {
+		if (!_cursor || !_cursor->_filename || !_cursor->_filename[0]) {
 			stack->pushNULL();
 		} else {
 			stack->pushString(_cursor->_filename);
@@ -507,7 +508,7 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		if (!_sFX) {
 			stack->pushInt(_sFXVolume);
 		} else {
-			stack->pushInt(_sFX->getVolumePercent());
+			stack->pushInt(_sFX->getVolume());
 		}
 		return STATUS_OK;
 	}
@@ -542,7 +543,7 @@ bool BaseObject::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisSta
 		stack->correctParams(0);
 
 		if (_shadowImage) {
-			stack->pushString(_shadowImage->_filename.c_str());
+			stack->pushString(_shadowImage->_filename);
 		} else {
 			stack->pushNULL();
 		}
@@ -830,9 +831,9 @@ ScValue *BaseObject::scGetProperty(const char *name) {
 	// AccCaption
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccCaption") == 0) {
-/*		if (m_AccessCaption)
-			m_ScValue->SetString(m_AccessCaption);
-		else*/
+		if (_accessCaption)
+			_scValue->setString(_accessCaption);
+		else
 			_scValue->setNULL();
 		return _scValue;
 	} else {
@@ -1026,11 +1027,11 @@ bool BaseObject::scSetProperty(const char *name, ScValue *value) {
 	// AccCaption
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "AccCaption") == 0) {
-		/*if (Value->IsNULL()) {
-			SAFE_DELETE_ARRAY(m_AccessCaption);
+		if (value->isNULL()) {
+			SAFE_DELETE_ARRAY(_accessCaption);
 		} else {
-			CBUtils::SetString(&m_AccessCaption, Value->GetString());
-		}*/
+			BaseUtils::setString(&_accessCaption, value->getString());
+		}
 		return STATUS_OK;
 	} else {
 		return BaseScriptHolder::scSetProperty(name, value);
@@ -1126,7 +1127,7 @@ bool BaseObject::persist(BasePersistenceManager *persistMgr) {
 		Common::String tempString;
 		if (persistMgr->getIsSaving()) {
 			if (_shadowImage) {
-				tempString = _shadowImage->_filename.c_str();
+				tempString = _shadowImage->_filename;
 			}
 			persistMgr->transferString(TMEMBER(tempString));
 		} else {
@@ -1145,7 +1146,13 @@ bool BaseObject::persist(BasePersistenceManager *persistMgr) {
 #endif
 
 	persistMgr->transferSint32(TMEMBER_INT(_blendMode));
-	//persistMgr->Transfer(TMEMBER(m_AccessCaption));
+	if (persistMgr->checkVersion(1, 10, 1)) {
+		persistMgr->transferPtr(TMEMBER(_accessCaption));
+	} else {
+		if (!persistMgr->getIsSaving()) {
+			_accessCaption = nullptr;
+		}
+	}
 
 	return STATUS_OK;
 }
@@ -1210,7 +1217,7 @@ bool BaseObject::playSFX(const char *filename, bool looping, bool playNow, const
 	// just play loaded sound
 	if (filename == nullptr && _sFX) {
 		if (_game->_editorMode || _sFXStart) {
-			_sFX->setVolumePercent(_sFXVolume);
+			_sFX->setVolume(_sFXVolume);
 			_sFX->setPositionTime(_sFXStart);
 			if (!_game->_editorMode) {
 				_sFXStart = 0;
@@ -1236,7 +1243,7 @@ bool BaseObject::playSFX(const char *filename, bool looping, bool playNow, const
 
 	_sFX = new BaseSound(_game);
 	if (_sFX && DID_SUCCEED(_sFX->setSound(filename, TSoundType::SOUND_SFX, true))) {
-		_sFX->setVolumePercent(_sFXVolume);
+		_sFX->setVolume(_sFXVolume);
 		if (_sFXStart) {
 			_sFX->setPositionTime(_sFXStart);
 			_sFXStart = 0;
@@ -1307,7 +1314,7 @@ bool BaseObject::setSFXTime(uint32 time) {
 bool BaseObject::setSFXVolume(int volume) {
 	_sFXVolume = volume;
 	if (_sFX) {
-		return _sFX->setVolumePercent(volume);
+		return _sFX->setVolume(volume);
 	} else {
 		return STATUS_OK;
 	}
@@ -1316,7 +1323,7 @@ bool BaseObject::setSFXVolume(int volume) {
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseObject::updateSounds() {
-	if (_soundEvent) {
+	if (_soundEvent && _soundEvent[0]) {
 		if (_sFX && !_sFX->isPlaying()) {
 			applyEvent(_soundEvent);
 			setSoundEvent(nullptr);
@@ -1413,10 +1420,12 @@ bool BaseObject::renderModel() {
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-/*char *CBObject::GetAccessCaption() {
-	if (m_AccessCaption)
-		return m_AccessCaption;
-	else
-		return GetCaption();
-}*/
+const char *BaseObject::getAccessCaption() {
+	if (_accessCaption) {
+		return _accessCaption;
+	} else {
+		return getCaption();
+	}
+}
+
 } // End of namespace Wintermute

@@ -74,7 +74,7 @@ public:
 	BaseRenderOpenGL3D(BaseGame *inGame = nullptr);
 	~BaseRenderOpenGL3D() override;
 
-	bool invalidateTexture(BaseSurfaceOpenGL3D *texture) override;
+	bool invalidateTexture(BaseSurface *texture) override;
 
 	bool invalidateDeviceObjects() override;
 	bool restoreDeviceObjects() override;
@@ -103,6 +103,7 @@ public:
 	bool clear() override;
 
 	bool setViewport(int left, int top, int right, int bottom) override;
+	bool drawLine(int x1, int y1, int x2, int y2, uint32 color) override;
 	bool fillRect(int x, int y, int w, int h, uint32 color) override;
 
 	DXMatrix *buildMatrix(DXMatrix* out, const DXVector2 *centre, const DXVector2 *scaling, float angle);

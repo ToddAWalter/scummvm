@@ -149,6 +149,7 @@ public:
 	// They live in lingo/lingo-events.cpp
 	void killScriptInstances(int frameNum);
 	void createScriptInstances(int frameNum);
+	Datum createScriptInstance(BehaviorElement *behavior);
 
 private:
 	bool isWaitingForNextFrame();
@@ -177,6 +178,7 @@ public:
 	Common::SortedArray<Label *> *_labels;
 	Common::HashMap<uint16, Common::String> _actions;
 	Common::HashMap<uint16, bool> _immediateActions;
+	Datum _scriptChannelScriptInstance;
 
 	Common::Array<Frame *> _scoreCache;
 
@@ -230,6 +232,8 @@ public:
 
 	Common::Array<uint32> _spriteDetailOffsets;
 	Common::Array<bool> _spriteDetailAccessed;
+
+	bool _disableGoPlayUpdateStage;
 
 private:
 	DirectorEngine *_vm;

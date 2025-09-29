@@ -320,7 +320,7 @@ void fixTree(Tree tree) {
 	}
 }
 
-void showDialogueLine(
+void showDialogOptions(
 	Common::String conversationMatrix[16],
 	uint &chosenTopic,
 	byte conversationIndex,
@@ -337,24 +337,19 @@ void showDialogueLine(
 	euroText(6, 173, conversationMatrix[3], 255);
 	euroText(6, 184, conversationMatrix[4], 255);
 	g_engine->_mouse->show();
-	Common::Event e;
+
 	do {
 		bool lMouseClicked = false;
 		bool rMouseClicked = false;
 		do {
 			g_engine->_chrono->updateChrono();
 			g_engine->_mouse->animateMouseIfNeeded();
+			g_engine->_events->pollEvent();
 
-			while (g_system->getEventManager()->pollEvent(e)) {
-				if (e.type == Common::EVENT_LBUTTONUP) {
-					lMouseClicked = true;
-					g_engine->_mouse->mouseClickX = e.mouse.x;
-					g_engine->_mouse->mouseClickY = e.mouse.y;
-				} else if (e.type == Common::EVENT_RBUTTONUP) {
-					rMouseClicked = true;
-					g_engine->_mouse->mouseClickX = e.mouse.x;
-					g_engine->_mouse->mouseClickY = e.mouse.y;
-				}
+			if (g_engine->_events->_leftMouseButton) {
+				lMouseClicked = true;
+			} else if (g_engine->_events->_rightMouseButton) {
+				rMouseClicked = true;
 			}
 
 			if (g_engine->_chrono->_gameTick) {
@@ -469,7 +464,7 @@ void talk(byte characterIndex) {
 			l1++;
 		};
 		l1 = linkedList->begin();
-		showDialogueLine(conversationMatrix, newNode, conversationIndex, l1, endOfConversation);
+		showDialogOptions(conversationMatrix, newNode, conversationIndex, l1, endOfConversation);
 		delete linkedList;
 		g_engine->sayLine(newNode, 255, 0, response, true);
 		stringAux = 0;

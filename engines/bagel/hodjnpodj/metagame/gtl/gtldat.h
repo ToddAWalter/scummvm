@@ -158,22 +158,21 @@ class CLexElement {
 	int m_iVal ;          // integer or char or keyword code
 	int m_iStringListPos ;      // string position
 	int m_iLineNumber, m_iColumn ;      // for error messages
-} ;
+};
 
 // CKeyTab -- keyword table element
 class CKeyTab {
 public:
 	int m_iKeyValue ;   // keyword value
 	const char *m_xpszKeyString ;     // string
-} ;
+};
 
 // CMap -- bit map
 class CMap {
 	friend class CGtlData ;
 
-	char m_cStartData ;
-	char m_szLabel[MAX_LABEL_LENGTH] ;  // bitmap label
-	char m_szFilename[MAX_FILENAME_LENGTH] ;    // file name of BMP file
+	char m_szLabel[MAX_LABEL_LENGTH] = {};  // bitmap label
+	char m_szFilename[MAX_FILENAME_LENGTH] = {};    // file name of BMP file
 	bool m_bPositionDetermined: 1 ;
 	bool m_bSprite : 1 ;
 	bool m_bPalette : 1 ;               // game palette from this bitmap
@@ -183,18 +182,24 @@ class CMap {
 	bool m_bRelocatable : 1 ;           // relocatable
 	bool m_bPositionSpecified : 1 ;     // position specified on input
 	bool m_bSpecialPaint: 1 ;           // don't automatically paint
-	CBgbObject FAR *m_lpcBgbObject ;    // Boffo game object for bitmap file
+	CBgbObject FAR *m_lpcBgbObject = nullptr;    // Boffo game object for bitmap file
 
-	int m_iRelationType ;       // KT_ABOVE, KT_BELOW, KT_LEFT, KT_RIGHT,
+	int m_iRelationType = 0;       // KT_ABOVE, KT_BELOW, KT_LEFT, KT_RIGHT,
 	// KT_NODE
-	int m_iRelation ;           // index of relation bitmap or node
-	char m_cEndData ;
+	int m_iRelation = 0;           // index of relation bitmap or node
 
 	CMap() {
-		memset(&m_cStartData,
-		       0, &m_cEndData - &m_cStartData);
+		m_bPositionDetermined = false;
+		m_bSprite = false;
+		m_bPalette = false;
+		m_bOverlay = false;
+		m_bMasked = false;
+		m_bMetaGame = false;
+		m_bRelocatable = false;
+		m_bPositionSpecified = false;
+		m_bSpecialPaint = false;
 	}
-} ;
+};
 
 /**
  * Node on the map
@@ -230,47 +235,41 @@ class CStratLocInfo {
 	friend class CGtlData ;
 	friend class CStrategyInfo ;
 
-	char m_cStartData ;
-	int m_iLocCode ;            // MG_LOC_xxxx -- location code
-	CNode FAR *m_lpNode ;       // node pointer for location
-	int m_iValueCode ;          // MG_VISIT_xxxx or MG_WIN_xxxx
+	int m_iLocCode = 0;				// MG_LOC_xxxx -- location code
+	CNode FAR *m_lpNode = nullptr;	// node pointer for location
+	int m_iValueCode = 0;			// MG_VISIT_xxxx or MG_WIN_xxxx
 	// or 0 if not eligible
-	int m_iDistance ;           // distance to location
-	int m_iWeight ;             // weight of location
-	int m_iAdjustedWeight ;     // weight adjusted by distance
+	int m_iDistance = 0;			// distance to location
+	int m_iWeight = 0;				// weight of location
+	int m_iAdjustedWeight = 0;		// weight adjusted by distance
 
-	char m_cEndData ;
-	CStratLocInfo() {
-		memset(&m_cStartData,
-		       0, &m_cEndData - &m_cStartData) ;
+	void clear() {
+		m_iLocCode = 0;
+		m_lpNode = nullptr;
+		m_iValueCode = 0;
+		m_iDistance = 0;
+		m_iWeight = 0;
+		m_iAdjustedWeight = 0;
 	}
-} ;
+};
 
 
 // CStrategyInfo -- strategy information for determining best move
 class CStrategyInfo {
 	friend class CGtlData ;
 
-	char m_cStartData ;
-	CStratLocInfo *xpTargetLocInfo ;    // target location (best move)
+	CStratLocInfo *xpTargetLocInfo = nullptr;		// target location (best move)
 
-	int m_iRequiredObjectsCount ;   // total number of objects I need
-	int m_iRequiredObjectsTable[MAX_GAME_TABLE] ; // objects I need
+	int m_iRequiredObjectsCount = 0;				// total number of objects I need
+	int m_iRequiredObjectsTable[MAX_GAME_TABLE] = {};	// objects I need
 
-	int m_iMaximumDistance ;    // max distance to eligible location
-	int m_iMaxAdjustedWeight ;  // maximum adjusted weight
-	int m_iTopLocCount ;        // number of top locations
-	int m_iTopLocTable[MG_LOC_MAX] ;    // table of top locations
-
-	char m_cEndData ;
+	int m_iMaximumDistance = 0;						// max distance to eligible location
+	int m_iMaxAdjustedWeight = 0;					// maximum adjusted weight
+	int m_iTopLocCount = 0;							// number of top locations
+	int m_iTopLocTable[MG_LOC_MAX] = {};			// table of top locations
 
 	CStratLocInfo m_cStratLocInfo[MG_LOC_MAX + 1] ;
-
-	CStrategyInfo() {
-		memset(&m_cStartData,
-		       0, &m_cEndData - &m_cStartData) ;
-	}
-} ;
+};
 
 // CXodj -- structure for Hodj Podj
 class CXodj {
@@ -278,163 +277,153 @@ class CXodj {
 
 public:
 
-	char m_cStartData ;
-	CXodj *m_xpXodjNext ;       // next in chain
-	char m_szName[MAX_LABEL_LENGTH] ;   // name of character
-	bool m_bHodj ;              // char is Hodj (not Podj)
-	int m_iFurlongs ;           // number of furlongs available
-	int m_iCharNode ;           // node where character is positioned
+	CXodj *m_xpXodjNext = nullptr;       // next in chain
+	char m_szName[MAX_LABEL_LENGTH] = {};   // name of character
+	bool m_bHodj = false;              // char is Hodj (not Podj)
+	int m_iFurlongs = 0;           // number of furlongs available
+	int m_iCharNode = 0;           // node where character is positioned
 
-	int m_nTurns;               // number of turns remaining (not furlongs)
+	int m_nTurns = 0;               // number of turns remaining (not furlongs)
 
-	bool m_bComputer ;          // played by computer
-	CMap FAR *m_lpMap ;         // bitmap object
-	CBgbObject FAR *m_lpcCharSprite ;   // character sprite bgb object
-	CBgbObject FAR *m_lpcIcon ;         // icon for character
+	bool m_bComputer = false;          // played by computer
+	CMap FAR *m_lpMap = nullptr;         // bitmap object
+	CBgbObject FAR *m_lpcCharSprite = nullptr;   // character sprite bgb object
+	CBgbObject FAR *m_lpcIcon = nullptr;         // icon for character
 
-	CSound *m_pThemeSound;              // this character's MIDI theme song info
-	const char *m_pszThemeFile;
-	unsigned int    m_nThemeStart;
-	unsigned int    m_nThemeEnd;
+	CSound *m_pThemeSound = nullptr;              // this character's MIDI theme song info
+	const char *m_pszThemeFile = nullptr;
+	unsigned int    m_nThemeStart = 0;
+	unsigned int    m_nThemeEnd = 0;
 
-	const char *m_pszStarsFile;             // cel strip for stars animation
+	const char *m_pszStarsFile = nullptr;             // cel strip for stars animation
 
 	// fields for computing computer play (also used for human player
 	// for debugging or giving hints)
-	class CStrategyInfo *m_xpStrategyInfo ;  // strategy information
+	class CStrategyInfo *m_xpStrategyInfo = nullptr;  // strategy information
 
 	// list of clue numbers for clues given by winning mini-game
-	int m_iWinInfoWon ;     // how many clues I've received
-	int m_iWinInfoNeed ;    // total number of clues I need
-	int m_iWinInfoTable[MAX_GAME_TABLE] ;
+	int m_iWinInfoWon = 0;     // how many clues I've received
+	int m_iWinInfoNeed = 0;    // total number of clues I need
+	int m_iWinInfoTable[MAX_GAME_TABLE] = {};
 
 	// list of clue numbers for clues given by farmer, etc.
-	int m_iSecondaryInfoWon ;   // how many clues I've received
-	int m_iSecondaryInfoNeed ;  // total number of clues I need
-	int m_iSecondaryInfoTable[MAX_GAME_TABLE] ;
+	int m_iSecondaryInfoWon = 0;   // how many clues I've received
+	int m_iSecondaryInfoNeed = 0;  // total number of clues I need
+	int m_iSecondaryInfoTable[MAX_GAME_TABLE] = {};
 
 	// list of objects required to get Mish/Mosh
-	int m_iRequiredObjectsCount ;   // total number of objects I need
-	int m_iRequiredObjectsTable[MAX_GAME_TABLE] ; // objects I need
-	int m_iRequiredMoney ;      // money needed for Mish/Mosh
+	int m_iRequiredObjectsCount = {};   // total number of objects I need
+	int m_iRequiredObjectsTable[MAX_GAME_TABLE] = {}; // objects I need
+	int m_iRequiredMoney = 0;      // money needed for Mish/Mosh
 
 	// list of secondary information location we still have to visit
-	int m_iSecondaryLoc[MAX_GAME_TABLE] ;
+	int m_iSecondaryLoc[MAX_GAME_TABLE] = {};
 
-	int m_iGameHistory[20] ;    // last 20 mini-games played
-	int m_iTargetLocation ;     // target location for computer play
-	bool m_bGatherInformation ; // if false, data from last
+	int m_iGameHistory[20] = {};    // last 20 mini-games played
+	int m_iTargetLocation = 0;     // target location for computer play
+	bool m_bGatherInformation = false; // if false, data from last
 	// GatherInformation is still valid
 
-	CInventory *m_pInventory ;   // items in personal inventory
-	CInventory *m_pGenStore ;    // items in general store
-	CInventory *m_pBlackMarket ;    // items in pawn shop
-	CInventory *m_pTradingPost ;    // items in pawn shop
+	CInventory *m_pInventory = nullptr;   // items in personal inventory
+	CInventory *m_pGenStore = nullptr;    // items in general store
+	CInventory *m_pBlackMarket = nullptr;    // items in pawn shop
+	CInventory *m_pTradingPost = nullptr;    // items in pawn shop
 
-	char m_cEndData ;
-
-	CXodj() {
-		memset(&m_cStartData, 0, &m_cEndData - &m_cStartData);
-	}
 	~CXodj();
-} ;
+};
 
 // CGtlData -- data class for graphics utility
 class CGtlData {
 public:
-	class CGtlDoc *m_xpcGtlDoc; // document pointer
+	class CGtlDoc *m_xpcGtlDoc = nullptr; // document pointer
 
 private:
-	CGenUtil m_cGenUtil ;       // general utility object
-	CBgbMgr m_cBgbMgr ;         // Boffo Game Object manager
-	CBbtMgr m_cBbtMgr ;         // Boffo Games button manager
-	CBbutton m_cMiniButton ;    // minimap button
-	CBbutton m_cInvButton ;     // inventory button
-	CBbutton m_cScrollButton ;  // scroll button
+	CGenUtil m_cGenUtil;       // general utility object
+	CBgbMgr m_cBgbMgr;         // Boffo Game Object manager
+	CBbtMgr m_cBbtMgr;         // Boffo Games button manager
+	CBbutton m_cMiniButton;    // minimap button
+	CBbutton m_cInvButton;     // inventory button
+	CBbutton m_cScrollButton;  // scroll button
 
-	CMap FAR *m_lpMaps /* [MAX_BITMAPS] */ ;  // bitmap array
-	CNode FAR *m_lpNodes /* [MAX_NODES] */ ;      // node array
+	CMap FAR *m_lpMaps = nullptr;  // bitmap array
+	CNode FAR *m_lpNodes = nullptr;      // node array
 
-	char m_cStartData ;
-	bool m_bGtlDll ;            // equals GTLDLL define
-	char m_szBmpDirectory[MAX_FILENAME_LENGTH] ; // bitmap file director
-	char m_szGtlFile[MAX_FILENAME_LENGTH] ; // gtl file name
-	char m_szListFile[MAX_FILENAME_LENGTH] ; // List file name
+	bool m_bGtlDll = false;            // equals GTLDLL define
+	char m_szBmpDirectory[MAX_FILENAME_LENGTH] = {}; // bitmap file director
+	char m_szGtlFile[MAX_FILENAME_LENGTH] = {}; // gtl file name
+	char m_szListFile[MAX_FILENAME_LENGTH] = {}; // List file name
 	Common::SeekableReadStream *m_xpGtlFile = nullptr;         // ptr to file structure for .GTL file
 	Common::WriteStream *m_xpListFile = nullptr;        // ptr to file structure for .LST file
-	bool m_bListing ;           // listing file flag
-	int m_iIndent ;             // current indent (decompile only)
-	int m_iLineNumber ;         // line number in input file
-	int m_iMaps, m_iNodes ;     // # of bitmaps, nodes
-	bool m_bEof ;               // end of file on input (or END stmt)
-	CNode FAR *m_lpLastNode ;   // pointer to last node
-	int m_iNumGenLabels ;               // number of generated lables
-	CLexElement *m_xpLexLabel ;         // current label lexeme
-	CLexElement m_cLexElts[MAX_LEXELTS] ;       // lexical element blocks
-	char m_szStringList[MAX_STRINGLIST] ;     // compiler input string
-	bool m_bSelectedLink ;      // flag: a link is selected
-	int m_iSelLinkPt1, m_iSelLinkPt2 ;  // indexes of selected link pts
+	bool m_bListing = false;           // listing file flag
+	int m_iIndent = 0;             // current indent (decompile only)
+	int m_iLineNumber = 0;         // line number in input file
+	int m_iMaps = 0, m_iNodes = 0;     // # of bitmaps, nodes
+	bool m_bEof = false;               // end of file on input (or END stmt)
+	CNode FAR *m_lpLastNode = nullptr;   // pointer to last node
+	int m_iNumGenLabels = 0;               // number of generated lables
+	CLexElement *m_xpLexLabel = nullptr;         // current label lexeme
+	CLexElement m_cLexElts[MAX_LEXELTS] = {};       // lexical element blocks
+	char m_szStringList[MAX_STRINGLIST] = {};     // compiler input string
+	bool m_bSelectedLink = false;      // flag: a link is selected
+	int m_iSelLinkPt1 = 0, m_iSelLinkPt2 = 0;  // indexes of selected link pts
 	uint32 m_stAcceptClickActive = 0;       // prevent recursion
 	uint32 m_stLDownTime = 0;       // time of left button down
-	CNode FAR *m_lpFoundNode ;  // node clicked on
-	CNode FAR *m_lpLastSelectedNode ;   // selected on click down
+	CNode FAR *m_lpFoundNode = nullptr;  // node clicked on
+	CNode FAR *m_lpLastSelectedNode = nullptr;   // selected on click down
 
-	bool m_bJustPlayedMiniGame; // true for Mini-Games in ProcessGameResult
+	bool m_bJustPlayedMiniGame = false;	// true for Mini-Games in ProcessGameResult
 
 	// fields for Draw routine
 public:
-	bool m_bInhibitDraw ;       // inhibit any actual drawing
-	bool m_bDrawing ;           // in Draw routine (prevent recursion)
-	CGtlView *m_xpGtlView ;     // current view
-	bool m_bPaint ;             // WM_PAINT flag
-	bool m_bRelocatable ;       // device context is currently
+	bool m_bInhibitDraw = false;		// inhibit any actual drawing
+	bool m_bDrawing = false;			// in Draw routine (prevent recursion)
+	CGtlView *m_xpGtlView = nullptr;	// current view
+	bool m_bPaint = false;				// WM_PAINT flag
+	bool m_bRelocatable = false;		// device context is currently
 	// relocatable
-	CRect *m_xpClipRect ;       // relocatable clipping rectangle
-	CRect *m_xpDevClipRect ;    // device (non-relocatable)
+	CRect *m_xpClipRect = nullptr;		// relocatable clipping rectangle
+	CRect *m_xpDevClipRect = nullptr;	// device (non-relocatable)
 	// clipping rectangle
-	CMap FAR *m_lpFurlongMaps[25] ;  // 0-24 furlong bitmaps
+	CMap FAR *m_lpFurlongMaps[25] = {};	// 0-24 furlong bitmaps
 
 // ---
 public:
-	int m_iSizeX, m_iSizeY ;    // size of entire client area
+	int m_iSizeX = 0, m_iSizeY = 0;		// size of entire client area
 	// (entire bitmap)
-	int m_iMargin ;             // size of top margin of view window
-	bool m_bChangeSize ;        // size of window changed (because
+	int m_iMargin = 0;					// size of top margin of view window
+	bool m_bChangeSize = false;			// size of window changed (because
 	// gtl modified the bitmap template)
-	int m_iViewSizeX, m_iViewSizeY ;    // size of view
+	int m_iViewSizeX = 0, m_iViewSizeY = 0;	// size of view
 
-	bool m_bPaintBackground ;   // paint background
-	bool m_bShowNodes ;         // show nodes and links
-	bool m_bShowSensitivity ;           // show node sensitivities
-	bool m_bStartMetaGame ;     // start in meta game mode
-	bool _metaGame = false;		// meta game mode
-	bool m_bInitMetaGame ;      // init sprites at beginning of metagame
+	bool m_bPaintBackground = false;	// paint background
+	bool m_bShowNodes = false;			// show nodes and links
+	bool m_bShowSensitivity = false;	// show node sensitivities
+	bool m_bStartMetaGame = false;		// start in meta game mode
+	bool _metaGame = false;				// meta game mode
+	bool m_bInitMetaGame = false;		// init sprites at beginning of metagame
 
-	CXodj *m_xpXodjChain ;      // chain of characters
-	CXodj *m_xpCurXodj ;        // character currently on the move
-	bool m_bSamePlace ;         // both characters are in same place
-	bool m_bGameOver ;          // game is over
+	CXodj *m_xpXodjChain = nullptr;		// chain of characters
+	CXodj *m_xpCurXodj = nullptr;		// character currently on the move
+	bool m_bSamePlace = false;			// both characters are in same place
+	bool m_bGameOver = false;			// game is over
 
-	CBitmap  *m_pOffScreenBmp;
-	CPalette *m_pPalOld;
-	HBITMAP   m_hOldBitmap;
+	CBitmap  *m_pOffScreenBmp = nullptr;
+	CPalette *m_pPalOld = nullptr;
+	HBITMAP   m_hOldBitmap = nullptr;
 
-	int m_iMishMoshLoc ;        // MG_LOC_xxxx -- Mish/Mosh location
+	int m_iMishMoshLoc = 0;				// MG_LOC_xxxx -- Mish/Mosh location
 
-	COLORREF m_cNodePenColor, m_cNodeBrushColor, m_cLinkPenColor ;
-	COLORREF m_cNodeSensitivityColor ;
-	COLORREF m_cNodePassThruColor, m_cNodeHeavyColor ;
-	COLORREF m_cSelNodePenColor, m_cSelNodeBrushColor ;
-	COLORREF m_cSelLinkPenColor ;
-	COLORREF m_cBackColor ;
-
-	char m_cEndData ;
+	COLORREF m_cNodePenColor = 0, m_cNodeBrushColor = 0, m_cLinkPenColor = 0;
+	COLORREF m_cNodeSensitivityColor = 0;
+	COLORREF m_cNodePassThruColor = 0, m_cNodeHeavyColor = 0;
+	COLORREF m_cSelNodePenColor = 0, m_cSelNodeBrushColor = 0;
+	COLORREF m_cSelLinkPenColor = 0;
+	COLORREF m_cBackColor = 0;
 
 	// constructor zeroes out all fields and allocates far arrays
 public:
 	void ClearData() {
-		memset(&m_cStartData,
-		       0, &m_cEndData - &m_cStartData) ;
+		*this = CGtlData();
 	}
 
 	// gtldcp.cpp -- decompiler for meta game
@@ -728,7 +717,7 @@ private:
 
 	void CheckForTransport(CXodj *, int);
 	void SetFurlongs(CXodj *);
-} ;
+};
 
 } // namespace Gtl
 } // namespace Metagame

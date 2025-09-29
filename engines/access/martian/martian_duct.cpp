@@ -223,9 +223,8 @@ void MartianDuct::applyMatrixToMapData() {
 void MartianDuct::updatePrimsAndDraw() {
 	int16 shapeZDepth[256];
 	int shapeIndexes[256];
-
-	for (uint i = 0; i < _renderShapes.size(); i++)
-		shapeZDepth[i] = INT16_MIN;
+	ARRAYCLEAR(shapeIndexes, -1);
+	ARRAYCLEAR(shapeZDepth, (int16)INT16_MIN);
 
 	for (uint shpNum = 0; shpNum < _renderShapes.size(); shpNum++) {
 		const Point3 &pt0 = _renderPoints[_renderShapes[shpNum]._pointIdxs[0]];
@@ -1206,7 +1205,7 @@ bool MartianDuct::checkMove10() {
 		if (_moveAngle != kMoveAngleNorth && _moveAngle != kMoveAngleWest)
 			return true;
 
-		_moveAngle = (MoveAngle)(_moveAngle - kMoveAngleEast);
+		_moveAngle = (MoveAngle)((_moveAngle - kMoveAngleEast) & 0xff);
 	}
 	_playerY = _nextPlayerY;
 	_playerX = _nextPlayerX;
@@ -1264,7 +1263,7 @@ bool MartianDuct::checkMove12() {
 		if (_moveAngle != kMoveAngleEast && _moveAngle != kMoveAngleNorth)
 			return true;
 
-		_moveAngle = (MoveAngle)(_moveAngle - kMoveAngleEast);
+		_moveAngle = (MoveAngle)((_moveAngle - kMoveAngleEast) & 0xff);
 	}
 	_playerY = _nextPlayerY;
 	_playerX = _nextPlayerX;

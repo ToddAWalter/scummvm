@@ -53,6 +53,7 @@
 #include "engines/wintermute/base/base_transition_manager.h"
 #include "engines/wintermute/base/base_sprite.h"
 #include "engines/wintermute/base/base_viewport.h"
+#include "engines/wintermute/base/base_access_mgr.h"
 #include "engines/wintermute/base/particles/part_emitter.h"
 #include "engines/wintermute/base/save_thumb_helper.h"
 #include "engines/wintermute/base/gfx/base_renderer.h"
@@ -207,7 +208,7 @@ bool AdGame::cleanup() {
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::initLoop() {
-	if (_scheduledScene && _transMgr->isReady()) {
+	if (_scheduledScene && _scheduledScene[0] && _transMgr->isReady()) {
 		changeScene(_scheduledScene, _scheduledFadeIn);
 		SAFE_DELETE_ARRAY(_scheduledScene);
 
@@ -299,7 +300,7 @@ bool AdGame::changeScene(const char *filename, bool fadeIn) {
 		}
 
 		bool ret;
-		if (_initialScene && _debugMode && _debugStartupScene) {
+		if (_initialScene && _debugMode && _debugStartupScene && _debugStartupScene[0]) {
 			_initialScene = false;
 			ret = _scene->loadFile(_debugStartupScene);
 		} else {
@@ -355,7 +356,7 @@ void AdGame::finishSentences() {
 			}
 		}
 	}
-	//Game->m_AccessMgr->Stop();
+	_game->_accessMgr->stop();
 }
 
 
@@ -1031,7 +1032,7 @@ ScValue *AdGame::scGetProperty(const char *name) {
 	// PrevSceneFilename / PreviousSceneFilename (RO)
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "PrevSceneFilename") == 0 || strcmp(name, "PreviousSceneFilename") == 0) {
-		if (!_prevSceneFilename) {
+		if (!_prevSceneFilename || !_prevSceneFilename[0]) {
 			_scValue->setString("");
 		} else {
 			_scValue->setString(_prevSceneFilename);
@@ -1043,7 +1044,7 @@ ScValue *AdGame::scGetProperty(const char *name) {
 	// LastResponse (RO)
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "LastResponse") == 0) {
-		if (!_responseBox || !_responseBox->_lastResponseText) {
+		if (!_responseBox || !_responseBox->_lastResponseText|| !_responseBox->_lastResponseText[0]) {
 			_scValue->setString("");
 		} else {
 			_scValue->setString(_responseBox->_lastResponseText);
@@ -1055,7 +1056,7 @@ ScValue *AdGame::scGetProperty(const char *name) {
 	// LastResponseOrig (RO)
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "LastResponseOrig") == 0) {
-		if (!_responseBox || !_responseBox->_lastResponseTextOrig) {
+		if (!_responseBox || !_responseBox->_lastResponseTextOrig || !_responseBox->_lastResponseTextOrig[0]) {
 			_scValue->setString("");
 		} else {
 			_scValue->setString(_responseBox->_lastResponseTextOrig);
@@ -1112,7 +1113,7 @@ ScValue *AdGame::scGetProperty(const char *name) {
 	// StartupScene
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "StartupScene") == 0) {
-		if (!_startupScene) {
+		if (!_startupScene || !_startupScene[0]) {
 			_scValue->setNULL();
 		} else {
 			_scValue->setString(_startupScene);
@@ -1546,9 +1547,9 @@ bool AdGame::persist(BasePersistenceManager *persistMgr) {
 
 	persistMgr->transferCharPtr(TMEMBER(_startupScene));
 
-	// TODO: update at next save version bump
-	//persistMgr->transferSint32(TMEMBER_INT(_videoSkipButton));
-	if (!persistMgr->getIsSaving()) {
+	if (persistMgr->checkVersion(1, 9, 1)) {
+		persistMgr->transferSint32(TMEMBER_INT(_videoSkipButton));
+	} else if (!persistMgr->getIsSaving()) {
 		_videoSkipButton = VIDEO_SKIP_LEFT;
 	}
 
@@ -2008,20 +2009,20 @@ bool AdGame::displayContent(bool doUpdate, bool displayAll) {
 		}
 
 		if (doUpdate || displayAll) {
-			//m_AccessMgr->DisplayBeforeGUI();
+			_accessMgr->displayBeforeGUI();
 
 			// display normal windows
 			displayWindows(false);
 
-			//m_AccessMgr->DisplayAfterGUI();
+			_accessMgr->displayAfterGUI();
 
 			setActiveObject(_game->_renderer->getObjectAt(p.x, p.y));
 
 			// textual info
-			//if (m_AccessGlobalPaused)
-			//	DisplaySentences(false);
-			//else
-			displaySentences(_state == GAME_FROZEN);
+			if (_accessGlobalPaused)
+				displaySentences(false);
+			else
+				displaySentences(_state == GAME_FROZEN);
 
 			showCursor();
 
@@ -2132,7 +2133,7 @@ bool AdGame::resetContent() {
 	_responsesGame.removeAll();
 
 	// reload inventory items
-	if (_itemsFile) {
+	if (_itemsFile && _itemsFile[0]) {
 		loadItemsFile(_itemsFile);
 	}
 
@@ -2254,28 +2255,28 @@ bool AdGame::renderShadowGeometry() {
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-/*CBObject *CAdGame::GetNextAccessObject(CBObject *CurrObject) {
-	CBObject *Ret = CBGame::GetNextAccessObject(CurrObject);
-	if (!Ret) {
-		if (m_ResponseBox && m_StateEx == GAME_WAITING_RESPONSE)
-			return m_ResponseBox->GetNextAccessObject(CurrObject);
-		if (m_Scene)
-			return m_Scene->GetNextAccessObject(CurrObject);
+BaseObject *AdGame::getNextAccessObject(BaseObject *currObject) {
+	BaseObject *ret = BaseGame::getNextAccessObject(currObject);
+	if (!ret) {
+		if (_responseBox && _stateEx == GAME_WAITING_RESPONSE)
+			return _responseBox->getNextAccessObject(currObject);
+		if (_scene)
+			return _scene->getNextAccessObject(currObject);
 	}
-	return Ret;
+	return ret;
 }
 
 //////////////////////////////////////////////////////////////////////////
-CBObject *CAdGame::GetPrevAccessObject(CBObject *CurrObject) {
-	CBObject *Ret = CBGame::GetPrevAccessObject(CurrObject);
-	if (!Ret) {
-		if (m_ResponseBox && m_StateEx == GAME_WAITING_RESPONSE)
-			return m_ResponseBox->GetPrevAccessObject(CurrObject);
-		if (m_Scene)
-			return m_Scene->GetPrevAccessObject(CurrObject);
+BaseObject *AdGame::getPrevAccessObject(BaseObject *currObject) {
+	BaseObject *ret = BaseGame::getPrevAccessObject(currObject);
+	if (!ret) {
+		if (_responseBox && _stateEx == GAME_WAITING_RESPONSE)
+			return _responseBox->getPrevAccessObject(currObject);
+		if (_scene)
+			return _scene->getPrevAccessObject(currObject);
 	}
-	return Ret;
-}*/
+	return ret;
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool AdGame::validMouse() {
@@ -2449,7 +2450,7 @@ bool AdGame::displayDebugInfo() {
 		Common::sprintf_s(str, "Mouse: %d, %d (scene: %d, %d)", _mousePos.x, _mousePos.y, _mousePos.x + (_scene ? _scene->getOffsetLeft() : 0), _mousePos.y + (_scene ? _scene->getOffsetTop() : 0));
 		_systemFont->drawText((byte *)str, 0, 90, _renderer->getWidth(), TAL_RIGHT);
 
-		Common::sprintf_s(str, "Scene: %s (prev: %s)", (_scene && _scene->_name) ? _scene->_name : "???", _prevSceneName ? _prevSceneName : "???");
+		Common::sprintf_s(str, "Scene: %s (prev: %s)", (_scene && _scene->_name && _scene->_name[0]) ? _scene->_name : "???", (_prevSceneName && _prevSceneName[0]) ? _prevSceneName : "???");
 		_systemFont->drawText((byte *)str, 0, 110, _renderer->getWidth(), TAL_RIGHT);
 	}
 	return BaseGame::displayDebugInfo();

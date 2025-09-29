@@ -41,19 +41,18 @@ struct EventHandlerType {
 	LEvent handler;
 	const char *name;
 } static const eventHandlerDescs[] = {
-	{ kEventPrepareMovie,		"prepareMovie" },
+	{ kEventPrepareMovie,		"prepareMovie" },		//					D6
 	{ kEventStartMovie,			"startMovie" },			//		D3
 	{ kEventStepMovie,			"stepMovie" },			//		D3
 	{ kEventStopMovie,			"stopMovie" },			//		D3
 
-	{ kEventNew,				"newSprite" },
-	{ kEventBeginSprite,		"beginSprite" },
-	{ kEventEndSprite,			"endSprite" },
+	{ kEventBeginSprite,		"beginSprite" },		//					D6
+	{ kEventEndSprite,			"endSprite" },			//					D6
 
 	{ kEventEnterFrame,			"enterFrame" },			//			D4
-	{ kEventPrepareFrame,		"prepareFrame" },
+	{ kEventPrepareFrame,		"prepareFrame" },		//					D6
 	{ kEventIdle,				"idle" },				//		D3
-	{ kEventStepFrame,			"stepFrame"},
+	{ kEventStepFrame,			"stepFrame"},			//				D5
 	{ kEventExitFrame,			"exitFrame" },			//			D4
 
 	{ kEventActivateWindow,		"activateWindow" },		//				D5
@@ -70,10 +69,10 @@ struct EventHandlerType {
 	{ kEventMouseDown,			"mouseDown" },			// D2 w	D3
 	{ kEventRightMouseDown,		"rightMouseDown" },		//				D5
 	{ kEventRightMouseUp,		"rightMouseUp" },		//				D5
-	{ kEventMouseEnter,			"mouseEnter" },
-	{ kEventMouseLeave,			"mouseLeave" },
-	{ kEventMouseUpOutSide,		"mouseUpOutSide" },
-	{ kEventMouseWithin,		"mouseWithin" },
+	{ kEventMouseEnter,			"mouseEnter" },			//					D6
+	{ kEventMouseLeave,			"mouseLeave" },			//					D6
+	{ kEventMouseUpOutSide,		"mouseUpOutSide" },		// 					D6
+	{ kEventMouseWithin,		"mouseWithin" },		//					D6
 
 	{ kEventTimeout,			"timeout" },			// D2 as when
 
@@ -129,8 +128,6 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 			spriteId = _score->getActiveSpriteIDFromPos(event.mousePos);
 		else
 			spriteId = _score->getMouseSpriteIDFromPos(event.mousePos);
-		_currentActiveSpriteId = _score->getActiveSpriteIDFromPos(event.mousePos); // the clickOn
-		_currentMouseSpriteId = _score->getMouseSpriteIDFromPos(event.mousePos);
 	}
 	// Very occasionally, we want to specify an event with a channel ID
 	// rather than infer it from the position. Allow it to override.
@@ -252,16 +249,15 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 					if (event.behaviorIndex >= 0) {
 						scriptId = sprite->_behaviors[event.behaviorIndex].memberID;
 						initializerParams = sprite->_behaviors[event.behaviorIndex].initializerParams;
-						warning("event: %d, ID: %s, initializerParams: '%s'", event.event, scriptId.asString().c_str(), initializerParams.c_str());
-
-						// TODO: instantiate the behavior script as a child and set its properties
-						// according to the list in initializerParams
 					} else {
+						_lastClickedSpriteId = 0;
 						return;
 					}
 				} else {
-					if (!sprite->_scriptId.member)
+					if (!sprite->_scriptId.member) {
+						_lastClickedSpriteId = 0;
 						return;
+					}
 
 					scriptId = sprite->_scriptId;
 				}
@@ -342,6 +338,16 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 			if (_score->_currentFrame == nullptr)
 				return;
 
+			if (_vm->getVersion() >= 600) {
+				if (_score->_scriptChannelScriptInstance.type == OBJECT) {
+					event.scriptType = kScoreScript;
+					event.scriptId = CastMemberID(); // No ID for the script channel script
+					event.scriptInstance = _score->_scriptChannelScriptInstance.u.obj;
+				}
+				return;
+			}
+
+			// Pre D6
 			CastMemberID scriptId = _score->_currentFrame->_mainChannels.actionId;
 			if (!scriptId.member)
 				return;
@@ -466,6 +472,11 @@ void Movie::queueEvent(Common::Queue<LingoEvent> &queue, LEvent event, int targe
 	// For mouseEnter/mouseLeave events, we want to specify exactly what sprite channel to resolve to.
 	case kEventMouseEnter:
 	case kEventMouseLeave:
+	case kEventPrepareFrame:
+	case kEventBeginSprite:
+	case kEventEndSprite:
+	case kEventMouseUpOutSide:	// D6+
+	case kEventMouseWithin:		// D6+
 		if (targetId != 0) {
 			channelId = targetId;
 		}
@@ -520,8 +531,12 @@ void Movie::queueEvent(Common::Queue<LingoEvent> &queue, LEvent event, int targe
 		case kEventRightMouseUp:
 		case kEventRightMouseDown:
 		case kEventBeginSprite:
+		case kEventEndSprite:
 		case kEventMouseEnter:
 		case kEventMouseLeave:
+		case kEventPrepareFrame:	// D6+
+		case kEventMouseUpOutSide:	// D6+
+		case kEventMouseWithin:		// D6+
 			if (_vm->getVersion() >= 600) {
 				if (pointedSpriteId != 0) {
 					Sprite *sprite = _score->getSpriteById(pointedSpriteId);
@@ -529,10 +544,15 @@ void Movie::queueEvent(Common::Queue<LingoEvent> &queue, LEvent event, int targe
 						// Generate event for each behavior, and pass through for all but the last one.
 						// This is to allow multiple behaviors on a single sprite to each have a
 						// chance to handle the event.
-						for (int i = 0; i < sprite->_behaviors.size(); i++) {
+						for (uint i = 0; i < sprite->_behaviors.size(); i++) {
 							bool passThrough = (i != sprite->_behaviors.size() - 1);
 							queue.push(LingoEvent(event, eventId, kSpriteHandler, passThrough, pos, channelId, i));
 						}
+					}
+
+					if (event == kEventBeginSprite || event == kEventEndSprite || event == kEventMouseUpOutSide) {
+						// These events do not go any further than the sprite behaviors
+						break;
 					}
 				} else {
 					// We have no sprite under the mouse, no SpriteHandler to queue.
@@ -554,7 +574,16 @@ void Movie::queueEvent(Common::Queue<LingoEvent> &queue, LEvent event, int targe
 		case kEventStartMovie:
 		case kEventStepMovie:
 		case kEventStopMovie:
-		case kEventPrepareMovie:
+
+		case kEventPrepareMovie:		// D6
+
+		case kEventActivateWindow:		// D5
+		case kEventDeactivateWindow:	// D5
+		case kEventMoveWindow:  		// D5
+		case kEventResizeWindow:  		// D5
+		case kEventOpenWindow:  		// D5
+		case kEventCloseWindow:  		// D5
+		case kEventZoomWindow:  		// D5
 			queue.push(LingoEvent(event, eventId, kMovieHandler, false, pos, channelId));
 			break;
 
@@ -575,6 +604,18 @@ void Movie::queueInputEvent(LEvent event, int targetId, Common::Point pos) {
 void Movie::processEvent(LEvent event, int targetId) {
 	Common::Queue<LingoEvent> queue;
 	queueEvent(queue, event, targetId);
+	_vm->setCurrentWindow(this->getWindow());
+	_lingo->processEvents(queue, false);
+}
+
+void Movie::broadcastEvent(LEvent event) {
+	Common::Queue<LingoEvent> queue;
+
+	for (uint i = 1; i < _score->_channels.size(); i++) {
+		if (_score->_channels[i] && _score->_channels[i]->_sprite && _score->_channels[i]->_sprite->_behaviors.size()) {
+			queueEvent(queue, event, i);
+		}
+	}
 	_vm->setCurrentWindow(this->getWindow());
 	_lingo->processEvents(queue, false);
 }
@@ -622,6 +663,9 @@ void Lingo::processEvents(Common::Queue<LingoEvent> &queue, bool isInputEvent) {
 		movie->_lastEventId[el.event] = el.eventId;
 
 		if (_vm->getVersion() >= 600) {
+			// Reset it for further event processing
+			g_director->getCurrentMovie()->_currentSpriteNum = 0;
+
 			// We need to execute all behaviours before deciding if we pass
 			// through or not
 			if (el.scriptType == kScoreScript && el.passByDefault == true) {
@@ -652,9 +696,14 @@ bool Lingo::processEvent(LEvent event, ScriptType st, CastMemberID scriptId, int
 
 
 	if (g_director->getVersion() >= 600 && st == kScoreScript && obj) {
-		push(Datum(obj));
-		LC::call(_eventHandlerTypes[event], 1, false);
-		return execute();
+		if (obj->getMethod(_eventHandlerTypes[event]).type != VOIDSYM) {
+			g_director->getCurrentMovie()->_currentSpriteNum = channelId;
+			push(Datum(obj));
+			LC::call(_eventHandlerTypes[event], 1, false);
+			return execute();
+		} else {
+			return true;
+		}
 	}
 
 	ScriptContext *script = g_director->getCurrentMovie()->getScriptContext(st, scriptId);
@@ -680,9 +729,24 @@ bool Lingo::processEvent(LEvent event, ScriptType st, CastMemberID scriptId, int
 	return true;
 }
 
+/***********************
+ * Script Instances
+ ***********************/
+
 void Score::killScriptInstances(int frameNum) {
 	if (_version < kFileVer600) // No-op for early Directors
 		return;
+
+	if (frameNum < _currentFrame->_mainChannels.scriptSpriteInfo.startFrame ||
+	    frameNum > _currentFrame->_mainChannels.scriptSpriteInfo.endFrame) {
+		if (_scriptChannelScriptInstance.type == OBJECT) {
+			_scriptChannelScriptInstance = Datum();
+			debugC(1, kDebugLingoExec, "Score::killScriptInstances(): Killed script instances for script channel. frame %d [%d-%d]",
+				frameNum,
+				_currentFrame->_mainChannels.scriptSpriteInfo.startFrame,
+				_currentFrame->_mainChannels.scriptSpriteInfo.endFrame);
+		}
+	}
 
 	for (int i = 0; i < (int)_channels.size(); i++) {
 		Channel *channel = _channels[i];
@@ -691,74 +755,126 @@ void Score::killScriptInstances(int frameNum) {
 			continue;
 
 		if (frameNum < channel->_startFrame || frameNum > channel->_endFrame) {
-			channel->_scriptInstanceList.clear();
-			channel->_startFrame = channel->_endFrame = -1;
+			bool prevDis = _disableGoPlayUpdateStage;
+			_disableGoPlayUpdateStage = true;
+			_movie->processEvent(kEventEndSprite, i);
+			_disableGoPlayUpdateStage = prevDis;
 
-			debugC(1, kDebugLingoExec, "Score::killScriptInstances(): Killed script instances for channel %d", i + 1);
+			channel->_scriptInstanceList.clear();
+			channel->_sprite->_behaviors.clear();
+			debugC(1, kDebugLingoExec, "Score::killScriptInstances(): Killed script instances for channel %d. frame %d [%d-%d]",
+					i + 1, frameNum, channel->_startFrame, channel->_endFrame);
+
+			channel->_startFrame = channel->_endFrame = -1;
 		}
 	}
 }
+
+Datum Score::createScriptInstance(BehaviorElement *behavior) {
+	// Instantiate the behavior
+	g_lingo->push(_movie->getScriptContext(kScoreScript, behavior->memberID));
+	LC::call("new", 1, true);
+	Datum instance = g_lingo->pop();
+
+	if (instance.type != OBJECT) {
+		warning("Score::createScriptInstance(): Could not instantiate behavior %s", behavior->toString().c_str());
+		return Datum();
+	}
+
+	debugC(1, kDebugLingoExec, "   Instantiated behavior %s", behavior->toString().c_str());
+
+	// No initializer, we are done
+	if (behavior->initializerIndex == 0)
+		return instance;
+
+	// Evaluate the params
+	g_lingo->push(behavior->initializerParams);
+	LB::b_value(1);
+	g_lingo->execute();
+
+	if (debugChannelSet(5, kDebugLingoExec)) {
+		g_lingo->printStack("  Parsed behavior parameters: ", 0);
+	}
+
+	if (g_lingo->_state->stack.size() == 0) {
+		warning("Score::createScriptInstance(): Could not evaluate initializer params '%s' for behavior %s",
+			behavior->initializerParams.c_str(), behavior->toString().c_str());
+		return instance;
+	}
+
+	Datum proplist = _lingo->pop();
+
+	if (proplist.type != PARRAY) {
+		warning("Score::createScriptInstance(): Could not evaluate initializer params '%s' for behavior %s",
+			behavior->initializerParams.c_str(), behavior->toString().c_str());
+		return instance;
+	}
+
+	debugC(2, kDebugLingoExec, "   Setting %d properties", proplist.u.parr->arr.size());
+
+	for (uint k = 0; k < proplist.u.parr->arr.size(); k++) {
+		Datum key = proplist.u.parr->arr[k].p;
+		Datum val = proplist.u.parr->arr[k].v;
+
+		instance.u.obj->setProp(key.asString(), val);
+	}
+
+	return instance;
+}
+
 
 void Score::createScriptInstances(int frameNum) {
 	if (_version < kFileVer600) // No-op for early Directors
 		return;
 
+	if (frameNum >= _currentFrame->_mainChannels.scriptSpriteInfo.startFrame &&
+	    frameNum <= _currentFrame->_mainChannels.scriptSpriteInfo.endFrame) {
+
+		// We have no instantiated script
+		if (_scriptChannelScriptInstance.type != OBJECT) {
+			if (_currentFrame->_mainChannels.behaviors.size() > 0) {
+				debugC(1, kDebugLingoExec, "Score::createScriptInstances(): Creating script instances for script channel, frames [%d-%d]",
+					_currentFrame->_mainChannels.scriptSpriteInfo.startFrame,
+					_currentFrame->_mainChannels.scriptSpriteInfo.endFrame);
+				_scriptChannelScriptInstance = createScriptInstance(&_currentFrame->_mainChannels.behaviors[0]);
+			}
+		}
+	}
+
 	for (int i = 0; i < (int)_channels.size(); i++) {
 		Channel *channel = _channels[i];
 		Sprite *sprite = channel->_sprite;
 
-		if (frameNum >= channel->_startFrame && frameNum <= channel->_endFrame) {
-			// We create scriptInstance only for new sprites
-			if (channel->_scriptInstanceList.size() == 0) {
-				if (sprite->_behaviors.size() > 0) {
-					for (uint j = 0; j < sprite->_behaviors.size(); j++) {
+		// The frame does not belong to the range
+		if (frameNum < channel->_startFrame || frameNum > channel->_endFrame)
+			continue;
 
-						// Instantiate the behavior
-						g_lingo->push(_movie->getScriptContext(kScoreScript, sprite->_behaviors[j].memberID));
-						LC::call("new", 1, true);
-						Datum inst = g_lingo->pop();
+		// We create scriptInstance only for new sprites
+		if (channel->_scriptInstanceList.size() != 0)
+			continue;
 
-						if (inst.type != OBJECT) {
-							warning("Score::createScriptInstances(): Could not instantiate behavior %s for channel %d",
-								sprite->_behaviors[j].toString().c_str(), i + 1);
-							continue;
-						}
+		// No behaviors, nothing to do
+		if (sprite->_behaviors.size() == 0)
+			continue;
 
-						channel->_scriptInstanceList.push_back(inst);
+		debugC(1, kDebugLingoExec, "Score::createScriptInstances(): Creating script instances for channel %d, %d behaviors, frames [%d-%d]",
+			i + 1, sprite->_behaviors.size(), channel->_startFrame, channel->_endFrame);
 
-						debugC(1, kDebugLingoExec, "Score::createScriptInstances(): Instantiated behavior %s for channel %d",
-							sprite->_behaviors[j].toString().c_str(), i + 1);
+		for (uint j = 0; j < sprite->_behaviors.size(); j++) {
+			Datum instance = createScriptInstance(&sprite->_behaviors[j]);
 
-						if (sprite->_behaviors[j].initializerIndex) {
-							// Evaluate the params
-							g_lingo->push(sprite->_behaviors[j].initializerParams);
-							if (debugChannelSet(2, kDebugLingoExec)) {
-								g_lingo->printStack("Stack before:", 0);
-							}
-							LB::b_value(1);
-
-							if (debugChannelSet(2, kDebugLingoExec)) {
-								g_lingo->printStack("Stack after", 0);
-							}
-
-							if (g_lingo->_state->stack.size() == 0) {
-								warning("Score::createScriptInstances(): Could not evaluate initializer params '%s' for behavior %s for channel %d",
-									sprite->_behaviors[j].initializerParams.c_str(), sprite->_behaviors[j].toString().c_str(), i + 1);
-								continue;
-							}
-
-							Datum proplist = _lingo->pop();
-
-							if (proplist.type != PARRAY) {
-								warning("Score::createScriptInstances(): Could not evaluate initializer params '%s' for behavior %s for channel %d",
-									sprite->_behaviors[j].initializerParams.c_str(), sprite->_behaviors[j].toString().c_str(), i + 1);
-								continue;
-							}
-						}
-					}
-				}
+			if (instance.type != OBJECT) {
+				warning("Score::createScriptInstances(): Could not instantiate behavior %s", sprite->_behaviors[j].toString().c_str());
+				continue;
 			}
+
+			channel->_scriptInstanceList.push_back(instance);
 		}
+
+		bool prevDis = _disableGoPlayUpdateStage;
+		_disableGoPlayUpdateStage = true;
+		_movie->processEvent(kEventBeginSprite, i);
+		_disableGoPlayUpdateStage = prevDis;
 	}
 }
 

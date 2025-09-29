@@ -39,6 +39,7 @@
 #include "engines/wintermute/base/base_sprite.h"
 #include "engines/wintermute/base/base_string_table.h"
 #include "engines/wintermute/base/base_game.h"
+#include "engines/wintermute/base/base_access_mgr.h"
 #include "engines/wintermute/base/gfx/base_renderer.h"
 #include "engines/wintermute/base/scriptables/script_value.h"
 #include "engines/wintermute/base/scriptables/script_stack.h"
@@ -322,28 +323,28 @@ bool UIEdit::saveAsText(BaseDynamicBuffer *buffer, int indent) {
 
 	buffer->putTextIndent(indent + 2, "\n");
 
-	if (_back && _back->_filename) {
+	if (_back && _back->_filename && _back->_filename[0]) {
 		buffer->putTextIndent(indent + 2, "BACK=\"%s\"\n", _back->_filename);
 	}
 
-	if (_image && _image->_filename) {
+	if (_image && _image->_filename && _image->_filename[0]) {
 		buffer->putTextIndent(indent + 2, "IMAGE=\"%s\"\n", _image->_filename);
 	}
 
-	if (_font && _font->_filename) {
+	if (_font && _font->_filename && _font->_filename[0]) {
 		buffer->putTextIndent(indent + 2, "FONT=\"%s\"\n", _font->_filename);
 	}
-	if (_fontSelected && _fontSelected->_filename) {
+	if (_fontSelected && _fontSelected->_filename && _fontSelected->_filename[0]) {
 		buffer->putTextIndent(indent + 2, "FONT_SELECTED=\"%s\"\n", _fontSelected->_filename);
 	}
 
-	if (_cursor && _cursor->_filename) {
+	if (_cursor && _cursor->_filename && _cursor->_filename[0]) {
 		buffer->putTextIndent(indent + 2, "CURSOR=\"%s\"\n", _cursor->_filename);
 	}
 
 	buffer->putTextIndent(indent + 2, "\n");
 
-	if (_text) {
+	if (_text && _text[0]) {
 		buffer->putTextIndent(indent + 2, "TEXT=\"%s\"\n", _text);
 	}
 
@@ -727,11 +728,11 @@ bool UIEdit::display(int offsetX, int offsetY) {
 
 	_game->_renderer->_rectList.add(new BaseActiveRect(_game, this, nullptr, offsetX + _posX, offsetY + _posY, _width, _height, 100, 100, false));
 
-/*	if (Game->m_AccessMgr->GetActiveObject() == this) {
+	if (_game->_accessMgr->getActiveObject() == this) {
 		Common::Rect32 rc;
-		SetRect(&rc, OffsetX + m_PosX, OffsetY + m_PosY, OffsetX + m_PosX + m_Width, OffsetY + m_PosY + m_Height);
-		Game->m_AccessMgr->SetHintRect(&rc, true);
-	}*/
+		BasePlatform::setRect(&rc, offsetX + _posX, offsetY + _posY, offsetX + _posX + _width, offsetY + _posY + _height);
+		_game->_accessMgr->setHintRect(&rc, true);
+	}
 
 	_game->_textEncoding = OrigEncoding;
 

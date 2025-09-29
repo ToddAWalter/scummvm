@@ -43,6 +43,8 @@ typedef void(*TimerProc)(
 typedef Common::KeyCode(*KeybindProc)(int key);
 typedef void (*FocusChangeProc)(CWnd *oldFocus, CWnd *newFocus);
 
+#define JOYSTICK_REST_POS 32767
+
 class WndList : public Common::List<CWnd *> {
 public:
 	bool contains(CWnd *wnd) const {
@@ -93,10 +95,10 @@ private:
 	TimerList _timers;
 	int _timerIdCtr = 0;
 	uint32 _nextFrameTime = 0;
-	Common::Point _joystickPos;
+	Common::Point _joystickPos = { JOYSTICK_REST_POS, JOYSTICK_REST_POS };
 	Common::Point _mousePos;
 	uint _joystickButtons = 0;
-	HOOKPROC _kbdHookProc = nullptr;
+	Array<HOOKPROC> _kbdHookProc;
 	int _idleCtr = 0;
 	KeybindProc _keybindProc = nullptr;
 	FocusChangeProc _focusChangeProc = nullptr;
@@ -244,12 +246,12 @@ public:
 	MMRESULT joyReleaseCapture(unsigned int uJoyID);
 
 	HHOOK HookKeyboard(HOOKPROC proc) {
-		_kbdHookProc = proc;
+		_kbdHookProc.push_back(proc);
 		return (HHOOK)proc;
 	}
 	void UnhookKeyboard(HHOOK hook) {
-		assert(_kbdHookProc && hook == (HHOOK)_kbdHookProc);
-		_kbdHookProc = nullptr;
+		assert(_kbdHookProc.contains((HOOKPROC)hook));
+		_kbdHookProc.remove((HOOKPROC)hook);
 	}
 
 	uintptr SetTimer(HWND hWnd, uintptr nIDEvent, unsigned int nElapse,

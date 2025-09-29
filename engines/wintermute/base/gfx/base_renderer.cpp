@@ -80,16 +80,16 @@ BaseObject *BaseRenderer::getObjectAt(int x, int y) {
 			if (_rectList[i]->_precise) {
 				// frame
 				if (_rectList[i]->_frame) {
-					int xx = (int)((_rectList[i]->_frame->getRect().left + x - _rectList[i]->_rect.left + _rectList[i]->_offsetX) / (float)((float)_rectList[i]->_zoomX / (float)100));
-					int yy = (int)((_rectList[i]->_frame->getRect().top  + y - _rectList[i]->_rect.top  + _rectList[i]->_offsetY) / (float)((float)_rectList[i]->_zoomY / (float)100));
+					int xx = (int)((_rectList[i]->_frame->_rect.left + x - _rectList[i]->_rect.left + _rectList[i]->_offsetX) / (float)((float)_rectList[i]->_zoomX / (float)100));
+					int yy = (int)((_rectList[i]->_frame->_rect.top + y - _rectList[i]->_rect.top + _rectList[i]->_offsetY) / (float)((float)_rectList[i]->_zoomY / (float)100));
 
 					if (_rectList[i]->_frame->_mirrorX) {
-						int width = _rectList[i]->_frame->getRect().right - _rectList[i]->_frame->getRect().left;
+						int width = _rectList[i]->_frame->_rect.right - _rectList[i]->_frame->_rect.left;
 						xx = width - xx;
 					}
 
 					if (_rectList[i]->_frame->_mirrorY) {
-						int height = _rectList[i]->_frame->getRect().bottom - _rectList[i]->_frame->getRect().top;
+						int height = _rectList[i]->_frame->_rect.bottom - _rectList[i]->_frame->_rect.top;
 						yy = height - yy;
 					}
 
@@ -153,6 +153,23 @@ bool BaseRenderer::setup3D(Camera3D *camera, bool force) {
 	return STATUS_FAILED;
 }
 #endif
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseRenderer::drawLine(int x1, int y1, int x2, int y2, uint32 color) {
+	return STATUS_FAILED;
+}
+
+//////////////////////////////////////////////////////////////////////////
+bool BaseRenderer::drawRect(int x1, int y1, int x2, int y2, uint32 color, int width) {
+	for (int i = 0; i < width; i++) {
+		drawLine(x1 + i, y1 + i, x2 - i,     y1 + i, color); // up
+		drawLine(x1 + i, y2 - i, x2 - i + 1, y2 - i, color); // down
+		
+		drawLine(x1 + i, y1 + i, x1 + i, y2 - i,     color); // left
+		drawLine(x2 - i, y1 + i, x2 - i, y2 - i + 1, color); // right
+	}
+	return STATUS_OK;
+}
 
 //////////////////////////////////////////////////////////////////////////
 bool BaseRenderer::fillRect(int x, int y, int w, int h, uint32 color) {

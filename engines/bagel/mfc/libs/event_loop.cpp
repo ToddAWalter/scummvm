@@ -191,8 +191,8 @@ bool EventLoop::GetMessage(MSG &msg) {
 
 		if (msg.hwnd) {
 			if ((msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) &&
-					_kbdHookProc) {
-				if (_kbdHookProc(HC_ACTION, msg.wParam, msg.lParam))
+					!_kbdHookProc.empty()) {
+				if (_kbdHookProc.front()(HC_ACTION, msg.wParam, msg.lParam))
 					msg.message = WM_NULL;
 			}
 		} else if (msg.message != WM_QUIT) {
@@ -224,9 +224,9 @@ void EventLoop::setMessageWnd(Common::Event &ev, HWND &hWnd) {
 			switch (ev.type) {
 			case Common::EVENT_JOYAXIS_MOTION:
 				if (ev.joystick.axis == 0)
-					_joystickPos.x = ev.joystick.position;
+					_joystickPos.x = ev.joystick.position + JOYSTICK_REST_POS;
 				else
-					_joystickPos.y = ev.joystick.position;
+					_joystickPos.y = ev.joystick.position + JOYSTICK_REST_POS;
 
 				joystickWin->SendMessage(MM_JOY1MOVE, JOYSTICKID1,
 					MAKELPARAM(_joystickPos.x, _joystickPos.y));
