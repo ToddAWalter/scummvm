@@ -539,15 +539,14 @@ void Movie::queueEvent(Common::Queue<LingoEvent> &queue, LEvent event, int targe
 		case kEventMouseWithin:		// D6+
 			if (_vm->getVersion() >= 600) {
 				if (pointedSpriteId != 0) {
-					Sprite *sprite = _score->getSpriteById(pointedSpriteId);
-					if (sprite) {
-						// Generate event for each behavior, and pass through for all but the last one.
-						// This is to allow multiple behaviors on a single sprite to each have a
-						// chance to handle the event.
-						for (uint i = 0; i < sprite->_behaviors.size(); i++) {
-							bool passThrough = (i != sprite->_behaviors.size() - 1);
-							queue.push(LingoEvent(event, eventId, kSpriteHandler, passThrough, pos, channelId, i));
-						}
+					Channel *channel = _score->_channels[channelId];
+
+					// Generate event for each behavior, and pass through for all but the last one.
+					// This is to allow multiple behaviors on a single sprite to each have a
+					// chance to handle the event.
+					for (uint i = 0; i < channel->_scriptInstanceList.size(); i++) {
+						bool passThrough = (i != channel->_scriptInstanceList.size() - 1);
+						queue.push(LingoEvent(event, eventId, kSpriteHandler, passThrough, pos, channelId, i));
 					}
 
 					if (event == kEventBeginSprite || event == kEventEndSprite || event == kEventMouseUpOutSide) {
@@ -772,7 +771,15 @@ void Score::killScriptInstances(int frameNum) {
 
 Datum Score::createScriptInstance(BehaviorElement *behavior) {
 	// Instantiate the behavior
-	g_lingo->push(_movie->getScriptContext(kScoreScript, behavior->memberID));
+	ScriptContext *scr = _movie->getScriptContext(kScoreScript, behavior->memberID);
+
+	// Some movies have behaviors with missing scripts
+	if (scr == nullptr) {
+		debugC(7, kDebugLingoExec, "Score::createScriptInstance(): Missing script for behavior %s", behavior->toString().c_str());
+		return Datum();
+	}
+
+	g_lingo->push(scr);
 	LC::call("new", 1, true);
 	Datum instance = g_lingo->pop();
 
@@ -864,7 +871,9 @@ void Score::createScriptInstances(int frameNum) {
 			Datum instance = createScriptInstance(&sprite->_behaviors[j]);
 
 			if (instance.type != OBJECT) {
-				warning("Score::createScriptInstances(): Could not instantiate behavior %s", sprite->_behaviors[j].toString().c_str());
+				if (!instance.isVoid())
+					warning("Score::createScriptInstances(): Could not instantiate behavior %s", sprite->_behaviors[j].toString().c_str());
+
 				continue;
 			}
 

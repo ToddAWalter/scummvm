@@ -215,11 +215,9 @@ CMainWindow::CMainWindow() {
 
 		MyFocusRect(pArtDC, colorBlock[i].rLocation, false);     // standard highlight on button
 
-		if (pMyBrush != nullptr) {                         // If the brush was constructed, delete it
-			pMyBrush->DeleteObject();
-			delete pMyBrush;
-			pMyBrush = nullptr;
-		}
+		pMyBrush->DeleteObject();
+		delete pMyBrush;
+		pMyBrush = nullptr;
 	}
 
 	statRect.SetRect(SIDE_BORDER + ART_WIDTH, TOP_BORDER,
@@ -344,7 +342,7 @@ void CMainWindow::DrawBeams(CDC *pDC) {
 	CPalette    *pPalOld = nullptr,                    // Pointer to old palette
 	             *pBigPalOld = nullptr;
 	CRect       rect;
-	CPoint      Start, End, Center;
+	CPoint      StartPt, EndPt, Center;
 	unsigned int    i;
 	int     radius;
 	float   degrees, x, y, radians, rads;
@@ -373,8 +371,8 @@ void CMainWindow::DrawBeams(CDC *pDC) {
 	x = (float)cos(0.0);
 	y = (float)sin(0.0);
 
-	Start.x = Center.x + (int)(x * radius);     // + radius
-	Start.y = Center.y  + (int)(y * radius);    //- radius;
+	EndPt.x = Center.x + (int)(x * radius);     // + radius
+	EndPt.y = Center.y  + (int)(y * radius);    //- radius;
 
 	for (i = 0; i < NUM_BEAMS; i++) {
 		degrees = ((float)(i + 1)) * (float)(360 / NUM_BEAMS);
@@ -385,8 +383,8 @@ void CMainWindow::DrawBeams(CDC *pDC) {
 		x = (float)cos(rads);
 		y = (float)sin(rads);
 
-		End.x = Center.x + (int)(x * radius);
-		End.y = Center.y + (int)(y * radius);
+		StartPt.x = Center.x + (int)(x * radius);
+		StartPt.y = Center.y + (int)(y * radius);
 
 		pMyPen = new CPen();                            // Construct new pen
 		(*pMyPen).CreatePen(PS_SOLID, 1, PALETTEINDEX((uint16)(i + START_ENTRY)));
@@ -395,26 +393,25 @@ void CMainWindow::DrawBeams(CDC *pDC) {
 		(*pMyBrush).CreateSolidBrush(PALETTEINDEX((uint16)(i + START_ENTRY)));
 		pOldBrush = (*pBigDC).SelectObject(pMyBrush);
 
-		(*pBigDC).Pie(&rect, End, Start);
+		(*pBigDC).Pie(&rect, StartPt, EndPt);
 
 		(*pBigDC).SelectObject(pOldPen);
-		if (pMyPen != nullptr) {                           // If the brush was constructed, delete it
-			pMyPen->DeleteObject();
-			delete pMyPen;
-			pMyPen = nullptr;
-		}
+
+		pMyPen->DeleteObject();
+		delete pMyPen;
+		pMyPen = nullptr;
+
 		(*pBigDC).SelectObject(pOldBrush);
-		if (pMyBrush != nullptr) {                         // If the brush was constructed, delete it
-			pMyBrush->DeleteObject();
-			delete pMyBrush;
-			pMyBrush = nullptr;
-		}
+
+		pMyBrush->DeleteObject();
+		delete pMyBrush;
+		pMyBrush = nullptr;
 
 		x = (float)cos(radians);
 		y = (float)sin(radians);
 
-		Start.x = Center.x + (int)(x * radius);
-		Start.y = Center.y + (int)(y * radius);
+		EndPt.x = Center.x + (int)(x * radius);
+		EndPt.y = Center.y + (int)(y * radius);
 	}
 
 	(*pDC).BitBlt(SIDE_BORDER, TOP_BORDER, ART_WIDTH, ART_HEIGHT, pBigDC, ART_WIDTH / 2, ART_HEIGHT / 2, SRCCOPY);
@@ -1222,9 +1219,13 @@ bool CMainWindow::LoadArtWork(CDC *pDC) {
 	inFile.getline(chNumEntries, sizeof(chNumEntries));     // read number of names in file
 	nNumEntries = atoi(chNumEntries);
 	pick = nLastPick;
+	assert(nNumEntries > 0);
+
 	while (pick == nLastPick) {
 		pick = (brand() % nNumEntries) + 1;
 	}
+
+	Common::strcpy_s(ArtName, "");
 	for (i = 0; i < pick; i++) {
 		if (!inFile.eof())
 			inFile.getline(ArtName, sizeof(ArtName));       // load a name
@@ -1306,21 +1307,17 @@ bool CMainWindow::LoadArtWork(CDC *pDC) {
 
 		MyFocusRect(pArtDC, colorBlock[i].rLocation, false);     // standard highlight on button
 
-		if (pMyBrush != nullptr) {                                 // If the brush was constructed, delete it
-			pMyBrush->DeleteObject();
-			delete pMyBrush;
-			pMyBrush = nullptr;
-		}
+		pMyBrush->DeleteObject();
+		delete pMyBrush;
+		pMyBrush = nullptr;
 	}
 
 	pBeaconBitmap = FetchResourceBitmap(pDC, nullptr, IDB_BEACON_BMP);          // Add the lighthouse
 
 	(*pDC).SelectPalette(pPalOld, false);
 
-	if (pTempPalette != nullptr) {
-		pTempPalette->DeleteObject();
-		delete pTempPalette;
-	}
+	pTempPalette->DeleteObject();
+	delete pTempPalette;
 
 	delete pSourceDoc;
 	pSourceDoc = nullptr;
@@ -1469,23 +1466,17 @@ void MyFocusRect(CDC *pDC, CRect rect, bool nPressed) {
 
 	(*pDC).SelectPalette(pPalOld, false);           // Select back the old palette
 
-	if (pMyBrush != nullptr) {                         // If the brush was constructed, delete it
-		pMyBrush->DeleteObject();
-		delete pMyBrush;
-		pMyBrush = nullptr;
-	}
+	pMyBrush->DeleteObject();
+	delete pMyBrush;
+	pMyBrush = nullptr;
 
-	if (pLitePen != nullptr) {                             // If the pen was constructed, delete it
-		pLitePen->DeleteObject();
-		delete pLitePen;
-		pLitePen = nullptr;
-	}
+	pLitePen->DeleteObject();
+	delete pLitePen;
+	pLitePen = nullptr;
 
-	if (pDarkPen != nullptr) {                             // If the pen was constructed, delete it
-		pDarkPen->DeleteObject();
-		delete pDarkPen;
-		pDarkPen = nullptr;
-	}
+	pDarkPen->DeleteObject();
+	delete pDarkPen;
+	pDarkPen = nullptr;
 
 } // End MyFocusRect()
 
