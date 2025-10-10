@@ -36,19 +36,17 @@
 namespace Wintermute {
 
 BaseSurfaceOpenGL3D::BaseSurfaceOpenGL3D(BaseGame *game, BaseRenderer3D *renderer)
-	: BaseSurface(game), _tex(0), _renderer(renderer), _imageData(nullptr), _maskData(nullptr), _texWidth(0), _texHeight(0), _pixelOpReady(false), _surfaceModified(false) {
+	: BaseSurface(game), _tex(0), _renderer(renderer), _imageData(nullptr), _maskData(nullptr), _texWidth(0), _texHeight(0), _pixelOpReady(false) {
 }
 
 BaseSurfaceOpenGL3D::~BaseSurfaceOpenGL3D() {
-	glDeleteTextures(1, &_tex);
 	_renderer->invalidateTexture(this);
-	_tex = 0;
-
-	if (_imageData) {
-		_imageData->free();
-		delete _imageData;
-		_imageData = nullptr;
+	if (_tex) {
+		glDeleteTextures(1, &_tex);
+		_tex = 0;
 	}
+
+	freeImageData();
 
 	if (_maskData) {
 		_maskData->free();
@@ -58,18 +56,15 @@ BaseSurfaceOpenGL3D::~BaseSurfaceOpenGL3D() {
 }
 
 bool BaseSurfaceOpenGL3D::invalidate() {
-	glDeleteTextures(1, &_tex);
 	_renderer->invalidateTexture(this);
-	_tex = 0;
-
-	if (_imageData) {
-		_imageData->free();
-		delete _imageData;
-		_imageData = nullptr;
+	if (_tex) {
+		glDeleteTextures(1, &_tex);
+		_tex = 0;
 	}
 
+	freeImageData();
+
 	_valid = false;
-	_surfaceModified = false;
 	return true;
 }
 
@@ -77,7 +72,11 @@ bool BaseSurfaceOpenGL3D::prepareToDraw() {
 	_lastUsedTime = _game->_liveTimer;
 
 	if (!_valid) {
-		loadImage();
+		if (!loadImage()) {
+			return false;
+		}
+		uploadTexture();
+		freeImageData();
 	}
 
 	return true;
@@ -129,7 +128,7 @@ bool BaseSurfaceOpenGL3D::displayTiled(int x, int y, Common::Rect32 rect, int nu
 	return true;
 }
 
-bool BaseSurfaceOpenGL3D::create(const char *filename, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime, bool keepLoaded) {
+bool BaseSurfaceOpenGL3D::create(const char *filename, bool texture2D, bool defaultCK, byte ckRed, byte ckGreen, byte ckBlue, int lifeTime, bool keepLoaded) {
 	if (defaultCK) {
 		ckRed = 255;
 		ckGreen = 0;
@@ -182,15 +181,13 @@ bool BaseSurfaceOpenGL3D::loadImage() {
 		return false;
 	}
 
+	_width = img.getSurface()->w;
+	_height = img.getSurface()->h;
+
 	bool needsColorKey = false;
 	bool replaceAlpha = true;
 
-	if (_imageData) {
-		_imageData->free();
-		delete _imageData;
-		_imageData = nullptr;
-	}
-
+	freeImageData();
 	_imageData = img.getSurface()->convertTo(Graphics::PixelFormat::createFormatRGBA32(), img.getPalette(), img.getPaletteCount());
 
 	if (filename.matchString("savegame:*g", true)) {
@@ -247,10 +244,6 @@ bool BaseSurfaceOpenGL3D::loadImage() {
 		}
 	}
 
-	putSurface(*_imageData);
-
-	/* TODO: Delete _imageData if we no longer need to access the pixel data? */
-
 	_valid = true;
 
 	return true;
@@ -262,7 +255,7 @@ bool BaseSurfaceOpenGL3D::create(int width, int height) {
 	_texWidth = Common::nextHigher2(width);
 	_texHeight = Common::nextHigher2(height);
 
-	if (!_valid) {
+	if (!_tex) {
 		glGenTextures(1, &_tex);
 	}
 	glBindTexture(GL_TEXTURE_2D, _tex);
@@ -277,17 +270,39 @@ bool BaseSurfaceOpenGL3D::putSurface(const Graphics::Surface &surface, bool hasA
 		_imageData = new Graphics::Surface();
 	}
 
-	if (_imageData && _imageData != &surface) {
+	if (_imageData != &surface) {
 		_imageData->copyFrom(surface);
 		writeAlpha(_imageData, _maskData);
 	}
 
 	_width = surface.w;
 	_height = surface.h;
+
+	uploadTexture();
+	freeImageData();
+
+	_valid = true;
+
+	return true;
+}
+
+void BaseSurfaceOpenGL3D::freeImageData() {
+	if (_imageData) {
+		_imageData->free();
+		delete _imageData;
+		_imageData = nullptr;
+	}
+}
+
+bool BaseSurfaceOpenGL3D::uploadTexture() {
+	if (!_imageData) {
+		return false;
+	}
+
 	_texWidth = Common::nextHigher2(_width);
 	_texHeight = Common::nextHigher2(_height);
 
-	if (!_valid) {
+	if (!_tex) {
 		glGenTextures(1, &_tex);
 	}
 	glBindTexture(GL_TEXTURE_2D, _tex);
@@ -298,7 +313,6 @@ bool BaseSurfaceOpenGL3D::putSurface(const Graphics::Surface &surface, bool hasA
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, GL_RGBA, GL_UNSIGNED_BYTE, _imageData->getPixels());
 	glBindTexture(GL_TEXTURE_2D, 0);
-	_valid = true;
 
 	return true;
 }
@@ -317,8 +331,6 @@ bool BaseSurfaceOpenGL3D::putPixel(int x, int y, byte r, byte g, byte b, byte a)
 	}
 
 	_imageData->setPixel(x, y, _imageData->format.ARGBToColor(a, r, g, b));
-
-	_surfaceModified = true;
 
 	return true;
 }
@@ -346,21 +358,25 @@ bool BaseSurfaceOpenGL3D::getPixel(int x, int y, byte *r, byte *g, byte *b, byte
 }
 
 bool BaseSurfaceOpenGL3D::startPixelOp() {
-	if (!prepareToDraw())
-		return false;
+	if (_pixelOpReady) {
+		return true;
+	}
+
+	if (!_valid || (_valid && !_imageData)) {
+		if (!loadImage()) {
+			return false;
+		}
+	}
+
+	_lastUsedTime = _game->_liveTimer;
+
 	_pixelOpReady = true;
 	return true;
 }
 
 bool BaseSurfaceOpenGL3D::endPixelOp() {
 	_pixelOpReady = false;
-	if (_surfaceModified) {
-		glBindTexture(GL_TEXTURE_2D, _tex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, GL_RGBA, GL_UNSIGNED_BYTE, _imageData->getPixels());
-		glBindTexture(GL_TEXTURE_2D, 0);
-		_surfaceModified = false;
-	}
+	uploadTexture();
 	return true;
 }
 

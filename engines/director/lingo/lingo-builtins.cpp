@@ -83,7 +83,7 @@ static const BuiltinProto builtins[] = {
 	{ "append",			LB::b_append,		2, 2, 400, HBLTIN_LIST },	//			D4 h
 	{ "count",			LB::b_count,		1, 1, 400, FBLTIN_LIST },	//			D4 f
 	{ "deleteAt",		LB::b_deleteAt,		2, 2, 400, HBLTIN_LIST },	//			D4 h
-	{ "deleteOne",		LB::b_deleteOne,	2, 2, 400, HBLTIN_LIST },	//			D4 h, undocumented?
+	{ "deleteOne",		LB::b_deleteOne,	2, 2, 400, HBLTIN_LIST },	//			D4 h, documented in D5
 	{ "deleteProp",		LB::b_deleteProp,	2, 2, 400, HBLTIN_LIST },	//			D4 h
 	{ "duplicate",		LB::b_duplicateList,1, 1, 500, FBLTIN_LIST },	//				D5 f
 	{ "findPos",		LB::b_findPos,		2, 2, 400, FBLTIN_LIST },	//			D4 f
@@ -122,6 +122,8 @@ static const BuiltinProto builtins[] = {
 	// Control
 	{ "abort",			LB::b_abort,		0, 0, 400, CBLTIN },	//			D4 c
 	{ "cancelIdleLoad",	LB::b_cancelIdleLoad,1, 1, 500, CBLTIN },	//				D5 c
+	{ "call",			LB::b_call,			-1,0, 200, CBLTIN },	// 					D6 c
+	{ "callAncestor",	LB::b_callAncestor,	-1,0, 200, CBLTIN },	// 					D6 c
 	{ "continue",		LB::b_continue,		0, 0, 200, CBLTIN },	// D2 c
 	{ "dontPassEvent",	LB::b_dontPassEvent,0, 0, 200, CBLTIN },	// D2 c
 	{ "delay",	 		LB::b_delay,		1, 1, 200, CBLTIN },	// D2 c
@@ -145,6 +147,7 @@ static const BuiltinProto builtins[] = {
 	{ "return",			LB::b_return,		0, 1, 200, CBLTIN },	// D2 f
 	{ "shutDown",		LB::b_shutDown,		0, 0, 200, CBLTIN },	// D2 c
 	{ "startTimer",		LB::b_startTimer,	0, 0, 200, CBLTIN },	// D2 c
+	{ "stopEvent",		LB::b_stopEvent,	0, 0, 600, CBLTIN },	//						D6 c
 		// when keyDown													// D2
 		// when mouseDown												// D2
 		// when mouseUp													// D2
@@ -169,6 +172,7 @@ static const BuiltinProto builtins[] = {
 	{ "printFrom",	 	LB::b_printFrom,	-1,0, 200, CBLTIN },	// D2 c
 	{ "put",			LB::b_put,			-1,0, 200, CBLTIN },	// D2
 		// set															// D2
+	{ "setPref",		LB::b_setPref,		2, 2, 600, CBLTIN },	// 					D6 c
 	{ "showGlobals",	LB::b_showGlobals,	0, 0, 200, CBLTIN },	// D2 c
 	{ "showLocals",		LB::b_showLocals,	0, 0, 200, CBLTIN },	// D2 c
 	// Score
@@ -194,6 +198,8 @@ static const BuiltinProto builtins[] = {
 	{ "puppetTransition",LB::b_puppetTransition,-1,0,200, CBLTIN },// D2 c
 	{ "ramNeeded",		LB::b_ramNeeded,	2, 2, 300, FBLTIN },	//		D3.1 f
 	{ "rollOver",		LB::b_rollOver,		1, 1, 200, FBLTIN },	// D2 f
+	{ "sendAllSprites",	LB::b_sendAllSprites,-1,0,600, CBLTIN },	// 					D6 c
+	{ "sendSprite",		LB::b_sendSprite,	-1,0, 600, CBLTIN },	// 					D6 c
 	{ "spriteBox",		LB::b_spriteBox,	5, 5, 200, CBLTIN },	// D2 c
 	{ "unLoad",			LB::b_unLoad,		0, 2, 300, CBLTIN },	//		D3.1 c
 	{ "unLoadCast",		LB::b_unLoadCast,	0, 2, 300, CBLTIN },	//		D3.1 c
@@ -219,6 +225,7 @@ static const BuiltinProto builtins[] = {
 	{ "union",			LB::b_union,		2, 2, 400, FBLTIN },	//			D4 f
 	// Sound
 	{ "beep",	 		LB::b_beep,			0, 1, 200, CBLTIN },	// D2
+	{ "isPastCuePoint",LB::b_isPastCuePoint,2, 2, 600, FBLTIN },	// 					D6 f
 	{ "mci",	 		LB::b_mci,			1, 1, 300, CBLTIN },	//		D3.1 c
 	{ "mciwait",		LB::b_mciwait,		1, 1, 300, CBLTIN },	//		D3.1 c
 	{ "sound",			LB::b_sound,		2, 3, 300, CBLTIN },	//		D3 c
@@ -243,12 +250,12 @@ static const BuiltinProto builtins[] = {
 	{ "windowPresent",	LB::b_windowPresent,1, 1, 500, FBLTIN },	//				D5 f
 	// Field operations
 	{ "charPosToLoc",	LB::b_charPosToLoc, 2, 2, 500, FBLTIN },	//				D5 f
+	{ "lineHeight",		LB::b_lineHeight,   2, 2, 500, FBLTIN },	//				D5 f
 	{ "linePosToLocV",	LB::b_linePosToLocV,2, 2, 500, FBLTIN },	//				D5 f
 	{ "locToCharPos",	LB::b_locToCharPos, 2, 2, 500, FBLTIN },	//				D5 f
 	{ "locVToLinePos",	LB::b_locVToLinePos, 2, 2, 500, FBLTIN },	//				D5 f
 	{ "scrollByLine",	LB::b_scrollByLine, 2, 2, 500, CBLTIN },	//				D5 c
 	{ "scrollByPage",	LB::b_scrollByPage, 2, 2, 500, CBLTIN },	//				D5 c
-	{ "lineHeight",		LB::b_lineHeight,   2, 2, 500, FBLTIN },	//				D5 f
 	// Chunk operations
 	{ "numberOfChars",	LB::b_numberofchars,1, 1, 300, FBLTIN },	//			D3 f
 	{ "numberOfItems",	LB::b_numberofitems,1, 1, 300, FBLTIN },	//			D3 f
@@ -260,6 +267,17 @@ static const BuiltinProto builtins[] = {
 	{ "trackStopTime",	LB::b_trackStopTime,1, 1, 500, FBLTIN },	//				D5 f
 	{ "trackType",		LB::b_trackType,	1, 1, 500, FBLTIN },	//				D5 f
 
+	// Save session
+	{ "beginRecording", LB::b_beginRecording,0, 1, 500, CBLTIN },	//				D5 c
+	{ "endRecording",	LB::b_endRecording,	 0, 0, 500, CBLTIN },	//				D5 c
+
+	// Shockwave
+	{ "externalParamCount", LB::b_externalParamCount, 0, 0, 600, FBLTIN }, //			D6 f
+	{ "externalParamName",  LB::b_externalParamName, 1, 1, 600, FBLTIN },  // 			D6 f
+	{ "externalParamValue", LB::b_externalParamValue, 1, 1, 600, FBLTIN },  // 			D6 f
+	{ "frameReady", LB::b_frameReady, 0, 2, 600, FBLTIN }, 			//					D6 f
+	{ "getPref", LB::b_getPref, 1, 1, 600, FBLTIN }, 				//					D6 f
+
 	// ScummVM Asserts: Used for testing ScummVM's Lingo implementation
 	{ "scummvmAssert",	LB::b_scummvmassert,1, 2, 200, HBLTIN },
 	{ "scummvmAssertEqual",	LB::b_scummvmassertequal,2,3,200,HBLTIN },
@@ -270,6 +288,156 @@ static const BuiltinProto builtins[] = {
 
 	{ nullptr, nullptr, 0, 0, 0, VOIDSYM }
 };
+
+/* These are related to Director Serrvices API, used by Xtras
+   to talk to Director. Unused in ScummVM. Leaving here for reference.
+
+   Media Info:
+   composite			//	D5
+   editableMedia		//			D7
+   image				//	D5
+   palette				//	D5
+   sound				//	D5
+   score				//	D5
+   scriptStyles			//		D6
+   text					//	D5
+   textSyles			//	D5
+
+   Media Format:
+   macColorTable		//	D5
+   macGWorld			//	D5
+   macPICT				//	D5
+   macSnd				//	D5
+   macTEStyles			//	D5
+   moaHandle			//	D5
+   moaPixels			//	D5
+   moaSound				//	D5
+   moaTEStyles			//	D5
+   winDIB				//	D5
+   winPALETTE			//	D5
+   winPICT				//	D5
+   winWAVE				//	D5
+
+   Frame properties:
+   palette				//	D5
+   paletteFrames		//	D5
+   paletteOverTime		//	D5
+   paletteRef			//	D5
+   paletteSpeed			//	D5
+   paletteTransitionType//	D5
+   script				//	D5
+   tempo				//	D5
+   transition			//	D5
+   waitClick			//	D5
+   waitDigitalVideo		//	D5
+   waitSeconds			//	D5
+   waitSound			//	D5
+
+   Palette properties:
+   fadeToBlack			//	D5
+   fadeToWhite			//	D5
+   normal				//	D5
+
+   Sound properties:
+   member				//	D5
+   scoreColor			//	D5
+
+   Sprite properties:
+   member				//	D5
+   scoreColor			//	D5
+   script				//	D5
+   scriptNum			//	D5
+   size					//	D5
+   loc					//	D5
+   foreColor			//	D5
+   color				//	D5
+   backColor			//	D5
+   bgColor				//			D7
+   ink					//	D5
+   trails				//	D5
+   moveableSprite		//	D5
+   editableText			//	D5
+   blend				//	D5
+   stretch				//	D5
+   tweened				//		D6
+
+   General properties:
+   authorMode			//	D5
+   folderName			//	D5
+   maxMember			//	D5
+   minMember			//	D5
+   memberCount			//	D5
+   modified				//	D5
+   name					//	D5
+   pathName				//	D5
+   preloadMode			//				D8
+   selectiomn			//	D5
+   soundDevice			//			D7
+   version				//	D5
+
+   Movie properties:
+   active3dRenderer		//				D8.5
+   activeCast			//	D5
+   activeCastLib		//	D5
+   bgStageColor			//			D7
+   castCount			//	D5
+   createName			//	D5
+   defaultColorDepth	//	D5
+   defaultPalette		//	D5
+   defaultStageRect		//	D5
+   editShortcutsEnabled	//				D8
+   enableFlashLingo		//				D8.5
+   enableInkmodeLimitations//			D8
+   frame				//	D5
+   instance				//	D5
+   lastChannel			//			D7
+   modified				//	D5
+   modifyName			//	D5
+   movieAboutInfo		//			D7
+   movieCopyrightInfo	//			D7
+   movieFileVersion		//				D8
+   movieImageCompression//				D8
+   movieImageQuality	//				D8
+   name					//	D5
+   okToQueryKeyboard	//				D8.5
+   pathName				//	D5
+   playing				//	D5
+   preferred3dRenderer	//				D8.5
+   remapPalettes		//	D5
+   scriptExecutionStyle	//					D10
+   safePlayer			//		D6
+   scoreSelection		//	D5
+   stageColor			//	D5
+   tempo				//	D5
+   tempoScaleFactor		//			D7
+   urlAdmin				//			D7
+   version				//	D5
+
+   Time Frame Prop:
+   label				//	D5
+   palette				//	D5
+   script				//	D5
+   tempo				//	D5
+   transition			//	D5
+
+   Host Info:
+   appFileSpec			//	D5
+
+   Types:
+	bitmap
+	button
+	digitalVideo
+	field
+	filmLoop
+	movie
+	ole
+	palette
+	richText
+	shape
+	script
+	sound
+	transition
+*/
 
 void Lingo::initBuiltIns() {
 	initBuiltIns(builtins);
@@ -886,26 +1054,25 @@ void LB::b_findPos(int nargs) {
 }
 
 void LB::b_findPosNear(int nargs) {
-	Common::String prop = g_lingo->pop().asString();
+	Datum prop = g_lingo->pop();
 	Datum list = g_lingo->pop();
 	Datum res;
-	TYPECHECK(list, PARRAY);
-
-	// FIXME: Integrate with compareTo framework
-	prop.toLowercase();
+	TYPECHECK2(list, PARRAY, ARRAY);
 
 	// This requires more testing, but D4-D6 test show that it does not work as described.
 	// The example:
 	//   findPosNear([#Nile:2, #Pharaoh:4, #Raja:0], #Ni)  supposed to return 1, for #Nile, but it returns 4
-	res = Datum((int)list.u.parr->arr.size() + 1); // Set it to the end of array by default
-
-	for (uint i = 0; i < list.u.parr->arr.size(); i++) {
-		Datum p = list.u.parr->arr[i].p;
-		Common::String tgt = p.asString();
-		tgt.toLowercase();
-		if (tgt.find(prop.c_str()) == 0) {
-			res.u.i = i + 1;
-			break;
+	if (list.type == PARRAY) {
+		res = Datum((int)list.u.parr->arr.size() + 1); // Set it to the end of array by default
+		int index = LC::compareArrays(list.u.parr->_sorted ? LC::geData : LC::eqData, list, prop, true).u.i;
+		if (index != 0) {
+			res = index;
+		}
+	} else if (list.type == ARRAY) {
+		res = prop; // set it to the returned value
+		int index = LC::compareArrays(list.u.farr->_sorted ? LC::geData : LC::eqData, list, prop, true).u.i;
+		if (index != 0) {
+			res = index;
 		}
 	}
 
@@ -1695,6 +1862,16 @@ void LB::b_abort(int nargs) {
 	g_lingo->_abort = true;
 }
 
+void LB::b_call(int nargs) {
+	g_lingo->printSTUBWithArglist("b_call", nargs);
+	g_lingo->dropStack(nargs);
+}
+
+void LB::b_callAncestor(int nargs) {
+	g_lingo->printSTUBWithArglist("b_callAncestor", nargs);
+	g_lingo->dropStack(nargs);
+}
+
 void LB::b_cancelIdleLoad(int nargs) {
 	g_lingo->printSTUBWithArglist("b_cancelIdleLoad", nargs);
 	g_lingo->dropStack(nargs);
@@ -1868,6 +2045,24 @@ void LB::b_play(int nargs) {
 
 void LB::b_playAccel(int nargs) {
 	g_lingo->printSTUBWithArglist("b_playAccel", nargs);
+
+/*
+	byFrame	Read one frame at a time from disk.
+	click		Stop and pass on mouse event.
+	clickStop	Stop and don't pass on mouse event.
+	loop		Play movie continuously.
+	noFlush		Prevents the current interactive movie from being
+				removed from memory when the Accelerator
+				document is loaded.
+	noSound		Don’t play sound.
+	noUpdate	Don’t update screen at end of movie.
+	playRect, l, t, r, b
+				Stop the movie when the pointer is moved outside the coordinates (left, top, right, bottom).
+	repeat, n 	Number of times to repeat.
+	sync		Attempt to play in sync with scan rate of monitor.
+	whatFits	Play only what fits into memory.
+	tempo, n	Set the tempo of the movie.
+*/
 
 	g_lingo->dropStack(nargs);
 }
@@ -2097,6 +2292,13 @@ void LB::b_startTimer(int nargs) {
 	g_director->getCurrentMovie()->_lastTimerReset = g_director->getMacTicks();
 }
 
+void LB::b_stopEvent(int nargs) {
+	warning("STUB: b_stopEvent");
+	// TEquivalent to the dontPassEvent command used in earlier
+	//versions of Director, this command also applies to sprite scripts.
+	g_lingo->_passEvent = false;
+}
+
 ///////////////////
 // Types
 ///////////////////
@@ -2263,6 +2465,11 @@ void LB::b_put(int nargs) {
 	} else {
 		debug("-- %s", output.c_str());
 	}
+	g_lingo->dropStack(nargs);
+}
+
+void LB::b_setPref(int nargs) {
+	g_lingo->printSTUBWithArglist("b_setPref", nargs);
 	g_lingo->dropStack(nargs);
 }
 
@@ -2477,31 +2684,21 @@ void LB::b_importFileInto(int nargs) {
 
 	CastMemberID memberID = *dst.u.cast;
 
-	if (!(file.matchString("*.pic") || file.matchString("*.pict"))) {
-		warning("LB::b_importFileInto : %s is not a valid PICT file", file.c_str());
+	Movie *movie = g_director->getCurrentMovie();
+	Score *score = movie->getScore();
+	Cast *cast = movie->getCast(memberID);
+	if (!cast) {
 		return;
 	}
 
 	Common::Path path = findPath(file);
-	Common::File in;
-	in.open(path);
-
-	if (!in.isOpen()) {
-		warning("b_importFileInto(): Cannot open file %s", path.toString().c_str());
+	if (path.empty()) {
+		warning("b_importFileInto(): couldn't find target file %s", file.c_str());
 		return;
 	}
 
-	Image::PICTDecoder *img = new Image::PICTDecoder();
-	img->loadStream(in);
-	in.close();
+	cast->importFileInto(memberID.member, path);
 
-	Movie *movie = g_director->getCurrentMovie();
-	Score *score = movie->getScore();
-	BitmapCastMember *bitmapCast = new BitmapCastMember(movie->getCast(), memberID.member, img);
-	movie->createOrReplaceCastMember(memberID, bitmapCast);
-	bitmapCast->setModified(true);
-	const Graphics::Surface *surf = img->getSurface();
-	bitmapCast->_size = surf->pitch * surf->h + img->getPalette().size() * 3;
 	score->refreshPointersForCastMemberID(dst.asMemberID());
 }
 
@@ -2871,9 +3068,23 @@ void LB::b_puppetPalette(int nargs) {
 void LB::b_puppetSound(int nargs) {
 
 	if (nargs < 1 || nargs >= 3) {
-		warning("b_puppetSound(): needs 1 or 2 args");
-		return;
+		warning("b_puppetSound(): needs 1 or 2 args, got %d", nargs);
+		if (nargs < 1)
+			return;
+		g_lingo->dropStack(nargs - 2);
 	}
+
+	// TODO
+	// Midi variant is similar to playAccel
+	//
+	// and contains these commands:
+	//
+	// midiBeat
+	// midiContinue
+	// midiSong
+	// midiSongpointer
+	// midiStart
+	// midiStop
 
 	DirectorSound *sound = g_director->getCurrentWindow()->getSoundManager();
 	Score *score = g_director->getCurrentMovie()->getScore();
@@ -3085,6 +3296,16 @@ void LB::b_rollOver(int nargs) {
 		res.u.i = 1; // TRUE
 
 	g_lingo->push(res);
+}
+
+void LB::b_sendAllSprites(int nargs) {
+	g_lingo->printSTUBWithArglist("b_sendAllSprites", nargs);
+	g_lingo->dropStack(nargs);
+}
+
+void LB::b_sendSprite(int nargs) {
+	g_lingo->printSTUBWithArglist("b_sendSprite", nargs);
+	g_lingo->dropStack(nargs);
 }
 
 void LB::b_spriteBox(int nargs) {
@@ -3502,6 +3723,12 @@ void LB::b_beep(int nargs) {
 	g_lingo->func_beep(repeat);
 }
 
+void LB::b_isPastCuePoint(int nargs) {
+	g_lingo->printSTUBWithArglist("b_isPastCuePoint", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
+}
+
 void LB::b_mci(int nargs) {
 	Datum d = g_lingo->pop();
 
@@ -3766,7 +3993,15 @@ void LB::b_window(int nargs) {
 
 	Common::String windowName = d.asString();
 	Window *window = g_director->getOrCreateWindow(windowName);
-	windowList->arr.push_back(Datum(window));
+	bool isNewWindow = true;
+	for (auto &it : windowList->arr) {
+		if (it.type == OBJECT && it.u.obj == window) {
+			isNewWindow = false;
+			break;
+		}
+	}
+	if (isNewWindow)
+		windowList->arr.push_back(Datum(window));
 
 	g_lingo->push(window);
 }
@@ -3895,6 +4130,8 @@ void LB::b_trackStopTime(int nargs) {
 void LB::b_trackType(int nargs) {
 	g_lingo->printSTUBWithArglist("b_trackType", nargs);
 	g_lingo->dropStack(nargs);
+	// Possible values are #video, #sound, #text, and #music
+	// also #timeCode is present but seemingly not used
 	Datum result("video");
 	result.type = SYMBOL;
 	g_lingo->push(result);
@@ -3952,6 +4189,54 @@ void LB::b_getVolumes(int nargs) {
 	d.u.farr->arr.push_back(Datum("Buried in Time\252 1"));
 
 	g_lingo->push(d);
+}
+
+void LB::b_beginRecording(int nargs) {
+	g_lingo->printSTUBWithArglist("b_beginRecording", nargs);
+	g_lingo->dropStack(nargs);
+}
+
+void LB::b_endRecording(int nargs) {
+	g_lingo->printSTUBWithArglist("b_endRecording", nargs);
+	g_lingo->dropStack(nargs);
+}
+
+// Shockwave D6
+void LB::b_externalParamCount(int nargs) {
+	g_lingo->printSTUBWithArglist("b_externalParamCount", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
+}
+
+void LB::b_externalParamName(int nargs) {
+	g_lingo->printSTUBWithArglist("b_externalParamName", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
+}
+
+void LB::b_externalParamValue(int nargs) {
+	g_lingo->printSTUBWithArglist("b_externalParamValue", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
+}
+
+void LB::b_frameReady(int nargs) {
+	g_lingo->printSTUBWithArglist("b_frameReady", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
+}
+
+void LB::b_getPref(int nargs) {
+	g_lingo->printSTUBWithArglist("b_getPref", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
+}
+
+void LB::b_netPresent(int nargs) {
+	// Once NETLINGO.X32 is implmemented, this should return 1
+	g_lingo->printSTUBWithArglist("b_netPresent", nargs);
+	g_lingo->dropStack(nargs);
+	g_lingo->push(Datum());
 }
 
 } // End of namespace Director

@@ -765,8 +765,7 @@ void BaseRenderOpenGL3D::setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode
 	}
 }
 
-bool BaseRenderOpenGL3D::stencilSupported() {
-	// assume that we have a stencil buffer
+bool BaseRenderOpenGL3D::shadowVolumeSupported() {
 	return true;
 }
 
@@ -1063,7 +1062,7 @@ void BaseRenderOpenGL3D::postfilter() {
 		 1.0f,  1.0f,
 		-1.0f,  1.0f
 	};
-	
+
 	GLfloat texCoords[] = {
 		0.0f, 0.0f,
 		1.0f, 0.0f,

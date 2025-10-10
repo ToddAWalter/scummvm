@@ -243,6 +243,7 @@ bool Script::execute(World *world, int loopCount, Common::String *inputText, Des
 				Operand *op = readOperand();
 				// TODO check op type is string.
 				_handled = true;
+				debugC(2, kDebugSound, "** Script sound '%s'", op->toString().c_str());
 				_engine->playSound(op->toString());
 				delete op;
 				byte d = _data->readByte();
@@ -639,9 +640,11 @@ enum {
 	kCompEqChrChr,
 	kCompEqSceneScene,
 	kCompEqStringTextInput,
+	kCompEqStringString,
 	kCompEqTextInputString,
 	kCompEqNumberTextInput,
 	kCompEqTextInputNumber,
+	kCompEqStringChr,
 	kCompLtNumNum,
 	kCompLtStringTextInput,
 	kCompLtTextInputString,
@@ -687,8 +690,10 @@ struct Comparator {
 	{ '=', SCENE, SCENE, kCompEqSceneScene },
 	{ '=', STRING, TEXT_INPUT, kCompEqStringTextInput },
 	{ '=', TEXT_INPUT, STRING, kCompEqTextInputString },
+	{ '=', STRING, STRING, kCompEqStringString },
 	{ '=', NUMBER, TEXT_INPUT, kCompEqNumberTextInput },
 	{ '=', TEXT_INPUT, NUMBER, kCompEqTextInputNumber },
+	{ '=', STRING, CHR, kCompEqStringChr },
 
 	{ '<', NUMBER, NUMBER, kCompLtNumNum },
 	{ '<', STRING, TEXT_INPUT, kCompLtStringTextInput },
@@ -756,6 +761,15 @@ bool Script::compare(Operand *o1, Operand *o2, int comparator) {
 					return true;
 		}
 		return false;
+	case kCompEqStringChr:
+		if (o2->_value.chr == NULL) {
+			debug(1, "%s() o2->_value.chr is null", __func__);
+		} else {
+			for (const auto &obj : o2->_value.chr->_inventory)
+				if (obj->_name.equalsIgnoreCase(*o1->_value.string))
+					return true;
+		}
+		return false;
 	case kCompEqChrChr:
 		return o1->_value.chr == o2->_value.chr;
 	case kCompEqSceneScene:
@@ -772,6 +786,14 @@ bool Script::compare(Operand *o1, Operand *o2, int comparator) {
 		}
 	case kCompEqTextInputString:
 		return compare(o2, o1, kCompEqStringTextInput);
+	case kCompEqStringString:
+		{
+			Common::String s1(*o1->_value.string), s2(*o2->_value.string);
+			s1.toLowercase();
+			s2.toLowercase();
+
+			return s1.contains(s2);
+		}
 	case kCompEqNumberTextInput:
 		if (_inputText == NULL) {
 			return false;
@@ -1242,7 +1264,7 @@ void Script::convertToText() {
 	ScriptText *scr = new ScriptText;
 	scr->offset = _data->pos();
 
-	while(true) {
+	while (true) {
 		int c = _data->readByte();
 
 		if (_data->eos())
@@ -1262,7 +1284,13 @@ void Script::convertToText() {
 					warning("convertToText: Unknown code 0x%02x at %d", c, (int)_data->pos());
 					c = ' ';
 				}
+
+				if (_data->eos())
+					break;
 			} while (c < 0x80);
+
+			if (_data->eos())
+				break;
 
 			_data->seek(-1, SEEK_CUR);
 		} else if (c == 0xff) {

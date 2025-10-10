@@ -146,7 +146,6 @@ static const PlainGameDescriptor wintermuteGames[] = {
 	{"reversion2",      "Reversion: The Meeting"},
 	{"reversion3",      "Reversion: The Return"},
 	{"rhiannon",        "Rhiannon: Curse of the four Branches"},
-	{"rhiannonghosts",  "Rhiannon: Ghosts of the Past"},
 	{"ritter",          "1 1/2 Ritter: Auf der Suche nach der hinreissenden Herzelinde"},
 	{"roadsantiago",    "The Road to Santiago"},
 	{"rosemary",        "Rosemary"},
@@ -284,11 +283,11 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Eight Squares in The Garden
 	WME_WINENTRY("8squares", "",
-		WME_ENTRY1s("data.dcp", "8788577bffe33ae059e13aa862dabd31", 29931982), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "8788577bffe33ae059e13aa862dabd31", 29931982), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_6),
 
 	// Actual Destination
 	WME_WINENTRY("actualdest", "",
-		WME_ENTRY1s("data.dcp", "6926f44b26f21ceb1d840eaab9aeb510", 9081740), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_11),
+		WME_ENTRY1s("data.dcp", "6926f44b26f21ceb1d840eaab9aeb510", 9081740), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_11),
 
 	// Alavi Detective - Murder of Miss Rojan (Persian) (Beta version -old version-, between 1387/12 to 1392/6)
 	WME_WINENTRY("alavi", "Beta version",
@@ -407,57 +406,57 @@ static const WMEGameDescription gameDescriptions[] = {
 	// Art of Murder: FBI Confidential (English)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "7e4c1dc8b1fb08541f7784d6288acfc8", 633692059,
-					"us.dcp", "4a02b65edc45444ac69ff8a514e952b8", 176592548), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_8_1),
+					"us.dcp", "4a02b65edc45444ac69ff8a514e952b8", 176592548), Common::EN_ANY, GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (French)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "bba4e56a66fd6406a26515cfc86ac125", 23782002,
-					"fr.dcp", "5665d84d70cb3e20472e1c3eb9d884c3", 125728694), Common::FR_FRA, ADGF_UNSTABLE | GF_3D, WME_1_8_1),
+					"fr.dcp", "5665d84d70cb3e20472e1c3eb9d884c3", 125728694), Common::FR_FRA, GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (German)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "09e57d77b68dafa73a0924f11f61b059", 630742753,
-					"i18n.dcp", "583940f6d3fb4097e7cb1e2cc9a43a7b", 156078991), Common::DE_DEU, ADGF_UNSTABLE | GF_3D, WME_1_8_1),
+					"i18n.dcp", "583940f6d3fb4097e7cb1e2cc9a43a7b", 156078991), Common::DE_DEU, GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (Italian)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "7e4c1dc8b1fb08541f7784d6288acfc8", 633692059,
-					"it.dcp", "c3c10399644a1e9f7e977df73fb017e0", 166794517), Common::IT_ITA, ADGF_UNSTABLE | GF_3D, WME_1_8_1),
+					"it.dcp", "c3c10399644a1e9f7e977df73fb017e0", 166794517), Common::IT_ITA, GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (Spanish)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "340f04f9f66a0ab978b78d317544bbed", 23757600,
-					"es.dcp", "47b3a609993b3c18ce5bfb1af734ea3e", 148997124), Common::ES_ESP, ADGF_UNSTABLE | GF_3D, WME_1_8_1),
+					"es.dcp", "47b3a609993b3c18ce5bfb1af734ea3e", 148997124), Common::ES_ESP, GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (Polish)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "592862a5dd1ae90d53561815a535ab2e", 630734278,
-					"i18n.dcp", "b43bd7b64991ad9d5d285753767fe3f4", 176591837), Common::PL_POL, ADGF_UNSTABLE | GF_3D, WME_1_8_1),
+					"i18n.dcp", "b43bd7b64991ad9d5d285753767fe3f4", 176591837), Common::PL_POL, GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (Russian)
 	WME_WINENTRY("artofmurder1", "",
 		WME_ENTRY2s("data.dcp", "4f383bd02fb0eea54e9b5825c3056b52", 23761530,
-					"ru.dcp", "57af214554547437c823a01f6cf51b24", 201702190), Common::RU_RUS, ADGF_UNSTABLE | GF_3D, WME_1_8_3),
+					"ru.dcp", "57af214554547437c823a01f6cf51b24", 201702190), Common::RU_RUS, GF_3D, WME_1_8_3),
 
 	// Art of Murder: FBI Confidential (English Demo)
 	WME_WINENTRY("artofmurder1", "Demo",
 		WME_ENTRY2s("data.dcp", "d0073ddf2b25527c83785ae7a0978867", 47676670,
-					"data.dcp", "d0073ddf2b25527c83785ae7a0978867", 47676670), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_8_1),
+					"data.dcp", "d0073ddf2b25527c83785ae7a0978867", 47676670), Common::EN_ANY, ADGF_DEMO | GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (Polish Demo)
 	WME_WINENTRY("artofmurder1", "Demo",
 		WME_ENTRY2s("data.dcp", "d0073ddf2b25527c83785ae7a0978867", 47676670,
-					"pl.dcp", "4dbc02aa9f67d22226d22dc0d837d20e", 49208405), Common::PL_POL, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_8_1),
+					"pl.dcp", "4dbc02aa9f67d22226d22dc0d837d20e", 49208405), Common::PL_POL, ADGF_DEMO | GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (German Demo 1)
 	WME_WINENTRY("artofmurder1", "Demo",
 		WME_ENTRY2s("data.dcp", "d7f3dd0e87e4904292d19778b8af2ed1", 47662172,
-					"de.dcp", "c0bbfee40b79af1f837a9f3f8fcef78c", 42741523), Common::DE_DEU, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_8_1),
+					"de.dcp", "c0bbfee40b79af1f837a9f3f8fcef78c", 42741523), Common::DE_DEU, ADGF_DEMO | GF_3D, WME_1_8_1),
 
 	// Art of Murder: FBI Confidential (German Demo 2)
 	WME_WINENTRY("artofmurder1", "Demo",
 		WME_ENTRY2s("data.dcp", "99d63dfee4ea97d31530649c929bee45", 81127581,
-					"de.dcp", "e97e2e18b26e5eff916c73f720d5f4f2", 17737492), Common::DE_DEU, ADGF_UNSTABLE | ADGF_DEMO | GF_3D, WME_1_8_1),
+					"de.dcp", "e97e2e18b26e5eff916c73f720d5f4f2", 17737492), Common::DE_DEU, ADGF_DEMO | GF_3D, WME_1_8_1),
 
 	// Awakening: Burning Ashes (Hayoola) (Persian)
 	WME_WINENTRY("awakening", "",
@@ -489,7 +488,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Boredom of Agustin Cordes
 	WME_WINENTRY("agustin", "",
-		WME_ENTRY1s("data.dcp", "abb79c16c9b92e9b06525a4c7c3f5861", 2461949), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "abb79c16c9b92e9b06525a4c7c3f5861", 2461949), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// Beyond the Threshold
 	WME_WINENTRY("bthreshold", "",
@@ -517,7 +516,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Book of Gron Part One
 	WME_WINENTRY("bookofgron", "",
-		WME_ENTRY1s("data.dcp", "e61b2ebee044a82fa0f8ca0fce2c8946", 83129531), Common::RU_RUS, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "e61b2ebee044a82fa0f8ca0fce2c8946", 83129531), Common::RU_RUS, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// Carol Reed 4 - East Side Story (English)
 	WME_WINENTRY("carolreed4", "",
@@ -917,7 +916,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// DFAF Adventure
 	WME_WINENTRY("dfafadventure", "",
-		WME_ENTRY1s("data.dcp", "5704ebef961176f647742aa66bd09352", 10083417), Common::EN_ANY, ADGF_UNSTABLE | GF_LOWSPEC_ASSETS, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "5704ebef961176f647742aa66bd09352", 10083417), Common::EN_ANY, GF_LOWSPEC_ASSETS, WME_1_9_1),
 
 	// Dirty Split (Czech)
 	WME_WINENTRY("dirtysplit", "",
@@ -953,7 +952,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Des Reves Elastiques Avec Mille Insectes Nommes Georges / Elastic Dreams with a Thousand Insects Named George
 	WME_WINENTRY("dreaming", "",
-		WME_ENTRY1s("data.dcp", "4af26d97ea063fc1277ce30ae431de90", 8804073), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "4af26d97ea063fc1277ce30ae431de90", 8804073), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_6),
 
 	// The Driller Incident (English)
 	WME_WINENTRY("driller", "",
@@ -977,7 +976,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Dreamcat
 	WME_WINENTRY("dreamcat", "",
-		WME_ENTRY1s("data.dcp", "189bd4eef29034f4ff4ed30120eaac4e", 7758040), Common::EN_ANY, ADGF_UNSTABLE | GF_LOWSPEC_ASSETS, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "189bd4eef29034f4ff4ed30120eaac4e", 7758040), Common::EN_ANY, GF_LOWSPEC_ASSETS, WME_1_9_1),
 
 	// Dreams (Demo)
 	WME_WINENTRY("dreams", "Demo",
@@ -990,7 +989,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// The Death of Erin Myers (Steam)
 	WME_WINENTRY("erinmyers", "Steam",
-		WME_ENTRY1s("data.dcp", "beebf574c043ebeedf23ac8df6e1f988", 245235110), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "beebf574c043ebeedf23ac8df6e1f988", 245235110), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// Escape from the Mansion
 	WME_WINENTRY("escapemansion", "Beta 1",
@@ -1075,7 +1074,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Four
 	WME_WINENTRY("four", "",
-		WME_ENTRY1s("data.dcp", "ec05cd5e37c9a524053b8859635a4234", 62599855), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "ec05cd5e37c9a524053b8859635a4234", 62599855), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// FoxTail 1.2.230.1291 (English)
 	WME_WINENTRY("foxtail", "1.2.230.1291",
@@ -1376,7 +1375,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Framed (Beta)
 	WME_WINENTRY("framed", "Beta",
-		WME_ENTRY1s("data.dcp", "e7259fb36f2c6f9f28242291e0c3de98", 34690568), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_8_11),
+		WME_ENTRY1s("data.dcp", "e7259fb36f2c6f9f28242291e0c3de98", 34690568), Common::EN_ANY, ADGF_DEMO, WME_1_8_11),
 
 	// Fred (English) (PreAlpha)
 	WME_WINENTRY("fred", "PreAlpha",
@@ -1526,11 +1525,11 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Hor v1.0
 	WME_WINENTRY("hor", "1.0",
-		WME_ENTRY1s("data.dcp", "ae94007f25a21143c028c1b7807dd907", 15077486), Common::UNK_LANG, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "ae94007f25a21143c028c1b7807dd907", 15077486), Common::UNK_LANG, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// Hor v1.3
 	WME_WINENTRY("hor", "1.3",
-		WME_ENTRY1s("data.dcp", "37b0abeb8651b82b9e6327bd10a18185", 15077486), Common::UNK_LANG, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "37b0abeb8651b82b9e6327bd10a18185", 15077486), Common::UNK_LANG, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// The Idiot's Tale (Steam, April 2018)
 	WME_WINENTRY("idiotstale", "1.0.2",
@@ -1723,19 +1722,19 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Klaymen Episodes: Pilot
 	WME_WINENTRY("klaymen1", "",
-		WME_ENTRY1s("data.dcp", "8a066d13d32567ca88a6918bfa3c01fa", 17086470), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "8a066d13d32567ca88a6918bfa3c01fa", 17086470), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_6),
 
 	// K'NOSSOS (Alpha Demo AKA Prologue 23.3RC7-E04)
 	WME_WINENTRY("knossos", "Alpha Demo",
-		WME_ENTRY1s("K'NOSSOS.exe", "694e488cc99bb78d2fe906f82d3ee9e1", 867516208), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_3),
+		WME_ENTRY1s("K'NOSSOS.exe", "694e488cc99bb78d2fe906f82d3ee9e1", 867516208), Common::EN_ANY, ADGF_DEMO, WME_1_9_3),
 
 	// K'NOSSOS (Prologue 29.18RC4-E05)
 	WME_WINENTRY("knossos", "Prologue",
-		WME_ENTRY1s("K'NOSSOS.exe", "694e488cc99bb78d2fe906f82d3ee9e1", 1482635116), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_3),
+		WME_ENTRY1s("K'NOSSOS.exe", "694e488cc99bb78d2fe906f82d3ee9e1", 1482635116), Common::EN_ANY, ADGF_DEMO, WME_1_9_3),
 
 	// K'NOSSOS (Prologue 30.21RC5-E05)
 	WME_WINENTRY("knossos", "Prologue",
-		WME_ENTRY1s("K'NOSSOS.exe", "694e488cc99bb78d2fe906f82d3ee9e1", 1654383903), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_3),
+		WME_ENTRY1s("K'NOSSOS.exe", "694e488cc99bb78d2fe906f82d3ee9e1", 1654383903), Common::EN_ANY, ADGF_DEMO, WME_1_9_3),
 
 	// Kulivocko (Czech)
 	WME_WINENTRY("kulivocko", "",
@@ -1939,7 +1938,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Paintaria
 	WME_WINENTRY("paintaria", "",
-		WME_ENTRY1s("data.dcp", "354c08440c98150ff0d4008dd2865880", 48326040), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "354c08440c98150ff0d4008dd2865880", 48326040), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// Palladion (Alpha6h)
 	WME_WINENTRY("palladion", "Alpha6h",
@@ -1967,7 +1966,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Pigeons in the Park
 	WME_WINENTRY("pigeons", "",
-		WME_ENTRY1s("data.dcp", "9143a5b6ff8206aefe3c4c643add3ec7", 2611100), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_1),
+		WME_ENTRY1s("data.dcp", "9143a5b6ff8206aefe3c4c643add3ec7", 2611100), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_1),
 
 	// Pizza Morgana (Demo)
 	WME_WINENTRY("pizzamorgana", "Demo",
@@ -2004,15 +2003,15 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Qajary Cat (Steam, November 2017) (English)
 	WME_WINENTRY("qajarycat", "",
-		WME_ENTRY1s("data.dcp", "3e47e3cd94133bdd5facf30ee84389ea", 447760816), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "3e47e3cd94133bdd5facf30ee84389ea", 447760816), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// Rebecca Carlson Mystery 01 - Silent Footsteps
 	WME_WINENTRY("rebeccacarlson1", "",
-		WME_ENTRY1s("data.dcp", "5fac4824b7ffdaee982dc18a45428182", 773144334), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "5fac4824b7ffdaee982dc18a45428182", 773144334), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_3),
 
 	// Rebecca Carlson Mystery 01 - Silent Footsteps (Demo)
 	WME_WINENTRY("rebeccacarlson1", "Demo",
-		WME_ENTRY1s("data.dcp", "a46c41edb1ae5e19a3e0fc5cac3ce83b", 212698165), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_3),
+		WME_ENTRY1s("data.dcp", "a46c41edb1ae5e19a3e0fc5cac3ce83b", 212698165), Common::EN_ANY, ADGF_DEMO, WME_1_9_3),
 
 	// On the Tracks of Dinosaurs (Beta 2.5) (English)
 	WME_WINENTRY("reptilesquest", "Beta 2.5",
@@ -4234,39 +4233,40 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// Rhiannon: Curse of the four Branches
 	WME_WINENTRY("rhiannon", "",
-		WME_ENTRY1s("data.dcp", "870f348900b735f1cc79c0608ce32b0e", 1046169851), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "870f348900b735f1cc79c0608ce32b0e", 1046169851), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_6),
 
 	// Rhiannon: Curse of the four Branches
 	WME_WINENTRY("rhiannon", "",
-		WME_ENTRY1s("data.dcp", "38e104ce1ebaf73e81446ab4344e1ad7", 1025512723), Common::DE_DEU, ADGF_UNSTABLE, WME_1_8_10),
+		WME_ENTRY1s("data.dcp", "38e104ce1ebaf73e81446ab4344e1ad7", 1025512723), Common::DE_DEU, ADGF_NO_FLAGS, WME_1_8_10),
 
 	// Rhiannon: Curse of the four Branches (English PC DVD)
 	WME_WINENTRY("rhiannon", "DVD",
-		WME_ENTRY1s("data.dcp", "6736bbc921bb6ce5161b3ad095a97bd4", 1053441028), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "6736bbc921bb6ce5161b3ad095a97bd4", 1053441028), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_6),
 
 	// Rhiannon: Curse of the four Branches (Premium Edition)
 	WME_WINENTRY("rhiannon", "Premium Edition",
-		WME_ENTRY1s("data.dcp", "8debcadeda038f43d9ca9b97d827e7f3", 928484275), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "8debcadeda038f43d9ca9b97d827e7f3", 928484275), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
+
+	// Rhiannon: Curse of the four Branches (Premium Edition) (German)
+	// AKA Rhiannon: Ghosts of the Past (Rhiannon: Geister der Vergangenheit)
+	WME_WINENTRY("rhiannon", "Premium Edition",
+		WME_ENTRY1s("data.dcp", "785d2fcea73508ea40a5b00869b12b03", 946473152), Common::DE_DEU, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// Rhiannon: Curse of The Four Branches (Demo: Chapter 1)
 	WME_WINENTRY("rhiannon", "Demo: Chapter 1",
-		WME_ENTRY1s("data.dcp", "d3b6ad94e9a8b29ca3cbda96c8857bd6", 72680676), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "d3b6ad94e9a8b29ca3cbda96c8857bd6", 72680676), Common::EN_ANY, ADGF_DEMO, WME_1_8_6),
 
 	// Rhiannon: Curse of The Four Branches (Demo: Chapter 5)
 	WME_WINENTRY("rhiannon", "Demo: Chapter 5",
-		WME_ENTRY1s("data.dcp", "88be3fa1389889b2079e54d780803a75", 88644508), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "88be3fa1389889b2079e54d780803a75", 88644508), Common::EN_ANY, ADGF_DEMO, WME_1_8_6),
 
 	// Rhiannon: Curse of The Four Branches (Demo 1)
 	WME_WINENTRY("rhiannon", "Demo 1",
-		WME_ENTRY1s("data.dcp", "5ee8d6684c374032a6baab4e40333c77", 95651432), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_8_6),
+		WME_ENTRY1s("data.dcp", "5ee8d6684c374032a6baab4e40333c77", 95651432), Common::EN_ANY, ADGF_DEMO, WME_1_8_6),
 
 	// Rhiannon: Curse of The Four Branches (Demo 2)
 	WME_WINENTRY("rhiannon", "Demo 2",
-		WME_ENTRY1s("data.dcp", "52f111205bf294e8630652981eb31c3d", 79687595), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_8_6),
-
-	// Rhiannon: Ghosts of the Past (Premium Edition)
-	WME_WINENTRY("rhiannonghosts", "Premium Edition",
-		WME_ENTRY1s("data.dcp", "785d2fcea73508ea40a5b00869b12b03", 946473152), Common::DE_DEU, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "52f111205bf294e8630652981eb31c3d", 79687595), Common::EN_ANY, ADGF_DEMO, WME_1_8_6),
 
 	// 1 1/2 Ritter: Auf der Suche nach der hinreissenden Herzelinde (German)
 	WME_WINENTRY("ritter", "",
@@ -4334,62 +4334,62 @@ static const WMEGameDescription gameDescriptions[] = {
 	// Shaban (Hayoola) (Persian)
 	WME_WINENTRY("shaban", "",
 		WME_ENTRY2s("data.dcp", "7d945a8219af9bf306980f526f2a885f", 589685802,
-					"persian.dcp", "395b6b13665f1afabaa51a4136c069e4", 12555497), Common::FA_IRN, ADGF_UNSTABLE, WME_1_9_2),
+					"persian.dcp", "395b6b13665f1afabaa51a4136c069e4", 12555497), Common::FA_IRN, ADGF_NO_FLAGS, WME_1_9_2),
 
 	// Shaban (Hayoola) (English)
 	WME_WINENTRY("shaban", "",
 		WME_ENTRY2s("data.dcp", "7d945a8219af9bf306980f526f2a885f", 589685802,
-					"data.dcp", "7d945a8219af9bf306980f526f2a885f", 589685802), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_2),
+					"data.dcp", "7d945a8219af9bf306980f526f2a885f", 589685802), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_2),
 
 	// Shaban (English)
-	// TODO: add checksum of localization.txt
 	WME_WINENTRY("shaban", "",
-		WME_ENTRY1s("data.dcp", "35f702ca9baabc5c620e0be230195c8a", 755388466), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_2),
+		WME_ENTRY2s("data.dcp", "35f702ca9baabc5c620e0be230195c8a", 755388466,
+					"localization.txt", "16b02da5787e433dd0461b0ad855380c", 5844), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_2),
 
 	// Shaban (Russian)
 	WME_WINENTRY("shaban", "",
 		WME_ENTRY2s("data.dcp", "e5636aa0244ed749eeaa5f820330e6e3", 755730897,
-					"localization.txt", "519f041b1ebf0c72c455d9747f9b12d2", 7412), Common::RU_RUS, ADGF_UNSTABLE, WME_1_9_2),
+					"localization.txt", "519f041b1ebf0c72c455d9747f9b12d2", 7412), Common::RU_RUS, ADGF_NO_FLAGS, WME_1_9_2),
 
 	// Shaban (English) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "7586c35bc43d06553a10e18a5a576fcc", 338067285,
-					"localization.txt", "16b02da5787e433dd0461b0ad855380c", 5844), Common::EN_ANY, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "16b02da5787e433dd0461b0ad855380c", 5844), Common::EN_ANY, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (German) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "2d20495860b7abd1c9190d425021ca5c", 6329), Common::DE_DEU, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "2d20495860b7abd1c9190d425021ca5c", 6329), Common::DE_DEU, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (Spanish) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "bb5ece9c042b031838549a2de215dc9c", 6233), Common::ES_ESP, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "bb5ece9c042b031838549a2de215dc9c", 6233), Common::ES_ESP, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (French) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "8f43b60d735ceee0fdb49cd86291596d", 6274), Common::FR_FRA, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "8f43b60d735ceee0fdb49cd86291596d", 6274), Common::FR_FRA, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (Italian) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "ffc7629568700d030602c9b065e27ce4", 5841), Common::IT_ITA, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "ffc7629568700d030602c9b065e27ce4", 5841), Common::IT_ITA, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (Japanese) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "cc1e9eb0ed1e78ff84439a4fdfa9cbf5", 6816), Common::JA_JPN, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "cc1e9eb0ed1e78ff84439a4fdfa9cbf5", 6816), Common::JA_JPN, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (Dutch) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "ce2330fad0157b4ad247d72e812cb8a0", 5806), Common::NL_NLD, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "ce2330fad0157b4ad247d72e812cb8a0", 5806), Common::NL_NLD, ADGF_DEMO, WME_1_9_2),
 
 	// Shaban (Portuguese) (Demo)
 	WME_WINENTRY("shaban", "Demo",
 		WME_ENTRY2s("data.dcp", "044d4ad8b9a079a99892fd7f7673076c", 181051276,
-					"localization.txt", "e69948ef75907fa591f4062b05470012", 5919), Common::PT_BRA, ADGF_UNSTABLE | ADGF_DEMO, WME_1_9_2),
+					"localization.txt", "e69948ef75907fa591f4062b05470012", 5919), Common::PT_BRA, ADGF_DEMO, WME_1_9_2),
 
 	// Stroke of Fate: Operation Valkyrie (English)
 	WME_WINENTRY("sof1", "",
@@ -5548,6 +5548,11 @@ static const WMEGameDescription gameDescriptions[] = {
 	WME_WINENTRY("tanya2", "",
 		WME_ENTRY1s("data.dcp", "9c15f14990f630177e063da885d03e6d", 936959767), Common::RU_RUS, ADGF_UNSTABLE, WME_1_8_3),
 
+	// Tanya Grotter and the Disappearing Floor
+	// TRAC report #16239
+	WME_WINENTRY("tanya2", "",
+		WME_ENTRY1s("data.dcp", "67013dfc94e4bbdc10d903c8da641575", 937147812), Common::RU_RUS, ADGF_UNSTABLE, WME_1_8_3),
+
 	// Tanya Grotter and the Disappearing Floor (Spanish fanmade)
 	// The same translation file is used for both games
 	WME_WINENTRY("tanya2", "",
@@ -5584,43 +5589,43 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// The Box
 	WME_WINENTRY("thebox", "",
-		WME_ENTRY1s("data.dcp", "ec5f0c7e8174e307701447b53afe7e2f", 108372483), Common::EN_ANY, ADGF_UNSTABLE, WME_1_8_11),
+		WME_ENTRY1s("data.dcp", "ec5f0c7e8174e307701447b53afe7e2f", 108372483), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_8_11),
 
 	// The Kite (Version 1.1)
 	WME_WINENTRY("thekite", "Version 1.1",
-		WME_ENTRY1s("data.dcp", "92d29428f464469bda2d81b03d4d5c3e", 47332296), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "92d29428f464469bda2d81b03d4d5c3e", 47332296), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.2.e) (English)
 	WME_WINENTRY("thekite", "Version 1.2.e",
-		WME_ENTRY1s("data.dcp", "92451578b1bdd2b32a1db592a4f6d5fc", 47360539), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "92451578b1bdd2b32a1db592a4f6d5fc", 47360539), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.2.i) (Italian)
 	WME_WINENTRY("thekite", "Version 1.2.i",
-		WME_ENTRY1s("data.dcp", "d3435b106a1b3b4c1df8ad596d271586", 47509274), Common::IT_ITA, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "d3435b106a1b3b4c1df8ad596d271586", 47509274), Common::IT_ITA, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.2.r) (Russian)
 	WME_WINENTRY("thekite", "Version 1.2.r",
-		WME_ENTRY1s("data.dcp", "d531e097dd884737469da014ed882cde", 47554582), Common::RU_RUS, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "d531e097dd884737469da014ed882cde", 47554582), Common::RU_RUS, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.3.e) (English)
 	WME_WINENTRY("thekite", "Version 1.3.e",
-		WME_ENTRY1s("data.dcp", "9761827b51370263b7623721545d7627", 47382987), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "9761827b51370263b7623721545d7627", 47382987), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.4.e) (English)
 	WME_WINENTRY("thekite", "Version 1.4.e",
-		WME_ENTRY1s("data.dcp", "b7b72a291c614ad45ae6a4e9c8d55f97", 47240677), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "b7b72a291c614ad45ae6a4e9c8d55f97", 47240677), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.4.f) (French)
 	WME_WINENTRY("thekite", "Version 1.4.f",
-		WME_ENTRY1s("data.dcp", "a1e2e8a1a0c54b2bd3f7a3b628e9483c", 47341826), Common::FR_FRA, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "a1e2e8a1a0c54b2bd3f7a3b628e9483c", 47341826), Common::FR_FRA, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.4.i) (Italian)
 	WME_WINENTRY("thekite", "Version 1.4.i",
-		WME_ENTRY1s("data.dcp", "69a58ff96306ec80114e0c4b3339a405", 47312894), Common::IT_ITA, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "69a58ff96306ec80114e0c4b3339a405", 47312894), Common::IT_ITA, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Kite (Version 1.4.r) (Russian)
 	WME_WINENTRY("thekite", "Version 1.4.r",
-		WME_ENTRY1s("data.dcp", "16618c3488b07fae5d00fb94c408d2b8", 47472358), Common::RU_RUS, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "16618c3488b07fae5d00fb94c408d2b8", 47472358), Common::RU_RUS, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Last Crown - Midnight Horror (Steam, Dec 2015) (English)
 	// NOTE: Same packages were reuploaded to Steam at October 2017
@@ -5694,7 +5699,7 @@ static const WMEGameDescription gameDescriptions[] = {
 
 	// War
 	WME_WINENTRY("war", "",
-		WME_ENTRY1s("data.dcp", "003e317cda6d0137bbd5e5d7f089ee4d", 32591890), Common::EN_ANY, ADGF_UNSTABLE, WME_1_9_1),
+		WME_ENTRY1s("data.dcp", "003e317cda6d0137bbd5e5d7f089ee4d", 32591890), Common::EN_ANY, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// The Way Of Love: Sub Zero (Retail) (Persian)
 	WME_WINENTRY("wayoflove", "",

@@ -364,17 +364,17 @@ void showDialogOptions(
 				selectedConv = 0;
 			else {
 				if (g_engine->_mouse->mouseClickX <= 280) {
-					if (g_engine->_mouse->mouseClickY >= 143 && g_engine->_mouse->mouseClickY <= 155) {
+					if (g_engine->_mouse->mouseClickY <= 155) {
 						selectedConv = firstChat;
-					} else if (g_engine->_mouse->mouseClickY >= 156 && g_engine->_mouse->mouseClickY <= 166) {
+					} else if (g_engine->_mouse->mouseClickY <= 166) {
 						selectedConv = firstChat + 1;
-					} else if (g_engine->_mouse->mouseClickY >= 167 && g_engine->_mouse->mouseClickY <= 177) {
+					} else if (g_engine->_mouse->mouseClickY <= 177) {
 						selectedConv = firstChat + 2;
-					} else if (g_engine->_mouse->mouseClickY >= 178 && g_engine->_mouse->mouseClickY <= 186) {
+					} else if (g_engine->_mouse->mouseClickY <= 186) {
 						selectedConv = firstChat + 3;
 					}
-				} else if (g_engine->_mouse->mouseClickX >= 281 && g_engine->_mouse->mouseClickX <= 319) {
-					if (g_engine->_mouse->mouseClickY >= 143 && g_engine->_mouse->mouseClickY <= 165) {
+				} else if (g_engine->_mouse->mouseClickX <= 319) {
+					if (g_engine->_mouse->mouseClickY <= 165) {
 						if (firstChat > 1) {
 							selectedConv = 0;
 							firstChat -= 1;
@@ -438,7 +438,7 @@ void talk(byte characterIndex) {
 		Common::List<uint> *linkedList = findDialogue(tree, characterIndex);
 		byte conversationIndex = 0;
 		l1 = linkedList->begin();
-		while (l1 != linkedList->end() && !g_engine->shouldQuit()) {
+		while (l1 != linkedList->end() && !g_engine->shouldQuit() && conversationIndex < 15) {
 			g_engine->_verbFile.seek(kVerbRegSize * (*l1));
 			conversationIndex += 1;
 			text = g_engine->readTextRegister();
@@ -544,8 +544,8 @@ void talkToSceneObject() {
 	g_engine->goToObject(g_engine->_currentRoomData->walkAreasGrid[(g_engine->_characterPosX + kCharacterCorrectionX) / kXGridCount][(g_engine->_characterPosY + kCharacerCorrectionY) / kYGridCount],
 			   g_engine->_currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
 
-	if (g_engine->_curObject.speaking > 0) {
-		talk(g_engine->_curObject.speaking);
+	if (g_engine->_curObject->speaking > 0) {
+		talk(g_engine->_curObject->speaking);
 	} else {
 		g_engine->readTextFile();
 		uint foo = 0;
@@ -581,7 +581,7 @@ void loadTalkAnimations() {
 	if ((g_engine->_currentRoomData->animationName != "PETER") && (g_engine->_currentRoomData->animationName != "ARZCAEL")) {
 		g_engine->_iframe2 = 0;
 		bool result;
-		switch (g_engine->_curObject.speaking) {
+		switch (g_engine->_curObject->speaking) {
 		case 1:
 			result = animFile.open("JOHN.SEC");
 			break;

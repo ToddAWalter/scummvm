@@ -63,6 +63,7 @@ GraphicsManager::~GraphicsManager() {
 	delete (_dosFont);
 	delete (_litt);
 	delete (_euro);
+	free(_textAreaBackground);
 }
 
 void GraphicsManager::restoreBackgroundArea(uint x, uint y, uint x2, uint y2) {
@@ -292,28 +293,22 @@ void GraphicsManager::updatePalette(byte paletteIndex) {
 	case 2: {
 		switch (paletteIndex) {
 		case 0:
+		case 4:
 			ip = 0;
 			break;
 		case 1:
+		case 3:
 			ip = 4;
 			break;
 		case 2:
 			ip = 8;
 			break;
-		case 3:
-			ip = 4;
-			break;
-		case 4:
-			ip = 0;
-			break;
 		case 5:
+		case 7:
 			ip = -4;
 			break;
 		case 6:
 			ip = -8;
-			break;
-		case 7:
-			ip = -4;
 			break;
 		}
 
@@ -446,6 +441,10 @@ void GraphicsManager::euroText(const Common::String &str, int x, int y, uint32 c
 		y = y - _euro->getFontHeight() / 2;
 	}
 	_euro->drawString(g_engine->_screen, str, x, y, 320, color, align);
+}
+
+int GraphicsManager::euroTextWidth(const Common::String &str) {
+	return (int)_euro->getBoundingBox(str).width();
 }
 
 void GraphicsManager::biosText(const Common::String &str, int x, int y, uint32 color) {

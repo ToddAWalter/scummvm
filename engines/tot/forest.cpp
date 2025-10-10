@@ -108,13 +108,11 @@ void saveExpression(Common::SeekableWriteStream *s, Common::String expression) {
 	int paddingSize = 255 - expression.size();
 	if (paddingSize > 0) {
 		debug("Writing padding of %d", paddingSize);
-		char *padding = (char *)malloc(paddingSize);
-		for (int i = 0; i < paddingSize; i++) {
-			padding[i] = '\0';
-		}
+		char *padding = new char[paddingSize];
+		memset(padding, '\0', paddingSize);
 		// 8 max char name
 		s->write(padding, paddingSize);
-		free(padding);
+		delete[] padding;
 	}
 }
 
@@ -149,16 +147,15 @@ void readTree(Common::SeekableReadStream &stream, Tree &a, uint position) {
 		do {
 			tmpExpression = tmpExpression + expresion[pos];
 		} while (expresion[pos++] != '@');
-		data.spoken = '0';
-		data.index = 0;
 
 		int nIndex = tmpExpression.find('N');
+		if (nIndex < 0)
+			break;
 		strInd = tmpExpression.substr(0, nIndex - 1);
 
 		data.spoken = tmpExpression[nIndex - 1];
 		data.index = atoi(strInd.c_str());
 
-		levelAsString = "";
 		levelAsString = tmpExpression.substr(nIndex + 1, tmpExpression.size() - nIndex - 2);
 		level = atoi(levelAsString.c_str());
 

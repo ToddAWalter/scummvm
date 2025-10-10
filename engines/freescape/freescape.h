@@ -72,6 +72,7 @@ enum FreescapeAction {
 	kActionMoveLeft,
 	kActionMoveRight,
 	kActionShoot,
+	kActionActivate,
 	kActionIncreaseAngle,
 	kActionDecreaseAngle,
 	kActionChangeStepSize,
@@ -152,6 +153,7 @@ public:
 	void pushEvent(Common::Event &event);
 	void clearExitEvents();
 	bool isActionActive(const Common::CustomEventType &action);
+	bool isKeyPressed();
 
 private:
 	// for continuous events (keyDown)
@@ -193,6 +195,7 @@ public:
 	bool isCPC() { return _gameDescription->platform == Common::kPlatformAmstradCPC; }
 	bool isC64() { return _gameDescription->platform == Common::kPlatformC64; }
 
+	virtual void beforeStarting();
 	Common::Error run() override;
 
 	// UI

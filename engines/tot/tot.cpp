@@ -49,6 +49,30 @@ TotEngine::TotEngine(OSystem *syst, const ADGameDescription *gameDesc) : Engine(
 	_rooms = nullptr;
 	_conversationData = nullptr;
 	_sceneObjectsData = nullptr;
+
+	for (uint dir = 0; dir < 4; dir++) {
+		for (uint frame = 0; frame < kWalkFrameCount + 30; frame++) {
+			_mainCharAnimation.bitmap[dir][frame] = nullptr;
+		}
+	}
+	for (uint dir = 0; dir < 4; dir++) {
+		for (uint frame = 0; frame < kWalkFrameCount + 30; frame++) {
+			_secondaryAnimation.bitmap[dir][frame] = nullptr;
+		}
+	}
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 4; j++) {
+			_niche[i][j] = 0;
+		}
+	}
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			_movementGridForSecondaryAnim[i][j] = 0;
+			_mouseGridForSecondaryAnim[i][j] = 0;
+			_maskGridSecondaryAnim[i][j] = 0;
+			_maskMouseSecondaryAnim[i][j] = 0;
+		}
+	}
 }
 
 TotEngine::~TotEngine() {
@@ -141,7 +165,6 @@ int TotEngine::engineStart() {
 	} else if (_continueGame && !shouldQuit()) {
 		resumeGame();
 	}
-
 	return startGame();
 }
 
@@ -157,7 +180,7 @@ void TotEngine::processEvents(bool &escapePressed) {
 		soundControls();
 		g_engine->_events->zeroEvents();
 	} else if (_events->_gameKey == KEY_SAVELOAD) {
-		if (ConfMan.getBool("original_save_load_screen"))
+		if (ConfMan.getBool("originalsaveload"))
 			originalSaveLoadScreen();
 		else
 			openMainMenuDialog();
@@ -292,8 +315,8 @@ void TotEngine::processEvents(bool &escapePressed) {
 						}
 					else
 						readObject(_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[_destinationX][_destinationY]]->fileIndex);
-					if (_curObject.lookAtTextRef > 0)
-						drawText(_curObject.lookAtTextRef);
+					if (_curObject->lookAtTextRef > 0)
+						drawText(_curObject->lookAtTextRef);
 					_actionCode = 0;
 				}
 				break;
@@ -392,8 +415,8 @@ void TotEngine::processEvents(bool &escapePressed) {
 					}
 				else
 					readObject(obj.fileIndex);
-				if (_curObject.lookAtTextRef > 0)
-					drawText(_curObject.lookAtTextRef);
+				if (_curObject->lookAtTextRef > 0)
+					drawText(_curObject->lookAtTextRef);
 				_actionCode = 0;
 			}
 		}
@@ -401,6 +424,9 @@ void TotEngine::processEvents(bool &escapePressed) {
 }
 
 int TotEngine::startGame() {
+	if (shouldQuit()) {
+		return 0;
+	}
 	_sound->fadeOutMusic();
 	switch (_gamePart) {
 	case 1:
@@ -422,7 +448,7 @@ int TotEngine::startGame() {
 		processEvents(escapePressed);
 		checkMouseGrid();
 		advanceAnimations(false, true);
-
+		if(shouldQuit()) break;
 		// Scene changes
 		if (_xframe2 == 0 && _roomChange) {
 			changeRoom();
@@ -932,47 +958,6 @@ void TotEngine::changeRoom() {
 	_oldTargetZone = 0;
 }
 
-void TotEngine::clearCurrentInventoryObject() {
-
-	_curObject.code = 0;
-	_curObject.height = 0;
-	_curObject.name = "";
-	_curObject.lookAtTextRef = 0;
-	_curObject.beforeUseTextRef = 0;
-	_curObject.afterUseTextRef = 0;
-	_curObject.pickTextRef = 0;
-	_curObject.useTextRef = 0;
-	_curObject.speaking = 0;
-	_curObject.openable = false;
-	_curObject.closeable = false;
-	for (int i = 0; i <= 7; i++)
-		_curObject.used[i] = 0;
-	_curObject.pickupable = false;
-	_curObject.useWith = 0;
-	_curObject.replaceWith = 0;
-	_curObject.depth = 0;
-	_curObject.bitmapPointer = 0;
-	_curObject.bitmapSize = 0;
-	_curObject.rotatingObjectAnimation = 0;
-	_curObject.rotatingObjectPalette = 0;
-	_curObject.dropOverlayX = 0;
-	_curObject.dropOverlayY = 0;
-	_curObject.dropOverlay = 0;
-	_curObject.dropOverlaySize = 0;
-	_curObject.objectIconBitmap = 0;
-	_curObject.xgrid1 = 0;
-	_curObject.ygrid1 = 0;
-	_curObject.xgrid2 = 0;
-	_curObject.ygrid2 = 0;
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			_curObject.walkAreasPatch[i][j] = 0;
-			_curObject.mouseGridPatch[i][j] = 0;
-		}
-	}
-	_cpCounter2 = _cpCounter;
-}
-
 /**
  * Originally the Room file contains 8 copies of each room, one for every save plus the baseline (which is 0).
  * To put this into memory we need to get the baseline of each room and then put them continuously in a byte stream.addr
@@ -1159,6 +1144,11 @@ void TotEngine::clearVars() {
 		delete _sceneObjectsData;
 	}
 
+	if(_curObject != nullptr) {
+		delete _curObject;
+		_curObject = nullptr;
+	}
+
 	if (_currentRoomData) {
 		delete _currentRoomData;
 	}
@@ -1242,7 +1232,7 @@ void TotEngine::mainMenu(bool fade) {
 					}
 				} else if (x >= 18 && x <= 145) {
 					_isSavingDisabled = true;
-					if (ConfMan.getBool("original_save_load_screen")) {
+					if (ConfMan.getBool("originalsaveload")) {
 						originalSaveLoadScreen();
 						validOption = true;
 					} else {
@@ -1260,7 +1250,7 @@ void TotEngine::mainMenu(bool fade) {
 					_startNewGame = false;
 					validOption = true;
 					_continueGame = true;
-				} else if (x > 173 && y < 288) {
+				} else if (x > 173 && x < 288) {
 					exitToDOS();
 				}
 			}
@@ -1272,12 +1262,11 @@ void TotEngine::mainMenu(bool fade) {
 
 void exitGame() {
 	g_engine->_graphics->clear();
-	g_system->quit();
+	g_engine->quitGame();
 }
 
 void TotEngine::clearGame() {
 	resetGameState();
-	clearAnims();
 	clearVars();
 }
 
@@ -1309,25 +1298,24 @@ void TotEngine::exitToDOS() {
 		if (_events->_escKeyFl) {
 			exitChar = '\33';
 		} else if (_events->_gameKey == KEY_YES) {
-			debug("would exit game now");
-			free(dialogBackground);
 			exitGame();
 		} else if (_events->_gameKey == KEY_NO) {
 			exitChar = '\33';
 		}
-
-		if (_events->_leftMouseButton) {
+		else if (_events->_leftMouseButton) {
 			uint x = g_engine->_mouse->mouseClickX;
 			if (x < 145) {
-				free(dialogBackground);
-				g_system->quit();
+				exitGame();
 			} else if (x > 160) {
 				exitChar = '\33';
 			}
 		}
 		_screen->update();
 	} while (exitChar != '\33' && !shouldQuit());
-	debug("finished exitToDos");
+	if (shouldQuit()) {
+		free(dialogBackground);
+		return;
+	}
 	_graphics->putImg(58, 48, dialogBackground);
 	_mouse->mouseX = oldMousePosX;
 	_mouse->mouseY = oldMousePosY;

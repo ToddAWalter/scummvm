@@ -86,9 +86,9 @@ private:
 	void displayLoading();
 	void runaroundRed();
 	void sprites(bool drawCharacter);
-	void saveGameToRegister();
+	SavedGame *saveGameToRegister();
 	void originalSaveLoadScreen();
-	void loadGame(SavedGame game);
+	void loadGame(SavedGame *game);
 
 	RoomFileRegister *readScreenDataFile(Common::SeekableReadStream *screenDataFile);
 	void lookAtObject(byte objectNumber);
@@ -108,7 +108,7 @@ private:
 	void updateMainCharacterDepth();
 	void actionLineText(const Common::String &actionLine);
 	void initializeObjectFile();
-	void saveObjectsData(ScreenObject object, Common::SeekableWriteStream *objectDataStream);
+	void saveObjectsData(ScreenObject *object, Common::SeekableWriteStream *out);
 	void scrollLeft(uint horizontalPos);
 	void scrollRight(uint horizontalPos);
 	TextEntry readTextRegister(uint numRegister);
@@ -121,7 +121,7 @@ private:
 	void updateVideo();
 	void nicheAnimation(byte nicheDir, int32 bitmap);
 	void replaceBackpack(byte obj1, uint obj2);
-	void dropObjectInScreen(ScreenObject replacementObject);
+	void dropObjectInScreen(ScreenObject *replacementObject);
 	void calculateTrajectory(uint finalX, uint finalY);
 	void animatedSequence(uint numSequence);
 	void initScreenPointers();
@@ -143,8 +143,8 @@ private:
 	void freeInventory();
 	void updateInventory(byte index);
 	void updateObject(uint filePos);
-	void readObject(Common::SeekableReadStream *stream, uint objPos, ScreenObject &thisRegObj);
-	void saveObject(ScreenObject object, Common::SeekableWriteStream *stream);
+	void readObject(Common::SeekableReadStream *stream, uint objPos, ScreenObject *thisRegObj);
+	void saveObject(ScreenObject *object, Common::SeekableWriteStream *stream);
 	void saveItemRegister();
 
 	void saveTemporaryGame();
@@ -157,7 +157,7 @@ private:
 	void introduction();
 	void firstIntroduction();
 	void readAlphaGraph(Common::String &data, int length, int x, int y, byte barColor);
-	void readAlphaGraphSmall(Common::String &data, int length, int x, int y, byte barColor, byte textColor, char startChar = '\0');
+	void readAlphaGraphSmall(Common::String &data, int length, int x, int y, byte barColor, byte textColor, Common::Event startEvent);
 	void displayObjectDescription(const Common::String &text);
 	void copyProtection();
 	void initialLogo();
@@ -174,7 +174,6 @@ private:
 	void clearGame();
 
 	// vars
-	void clearCurrentInventoryObject();
 	void initVars();
 	void resetGameState();
 	void clearVars();
@@ -235,7 +234,7 @@ public:
 	/**
 	 * Keeps an array of all inventory icon bitmaps
 	 */
-	byte *_inventoryIconBitmaps[kInventoryIconCount];
+	byte *_inventoryIconBitmaps[kInventoryIconCount] = { nullptr };
 	/**
 	 * Position within inventory
 	 */
@@ -244,9 +243,9 @@ public:
 	 * Animation sequences
 	 */
 	CharacterAnim _mainCharAnimation;
-	uint _mainCharFrameSize;
+	uint _mainCharFrameSize = 0;
 	SecondaryAnim _secondaryAnimation;
-	uint _secondaryAnimFrameSize;
+	uint _secondaryAnimFrameSize = 0;
 	/**
 	 * Currently selected action.
 	 */
@@ -341,7 +340,7 @@ public:
 
 	RoomFileRegister *_currentRoomData = nullptr;
 
-	ScreenObject _curObject;
+	ScreenObject *_curObject = nullptr; // Currently selected object in the screen
 	/**
 	 * New movement to execute.
 	 */
@@ -424,29 +423,29 @@ public:
 	/**
 	 * Bitmaps of screenobjects
 	 */
-	byte *_screenLayers[kNumScreenOverlays];
+	byte *_screenLayers[kNumScreenOverlays] =  { nullptr };
 	/**
 	 * Current frame of main character
 	 */
-	byte *_curCharacterAnimationFrame;
+	byte *_curCharacterAnimationFrame = nullptr;
 	/**
 	 * Current frame of secondary animation
 	 */
-	byte *_curSecondaryAnimationFrame;
+	byte *_curSecondaryAnimationFrame = nullptr;
 
 	/**
 	 * Pointer storing the screen as it displays on the game
 	 */
-	byte *_sceneBackground;
+	byte *_sceneBackground = nullptr;
 
 	/**
 	 * Dirty patch of screen to repaint on every frame
 	 */
-	byte *_characterDirtyRect;
+	byte *_characterDirtyRect = nullptr;
 	/**
 	 * Stores a copy of the background bitmap
 	 */
-	byte *_backgroundCopy;
+	byte *_backgroundCopy = nullptr;
 
 	uint _currentRoomNumber = 0;
 
@@ -459,8 +458,6 @@ public:
 	 */
 	uint _oldGridX = 0, _oldGridY = 0;
 
-	SavedGame _savedGame;
-
 	uint _curDepth = 0;
 	/**
 	 * Point of origin of the area surrounding the main character.
@@ -472,7 +469,7 @@ public:
 	 * Calculated using the position of the character + dimension
 	 */
 	uint _dirtyMainSpriteX2 = 0, _dirtyMainSpriteY2 = 0;
-	byte *_spriteBackground;
+	byte *_spriteBackground = nullptr;
 public:
 	TotEngine(OSystem *syst, const ADGameDescription *gameDesc);
 	~TotEngine() override;
@@ -510,6 +507,8 @@ public:
 	void clearAnimation();
 	void buttonBorder(uint x1, uint y1, uint x2, uint y2, byte color1, byte color2, byte color3, byte color4, byte color5);
 	void drawMenu(byte menuNumber);
+	void drawLeftArrow(uint x, uint y);
+	void drawRightArrow(uint x, uint y);
 	void readTextFile();
 	void loadAnimationForDirection(Common::SeekableReadStream *stream, int direction);
 	void sayLine(uint textRef, byte textColor, byte shadowColor, uint &responseNumber, bool isWithinConversation);

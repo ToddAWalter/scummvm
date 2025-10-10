@@ -18,6 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include "backends/keymapper/keymapper.h"
 #include "common/config-manager.h"
 #include "common/savefile.h"
 #include "image/png.h"
@@ -98,10 +99,10 @@ void TotEngine::runaroundRed() {
 			if (secTrajIndex <= 8) {
 				_secondaryAnimation.dir = 2;
 				_secondaryAnimation.depth = 1;
-			} else if (secTrajIndex >= 9 && secTrajIndex <= 33) {
+			} else if (secTrajIndex <= 33) {
 				_secondaryAnimation.dir = 2;
 				_secondaryAnimation.depth = 14;
-			} else if (secTrajIndex >= 34 && secTrajIndex <= 63) {
+			} else if (secTrajIndex <= 63) {
 				_secondaryAnimation.dir = 1;
 				_secondaryAnimation.depth = 14;
 			} else {
@@ -246,17 +247,20 @@ static void overlayLayers() {
 
 void drawMainCharacter() {
 
-	bool debug = false;
-	if (debug) {
-		g_engine->_graphics->sceneTransition(false, g_engine->_sceneBackground, 13);
-	}
-
 	uint16 tempW;
 	uint16 tempH;
 	tempW = READ_LE_UINT16(g_engine->_curCharacterAnimationFrame);
 	tempH = READ_LE_UINT16(g_engine->_curCharacterAnimationFrame + 2);
 	tempW += 6;
 	tempH += 6;
+
+	if (g_engine->_dirtyMainSpriteY + tempH > 140) {
+		tempH -= (g_engine->_dirtyMainSpriteY + tempH) - 140;
+	}
+
+	if (g_engine->_dirtyMainSpriteX + tempW > 320) {
+		tempW -= (g_engine->_dirtyMainSpriteX + tempW) - 320;
+	}
 
 	g_engine->_characterDirtyRect = (byte *)malloc((tempW + 1) * (tempH + 1) + 4);
 
@@ -274,11 +278,6 @@ void drawMainCharacter() {
 
 	g_engine->_graphics->putImg(g_engine->_dirtyMainSpriteX, g_engine->_dirtyMainSpriteY, g_engine->_characterDirtyRect);
 
-	if (debug) {
-		// draw background dirty area
-		drawRect(2, g_engine->_dirtyMainSpriteX, g_engine->_dirtyMainSpriteY, g_engine->_dirtyMainSpriteX + tempW, g_engine->_dirtyMainSpriteY + tempH);
-		drawPos(g_engine->_xframe2, g_engine->_yframe2, 218);
-	}
 	free(g_engine->_characterDirtyRect);
 }
 
@@ -592,20 +591,19 @@ void TotEngine::animatedSequence(uint numSequence) {
 			_graphics->putShape(animX, animY, animptr);
 		}
 
-		clearScreenLayer(_curObject.depth - 1);
+		clearScreenLayer(_curObject->depth - 1);
 		_graphics->restoreBackground();
 		animIndex = _mainCharAnimation.depth;
 		_mainCharAnimation.depth = 30;
-		if (g_engine->_screenLayers[13]) {
-			free(g_engine->_screenLayers[13]);
-		}
-		_screenLayers[13] = animptr;
-		_depthMap[13].posx = animX;
-		_depthMap[13].posy = animY;
+		clearScreenLayer(12);
+		_screenLayers[12] = animptr;
+		_depthMap[12].posx = animX;
+		_depthMap[12].posy = animY;
 		assembleScreen();
 		_graphics->drawScreen(_sceneBackground);
+		// do not clear layer yet, needed for next frames
+		_screenLayers[12] = nullptr;
 
-		clearScreenLayer(13);
 		_mainCharAnimation.depth = animIndex;
 		drawInventory();
 		for (animIndex = 32; animIndex <= secFrameCount; animIndex++) {
@@ -643,16 +641,16 @@ void TotEngine::animatedSequence(uint numSequence) {
 		}
 		animIndex = _mainCharAnimation.depth;
 		_mainCharAnimation.depth = 30;
-		if (g_engine->_screenLayers[12]) {
-			free(g_engine->_screenLayers[12]);
-		}
+
+		clearScreenLayer(12);
 		_screenLayers[12] = animptr;
 		_depthMap[12].posx = animX;
 		_depthMap[12].posy = animY;
 		disableSecondAnimation();
-		clearScreenLayer(12);
 		_mainCharAnimation.depth = animIndex;
 		_graphics->drawScreen(_sceneBackground);
+		// do not clear layer yet, needed for next frames
+		_screenLayers[12] = nullptr;
 		for (animIndex = 9; animIndex <= secFrameCount; animIndex++) {
 			animationFile.read(animptr, animFrameSize);
 			emptyLoop();
@@ -843,10 +841,10 @@ void TotEngine::lookAtObject(byte objectCode) {
 
 	drawMenu(4);
 
-	if (_curObject.used[0] != 9) {
-		if (_curObject.beforeUseTextRef != 0) {
+	if (_curObject->used[0] != 9) {
+		if (_curObject->beforeUseTextRef != 0) {
 			readTextFile();
-			textRef = readTextRegister(_curObject.beforeUseTextRef);
+			textRef = readTextRegister(_curObject->beforeUseTextRef);
 			description = textRef.text;
 			for (yaux = 0; yaux < textRef.text.size(); yaux++)
 				description.setChar(_decryptionKey[yaux] ^ textRef.text[yaux], yaux);
@@ -858,9 +856,9 @@ void TotEngine::lookAtObject(byte objectCode) {
 		}
 	} else {
 
-		if (_curObject.afterUseTextRef != 0) {
+		if (_curObject->afterUseTextRef != 0) {
 			readTextFile();
-			textRef = readTextRegister(_curObject.afterUseTextRef);
+			textRef = readTextRegister(_curObject->afterUseTextRef);
 			description = textRef.text;
 			for (yaux = 0; yaux < textRef.text.size(); yaux++)
 				description.setChar(_decryptionKey[yaux] ^ textRef.text[yaux], yaux);
@@ -872,7 +870,7 @@ void TotEngine::lookAtObject(byte objectCode) {
 		}
 	}
 
-	drawFlc(125, 70, _curObject.rotatingObjectAnimation, 60000, 9, 0, false, true, true, foobar);
+	drawFlc(125, 70, _curObject->rotatingObjectAnimation, 60000, 9, 0, false, true, true, foobar);
 
 	_graphics->sceneTransition(true, nullptr, 3);
 	_graphics->partialFadeOut(234);
@@ -887,7 +885,7 @@ void TotEngine::useInventoryObjectWithInventoryObject(uint objectCode1, uint obj
 	byte invIndex, indobj1, indobj2;
 
 	readObject(_sceneObjectsData, objectCode1, _curObject);
-	if (_curObject.used[0] != 1 || _curObject.useWith != objectCode2) {
+	if (_curObject->used[0] != 1 || _curObject->useWith != objectCode2) {
 		drawText(getRandom(11) + 1022);
 		return;
 	}
@@ -904,22 +902,22 @@ void TotEngine::useInventoryObjectWithInventoryObject(uint objectCode1, uint obj
 	}
 
 	indobj2 = invIndex;
-	uint textRef = _curObject.useTextRef;
+	uint textRef = _curObject->useTextRef;
 
-	if (_curObject.replaceWith == 0) {
+	if (_curObject->replaceWith == 0) {
 		readObject(_sceneObjectsData, objectCode1, _curObject);
-		_curObject.used[0] = 9;
+		_curObject->used[0] = 9;
 		saveObject(_curObject, _sceneObjectsData);
 
 		readObject(_sceneObjectsData, objectCode2, _curObject);
-		_curObject.used[0] = 9;
+		_curObject->used[0] = 9;
 		saveObject(_curObject, _sceneObjectsData);
 
 	} else {
-		readObject(_sceneObjectsData, _curObject.replaceWith, _curObject);
-		_inventory[indobj1].bitmapIndex = _curObject.objectIconBitmap;
-		_inventory[indobj1].code = _curObject.code;
-		_inventory[indobj1].objectName = _curObject.name;
+		readObject(_sceneObjectsData, _curObject->replaceWith, _curObject);
+		_inventory[indobj1].bitmapIndex = _curObject->objectIconBitmap;
+		_inventory[indobj1].code = _curObject->code;
+		_inventory[indobj1].objectName = _curObject->name;
 		for (indobj1 = indobj2; indobj1 < (kInventoryIconCount - 1); indobj1++) {
 			_inventory[indobj1].bitmapIndex = _inventory[indobj1 + 1].bitmapIndex;
 			_inventory[indobj1].code = _inventory[indobj1 + 1].code;
@@ -1014,7 +1012,7 @@ void TotEngine::goToObject(byte zone1, byte zone2) {
 		if ((zone2 >= 1 && zone2 <= 5) ||
 			(zone2 >= 9 && zone2 <= 13) ||
 			(zone2 >= 18 && zone2 <= 21) ||
-			zone2 == 24 || zone2 == 25) {
+			zone2 == 25) {
 
 			_targetZone = 7;
 			_mouse->mouseClickX = 232;
@@ -1023,6 +1021,10 @@ void TotEngine::goToObject(byte zone1, byte zone2) {
 		}
 		if (zone2 == 24) {
 			barredZone = false;
+			_targetZone = 7;
+			_mouse->mouseClickX = 232;
+			_mouse->mouseClickY = 75;
+			zone2 = 7;
 		}
 	}
 	if (zone1 < 10) {
@@ -1050,21 +1052,21 @@ void TotEngine::updateSecondaryAnimationDepth() {
 	uint animationPos = _secondaryAnimation.posy + _secondaryAnimHeight - 1;
 	if (animationPos && animationPos <= 56) {
 		_secondaryAnimation.depth = 0;
-	} else if (animationPos >= 57 && animationPos <= 66) {
+	} else if (animationPos >= 57 && animationPos <= 64) {
 		_secondaryAnimation.depth = 1;
-	} else if (animationPos >= 65 && animationPos <= 74) {
+	} else if (animationPos >= 65 && animationPos <= 72) {
 		_secondaryAnimation.depth = 2;
-	} else if (animationPos >= 73 && animationPos <= 82) {
+	} else if (animationPos >= 73 && animationPos <= 80) {
 		_secondaryAnimation.depth = 3;
-	} else if (animationPos >= 81 && animationPos <= 90) {
+	} else if (animationPos >= 81 && animationPos <= 88) {
 		_secondaryAnimation.depth = 4;
-	} else if (animationPos >= 89 && animationPos <= 98) {
+	} else if (animationPos >= 89 && animationPos <= 96) {
 		_secondaryAnimation.depth = 5;
-	} else if (animationPos >= 97 && animationPos <= 106) {
+	} else if (animationPos >= 97 && animationPos <= 104) {
 		_secondaryAnimation.depth = 6;
-	} else if (animationPos >= 105 && animationPos <= 114) {
+	} else if (animationPos >= 105 && animationPos <= 112) {
 		_secondaryAnimation.depth = 7;
-	} else if (animationPos >= 113 && animationPos <= 122) {
+	} else if (animationPos >= 113 && animationPos <= 120) {
 		_secondaryAnimation.depth = 8;
 	} else if (animationPos >= 121 && animationPos <= 140) {
 		_secondaryAnimation.depth = 9;
@@ -1357,7 +1359,7 @@ void TotEngine::animateBat() {
 }
 
 void TotEngine::updateVideo() {
-	readBitmap(_curObject.dropOverlay, _screenLayers[_curObject.depth - 1], _curObject.dropOverlaySize, 319);
+	readBitmap(_curObject->dropOverlay, _screenLayers[_curObject->depth - 1], _curObject->dropOverlaySize, 319);
 	_graphics->restoreBackground();
 	assembleScreen();
 	_graphics->drawScreen(_sceneBackground);
@@ -1441,9 +1443,9 @@ void TotEngine::pickupScreenObject() {
 	goToObject(
 		_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount],
 		_currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
-	if (_curObject.pickupable) {
+	if (_curObject->pickupable) {
 		_mouse->hide();
-		switch (_curObject.code) {
+		switch (_curObject->code) {
 		case 521: { // Corridor lamp
 			_currentRoomData->mouseGrid[10][11] = 19;
 			_currentRoomData->mouseGrid[9][12] = 18;
@@ -1468,16 +1470,16 @@ void TotEngine::pickupScreenObject() {
 			_isVasePlaced = false;
 		} break;
 		}
-		switch (_curObject.height) {
+		switch (_curObject->height) {
 		case 0: { // Pick up above
-			switch (_curObject.code) {
+			switch (_curObject->code) {
 			case 590: { // Ectoplasm
 				animatePickup1(3, 0);
 				animatePickup2(3, 0);
 			} break;
 			default: {
 				animatePickup1(_charFacingDirection, 0);
-				clearScreenLayer(_curObject.depth - 1);
+				clearScreenLayer(_curObject->depth - 1);
 				_graphics->restoreBackground();
 				assembleScreen();
 				_graphics->drawScreen(_sceneBackground);
@@ -1486,19 +1488,17 @@ void TotEngine::pickupScreenObject() {
 			}
 		} break;
 		case 1: { // Waist level
-			switch (_curObject.code) {
-			case 218: { // Necronomicon
+			switch (_curObject->code) {
+			case 218: // Necronomicon
+			case 308: // Mistletoe
+			case 517: // mints
 				animatePickup1(0, 1);
 				animatePickup2(0, 1);
-			} break;
+			 break;
 			case 223: { // table cloths
 				animatePickup1(0, 1);
-				_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject.replaceWith;
+				_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject->replaceWith;
 				updateVideo();
-				animatePickup2(0, 1);
-			} break;
-			case 308: { // Mistletoe
-				animatePickup1(0, 1);
 				animatePickup2(0, 1);
 			} break;
 			case 402: { // Kitchen table
@@ -1509,10 +1509,6 @@ void TotEngine::pickupScreenObject() {
 			case 479: { // Scissors
 				animatePickup1(3, 1);
 				animatePickup2(3, 1);
-			} break;
-			case 517: { // mints
-				animatePickup1(0, 1);
-				animatePickup2(0, 1);
 			} break;
 			case 521: { // Puts plaster and key on the floor
 				animatePickup1(0, 1);
@@ -1537,7 +1533,7 @@ void TotEngine::pickupScreenObject() {
 					loadScreenLayer(with.coordx, with.coordy, with.bitmapSize, with.bitmapPointer, with.depth);
 				}
 
-				clearScreenLayer(_curObject.depth -1);
+				clearScreenLayer(_curObject->depth -1);
 				_graphics->restoreBackground();
 
 				assembleScreen();
@@ -1554,7 +1550,7 @@ void TotEngine::pickupScreenObject() {
 							_niche[0][_niche[0][3]] = 0;
 							_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(4);
 							animatePickup1(3, 1);
-							readBitmap(1190768, _screenLayers[_curObject.depth - 1], 892, 319);
+							readBitmap(1190768, _screenLayers[_curObject->depth - 1], 892, 319);
 							_currentRoomData->screenLayers[1].bitmapPointer = 1190768;
 							_currentRoomData->screenLayers[1].bitmapSize = 892;
 							_currentRoomData->screenLayers[1].coordx = 66;
@@ -1571,7 +1567,7 @@ void TotEngine::pickupScreenObject() {
 							_niche[1][3] -= 1;
 							_currentRoomData->screenObjectIndex[9]->objectName = "                    ";
 							animatePickup1(3, 1);
-							readBitmap(1190768, _screenLayers[_curObject.depth - 1],
+							readBitmap(1190768, _screenLayers[_curObject->depth - 1],
 									   892, 319);
 							_graphics->restoreBackground();
 							assembleScreen();
@@ -1621,7 +1617,7 @@ void TotEngine::pickupScreenObject() {
 							_niche[1][2] = 0;
 							_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(4);
 							animatePickup1(0, 1);
-							readBitmap(1399610, _screenLayers[_curObject.depth - 1], 892, 319);
+							readBitmap(1399610, _screenLayers[_curObject->depth - 1], 892, 319);
 							_currentRoomData->screenLayers[0].bitmapPointer = 1399610;
 							_currentRoomData->screenLayers[0].bitmapSize = 892;
 							_currentRoomData->screenLayers[0].coordx = 217;
@@ -1706,7 +1702,7 @@ void TotEngine::pickupScreenObject() {
 			} break;
 			default: {
 				animatePickup1(_charFacingDirection, 1);
-				clearScreenLayer(_curObject.depth - 1);
+				clearScreenLayer(_curObject->depth - 1);
 				_graphics->restoreBackground();
 				assembleScreen();
 				_graphics->drawScreen(_sceneBackground);
@@ -1715,16 +1711,16 @@ void TotEngine::pickupScreenObject() {
 			}
 		} break;
 		case 2: { // Pick up feet level
-			switch (_curObject.code) {
+			switch (_curObject->code) {
 			case 216: { // chisel
 				animatePickup1(0, 2);
-				_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject.replaceWith;
+				_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject->replaceWith;
 				updateVideo();
 				animatePickup2(0, 2);
 			} break;
 			case 295: { // candles
 				animatePickup1(3, 2);
-				_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject.replaceWith;
+				_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject->replaceWith;
 				updateVideo();
 				animatePickup2(3, 2);
 			} break;
@@ -1738,7 +1734,7 @@ void TotEngine::pickupScreenObject() {
 			} break;
 			case 659: { // spider web, puts bird and ring on the floor
 				animatePickup1(3, 2);
-				clearScreenLayer(_curObject.depth - 1);
+				clearScreenLayer(_curObject->depth - 1);
 				{ // bird
 					RoomBitmapRegister &with = _currentRoomData->screenLayers[2];
 
@@ -1766,7 +1762,7 @@ void TotEngine::pickupScreenObject() {
 			} break;
 			default: {
 				animatePickup1(_charFacingDirection, 2);
-				clearScreenLayer(_curObject.depth - 1);
+				clearScreenLayer(_curObject->depth - 1);
 				assembleScreen();
 				_graphics->drawScreen(_sceneBackground);
 				animatePickup2(_charFacingDirection, 2);
@@ -1774,7 +1770,7 @@ void TotEngine::pickupScreenObject() {
 			}
 		} break;
 		case 9: { // bat
-			uint textRef = _curObject.pickTextRef;
+			uint textRef = _curObject->pickTextRef;
 			readObject(204);
 			animatePickup1(0, 1);
 			animateOpen2(0, 1);
@@ -1791,13 +1787,13 @@ void TotEngine::pickupScreenObject() {
 		}
 		_mouse->show();
 
-		if (_curObject.code != 624)
-			for (int j = _curObject.ygrid1; j <= _curObject.ygrid2; j++)
-				for (int i = _curObject.xgrid1; i <= _curObject.xgrid2; i++) {
-					_currentRoomData->walkAreasGrid[i][j] = _curObject.walkAreasPatch[i - _curObject.xgrid1][j - _curObject.ygrid1];
-					_currentRoomData->mouseGrid[i][j] = _curObject.mouseGridPatch[i - _curObject.xgrid1][j - _curObject.ygrid1];
+		if (_curObject->code != 624)
+			for (int j = _curObject->ygrid1; j <= _curObject->ygrid2; j++)
+				for (int i = _curObject->xgrid1; i <= _curObject->xgrid2; i++) {
+					_currentRoomData->walkAreasGrid[i][j] = _curObject->walkAreasPatch[i - _curObject->xgrid1][j - _curObject->ygrid1];
+					_currentRoomData->mouseGrid[i][j] = _curObject->mouseGridPatch[i - _curObject->xgrid1][j - _curObject->ygrid1];
 				}
-		switch (_curObject.code) {
+		switch (_curObject->code) {
 		case 216: { // chisel
 			_currentRoomData->screenLayers[5].bitmapPointer = 517485;
 			_currentRoomData->screenLayers[5].bitmapSize = 964;
@@ -1844,7 +1840,7 @@ void TotEngine::pickupScreenObject() {
 			break;
 		default: {
 			for (int i = 0; i < 15; i++)
-				if (_currentRoomData->screenLayers[i].bitmapPointer == _curObject.bitmapPointer) {
+				if (_currentRoomData->screenLayers[i].bitmapPointer == _curObject->bitmapPointer) {
 					_currentRoomData->screenLayers[i].bitmapPointer = 0;
 					_currentRoomData->screenLayers[i].bitmapSize = 0;
 					_currentRoomData->screenLayers[i].coordx = 0;
@@ -1854,8 +1850,8 @@ void TotEngine::pickupScreenObject() {
 		}
 		}
 	} else {
-		if (_curObject.pickTextRef > 0)
-			drawText(_curObject.pickTextRef);
+		if (_curObject->pickTextRef > 0)
+			drawText(_curObject->pickTextRef);
 		_actionCode = 0;
 		_oldGridX = 0;
 		_oldGridY = 0;
@@ -1868,14 +1864,14 @@ void TotEngine::pickupScreenObject() {
 		inventoryIndex += 1;
 	}
 
-	_inventory[inventoryIndex].bitmapIndex = _curObject.objectIconBitmap;
-	_inventory[inventoryIndex].code = _curObject.code;
-	_inventory[inventoryIndex].objectName = _curObject.name;
+	_inventory[inventoryIndex].bitmapIndex = _curObject->objectIconBitmap;
+	_inventory[inventoryIndex].code = _curObject->code;
+	_inventory[inventoryIndex].objectName = _curObject->name;
 	_mouse->hide();
 	drawInventory();
 	_mouse->show();
-	if (_curObject.pickTextRef > 0)
-		drawText(_curObject.pickTextRef);
+	if (_curObject->pickTextRef > 0)
+		drawText(_curObject->pickTextRef);
 	_actionCode = 0;
 	_oldGridX = 0;
 	_oldGridY = 0;
@@ -1884,16 +1880,16 @@ void TotEngine::pickupScreenObject() {
 
 void TotEngine::replaceBackpack(byte obj1, uint obj2) {
 	readObject(obj2);
-	_inventory[obj1].bitmapIndex = _curObject.objectIconBitmap;
+	_inventory[obj1].bitmapIndex = _curObject->objectIconBitmap;
 	_inventory[obj1].code = obj2;
-	_inventory[obj1].objectName = _curObject.name;
+	_inventory[obj1].objectName = _curObject->name;
 	_cpCounter = _cpCounter2;
 }
 
-void TotEngine::dropObjectInScreen(ScreenObject replacementObject) {
+void TotEngine::dropObjectInScreen(ScreenObject *replacementObject) {
 	byte objIndex;
 
-	if (replacementObject.bitmapSize > 0) {
+	if (replacementObject->bitmapSize > 0) {
 		objIndex = 0;
 		while (!(_currentRoomData->screenLayers[objIndex].bitmapSize == 0) || objIndex == 15) {
 			objIndex++;
@@ -1902,17 +1898,17 @@ void TotEngine::dropObjectInScreen(ScreenObject replacementObject) {
 			{
 				RoomBitmapRegister &with = _currentRoomData->screenLayers[objIndex];
 
-				with.bitmapPointer = replacementObject.bitmapPointer;
-				with.bitmapSize = replacementObject.bitmapSize;
-				with.coordx = replacementObject.dropOverlayX;
-				with.coordy = replacementObject.dropOverlayY;
-				with.depth = replacementObject.depth;
+				with.bitmapPointer = replacementObject->bitmapPointer;
+				with.bitmapSize = replacementObject->bitmapSize;
+				with.coordx = replacementObject->dropOverlayX;
+				with.coordy = replacementObject->dropOverlayY;
+				with.depth = replacementObject->depth;
 				loadScreenLayer(with.coordx, with.coordy, with.bitmapSize, with.bitmapPointer, with.depth);
 			}
-			for (int j = replacementObject.ygrid1; j <= replacementObject.ygrid2; j++)
-				for (int i = replacementObject.xgrid1; i <= replacementObject.xgrid2; i++) {
-					_currentRoomData->walkAreasGrid[i][j] = replacementObject.walkAreasPatch[i - replacementObject.xgrid1][j - replacementObject.ygrid1];
-					_currentRoomData->mouseGrid[i][j] = replacementObject.mouseGridPatch[i - replacementObject.xgrid1][j - replacementObject.ygrid1];
+			for (int j = replacementObject->ygrid1; j <= replacementObject->ygrid2; j++)
+				for (int i = replacementObject->xgrid1; i <= replacementObject->xgrid2; i++) {
+					_currentRoomData->walkAreasGrid[i][j] = replacementObject->walkAreasPatch[i - replacementObject->xgrid1][j - replacementObject->ygrid1];
+					_currentRoomData->mouseGrid[i][j] = replacementObject->mouseGridPatch[i - replacementObject->xgrid1][j - replacementObject->ygrid1];
 				}
 		} else
 			showError(264);
@@ -1941,16 +1937,16 @@ void TotEngine::useScreenObject() {
 			_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount],
 			_currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
 
-		if (_curObject.useWith == sceneObject && sceneObject > 0 && _curObject.used[0] == 5) {
-			switch (_curObject.useWith) {
+		if (_curObject->useWith == sceneObject && sceneObject > 0 && _curObject->used[0] == 5) {
+			switch (_curObject->useWith) {
 			case 30: { // corn with rooster
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 
 				animateGive(1, 2);
 				animatePickup2(1, 2);
 
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				_currentRoomData->screenObjectIndex[27]->fileIndex = 201;
 				do {
 					_chrono->updateChrono();
@@ -2000,13 +1996,13 @@ void TotEngine::useScreenObject() {
 				_mouse->show();
 			} break;
 			case 153: { // oil with well
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				_sound->playVoc("BLUP", 330921, 3858);
 				animateGive(3, 1);
 				animatePickup2(3, 1);
 				_mouse->show();
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				_currentRoomData->screenObjectIndex[21]->fileIndex = 154;
 			} break;
 			case 157: { // giving something to john
@@ -2055,7 +2051,7 @@ void TotEngine::useScreenObject() {
 							_mouse->show();
 						} else {
 							readTextFile();
-							sayLine(_curObject.useTextRef, 255, 0, foo, false);
+							sayLine(_curObject->useTextRef, 255, 0, foo, false);
 							_mouse->hide();
 							animateGive(_charFacingDirection, 1);
 							animateOpen2(_charFacingDirection, 1);
@@ -2073,7 +2069,7 @@ void TotEngine::useScreenObject() {
 					if (verifyList) {
 						int completedListItems = 0;
 						for (listIndex = 0; listIndex < 5; listIndex++) {
-							for (invIndex = 0; invIndex <= kInventoryIconCount; invIndex++) {
+							for (invIndex = 0; invIndex < kInventoryIconCount; invIndex++) {
 								if (_inventory[invIndex].code == _secondList[listIndex]) {
 									completedListItems += 1;
 									break;
@@ -2106,7 +2102,7 @@ void TotEngine::useScreenObject() {
 							_mouse->show();
 						} else {
 							readTextFile();
-							sayLine(_curObject.useTextRef, 255, 0, foo, false);
+							sayLine(_curObject->useTextRef, 255, 0, foo, false);
 							_mouse->hide();
 							animateGive(_charFacingDirection, 1);
 							animateOpen2(_charFacingDirection, 1);
@@ -2118,7 +2114,7 @@ void TotEngine::useScreenObject() {
 				}
 			} break;
 			case 159: {
-				switch (_curObject.code) {
+				switch (_curObject->code) {
 				case 173: {
 					readTextFile();
 					sayLine(1118, 255, 0, foo, false);
@@ -2167,7 +2163,7 @@ void TotEngine::useScreenObject() {
 				}
 			} break;
 			case 164: {
-				switch (_curObject.code) {
+				switch (_curObject->code) {
 				case 563: {
 					_isPottersManualDelivered = true;
 					if (_isPottersWheelDelivered && _isGreenDevilDelivered && _isMudDelivered) {
@@ -2400,7 +2396,7 @@ void TotEngine::useScreenObject() {
 				_mouse->show();
 			} break;
 			case 201: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_sound->playVoc("GALLO", 94965, 46007);
 				_mouse->hide();
 				animatedSequence(5);
@@ -2413,7 +2409,7 @@ void TotEngine::useScreenObject() {
 				checkMouseGrid();
 			} break;
 			case 219: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				_sound->playVoc("TAZA", 223698, 29066);
 				animateGive(3, 2);
@@ -2427,7 +2423,7 @@ void TotEngine::useScreenObject() {
 					g_system->delayMillis(10);
 				} while (_sound->isVocPlaying());
 				animateOpen2(3, 2);
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				disableSecondAnimation();
 				_graphics->drawScreen(_sceneBackground);
 				_mouse->show();
@@ -2442,8 +2438,7 @@ void TotEngine::useScreenObject() {
 				_currentRoomData->mouseGrid[9][10] = 1;
 				_currentRoomData->mouseGrid[10][10] = 1;
 				for (int i = 0; i < 15; i++)
-					if (_currentRoomData->screenLayers[i].bitmapPointer ==
-						_curObject.bitmapPointer) {
+					if (_currentRoomData->screenLayers[i].bitmapPointer == _curObject->bitmapPointer) {
 						_currentRoomData->screenLayers[i].bitmapPointer = 0;
 						_currentRoomData->screenLayers[i].bitmapSize = 0;
 						_currentRoomData->screenLayers[i].coordx = 0;
@@ -2454,9 +2449,9 @@ void TotEngine::useScreenObject() {
 				while (_inventory[usedObjectIndex].code != 0) {
 					usedObjectIndex += 1;
 				}
-				_inventory[usedObjectIndex].bitmapIndex = _curObject.objectIconBitmap;
-				_inventory[usedObjectIndex].code = _curObject.code;
-				_inventory[usedObjectIndex].objectName = _curObject.name;
+				_inventory[usedObjectIndex].bitmapIndex = _curObject->objectIconBitmap;
+				_inventory[usedObjectIndex].code = _curObject->code;
+				_inventory[usedObjectIndex].objectName = _curObject->name;
 				animatedSequence(4);
 				_mouse->show();
 				_actionCode = 0;
@@ -2465,20 +2460,20 @@ void TotEngine::useScreenObject() {
 				checkMouseGrid();
 			} break;
 			case 221: {
-				drawText(_curObject.useTextRef);
-				_curObject.used[0] = 9;
+				drawText(_curObject->useTextRef);
+				_curObject->used[0] = 9;
 				usedObjectIndex = 0;
 				while (_inventory[usedObjectIndex].code != 0) {
 					usedObjectIndex += 1;
 				}
 
-				_sceneObjectsData->seek(_curObject.code);
+				_sceneObjectsData->seek(_curObject->code);
 
 				saveObjectsData(_curObject, _sceneObjectsData);
 				readObject(_sceneObjectsData, 221, _curObject);
-				_inventory[usedObjectIndex].bitmapIndex = _curObject.objectIconBitmap;
-				_inventory[usedObjectIndex].code = _curObject.code;
-				_inventory[usedObjectIndex].objectName = _curObject.name;
+				_inventory[usedObjectIndex].bitmapIndex = _curObject->objectIconBitmap;
+				_inventory[usedObjectIndex].code = _curObject->code;
+				_inventory[usedObjectIndex].objectName = _curObject->name;
 
 				_mouse->hide();
 				animatePickup1(2, 0);
@@ -2489,7 +2484,7 @@ void TotEngine::useScreenObject() {
 				_mouse->show();
 			} break;
 			case 227: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				_sound->playVoc("ALACENA", 319112, 11809);
 				animatePickup1(0, 2);
@@ -2502,18 +2497,18 @@ void TotEngine::useScreenObject() {
 				_isCupboardOpen = true;
 			} break;
 			case 274: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				_sound->playVoc("CINCEL", 334779, 19490);
 				animatePickup1(_charFacingDirection, 2);
 				_sound->waitForSoundEnd();
 				animateOpen2(_charFacingDirection, 2);
 				_mouse->show();
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				_isChestOpen = true;
 			} break;
 			case 416: {
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				_mouse->hide();
 				_sound->playVoc("PUERTA", 186429, 4754);
 				animatePickup1(0, 1);
@@ -2521,11 +2516,11 @@ void TotEngine::useScreenObject() {
 				_sound->waitForSoundEnd();
 				_sound->loadVoc("GOTA", 140972, 1029);
 				_mouse->show();
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_currentRoomData->doors[2].openclosed = 0;
 			} break;
 			case 446: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				_sound->playVoc("TAZA", 223698, 29066);
 				animateGive(0, 2);
@@ -2546,13 +2541,13 @@ void TotEngine::useScreenObject() {
 				_currentRoomData->mouseGrid[27][8] = 22;
 			} break;
 			case 549: {
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				_mouse->hide();
 				_sound->playVoc("PUERTA", 186429, 4754);
 				animatePickup1(1, 1);
 				animateOpen2(1, 1);
 				_mouse->show();
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_currentRoomData->doors[0].openclosed = 0;
 			} break;
 			case 562: { // put any object in the niches
@@ -2561,8 +2556,8 @@ void TotEngine::useScreenObject() {
 					if (_niche[0][_niche[0][3]] == 0) {
 
 						if (_niche[0][3] == 0) {
-							_niche[0][0] = _curObject.code;
-							drawText(_curObject.useTextRef);
+							_niche[0][0] = _curObject->code;
+							drawText(_curObject->useTextRef);
 							_mouse->hide();
 							_currentRoomData->screenObjectIndex[9]->objectName = "                    ";
 							animateGive(3, 1);
@@ -2591,13 +2586,13 @@ void TotEngine::useScreenObject() {
 							_mouse->show();
 						} else {
 
-							_niche[0][_niche[0][3]] = _curObject.code;
+							_niche[0][_niche[0][3]] = _curObject->code;
 							_niche[1][3] += 1;
 							_niche[0][3] -= 1;
-							drawText(_curObject.useTextRef);
+							drawText(_curObject->useTextRef);
 							_mouse->hide();
 							animateGive(3, 1);
-							switch (_curObject.code) {
+							switch (_curObject->code) {
 							case 561:
 								readBitmap(1182652, _screenLayers[0], 892, 319);
 								break;
@@ -2651,8 +2646,8 @@ void TotEngine::useScreenObject() {
 
 						if (_niche[1][3] == 0) {
 
-							_niche[1][0] = _curObject.code;
-							drawText(_curObject.useTextRef);
+							_niche[1][0] = _curObject->code;
+							drawText(_curObject->useTextRef);
 							_mouse->hide();
 							_currentRoomData->screenObjectIndex[8]->objectName = "                    ";
 							animateGive(0, 1);
@@ -2681,20 +2676,20 @@ void TotEngine::useScreenObject() {
 							_mouse->show();
 						} else {
 
-							_niche[1][_niche[1][3]] = _curObject.code;
+							_niche[1][_niche[1][3]] = _curObject->code;
 							_niche[0][3] += 1;
 							_niche[1][3] -= 1;
-							drawText(_curObject.useTextRef);
+							drawText(_curObject->useTextRef);
 							_mouse->hide();
 							animateGive(0, 1);
 
-							switch (_curObject.code) {
+							switch (_curObject->code) {
 							case 561:
-								readBitmap(1381982, _screenLayers[_curObject.depth - 1],
+								readBitmap(1381982, _screenLayers[_curObject->depth - 1],
 										   892, 319);
 								break;
 							case 615:
-								readBitmap(1381090, _screenLayers[_curObject.depth - 1],
+								readBitmap(1381090, _screenLayers[_curObject->depth - 1],
 										   892, 319);
 								break;
 							}
@@ -2750,11 +2745,11 @@ void TotEngine::useScreenObject() {
 
 				int32 offset = getOffsetsByCurrentLanguage()[20];
 
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				drawFlc(140, 34, offset, 0, 9, 24, false, false, true, foobar);
 				_mouse->show();
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 				_currentRoomData->screenObjectIndex[7]->fileIndex = 716;
 				_currentRoomData->mouseGrid[19][9] = 14;
 				_currentRoomData->mouseGrid[22][16] = 15;
@@ -2796,7 +2791,7 @@ void TotEngine::useScreenObject() {
 				_graphics->drawScreen(_sceneBackground);
 			} break;
 			case 594: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				animateGive(3, 2);
 				animatePickup2(3, 2);
@@ -2805,7 +2800,7 @@ void TotEngine::useScreenObject() {
 				_mouse->show();
 			} break;
 			case 608: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				goToObject(_currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY], 26);
 				_mouse->hide();
 				animateGive(2, 2);
@@ -2830,7 +2825,7 @@ void TotEngine::useScreenObject() {
 			} break;
 			case 632: {
 				int32 offset = getOffsetsByCurrentLanguage()[21];
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				animateGive(_charFacingDirection, 1);
 
@@ -2894,7 +2889,7 @@ void TotEngine::useScreenObject() {
 			case 633: { //Use ring!
 				int32 offset = getOffsetsByCurrentLanguage()[22];
 
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->hide();
 				animateGive(3, 1);
 				loadScreenLayer(86, 55, 92, 1591272, 8);
@@ -2953,7 +2948,7 @@ void TotEngine::useScreenObject() {
 				int32 offset = getOffsetsByCurrentLanguage()[23];
 
 				if (_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount] != 5)
-					drawText(_curObject.useTextRef);
+					drawText(_curObject->useTextRef);
 				_mouse->mouseClickX = 149 - 7;
 				_mouse->mouseClickY = 126 - 7;
 				goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount], 5);
@@ -2984,7 +2979,7 @@ void TotEngine::useScreenObject() {
 			case 657: { // sharpen scythe
 				int32 offset = getOffsetsByCurrentLanguage()[24];
 
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->mouseClickX = 178 - 7;
 				_mouse->mouseClickY = 71 - 7;
 				goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount], 3);
@@ -2996,7 +2991,7 @@ void TotEngine::useScreenObject() {
 				_mouse->show();
 			} break;
 			case 686: {
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_isVasePlaced = true;
 				_caves[4] = false;
 				_mouse->hide();
@@ -3016,7 +3011,7 @@ void TotEngine::useScreenObject() {
 			case 689: { // rope
 				int32 offset = getOffsetsByCurrentLanguage()[25];
 
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->mouseClickX = 124 - 7;
 				_mouse->mouseClickY = 133 - 7;
 				goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount], 9);
@@ -3035,7 +3030,7 @@ void TotEngine::useScreenObject() {
 			} break;
 			case 700: { // Trident
 				int32 offset = getOffsetsByCurrentLanguage()[26];
-				drawText(_curObject.useTextRef);
+				drawText(_curObject->useTextRef);
 				_mouse->mouseClickX = 224 - 7;
 				_mouse->mouseClickY = 91 - 7;
 				goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount], 7);
@@ -3075,13 +3070,13 @@ void TotEngine::useScreenObject() {
 					_currentRoomData->mouseGrid[35][invIndex] = 7;
 				_currentRoomData->doors[1].openclosed = 1;
 				_mouse->show();
-				updateObject(_curObject.code);
+				updateObject(_curObject->code);
 			} break;
 			case 709: { // rock with mural
 				int32 offset = getOffsetsByCurrentLanguage()[27];
 
 				if (_isSealRemoved) {
-					drawText(_curObject.useTextRef);
+					drawText(_curObject->useTextRef);
 					_mouse->hide();
 					animatePickup1(0, 1);
 					_sound->playVoc("TIZA", 390631, 18774);
@@ -3110,7 +3105,7 @@ void TotEngine::useScreenObject() {
 			}
 		} else {
 			goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount], _currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
-			if (_curObject.code == 536 || _curObject.code == 220)
+			if (_curObject->code == 536 || _curObject->code == 220)
 				drawText(getRandom(6) + 1033);
 			else
 				drawText(getRandom(11) + 1022);
@@ -3119,26 +3114,26 @@ void TotEngine::useScreenObject() {
 		if (sceneObject > 0) {
 			readObject(sceneObject);
 			goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount], _currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
-			switch (_curObject.used[0]) {
+			switch (_curObject->used[0]) {
 			case 0: {
-				if (_curObject.useTextRef > 0)
-					drawText(_curObject.useTextRef);
+				if (_curObject->useTextRef > 0)
+					drawText(_curObject->useTextRef);
 			} break;
 			case 9: {
-				if (_curObject.afterUseTextRef > 0)
-					drawText(_curObject.afterUseTextRef);
+				if (_curObject->afterUseTextRef > 0)
+					drawText(_curObject->afterUseTextRef);
 			} break;
 			case 100: {
-				switch (_curObject.code) {
+				switch (_curObject->code) {
 				case 153: {
 					_mouse->hide();
 					animatedSequence(2);
 					_mouse->show();
 				} break;
 				case 154: {
-					_curObject.used[0] = 9;
-					if (_curObject.beforeUseTextRef > 0)
-						drawText(_curObject.beforeUseTextRef);
+					_curObject->used[0] = 9;
+					if (_curObject->beforeUseTextRef > 0)
+						drawText(_curObject->beforeUseTextRef);
 					_mouse->hide();
 					animatedSequence(1);
 					_mouse->show();
@@ -3146,15 +3141,15 @@ void TotEngine::useScreenObject() {
 					_mouse->hide();
 					animatedSequence(3);
 					_mouse->show();
-					updateObject(_curObject.code);
+					updateObject(_curObject->code);
 					readObject(152);
 					usedObjectIndex = 0;
 					while (_inventory[usedObjectIndex].code != 0) {
 						usedObjectIndex += 1;
 					}
-					_inventory[usedObjectIndex].bitmapIndex = _curObject.objectIconBitmap;
-					_inventory[usedObjectIndex].code = _curObject.code;
-					_inventory[usedObjectIndex].objectName = _curObject.name;
+					_inventory[usedObjectIndex].bitmapIndex = _curObject->objectIconBitmap;
+					_inventory[usedObjectIndex].code = _curObject->code;
+					_inventory[usedObjectIndex].objectName = _curObject->name;
 					_mouse->hide();
 					drawInventory();
 					_mouse->show();
@@ -3183,7 +3178,7 @@ void TotEngine::useScreenObject() {
 					_mouse->show();
 				} break;
 				case 347: {
-					drawText(_curObject.useTextRef);
+					drawText(_curObject->useTextRef);
 					_sound->stopVoc();
 					_sound->playVoc("CLICK", 27742, 2458);
 					_mouse->hide();
@@ -3199,7 +3194,7 @@ void TotEngine::useScreenObject() {
 					_currentRoomData->doors[1].openclosed = 1;
 				} break;
 				case 359: {
-					drawText(_curObject.useTextRef);
+					drawText(_curObject->useTextRef);
 					_sound->stopVoc();
 					_sound->playVoc("CARBON", 21819, 5923);
 					_mouse->hide();
@@ -3207,7 +3202,7 @@ void TotEngine::useScreenObject() {
 					delay(100);
 					animateOpen2(0, 0);
 					_mouse->show();
-					updateObject(_curObject.code);
+					updateObject(_curObject->code);
 					_currentRoomData->screenObjectIndex[16]->fileIndex = 362;
 					_currentRoomData->screenObjectIndex[16]->objectName = getObjectName(2);
 					_currentRoomData->screenObjectIndex[1]->fileIndex = 347;
@@ -3245,8 +3240,8 @@ void TotEngine::useScreenObject() {
 					_mouse->show();
 				} break;
 				}
-				if ((_curObject.beforeUseTextRef > 0) && (_curObject.code != 154))
-					drawText(_curObject.beforeUseTextRef);
+				if ((_curObject->beforeUseTextRef > 0) && (_curObject->code != 154))
+					drawText(_curObject->beforeUseTextRef);
 			} break;
 			default:
 				drawText(1022 + getRandom(11));
@@ -3271,16 +3266,16 @@ void TotEngine::openScreenObject() {
 		return;
 
 	readObject(screenObject);
-	debug("Read screen object = %s, with code = %d, depth=%d", _curObject.name.c_str(), _curObject.code, _curObject.depth);
+	debug("Read screen object = %s, with code = %d, depth=%d", _curObject->name.c_str(), _curObject->code, _curObject->depth);
 	goToObject(_currentRoomData->walkAreasGrid[(_characterPosX + kCharacterCorrectionX) / kXGridCount][(_characterPosY + kCharacerCorrectionY) / kYGridCount],
 			   _currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
 
-	if (_curObject.openable == false) {
+	if (_curObject->openable == false) {
 		drawText(getRandom(9) + 1059);
 		return;
 	} else {
 		shouldSpeak = false;
-		switch (_curObject.code) {
+		switch (_curObject->code) {
 		case 227:
 			if (_isCupboardOpen == false)
 				shouldSpeak = true;
@@ -3295,12 +3290,11 @@ void TotEngine::openScreenObject() {
 			else {
 				_mouse->hide();
 				animatePickup1(0, 1);
-				clearScreenLayer(_curObject.depth - 1);
+				clearScreenLayer(_curObject->depth - 1);
 				yIndex = 0;
-				while (_currentRoomData->screenLayers[yIndex].depth != _curObject.depth && yIndex != 15) {
+				while (yIndex < 14 && _currentRoomData->screenLayers[yIndex].depth != _curObject->depth) {
 					yIndex++;
 				}
-				debug("changing bitmap at %d, with depth = %d", yIndex, _currentRoomData->screenLayers[yIndex].depth);
 				_currentRoomData->screenLayers[yIndex].bitmapPointer = 0;
 				_currentRoomData->screenLayers[yIndex].bitmapSize = 0;
 				_currentRoomData->screenLayers[yIndex].coordx = 0;
@@ -3331,9 +3325,9 @@ void TotEngine::openScreenObject() {
 			else {
 				_mouse->hide();
 				animatePickup1(1, 1);
-				clearScreenLayer(_curObject.depth - 1);
+				clearScreenLayer(_curObject->depth - 1);
 				yIndex = 0;
-				while (_currentRoomData->screenLayers[yIndex].depth != _curObject.depth && yIndex != 14) {
+				while (_currentRoomData->screenLayers[yIndex].depth != _curObject->depth && yIndex != 14) {
 					yIndex++;
 				}
 				_currentRoomData->screenLayers[yIndex].bitmapPointer = 0;
@@ -3377,9 +3371,9 @@ void TotEngine::openScreenObject() {
 			drawText(getRandom(9) + 1059);
 			return;
 		}
-		_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject.replaceWith;
+		_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject->replaceWith;
 		_mouse->hide();
-		switch (_curObject.height) {
+		switch (_curObject->height) {
 		case 0: {
 			animatePickup1(_charFacingDirection, 0);
 			updateVideo();
@@ -3397,15 +3391,15 @@ void TotEngine::openScreenObject() {
 		} break;
 		}
 		_mouse->show();
-		for (yIndex = _curObject.ygrid1; yIndex <= _curObject.ygrid2; yIndex++)
-			for (xIndex = _curObject.xgrid1; xIndex <= _curObject.xgrid2; xIndex++) {
-				_currentRoomData->walkAreasGrid[xIndex][yIndex] = _curObject.walkAreasPatch[xIndex - _curObject.xgrid1][yIndex - _curObject.ygrid1];
-				_currentRoomData->mouseGrid[xIndex][yIndex] = _curObject.mouseGridPatch[xIndex - _curObject.xgrid1][yIndex - _curObject.ygrid1];
+		for (yIndex = _curObject->ygrid1; yIndex <= _curObject->ygrid2; yIndex++)
+			for (xIndex = _curObject->xgrid1; xIndex <= _curObject->xgrid2; xIndex++) {
+				_currentRoomData->walkAreasGrid[xIndex][yIndex] = _curObject->walkAreasPatch[xIndex - _curObject->xgrid1][yIndex - _curObject->ygrid1];
+				_currentRoomData->mouseGrid[xIndex][yIndex] = _curObject->mouseGridPatch[xIndex - _curObject->xgrid1][yIndex - _curObject->ygrid1];
 			}
 		for (xIndex = 0; xIndex < 15; xIndex++)
-			if (_currentRoomData->screenLayers[xIndex].bitmapPointer == _curObject.bitmapPointer) {
-				_currentRoomData->screenLayers[xIndex].bitmapPointer = _curObject.dropOverlay;
-				_currentRoomData->screenLayers[xIndex].bitmapSize = _curObject.dropOverlaySize;
+			if (_currentRoomData->screenLayers[xIndex].bitmapPointer == _curObject->bitmapPointer) {
+				_currentRoomData->screenLayers[xIndex].bitmapPointer = _curObject->dropOverlay;
+				_currentRoomData->screenLayers[xIndex].bitmapSize = _curObject->dropOverlaySize;
 			}
 		_actionCode = 0;
 	}
@@ -3427,12 +3421,12 @@ void TotEngine::closeScreenObject() {
 	readObject(sceneObject);
 	goToObject(_currentRoomData->walkAreasGrid[((_characterPosX + kCharacterCorrectionX) / kXGridCount)][((_characterPosY + kCharacerCorrectionY) / kYGridCount)],
 			   _currentRoomData->walkAreasGrid[correctedMouseX][correctedMouseY]);
-	if (_curObject.closeable == false) {
+	if (_curObject->closeable == false) {
 		drawText((getRandom(10) + 1068));
 		return;
 	} else {
 		shouldSpeak = false;
-		switch (_curObject.code) {
+		switch (_curObject->code) {
 		case 224:
 		case 226:
 			if (_isCupboardOpen == false)
@@ -3448,9 +3442,9 @@ void TotEngine::closeScreenObject() {
 			drawText(getRandom(10) + 1068);
 			return;
 		}
-		_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject.replaceWith;
+		_currentRoomData->screenObjectIndex[_currentRoomData->mouseGrid[correctedMouseX][correctedMouseY]]->fileIndex = _curObject->replaceWith;
 		_mouse->hide();
-		switch (_curObject.height) {
+		switch (_curObject->height) {
 		case 0: {
 			animatePickup1(_charFacingDirection, 0);
 			updateVideo();
@@ -3468,15 +3462,15 @@ void TotEngine::closeScreenObject() {
 		} break;
 		}
 		_mouse->show();
-		for (yIndex = _curObject.ygrid1; yIndex <= _curObject.ygrid2; yIndex++)
-			for (xIndex = _curObject.xgrid1; xIndex <= _curObject.xgrid2; xIndex++) {
-				_currentRoomData->walkAreasGrid[xIndex][yIndex] = _curObject.walkAreasPatch[xIndex - _curObject.xgrid1][yIndex - _curObject.ygrid1];
-				_currentRoomData->mouseGrid[xIndex][yIndex] = _curObject.mouseGridPatch[xIndex - _curObject.xgrid1][yIndex - _curObject.ygrid1];
+		for (yIndex = _curObject->ygrid1; yIndex <= _curObject->ygrid2; yIndex++)
+			for (xIndex = _curObject->xgrid1; xIndex <= _curObject->xgrid2; xIndex++) {
+				_currentRoomData->walkAreasGrid[xIndex][yIndex] = _curObject->walkAreasPatch[xIndex - _curObject->xgrid1][yIndex - _curObject->ygrid1];
+				_currentRoomData->mouseGrid[xIndex][yIndex] = _curObject->mouseGridPatch[xIndex - _curObject->xgrid1][yIndex - _curObject->ygrid1];
 			}
 		for (xIndex = 0; xIndex < 15; xIndex++)
-			if (_currentRoomData->screenLayers[xIndex].bitmapPointer == _curObject.bitmapPointer) {
-				_currentRoomData->screenLayers[xIndex].bitmapPointer = _curObject.dropOverlay;
-				_currentRoomData->screenLayers[xIndex].bitmapSize = _curObject.dropOverlaySize;
+			if (_currentRoomData->screenLayers[xIndex].bitmapPointer == _curObject->bitmapPointer) {
+				_currentRoomData->screenLayers[xIndex].bitmapPointer = _curObject->dropOverlay;
+				_currentRoomData->screenLayers[xIndex].bitmapSize = _curObject->dropOverlaySize;
 			}
 		_actionCode = 0;
 	}
@@ -3865,11 +3859,12 @@ void TotEngine::sayLine(
 		posy = 2;
 		width = 30;
 	} break;
-	case 8: { // patch
+	case 8:  // patch
+	case 21: // p4
 		posx = 10;
 		posy = 100;
 		width = 50;
-	} break;
+		break;
 	case 10: { // well
 		posx = 10;
 		posy = 2;
@@ -3889,11 +3884,6 @@ void TotEngine::sayLine(
 		posx = 10;
 		posy = 2;
 		width = 30;
-	} break;
-	case 21: { // p4
-		posx = 10;
-		posy = 100;
-		width = 50;
 	} break;
 	case 23: { // fountain
 		posx = 10;
@@ -3977,7 +3967,7 @@ void TotEngine::sayLine(
 					charCounter -= 1;
 				} while (text.text[charCounter] != ' ');
 				lineBreaks[lineBreakCount] = charCounter + 1;
-			} while (charCounter + 1 <= text.text.size() - width);
+			} while (charCounter + 1 <= ((int)text.text.size() - (int)width));
 
 			lineBreakCount += 1;
 			lineBreaks[lineBreakCount] = text.text.size();
@@ -4126,10 +4116,10 @@ void TotEngine::loadAnimation(const Common::String &animationName) {
 	setRoomTrajectories(_secondaryAnimHeight, _secondaryAnimWidth, SET_WITH_ANIM, false);
 
 	readObject(_currentRoomData->secondaryAnimDirections[299]);
-	_maxXGrid = (_curObject.xgrid2 - _curObject.xgrid1 + 1);
-	_maxYGrid = (_curObject.ygrid2 - _curObject.ygrid1 + 1);
-	_oldposx = _curObject.xgrid1 + 1;
-	_oldposy = _curObject.ygrid1 + 1;
+	_maxXGrid = (_curObject->xgrid2 - _curObject->xgrid1 + 1);
+	_maxYGrid = (_curObject->ygrid2 - _curObject->ygrid1 + 1);
+	_oldposx = _curObject->xgrid1 + 1;
+	_oldposy = _curObject->ygrid1 + 1;
 
 	for (int i = 0; i < 10; i++)
 		for (int j = 0; j < 10; j++) {
@@ -4141,8 +4131,8 @@ void TotEngine::loadAnimation(const Common::String &animationName) {
 
 	for (int i = 0; i < _maxXGrid; i++)
 		for (int j = 0; j < _maxYGrid; j++) {
-			_maskGridSecondaryAnim[i][j] = _curObject.walkAreasPatch[i][j];
-			_maskMouseSecondaryAnim[i][j] = _curObject.mouseGridPatch[i][j];
+			_maskGridSecondaryAnim[i][j] = _curObject->walkAreasPatch[i][j];
+			_maskMouseSecondaryAnim[i][j] = _curObject->mouseGridPatch[i][j];
 			_movementGridForSecondaryAnim[i][j] = _currentRoomData->walkAreasGrid[_oldposx + i][_oldposy + j];
 			_mouseGridForSecondaryAnim[i][j] = _currentRoomData->mouseGrid[_oldposx + i][_oldposy + j];
 		}
@@ -4153,100 +4143,100 @@ void TotEngine::updateAltScreen(byte otherScreenNumber) {
 	uint i22;
 	uint i11;
 
-	byte currentScreen = _currentRoomData->code;
-
-	setRoomTrajectories(_secondaryAnimHeight, _secondaryAnimWidth, RESTORE);
-
-	// Save current room
-	saveRoomData(_currentRoomData, _rooms);
-
-	// Load other screen
-	_rooms->seek(otherScreenNumber * kRoomRegSize, SEEK_SET);
 	if (_currentRoomData) {
-		delete _currentRoomData;
-	}
-	_currentRoomData = readScreenDataFile(_rooms);
+		byte currentScreen = _currentRoomData->code;
 
-	switch (otherScreenNumber) {
-	case 20: {
-		switch (_niche[0][_niche[0][3]]) {
-		case 0: {
-			_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(4);
-			_currentRoomData->screenLayers[1].bitmapPointer = 1190768;
+		setRoomTrajectories(_secondaryAnimHeight, _secondaryAnimWidth, RESTORE);
+
+		// Save current room
+		saveRoomData(_currentRoomData, _rooms);
+
+		// Load other screen
+		_rooms->seek(otherScreenNumber * kRoomRegSize, SEEK_SET);
+		delete _currentRoomData;
+		_currentRoomData = readScreenDataFile(_rooms);
+
+		switch (otherScreenNumber) {
+		case 20: {
+			switch (_niche[0][_niche[0][3]]) {
+			case 0: {
+				_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(4);
+				_currentRoomData->screenLayers[1].bitmapPointer = 1190768;
+			} break;
+			case 561: {
+				_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(5);
+				_currentRoomData->screenLayers[1].bitmapPointer = 1182652;
+			} break;
+			case 563: {
+				_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(6);
+				_currentRoomData->screenLayers[1].bitmapPointer = 1186044;
+			} break;
+			case 615: {
+				_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(7);
+				_currentRoomData->screenLayers[1].bitmapPointer = 1181760;
+			} break;
+			}
+			_currentRoomData->screenLayers[1].bitmapSize = 892;
+			_currentRoomData->screenLayers[1].coordx = 66;
+			_currentRoomData->screenLayers[1].coordy = 35;
+			_currentRoomData->screenLayers[1].depth = 1;
 		} break;
-		case 561: {
-			_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(5);
-			_currentRoomData->screenLayers[1].bitmapPointer = 1182652;
+		case 24: {
+			switch (_niche[1][_niche[1][3]]) {
+			case 0: {
+				_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(4);
+				_currentRoomData->screenLayers[0].bitmapPointer = 1399610;
+			} break;
+			case 561: {
+				_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(5);
+				_currentRoomData->screenLayers[0].bitmapPointer = 1381982;
+			} break;
+			case 615: {
+				_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(7);
+				_currentRoomData->screenLayers[0].bitmapPointer = 1381090;
+			} break;
+			case 622: {
+				_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(8);
+				_currentRoomData->screenLayers[0].bitmapPointer = 1400502;
+			} break;
+			case 623: {
+				_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(9);
+				_currentRoomData->screenLayers[0].bitmapPointer = 1398718;
+			} break;
+			}
+			_currentRoomData->screenLayers[0].bitmapSize = 892;
+			_currentRoomData->screenLayers[0].coordx = 217;
+			_currentRoomData->screenLayers[0].coordy = 48;
+			_currentRoomData->screenLayers[0].depth = 1;
 		} break;
-		case 563: {
-			_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(6);
-			_currentRoomData->screenLayers[1].bitmapPointer = 1186044;
-		} break;
-		case 615: {
-			_currentRoomData->screenObjectIndex[9]->objectName = getObjectName(7);
-			_currentRoomData->screenLayers[1].bitmapPointer = 1181760;
+		case 31: {
+			for (i11 = 23; i11 <= 25; i11++)
+				for (i22 = 4; i22 <= 9; i22++)
+					_currentRoomData->mouseGrid[i11][i22] = 4;
+			for (i11 = 23; i11 <= 25; i11++)
+				for (i22 = 10; i22 <= 11; i22++)
+					_currentRoomData->mouseGrid[i11][i22] = 3;
+
+			_currentRoomData->screenLayers[0].bitmapSize = 0;
+			_currentRoomData->screenLayers[0].bitmapPointer = 0;
+			_currentRoomData->screenLayers[0].coordx = 0;
+			_currentRoomData->screenLayers[0].coordy = 0;
+			_currentRoomData->screenLayers[0].depth = 0;
 		} break;
 		}
-		_currentRoomData->screenLayers[1].bitmapSize = 892;
-		_currentRoomData->screenLayers[1].coordx = 66;
-		_currentRoomData->screenLayers[1].coordy = 35;
-		_currentRoomData->screenLayers[1].depth = 1;
-	} break;
-	case 24: {
-		switch (_niche[1][_niche[1][3]]) {
-		case 0: {
-			_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(4);
-			_currentRoomData->screenLayers[0].bitmapPointer = 1399610;
-		} break;
-		case 561: {
-			_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(5);
-			_currentRoomData->screenLayers[0].bitmapPointer = 1381982;
-		} break;
-		case 615: {
-			_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(7);
-			_currentRoomData->screenLayers[0].bitmapPointer = 1381090;
-		} break;
-		case 622: {
-			_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(8);
-			_currentRoomData->screenLayers[0].bitmapPointer = 1400502;
-		} break;
-		case 623: {
-			_currentRoomData->screenObjectIndex[8]->objectName = getObjectName(9);
-			_currentRoomData->screenLayers[0].bitmapPointer = 1398718;
-		} break;
+
+		// Save other screen
+		saveRoomData(_currentRoomData, _rooms);
+
+		// Restore current room again
+		_rooms->seek(currentScreen * kRoomRegSize, SEEK_SET);
+		if (_currentRoomData) {
+			delete _currentRoomData;
 		}
-		_currentRoomData->screenLayers[0].bitmapSize = 892;
-		_currentRoomData->screenLayers[0].coordx = 217;
-		_currentRoomData->screenLayers[0].coordy = 48;
-		_currentRoomData->screenLayers[0].depth = 1;
-	} break;
-	case 31: {
-		for (i11 = 23; i11 <= 25; i11++)
-			for (i22 = 4; i22 <= 9; i22++)
-				_currentRoomData->mouseGrid[i11][i22] = 4;
-		for (i11 = 23; i11 <= 25; i11++)
-			for (i22 = 10; i22 <= 11; i22++)
-				_currentRoomData->mouseGrid[i11][i22] = 3;
+		_currentRoomData = readScreenDataFile(_rooms);
 
-		_currentRoomData->screenLayers[0].bitmapSize = 0;
-		_currentRoomData->screenLayers[0].bitmapPointer = 0;
-		_currentRoomData->screenLayers[0].coordx = 0;
-		_currentRoomData->screenLayers[0].coordy = 0;
-		_currentRoomData->screenLayers[0].depth = 0;
-	} break;
+		setRoomTrajectories(_secondaryAnimHeight, _secondaryAnimWidth, SET_WITH_ANIM);
 	}
-
-	// Save other screen
-	saveRoomData(_currentRoomData, _rooms);
-
-	// Restore current room again
-	_rooms->seek(currentScreen * kRoomRegSize, SEEK_SET);
-	if (_currentRoomData) {
-		delete _currentRoomData;
-	}
-	_currentRoomData = readScreenDataFile(_rooms);
-
-	setRoomTrajectories(_secondaryAnimHeight, _secondaryAnimWidth, SET_WITH_ANIM);
 }
 
 void TotEngine::loadTV() {
@@ -4324,7 +4314,7 @@ void TotEngine::clearAnimation() {
 		_curSecondaryAnimationFrame = nullptr;
 		for (int j = 0; j < _secondaryAnimDirCount; j++) {
 			for (int i = 0; i < _secondaryAnimationFrameCount; i++) {
-				if (_secondaryAnimation.bitmap[j][i] != nullptr && _secondaryAnimation.bitmap[j][i] != _curSecondaryAnimationFrame) {
+				if (_secondaryAnimation.bitmap[j][i] != nullptr) {
 					free(_secondaryAnimation.bitmap[j][i]);
 				}
 				_secondaryAnimation.bitmap[j][i] = nullptr;
@@ -4436,6 +4426,7 @@ void TotEngine::drawInventory(byte dir, byte max) {
 		lightUpLeft();
 	else
 		turnOffLeft();
+
 	if (_inventory[_inventoryPosition + 6].code > 0)
 		lightUpRight();
 	else
@@ -4461,6 +4452,44 @@ void TotEngine::drawInventoryMask() {
 		turnOffRight();
 }
 
+byte *getArrow(uint x, uint y) {
+	Common::File menuFile;
+	if (!menuFile.open("MENUS.DAT")) {
+		showError(258);
+	}
+
+	int32 menuOffset = isLanguageSpanish() ? menuOffsets_ES[0][0] : menuOffsets_EN[0][0];
+	uint w = 20;
+	uint h = 18;
+	uint size = 4 + w * h;
+	byte *bitmap = (byte *)malloc(size);
+	WRITE_LE_UINT16(bitmap, w - 1);
+	WRITE_LE_UINT16(bitmap + 2, h - 1);
+	menuFile.seek(menuOffset);
+
+
+	uint originalW = menuFile.readUint16LE() + 1;
+	for(int i = 0; i < h; i++) {
+		menuFile.seek(menuOffset + 4 + + (y + i) * originalW + x);
+		menuFile.read(bitmap + 4 + i * w, w);
+	}
+	menuFile.close();
+	return bitmap;
+}
+
+void TotEngine::drawLeftArrow(uint x, uint y) {
+	byte *bitmap = getArrow(10, 23);
+	_graphics->putImg(x, y, bitmap);
+	free(bitmap);
+}
+
+void TotEngine::drawRightArrow(uint x, uint y) {
+	byte *bitmap = getArrow(291, 23);
+	_graphics->putImg(x, y, bitmap);
+	free(bitmap);
+}
+
+
 void TotEngine::drawMenu(byte menuNumber) {
 	byte *bitmap;
 	uint menuSize;
@@ -4480,14 +4509,12 @@ void TotEngine::drawMenu(byte menuNumber) {
 		xmenu = 0;
 		ymenu = 150;
 	} break;
-	case 2: {
+	case 2:
+	case 3:
+	case 6:
 		xmenu = 50;
 		ymenu = 10;
-	} break;
-	case 3: {
-		xmenu = 50;
-		ymenu = 10;
-	} break;
+		break;
 	case 4: {
 		if (_cpCounter2 > 20)
 			showError(274);
@@ -4499,10 +4526,6 @@ void TotEngine::drawMenu(byte menuNumber) {
 			showError(274);
 		xmenu = 0;
 		ymenu = 150;
-	} break;
-	case 6: {
-		xmenu = 50;
-		ymenu = 10;
 	} break;
 	case 7: {
 		xmenu = 58;
@@ -4569,7 +4592,7 @@ static void loadDiploma(Common::String &photoName, Common::String &key) {
 	g_engine->_screen->markAllDirty();
 	g_engine->_screen->update();
 
-	char *passArray = (char *)malloc(10);
+	char *passArray =  new char[10];
 	for (int i = 0; i < 10; i++)
 		passArray[i] = (char)(getRandom(10) + 48);
 
@@ -4604,6 +4627,7 @@ static void loadDiploma(Common::String &photoName, Common::String &key) {
 	delay(1500);
 	g_engine->_sound->playVoc("PORTAZO", 434988, 932);
 	g_engine->_graphics->putShape(270, 159, stamp);
+	delete[] passArray;
 	free(stamp);
 }
 
@@ -4684,7 +4708,7 @@ void TotEngine::checkMouseGrid() {
 		}
 		_oldActionCode = 253;
 		_oldInventoryObjectName = "";
-	} else if (_mouse->mouseY >= 132 && _mouse->mouseY <= 165) {
+	} else if (_mouse->mouseY <= 165) {
 		if (_actionCode != _oldActionCode) {
 			bar(0, 140, 319, 149, 0);
 			Common::String actionLine;
@@ -4721,7 +4745,7 @@ void TotEngine::checkMouseGrid() {
 			_oldGridX = 0;
 			_oldGridY = 0;
 		}
-	} else if (_mouse->mouseY >= 166 && _mouse->mouseY <= 199) {
+	} else if (_mouse->mouseY <= 199) {
 		if (_mouse->mouseX >= 26 && _mouse->mouseX <= 65) {
 			invObject = _inventory[_inventoryPosition].objectName;
 		} else if (_mouse->mouseX >= 70 && _mouse->mouseX <= 108) {
@@ -4784,6 +4808,8 @@ void TotEngine::readAlphaGraph(Common::String &output, int length, int posx, int
 
 	Common::Event e;
 	bool done = false;
+
+	g_system->getEventManager()->getKeymapper()->setEnabled(false);
 	while (!done && !shouldQuit()) {
 		while (g_system->getEventManager()->pollEvent(e)) {
 
@@ -4825,6 +4851,17 @@ void TotEngine::readAlphaGraph(Common::String &output, int length, int posx, int
 		g_system->delayMillis(10);
 		_screen->update();
 	}
+
+	g_system->getEventManager()->getKeymapper()->setEnabled(true);
+}
+
+bool getEvent(Common::Event &e, Common::Event &firstEvent) {
+	if (firstEvent.type != Common::EVENT_INVALID) {
+		e = firstEvent;
+		firstEvent.type = Common::EVENT_INVALID;
+		return true;
+	}
+	return g_system->getEventManager()->pollEvent(e);
 }
 
 void TotEngine::readAlphaGraphSmall(
@@ -4834,26 +4871,17 @@ void TotEngine::readAlphaGraphSmall(
 	int posy,
 	byte barColor,
 	byte textColor,
-	char startChar) {
+	Common::Event event) {
 	int pun = 1;
 	bool removeCaret = false;
-	if (startChar != 0) {
-		output.append(1, startChar);
-		output.toUppercase();
-		pun += 1;
-		bar(posx, (posy + 2), (posx + length * 6), (posy + 9), barColor);
-		euroText(posx, posy, output, textColor);
-		euroText((posx + (output.size()) * 6), posy, "-", textColor);
-		removeCaret = true;
-	}
-	else {
-		bar(posx, posy + 2, posx + length * 6, posy + 9, barColor);
-		euroText(posx, posy, "-", textColor);
-	}
+	g_system->getEventManager()->getKeymapper()->setEnabled(false);
+	output = "";
+	bar(posx, posy + 2, posx + length * 6, posy + 9, barColor);
+	euroText(posx, posy, "-", textColor);
 	Common::Event e;
 	bool done = false;
 	while (!done && !shouldQuit()) {
-		while (g_system->getEventManager()->pollEvent(e)) {
+		while (getEvent(e, event)) {
 			if (e.type == Common::EVENT_KEYDOWN) {
 				int keycode = e.kbd.keycode;
 				int asciiCode = e.kbd.ascii;
@@ -4862,18 +4890,19 @@ void TotEngine::readAlphaGraphSmall(
 				if (keycode == Common::KEYCODE_RETURN || keycode == Common::KEYCODE_KP_ENTER) {
 					if (output.size() > 0) {
 						done = true;
+						removeCaret = true;
 						continue;
 					}
 				}
 				if (pun > length && asciiCode != 8) {
 					_sound->beep(750, 60);
-					bar((posx + (output.size()) * 6), (posy + 2), (posx + (output.size() + 1) * 6), (posy + 9), barColor);
+					bar((posx + (output.size()) * 6), (posy + 2), (posx + (output.size() + 1) * 6), (posy + 10), barColor);
 				} else if (asciiCode == 8 && pun > 1) {
 					output = output.substr(0, output.size() - 1);
-					output.toUppercase();
-					bar(posx, (posy + 2), (posx + length * 6), (posy + 9), barColor);
+
+					bar(posx, (posy + 2), (posx + length * 6), (posy + 10), barColor);
 					euroText(posx, posy, output, textColor);
-					euroText((posx + (output.size()) * 6), posy, "-", textColor);
+					euroText(posx + _graphics->euroTextWidth(output), posy, "-", textColor);
 					pun -= 1;
 					removeCaret = true;
 				} else if (
@@ -4886,10 +4915,11 @@ void TotEngine::readAlphaGraphSmall(
 				} else {
 					pun += 1;
 					output = output + (char)e.kbd.ascii;
-					output.toUppercase();
+
 					bar(posx, (posy + 2), (posx + length * 6), (posy + 9), barColor);
 					euroText(posx, posy, output, textColor);
-					euroText((posx + (output.size()) * 6), posy, "-", textColor);
+
+					euroText(posx + _graphics->euroTextWidth(output), posy, "-", textColor);
 					removeCaret = true;
 				}
 			}
@@ -4899,8 +4929,10 @@ void TotEngine::readAlphaGraphSmall(
 		_screen->update();
 	}
 
-	if (removeCaret)
-		bar(posx + (output.size()) * 6, posy + 2, (posx + (output.size()) * 6) + 6, posy + 9, barColor);
+	if (removeCaret) {
+		bar(posx + _graphics->euroTextWidth(output), posy + 2, (posx + _graphics->euroTextWidth(output)) + 6, posy + 9, barColor);
+	}
+	g_system->getEventManager()->getKeymapper()->setEnabled(true);
 }
 
 void TotEngine::displayObjectDescription(const Common::String &textString) {
@@ -5008,9 +5040,7 @@ void TotEngine::copyProtection() {
 	byte numColumn = getRandom(38) + 1;
 
 	protectionFile.seek(1 * chunkSize);
-	protXor1 = 6543736;
 	protXor1 = protectionFile.readUint32LE();
-	protXor2 = 9873254;
 	protectionFile.seek((((numRow - 1) * 38) + numColumn + 1) * chunkSize);
 	protXor2 = protectionFile.readUint32LE();
 	inputPassword = 0;
@@ -5071,8 +5101,8 @@ void TotEngine::copyProtection() {
 		int correctedMouseY = _mouse->mouseClickY + 7;
 
 		if ((correctedMouseX > 59 && correctedMouseX < 180) && (correctedMouseY > 28 && correctedMouseY < 119)) {
-			if (correctedMouseY >= 29 && correctedMouseY <= 58) {
-				if (correctedMouseX >= 60 && correctedMouseX <= 89) {
+			if (correctedMouseY <= 58) {
+				if (correctedMouseX <= 89) {
 					if (cursorPos < 50) {
 						_sound->beep(200, beepDelay);
 						buttonPress(60, 29, 89, 58, true);
@@ -5083,7 +5113,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 90 && correctedMouseX <= 119) {
+				} else if (correctedMouseX <= 119) {
 					if (cursorPos < 50) {
 						_sound->beep(250, beepDelay);
 						buttonPress(90, 29, 119, 58, true);
@@ -5094,7 +5124,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 120 && correctedMouseX <= 149) {
+				} else if (correctedMouseX <= 149) {
 					if (cursorPos < 50) {
 						_sound->beep(300, beepDelay);
 						buttonPress(120, 29, 149, 58, true);
@@ -5105,7 +5135,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 150 && correctedMouseX <= 179) {
+				} else {
 					if (cursorPos < 50) {
 						_sound->beep(350, beepDelay);
 						buttonPress(150, 29, 179, 58, true);
@@ -5117,8 +5147,8 @@ void TotEngine::copyProtection() {
 						_sound->beep(70, 250);
 					}
 				}
-			} else if (correctedMouseY >= 59 && correctedMouseY <= 88) {
-				if (correctedMouseX >= 60 && correctedMouseX <= 89) {
+			} else if (correctedMouseY <= 88) {
+				if (correctedMouseX <= 89) {
 					if (cursorPos < 50) {
 						_sound->beep(400, beepDelay);
 						buttonPress(60, 59, 89, 88, true);
@@ -5129,7 +5159,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 90 && correctedMouseX <= 119) {
+				} else if (correctedMouseX <= 119) {
 					if (cursorPos < 50) {
 						_sound->beep(450, beepDelay);
 						buttonPress(90, 59, 119, 88, true);
@@ -5140,7 +5170,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 120 && correctedMouseX <= 149) {
+				} else if (correctedMouseX <= 149) {
 					if (cursorPos < 50) {
 						_sound->beep(500, beepDelay);
 						buttonPress(120, 59, 149, 88, true);
@@ -5151,7 +5181,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 150 && correctedMouseX <= 179) {
+				} else {
 					if (cursorPos < 50) {
 						_sound->beep(550, beepDelay);
 						buttonPress(150, 59, 179, 88, true);
@@ -5163,8 +5193,8 @@ void TotEngine::copyProtection() {
 						_sound->beep(70, 250);
 					}
 				}
-			} else if (correctedMouseY >= 89 && correctedMouseY <= 118) {
-				if (correctedMouseX >= 60 && correctedMouseX <= 89) {
+			} else {
+				if (correctedMouseX <= 89) {
 					if (cursorPos < 50) {
 						_sound->beep(600, beepDelay);
 						buttonPress(60, 89, 89, 118, true);
@@ -5175,7 +5205,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 90 && correctedMouseX <= 119) {
+				} else if (correctedMouseX <= 119) {
 					if (cursorPos < 50) {
 						_sound->beep(650, beepDelay);
 						buttonPress(90, 89, 119, 118, true);
@@ -5186,7 +5216,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 120 && correctedMouseX <= 149) {
+				} else if (correctedMouseX <= 149) {
 					if (cursorPos > 0) {
 						_sound->beep(700, beepDelay);
 						buttonPress(120, 89, 149, 118, true);
@@ -5197,7 +5227,7 @@ void TotEngine::copyProtection() {
 					} else {
 						_sound->beep(70, 250);
 					}
-				} else if (correctedMouseX >= 150 && correctedMouseX <= 179) {
+				} else {
 					if (cursorPos > 39) {
 						_sound->beep(750, beepDelay);
 						buttonPress(150, 89, 179, 118, true);

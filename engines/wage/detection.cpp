@@ -46,6 +46,7 @@ static const PlainGameDescriptor wageGames[] = {
 
 static const DebugChannelDef debugFlagList[] = {
 	{Wage::kDebugImGui, "imgui", "Show ImGui debug window (if available)"},
+	{Wage::kDebugSound, "sound", "Show sound debug information	"},
 	DEBUG_CHANNEL_END
 };
 
@@ -65,7 +66,7 @@ class WageMetaEngineDetection : public AdvancedMetaEngineDetection<ADGameDescrip
 public:
 	WageMetaEngineDetection() : AdvancedMetaEngineDetection(Wage::gameDescriptions, wageGames) {
 		_md5Bytes = 2 * 1024 * 1024;
-		_guiOptions = GUIO3(GUIO_NOSPEECH, GUIO_NOMIDI, GAMEOPTION_TTS);
+		_guiOptions = GUIO4(GUIO_NOSPEECH, GUIO_NOMIDI, GAMEOPTION_TTS, GUIO_NOMUSIC);
 	}
 
 	const char *getName() const override {

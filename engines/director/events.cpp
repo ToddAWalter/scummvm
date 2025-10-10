@@ -20,6 +20,7 @@
  */
 
 #include "common/events.h"
+#include "common/keyboard.h"
 #include "common/system.h"
 #include "common/translation.h"
 
@@ -113,7 +114,7 @@ void DirectorEngine::processEventQUIT() {
 }
 
 bool Window::processEvent(Common::Event &event) {
-	bool flag = MacWindow::processEvent(event);
+	bool flag = false;
 
 	if (_currentMovie && _currentMovie->processEvent(event))
 		flag = true;
@@ -194,7 +195,13 @@ bool Movie::processEvent(Common::Event &event) {
 
 		// TODO: In the original, these events are generated only
 		// along with the kEventIdle event which depends on the idleHandlerPeriod property
-		if (g_director->getVersion() >= 600) {
+		if (g_director->getVersion() >= 500) {
+
+			// In D5, these events are only generated if a mouse button is pressed
+			if (g_director->getVersion() < 600)
+				if (g_system->getEventManager()->getButtonState() == 0)
+					return true;
+
 			if (spriteId > 0) {
 				if (spriteId != _lastEnteredChannelId) {
 					if (_lastEnteredChannelId) {
@@ -228,8 +235,6 @@ bool Movie::processEvent(Common::Event &event) {
 				}
 			}
 
-			_lastClickedSpriteId = spriteId; // for 'the clickOn'
-
 			// FIXME: Check if these are tracked with the right mouse button
 			_lastEventTime = g_director->getMacTicks();
 			_lastClickTime2 = _lastClickTime;
@@ -256,6 +261,12 @@ bool Movie::processEvent(Common::Event &event) {
 
 			debugC(3, kDebugEvents, "Movie::processEvent(): Button Down @(%d, %d), movie '%s'", pos.x, pos.y, _macName.c_str());
 			queueInputEvent(ev, 0, pos);
+
+			// D5 has special behavior here
+			if (g_director->getVersion() >= 500 && g_director->getVersion() < 600) {
+				if (_lastClickedSpriteId)
+					queueInputEvent(kEventMouseEnter, _lastClickedSpriteId, pos);
+			}
 		}
 
 		return true;
@@ -284,6 +295,13 @@ bool Movie::processEvent(Common::Event &event) {
 			}
 
 			queueInputEvent(ev, 0, pos);
+
+			// D5 has special behavior here
+			if (g_director->getVersion() >= 500 && g_director->getVersion() < 600) {
+				if (spriteId)
+					queueInputEvent(kEventMouseLeave, spriteId, pos);
+			}
+
 			sc->renderCursor(pos);
 		}
 		return true;
@@ -291,6 +309,24 @@ bool Movie::processEvent(Common::Event &event) {
 	case Common::EVENT_KEYDOWN:
 		_keyCode = _vm->_KeyCodes.contains(event.kbd.keycode) ? _vm->_KeyCodes[event.kbd.keycode] : 0;
 		_key = event.kbd.ascii;
+		// While most non-letter keys don't affect "the keyPress", there
+		// are some that do and (sadly) we have to account for that.
+		switch (event.kbd.keycode) {
+		case Common::KEYCODE_LEFT:
+			_key = 28;
+			break;
+		case Common::KEYCODE_RIGHT:
+			_key = 29;
+			break;
+		case Common::KEYCODE_UP:
+			_key = 30;
+			break;
+		case Common::KEYCODE_DOWN:
+			_key = 31;
+			break;
+		default:
+			break;
+		}
 		_keyFlags = event.kbd.flags;
 
 		if (event.kbd.keycode == Common::KEYCODE_LSHIFT || event.kbd.keycode == Common::KEYCODE_RSHIFT ||
@@ -325,48 +361,55 @@ bool Movie::processEvent(Common::Event &event) {
 }
 
 bool Window::processWMEvent(Graphics::WindowClick click, Common::Event &event) {
+	bool flag = false;
 	switch (click) {
 	case Graphics::kBorderCloseButton:
 		if (_currentMovie && event.type == Common::EVENT_LBUTTONUP) {
 			_currentMovie->processEvent(kEventCloseWindow, 0);
 			setVisible(false);
 
-			return true;
+			flag = true;
 		}
 		break;
 
 	case Graphics::kBorderActivate:
 		sendWindowEvent(kEventActivateWindow);
-		return true;
+		flag = true;
+		break;
 
 	case Graphics::kBorderDeactivate:
 		sendWindowEvent(kEventDeactivateWindow);
-		return true;
+		flag = true;
+		break;
 
 	case Graphics::kBorderDragged:
 		sendWindowEvent(kEventMoveWindow);
-		return true;
+		flag = true;
+		break;
 
 	case Graphics::kBorderResized:
 		sendWindowEvent(kEventResizeWindow);
-		return true;
+		flag = true;
+		break;
 
 	case Graphics::kBorderMaximizeButton:
 		if (event.type == Common::EVENT_LBUTTONUP) {
 			sendWindowEvent(kEventZoomWindow);
 
-			return true;
+			flag = true;
+			break;
 		}
 		break;
 	default:
 		break;
 	}
 
-	return false;
+	flag |= processEvent(event);
+	return flag;
 }
 
 void Window::sendWindowEvent(LEvent event) {
-	if (_currentMovie && _visible && !_isStage) {
+	if (_currentMovie && _window->isVisible() && !_isStage) {
 		// We cannot call processEvent here directly because it might
 		// be called from within another event processing (like 'on startMovie'	)
 		// which would mess up the Lingo state.

@@ -190,12 +190,20 @@ void FreescapeEngine::traverseEntrance(uint16 entranceID) {
 
 void FreescapeEngine::activate() {
 	Common::Point center(_viewArea.left + _viewArea.width() / 2, _viewArea.top + _viewArea.height() / 2);
-	float xoffset = _crossairPosition.x - center.x;
-	float yoffset = _crossairPosition.y - center.y;
-	xoffset = xoffset * 0.33;
-	yoffset = yoffset * 0.50;
+	// Convert to normalized coordinates [-1, 1]
+	float ndcX = (2.0f * (_crossairPosition.x - _viewArea.left) / _viewArea.width()) - 1.0f;
+	float ndcY = 1.0f - (2.0f * (_crossairPosition.y - _viewArea.top) / _viewArea.height());
 
-	Math::Vector3d direction = directionToVector(_pitch - yoffset, _yaw - xoffset, false);
+	// Calculate angular offsets using perspective projection
+	float fovHorizontalRad = (float)(75.0f * M_PI / 180.0f);
+	float aspectRatio = isCastle() ? 1.6 : 2.18;
+	float fovVerticalRad = 2.0f * atan(tan(fovHorizontalRad / 2.0f) / aspectRatio);
+
+	// Convert NDC to angle offset
+	float angleOffsetX = atan(ndcX * tan(fovHorizontalRad / 2.0f)) * 180.0f / M_PI;
+	float angleOffsetY = atan(ndcY * tan(fovVerticalRad / 2.0f)) * 180.0f / M_PI;
+
+	Math::Vector3d direction = directionToVector(_pitch + angleOffsetY, _yaw - angleOffsetX, false);
 	Math::Ray ray(_position, direction);
 	Object *interacted = _currentArea->checkCollisionRay(ray, 1250.0 / _currentArea->getScale());
 	if (interacted) {
@@ -207,8 +215,10 @@ void FreescapeEngine::activate() {
 
 		executeObjectConditions(gobj, false, false, true);
 	} else {
-		if (!_outOfReachMessage.empty())
+		if (!_outOfReachMessage.empty()) {
+			clearTemporalMessages();
 			insertTemporaryMessage(_outOfReachMessage, _countdown - 2);
+		}
 	}
 	//executeLocalGlobalConditions(true, false, false); // Only execute "on shot" room/global conditions
 }
@@ -222,13 +232,20 @@ void FreescapeEngine::shoot() {
 	g_system->delayMillis(2);
 	_shootingFrames = 10;
 
-	Common::Point center(_viewArea.left + _viewArea.width() / 2, _viewArea.top + _viewArea.height() / 2);
-	float xoffset = _crossairPosition.x - center.x;
-	float yoffset = _crossairPosition.y - center.y;
-	xoffset = xoffset * 0.33;
-	yoffset = yoffset * 0.50;
+	// Convert to normalized coordinates [-1, 1]
+	float ndcX = (2.0f * (_crossairPosition.x - _viewArea.left) / _viewArea.width()) - 1.0f;
+	float ndcY = 1.0f - (2.0f * (_crossairPosition.y - _viewArea.top) / _viewArea.height());
 
-	Math::Vector3d direction = directionToVector(_pitch - yoffset, _yaw - xoffset, false);
+	// Calculate angular offsets using perspective projection
+	float fovHorizontalRad = (float)(75.0f * M_PI / 180.0f);
+	float aspectRatio = isCastle() ? 1.6 : 2.18;
+	float fovVerticalRad = 2.0f * atan(tan(fovHorizontalRad / 2.0f) / aspectRatio);
+
+	// Convert NDC to angle offset
+	float angleOffsetX = atan(ndcX * tan(fovHorizontalRad / 2.0f)) * 180.0f / M_PI;
+	float angleOffsetY = atan(ndcY * tan(fovVerticalRad / 2.0f)) * 180.0f / M_PI;
+
+	Math::Vector3d direction = directionToVector(_pitch + angleOffsetY, _yaw - angleOffsetX, false);
 	Math::Ray ray(_position, direction);
 	Object *shot = _currentArea->checkCollisionRay(ray, 8192);
 	if (shot) {
@@ -425,6 +442,18 @@ void FreescapeEngine::updatePlayerMovementClassic(float deltaTime) {
 }
 
 void FreescapeEngine::updatePlayerMovementSmooth(float deltaTime) {
+	if (_moveForward && !_eventManager->isActionActive(kActionMoveUp))
+		_moveForward = false;
+
+	if (_moveBackward && !_eventManager->isActionActive(kActionMoveDown))
+		_moveBackward = false;
+
+	if (_strafeLeft && !_eventManager->isActionActive(kActionMoveLeft))
+		_strafeLeft = false;
+
+	if (_strafeRight && !_eventManager->isActionActive(kActionMoveRight))
+		_strafeRight = false;
+
 	if (!_moveForward && !_moveBackward && !_strafeLeft && !_strafeRight)
 		return;
 
@@ -471,8 +500,6 @@ void FreescapeEngine::resolveCollisions(Math::Vector3d const position) {
 
 	_gotoExecuted = false;
 	bool executed = runCollisionConditions(lastPosition, newPosition);
-	if (executed)
-		stopMovement();
 
 	if (_gotoExecuted) {
 		_gotoExecuted = false;
@@ -543,8 +570,7 @@ void FreescapeEngine::resolveCollisions(Math::Vector3d const position) {
 	if (!_hasFallen && fallen > 0) {
 		isSteppingDown = true;
 		// Position in Y was changed, let's re-run effects
-		if (runCollisionConditions(_lastPosition, newPosition))
-			stopMovement();
+		runCollisionConditions(_lastPosition, newPosition); 
 	}
 
 	if (isSteppingUp && (newPosition - _lastPosition).length() <= 1) {
@@ -558,15 +584,15 @@ void FreescapeEngine::resolveCollisions(Math::Vector3d const position) {
 	}
 
 	if (isSteppingUp)  {
-		debug("Stepping up sound!");
+		//debug("Stepping up sound!");
 		if (!_mixer->isSoundHandleActive(_movementSoundHandle))
 			playSound(_soundIndexStepUp, false, _movementSoundHandle);
 	} else if (isSteppingDown) {
-		debug("Stepping down sound!");
+		//debug("Stepping down sound!");
 		if (!_mixer->isSoundHandleActive(_movementSoundHandle))
 			playSound(_soundIndexStepDown, false, _movementSoundHandle);
 	} else if (isCollidingWithWall) {
-		debug("Colliding with wall sound!");
+		//debug("Colliding with wall sound!");
 		if (!_mixer->isSoundHandleActive(_movementSoundHandle))
 			playSound(_soundIndexCollide, false, _movementSoundHandle);
 	}
@@ -592,8 +618,7 @@ bool FreescapeEngine::runCollisionConditions(Math::Vector3d const lastPosition, 
 	Object *collided = nullptr;
 	_gotoExecuted = false;
 
-	if (!_smoothMovement)
-		_speaker->stop();
+	_speaker->stop();
 
 	Math::Ray ray(newPosition, -_upVector);
 	collided = _currentArea->checkCollisionRay(ray, _playerHeight + 3);

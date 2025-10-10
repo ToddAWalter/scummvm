@@ -49,7 +49,6 @@ bool ShadowVolumeTinyGL::render() {
 	tglDisable(TGL_TEXTURE_2D);
 	_game->_renderer3D->_lastTexture = nullptr;
 
-	tglColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	tglEnableClientState(TGL_VERTEX_ARRAY);
 	tglVertexPointer(3, TGL_FLOAT, 0, _vertices.getData());
 	tglDrawArrays(TGL_TRIANGLES, 0, _vertices.getSize());
@@ -60,9 +59,10 @@ bool ShadowVolumeTinyGL::render() {
 
 //////////////////////////////////////////////////////////////////////////
 bool ShadowVolumeTinyGL::renderToStencilBuffer() {
-	// Disable z-buffer writes (note: z-testing still occurs), and enable the
+	// Disable z-buffer/color writes (note: z-testing still occurs), and enable the
 	// stencil-buffer
 	tglDepthMask(TGL_FALSE);
+	tglColorMask(TGL_FALSE, TGL_FALSE, TGL_FALSE, TGL_FALSE);
 	tglDisable(TGL_TEXTURE_2D);
 	tglDisable(TGL_LIGHTING);
 	tglEnable(TGL_STENCIL_TEST);
@@ -72,12 +72,9 @@ bool ShadowVolumeTinyGL::renderToStencilBuffer() {
 	// Stencil test passes if ((ref & mask) cmpfn (stencil & mask)) is true.
 	// Note: since we set up the stencil-test to always pass, the STENCILFAIL
 	// renderstate is really not needed.
-	tglStencilFunc(TGL_ALWAYS, 0x1, 0xFFFFFFFF);
+	tglStencilFunc(TGL_ALWAYS, 0x1, 0xff);
 
 	tglShadeModel(TGL_FLAT);
-	// Make sure that no pixels get drawn to the frame buffer
-	tglEnable(TGL_BLEND);
-	tglBlendFunc(TGL_ZERO, TGL_ONE);
 
 	tglStencilOp(TGL_KEEP, TGL_KEEP, TGL_INCR);
 
@@ -97,6 +94,7 @@ bool ShadowVolumeTinyGL::renderToStencilBuffer() {
 	tglFrontFace(TGL_CCW);
 	tglShadeModel(TGL_SMOOTH);
 	tglDepthMask(TGL_TRUE);
+	tglColorMask(TGL_TRUE, TGL_TRUE, TGL_TRUE, TGL_TRUE);
 	tglDisable(TGL_STENCIL_TEST);
 	tglDisable(TGL_BLEND);
 
@@ -113,7 +111,7 @@ bool ShadowVolumeTinyGL::renderToScene() {
 	tglBlendFunc(TGL_SRC_ALPHA, TGL_ONE_MINUS_SRC_ALPHA);
 
 	// Only write where stencil val >= 1 (count indicates # of shadows that overlap that pixel)
-	tglStencilFunc(TGL_LEQUAL, 0x1, 0xFFFFFFFF);
+	tglStencilFunc(TGL_LEQUAL, 0x1, 0xff);
 	tglStencilOp(TGL_KEEP, TGL_KEEP, TGL_KEEP);
 
 	tglDisable(TGL_FOG);
@@ -122,10 +120,11 @@ bool ShadowVolumeTinyGL::renderToScene() {
 
 	tglBindTexture(TGL_TEXTURE_2D, 0);
 
-	BaseRenderTinyGL *renderer = dynamic_cast<BaseRenderTinyGL *>(_game->_renderer3D);
+	BaseRenderTinyGL *renderer = (BaseRenderTinyGL *)_game->_renderer3D;
 	renderer->setProjection2D();
 
-	tglFrontFace(TGL_CW);
+	// FIXME: CW->CCW Why it differ from OpenGL?
+	tglFrontFace(TGL_CCW);
 
 	tglEnableClientState(TGL_COLOR_ARRAY);
 	tglEnableClientState(TGL_VERTEX_ARRAY);

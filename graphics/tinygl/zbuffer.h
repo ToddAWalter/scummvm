@@ -300,34 +300,35 @@ private:
 
 	FORCEINLINE void stencilOp(bool stencilTestResult, bool depthTestResult, byte *sDst) {
 		int op = !stencilTestResult ? _stencilSfail : !depthTestResult ? _stencilDpfail : _stencilDppass;
-		byte value = *sDst;
+		byte oldValue = *sDst;
+		byte newValue = oldValue;
 		switch (op) {
 		case TGL_KEEP:
 			return;
 		case TGL_ZERO:
-			value = 0;
+			newValue = 0;
 			break;
 		case TGL_REPLACE:
-			value = _stencilRefVal;
+			newValue = _stencilRefVal;
 			break;
 		case TGL_INCR:
-			if (value < 255)
-				value++;
+			if (newValue < 255)
+				newValue++;
 			break;
 		case TGL_INCR_WRAP:
-			value++;
+			newValue++;
 			break;
 		case TGL_DECR:
-			if (value > 0)
-				value--;
+			if (newValue > 0)
+				newValue--;
 			break;
 		case TGL_DECR_WRAP:
-			value--;
+			newValue--;
 			break;
 		case TGL_INVERT:
-			value = ~value;
+			newValue = ~newValue;
 		}
-		*sDst = value & _stencilWriteMask;
+		*sDst = (newValue & _stencilWriteMask) | (oldValue & ~_stencilWriteMask);
 	}
 
 	template <bool kEnableAlphaTest, bool kBlendingEnabled>
@@ -651,7 +652,7 @@ public:
 		_polygonStipplePattern = stipple;
 	}
 
-	void setStencilTestFunc(int stencilFunc, int stencilValue, uint stencilMask) {
+	void setStencilTestFunc(int stencilFunc, byte stencilValue, byte stencilMask) {
 		_stencilTestFunc = stencilFunc;
 		_stencilRefVal = stencilValue;
 		_stencilMask = stencilMask;
@@ -829,9 +830,9 @@ private:
 	bool _depthWrite;
 	bool _stencilTestEnabled;
 	int _stencilTestFunc;
-	int _stencilRefVal;
-	uint _stencilMask;
-	uint _stencilWriteMask;
+	byte _stencilRefVal;
+	byte _stencilMask;
+	byte _stencilWriteMask;
 	int _stencilSfail;
 	int _stencilDpfail;
 	int _stencilDppass;

@@ -53,6 +53,7 @@ BaseRenderer3D *makeTinyGL3DRenderer(BaseGame *inGame) {
 
 BaseRenderTinyGL::BaseRenderTinyGL(BaseGame *inGame) : BaseRenderer3D(inGame) {
 	_flipInProgress = false;
+	_shadowVolumesSupported = false;
 }
 
 BaseRenderTinyGL::~BaseRenderTinyGL() {
@@ -97,6 +98,9 @@ bool BaseRenderTinyGL::initRenderer(int width, int height, bool windowed) {
 	_simpleShadow[3].u = 1.0f;
 	_simpleShadow[3].v = 0.0f;
 
+	// Disable shadow rendering as it's slow and a bit glitching in precision
+	_shadowVolumesSupported = false;
+
 	Graphics::PixelFormat pixelFormat = getPixelFormat();
 	initGraphics(width, height, &pixelFormat);
 	if (g_system->getScreenFormat() != pixelFormat) {
@@ -105,7 +109,7 @@ bool BaseRenderTinyGL::initRenderer(int width, int height, bool windowed) {
 	}
 
 	debug(2, "INFO: TinyGL front buffer pixel format: %s", pixelFormat.toString().c_str());
-	TinyGL::createContext(width, height, pixelFormat, 512, true, false/*ConfMan.getBool("dirtyrects")*/, 64 * 1024 * 1024);
+	TinyGL::createContext(width, height, pixelFormat, 512, true, ConfMan.getBool("dirtyrects"), 5 * 1024 * 1024);
 
 	setSpriteBlendMode(Graphics::BLEND_NORMAL, true);
 
@@ -752,9 +756,8 @@ void BaseRenderTinyGL::setSpriteBlendMode(Graphics::TSpriteBlendMode blendMode, 
 	}
 }
 
-bool BaseRenderTinyGL::stencilSupported() {
-	// assume that we have a stencil buffer
-	return true;
+bool BaseRenderTinyGL::shadowVolumeSupported() {
+	return _shadowVolumesSupported;
 }
 
 int BaseRenderTinyGL::getMaxActiveLights() {

@@ -554,12 +554,11 @@ bool CHodjPodjWindow::OnCommand(WPARAM wParam, LPARAM lParam) {
 	// this must be before the CMainGameDlg constructor
 	PositionAtHomePath();
 
-	bool            bSuccess;
-	CMainGameDlg    cMainDlg((CWnd *)this, pGamePalette);
-	int             nMainDlgReturn = 0;
-	CDC            *pDC = nullptr;
-	CWnd           *pWnd = nullptr;
-	int                         nMovieId;
+	bool bSuccess;
+	CMainGameDlg cMainDlg((CWnd *)this, pGamePalette);
+	int nMainDlgReturn = 0;
+	CWnd *pWnd = nullptr;
+	int nMovieId;
 
 	switch (wParam) {
 	case MOVIE_OVER:
@@ -691,9 +690,6 @@ bool CHodjPodjWindow::OnCommand(WPARAM wParam, LPARAM lParam) {
 			PostMessage(WM_COMMAND, IDC_MAINDLG);
 		break;
 	}
-
-	if (pDC != nullptr)
-		ReleaseDC(pDC);
 
 	return true;
 }
@@ -854,10 +850,9 @@ LRESULT CHodjPodjWindow::OnMCINotify(WPARAM wParam, LPARAM lParam) {
  *
  ****************************************************************/
 
-void    CHodjPodjWindow::LoadNewDLL(LPARAM lParam) {
-	bool    bSuccess = false;
-	int     nWhichDLL;
-	bool    bLoadedDLL;
+void CHodjPodjWindow::LoadNewDLL(LPARAM lParam) {
+	int nWhichDLL;
+	bool bLoadedDLL;
 	CWinApp *pMyApp;
 
 	pMyApp = AfxGetApp();
@@ -873,18 +868,18 @@ void    CHodjPodjWindow::LoadNewDLL(LPARAM lParam) {
 
 		if (bReturnToZoom) {
 			StartBackgroundMidi();
-			bSuccess = LoadZoomDLL();
+			LoadZoomDLL();
 		}
 
 		if (bReturnToMeta) {
 			StopBackgroundMidi();
 			lpMetaGame->m_bRestart = true;
-			bSuccess = LoadMetaDLL();
+			LoadMetaDLL();
 		}
 
 		if (bReturnToGrandTour) {
 			StartBackgroundMidi();
-			bSuccess = LoadGrandTourDLL();
+			LoadGrandTourDLL();
 		}
 
 		return;
@@ -894,7 +889,7 @@ void    CHodjPodjWindow::LoadNewDLL(LPARAM lParam) {
 
 	if (lParam == MG_GAME_CHALLENGE) {
 		StartBackgroundMidi();
-		bSuccess = LoadZoomDLL();
+		bool bSuccess = LoadZoomDLL();
 		bReturnToZoom = false;
 		if (bSuccess == false) {
 			lpMetaGame->m_bRestart = true;
@@ -957,11 +952,11 @@ void    CHodjPodjWindow::LoadNewDLL(LPARAM lParam) {
 			MessageBox("Verify proper game installation and try again.");
 
 			if (bReturnToZoom)
-				bSuccess = LoadZoomDLL();
+				LoadZoomDLL();
 
 			if (bReturnToMeta) {
 				lpMetaGame->m_bRestart = true;
-				bSuccess = LoadMetaDLL();
+				LoadMetaDLL();
 			}
 		}
 	}

@@ -157,7 +157,6 @@ CMainWSWindow::CMainWSWindow(HWND hCallingWnd, LPGAMESTRUCT lpGameStruct) :
 	// load splash screen
 	pDC = GetDC();                                  // get a device context for our window
 
-	pbmpSplashScreen = new CBitmap();
 	pbmpSplashScreen = FetchBitmap(pDC, &pGamePalette, SPLASHSPEC);      // get splash screen and game palettte
 
 	pOldPal = pDC->SelectPalette(pGamePalette, false);   // load game palette
@@ -204,7 +203,6 @@ CMainWSWindow::CMainWSWindow(HWND hCallingWnd, LPGAMESTRUCT lpGameStruct) :
 	pOldOffScreenBmp = pOffScreenDC->SelectObject(pOffScreenBmp);            // load in offscreen bitmap
 	pOffScreenDC->RealizePalette();                                         // realize palette
 
-	pbmpAllLetters = new CBitmap;
 	//pbmpAllLetters = FetchBitmap( pDC, nullptr, ALLLETTERS );
 	pbmpAllLetters = FetchBitmap(pOffScreenDC, nullptr, ALLLETTERS);
 	ASSERT(pbmpAllLetters != 0);
@@ -556,7 +554,7 @@ void CMainWSWindow::CreateNewGrid() {
 			}
 			switch (nDirection) {
 			case 0: // going right
-				if (ptSPos.x + nWordLen > NUMBEROFCOLS)
+				if (ptSPos.x + nWordLen >= NUMBEROFCOLS)
 					continue;
 				bTemp2 = true;
 				for (z = 0; z < nWordLen; z++) {
@@ -573,9 +571,9 @@ void CMainWSWindow::CreateNewGrid() {
 				}
 				break;
 			case 1: // going down and right
-				if (ptSPos.x + nWordLen > NUMBEROFCOLS)
+				if (ptSPos.x + nWordLen >= NUMBEROFCOLS)
 					continue;
-				if (ptSPos.y + nWordLen > NUMBEROFROWS)
+				if (ptSPos.y + nWordLen >= NUMBEROFROWS)
 					continue;
 				bTemp2 = true;
 				for (z = 0; z < nWordLen; z++) {
@@ -592,7 +590,7 @@ void CMainWSWindow::CreateNewGrid() {
 				}
 				break;
 			case 2: // going down
-				if (ptSPos.y + nWordLen > NUMBEROFROWS)
+				if (ptSPos.y + nWordLen >= NUMBEROFROWS)
 					continue;
 				bTemp2 = true;
 				for (z = 0; z < nWordLen; z++) {
@@ -609,7 +607,7 @@ void CMainWSWindow::CreateNewGrid() {
 				}
 				break;
 			case 3: // going down and left
-				if (ptSPos.y + nWordLen > NUMBEROFROWS)
+				if (ptSPos.y + nWordLen >= NUMBEROFROWS)
 					continue;
 				if (ptSPos.x - nWordLen < 0)
 					continue;
@@ -681,7 +679,7 @@ void CMainWSWindow::CreateNewGrid() {
 				}
 				break;
 			case 7: // going up and right
-				if (ptSPos.x + nWordLen > NUMBEROFCOLS)
+				if (ptSPos.x + nWordLen >= NUMBEROFCOLS)
 					continue;
 				if (ptSPos.y - nWordLen < 0)
 					continue;
@@ -942,8 +940,6 @@ void CMainWSWindow::OnLButtonDown(unsigned int nFlags, CPoint point) {
 				m_bMouseCaptured = true;
 				ptCurrPosInGrid.x = x;
 				ptCurrPosInGrid.y = y;
-				ptOrigPosInGrid.x = x;
-				ptOrigPosInGrid.y = y;
 				ptOrigPosInGrid.x = x;
 				ptOrigPosInGrid.y = y;
 				ptLastPosInGrid.x = x;

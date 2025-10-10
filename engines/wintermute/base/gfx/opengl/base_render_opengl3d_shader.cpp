@@ -630,7 +630,7 @@ bool BaseRenderOpenGL3DShader::setProjection() {
 
 bool BaseRenderOpenGL3DShader::drawLine(int x1, int y1, int x2, int y2, uint32 color) {
 	setupLines();
-	
+
 	x1 += _drawOffsetX;
 	x2 += _drawOffsetX;
 	y1 += _drawOffsetY;
@@ -863,8 +863,7 @@ void BaseRenderOpenGL3DShader::setSpriteBlendMode(Graphics::TSpriteBlendMode ble
 	}
 }
 
-bool BaseRenderOpenGL3DShader::stencilSupported() {
-	// assume that we have a stencil buffer
+bool BaseRenderOpenGL3DShader::shadowVolumeSupported() {
 	return true;
 }
 

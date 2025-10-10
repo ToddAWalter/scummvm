@@ -69,14 +69,18 @@ struct EventHandlerType {
 	{ kEventMouseDown,			"mouseDown" },			// D2 w	D3
 	{ kEventRightMouseDown,		"rightMouseDown" },		//				D5
 	{ kEventRightMouseUp,		"rightMouseUp" },		//				D5
-	{ kEventMouseEnter,			"mouseEnter" },			//					D6
-	{ kEventMouseLeave,			"mouseLeave" },			//					D6
+	{ kEventMouseEnter,			"mouseEnter" },			//					D6, present in D5
+	{ kEventMouseLeave,			"mouseLeave" },			//					D6, present in D5
 	{ kEventMouseUpOutSide,		"mouseUpOutSide" },		// 					D6
-	{ kEventMouseWithin,		"mouseWithin" },		//					D6
+	{ kEventMouseWithin,		"mouseWithin" },		//					D6, present in D5
 
 	{ kEventTimeout,			"timeout" },			// D2 as when
 
 	{ kEventStartUp,			"startUp" },
+
+	{ kEventGetBehaviorDescription,	"getBehaviorDescription" }, //			D6
+	{ kEventGetPropertyDescriptionList,	"getPropertyDescriptionList" }, //	D6
+	{ kEventRunPropertyDialog,	"runPropertyDialog" },	 //					D6
 
 	{ kEventGeneric,			"scummvm_generic" },
 
@@ -128,6 +132,9 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 			spriteId = _score->getActiveSpriteIDFromPos(event.mousePos);
 		else
 			spriteId = _score->getMouseSpriteIDFromPos(event.mousePos);
+
+		if (event.event == kEventMouseDown || event.event == kEventRightMouseDown)
+			_lastClickedSpriteId = _score->getActiveSpriteIDFromPos(event.mousePos); // the clickOn
 	}
 	// Very occasionally, we want to specify an event with a channel ID
 	// rather than infer it from the position. Allow it to override.
@@ -233,7 +240,8 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 			bool immediate = false;
 			Common::String initializerParams;
 			// mouseUp events seem to check the frame script ID from the original mouseDown event
-			if ((event.event == kEventMouseUp) || (event.event == kEventRightMouseUp)) {
+			// In Director 5 and above, we always generate event for the actual sprite under the mouse
+			if (((event.event == kEventMouseUp) || (event.event == kEventRightMouseUp)) && _vm->getVersion() < 500) {
 				scriptId = _currentMouseDownSpriteScriptID;
 				immediate = _currentMouseDownSpriteImmediate;
 			} else {
@@ -247,8 +255,12 @@ void Movie::resolveScriptEvent(LingoEvent &event) {
 
 				if (_vm->getVersion() >= 600) {
 					if (event.behaviorIndex >= 0) {
-						scriptId = sprite->_behaviors[event.behaviorIndex].memberID;
-						initializerParams = sprite->_behaviors[event.behaviorIndex].initializerParams;
+						if (event.behaviorIndex >= (int)sprite->_behaviors.size()) {
+							warning("Movie::resolveScriptEvent: invalid behavior index %d, ignoring", event.behaviorIndex);
+						} else {
+							scriptId = sprite->_behaviors[event.behaviorIndex].memberID;
+							initializerParams = sprite->_behaviors[event.behaviorIndex].initializerParams;
+						}
 					} else {
 						_lastClickedSpriteId = 0;
 						return;
@@ -539,14 +551,14 @@ void Movie::queueEvent(Common::Queue<LingoEvent> &queue, LEvent event, int targe
 		case kEventMouseWithin:		// D6+
 			if (_vm->getVersion() >= 600) {
 				if (pointedSpriteId != 0) {
-					Channel *channel = _score->_channels[channelId];
+					Channel *channel = _score->getChannelById(pointedSpriteId);
 
 					// Generate event for each behavior, and pass through for all but the last one.
 					// This is to allow multiple behaviors on a single sprite to each have a
 					// chance to handle the event.
 					for (uint i = 0; i < channel->_scriptInstanceList.size(); i++) {
 						bool passThrough = (i != channel->_scriptInstanceList.size() - 1);
-						queue.push(LingoEvent(event, eventId, kSpriteHandler, passThrough, pos, channelId, i));
+						queue.push(LingoEvent(event, eventId, kSpriteHandler, passThrough, pos, pointedSpriteId, i));
 					}
 
 					if (event == kEventBeginSprite || event == kEventEndSprite || event == kEventMouseUpOutSide) {

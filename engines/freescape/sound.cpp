@@ -162,7 +162,7 @@ void FreescapeEngine::loadSpeakerFxZX(Common::SeekableReadStream *file, int sfxT
 					soundUnitZX soundUnit;
 					soundUnit.isRaw = true;
 					int totalSize = soundSize + sVar7;
-					soundUnit.rawFreq = 0.1;
+					soundUnit.rawFreq = 0.1f;
 					soundUnit.rawLengthus = totalSize;
 					_soundsSpeakerFxZX[i]->push_back(soundUnit);
 					//debugN("%x ", silenceSize);
@@ -444,16 +444,17 @@ void FreescapeEngine::playSoundFx(int index, bool sync) {
 }
 
 void FreescapeEngine::stopAllSounds(Audio::SoundHandle &handle) {
+	debugC(1, kFreescapeDebugMedia, "Stopping sound");
 	_mixer->stopHandle(handle);
 }
 
 void FreescapeEngine::waitForSounds() {
 	if (_usePrerecordedSounds || isAmiga() || isAtariST())
 		while (_mixer->isSoundHandleActive(_soundFxHandle))
-			g_system->delayMillis(10);
+			waitInLoop(10);
 	else {
 		while (!_speaker->endOfStream())
-			g_system->delayMillis(10);
+			waitInLoop(10);
 	}
 }
 

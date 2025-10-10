@@ -410,7 +410,10 @@ bool AdActor3DX::display() {
 
 	TShadowType shadowType = _game->getMaxShadowType(this);
 	if (shadowType == SHADOW_STENCIL) {
-		displayShadowVolume();
+		// Skip shadow volume rendering if not supported
+		if (_game->_renderer3D->shadowVolumeSupported()) {
+			displayShadowVolume();
+		}
 	} else if (shadowType > SHADOW_NONE) {
 		if (_game->_maxShadowType > SHADOW_NONE) {
 			bool simpleShadow = shadowType <= SHADOW_SIMPLE;
@@ -1166,7 +1169,7 @@ bool AdActor3DX::loadBuffer(char *buffer, bool complete) {
 				_game->_surfaceStorage->removeSurface(_shadowImage);
 			_shadowImage = nullptr;
 
-			_shadowImage = _game->_surfaceStorage->addSurface(params);
+			_shadowImage = _game->_surfaceStorage->addSurface(params, false);
 			break;
 
 		case TOKEN_BLOCKED_REGION: {

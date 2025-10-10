@@ -139,12 +139,12 @@ typedef struct {
 // CBmpTable -- table of bitmap filenames
 class CBmpTable {
 public:
-	int m_iBmpType ;        // BMT_xxxx
-	int m_iNumStones ;      // 0 means "many"
-	int m_iNumBmps ;        // number of bmp files for this combo
-	const char *m_xpszFilenameString ;  // sprintf string
-	bool m_bSubNumStones ;
-	bool m_bMasked ;        // mask white areas of bitmap
+	int m_iBmpType;				// BMT_xxxx
+	int m_iNumStones;			// 0 means "many"
+	int m_iNumBmps;				// number of bmp files for this combo
+	const char *m_xpszFilenameString;  // sprintf string
+	bool m_bSubNumStones;
+	bool m_bMasked;			// mask white areas of bitmap
 } ;
 
 // CBmpObject -- bitmap object
@@ -322,7 +322,6 @@ private: bool SetBestWinCount(CMove * xpcMove) ;
 
 	bool DefensiveStaticEvaluation(CMove*);
 	bool TreeAlgo(CMove*);
-	int ExtendedStaticEvaluation(MOVE*, MOVE*, signed char, int);
 
 } ; // CMnk
 

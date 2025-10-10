@@ -427,12 +427,6 @@ void FreescapeEngine::clearBackground() {
 void FreescapeEngine::drawBackground() {
 	clearBackground();
 	_gfx->drawBackground(_currentArea->_skyColor);
-
-	if (isCastle() && _background) {
-		if (!_skyTexture)
-			_skyTexture = _gfx->createTexture(_background->surfacePtr(), true);
-		_gfx->drawSkybox(_skyTexture, _position);
-	}
 }
 
 void FreescapeEngine::drawFrame() {
@@ -462,7 +456,7 @@ void FreescapeEngine::drawFrame() {
 
 	drawBackground();
 	if (_avoidRenderingFrames == 0) { // Avoid rendering inside objects
-		_currentArea->draw(_gfx, _ticks / 10, _position, _cameraFront);
+		_currentArea->draw(_gfx, _ticks / 10, _position, _cameraFront, false);
 		if (_gameStateControl == kFreescapeGameStatePlaying &&
 		    _currentArea->hasActiveGroups() && _ticks % 50 == 0) {
 			executeMovementConditions();
@@ -781,6 +775,8 @@ void FreescapeEngine::executeMovementConditions() {
 
 void FreescapeEngine::updateTimeVariables() {}
 
+void FreescapeEngine::beforeStarting() {}
+
 Common::Error FreescapeEngine::run() {
 	_vsyncEnabled = g_system->getFeatureState(OSystem::kFeatureVSync);
 	_frameLimiter = new Graphics::FrameLimiter(g_system, ConfMan.getInt("engine_speed"));
@@ -803,7 +799,6 @@ Common::Error FreescapeEngine::run() {
 	// Load game data and init game state
 	loadDataBundle();
 	loadAssets();
-	initGameState();
 	loadColorPalette();
 
 	if (g_system->getFeatureState(OSystem::kFeatureTouchscreen)) {
@@ -824,33 +819,30 @@ Common::Error FreescapeEngine::run() {
 	processBorder(); // Border is processed to use during the game
 
 	if (saveSlot >= 0) { // load the savegame
+		initGameState();
 		loadGameState(saveSlot);
-	} else
-		gotoArea(_startArea, _startEntrance);
-
-	debugC(1, kFreescapeDebugMove, "Starting area %d", _currentArea->getAreaID());
-	// Draw first frame
+	} 
 
 	g_system->showMouse(false);
 	g_system->lockMouse(true);
 	resetInput();
-	_gfx->computeScreenViewport();
-	_gfx->clear(0, 0, 0, true);
-	_gfx->flipBuffer();
-	g_system->updateScreen();
 
 	while (!shouldQuit()) {
 		float currentFrame = g_system->getMillis();
 		float deltaTime = (currentFrame - _lastFrame) / 1000.0f;
 		_lastFrame = currentFrame;
 
-		updateTimeVariables();
-		if (_gameStateControl == kFreescapeGameStateRestart) {
+		if (_gameStateControl == kFreescapeGameStateRestart || _gameStateControl == kFreescapeGameStateStart) {
 			initGameState();
 			gotoArea(_startArea, _startEntrance);
+			g_system->updateScreen();
+			debugC(1, kFreescapeDebugMove, "Starting area %d", _currentArea->getAreaID());
+			beforeStarting();
+			_gameStateControl = kFreescapeGameStatePlaying;
 		} else if (_gameStateControl == kFreescapeGameStateEnd)
 			endGame();
 
+		updateTimeVariables();
 		processInput();
 		updatePlayerMovement(deltaTime);
 		if (_demoMode)
@@ -1017,7 +1009,6 @@ uint16 FreescapeEngine::getGameBit(int index) {
 }
 
 void FreescapeEngine::initGameState() {
-	_gameStateControl = kFreescapeGameStatePlaying;
 	_endGameDelayTicks = int(2 * 60); // 2.5 seconds at 60 frames per second
 
 	for (int i = 0; i < k8bitMaxVariable; i++) // TODO: check maximum variable
@@ -1148,6 +1139,7 @@ Common::Error FreescapeEngine::loadGameStream(Common::SeekableReadStream *stream
 		gotoArea(areaID, -1); // Do not change position nor rotation
 
 	_playerHeight = 32 * (_playerHeightNumber + 1) - 16 / float(_currentArea->_scale);
+	_gameStateControl = kFreescapeGameStatePlaying;
 	return loadGameStreamExtended(stream);
 }
 

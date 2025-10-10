@@ -27,6 +27,13 @@
 
 namespace Director {
 
+SoundCastMember::SoundCastMember(Cast *cast, uint16 castId)
+		: CastMember(cast, castId) {
+	_type = kCastSound;
+	_audio = nullptr;
+	_looping = 0;
+}
+
 SoundCastMember::SoundCastMember(Cast *cast, uint16 castId, Common::SeekableReadStreamEndian &stream, uint16 version)
 		: CastMember(cast, castId, stream) {
 	_type = kCastSound;
@@ -184,6 +191,9 @@ void SoundCastMember::unload() {
 bool SoundCastMember::hasField(int field) {
 	switch (field) {
 	case kTheChannelCount:
+	case kTheCuePointNames:		// D6
+	case kTheCuePointTimes:		// D6
+	case kTheCurrentTime:		// D6
 	case kTheSampleRate:
 	case kTheSampleSize:
 		return true;

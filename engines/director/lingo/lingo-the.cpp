@@ -48,78 +48,81 @@ namespace Director {
 class Sprite;
 
 TheEntity entities[] = {					//	hasId  ver.	isFunction
-	{ kTheActiveWindow,		"activeWindow",		false, 500, false },	//				D5 property
-	{ kTheActorList,		"actorList",		false, 400, false },	//			D4 p
-	{ kTheBeepOn,			"beepOn",			false, 200, false },	// D2 p
-	{ kTheButtonStyle,		"buttonStyle",		false, 200, false },	// D2 p
-	{ kTheCast,				"cast",				true,  200, false },	// D2
-	{ kTheCastLibs,			"castLibs",			false, 500, false },	//				D5 p
-	{ kTheCastMembers,		"castmembers",		false, 300, false },	//		 D3
-	{ kTheCenterStage,		"centerStage",		false, 200, false },	// D2 p
-	{ kTheCheckBoxAccess,	"checkBoxAccess",	false, 200, false },	// D2 p
-	{ kTheCheckBoxType,		"checkBoxType",		false, 200, false },	// D2 p
-	{ kTheChunk,			"chunk",			true,  300, false },	//		D3
+	{ kTheActiveWindow,		"activeWindow",		false, 500, false },//				D5 property
+	{ kTheActorList,		"actorList",		false, 400, false },//			D4 p
+	{ kTheAlertHook,		"alertHook",		false, 600, true },	//					D6 p
+	{ kTheApplicationPath,	"applicationPath",	false, 600, true },	//					D6 f
+	{ kTheBeepOn,			"beepOn",			false, 200, false },// D2 p
+	{ kTheButtonStyle,		"buttonStyle",		false, 200, false },// D2 p
+	{ kTheCast,				"cast",				true,  200, false },// D2
+	{ kTheCastLibs,			"castLibs",			false, 500, false },//				D5 p
+	{ kTheCastMembers,		"castmembers",		false, 300, false },//		D3
+	{ kTheCenterStage,		"centerStage",		false, 200, false },// D2 p
+	{ kTheCheckBoxAccess,	"checkBoxAccess",	false, 200, false },// D2 p
+	{ kTheCheckBoxType,		"checkBoxType",		false, 200, false },// D2 p
+	{ kTheChunk,			"chunk",			true,  300, false },//		D3
 	{ kTheClickLoc,			"clickLoc",			false, 400, true },	// 			D4 function
 	{ kTheClickOn,			"clickOn",			false, 200, true },	// D2 f
-	{ kTheColorDepth,		"colorDepth",		false, 200, false },	// D2 p
+	{ kTheColorDepth,		"colorDepth",		false, 200, false },// D2 p
 	{ kTheColorQD,			"colorQD",			false, 200, true },	// D2 f
 	{ kTheCommandDown,		"commandDown",		false, 200, true },	// D2 f
 	{ kTheControlDown,		"controlDown",		false, 200, true },	// D2 f
-	{ kTheCurrentSpriteNum,	"currentSpriteNum",	false, 600, true },	//						D6 p
+	{ kTheCurrentSpriteNum,	"currentSpriteNum",	false, 600, true },	//					D6 p
 	{ kTheDate,				"date",				false, 300, true },	//		D3 f
-	{ kTheDeskTopRectList,	"deskTopRectList",	false, 500, true },	//					D5 p
-	{ kTheDigitalVideoTimeScale,"digitalVideoTimeScale",false, 500, false },//			D5 p
+	{ kTheDeskTopRectList,	"deskTopRectList",	false, 500, true },	//				D5 p
+	{ kTheDigitalVideoTimeScale,"digitalVideoTimeScale",false, 500, false },//		D5 p
 	{ kTheDoubleClick,		"doubleClick",		false, 200, true },	// D2 f
-	{ kTheEmulateMultiButtonMouse,"emulateMultiButtonMouse",false, 500, false },//		D5 p
-	{ kTheExitLock,			"exitLock",			false, 200, false },	// D2 p
-	{ kTheField,			"field",			true,  300, false },	//		D3
-	{ kTheFixStageSize,		"fixStageSize",		false, 200, false },	// D2 p
-	{ kTheFloatPrecision,	"floatPrecision",	false, 300, false },	//		D3 p
+	{ kTheEmulateMultiButtonMouse,"emulateMultiButtonMouse",false, 500, false },//	D5 p
+	{ kTheExitLock,			"exitLock",			false, 200, false },// D2 p
+	{ kTheField,			"field",			true,  300, false },//		D3
+	{ kTheFixStageSize,		"fixStageSize",		false, 200, false },// D2 p
+	{ kTheFloatPrecision,	"floatPrecision",	false, 300, false },//		D3 p
 	{ kTheFrame,			"frame",			false, 200, true },	// D2 f
-	{ kTheFrameLabel,		"frameLabel",		false, 400, false },	//			D4 p
-	{ kTheFramePalette,		"framePalette",		false, 400, false },	//			D4 p
-	{ kTheFrameScript,		"frameScript",		false, 400, false },	//			D4 p
-	{ kTheFrameSound1,		"frameSound1",		false, 500, false },	//				D5 p
-	{ kTheFrameSound2,		"frameSound2",		false, 500, false },	//				D5 p
-	{ kTheFrameTempo,		"frameTempo",		false, 400, false },	//			D4 p
-	{ kTheFrameTransition,	"frameTransition",	false, 500, false },	//				D5 p
+	{ kTheFrameLabel,		"frameLabel",		false, 400, false },//			D4 p
+	{ kTheFramePalette,		"framePalette",		false, 400, false },//			D4 p
+	{ kTheFrameScript,		"frameScript",		false, 400, false },//			D4 p
+	{ kTheFrameSound1,		"frameSound1",		false, 500, false },//				D5 p
+	{ kTheFrameSound2,		"frameSound2",		false, 500, false },//				D5 p
+	{ kTheFrameTempo,		"frameTempo",		false, 400, false },//			D4 p
+	{ kTheFrameTransition,	"frameTransition",	false, 500, false },//				D5 p
 	{ kTheFreeBlock,		"freeBlock",		false, 200, true },	// D2 f
 	{ kTheFreeBytes,		"freeBytes",		false, 200, true },	// D2 f
-	{ kTheFrontWindow,		"frontWindow",		false, 500, false },//					D5 p
-	{ kTheFullColorPermit,	"fullColorPermit",	false, 200, false },	// D2 p
-	{ kTheIdleHandlerPeriod,"idleHandlerPeriod",false, 500, false },//					D5 p
-	{ kTheIdleLoadMode,		"idleLoadMode",		false, 500, false },//					D5 p
-	{ kTheIdleLoadPeriod,	"idleLoadPeriod",	false, 500, false },//					D5 p
-	{ kTheIdleLoadTag,		"idleLoadTag",		false, 500, false },//					D5 p
-	{ kTheIdleReadChunkSize,"idleReadChunkSize",false, 500, false },//			D5 p
-	{ kTheImageDirect,		"imageDirect",		false, 200, false },	// D2 p
-	{ kTheItemDelimiter,	"itemDelimiter",	false, 400, false },	//			D4 p
+	{ kTheFrontWindow,		"frontWindow",		false, 500, false },//				D5 p
+	{ kTheFullColorPermit,	"fullColorPermit",	false, 200, false },// D2 p
+	{ kTheIdleHandlerPeriod,"idleHandlerPeriod",false, 500, false },//				D5 p
+	{ kTheIdleLoadMode,		"idleLoadMode",		false, 500, false },//				D5 p
+	{ kTheIdleLoadPeriod,	"idleLoadPeriod",	false, 500, false },//				D5 p
+	{ kTheIdleLoadTag,		"idleLoadTag",		false, 500, false },//				D5 p
+	{ kTheIdleReadChunkSize,"idleReadChunkSize",false, 500, false },//				D5 p
+	{ kTheImageDirect,		"imageDirect",		false, 200, false },// D2 p
+	{ kTheItemDelimiter,	"itemDelimiter",	false, 400, false },//			D4 p
 	{ kTheKey,				"key",				false, 200, true },	// D2 f
 	{ kTheKeyCode,			"keyCode",			false, 200, true },	// D2 f
-	{ kTheKeyDownScript,	"keyDownScript",	false, 200, false },	// D2 p
-	{ kTheKeyPressed,		"keyPressed",		false, 500, false },//					D5 p
-	{ kTheKeyUpScript,		"keyUpScript",		false, 400, false },	//			D4 p
+	{ kTheKeyDownScript,	"keyDownScript",	false, 200, false },// D2 p
+	{ kTheKeyPressed,		"keyPressed",		false, 500, false },//				D5 p
+	{ kTheKeyUpScript,		"keyUpScript",		false, 400, false },//			D4 p
 	{ kTheLabelList,		"labelList",		false, 300, true },	//		D3 f
 	{ kTheLastClick,		"lastClick",		false, 200, true },	// D2 f
 	{ kTheLastEvent,		"lastEvent",		false, 200, true },	// D2 f
-	{ kTheLastFrame,		"lastFrame",		false, 400, false },	//			D4 p
+	{ kTheLastFrame,		"lastFrame",		false, 400, false },//			D4 p
 	{ kTheLastKey,			"lastKey",			false, 200, true },	// D2 f
 	{ kTheLastRoll,			"lastRoll",			false, 200, true },	// D2 f
 	{ kTheMachineType,		"machineType",		false, 200, true },	// D2 f
 	{ kTheMaxInteger,		"maxInteger",		false, 300, true },	//		D3.1 f
 	{ kTheMemorySize,		"memorySize",		false, 200, true },	// D2 f
-	{ kTheMenu,				"menu",				true,  300, false },	//		D3 p
-	{ kTheMenuItem,			"menuitem",			true,  300, false },	//		D3 p
+	{ kTheMenu,				"menu",				true,  300, false },//		D3 p
+	{ kTheMenuItem,			"menuitem",			true,  300, false },//		D3 p
 	{ kTheMenuItems,		"menuitems",		false, 300, true },	//		D3 f
 	{ kTheMouseCast,		"mouseCast",		false, 300, true },	//		D3 f
 	{ kTheMouseChar,		"mouseChar",		false, 300, true },	//		D3 f
 	{ kTheMouseDown,		"mouseDown",		false, 200, true },	// D2 f
-	{ kTheMouseDownScript,  "mouseDownScript",	false, 200, false },	// D2 p
+	{ kTheMouseDownScript,  "mouseDownScript",	false, 200, false },// D2 p
 	{ kTheMouseH,			"mouseH",			false, 200, true },	// D2 f
 	{ kTheMouseItem,		"mouseItem",		false, 300, true },	//		D3 f
 	{ kTheMouseLine,		"mouseLine",		false, 300, true },	//		D3 f
+	{ kTheMouseMember,		"mouseMember",		false, 600, true },	//					D6 f
 	{ kTheMouseUp,			"mouseUp",			false, 200, true },	// D2 f
-	{ kTheMouseUpScript,  	"mouseUpScript",	false, 200, false },	// D2 p
+	{ kTheMouseUpScript,  	"mouseUpScript",	false, 200, false },// D2 p
 	{ kTheMouseV,			"mouseV",			false, 200, true },	// D2 f
 	{ kTheMouseWord,		"mouseWord",		false, 300, true },	//		D3 f
 	{ kTheMovie,			"movie",			false, 200, true },	// D2 f
@@ -129,63 +132,66 @@ TheEntity entities[] = {					//	hasId  ver.	isFunction
 	{ kTheMoviePath,		"moviePath",		false, 400, true },	//			D4 f
 	{ kTheMultiSound,		"multiSound",		false, 300, true },	//		D3.1 f
 	{ kTheOptionDown,		"optionDown",		false, 200, true },	// D2 f
-	{ kTheOrganizationName,	"organizationName",	false, 500, false },	//				D5 p
+	{ kTheOrganizationName,	"organizationName",	false, 500, false },//				D5 p, documented in D7
 	{ kTheParamCount,		"paramCount",		false, 400, true },	//			D4 f
 	{ kThePathName,			"pathName",			false, 200, true },	// D2 f
 	{ kThePauseState,		"pauseState",		false, 200, true },	// D2 f
-	{ kThePerFrameHook,		"perFrameHook",		false, 200, false },	// D2 p
-	{ kThePreloadEventAbort,"preloadEventAbort",false, 400, false },	//			D4 p
-	{ kThePreLoadRAM,		"preLoadRAM",		false, 400, false },	//			D4 p
-	{ kThePlatform,			"platform",			false, 500, false },	//				D5 p
+	{ kThePerFrameHook,		"perFrameHook",		false, 200, false },// D2 p
 	{ kThePi,				"pi",				false, 400, true },	//			D4 f
+	{ kThePlatform,			"platform",			false, 500, false },//				D5 p
+	{ kThePreloadEventAbort,"preloadEventAbort",false, 400, false },//			D4 p
+	{ kThePreLoadRAM,		"preLoadRAM",		false, 400, false },//			D4 p
+	{ kTheProductName,		"productName",		false, 500, false },//				D5 p, undocumented
+	{ kTheProductVersion,	"productVersion",	false, 500, false },//				D5 p, documented in D8
 	{ kTheQuickTimePresent,	"quickTimePresent",	false, 300, true },	//		D3.1 f
-	{ kTheRandomSeed,		"randomSeed",		false, 400, false },	//			D4 p
+	{ kTheRandomSeed,		"randomSeed",		false, 400, false },//			D4 p
 	{ kTheResult,			"result",			false, 200, true },	// D2 f
-	{ kTheRightMouseDown,	"rightMouseDown",	false, 500, true },	//					D5 f
-	{ kTheRightMouseUp,		"rightMouseUp",		false, 500, true },	//					D5 f
-	{ kTheRollOver,			"rollOver",			false, 500, true },	//					D5 f, undocumented
-	{ kTheRomanLingo,		"romanLingo",		false, 300, false },	//		D3.1 p
-	{ kTheRunMode, 			"runMode",			false, 500, false },//					D5 f, documented in D6
-	{ kTheScore,			"score",			false, 500, false },	//				D5 p
+	{ kTheRightMouseDown,	"rightMouseDown",	false, 500, true },	//				D5 f
+	{ kTheRightMouseUp,		"rightMouseUp",		false, 500, true },	//				D5 f
+	{ kTheRollOver,			"rollOver",			false, 500, true },	//				D5 f, undocumented
+	{ kTheRomanLingo,		"romanLingo",		false, 300, false },//		D3.1 p
+	{ kTheRunMode, 			"runMode",			false, 500, false },//				D5 f, documented in D6
+	{ kTheSafePlayer,		"safePlayer",		false, 600, false },//					D6 p, documented in D7
+	{ kTheScore,			"score",			false, 500, false },//				D5 p
 	{ kTheScummvmVersion,	"scummvmVersion",	false, 200, true }, // 					ScummVM only
-	{ kTheSearchCurrentFolder,"searchCurrentFolder",false,400, true },//			D4 f
+	{ kTheSearchCurrentFolder,"searchCurrentFolder",false,400, true },//		D4 f
 	{ kTheSearchPath,		"searchPath",		false, 400, true },	//			D4 f
-	{ kTheSearchPaths,		"searchPaths",		false, 400, false },	//			D4 p, documented in D5
+	{ kTheSearchPaths,		"searchPaths",		false, 400, false },//			D4 p, documented in D5
 	{ kTheSelection,		"selection",		false, 200, true },	// D2 f
-	{ kTheSelEnd,			"selEnd",			false, 200, false },	// D2 p
-	{ kTheSelStart,			"selStart",			false, 200, false },	// D2 p
-	{ kTheSerialNumber,		"serialNumber",		false, 500, false },	//				D5 p
+	{ kTheSelEnd,			"selEnd",			false, 200, false },// D2 p
+	{ kTheSelStart,			"selStart",			false, 200, false },// D2 p
+	{ kTheSerialNumber,		"serialNumber",		false, 500, false },//				D5 p, documnted in D7
 	{ kTheShiftDown,		"shiftDown",		false, 200, true },	// D2 f
-	{ kTheSoundEnabled,		"soundEnabled",		false, 200, false },	// D2 p
-	{ kTheSoundEntity,		"sound",			true,  300, false },	// 		D3 p
-	{ kTheSoundLevel,		"soundLevel",		false, 200, false },	// D2 p
-	{ kTheSprite,			"sprite",			true,  200, false },	// 			D4 p
-	{ kTheStage,			"stage",			false, 400, false },	//			D4 p
+	{ kTheSoundEnabled,		"soundEnabled",		false, 200, false },// D2 p
+	{ kTheSoundEntity,		"sound",			true,  300, false },// 		D3 p
+	{ kTheSoundLevel,		"soundLevel",		false, 200, false },// D2 p
+	{ kTheSprite,			"sprite",			true,  200, false },// 			D4 p
+	{ kTheStage,			"stage",			false, 400, false },//			D4 p
 	{ kTheStageBottom,		"stageBottom",		false, 200, true },	// D2 f
-	{ kTheStageColor,		"stageColor",		false, 300, false },	//		D3 p
+	{ kTheStageColor,		"stageColor",		false, 300, false },//		D3 p
 	{ kTheStageLeft,		"stageLeft",		false, 200, true },	// D2 f
 	{ kTheStageRight,		"stageRight",		false, 200, true },	// D2 f
 	{ kTheStageTop,			"stageTop",			false, 200, true },	// D2 f
 	{ kTheStillDown,		"stillDown",		false, 200, true },	// D2 f
-	{ kTheSwitchColorDepth,	"switchColorDepth",	false, 200, false },	// D2 p
+	{ kTheSwitchColorDepth,	"switchColorDepth",	false, 200, false },// D2 p
 	{ kTheTicks,			"ticks",			false, 200, true },	// D2 f
 	{ kTheTime,				"time",				false, 300, true },	// 		D3 f
-	{ kTheTimeoutKeyDown,	"timeoutKeyDown",	false, 200, false },	// D2 p
-	{ kTheTimeoutLapsed,	"timeoutLapsed",	false, 200, false },	// D2 p
-	{ kTheTimeoutLength,	"timeoutLength",	false, 200, false },	// D2 p
-	{ kTheTimeoutMouse,		"timeoutMouse",		false, 200, false },	// D2 p
-	{ kTheTimeoutPlay,		"timeoutPlay",		false, 200, false },	// D2 p
-	{ kTheTimeoutScript,	"timeoutScript",	false, 200, false },	// D2 p
-	{ kTheTimer,			"timer",			false, 200, false },	// D2 p
-	{ kTheTrace,			"trace",			false, 400, false },	//			D4 p
-	{ kTheTraceLoad,		"traceLoad",		false, 400, false },	//			D4 p
-	{ kTheTraceLogFile,		"traceLogFile",		false, 400, false },	//			D4 p
+	{ kTheTimeoutKeyDown,	"timeoutKeyDown",	false, 200, false },// D2 p
+	{ kTheTimeoutLapsed,	"timeoutLapsed",	false, 200, false },// D2 p
+	{ kTheTimeoutLength,	"timeoutLength",	false, 200, false },// D2 p
+	{ kTheTimeoutMouse,		"timeoutMouse",		false, 200, false },// D2 p
+	{ kTheTimeoutPlay,		"timeoutPlay",		false, 200, false },// D2 p
+	{ kTheTimeoutScript,	"timeoutScript",	false, 200, false },// D2 p
+	{ kTheTimer,			"timer",			false, 200, false },// D2 p
+	{ kTheTrace,			"trace",			false, 400, false },//			D4 p
+	{ kTheTraceLoad,		"traceLoad",		false, 400, false },//			D4 p
+	{ kTheTraceLogFile,		"traceLogFile",		false, 400, false },//			D4 p
 	{ kTheUpdateMovieEnabled,"updateMovieEnabled",false,400, false },//			D4 p
-	{ kTheUserName,			"userName",			false, 500, false },	//				D5 p
-	{ kTheVideoForWindowsPresent,"videoForWindowsPresent",false, 400, true },//		D4 f
-	{ kTheWindow,			"window",			true,  400, false },	//			D4
-	{ kTheWindowList,		"windowList",		false, 400, false },	//			D4 p
-	{ kTheXtras,			"xtras",			false, 500, false },	//			D4 p
+	{ kTheUserName,			"userName",			false, 500, false },//				D5 p, documented in D7
+	{ kTheVideoForWindowsPresent,"videoForWindowsPresent",false, 400, true },//	D4 f
+	{ kTheWindow,			"window",			true,  400, false },//			D4
+	{ kTheWindowList,		"windowList",		false, 400, false },//			D4 p
+	{ kTheXtras,			"xtras",			false, 500, false },//				D5 p
 	{ kTheNOEntity, nullptr, false, 0, false }
 };
 
@@ -196,11 +202,11 @@ const TheEntityField fields[] = {
 	{ kTheSprite,	"castNum",		kTheCastNum,	200 },// D2 p
 	{ kTheSprite,	"castLibNum",	kTheCastLibNum,	500 },//					D5 p
 	{ kTheSprite,	"constraint",	kTheConstraint, 200 },// D2 p
-	{ kTheSprite,	"currentTime",	kTheCurrentTime,600 },//							D6 p
+	{ kTheSprite,	"currentTime",	kTheCurrentTime,600 },//						D6 p
 	{ kTheSprite,	"cursor",		kTheCursor,		200 },// D2 p
 	{ kTheSprite,	"editableText", kTheEditableText,400 },//				D4 p
-	{ kTheSprite,	"flipH",		kTheFlipH,		700 },// 								D7 p
-	{ kTheSprite,	"flipV",		kTheFlipV,		700 },// 								D7 p
+	{ kTheSprite,	"flipH",		kTheFlipH,		700 },// 							D7 p
+	{ kTheSprite,	"flipV",		kTheFlipV,		700 },// 							D7 p
 	{ kTheSprite,	"foreColor",	kTheForeColor,	200 },// D2 p
 	{ kTheSprite,	"height",		kTheHeight,		200 },// D2 p
 	{ kTheSprite,	"immediate",	kTheImmediate,	200 },// D2 p
@@ -213,19 +219,19 @@ const TheEntityField fields[] = {
 	{ kTheSprite,	"member",		kTheMember,		500 },//					D5 p
 	{ kTheSprite,	"memberNum",	kTheMemberNum,	500 },//					D5 p
 	{ kTheSprite,	"moveableSprite",kTheMoveableSprite,400 },//			D4 p
-	{ kTheSprite,	"mostRecentCuePoint",kTheMostRecentCuePoint,600 },//				D6 p
-	{ kTheSprite,	"name",			kTheName,		600 },//							D6 p
+	{ kTheSprite,	"mostRecentCuePoint",kTheMostRecentCuePoint,600 },//			D6 p
+	{ kTheSprite,	"name",			kTheName,		600 },//						D6 p
 	{ kTheSprite,	"pattern",		kThePattern,	200 },// D2 p
 	{ kTheSprite,	"puppet",		kThePuppet,		200 },// D2 p
 	{ kTheSprite,	"rect",			kTheRect,		400 },//				D4 p ???
 	{ kTheSprite,	"right",		kTheRight,		200 },// D2 p
 	{ kTheSprite,	"scoreColor",	kTheScoreColor,	400 },//				D4 p
-	{ kTheSprite,	"scriptInstanceList",kTheScriptInstanceList,600 },//				D6 p
+	{ kTheSprite,	"scriptInstanceList",kTheScriptInstanceList,600 },//			D6 p
 	{ kTheSprite,	"scriptNum",	kTheScriptNum,	400 },//				D4 p
 	{ kTheSprite,	"stretch",		kTheStretch,	200 },// D2 p
 	{ kTheSprite,	"top",			kTheTop,		200 },// D2 p
 	{ kTheSprite,	"trails",		kTheTrails,		300 },//		D3.1 p
-	{ kTheSprite,	"tweened",		kTheTweened,	600 },//							D6 p
+	{ kTheSprite,	"tweened",		kTheTweened,	600 },//						D6 p
 	{ kTheSprite,	"type",			kTheType,		200 },// D2 p
 	{ kTheSprite,	"visibility",	kTheVisibility,	300 },//		D3.1 p
 	{ kTheSprite,	"visible",		kTheVisible,	400 },//				D4 p
@@ -239,14 +245,18 @@ const TheEntityField fields[] = {
 	{ kTheCastLib,	"selection",	kTheSelectionField,500 },//					D5 p
 
 	// Common cast fields
+	{ kTheCast,		"antiAlias",	kTheAntiAlias,	500 },//					D5 p (?), documented in D7
 	{ kTheCast,		"backColor",	kTheBackColor,	400 },//				D4 p
 	{ kTheCast,		"castLibNum",	kTheCastLibNum,	500 },// 					D5 p
 	{ kTheCast,		"castType",		kTheCastType,	400 },//				D4 p
+	{ kTheCast,		"cuePointNames",kTheCuePointNames,600 },//						D6 p
+	{ kTheCast,		"cuePointTimes",kTheCuePointTimes,600 },//						D6 p
 	{ kTheCast,		"filename",		kTheFileName,	400 },//				D4 p
 	{ kTheCast,		"foreColor",	kTheForeColor,	400 },//				D4 p
 	{ kTheCast,		"height",		kTheHeight,		400 },//				D4 p
 	{ kTheCast,		"loaded",		kTheLoaded,		400 },//				D4 p
 	{ kTheCast,		"media",		kTheMedia,		500 },//					D5 p
+	{ kTheCast,		"mediaReady",	kTheMediaReady,	600 },//						D6 p
 	{ kTheCast,		"memberNum",	kTheMemberNum,	500 },//					D5 p
 	{ kTheCast,		"modified",		kTheModified,	400 },//				D4 p
 	{ kTheCast,		"name",			kTheName,		300 },//		D3 p
@@ -271,24 +281,27 @@ const TheEntityField fields[] = {
 	{ kTheSprite,	"movieTime",	kTheMovieTime,	300 },//		D3.1 P
 	{ kTheCast,		"pausedAtStart",kThePausedAtStart,400 },//				D4 p
 	{ kTheCast,		"preLoad",		kThePreLoad,	300 },//		D3.1 p
+	{ kTheSprite,	"setTrackEnabled",kTheSetTrackEnabled, 500 },//				D5 p
 	{ kTheCast,		"sound",		kTheSound,		300 },//		D3.1 p // 0-1 off-on
 	{ kTheSprite,	"startTime",	kTheStartTime,	300 },//		D3.1 p
 	{ kTheSprite,	"stopTime",		kTheStopTime,	300 },//		D3.1 p
-	{ kTheCast,		"timeScale",	kTheTimeScale,	500 },//						D5 p
-	{ kTheSprite,	"trackEnabled",	kTheTrackEnabled, 500 },//						D5 p
-	{ kTheSprite,	"trackNextKeyTime",	kTheTrackNextKeyTime, 500 },//				D5 p
-	{ kTheSprite,	"trackNextSampleTime",	kTheTrackNextSampleTime, 500 },//		D5 p
-	{ kTheSprite,	"trackPreviousKeyTime",	kTheTrackPreviousKeyTime, 500 },//		D5 p
-	{ kTheSprite,	"trackPreviousSampleTime",	kTheTrackPreviousKeyTime, 500 },//	D5 p
-	{ kTheSprite,	"trackText",	kTheTrackText, 500 },//							D5 p
+	{ kTheCast,		"timeScale",	kTheTimeScale,	500 },//					D5 p
+	{ kTheSprite,	"trackEnabled",	kTheTrackEnabled, 500 },//					D5 p
+	{ kTheSprite,	"trackNextKeyTime",	kTheTrackNextKeyTime, 500 },//			D5 p
+	{ kTheSprite,	"trackNextSampleTime",	kTheTrackNextSampleTime, 500 },//	D5 p
+	{ kTheSprite,	"trackPreviousKeyTime",	kTheTrackPreviousKeyTime, 500 },//	D5 p
+	{ kTheSprite,	"trackPreviousSampleTime",	kTheTrackPreviousKeyTime, 500 },//D5 p
+	{ kTheSprite,	"trackText",	kTheTrackText, 500 },//						D5 p
 	{ kTheCast,		"video",		kTheVideo,		400 },//				D4 p
 	{ kTheSprite,	"volume",		kTheVolume,		300 },//		D3.1 p
+	// track, scontains track type, seems to be unused
+	// tracks, number of track, seems to be unused
 
 	// Movie fields
-	{ kTheCast,		"paletteMapping",	kThePaletteMapping,	500 },//				D5 p
-	{ kTheCast,		"scriptsEnabled",	kTheScriptsEnabled,	500 },//				D5 p
-	{ kTheCast,		"scoreSelection",	kTheScoreSelection,	500 },//				D5 p
-	{ kTheCast,		"updateLock",		kTheUpdateLock,		500 },//				D5 p
+	{ kTheCast,		"paletteMapping",	kThePaletteMapping,	500 },//			D5 p
+	{ kTheCast,		"scriptsEnabled",	kTheScriptsEnabled,	500 },//			D5 p
+	{ kTheCast,		"scoreSelection",	kTheScoreSelection,	500 },//			D5 p
+	{ kTheCast,		"updateLock",		kTheUpdateLock,		500 },//			D5 p
 
 	// Bitmap fields
 	{ kTheCast,		"depth",		kTheDepth,		400 },//				D4 p
@@ -298,60 +311,66 @@ const TheEntityField fields[] = {
 	{ kTheCast,		"picture",		kThePicture,	300 },//		D3 p
 
 	// TextCastMember fields
-	{ kTheCast,		"alignment",	kTheTextAlign,	500 },//						D5 p
-	{ kTheCast,		"autoTab",		kTheAutoTab,	500 },//						D5 p
-	{ kTheCast,		"border",		kTheBorder,		500 },//						D5 p
-	{ kTheCast,		"boxDropShadow",kTheBoxDropShadow,	500 },//					D5 p
-	{ kTheCast,		"boxType",		kTheBoxType,	500 },//						D5 p
-	{ kTheCast,		"dropShadow",	kTheDropShadow,	500 },//						D5 p
-	{ kTheCast,		"editable",		kTheEditable,	500 },//						D5 p
-	{ kTheCast,		"font",			kTheTextFont,	500 },//						D5 p
-	{ kTheCast,		"fontSize",		kTheTextSize,	500 },//						D5 p
-	{ kTheCast,		"fontStyle",	kTheTextStyle,	500 },//						D5 p
-	{ kTheCast,		"lineCount",	kTheLineCount,	500 },//						D5 p
-	{ kTheCast,		"lineHeight",	kTheTextHeight,	500 },//						D5 p
+	{ kTheCast,		"alignment",	kTheTextAlign,	500 },//					D5 p
+	{ kTheCast,		"autoTab",		kTheAutoTab,	500 },//					D5 p
+	{ kTheCast,		"border",		kTheBorder,		500 },//					D5 p
+	{ kTheCast,		"boxDropShadow",kTheBoxDropShadow,	500 },//				D5 p
+	{ kTheCast,		"boxType",		kTheBoxType,	500 },//					D5 p
+	{ kTheCast,		"dropShadow",	kTheDropShadow,	500 },//					D5 p
+	{ kTheCast,		"editable",		kTheEditable,	500 },//					D5 p
+	{ kTheCast,		"font",			kTheTextFont,	500 },//					D5 p
+	{ kTheCast,		"fontSize",		kTheTextSize,	500 },//					D5 p
+	{ kTheCast,		"fontStyle",	kTheTextStyle,	500 },//					D5 p
+	{ kTheCast,		"lineCount",	kTheLineCount,	500 },//					D5 p
+	{ kTheCast,		"lineHeight",	kTheTextHeight,	500 },//					D5 p
 	{ kTheCast,		"hilite",		kTheHilite,		200 },// D2 p
-	{ kTheCast,		"margin",		kTheMargin,		500 },//						D5 p
-	{ kTheCast,		"pageHeight",	kThePageHeight,	500 },//						D5 p
+	{ kTheCast,		"margin",		kTheMargin,		500 },//					D5 p
+	{ kTheCast,		"pageHeight",	kThePageHeight,	500 },//					D5 p
 	{ kTheCast,		"text",			kTheText,		200 },// D2 p
 	{ kTheCast,		"textAlign",	kTheTextAlign,	300 },//		D3 p
 	{ kTheCast,		"textFont",		kTheTextFont,	300 },//		D3 p
 	{ kTheCast,		"textHeight",	kTheTextHeight,	300 },//		D3 p
 	{ kTheCast,		"textSize",		kTheTextSize,	300 },//		D3 p
 	{ kTheCast,		"textStyle",	kTheTextStyle,	300 },//		D3 p
-	{ kTheCast,		"scrollTop",	kTheScrollTop,  500 },//						D5 p
-	{ kTheCast,		"wordWrap",		kTheWordWrap,	500 },//						D5 p
+	{ kTheCast,		"scrollTop",	kTheScrollTop,  500 },//					D5 p
+	{ kTheCast,		"wordWrap",		kTheWordWrap,	500 },//					D5 p
 
 	// ButtonCastMember fields
-	{ kTheCast,		"buttonType",	kTheButtonType,	500 },//						D5 p
+	{ kTheCast,		"buttonType",	kTheButtonType,	500 },//					D5 p
 
 	// ScriptCastMember fields
-	{ kTheCast,		"scriptType",	kTheScriptType,	500 },//						D5 p
+	{ kTheCast,		"scriptType",	kTheScriptType,	500 },//					D5 p
 
 	// ShapeCastMember fields
-	{ kTheCast,		"filled",		kTheFilled,		500 },//						D5 p
-	{ kTheCast,		"lineSize",		kTheLineSize,	500 },//						D5 p
-	{ kTheCast,		"pattern",		kThePattern,	500 },//						D5 p
-	{ kTheCast,		"shapeType",	kTheShapeType,	500 },//						D5 p
+	{ kTheCast,		"filled",		kTheFilled,		500 },//					D5 p
+	{ kTheCast,		"lineSize",		kTheLineSize,	500 },//					D5 p
+	{ kTheCast,		"pattern",		kThePattern,	500 },//					D5 p
+	{ kTheCast,		"shapeType",	kTheShapeType,	500 },//					D5 p
 
 	// SoundCastMember fields
-	{ kTheCast,		"channelCount",	kTheChannelCount,500 },//						D5 p
-	{ kTheCast,		"sampleRate",	kTheSampleRate,	500 },//						D5 p
-	{ kTheCast,		"sampleSize",	kTheSampleSize,	500 },//						D5 p
+	{ kTheCast,		"channelCount",	kTheChannelCount,500 },//					D5 p
+	{ kTheCast,		"sampleRate",	kTheSampleRate,	500 },//					D5 p
+	{ kTheCast,		"sampleSize",	kTheSampleSize,	500 },//					D5 p
 
 	// TransitionCastMember fields
-	{ kTheCast,		"changeArea",	kTheChangeArea,	500 },//						D5 p
-	{ kTheCast,		"chunkSize",	kTheChunkSize,	500 },//						D5 p
-	{ kTheCast,		"transitionType",kTheTransitionType,500 },//					D5 p
+	{ kTheCast,		"changeArea",	kTheChangeArea,	500 },//					D5 p
+	{ kTheCast,		"chunkSize",	kTheChunkSize,	500 },//					D5 p
+	{ kTheCast,		"transitionType",kTheTransitionType,500 },//				D5 p
+
+	// XtrsaCastMember fields
+	{ kTheCast,		"interface",	kTheInterface,	500 },//					D5 p
+
+	// Behavior (me) fields
+	{ kTheCast,		"spriteNum",	kTheSpriteNum,	600 },//						D6 p
 
 	// Field fields
-	{ kTheField,	"alignment",	kTheTextAlign,	500 },//						D5 p
-	{ kTheField,	"font",			kTheTextFont,	500 },//						D5 p
-	{ kTheField,	"fontSize",		kTheTextSize,	500 },//						D5 p
-	{ kTheField,	"fontStyle",	kTheTextStyle,	500 },//						D5 p
+	{ kTheField,	"alignment",	kTheTextAlign,	500 },//					D5 p
+	{ kTheField,	"font",			kTheTextFont,	500 },//					D5 p
+	{ kTheField,	"fontSize",		kTheTextSize,	500 },//					D5 p
+	{ kTheField,	"fontStyle",	kTheTextStyle,	500 },//					D5 p
 	{ kTheField,	"foreColor",	kTheForeColor,	400 },//				D4 p
 	{ kTheField,	"hilite",		kTheHilite,		200 },// D2 p
-	{ kTheField,	"lineHeight",	kTheTextHeight,	500 },//						D5 p
+	{ kTheField,	"lineHeight",	kTheTextHeight,	500 },//					D5 p
 	{ kTheField,	"name",			kTheName,		300 },//		D3 p
 	{ kTheField,	"text",			kTheText,		200 },// D2 p
 	{ kTheField,	"textAlign",	kTheTextAlign,	300 },//		D3 p
@@ -361,11 +380,11 @@ const TheEntityField fields[] = {
 	{ kTheField,	"textStyle",	kTheTextStyle,	300 },//		D3 p
 
 	// Chunk fields
-	{ kTheChunk,	"font",			kTheTextFont,	500 },//						D5 p
-	{ kTheChunk,	"fontSize",		kTheTextSize,	500 },//						D5 p
-	{ kTheChunk,	"fontStyle",	kTheTextStyle,	500 },//						D5 p
+	{ kTheChunk,	"font",			kTheTextFont,	500 },//					D5 p
+	{ kTheChunk,	"fontSize",		kTheTextSize,	500 },//					D5 p
+	{ kTheChunk,	"fontStyle",	kTheTextStyle,	500 },//					D5 p
 	{ kTheChunk,	"foreColor",	kTheForeColor,	400 },//				D4 p
-	{ kTheChunk,	"lineHeight",	kTheTextHeight,	500 },//						D5 p
+	{ kTheChunk,	"lineHeight",	kTheTextHeight,	500 },//					D5 p
 	{ kTheChunk,	"textFont",		kTheTextFont,	300 },//		D3 p
 	{ kTheChunk,	"textHeight",	kTheTextHeight,	300 },//		D3 p
 	{ kTheChunk,	"textSize",		kTheTextSize,	300 },//		D3 p
@@ -391,7 +410,7 @@ const TheEntityField fields[] = {
 
 	{ kTheCastMembers,	"number",	kTheNumber,		300 },// 		D3 p
 
-	{ kTheCastLibs,		"number",	kTheNumber,		500 },//						D5 p
+	{ kTheCastLibs,		"number",	kTheNumber,		500 },//					D5 p
 
 	{ kTheDate,		"short",		kTheShort,		300 },//		D3 f
 	{ kTheDate,		"long",			kTheLong,		300 },//		D3 f
@@ -503,6 +522,12 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		break;
 	case kTheActorList:
 		d = g_lingo->_actorList;
+		break;
+	case kTheAlertHook:
+		warning("STUB: the alertHook");
+		break;
+	case kTheApplicationPath:
+		warning("STUB: the applicationPath");
 		break;
 	case kTheBeepOn:
 		d = (int)movie->_isBeepOn;
@@ -850,6 +875,17 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 			d = ch->getMouseLine(pos.x, pos.y);
 		}
 		break;
+	case kTheMouseMember:
+		{
+			Common::Point pos = g_director->getCurrentWindow()->getMousePos();
+			uint16 spriteId = score->getSpriteIDFromPos(pos);
+			if (spriteId) {
+				d = score->getSpriteById(spriteId)->_cast;
+			} else {
+				d = getVoid();
+			}
+		}
+		break;
 	case kTheMouseUp:
 		d = g_system->getEventManager()->getButtonState() & (1 << Common::MOUSE_BUTTON_LEFT | 1 << Common::MOUSE_BUTTON_RIGHT) ? 0 : 1;
 		break;
@@ -934,6 +970,13 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		break;
 	case kThePi:
 		d = M_PI;
+		break;
+	case kTheProductName:
+		d = Common::String("Director");
+		break;
+	case kTheProductVersion:
+		d = Common::String::format("%d.%d.%d",
+				g_director->getVersion() / 100, (g_director->getVersion() / 10) % 10, g_director->getVersion() % 10);
 		break;
 	case kTheQuickTimePresent:
 		// QuickTime is always present for ScummVM
@@ -1031,7 +1074,7 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	case kTheStageBottom:
 		{
 			Window *window = _vm->getCurrentWindow();
-			d = window->getInnerDimensions().bottom;
+			d = window->_window->getInnerDimensions().bottom;
 		}
 		break;
 	case kTheStageColor:
@@ -1041,19 +1084,19 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	case kTheStageLeft:
 		{
 			Window *window = _vm->getCurrentWindow();
-			d = window->getInnerDimensions().left;
+			d = window->_window->getInnerDimensions().left;
 		}
 		break;
 	case kTheStageRight:
 		{
 			Window *window = _vm->getCurrentWindow();
-			d = window->getInnerDimensions().right;
+			d = window->_window->getInnerDimensions().right;
 		}
 		break;
 	case kTheStageTop:
 		{
 			Window *window = _vm->getCurrentWindow();
-			d = window->getInnerDimensions().top;
+			d = window->_window->getInnerDimensions().top;
 		}
 		break;
 	case kTheStillDown:
@@ -1148,6 +1191,9 @@ void Lingo::setTheEntity(int entity, Datum &id, int field, Datum &d) {
 	switch (entity) {
 	case kTheActorList:
 		g_lingo->_actorList = d;
+		break;
+	case kTheAlertHook:
+		warning("STUB: the alertHook");
 		break;
 	case kTheBeepOn:
 		movie->_isBeepOn = (bool)d.u.i;
@@ -1611,6 +1657,10 @@ Datum Lingo::getTheSprite(Datum &id1, int field) {
 	case kTheLocV:
 		d = channel->getPosition().y;
 		break;
+	case kTheMostRecentCuePoint:
+		warning("STUB: the mostRecentCuePoint");
+		d = 0;
+		break;
 	case kTheMoveableSprite:
 		d = sprite->_moveable;
 		break;
@@ -1647,6 +1697,11 @@ Datum Lingo::getTheSprite(Datum &id1, int field) {
 		//Check the last 3 bits of the _colorcode byte as value lies in 0 to 5
 		d = (int)(sprite->_colorcode & 0x7);
 		break;
+	case kTheScriptInstanceList:
+		warning("STUB: Getting the scriptInstanceList");
+		d.type = PARRAY;
+		d.u.parr = new PArray;
+		break;
 	case kTheScriptNum:
 		if (g_director->getVersion() >= 600) {
 			if (sprite->_behaviors.size() > 0)
@@ -1656,6 +1711,10 @@ Datum Lingo::getTheSprite(Datum &id1, int field) {
 		} else {
 			d = sprite->_scriptId.member;
 		}
+		break;
+	case kTheSpriteNum:
+		warning("STUB: Getting the spriteNum");
+		d = 0;
 		break;
 	case kTheStartTime:
 		d = channel->_startTime;
@@ -1981,6 +2040,9 @@ void Lingo::setTheSprite(Datum &id1, int field, Datum &d) {
 		// Based on Director in a Nutshell, page 15
 		sprite->setAutoPuppet(kAPRect, true);
 
+		break;
+	case kTheScriptInstanceList:
+		warning("STUB: Setting the scriptInstanceList");
 		break;
 	case kTheStartTime:
 		channel->_startTime = d.asInt();

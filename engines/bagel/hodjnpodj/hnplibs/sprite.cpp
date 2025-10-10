@@ -96,6 +96,7 @@ CSprite::CSprite() {
 	m_bLinked = false;                                  // not initially linked into the sprite chain
 	m_pNext = nullptr;                                     // it is not yet in the sprite chain and
 	m_pPrev = nullptr;                                     // ... thus has no links to other sprites
+	m_pZPrev = nullptr;
 }
 
 
@@ -342,10 +343,10 @@ CSprite *CSprite::DuplicateSprite(CDC *pDC) {
 
 	pSprite = new CSprite();                                // create an object for the sprite
 
-	if ((pSprite != nullptr) &&                                // try to duplicate it
-	        DuplicateSprite(pDC, pSprite))
-		return (pSprite);
+	if (DuplicateSprite(pDC, pSprite))
+		return pSprite;
 
+	delete pSprite;
 	return nullptr;                                          // return failure
 }
 
@@ -384,7 +385,7 @@ bool CSprite::DuplicateSprite(CDC *pDC, CSprite *pSprite) {
 			if (m_bRetainContexts) {
 				if (!SetupImage(pDC))
 					return false;
-				SetupMask(pDC);
+				(void)SetupMask(pDC);
 				(*pSprite).m_pImageDC = m_pImageDC;
 				(*pSprite).m_pImageOld = m_pImageOld;
 				(*pSprite).m_pMaskDC = m_pMaskDC;
@@ -2291,8 +2292,7 @@ bool CSprite::SpritesOverlap(CDC * pDC, CSprite * pSprite, CPoint *pPoint) {
 		}
 	}
 
-	if (chPixels != nullptr)
-		free(chPixels);                                 // free up the work area's bitmap
+	free(chPixels);                                 // free up the work area's bitmap
 
 	if (pBitmap1Old != nullptr)                            // map out the bitmaps we used
 		(*cDC1).SelectObject(pBitmap1Old);

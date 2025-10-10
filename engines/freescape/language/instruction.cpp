@@ -112,9 +112,11 @@ bool FreescapeEngine::executeObjectConditions(GeometricObject *obj, bool shot, b
 			debugC(1, kFreescapeDebugCode, "Executing with collision flag: %s", obj->_conditionSource.c_str());
 		} else if (shot)
 			debugC(1, kFreescapeDebugCode, "Executing with shot flag: %s", obj->_conditionSource.c_str());
-		else if (activated)
+		else if (activated) {
+			if (isCastle()) // TODO: add a 3DCK check here
+				clearTemporalMessages();
 			debugC(1, kFreescapeDebugCode, "Executing with activated flag: %s", obj->_conditionSource.c_str());
-		else
+		} else
 			error("Neither shot or collided flag is set!");
 		executed = executeCode(obj->_condition, shot, collided, false, activated); // TODO: check this last parameter
 	}
@@ -150,6 +152,8 @@ bool FreescapeEngine::executeCode(FCLInstructionVector &code, bool shot, bool co
 	int skipDepth = 0;
 	int conditionalDepth = 0;
 	bool executed = false;
+	int loopIterations = 0;
+	int loopHead = -1;
 	int codeSize = code.size();
 
 	if (codeSize == 0) {
@@ -196,6 +200,25 @@ bool FreescapeEngine::executeCode(FCLInstructionVector &code, bool shot, bool co
 			break;
 		case Token::NOP:
 			debugC(1, kFreescapeDebugCode, "Executing NOP at ip: %d", ip);
+			break;
+
+		case Token::LOOP:
+			loopHead = ip;
+			loopIterations = instruction._source;
+			debugC(1, kFreescapeDebugCode, "Starting loop with %d iterations at ip: %d", loopIterations, ip);
+			break;
+
+		case Token::AGAIN:
+			if (loopIterations > 1) {
+				loopIterations--;
+				ip = loopHead;
+				debugC(1, kFreescapeDebugCode, "Looping again, %d iterations left, jumping to ip: %d", loopIterations, ip);
+			} else if (loopIterations == 1) {
+				loopIterations--;
+				debugC(1, kFreescapeDebugCode, "Loop finished");
+			} else {
+				error("AGAIN found without a matching LOOP!");
+			}
 			break;
 
 		case Token::CONDITIONAL:
@@ -342,6 +365,10 @@ void FreescapeEngine::executeExecute(FCLInstruction &instruction, bool shot, boo
 		obj = _areaMap[255]->objectWithID(objId);
 		if (!obj) {
 			obj = _areaMap[255]->entranceWithID(objId);
+			if (!obj) {
+				debugC(1, kFreescapeDebugCode, "WARNING: executing instructions from a non-existent object %d", objId);
+				return;
+			} 
 			assert(obj);
 			FCLInstructionVector &condition = ((Entrance *)obj)->_condition;
 			executeCode(condition, shot, collided, false, activated);

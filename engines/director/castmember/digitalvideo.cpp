@@ -81,6 +81,38 @@ public:
 
 };
 
+DigitalVideoCastMember::DigitalVideoCastMember(Cast *cast, uint16 castId)
+		: CastMember(cast, castId) {
+	_type = kCastDigitalVideo;
+	_video = nullptr;
+	_lastFrame = nullptr;
+	_channel = nullptr;
+
+	_getFirstFrame = false;
+	_duration = 0;
+
+	_vflags = 0;
+	_frameRate = 0;
+
+	_frameRateType = kFrameRateDefault;
+	_videoType = kDVUnknown;
+	_qtmovie = true;
+	_avimovie = false;
+	_preload = false;
+	_enableVideo = true;
+	_pausedAtStart = false;
+	_showControls = false;
+	_directToStage = false;
+	_looping = false;
+	_enableSound = true;
+	_crop = false;
+	_center = false;
+	_dirty = false;
+	_emptyFile = false;
+
+	memset(_ditheringPalette, 0, 256*3);
+}
+
 
 
 DigitalVideoCastMember::DigitalVideoCastMember(Cast *cast, uint16 castId, Common::SeekableReadStreamEndian &stream, uint16 version)
@@ -187,8 +219,6 @@ bool DigitalVideoCastMember::loadVideoFromCast() {
 }
 
 bool DigitalVideoCastMember::loadVideo(Common::String path) {
-	// TODO: detect file type (AVI, QuickTime, FLIC) based on magic number,
-	// insert the right video decoder
 	if (_filename == path) {
 		// we've already loaded this video, or not. no point trying again.
 		return _video ? true : false;
@@ -390,7 +420,7 @@ Graphics::MacWidget *DigitalVideoCastMember::createWidget(Common::Rect &bbox, Ch
 		}
 	}
 
-	Graphics::MacWidget *widget = new Graphics::MacWidget(g_director->getCurrentWindow(), bbox.left, bbox.top, bbox.width(), bbox.height(), g_director->_wm, false);
+	Graphics::MacWidget *widget = new Graphics::MacWidget(g_director->getCurrentWindow()->getMacWindow(), bbox.left, bbox.top, bbox.width(), bbox.height(), g_director->_wm, false);
 
 	_channel = channel;
 
@@ -550,6 +580,9 @@ bool DigitalVideoCastMember::hasField(int field) {
 	case kTheCenter:
 	case kTheController:
 	case kTheCrop:
+	case kTheCuePointNames:		// D6
+	case kTheCuePointTimes:		// D6
+	case kTheCurrentTime:		// D6
 	case kTheDigitalVideoType:
 	case kTheDirectToStage:
 	case kTheDuration:
