@@ -474,7 +474,9 @@ void Lingo::reloadOpenXLibs() {
 
 void LM::m_new(int nargs) {
 	// This is usually overridden by a user-defined mNew
-	g_lingo->printSTUBWithArglist("m_new", nargs);
+	//
+	// However, in behaviors it is often absent, and it is
+	// in essence our default constructor.
 	g_lingo->push(g_lingo->_state->me);
 }
 
@@ -579,7 +581,13 @@ bool ScriptContext::hasProp(const Common::String &propName) {
 				&& (_properties["ancestor"].u.obj->getObjType() & (kScriptObj | kXtraObj))) {
 			return _properties["ancestor"].u.obj->hasProp(propName);
 		}
+
+		// This is used by behaviors
+		if (propName.equalsIgnoreCase("spriteNum")) {
+			return true;
+		}
 	}
+
 	return false;
 }
 
@@ -595,6 +603,11 @@ Datum ScriptContext::getProp(const Common::String &propName) {
 				&& (_properties["ancestor"].u.obj->getObjType() & (kScriptObj | kXtraObj))) {
 			debugC(3, kDebugLingoExec, "Getting prop '%s' from ancestor: <%s>", propName.c_str(), _properties["ancestor"].asString(true).c_str());
 			return _properties["ancestor"].u.obj->getProp(propName);
+		}
+
+		// This is used by behaviors
+		if (propName.equalsIgnoreCase("spriteNum")) {
+			return Datum((int)g_director->getCurrentMovie()->_currentSpriteNum);
 		}
 	}
 	_propertyNames.push_back(propName);

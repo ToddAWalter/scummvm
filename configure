@@ -2908,7 +2908,9 @@ case $_host_os in
 		append_var LDFLAGS "-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft"
 		append_var LDFLAGS "-L$DEVKITPRO/libctru/lib"
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/3ds/lib"
-		append_var LDFLAGS "-specs=3dsx.specs"
+		# Add ctru in LDFLAGS for configure checks as it's needed by crt0
+		# We remove it at the end of configure
+		append_var LDFLAGS "-specs=3dsx.specs -lctru"
 		append_var LIBS "-lcitro3d -lctru"
 		;;
 	amigaos*)
@@ -3239,10 +3241,11 @@ EOF
 	ds)
 		_optimization_level=-Os
 		append_var DEFINES "-D__DS__"
-		append_var DEFINES "-DNDS"
+		append_var DEFINES "-D__NDS__"
 		append_var DEFINES "-DARM9"
 		append_var DEFINES "-DARM"
 		append_var DEFINES "-DNONSTANDARD_PORT"
+		append_var CXXFLAGS "-I $DEVKITPRO/calico/include"
 		append_var CXXFLAGS "-isystem $DEVKITPRO/libnds/include"
 		append_var CXXFLAGS "-isystem $DEVKITPRO/portlibs/nds/include"
 		append_var CXXFLAGS "-isystem $DEVKITPRO/portlibs/armv5te/include"
@@ -3262,14 +3265,16 @@ EOF
 		append_var LDFLAGS "-mthumb-interwork"
 		append_var LDFLAGS "-mfloat-abi=soft"
 		append_var LDFLAGS "-Wl,-Map,map.txt"
+		append_var LDFLAGS "-L$DEVKITPRO/calico/lib"
 		append_var LDFLAGS "-L$DEVKITPRO/libnds/lib"
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/nds/lib"
 		append_var LDFLAGS "-L$DEVKITPRO/portlibs/armv5te/lib"
-		append_var LIBS "-specs=ds_arm9.specs"
+		append_var LDFLAGS "-specs=$DEVKITPRO/calico/share/ds9.specs"
 		append_var LIBS "-lfilesystem"
 		append_var LIBS "-lfat"
 		append_var LIBS "-lmm9"
 		append_var LIBS "-lnds9"
+		append_var LIBS "-lcalico_ds9"
 		;;
 	emscripten)
 		append_var DEFINES "-DEMSCRIPTEN"
@@ -4111,7 +4116,6 @@ case $_backend in
 	3ds)
 		;;
 	android)
-		append_var DEFINES "-DREDUCE_MEMORY_USAGE"
 		append_var DEFINES "-DNONSTANDARD_PORT"
 		append_var DEFINES "-DANDROID_BACKEND"
 		append_var INCLUDES '-I$(srcdir)/backends/platform/'$_backend
@@ -7511,6 +7515,9 @@ case $_host_os in
 		else
 			append_var LDFLAGS "-Wl,--no-gc-sections"
 		fi
+
+		# Remove ctru from LDFLAGS: it was added for configure checks
+		LDFLAGS=$(echo "$LDFLAGS" | sed -e 's/ -lctru//')
 		;;
 	amigaos*)
 		# In release mode use LTO to improve performance
