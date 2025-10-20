@@ -4469,7 +4469,7 @@ byte *getArrow(uint x, uint y) {
 
 
 	uint originalW = menuFile.readUint16LE() + 1;
-	for(int i = 0; i < h; i++) {
+	for(uint i = 0; i < h; i++) {
 		menuFile.seek(menuOffset + 4 + + (y + i) * originalW + x);
 		menuFile.read(bitmap + 4 + i * w, w);
 	}
@@ -5020,7 +5020,7 @@ static void buttonPress(uint xx1, uint yy1, uint xx2, uint yy2, bool pressed) {
 }
 
 void TotEngine::copyProtection() {
-	if (!ConfMan.getBool("copy_protection")) {
+	if (!ConfMan.getBool("copy_protection") || isDemo()) {
 		return;
 	}
 	const char *message = isLanguageSpanish() ? hardcodedTexts_ES[12] : hardcodedTexts_EN[12];
