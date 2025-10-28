@@ -731,6 +731,7 @@ protected:
 	void o7_getFileInfo();
 	void o7_getSystemProperty();
 	void o7_loadImage();
+	void o7_copyDataToClipboard();
 	void o7_setVolume();
 	void o7_zeroVar();
 	void o7_draw0xA0();
@@ -786,6 +787,7 @@ protected:
 	void o7_checkData(OpFuncParams &params);
 	void o7_readData(OpFuncParams &params);
 	void o7_writeData(OpFuncParams &params);
+	void o7_manageDataFile(OpFuncParams &params);
 
 	bool readAdi4InfDataForChild(Common::Array<byte> &dest, uint32 childNumber, uint32 offset, uint32 size);
 	bool readAdi4InstalledAppsData(Common::Array<byte> &generalChildData,
@@ -806,6 +808,7 @@ protected:
 
 	void o7_xorDeobfuscate(OpGobParams &params);
 	void o7_xorObfuscate(OpGobParams &params);
+	void o7_resolvePath(OpGobParams &params);
 	void o7_ansiToOEM(OpGobParams &params);
 	void o7_oemToANSI(OpGobParams &params);
 	void o7_setDBStringEncoding(OpGobParams &params);

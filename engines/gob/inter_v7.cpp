@@ -88,6 +88,7 @@ void Inter_v7::setupOpcodesDraw() {
 	OPCODEDRAW(0x8C, o7_getSystemProperty);
 	OPCODEDRAW(0x8E, o7_getFileInfo);
 	OPCODEDRAW(0x90, o7_loadImage);
+	OPCODEDRAW(0x91, o7_copyDataToClipboard);
 	OPCODEDRAW(0x93, o7_setVolume);
 	OPCODEDRAW(0x95, o7_zeroVar);
 	OPCODEDRAW(0xA0, o7_draw0xA0);
@@ -147,6 +148,7 @@ void Inter_v7::setupOpcodesFunc() {
 	OPCODEFUNC(0x3F, o7_checkData);
 	OPCODEFUNC(0x4D, o7_readData);
 	OPCODEFUNC(0x4E, o7_writeData);
+	OPCODEFUNC(0x4F, o7_manageDataFile);
 }
 
 void Inter_v7::setupOpcodesGob() {
@@ -160,6 +162,7 @@ void Inter_v7::setupOpcodesGob() {
 	OPCODEGOB(406, o7_startAdi4Application);
 	OPCODEGOB(407, o7_xorDeobfuscate);
 	OPCODEGOB(408, o7_xorObfuscate);
+	OPCODEGOB(410, o7_resolvePath);
 	OPCODEGOB(420, o7_ansiToOEM);
 	OPCODEGOB(421, o7_oemToANSI);
 	OPCODEGOB(512, o7_setDBStringEncoding);
@@ -1023,6 +1026,11 @@ void Inter_v7::o7_loadImage() {
 		warning("o7_loadImage(): Failed to load image \"%s\"", file.c_str());
 		return;
 	}
+}
+
+void Inter_v7::o7_copyDataToClipboard() {
+	Common::String data = _vm->_game->_script->evalString();
+	warning("STUB: Adi4: Copy data '%s' to clipboard", data.c_str());
 }
 
 void Inter_v7::o7_setVolume() {
@@ -1949,6 +1957,21 @@ void Inter_v7::o7_writeData(OpFuncParams &params) {
 		warning("Attempted to write to file \"%s\"", file.c_str());
 }
 
+void Inter_v7::o7_manageDataFile(OpFuncParams &params) {
+	Common::String file = _vm->_game->_script->evalString();
+
+	if (!file.empty()) {
+		bool result = _vm->_dataIO->openArchive(Common::Path(file, '\\').toString('/'), true);
+		WRITE_VAR(27, result);
+	} else {
+		_vm->_dataIO->closeArchive(true);
+
+		// NOTE: Lost in Time might close a data file without explicitely closing a video in it.
+		//       So we make sure that all open videos are still available.
+		_vm->_vidPlayer->reopenAll();
+	}
+}
+
 Common::String Inter_v7::ansiToOEM(Common::String string) {
 	Common::U32String u32String = string.decode(Common::kWindows1252);
 	// Replace characters that do not exist in the target codepage with the closest match
@@ -2270,6 +2293,21 @@ void Inter_v7::o7_xorObfuscate(OpGobParams &params) {
 	byte *data = _vm->_inter->_variables->getAddressVar8(varIndex);
 	uint16 size = _vm->_game->_script->readUint16();
 	xorObfuscate(data, size);
+}
+
+void Inter_v7::o7_resolvePath(OpGobParams &params) {
+	uint16 srcVarIndex = _vm->_game->_script->readUint16();
+	uint16 destVarIndex = _vm->_game->_script->readUint16();
+	char *str = GET_VAR_STR(srcVarIndex);
+	Common::String resolvedPath = getFile(str);
+	if ((int)resolvedPath.size() > 4 * _vm->_global->_inter_animDataSize) {
+		warning("o7_resolvePath: resolved path too long (%d > max length = %d), truncating",
+				(int)resolvedPath.size(),
+				4 * _vm->_global->_inter_animDataSize);
+		resolvedPath = resolvedPath.substr(0, 4 * _vm->_global->_inter_animDataSize);
+	}
+
+	WRITE_VAR_STR(destVarIndex, resolvedPath.c_str());
 }
 
 void Inter_v7::o7_ansiToOEM(OpGobParams &params) {

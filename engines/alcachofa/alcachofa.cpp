@@ -164,14 +164,15 @@ void AlcachofaEngine::playVideo(int32 videoId) {
 		game().invalidVideo(videoId, "decode video");
 		return;
 	}
+	decoder->setOutputPixelFormat(g_engine->renderer().getPixelFormat());
 
 	Vector2d texMax(1.0f, 1.0f);
 	int16 texWidth = decoder->getWidth(), texHeight = decoder->getHeight();
 	ManagedSurface tmpSurface;
 	if (_renderer->requiresPoTTextures() &&
 		(!isPowerOfTwo(texWidth) || !isPowerOfTwo(texHeight))) {
-		texWidth = nextPowerOfTwo(texWidth);
-		texHeight = nextPowerOfTwo(texHeight);
+		texWidth = nextHigher2(texWidth);
+		texHeight = nextHigher2(texHeight);
 		texMax = {
 			decoder->getWidth() / (float)texWidth,
 			decoder->getHeight() / (float)texHeight,
