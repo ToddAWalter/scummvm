@@ -664,7 +664,7 @@ CDC::Impl::Impl(CWnd *wndOwner) : m_pWnd(wndOwner), _drawMode(R2_COPYPEN) {
 	_font = app->getDefaultFont();
 	_pen = app->getDefaultPen();
 	_brush = app->getDefaultBrush();
-	_palette = app->getSystemPalette();
+	_palette = app->getSystemDefaultPalette();
 }
 
 CDC::Impl::Impl(HDC srcDc) {
@@ -686,7 +686,7 @@ CDC::Impl::Impl(HDC srcDc) {
 		_font = app->getDefaultFont();
 		_pen = app->getDefaultPen();
 		_brush = app->getDefaultBrush();
-		_palette = app->getSystemPalette();
+		_palette = app->getSystemDefaultPalette();
 	}
 }
 
@@ -756,11 +756,22 @@ void CDC::Impl::setScreenRect(const Common::Rect &r) {
 }
 
 HPALETTE CDC::Impl::selectPalette(HPALETTE pal, bool bForceBackground) {
+	CWinApp *app = AfxGetApp();
 	HPALETTE oldPal = _palette;
+	//CWnd *pTopLevel = m_pWnd->GetTopLevelFrame();
+
+	_paletteRealized = false;
 	m_bForceBackground = bForceBackground;
+	if (!m_bForceBackground) {
+		m_bForceBackground = app->GetActiveWindow() != m_pWnd;
+		//CDC *dc = wnd->GetDC();
+		//m_bForceBackground = dc->m_hDC == this;
+		//wnd->ReleaseDC(dc);
+	}
 
 	if (pal) {
 		_palette = pal;
+		_hasLogicalPalette = app->getSystemDefaultPalette() != pal;
 		CBitmap::Impl *bitmap = (CBitmap::Impl *)_bitmap;
 
 		auto *newPal = static_cast<CPalette::Impl *>(pal);
@@ -784,15 +795,15 @@ unsigned int CDC::Impl::realizePalette() {
 	if (m_pWnd == nullptr || !pal)
 		return 0;
 
-	CWinApp *app = AfxGetApp();
-	CWnd *pTopLevel = m_pWnd->GetTopLevelFrame();
-	if (!m_bForceBackground && pTopLevel == app->GetActiveWindow()) {
+	if (!m_bForceBackground) {
 		// This window is active - update the system palette
 		AfxGetApp()->setPalette(*pal);
+		_paletteRealized = true;
 		return 1;  // number of entries changed - simplified
+	} else {
+		_paletteRealized = true;
 	}
 
-	// Not active - do not change system palette
 	return 0;
 }
 
@@ -1013,28 +1024,63 @@ void CDC::Impl::bitBlt(int x, int y, int nWidth, int nHeight, CDC *pSrcDC,
 
 	Gfx::Surface dummySrc;
 	Gfx::Surface *src = &dummySrc;
+	uint32 *paletteMap = nullptr;
 
 	if (pSrcDC) {
-		src = pSrcDC->impl()->getSurface();
-		//CPoint srcOrg = src->getViewportOrg();
+		auto *srcImpl = pSrcDC->impl();
+		src = srcImpl->getSurface();
+
+		// Get a palette map if necessary
+		paletteMap = getPaletteMap(srcImpl);
 	}
 
 	Gfx::Surface *dest = getSurface();
 	const Common::Point destPos(x, y);
 	uint bgColor = getBkPixel();
 
-	Gfx::blit(src, dest, srcRect, destPos, bgColor, dwRop);
+	Gfx::blit(src, dest, srcRect, destPos, bgColor, dwRop, paletteMap);
+
+	delete[] paletteMap;
 }
 
 void CDC::Impl::stretchBlt(int x, int y, int nWidth, int nHeight, CDC *pSrcDC,
 	int xSrc, int ySrc, int nSrcWidth, int nSrcHeight, uint32 dwRop) {
-	Gfx::Surface *src = pSrcDC->impl()->getSurface();
+	auto *srcImpl = pSrcDC->impl();
+	Gfx::Surface *src = srcImpl->getSurface();
 	Gfx::Surface *dest = getSurface();
 	const Common::Rect srcRect(xSrc, ySrc, xSrc + nSrcWidth, ySrc + nSrcHeight);
 	const Common::Rect destRect(x, y, x + nWidth, y + nHeight);
 	uint bgColor = getBkPixel();
+	uint32 *paletteMap = getPaletteMap(srcImpl);
 
-	Gfx::stretchBlit(src, dest, srcRect, destRect, bgColor, dwRop);
+	Gfx::stretchBlit(src, dest, srcRect, destRect, bgColor, dwRop, nullptr);
+
+	delete[] paletteMap;
+}
+
+uint32 *CDC::Impl::getPaletteMap(const CDC::Impl *srcImpl) {
+	Graphics::Palette *srcPal, *destPal;
+
+	// If we have a logical palette, but are in the background (i.e. not the active one),
+	// then source pixels map from the local logical palette to the system one
+	if (_paletteRealized && m_bForceBackground) {
+		srcPal = dynamic_cast<Graphics::Palette *>(_palette);
+		destPal = dynamic_cast<Graphics::Palette *>(AfxGetApp()->getCurrentPalette());
+	}
+	// If we haven't realized our palette locally, or the source bitmap hasn't had any
+	// palette at all set, then return null indicating no palette mapping will occur
+	else if (!_paletteRealized || !srcImpl->_hasLogicalPalette)
+		return nullptr;
+	else {
+		srcPal = dynamic_cast<Graphics::Palette *>(srcImpl->_palette);
+		destPal = dynamic_cast<Graphics::Palette *>(_palette);
+	}
+
+	assert(srcPal && destPal && srcPal->size() == destPal->size());
+
+	// Create the map
+	Graphics::PaletteLookup palLookup(destPal->data(), destPal->size());
+	return palLookup.createMap(srcPal->data(), srcPal->size());
 }
 
 void CDC::Impl::moveTo(int x, int y) {

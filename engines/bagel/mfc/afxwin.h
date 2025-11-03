@@ -444,6 +444,7 @@ union MessageMapFunctions {
 	void (AFX_MSG_CALL CWnd:: *pfn_vOWNER)(int, uint16 *);      // force return true
 	int (AFX_MSG_CALL CWnd:: *pfn_iis)(int, uint16 *);
 	unsigned int(AFX_MSG_CALL CWnd:: *pfn_wp)(CPoint);
+	bool(AFX_MSG_CALL CWnd:: *pfn_bv)();
 	unsigned int(AFX_MSG_CALL CWnd:: *pfn_wv)();
 	void (AFX_MSG_CALL CWnd:: *pfn_vPOS)(WINDOWPOS *);
 	void (AFX_MSG_CALL CWnd:: *pfn_vCALC)(bool, NCCALCSIZE_PARAMS *);
@@ -744,10 +745,12 @@ public:
 		int _bkMode = TRANSPARENT;
 		COLORREF _textColor = 0;
 		uint _textAlign = TA_LEFT;
-		int _drawMode;
+		int _drawMode = 0;
+		bool _paletteRealized = false;
 
 		uint getPenColor() const;
 		uint getBrushColor() const;
+		uint32 *getPaletteMap(const CDC::Impl *srcImpl);
 
 	public:
 		HBITMAP _bitmap;
@@ -757,6 +760,7 @@ public:
 		HPALETTE _palette = nullptr;
 		CPalette *_cPalette = nullptr;
 		bool m_bForceBackground = false;
+		bool _hasLogicalPalette = false;
 
 	public:
 		Impl(CWnd *wndOwner = nullptr);
@@ -1209,9 +1213,6 @@ protected:
 	afx_msg bool OnQueryEndSession() {
 		return false;
 	}
-	afx_msg bool OnQueryNewPalette() {
-		return false;
-	}
 	afx_msg bool OnQueryOpen() {
 		return false;
 	}
@@ -1226,6 +1227,7 @@ protected:
 	afx_msg unsigned int OnQueryUIState() {
 		return 0;
 	}
+	afx_msg bool OnQueryNewPalette();
 
 	// Nonclient-Area message handler member functions
 	afx_msg bool OnNcActivate(bool bActive) {
@@ -2093,7 +2095,11 @@ public:
 		assert(_defaultBrush.m_hObject);
 		return (HBRUSH)_defaultBrush.m_hObject;
 	}
-	HPALETTE getSystemPalette() {
+	HPALETTE getCurrentPalette() const {
+		assert(_currentPalette.m_hObject);
+		return (HPALETTE)_currentPalette.m_hObject;
+	}
+	HPALETTE getSystemDefaultPalette() const {
 		assert(_systemPalette.m_hObject);
 		return (HPALETTE)_systemPalette.m_hObject;
 	}

@@ -56,11 +56,13 @@ static void fChgMode(ArgArray args) {
 		setSymbol(location, true);
 	}
 
-	// This is the only place where this should be used
-	if (g_private->_noStopSounds) {
-		g_private->_noStopSounds = false;
-	} else {
-		g_private->stopSound(true);
+	if (g_private->_mode == 0) {
+		// This is the only place where this should be used
+		if (g_private->_noStopSounds) {
+			g_private->_noStopSounds = false;
+		} else {
+			g_private->stopSound(true);
+		}
 	}
 }
 
@@ -195,9 +197,6 @@ static void fLoadGame(ArgArray args) {
 	m.nextSetting = "";
 	m.flag1 = nullptr;
 	m.flag2 = nullptr;
-	if (g_private->_loadGameMask.surf)
-		g_private->_loadGameMask.surf->free();
-	delete g_private->_loadGameMask.surf;
 	g_private->_loadGameMask = m;
 	g_private->_masks.push_front(m);
 }
@@ -211,9 +210,6 @@ static void fSaveGame(ArgArray args) {
 	m.nextSetting = "";
 	m.flag1 = nullptr;
 	m.flag2 = nullptr;
-	if (g_private->_saveGameMask.surf)
-		g_private->_saveGameMask.surf->free();
-	delete g_private->_saveGameMask.surf;
 	g_private->_saveGameMask = m;
 	g_private->_masks.push_front(m);
 }
@@ -546,7 +542,7 @@ static void fLoopedSound(ArgArray args) {
 	Common::String s(args[0].u.str);
 
 	if (s != "\"\"") {
-		g_private->playSound(s, 0, true, true);
+		g_private->playSound(s, 0, false, true);
 	} else {
 		g_private->stopSound(true);
 	}
@@ -607,6 +603,7 @@ static void fCRect(ArgArray args) {
 	d.type = RECT;
 	d.u.rect = rect;
 	Gen::push(d);
+	g_private->_rects.push_back(rect);
 }
 
 static void fBitmap(ArgArray args) {
@@ -743,9 +740,6 @@ static void fSoundArea(ArgArray args) {
 		m.nextSetting = "";
 		m.flag1 = nullptr;
 		m.flag2 = nullptr;
-		if (g_private->_AMRadioArea.surf)
-			g_private->_AMRadioArea.surf->free();
-		delete g_private->_AMRadioArea.surf;
 		g_private->_AMRadioArea = m;
 		g_private->_masks.push_front(m);
 	} else if (n == "kPoliceRadio") {
@@ -754,9 +748,6 @@ static void fSoundArea(ArgArray args) {
 		m.nextSetting = "";
 		m.flag1 = nullptr;
 		m.flag2 = nullptr;
-		if (g_private->_policeRadioArea.surf)
-			g_private->_policeRadioArea.surf->free();
-		delete g_private->_policeRadioArea.surf;
 		g_private->_policeRadioArea = m;
 		g_private->_masks.push_front(m);
 	} else if (n == "kPhone") {
@@ -765,9 +756,6 @@ static void fSoundArea(ArgArray args) {
 		m.nextSetting = "";
 		m.flag1 = nullptr;
 		m.flag2 = nullptr;
-		if (g_private->_phoneArea.surf)
-			g_private->_phoneArea.surf->free();
-		delete g_private->_phoneArea.surf;
 		g_private->_phoneArea = m;
 		g_private->_masks.push_front(m);
 	} else
@@ -796,15 +784,11 @@ static void fTimer(ArgArray args) {
 		debugC(1, kPrivateDebugScript, "Timer(%d, %s)", args[0].u.val, args[1].u.str);
 
 	int32 delay = 1000000 * args[0].u.val;
-	// This pointer is necessary since installTimer needs one
-	Common::String *s = new Common::String(args[1].u.sym->name->c_str());
 	if (delay > 0) {
-		if (!g_private->installTimer(delay, s))
+		if (!g_private->installTimer(delay, args[1].u.sym->name))
 			error("Timer installation failed!");
 	} else if (delay == 0) {
-		g_private->_nextSetting = *s;
-		// No need to keep the pointer alive
-		delete s;
+		g_private->_nextSetting = *(args[1].u.sym->name);
 	} else {
 		assert(0);
 	}

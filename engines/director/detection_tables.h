@@ -666,6 +666,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "gp2006",				"Grand Prix 2006 & Auto Directory" },
 	{ "guns",				"Multimedia Guns" },
 	{ "haight",				"Haight-Ashbury in the Sixties" },
+	{ "hestonbible",		"Charlton Heston's Voyage Through the Bible" },
 	{ "heuther",			"Understanding Pathophysiology, 3rd Edition" },
 	{ "hikaruhana",			"Shining Flower: Hikaruhana" },					// 光る花
 	{ "hirezaudio",			"Hi Rez Audio" },
@@ -1575,6 +1576,9 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "ypl2", 				"勇者泡泡龍2" },							// Yongzhe Paopao Long 2, aka Brave Bubble Dragon 2, aka Bubble Hero 2
 	{ "creativenursery",	"创意学前华文(一)" },						// Creative Nursery Chinese
 
+	// Korean titles
+	{ "neoguri",			"일곱마리 너구리의 한글교실" }, // Seven Raccoon-Dogs' Hangul Class
+
 	// Titles containing Director extras
 	{ "acrosstherhine",		"Across the Rhine" }, // Lou Reda documentary from disc 2 of "Across the Rhine" (Microprose)
 	{ "amgpremiere",		"The American Girls Premiere" },
@@ -1760,6 +1764,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "iliad",				"Iliad" },
 	{ "illustrator",		"Adobe Illustrator" },
 	{ "it1d",				"In the First Degree" },
+	{ "kidpix",				"Kid Pix" },
 	{ "landdesigner",		"Sierra Land Designer" },
 	{ "lbt8",				"The Land Before Time: The Big Freeze" },
 	{ "leopardspots",		"How the Leopard Got His Spots" },
@@ -4625,6 +4630,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1t_l("henachocogala", "Itachoco Taizen 1 rerelease", "galakure-", "432fbbe4d75650580c1314e741e6a583", 290434, Common::JA_JPN, 402),
 
 	MACGAME1t_l("henachocotaizen", "", "LetterShop0.0", "b3fefa664154f160a32a7fdfcc83c047", 292680, Common::JA_JPN, 402),
+
+	WINGAME1f("hestonbible", "Old Testament", "OLDTEST.EXE", "t:56f332fa0190a21d697911887fad0ab5", 1003475, 404, GF_32BPP),
+	MACGAME1f("hestonbible", "Old Testament", "Bible Old Testament 1.0", "rt:49604f6c775663828a91b0999fe4f2aa", 483490, 404, GF_32BPP),
+	WINGAME1f("hestonbible", "New Testament", "ALPHA/NEWTEST.EXE", "t:7e7c9b3fe5aefe59ab930fb7ca47bd4a", 1319489, 404, GF_32BPP),
+	MACGAME1f("hestonbible", "New Testament", "ALPHA/New Testament 1.0", "rt:efeb87cee862bb7ef8ea21f4cbf46aa8", 483490, 404, GF_32BPP),
 
 	// Mac version is D3
 	WINGAME1t("hhouse", "",			"HHOUSE.EXE",  "b0486032820bc6a413dd836650f8b0c3", 3181345, 404),
@@ -8602,6 +8612,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1_l("ispyschool", "", "Ikzie32.exe",				 "t:2af7f901e9fb93b4323d871067cd7ac5",  1989859, Common::NL_BEL, 600),
 	WINGAME1_l("ispyschool", "", "Ikzie32.exe",				 "t:2af7f901e9fb93b4323d871067cd7ac5",  1989785, Common::NL_NLD, 600),
 
+	MACGAME1("ispyspooky", "", "Play I Spy Spooky Mansion", "rt:66f2146acecb09b969c599d5ec854e5e", 115778, 602),
+	WINGAME1("ispyspooky", "", "_Spooky.exe", "t:b57f9500220d32301f83c6b20b02fb96", 1568954, 602),
+
 	MACGAME1("jmmg", "", "Just Me and My Grandpa", "66f1a7078033867061b05f3789c6e5de", 1032378, 602),
 	WINGAME1("jmmg", "", "JMMG.EXE", "t:9801c1217842b39b25e42584cf5f8548", 1704089, 600),
 
@@ -8792,6 +8805,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 								  "ENGINE/ZSCR0102.Cxt", "d:d0248fdf4d4726f7b2693dae9ad12004",	  71224, Common::JA_JPN, 602),
 	WINGAME2_l("ngebrowser7", "", "BROWSE32.EXE",		 "t:d6250fd82cb0d6eb7c0c3a02d61a289a",  1826827,
 								  "ENGINE/ZSCR0102.Cxt", "f:d0248fdf4d4726f7b2693dae9ad12004",	  71224, Common::JA_JPN, 602),
+
+	WINDEMO1_l("neoguri", "", "Sevendem.exe", "t:763f6a1e5ff37a71d7548f7561002521", 5212676, Common::KO_KOR, 601),
 
 	// Study guide from The Daily Telegraph
 	// Mac executable filename does indeed end in .exe
@@ -9464,6 +9479,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME2("kgbpocahontas", "", "CDGe.EXE",	 "t:7d1d6dba1026a1be63d60b7f14111619", 3037522,
 								  "CBAIOBJ.dir", "f:5f374ed90aca597fd43a0726ff2cf710",	204224, 702),
 
+	WINDEMO1_l("kidpix", "Demo", "kidpix.exe", "t:edb63181702824aaacfffe73012cbff3", 7445882, Common::KO_KOR, 702),
+
 	// Extra activities on Little Bear Thinking Adventures
 	MACGAME1("lbfamfun", "", "Little Bear Family Fun", "0944b962ebb00f4b5d5149d220f8449b", 112758, 702),
 	WINGAME1("lbfamfun", "", "Little Bear Family Fun.exe", "7c18c9a6af2694156bf09ed195c1ab09", 4214763, 702),
@@ -9493,6 +9510,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	MACGAME1("maisybday", "", "Maisy BDay",		"r:0944b962ebb00f4b5d5149d220f8449b", 113458,  702),
 	WINGAME1("maisybday", "", "Maisy BDay.exe", "t:26fc28194d1991645a9a42794bcb1b36", 2619122, 702),
+
+	// Korean title is 수학교실
+	WINDEMO2_l("mathsworkshop", "Preview", "Math.exe",	   "t:5e2d026147a09b063a2e8db2dba0ab94", 10146326,
+										   "gorilla1.avi", "f:93c4103cf645bdaaf03df5259cfd17de",   966656, Common::KO_KOR, 702),
 
 	// Max i Duch Zamku
 	// Other languages are D4
@@ -9529,6 +9550,9 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	WINGAME2("nyknicks2000", "", "KNICKS.exe", "c1a2e8b7e41fa204009324a9c7db1030", 2834311,
 								 "Garden.dxr", "fe309424e95c3f0435c8f8a6e9a7883f", 322042, 700),
+
+	// Korean title is 올리의 그림 동화 만들기
+	WINDEMO1_l("orly", "Director Demo", "Orlydemo.exe", "t:191f9410b357d81d6fb183a5a968c8a7", 12936499, Common::KO_KOR, 702),
 
 	// Found on German releases of Silly Noisy House, The Great Green Mouse Disaster and possibly others
 	WINGAME2_l("otelo", "Demo", "PEARL.EXE", "t:fc853cf158e7eff823b6c8236bbfde4d", 8036549,
