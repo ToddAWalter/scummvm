@@ -124,10 +124,7 @@ PrivateEngine::PrivateEngine(OSystem *syst, const ADGameDescription *gd)
 }
 
 PrivateEngine::~PrivateEngine() {
-	if (_videoDecoder != _pausedVideo) {
-		delete _pausedVideo;
-	}
-	delete _videoDecoder;
+	destroyVideo();
 
 	delete _compositeSurface;
 	if (_frameImage != nullptr) {
@@ -240,9 +237,7 @@ Common::Error PrivateEngine::run() {
 	if (!Common::parseBool(ConfMan.get("sfxSubtitles"), _sfxSubtitles))
 		warning("Failed to parse bool from sfxSubtitles options");
 
-	if (_useSubtitles) {
-		g_system->showOverlay(false);
-	} else if (_sfxSubtitles) {
+	if (!_useSubtitles && _sfxSubtitles) {
 		warning("SFX subtitles are enabled, but no subtitles will be shown");
 	}
 
@@ -342,7 +337,7 @@ Common::Error PrivateEngine::run() {
 			// Events
 			switch (event.type) {
 			case Common::EVENT_CUSTOM_ENGINE_ACTION_START:
-				if (event.customType == kActionSkip && _videoDecoder) {
+				if (event.customType == kActionSkip) {
 					skipVideo();
 				}
 				break;
@@ -436,12 +431,13 @@ Common::Error PrivateEngine::run() {
 			}
 
 			if (_videoDecoder->endOfVideo()) {
-				_videoDecoder->close();
 				delete _videoDecoder;
 				_videoDecoder = nullptr;
-				delete _subtitles;
-				_subtitles = nullptr;
-				g_system->clearOverlay();
+				if (_subtitles != nullptr) {
+					delete _subtitles;
+					_subtitles = nullptr;
+					g_system->clearOverlay();
+				}
 				_currentMovie = "";
 			} else if (!_videoDecoder->needsUpdate() && needsUpdate) {
 				g_system->updateScreen();
@@ -467,7 +463,7 @@ Common::Error PrivateEngine::run() {
 
 		g_system->updateScreen();
 		g_system->delayMillis(10);
-		if (_subtitles) {
+		if (_subtitles != nullptr) {
 			if (_mixer->isSoundHandleActive(_fgSoundHandle)) {
 				_subtitles->drawSubtitle(_mixer->getElapsedTime(_fgSoundHandle).msecs(), false, _sfxSubtitles);
 			} else {
@@ -1235,12 +1231,7 @@ void PrivateEngine::restartGame() {
 	// Movies
 	_repeatedMovieExit = "";
 	_playedMovies.clear();
-	if (_videoDecoder != _pausedVideo) {
-		delete _pausedVideo;
-	}
-	delete _videoDecoder;
-	_videoDecoder = nullptr;
-	_pausedVideo = nullptr;
+	destroyVideo();
 
 	// Pause
 	_pausedSetting = "";
@@ -1250,9 +1241,9 @@ void PrivateEngine::restartGame() {
 }
 
 Common::Error PrivateEngine::loadGameStream(Common::SeekableReadStream *stream) {
-	// We don't want to continue with any sound from a previous game
+	// We don't want to continue with any sound or videos from a previous game
 	stopSound(true);
-	_pausedVideo = nullptr;
+	destroyVideo();
 
 	Common::Serializer s(stream, nullptr);
 	debugC(1, kPrivateDebugFunction, "loadGameStream");
@@ -1570,7 +1561,7 @@ void PrivateEngine::loadSubtitles(const Common::Path &path) {
 		_subtitles->loadSRTFile(subPath);
 		g_system->showOverlay(false);
 		adjustSubtitleSize();
-	} else {
+	} else if (_subtitles != nullptr) {
 		delete _subtitles;
 		_subtitles = nullptr;
 		g_system->clearOverlay();
@@ -1593,13 +1584,27 @@ void PrivateEngine::playVideo(const Common::String &name) {
 }
 
 void PrivateEngine::skipVideo() {
-	_videoDecoder->close();
+	if (_videoDecoder == nullptr || _videoDecoder->isPaused()) {
+		return;
+	}
+
 	delete _videoDecoder;
 	_videoDecoder = nullptr;
-	delete _subtitles;
-	_subtitles = nullptr;
-	g_system->clearOverlay();
+	if (_subtitles != nullptr) {
+		delete _subtitles;
+		_subtitles = nullptr;
+		g_system->clearOverlay();
+	}
 	_currentMovie = "";
+}
+
+void PrivateEngine::destroyVideo() {
+	if (_videoDecoder != _pausedVideo) {
+		delete _pausedVideo;
+	}
+	delete _videoDecoder;
+	_videoDecoder = nullptr;
+	_pausedVideo = nullptr;
 }
 
 void PrivateEngine::stopSound(bool all) {
