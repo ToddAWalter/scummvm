@@ -99,7 +99,7 @@ static void fDiaryGoLoc(ArgArray args) {
 	ExitInfo e;
 
 	e.rect = *args[1].u.rect;
-	e.nextSetting = "kDiaryMiddle";
+	e.nextSetting = g_private->getDiaryMiddleSetting();
 
 	if (args[0].u.val) {
 		e.cursor = "kTurnRight";
@@ -116,14 +116,14 @@ static void fDiaryPageTurn(ArgArray args) {
 	debugC(1, kPrivateDebugScript, "DiaryPageTurn(%d, ..)", args[0].u.val);
 
 	ExitInfo e;
-	e.nextSetting = "kDiaryMiddle";
+	e.nextSetting = g_private->getDiaryMiddleSetting();
 	e.rect = *args[1].u.rect;
 
 	if (args[0].u.val == 1) {
 		e.cursor = "kTurnRight";
 
 		if ((uint)g_private->_currentDiaryPage == g_private->_diaryPages.size() - 1) {
-			e.nextSetting = "kDiaryLastPage";
+			e.nextSetting = g_private->getDiaryLastPageSetting();
 		}
 
 		g_private->_diaryNextPageExit = e;
@@ -131,7 +131,7 @@ static void fDiaryPageTurn(ArgArray args) {
 		e.cursor = "kTurnLeft";
 
 		if (g_private->_currentDiaryPage == 0) {
-			e.nextSetting = "kDiaryTOC";
+			e.nextSetting = g_private->getDiaryTOCSetting();
 		}
 
 		g_private->_diaryPrevPageExit = e;
@@ -170,6 +170,8 @@ static void fSyncSound(ArgArray args) {
 	Common::String s = args[0].u.str;
 
 	if (s != "\"\"") {
+		g_private->drawScreen();
+
 		g_private->playSound(s, 1, true, false);
 		while (g_private->isSoundActive())
 			g_private->ignoreEvents();
@@ -359,14 +361,6 @@ static void fLoseInventory(ArgArray args) {
 	g_private->inventory.clear();
 }
 
-bool inInventory(Common::String &bmp) {
-	for (NameList::const_iterator it = g_private->inventory.begin(); it != g_private->inventory.end(); ++it) {
-		if (*it == bmp)
-			return true;
-	}
-	return false;
-}
-
 static void fInventory(ArgArray args) {
 	// assert types
 	Datum b1 = args[0];
@@ -414,6 +408,7 @@ static void fInventory(ArgArray args) {
 		} else
 			m.flag2 = nullptr;
 
+		m.inventoryItem = bmp;
 		g_private->_masks.push_front(m);
 		g_private->_toTake = true;
 		Common::String sound(snd.u.str);
@@ -423,23 +418,20 @@ static void fInventory(ArgArray args) {
 		} else {
 			g_private->playSound(g_private->getTakeLeaveSound(), 1, false, false);
 		}
-
-		if (!inInventory(bmp))
-			g_private->inventory.push_back(bmp);
 	} else {
 		if (v1.type == NAME) {
 			v1.u.sym = g_private->maps.lookupVariable(v1.u.sym->name);
 			if (strcmp(c.u.str, "\"REMOVE\"") == 0) {
 				v1.u.sym->u.val = 0;
-				if (inInventory(bmp))
+				if (g_private->inInventory(bmp))
 					g_private->inventory.remove(bmp);
 			} else {
 				v1.u.sym->u.val = 1;
-				if (!inInventory(bmp))
+				if (!g_private->inInventory(bmp))
 					g_private->inventory.push_back(bmp);
 			}
 		} else {
-			if (!inInventory(bmp))
+			if (!g_private->inInventory(bmp))
 				g_private->inventory.push_back(bmp);
 		}
 		if (v2.type == NAME) {

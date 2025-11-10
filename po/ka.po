@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-11-04 09:15+0000\n"
-"PO-Revision-Date: 2025-09-09 04:16+0000\n"
+"POT-Creation-Date: 2025-11-09 13:17+0000\n"
+"PO-Revision-Date: 2025-11-07 12:36+0000\n"
 "Last-Translator: NorwayFun <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ka/>\n"
@@ -58,7 +58,7 @@ msgstr "ხელმისაწვდომი ძრავები:"
 #. I18N: Close dialog button
 #: gui/about.cpp:527 gui/downloadpacksdialog.cpp:298
 #: gui/downloadpacksdialog.cpp:389 gui/integrity-dialog.cpp:354
-#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:53
+#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:56
 #: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:558
 #: engines/drascula/metaengine.cpp:245 engines/queen/metaengine.cpp:264
 #: engines/saga/metaengine.cpp:374 engines/scumm/help.cpp:126
@@ -345,11 +345,11 @@ msgid "Wait until current Storage finishes and try again."
 msgstr "მოითმინეთ, სანამ მიმდინარე საცავი დასრულდება და თავიდან სცადეთ."
 
 #. I18N: JSON is name of the format, this message is displayed if user entered something incorrect to the text field
-#: gui/cloudconnectionwizard.cpp:567
+#: gui/cloudconnectionwizard.cpp:564
 msgid "JSON code contents are malformed."
 msgstr "JSON კოდის შემცველობა დამახინჯებულია."
 
-#: gui/cloudconnectionwizard.cpp:588 gui/downloaddialog.cpp:146
+#: gui/cloudconnectionwizard.cpp:585 gui/downloaddialog.cpp:146
 #: gui/editgamedialog.cpp:341 gui/editrecorddialog.cpp:67
 #: gui/integrity-dialog.cpp:260 gui/fluidsynth-dialog.cpp:154
 #: gui/launcher.cpp:566 gui/launcher.cpp:570 gui/massadd.cpp:90
@@ -375,16 +375,16 @@ msgstr "JSON კოდის შემცველობა დამახი�
 msgid "OK"
 msgstr "დიახ"
 
-#: gui/cloudconnectionwizard.cpp:589
+#: gui/cloudconnectionwizard.cpp:586
 msgid "Incorrect JSON."
 msgstr "არასწორი JSON."
 
 #. I18N: error message displayed on 'Manual Mode: Failure' step of 'Cloud Connection Wizard', describing that storage connection process was interrupted
-#: gui/cloudconnectionwizard.cpp:596
+#: gui/cloudconnectionwizard.cpp:593
 msgid "Interrupted."
 msgstr "შეწყვეტილია."
 
-#: gui/cloudconnectionwizard.cpp:669
+#: gui/cloudconnectionwizard.cpp:666
 msgid ""
 "Failed to open URL!\n"
 "Please navigate to this page manually."
@@ -393,12 +393,12 @@ msgstr ""
 "გადადით ამ გვერდზე თვითონ."
 
 #. I18N: JSON is a file format name
-#: gui/cloudconnectionwizard.cpp:686
+#: gui/cloudconnectionwizard.cpp:683
 msgid "Select JSON file copied from scummvm.org site"
 msgstr "აირჩიეთ JSON ფაილი, რომელიც საიტიდან scummvm.org მიიღეთ"
 
 #. I18N: JSON is a file format name
-#: gui/cloudconnectionwizard.cpp:692
+#: gui/cloudconnectionwizard.cpp:689
 msgid "Failed to load JSON file"
 msgstr "JSON დოკუმენტის ჩატვირთვა შეუძლებელია"
 
@@ -414,7 +414,7 @@ msgstr "DLC-ების გამოთხოვა..."
 msgid "All Downloads"
 msgstr "ყველა გადმოწერა"
 
-#: gui/dlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:268
+#: gui/dlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:268 gui/textviewer.cpp:59
 msgid "Download"
 msgstr "გადმოწერა"
 
@@ -5643,7 +5643,7 @@ msgstr "განახლებების შემოწმება..."
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
 #: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:84 engines/queen/metaengine.cpp:146
+#: engines/private/metaengine.cpp:95 engines/queen/metaengine.cpp:146
 #: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
 #: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
 #: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
@@ -6637,38 +6637,28 @@ msgid "Escape"
 msgstr "Escape"
 
 #: engines/bagel/metaengine.cpp:70
-#, fuzzy
-#| msgid "Page up"
 msgid "Page Up"
-msgstr "გვერდით ზემოთ"
+msgstr "Page Up"
 
 #: engines/bagel/metaengine.cpp:71
-#, fuzzy
-#| msgid "Page down"
 msgid "Page Down"
-msgstr "გვერდით ქვემოთ"
+msgstr "Page Down"
 
 #: engines/bagel/metaengine.cpp:72
-#, fuzzy
-#| msgid "Home key"
 msgid "Home"
-msgstr "ღილაკი Home"
+msgstr "Home"
 
 #: engines/bagel/metaengine.cpp:73
-#, fuzzy
-#| msgid "End key"
 msgid "End"
-msgstr "ღილაკი end"
+msgstr "end"
 
 #: engines/bagel/metaengine.cpp:180
 msgid "General Keys"
 msgstr "ზოგადი გასაღებები"
 
 #: engines/bagel/metaengine.cpp:180
-#, fuzzy
-#| msgid "Minimal Volume"
 msgid "Minimal Keys"
-msgstr "მინიმალური ხმა"
+msgstr "მინიმალური ღილაკები"
 
 #. I18N: Escape is a key
 #: engines/bbvs/metaengine.cpp:95
@@ -7038,7 +7028,7 @@ msgstr "ინვენტარის კლავიატურის მა�
 
 #: engines/buried/metaengine.cpp:141 engines/chamber/metaengine.cpp:65
 #: engines/chamber/metaengine.cpp:71 engines/chamber/metaengine.cpp:77
-#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:87
+#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:98
 #: engines/sherlock/metaengine.cpp:1185
 msgid "Select / Interact"
 msgstr "არჩევა / ურთიერთობა"
@@ -7496,10 +7486,8 @@ msgid ""
 msgstr ""
 
 #: engines/darkseed/dialogs.cpp:121
-#, fuzzy
-#| msgid "SFX volume:"
 msgid "SFX mode:"
-msgstr "SFX ხმა:"
+msgstr "SFX რეჟიმი:"
 
 #: engines/darkseed/dialogs.cpp:122
 msgid ""
@@ -7535,8 +7523,6 @@ msgid "Time advance"
 msgstr "დროის გადაწევა"
 
 #: engines/darkseed/metaengine.cpp:65
-#, fuzzy
-#| msgid "Skip cutscene"
 msgid "Skip Cutscene"
 msgstr "საწყისი ეკრანის გამოტოვება"
 
@@ -9449,10 +9435,8 @@ msgid ""
 msgstr ""
 
 #: engines/made/metaengine.cpp:63
-#, fuzzy
-#| msgid "Use Windows cursors"
 msgid "Use Windows mouse cursors"
-msgstr "Windows-ის კურსორის გამოყენება"
+msgstr "Windows-ის თაგუნას კურსორის გამოყენება"
 
 #: engines/made/metaengine.cpp:64
 msgid ""
@@ -10211,53 +10195,39 @@ msgid "Confirm the selected save / new save name"
 msgstr "დაადასტურეთ არჩეული შენახვის / ახალი შენახვის სახელი"
 
 #: engines/ngi/metaengine.cpp:118
-#, fuzzy
-#| msgid "Quit keymappings"
 msgid "Credits keymappings"
-msgstr "კლავიატურის მალსახმობებიდან გასვლა"
+msgstr "საავტორო უფლებების კლავიატურის მალსახმობი"
 
 #. I18N: Keymap for various dialogs such as save game dialog.
 #: engines/ngi/metaengine.cpp:120
-#, fuzzy
-#| msgid "Quit dialog keymappings"
 msgid "Dialog keymappings"
-msgstr "დიალოგის კლავიატურის მალსახმობების დიალოგიდან გასვლა"
+msgstr "დიალოგის კლავიატურის მალსახმობები"
 
 #: engines/ngi/metaengine.cpp:130
-#, fuzzy
-#| msgid "Search / Select item"
 msgid "Deselect item"
-msgstr "საგნის ძებნა / არჩევა"
+msgstr "საგნის მონიშვნის გაუქმება"
 
 #. I18N: Stops all currently playing sounds.
 #: engines/ngi/metaengine.cpp:143
-#, fuzzy
-#| msgid "Preload sounds"
 msgid "Stop sounds"
-msgstr "ხმების წინასწარი ჩატვირთვა"
+msgstr "ხმების გაჩერება"
 
 #: engines/ngi/metaengine.cpp:155 engines/teenagent/metaengine.cpp:226
 msgid "Toggle inventory"
 msgstr "ინვენტარის გადართვა"
 
 #: engines/ngi/metaengine.cpp:176
-#, fuzzy
-#| msgid "Show credits"
 msgid "Skip credits"
-msgstr "კრედიტების ჩვენება"
+msgstr "კრედიტების გამოტოვება"
 
 #. I18N: Closes any open dialogs, such as save game dialog.
 #: engines/ngi/metaengine.cpp:183
-#, fuzzy
-#| msgid "Close the dialog box"
 msgid "Close dialog"
-msgstr "დიალოგური ფანჯრის დახურვა"
+msgstr "დიალოგის დახურვა"
 
 #: engines/ngi/metaengine.cpp:197
-#, fuzzy
-#| msgid "Close gumps"
 msgid "Close map"
-msgstr "მენიუს დახურვა"
+msgstr "რუკის დახურვა"
 
 #: engines/parallaction/saveload.cpp:129
 #, c-format
@@ -10341,36 +10311,26 @@ msgid "Toggle Chatty AI"
 msgstr "მოლაყბე AI-ის გადართვა"
 
 #: engines/petka/metaengine.cpp:117
-#, fuzzy
-#| msgid "Move / Interact / Skip dialog"
 msgid "Interact / Skip dialog"
-msgstr "გადაადგილება / ურთიერთქმედება / დიალოგის გამოტოვება"
+msgstr "ურთიერთქმედება / დიალოგის გამოტოვება"
 
 #. I18N: (Game Name: Red Comrades 1: Save the Galaxy) The game has multiple actions that you can perform(take, use, etc.), the action menu allows you to select one of them.
 #: engines/petka/metaengine.cpp:124
-#, fuzzy
-#| msgid "Open action menu / Close menu"
 msgid "Open action menu / Close current interface"
-msgstr "ქმედებების მენიუს გახსნა / მენიუს დახურვა"
+msgstr "ქმედებების მენიუს გახსნა / მიმდინარე ინტერფეისის დახურვა"
 
 #. I18N: (Game Name: Red Comrades 1: Save the Galaxy) The game features two characters, but all actions are normally performed by Petka. This action allows you to "use" an object specifically with Chapayev instead.
 #: engines/petka/metaengine.cpp:166
-#, fuzzy
-#| msgid "Chapayev's action"
 msgid "Chapayev use object"
-msgstr "ჩაპაევის ქმედება"
+msgstr "ჩაპაევი ობიექტის გამოყენება"
 
 #: engines/petka/metaengine.cpp:186
-#, fuzzy
-#| msgid "Show options menu"
 msgid "Show / Hide options screen"
-msgstr "პარამეტრების მენიუს ჩვენება"
+msgstr "პარამეტრების ეკრანის ჩვენება / დამალვა"
 
 #: engines/petka/metaengine.cpp:192
-#, fuzzy
-#| msgid "Easy mouse interface"
 msgid "Close current interface"
-msgstr "ადვილი თაგუნას ინტერფეისი"
+msgstr "მიმდინარე ინტერფეისის დახურვა"
 
 #: engines/pink/gui.cpp:291
 msgid "This menu item is not yet implemented"
@@ -10449,7 +10409,17 @@ msgstr "SFX სუბტიტრების ჩვენება"
 msgid "Use SFX subtitles (if subtitles are enabled)."
 msgstr ""
 
-#: engines/private/metaengine.cpp:93 engines/trecision/metaengine.cpp:137
+#: engines/private/metaengine.cpp:48
+#, fuzzy
+#| msgid "Highlight items"
+msgid "Highlight decision areas"
+msgstr "ელემენტების გამოკვეთა"
+
+#: engines/private/metaengine.cpp:49
+msgid "Highlight clickable areas in decision scenes."
+msgstr ""
+
+#: engines/private/metaengine.cpp:104 engines/trecision/metaengine.cpp:137
 msgid "Skip video"
 msgstr "ვიდეოს გამოტოვება"
 
@@ -12964,10 +12934,8 @@ msgid "Close inventory"
 msgstr "ინვენტარის დახურვა"
 
 #: engines/testbed/metaengine.cpp:38 engines/testbed/metaengine.cpp:39
-#, fuzzy
-#| msgid "Interact mode"
 msgid "Run in interactive mode"
-msgstr "ურთიერთობის რეჟიმი"
+msgstr "გაშვება ინტერაქტიურ რეჟიმში"
 
 #: engines/tetraedge/metaengine.cpp:32
 msgid "Correct movie aspect ratio"
@@ -13184,50 +13152,36 @@ msgid "Unable to locate the '%s' data file."
 msgstr ""
 
 #: engines/tot/metaengine.cpp:36
-#, fuzzy
-#| msgid "Enable copy protection"
 msgid "Copy protection"
-msgstr "კოპირებისგან დაცვის ჩართვა"
+msgstr "კოპირებისგან დაცვა"
 
 #: engines/tot/metaengine.cpp:47
-#, fuzzy
-#| msgid "Pixellated scene transitions"
 msgid "Disable scene transitions"
-msgstr "დაპიქსელებული სცემის გადასვლები"
+msgstr "სცენის გადასვლების გამორთვა"
 
 #: engines/tot/metaengine.cpp:48
 msgid "Disable original transition effects between scenes"
 msgstr ""
 
 #: engines/tot/metaengine.cpp:58
-#, fuzzy
-#| msgid "Open save / load dialog"
 msgid "Original save/load dialog"
-msgstr "შენახვის / ჩატვირთვის დიალოგის გახსნა"
+msgstr "ორიგინალი შენახვის / ჩატვირთვის დიალოგი"
 
 #: engines/tot/metaengine.cpp:59
-#, fuzzy
-#| msgid "Use original save/load screens"
 msgid "Use original save and load dialogs"
-msgstr "ორიგინალი შენახვა/ჩატვირთვის ეკრანების გამოყენება"
+msgstr "ორიგინალი შენახვა/ჩატვირთვის დიალოგის გამოყენება"
 
 #: engines/tot/metaengine.cpp:118
-#, fuzzy
-#| msgid "Perform default action"
 msgid "Default action"
-msgstr "ნაგულისხმევი ქმედების შესრულება"
+msgstr "ნაგულისხმევი ქმედება"
 
 #: engines/tot/metaengine.cpp:154
-#, fuzzy
-#| msgid "Save / load game"
 msgid "Save and load game"
-msgstr "თამაშის შენახვა / ჩატვირთვა"
+msgstr "თამაშის შენახვა და ჩატვირთვა"
 
 #: engines/tot/metaengine.cpp:164
-#, fuzzy
-#| msgid "Main menu"
 msgid "Main menu/Exit"
-msgstr "მთავარი მენიუ"
+msgstr "მთავარი მენიუ/გასვლა"
 
 #: engines/touche/metaengine.cpp:135
 msgid "Skip sequence / open quit dialog"

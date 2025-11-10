@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-11-04 09:15+0000\n"
+"POT-Creation-Date: 2025-11-09 13:17+0000\n"
 "PO-Revision-Date: 2024-11-16 02:13+0000\n"
 "Last-Translator: Marcel Souza Lemes <marcosoutsider@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translations.scummvm.org/"
@@ -61,7 +61,7 @@ msgstr "Engines disponíveis:"
 #. I18N: Close dialog button
 #: gui/about.cpp:527 gui/downloadpacksdialog.cpp:298
 #: gui/downloadpacksdialog.cpp:389 gui/integrity-dialog.cpp:354
-#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:53
+#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:56
 #: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:558
 #: engines/drascula/metaengine.cpp:245 engines/queen/metaengine.cpp:264
 #: engines/saga/metaengine.cpp:374 engines/scumm/help.cpp:126
@@ -358,11 +358,11 @@ msgstr ""
 "Aguarde até que o armazenamento atual conclua seu processo e tente outra vez."
 
 #. I18N: JSON is name of the format, this message is displayed if user entered something incorrect to the text field
-#: gui/cloudconnectionwizard.cpp:567
+#: gui/cloudconnectionwizard.cpp:564
 msgid "JSON code contents are malformed."
 msgstr "O conteúdo do código JSON está incorreto."
 
-#: gui/cloudconnectionwizard.cpp:588 gui/downloaddialog.cpp:146
+#: gui/cloudconnectionwizard.cpp:585 gui/downloaddialog.cpp:146
 #: gui/editgamedialog.cpp:341 gui/editrecorddialog.cpp:67
 #: gui/integrity-dialog.cpp:260 gui/fluidsynth-dialog.cpp:154
 #: gui/launcher.cpp:566 gui/launcher.cpp:570 gui/massadd.cpp:90
@@ -388,16 +388,16 @@ msgstr "O conteúdo do código JSON está incorreto."
 msgid "OK"
 msgstr "OK"
 
-#: gui/cloudconnectionwizard.cpp:589
+#: gui/cloudconnectionwizard.cpp:586
 msgid "Incorrect JSON."
 msgstr "JSON incorreto."
 
 #. I18N: error message displayed on 'Manual Mode: Failure' step of 'Cloud Connection Wizard', describing that storage connection process was interrupted
-#: gui/cloudconnectionwizard.cpp:596
+#: gui/cloudconnectionwizard.cpp:593
 msgid "Interrupted."
 msgstr "Interrompido."
 
-#: gui/cloudconnectionwizard.cpp:669
+#: gui/cloudconnectionwizard.cpp:666
 msgid ""
 "Failed to open URL!\n"
 "Please navigate to this page manually."
@@ -406,12 +406,12 @@ msgstr ""
 "Por favor, navegue para esta página manualmente."
 
 #. I18N: JSON is a file format name
-#: gui/cloudconnectionwizard.cpp:686
+#: gui/cloudconnectionwizard.cpp:683
 msgid "Select JSON file copied from scummvm.org site"
 msgstr "Selecione o arquivo JSON copiado do site scummvm.org"
 
 #. I18N: JSON is a file format name
-#: gui/cloudconnectionwizard.cpp:692
+#: gui/cloudconnectionwizard.cpp:689
 msgid "Failed to load JSON file"
 msgstr "Falha ao carregar arquivo JSON"
 
@@ -427,7 +427,7 @@ msgstr "Buscando DLCs..."
 msgid "All Downloads"
 msgstr "Todos os Downloads"
 
-#: gui/dlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:268
+#: gui/dlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:268 gui/textviewer.cpp:59
 msgid "Download"
 msgstr "Baixar"
 
@@ -6326,7 +6326,7 @@ msgstr "Procurar por Atualizações..."
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
 #: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:84 engines/queen/metaengine.cpp:146
+#: engines/private/metaengine.cpp:95 engines/queen/metaengine.cpp:146
 #: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
 #: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
 #: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
@@ -7867,7 +7867,7 @@ msgstr "Mapeamentos de teclas de índice"
 
 #: engines/buried/metaengine.cpp:141 engines/chamber/metaengine.cpp:65
 #: engines/chamber/metaengine.cpp:71 engines/chamber/metaengine.cpp:77
-#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:87
+#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:98
 #: engines/sherlock/metaengine.cpp:1185
 #, fuzzy
 #| msgid "Interact Mode"
@@ -11932,7 +11932,17 @@ msgstr "Ativar/desativar legendas"
 msgid "Use SFX subtitles (if subtitles are enabled)."
 msgstr "Usar TPS para ler as legendas (se TPS estiver disponível)"
 
-#: engines/private/metaengine.cpp:93 engines/trecision/metaengine.cpp:137
+#: engines/private/metaengine.cpp:48
+#, fuzzy
+#| msgid "Highlight next dialogue"
+msgid "Highlight decision areas"
+msgstr "Destacar próximo diálogo"
+
+#: engines/private/metaengine.cpp:49
+msgid "Highlight clickable areas in decision scenes."
+msgstr ""
+
+#: engines/private/metaengine.cpp:104 engines/trecision/metaengine.cpp:137
 msgid "Skip video"
 msgstr "Pular vídeo"
 

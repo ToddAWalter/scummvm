@@ -53,10 +53,11 @@ extern int parse(const char *);
 PrivateEngine::PrivateEngine(OSystem *syst, const ADGameDescription *gd)
 	: Engine(syst), _gameDescription(gd), _image(nullptr), _videoDecoder(nullptr),
 	  _compositeSurface(nullptr), _transparentColor(0), _frameImage(nullptr),
-	  _framePalette(nullptr), _maxNumberClicks(0), _sirenWarning(0), 
+	  _framePalette(nullptr), _maxNumberClicks(0), _sirenWarning(0),
 	  _subtitles(nullptr), _sfxSubtitles(false), _useSubtitles(false),
 	  _defaultCursor(nullptr),
 	  _screenW(640), _screenH(480) {
+	_highlightMasks = false;
 	_rnd = new Common::RandomSource("private");
 
 	// Global object for external reference
@@ -112,7 +113,7 @@ PrivateEngine::PrivateEngine(OSystem *syst, const ADGameDescription *gd)
 
 	// Diary
 	_diaryLocPrefix = "inface/diary/loclist/";
-	_currentDiaryPage = 0;
+	_currentDiaryPage = -1;
 
 	// Safe
 	_safeNumberPath = "sg/search_s/sgsaf%d.bmp";
@@ -237,6 +238,9 @@ Common::Error PrivateEngine::run() {
 	if (!Common::parseBool(ConfMan.get("sfxSubtitles"), _sfxSubtitles))
 		warning("Failed to parse bool from sfxSubtitles options");
 
+	if (!Common::parseBool(ConfMan.get("highlightMasks"), _shouldHighlightMasks))
+		warning("Failed to parse bool from highlightMasks options");
+
 	if (!_useSubtitles && _sfxSubtitles) {
 		warning("SFX subtitles are enabled, but no subtitles will be shown");
 	}
@@ -282,7 +286,7 @@ Common::Error PrivateEngine::run() {
 	_compositeSurface->create(_screenW, _screenH, _pixelFormat);
 	_compositeSurface->setTransparentColor(_transparentColor);
 
-	_currentDiaryPage = 0;
+	_currentDiaryPage = -1;
 
 	// Load the game frame once
 	byte *palette;
@@ -423,13 +427,6 @@ Common::Error PrivateEngine::run() {
 				stopSound(true);
 			}
 
-			if (_needToDrawScreenFrame && _videoDecoder->getCurFrame() >= 0) {
-				const byte *videoPalette = _videoDecoder->getPalette();
-				g_system->getPaletteManager()->setPalette(videoPalette, 0, 256);
-				drawScreenFrame(videoPalette);
-				_needToDrawScreenFrame = false;
-			}
-
 			if (_videoDecoder->endOfVideo()) {
 				delete _videoDecoder;
 				_videoDecoder = nullptr;
@@ -458,7 +455,14 @@ Common::Error PrivateEngine::run() {
 			_currentVS = "";
 			Gen::g_vm->run();
 			changeCursor("default");
-			drawScreen();
+
+			// Draw the screen once the VM has processed the last setting.
+			// This prevents the screen from flickering images as VM settings
+			// are executed. Fixes the previous screen from being displayed
+			// when a video finishes playing.
+			if (_nextSetting.empty()) {
+				drawScreen();
+			}
 		}
 
 		g_system->updateScreen();
@@ -502,6 +506,7 @@ void PrivateEngine::clearAreas() {
 
 	_exits.clear();
 	_masks.clear();
+	_highlightMasks = false;
 	_locationMasks.clear();
 	_memoryMasks.clear();
 
@@ -610,12 +615,17 @@ bool PrivateEngine::inMask(Graphics::Surface *surf, Common::Point mousePos) {
 	return (surf->getPixel(mousePos.x, mousePos.y) != _transparentColor);
 }
 
+bool PrivateEngine::inBox(const Common::Rect &box, Common::Point mousePos) {
+	return box.contains(mousePos);
+}
+
 bool PrivateEngine::cursorMask(Common::Point mousePos) {
 	bool inside = false;
 	for (MaskList::const_iterator it = _masks.begin(); it != _masks.end(); ++it) {
 		const MaskInfo &m = *it;
 
-		if (inMask(m.surf, mousePos)) {
+		bool inArea = m.useBoxCollision ? m.box.contains(mousePos) : inMask(m.surf, mousePos);
+		if (inArea) {
 			if (!m.cursor.empty()) { // TODO: check this
 				inside = true;
 				changeCursor(m.cursor);
@@ -666,6 +676,27 @@ Common::String PrivateEngine::getMainDesktopSetting() {
 		return "k45";
 
 	return "k183";
+}
+
+Common::String PrivateEngine::getDiaryTOCSetting() {
+	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
+		return "kDiaryTOC";
+
+	return "k185";
+}
+
+Common::String PrivateEngine::getDiaryMiddleSetting() {
+	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
+		return "kDiaryMiddle";
+
+	return "k186";
+}
+
+Common::String PrivateEngine::getDiaryLastPageSetting() {
+	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
+		return "kDiaryLastPage";
+
+	return "k187";
 }
 
 Common::String PrivateEngine::getPoliceIndexVariable() {
@@ -785,6 +816,7 @@ void PrivateEngine::selectExit(Common::Point mousePos) {
 	if (!ns.empty()) {
 		_numberClicks++; // count click only if it hits a hotspot
 		_nextSetting = ns;
+		_highlightMasks = false;
 	}
 }
 
@@ -801,9 +833,11 @@ void PrivateEngine::selectMask(Common::Point mousePos) {
 			}
 
 			if (m.flag1 != nullptr) { // TODO: check this
-				setSymbol(m.flag1, 1);
 				// an item was taken
 				if (_toTake) {
+					if (!inInventory(m.inventoryItem))
+						inventory.push_back(m.inventoryItem);
+					setSymbol(m.flag1, 1);
 					playSound(getTakeSound(), 1, false, false);
 					_toTake = false;
 				}
@@ -818,6 +852,7 @@ void PrivateEngine::selectMask(Common::Point mousePos) {
 	if (!ns.empty()) {
 		_numberClicks++; // count click only if it hits a hotspot
 		_nextSetting = ns;
+		_highlightMasks = false;
 	}
 }
 
@@ -827,11 +862,11 @@ bool PrivateEngine::selectLocation(const Common::Point &mousePos) {
 	}
 
 	uint i = 0;
-	uint totalLocations = 0;
+	int totalLocations = 0;
 	for (auto &it : maps.locationList) {
 		const Private::Symbol *sym = maps.locations.getVal(it);
 		if (sym->u.val) {
-			if (inMask(_locationMasks[i].surf, mousePos)) {
+			if (inBox(_locationMasks[i].box, mousePos)) {
 				bool diaryPageSet = false;
 				for (uint j = 0; j < _diaryPages.size(); j++) {
 					if (_diaryPages[j].locationID == totalLocations + 1) {
@@ -895,7 +930,7 @@ bool PrivateEngine::selectMemory(const Common::Point &mousePos) {
 		if (inMask(_memoryMasks[i].surf, mousePos)) {
 			clearAreas();
 			_nextMovie = _diaryPages[_currentDiaryPage].memories[i].movie;
-			_nextSetting = "kDiaryMiddle";
+			_nextSetting = getDiaryMiddleSetting();
 			return true;
 		}
 	}
@@ -947,6 +982,7 @@ void PrivateEngine::addMemory(const Common::String &path) {
 
 	DiaryPage diaryPage;
 	diaryPage.locationName = location;
+	diaryPage.locationID = -1;
 
 	uint locationIndex = 0;
 	for (auto &it : maps.locationList) {
@@ -954,12 +990,46 @@ void PrivateEngine::addMemory(const Common::String &path) {
 		locationIndex++;
 
 		Common::String currentLocation = it.substr(9);
+		if (it.size() <= 3) {
+			if (it == "k0") {
+				currentLocation = "mo";
+			} else if (it == "k1") {
+				currentLocation = "is";
+			} else if (it == "k2") {
+				currentLocation = "mw";
+			} else if (it == "k3") {
+				currentLocation = "cs";
+			} else if (it == "k4") {
+				currentLocation = "cw";
+			} else if (it == "k5") {
+				currentLocation = "ts";
+			} else if (it == "k6") {
+				currentLocation = "bo";
+			} else if (it == "k7") {
+				currentLocation = "gz";
+			} else if (it == "k8") {
+				currentLocation = "sg";
+			} else if (it == "k9") {
+				currentLocation = "da";
+			} else if (it == "k10") {
+				currentLocation = "dl";
+			} else if (it == "k11") {
+				currentLocation = "vn";
+			} else if (it == "k12") {
+				currentLocation = "po";
+			} else if (it == "k13") {
+				currentLocation = "dc";
+			} else
+				error("Unknown location symbol %s", it.c_str());
+		}
+
 		currentLocation.toLowercase();
 		if (sym->u.val && currentLocation == location) {
 			diaryPage.locationID = locationIndex;
 			break;
 		}
 	}
+	assert(diaryPage.locationID != -1);
 
 	diaryPage.memories.push_back(memory);
 
@@ -971,6 +1041,14 @@ void PrivateEngine::addMemory(const Common::String &path) {
 	}
 
 	_diaryPages.insert_at(0, diaryPage);
+}
+
+bool PrivateEngine::inInventory(const Common::String &bmp) const {
+	for (NameList::const_iterator it = inventory.begin(); it != inventory.end(); ++it) {
+		if (*it == bmp)
+			return true;
+	}
+	return false;
 }
 
 void PrivateEngine::selectAMRadioArea(Common::Point mousePos) {
@@ -1064,6 +1142,7 @@ bool PrivateEngine::selectDossierNextSuspect(Common::Point mousePos) {
 
 	if (inMask(_dossierNextSuspectMask.surf, mousePos)) {
 		if ((_dossierSuspect + 1) < _dossiers.size()) {
+			playSound(getPaperShuffleSound(), 1, false, false);
 			_dossierSuspect++;
 			_dossierPage = 0;
 			loadDossier();
@@ -1082,6 +1161,7 @@ bool PrivateEngine::selectDossierPrevSheet(Common::Point mousePos) {
 
 	if (inMask(_dossierPrevSheetMask.surf, mousePos)) {
 		if (_dossierPage == 1) {
+			playSound(getPaperShuffleSound(), 1, false, false);
 			_dossierPage = 0;
 			loadDossier();
 			drawMask(_dossierNextSuspectMask.surf);
@@ -1100,6 +1180,7 @@ bool PrivateEngine::selectDossierNextSheet(Common::Point mousePos) {
 	if (inMask(_dossierNextSheetMask.surf, mousePos)) {
 		DossierInfo m = _dossiers[_dossierSuspect];
 		if (_dossierPage == 0 && !m.page2.empty()) {
+			playSound(getPaperShuffleSound(), 1, false, false);
 			_dossierPage = 1;
 			loadDossier();
 			drawMask(_dossierNextSuspectMask.surf);
@@ -1117,6 +1198,7 @@ bool PrivateEngine::selectDossierPrevSuspect(Common::Point mousePos) {
 
 	if (inMask(_dossierPrevSuspectMask.surf, mousePos)) {
 		if (_dossierSuspect > 0) {
+			playSound(getPaperShuffleSound(), 1, false, false);
 			_dossierSuspect--;
 			_dossierPage = 0;
 			loadDossier();
@@ -1581,6 +1663,59 @@ void PrivateEngine::playVideo(const Common::String &name) {
 
 	loadSubtitles(path);
 	_videoDecoder->start();
+
+	// set the view screen based on the video, unless playing from diary
+	if (_currentSetting != getDiaryMiddleSetting()) {
+		Common::String videoViewScreen = getVideoViewScreen(name);
+		if (!videoViewScreen.empty()) {
+			_nextVS = videoViewScreen;
+		}
+	}
+}
+
+Common::String PrivateEngine::getVideoViewScreen(Common::String video) {
+	video = convertPath(video).toString();
+
+	// find the separator
+	const char *separators[] = { "/animatio/", "/" };
+	size_t separatorPos = Common::String::npos;
+	size_t separatorLength = Common::String::npos;
+	for (uint i = 0; i < ARRAYSIZE(separators); i++) {
+		separatorPos = video.find(separators[i]);
+		if (separatorPos != Common::String::npos) {
+			separatorLength = strlen(separators[i]);
+			break;
+		}
+	}
+	if (separatorPos == Common::String::npos) {
+		return "";
+	}
+
+	// find the video suffix. these suffixes are from the executable.
+	size_t suffixPos = Common::String::npos;
+	const char *suffixes[] = { "ys.smk", "xs.smk", "a.smk", "s.smk", ".smk" };
+	for (uint i = 0; i < ARRAYSIZE(suffixes); i++) {
+		if (video.hasSuffix(suffixes[i])) {
+			suffixPos = video.size() - strlen(suffixes[i]);
+			break;
+		}
+	}
+	if (suffixPos == Common::String::npos) {
+		return "";
+	}
+
+	// build the view screen picture name
+	Common::String picture = Common::String::format(
+		"\"inface/views/%s/%s.bmp\"",
+		video.substr(0, separatorPos).c_str(),
+		video.substr(separatorPos + separatorLength, suffixPos - (separatorPos + separatorLength)).c_str());
+
+	// not every video has a picture
+	if (!Common::File::exists(convertPath(picture))) {
+		return "";
+	}
+
+	return picture;
 }
 
 void PrivateEngine::skipVideo() {
@@ -1773,11 +1908,10 @@ void PrivateEngine::drawScreenFrame(const byte *newPalette) {
 	g_system->copyRectToScreen(_mframeImage->getPixels(), _mframeImage->pitch, 0, 0, _screenW, _screenH);
 }
 
-Graphics::Surface *PrivateEngine::loadMask(const Common::String &name, int x, int y, bool drawn) {
-	debugC(1, kPrivateDebugFunction, "%s(%s,%d,%d,%d)", __FUNCTION__, name.c_str(), x, y, drawn);
-	Graphics::Surface *surf = new Graphics::Surface();
-	surf->create(_screenW, _screenH, _pixelFormat);
-	surf->fillRect(_screenRect, _transparentColor);
+void PrivateEngine::loadMaskAndInfo(MaskInfo *m, const Common::String &name, int x, int y, bool drawn) {
+	m->surf = new Graphics::Surface();
+	m->surf->create(_screenW, _screenH, _pixelFormat);
+	m->surf->fillRect(_screenRect, _transparentColor);
 	byte *palette;
 	bool isNewPalette;
 	Graphics::Surface *csurf = decodeImage(name, &palette, &isNewPalette);
@@ -1791,12 +1925,13 @@ Graphics::Surface *PrivateEngine::loadMask(const Common::String &name, int x, in
 		wdiff = y + csurf->w - _screenW;
 
 	Common::Rect crect(csurf->w - wdiff, csurf->h - hdiff);
-	surf->copyRectToSurface(*csurf, x, y, crect);
+	m->surf->copyRectToSurface(*csurf, x, y, crect);
+	m->box = Common::Rect(x, y, x + csurf->w, y + csurf->h);
 
 	if (drawn) {
 		_compositeSurface->setPalette(palette, 0, 256);
 		_compositeSurface->setTransparentColor(_transparentColor);
-		drawMask(surf);
+		drawMask(m->surf);
 	}
 
 	csurf->free();
@@ -1806,22 +1941,70 @@ Graphics::Surface *PrivateEngine::loadMask(const Common::String &name, int x, in
 	if (isNewPalette) {
 		free(palette);
 	}
+}
 
-	return surf;
+Graphics::Surface *PrivateEngine::loadMask(const Common::String &name, int x, int y, bool drawn) {
+	debugC(1, kPrivateDebugFunction, "%s(%s,%d,%d,%d)", __FUNCTION__, name.c_str(), x, y, drawn);
+	if (_shouldHighlightMasks && name.contains("\\decision\\"))
+		_highlightMasks = true;
+
+	MaskInfo m;
+	loadMaskAndInfo(&m, name, x, y, drawn);
+	return m.surf;
 }
 
 void PrivateEngine::drawMask(Graphics::Surface *surf) {
 	_compositeSurface->transBlitFrom(*surf, _origin, _transparentColor);
 }
 
+void drawCircle(Graphics::ManagedSurface *surface, int x, int y, int radius, int color) {
+	int cx = 0;
+	int cy = radius;
+	int df = 1 - radius;
+	int d_e = 3;
+	int d_se = -2 * radius + 5;
+
+	do {
+		surface->setPixel(x + cx, y + cy, color);
+		surface->setPixel(x - cx, y + cy, color);
+		surface->setPixel(x + cx, y - cy, color);
+		surface->setPixel(x - cx, y - cy, color);
+		surface->setPixel(x + cy, y + cx, color);
+		surface->setPixel(x - cy, y + cx, color);
+		surface->setPixel(x + cy, y - cx, color);
+		surface->setPixel(x - cy, y - cx, color);
+
+		if (df < 0) {
+			df += d_e;
+			d_e += 2;
+			d_se += 2;
+		} else {
+			df += d_se;
+			d_e += 2;
+			d_se += 4;
+			cy--;
+		}
+		cx++;
+	} while (cx <= cy);
+
+	for (int i = -radius; i <= radius; i++) {
+		surface->setPixel(x + i, y, color);
+		surface->setPixel(x, y + i, color);
+	}
+}
+
 void PrivateEngine::drawScreen() {
 	if (_videoDecoder && !_videoDecoder->isPaused()) {
 		const Graphics::Surface *frame = _videoDecoder->decodeNextFrame();
 		Common::Point center((_screenW - _videoDecoder->getWidth()) / 2, (_screenH - _videoDecoder->getHeight()) / 2);
-		const byte *videoPalette = nullptr;
 
-		if (_videoDecoder->hasDirtyPalette()) {
-			videoPalette = _videoDecoder->getPalette();
+		if (_needToDrawScreenFrame && _videoDecoder->getCurFrame() >= 0) {
+			const byte *videoPalette = _videoDecoder->getPalette();
+			g_system->getPaletteManager()->setPalette(videoPalette, 0, 256);
+			drawScreenFrame(videoPalette);
+			_needToDrawScreenFrame = false;
+		} else if (_videoDecoder->hasDirtyPalette()) {
+			const byte *videoPalette = _videoDecoder->getPalette();
 			g_system->getPaletteManager()->setPalette(videoPalette, 0, 256);
 
 			if (_mode == 1) {
@@ -1840,6 +2023,47 @@ void PrivateEngine::drawScreen() {
 			// We can reuse newPalette
 			g_system->getPaletteManager()->grabPalette((byte *) &newPalette, 0, 256);
 			drawScreenFrame((byte *) &newPalette);
+		}
+
+		if (_highlightMasks) {
+			byte redIndex = 0;
+			int min_dist = 1000 * 1000;
+			for (int i = 0; i < 256; ++i) {
+				int r = newPalette[i * 3 + 0];
+				int g = newPalette[i * 3 + 1];
+				int b = newPalette[i * 3 + 2];
+				int dist = (255 - r) * (255 - r) + g * g + b * b;
+				if (dist < min_dist) {
+					min_dist = dist;
+					redIndex = i;
+				}
+			}
+
+			for (MaskList::const_iterator it = _masks.begin(); it != _masks.end(); ++it) {
+				const MaskInfo &m = *it;
+				if (m.surf == nullptr) continue;
+
+				long sumX = 0;
+				long sumY = 0;
+				int count = 0;
+
+				for (int sx = 0; sx < m.surf->w; ++sx) {
+					for (int sy = 0; sy < m.surf->h; ++sy) {
+						if (m.surf->getPixel(sx, sy) != _transparentColor) {
+							sumX += sx;
+							sumY += sy;
+							count++;
+						}
+					}
+				}
+
+				if (count > 0) {
+					int centerX = sumX / count;
+					int centerY = sumY / count;
+
+					drawCircle(_compositeSurface, centerX + _origin.x, centerY + _origin.y, 7, redIndex);
+				}
+			}
 		}
 
 		Common::Rect w(_origin.x, _origin.y, _screenW - _origin.x, _screenH - _origin.y);
@@ -1920,11 +2144,12 @@ void PrivateEngine::loadLocations(const Common::Rect &rect) {
 				Common::String::format("%sdryloc%d.bmp", _diaryLocPrefix.c_str(), i);
 
 			MaskInfo m;
-			m.surf = loadMask(s, rect.left + 120, rect.top + offset, true);
+			loadMaskAndInfo(&m, s, rect.left + 120, rect.top + offset, true);
 			m.cursor = g_private->getExitCursor();
-			m.nextSetting = "kDiaryMiddle";
+			m.nextSetting = getDiaryMiddleSetting();
 			m.flag1 = nullptr;
 			m.flag2 = nullptr;
+			m.useBoxCollision = true;
 			_masks.push_front(m);
 			_locationMasks.push_back(m);
 		}
@@ -1942,6 +2167,9 @@ void PrivateEngine::loadInventory(uint32 x, const Common::Rect &r1, const Common
 }
 
 void PrivateEngine::loadMemories(const Common::Rect &rect, uint rightPageOffset, uint verticalOffset) {
+	if (_currentDiaryPage < 0)
+		return;
+
 	Common::String s = Common::String::format("inface/diary/loctabs/drytab%d.bmp", _diaryPages[_currentDiaryPage].locationID);
 	loadImage(s, 0, 0);
 
@@ -1953,7 +2181,7 @@ void PrivateEngine::loadMemories(const Common::Rect &rect, uint rightPageOffset,
 		MaskInfo m;
 		m.surf = loadMask(_diaryPages[_currentDiaryPage].memories[i].image, rect.left + horizontalOffset, rect.top + currentVerticalOffset, true);
 		m.cursor = g_private->getExitCursor();
-		m.nextSetting = "kDiaryMiddle";
+		m.nextSetting = getDiaryMiddleSetting();
 		m.flag1 = nullptr;
 		m.flag2 = nullptr;
 		_masks.push_front(m);

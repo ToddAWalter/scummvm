@@ -87,14 +87,24 @@ typedef struct MaskInfo {
 	Symbol *flag1;
 	Symbol *flag2;
 	Common::String cursor;
+	Common::String inventoryItem;
+	bool useBoxCollision;
+	Common::Rect box;
+
+	MaskInfo() {
+		clear();
+	}
 
 	void clear() {
 		surf = nullptr;
+		useBoxCollision = false;
+		box = Common::Rect();
 		flag1 = nullptr;
 		flag2 = nullptr;
 		nextSetting.clear();
 		cursor.clear();
 		point = Common::Point();
+		inventoryItem.clear();
 	}
 } MaskInfo;
 
@@ -124,7 +134,7 @@ typedef struct MemoryInfo {
 typedef struct DiaryPage {
 	Common::String locationName;
 	Common::Array<MemoryInfo> memories;
-	uint locationID;
+	int locationID;
 } DiaryPage;
 
 // funcs
@@ -164,6 +174,8 @@ private:
 	int _screenW, _screenH;
 
 public:
+	bool _shouldHighlightMasks;
+	bool _highlightMasks;
 	PrivateEngine(OSystem *syst, const ADGameDescription *gd);
 	~PrivateEngine();
 
@@ -218,7 +230,8 @@ public:
 	Common::Error loadGameStream(Common::SeekableReadStream *stream) override;
 	Common::Error saveGameStream(Common::WriteStream *stream, bool isAutosave = false) override;
 
-	Common::Path convertPath(const Common::String &);
+	static Common::Path convertPath(const Common::String &name);
+	static Common::String getVideoViewScreen(Common::String video);
 	void playVideo(const Common::String &);
 	void skipVideo();
 	void destroyVideo();
@@ -249,9 +262,11 @@ public:
 	// Rendering
 	Graphics::ManagedSurface *_compositeSurface;
 	Graphics::Surface *loadMask(const Common::String &, int, int, bool);
+	void loadMaskAndInfo(MaskInfo *m, const Common::String &name, int x, int y, bool drawn);
 	void drawMask(Graphics::Surface *);
 	void fillRect(uint32, Common::Rect);
 	bool inMask(Graphics::Surface *, Common::Point);
+	bool inBox(const Common::Rect &box, Common::Point mousePos);
 	uint32 _transparentColor;
 	Common::Rect _screenRect;
 	Common::String _framePath;
@@ -271,6 +286,9 @@ public:
 	Common::String getPauseMovieSetting();
 	Common::String getGoIntroSetting();
 	Common::String getMainDesktopSetting();
+	Common::String getDiaryTOCSetting();
+	Common::String getDiaryMiddleSetting();
+	Common::String getDiaryLastPageSetting();
 	Common::String getPOGoBustMovieSetting();
 	Common::String getPoliceBustFromMOSetting();
 	Common::String getAlternateGameVariable();
@@ -307,6 +325,7 @@ public:
 
 	// Diary
 	InvList inventory;
+	bool inInventory(const Common::String &bmp) const;
 	Common::String _diaryLocPrefix;
 	void loadLocations(const Common::Rect &);
 	void loadInventory(uint32, const Common::Rect &, const Common::Rect &);

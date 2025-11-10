@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 3.0.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-11-04 09:15+0000\n"
+"POT-Creation-Date: 2025-11-09 13:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,7 +55,7 @@ msgstr ""
 #. I18N: Close dialog button
 #: gui/about.cpp:527 gui/downloadpacksdialog.cpp:298
 #: gui/downloadpacksdialog.cpp:389 gui/integrity-dialog.cpp:354
-#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:53
+#: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:56
 #: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:558
 #: engines/drascula/metaengine.cpp:245 engines/queen/metaengine.cpp:264
 #: engines/saga/metaengine.cpp:374 engines/scumm/help.cpp:126
@@ -342,11 +342,11 @@ msgid "Wait until current Storage finishes and try again."
 msgstr ""
 
 #. I18N: JSON is name of the format, this message is displayed if user entered something incorrect to the text field
-#: gui/cloudconnectionwizard.cpp:567
+#: gui/cloudconnectionwizard.cpp:564
 msgid "JSON code contents are malformed."
 msgstr ""
 
-#: gui/cloudconnectionwizard.cpp:588 gui/downloaddialog.cpp:146
+#: gui/cloudconnectionwizard.cpp:585 gui/downloaddialog.cpp:146
 #: gui/editgamedialog.cpp:341 gui/editrecorddialog.cpp:67
 #: gui/integrity-dialog.cpp:260 gui/fluidsynth-dialog.cpp:154
 #: gui/launcher.cpp:566 gui/launcher.cpp:570 gui/massadd.cpp:90
@@ -372,28 +372,28 @@ msgstr ""
 msgid "OK"
 msgstr ""
 
-#: gui/cloudconnectionwizard.cpp:589
+#: gui/cloudconnectionwizard.cpp:586
 msgid "Incorrect JSON."
 msgstr ""
 
 #. I18N: error message displayed on 'Manual Mode: Failure' step of 'Cloud Connection Wizard', describing that storage connection process was interrupted
-#: gui/cloudconnectionwizard.cpp:596
+#: gui/cloudconnectionwizard.cpp:593
 msgid "Interrupted."
 msgstr ""
 
-#: gui/cloudconnectionwizard.cpp:669
+#: gui/cloudconnectionwizard.cpp:666
 msgid ""
 "Failed to open URL!\n"
 "Please navigate to this page manually."
 msgstr ""
 
 #. I18N: JSON is a file format name
-#: gui/cloudconnectionwizard.cpp:686
+#: gui/cloudconnectionwizard.cpp:683
 msgid "Select JSON file copied from scummvm.org site"
 msgstr ""
 
 #. I18N: JSON is a file format name
-#: gui/cloudconnectionwizard.cpp:692
+#: gui/cloudconnectionwizard.cpp:689
 msgid "Failed to load JSON file"
 msgstr ""
 
@@ -409,7 +409,7 @@ msgstr ""
 msgid "All Downloads"
 msgstr ""
 
-#: gui/dlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:268
+#: gui/dlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:268 gui/textviewer.cpp:59
 msgid "Download"
 msgstr ""
 
@@ -5617,7 +5617,7 @@ msgstr ""
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
 #: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:84 engines/queen/metaengine.cpp:146
+#: engines/private/metaengine.cpp:95 engines/queen/metaengine.cpp:146
 #: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
 #: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
 #: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
@@ -6996,7 +6996,7 @@ msgstr ""
 
 #: engines/buried/metaengine.cpp:141 engines/chamber/metaengine.cpp:65
 #: engines/chamber/metaengine.cpp:71 engines/chamber/metaengine.cpp:77
-#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:87
+#: engines/dm/metaengine.cpp:130 engines/private/metaengine.cpp:98
 #: engines/sherlock/metaengine.cpp:1185
 msgid "Select / Interact"
 msgstr ""
@@ -10377,7 +10377,15 @@ msgstr ""
 msgid "Use SFX subtitles (if subtitles are enabled)."
 msgstr ""
 
-#: engines/private/metaengine.cpp:93 engines/trecision/metaengine.cpp:137
+#: engines/private/metaengine.cpp:48
+msgid "Highlight decision areas"
+msgstr ""
+
+#: engines/private/metaengine.cpp:49
+msgid "Highlight clickable areas in decision scenes."
+msgstr ""
+
+#: engines/private/metaengine.cpp:104 engines/trecision/metaengine.cpp:137
 msgid "Skip video"
 msgstr ""
 
