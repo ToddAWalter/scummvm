@@ -173,7 +173,6 @@ void PrivateEngine::initializePath(const Common::FSNode &gamePath) {
 Common::SeekableReadStream *PrivateEngine::loadAssets() {
 
 	Common::File *test = new Common::File();
-	Common::SeekableReadStream *file = nullptr;
 
 	if (isDemo() && test->open("SUPPORT/ASSETS/DEMOGAME.WIN"))
 		return test;
@@ -187,19 +186,15 @@ Common::SeekableReadStream *PrivateEngine::loadAssets() {
 
 	delete test;
 
-	if (_platform == Common::kPlatformMacintosh && _language == Common::JA_JPN)
-		file = Common::MacResManager::openFileOrDataFork("xn--16jc8na7ay6a0eyg9e5nud0e4525d");
-	else
-		file = Common::MacResManager::openFileOrDataFork(isDemo() ? "Private Eye Demo Installer" : "Private Eye Installer");
-	if (file) {
-		Common::Archive *s = createStuffItArchive(file, true);
-		Common::SeekableReadStream *file2 = nullptr;
-		if (s)
-			file2 = s->createReadStreamForMember(isDemo() ? "demogame.mac" : "game.mac");
-		// file2 is enough to keep valid reference
-		delete file;
-		if (file2)
-			return file2;
+	if (_platform == Common::kPlatformMacintosh) {
+		Common::ScopedPtr<Common::Archive> macInstaller(loadMacInstaller());
+		if (macInstaller) {
+			const char *macFileName = isDemo() ? "demogame.mac" : "game.mac";
+			Common::SeekableReadStream *file = macInstaller->createReadStreamForMember(macFileName);
+			if (file != nullptr) {
+				return file;
+			}
+		}
 	}
 
 	Common::InstallShieldV3 installerArchive;
@@ -227,6 +222,25 @@ Common::SeekableReadStream *PrivateEngine::loadAssets() {
 
 	error("Unknown version");
 	return nullptr;
+}
+
+Common::Archive *PrivateEngine::loadMacInstaller() {
+	const char *fileName;
+	if (_language == Common::JA_JPN) {
+		fileName = "xn--16jc8na7ay6a0eyg9e5nud0e4525d";
+	} else if (isDemo()) {
+		fileName = "Private Eye Demo Installer";
+	} else {
+		fileName = "Private Eye Installer";
+	}
+
+	Common::SeekableReadStream *archiveFile = Common::MacResManager::openFileOrDataFork(fileName);
+	if (archiveFile == nullptr) {
+		return nullptr;
+	}
+
+	// createStuffItArchive() takes ownership of incoming stream, even on failure
+	return createStuffItArchive(archiveFile, true);
 }
 
 Common::Error PrivateEngine::run() {
@@ -330,10 +344,9 @@ Common::Error PrivateEngine::run() {
 	}
 
 	_needToDrawScreenFrame = false;
-	bool needsUpdate = false;
 
 	while (!shouldQuit()) {
-		needsUpdate = false;
+		bool mouseMoved = false;
 		checkPhoneCall();
 
 		while (g_system->getEventManager()->pollEvent(event)) {
@@ -388,15 +401,8 @@ Common::Error PrivateEngine::run() {
 				break;
 
 			case Common::EVENT_MOUSEMOVE:
-				needsUpdate = true;
-				// Reset cursor to default
-				changeCursor("default");
-				// The following functions will return true
-				// if the cursor is changed
-				if (cursorPauseMovie(mousePos)) {
-				} else if (cursorMask(mousePos)) {
-				} else
-					cursorExit(mousePos);
+				mouseMoved = true;
+				updateCursor(mousePos);
 				break;
 
 			default:
@@ -413,6 +419,7 @@ Common::Error PrivateEngine::run() {
 			playVideo(_nextMovie);
 			_currentMovie = _nextMovie;
 			_nextMovie = "";
+			updateCursor(mousePos);
 			continue;
 		}
 
@@ -436,7 +443,7 @@ Common::Error PrivateEngine::run() {
 					g_system->clearOverlay();
 				}
 				_currentMovie = "";
-			} else if (!_videoDecoder->needsUpdate() && needsUpdate) {
+			} else if (!_videoDecoder->needsUpdate() && mouseMoved) {
 				g_system->updateScreen();
 			} else if (_videoDecoder->needsUpdate()) {
 				drawScreen();
@@ -454,13 +461,13 @@ Common::Error PrivateEngine::run() {
 			_nextSetting = "";
 			_currentVS = "";
 			Gen::g_vm->run();
-			changeCursor("default");
 
 			// Draw the screen once the VM has processed the last setting.
 			// This prevents the screen from flickering images as VM settings
 			// are executed. Fixes the previous screen from being displayed
 			// when a video finishes playing.
 			if (_nextSetting.empty()) {
+				updateCursor(mousePos);
 				drawScreen();
 			}
 		}
@@ -572,6 +579,20 @@ void PrivateEngine::checkPoliceBust() {
 	}
 }
 
+void PrivateEngine::updateCursor(Common::Point mousePos) {
+	// If a function returns true then it changed the cursor.
+	if (cursorPauseMovie(mousePos)) {
+		return;
+	}
+	if (cursorMask(mousePos)) {
+		return;
+	}
+	if (cursorExit(mousePos)) {
+		return;
+	}
+	changeCursor("default");
+}
+
 bool PrivateEngine::cursorExit(Common::Point mousePos) {
 	mousePos = mousePos - _origin;
 	if (mousePos.x < 0 || mousePos.y < 0)
@@ -641,6 +662,7 @@ bool PrivateEngine::cursorPauseMovie(Common::Point mousePos) {
 		uint32 tol = 15;
 		Common::Rect window(_origin.x - tol, _origin.y - tol, _screenW - _origin.x + tol, _screenH - _origin.y + tol);
 		if (!window.contains(mousePos)) {
+			changeCursor("default");
 			return true;
 		}
 	}

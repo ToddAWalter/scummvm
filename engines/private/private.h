@@ -32,6 +32,10 @@
 
 #include "private/grammar.h"
 
+namespace Common {
+class Archive;
+}
+
 namespace Image {
 class ImageDecoder;
 }
@@ -196,6 +200,7 @@ public:
 	void clearAreas();
 	void initializePath(const Common::FSNode &gamePath) override;
 	Common::SeekableReadStream *loadAssets();
+	Common::Archive *loadMacInstaller();
 
 	// Functions
 
@@ -211,6 +216,7 @@ public:
 	void resumeGame();
 
 	// Cursors
+	void updateCursor(Common::Point);
 	bool cursorPauseMovie(Common::Point);
 	bool cursorExit(Common::Point);
 	bool cursorMask(Common::Point);
