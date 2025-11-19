@@ -354,8 +354,8 @@ void AGDSEngine::loadScreen(const Common::String &name, ScreenLoadingType loadin
 
 	if (doPatch) {
 		_currentScreen->load(patch);
-		if (_currentCharacter && patch->characterPresent) {
-			_currentCharacter->visible(true);
+		if (_currentCharacter) {
+			_currentCharacter->visible(patch->characterPresent);
 			_currentCharacter->position(patch->characterPosition);
 			_currentCharacter->direction(patch->characterDirection);
 		}
@@ -919,7 +919,9 @@ Graphics::ManagedSurface *AGDSEngine::loadFromCache(int id) const {
 void AGDSEngine::loadFont(int id, const Common::String &name, int gw, int gh) {
 	if (v2()) {
 		debug("loadTTF %d %s, pixelSize: %d", id, name.c_str(), gh);
+#ifdef USE_FREETYPE2
 		_fonts[id].reset(Graphics::loadTTFFontFromArchive(name, gh));
+#endif
 	} else {
 		debug("loadFont %d %s %d %d", id, name.c_str(), gw, gh);
 		Graphics::ManagedSurface *surface = loadPicture(name);

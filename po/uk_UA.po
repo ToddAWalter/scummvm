@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2025-11-11 10:58+0000\n"
-"PO-Revision-Date: 2025-11-10 21:37+0000\n"
+"POT-Creation-Date: 2025-11-14 21:01+0000\n"
+"PO-Revision-Date: 2025-11-13 11:41+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/uk/>\n"
@@ -61,7 +61,7 @@ msgstr "Доступні движки:"
 #: gui/about.cpp:527 gui/downloadpacksdialog.cpp:298
 #: gui/downloadpacksdialog.cpp:389 gui/integrity-dialog.cpp:354
 #: gui/gui-manager.cpp:168 gui/imagealbum-dialog.cpp:133 gui/textviewer.cpp:56
-#: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:558
+#: gui/unknown-game-dialog.cpp:53 backends/platform/android/options.cpp:571
 #: engines/drascula/metaengine.cpp:245 engines/queen/metaengine.cpp:264
 #: engines/saga/metaengine.cpp:374 engines/scumm/help.cpp:126
 #: engines/scumm/help.cpp:141 engines/scumm/help.cpp:166
@@ -109,7 +109,7 @@ msgstr "Вгору"
 #: engines/engine.cpp:833 backends/dialogs/gtk/gtk-dialogs.cpp:65
 #: backends/events/default/default-events.cpp:193
 #: backends/events/default/default-events.cpp:217
-#: backends/platform/android/options.cpp:289
+#: backends/platform/android/options.cpp:293
 #: backends/platform/wii/options.cpp:47 engines/asylum/asylum.cpp:204
 #: engines/buried/saveload.cpp:83 engines/cine/saveload.cpp:857
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:123
@@ -558,7 +558,7 @@ msgstr ""
 "Чи ви насправді хочете продовжити?"
 
 #: gui/downloadpacksdialog.cpp:465 gui/updates-dialog.cpp:117
-#: backends/platform/android/options.cpp:289
+#: backends/platform/android/options.cpp:293
 msgid "Proceed"
 msgstr "Продовжити"
 
@@ -795,9 +795,9 @@ msgstr ""
 #: gui/options.cpp:1675 gui/options.cpp:1711 gui/options.cpp:1727
 #: gui/options.cpp:2142 gui/options.cpp:2598 gui/options.cpp:2672
 #: gui/options.cpp:2886 gui/options.cpp:3387 audio/null.cpp:45
-#: backends/platform/android/options.cpp:154
-#: backends/platform/android/options.cpp:155
-#: backends/platform/android/options.cpp:183
+#: backends/platform/android/options.cpp:157
+#: backends/platform/android/options.cpp:158
+#: backends/platform/android/options.cpp:186
 #: backends/platform/ios7/ios7_options.mm:132
 #: backends/platform/ios7/ios7_options.mm:133
 #: backends/platform/ios7/ios7_options.mm:158 engines/ags/dialogs.cpp:65
@@ -5210,26 +5210,30 @@ msgstr ""
 "Перегляньте нашу [документацію Android](https://docs.scummvm.org/en/latest/"
 "other_platforms/android.html), щоб дізнатися більше.\n"
 
-#: backends/platform/android/options.cpp:135
+#: backends/platform/android/options.cpp:137
 #: backends/platform/ios7/ios7_options.mm:165
 msgid "Show On-screen control"
 msgstr "Показувати екранне керування"
 
-#: backends/platform/android/options.cpp:136
+#: backends/platform/android/options.cpp:138
+msgid "Ignore safe areas in-game"
+msgstr ""
+
+#: backends/platform/android/options.cpp:139
 #: backends/platform/ios7/ios7_options.mm:112
 msgid "Choose the preferred touch mode:"
 msgstr "Оберіть уподобаний режим дотику:"
 
-#: backends/platform/android/options.cpp:138
-#: backends/platform/android/options.cpp:169
+#: backends/platform/android/options.cpp:141
+#: backends/platform/android/options.cpp:172
 #: backends/platform/ios7/ios7_options.mm:117
 #: backends/platform/ios7/ios7_options.mm:144
 msgid "In menus"
 msgstr "В меню"
 
-#: backends/platform/android/options.cpp:140
-#: backends/platform/android/options.cpp:158
-#: backends/platform/android/options.cpp:159
+#: backends/platform/android/options.cpp:143
+#: backends/platform/android/options.cpp:161
+#: backends/platform/android/options.cpp:162
 #: backends/platform/ios7/ios7_options.mm:119
 #: backends/platform/ios7/ios7_options.mm:136
 #: backends/platform/ios7/ios7_options.mm:137
@@ -5237,9 +5241,9 @@ msgstr "В меню"
 msgid "Touchpad emulation"
 msgstr "Емуляція тачпаду"
 
-#: backends/platform/android/options.cpp:141
-#: backends/platform/android/options.cpp:161
-#: backends/platform/android/options.cpp:162
+#: backends/platform/android/options.cpp:144
+#: backends/platform/android/options.cpp:164
+#: backends/platform/android/options.cpp:165
 #: backends/platform/ios7/ios7_options.mm:120
 #: backends/platform/ios7/ios7_options.mm:139
 #: backends/platform/ios7/ios7_options.mm:140
@@ -5247,96 +5251,96 @@ msgstr "Емуляція тачпаду"
 msgid "Direct mouse"
 msgstr "Віртуальна миша"
 
-#: backends/platform/android/options.cpp:142
-#: backends/platform/android/options.cpp:164
-#: backends/platform/android/options.cpp:165
+#: backends/platform/android/options.cpp:145
+#: backends/platform/android/options.cpp:167
+#: backends/platform/android/options.cpp:168
 msgid "Gamepad emulation"
 msgstr "Емуляція геймпаду"
 
-#: backends/platform/android/options.cpp:148
+#: backends/platform/android/options.cpp:151
 #: backends/platform/ios7/ios7_options.mm:126
 msgid "In 2D games"
 msgstr "У 2D іграх"
 
-#: backends/platform/android/options.cpp:150
+#: backends/platform/android/options.cpp:153
 #: backends/platform/ios7/ios7_options.mm:128
 msgid "In 3D games"
 msgstr "У 3D іграх"
 
-#: backends/platform/android/options.cpp:167
+#: backends/platform/android/options.cpp:170
 #: backends/platform/ios7/ios7_options.mm:142
 msgid "Select the orientation:"
 msgstr "Оберіть орієнтацію:"
 
-#: backends/platform/android/options.cpp:171
-#: backends/platform/android/options.cpp:186
+#: backends/platform/android/options.cpp:174
+#: backends/platform/android/options.cpp:189
 #: backends/platform/ios7/ios7_options.mm:146
 #: backends/platform/ios7/ios7_options.mm:161
 msgid "Automatic"
 msgstr "Автоматичне"
 
-#: backends/platform/android/options.cpp:172
-#: backends/platform/android/options.cpp:187
+#: backends/platform/android/options.cpp:175
+#: backends/platform/android/options.cpp:190
 #: backends/platform/ios7/ios7_options.mm:147
 #: backends/platform/ios7/ios7_options.mm:162
 msgid "Portrait"
 msgstr "Горизонтальна"
 
-#: backends/platform/android/options.cpp:173
-#: backends/platform/android/options.cpp:188
+#: backends/platform/android/options.cpp:176
+#: backends/platform/android/options.cpp:191
 #: backends/platform/ios7/ios7_options.mm:148
 #: backends/platform/ios7/ios7_options.mm:163
 msgid "Landscape"
 msgstr "Горизонтальний"
 
-#: backends/platform/android/options.cpp:179
+#: backends/platform/android/options.cpp:182
 #: backends/platform/ios7/ios7_options.mm:154
 msgid "In games"
 msgstr "У іграх"
 
-#: backends/platform/android/options.cpp:192
+#: backends/platform/android/options.cpp:195
 msgid "Export backup"
 msgstr "Експорт резервної копії"
 
-#: backends/platform/android/options.cpp:192
+#: backends/platform/android/options.cpp:195
 msgid "Export a backup of the configuration and save files"
 msgstr "Експорт резервної копії конфігурації та файлів збереження"
 
-#: backends/platform/android/options.cpp:193
+#: backends/platform/android/options.cpp:196
 msgid "Import backup"
 msgstr "Імпорт резервної копії"
 
-#: backends/platform/android/options.cpp:193
+#: backends/platform/android/options.cpp:196
 msgid "Import a previously exported backup file"
 msgstr "Імпорт раніше експортованого файлу резервної копії"
 
 #. I18N: This button opens a list of all folders added for Android Storage Attached Framework
-#: backends/platform/android/options.cpp:196
+#: backends/platform/android/options.cpp:199
 msgid "Remove folder authorizations..."
 msgstr "Видалити авторизацію для папок..."
 
-#: backends/platform/android/options.cpp:268
+#: backends/platform/android/options.cpp:272
 msgid "Select backup destination"
 msgstr "Виберіть місце розташування резервної копії"
 
-#: backends/platform/android/options.cpp:276
+#: backends/platform/android/options.cpp:280
 msgid "The backup has been saved successfully."
 msgstr "Резервну копію успішно збережено."
 
-#: backends/platform/android/options.cpp:278
+#: backends/platform/android/options.cpp:282
 msgid "The backup has been saved successfully to the Downloads folder."
 msgstr "Резервну копію успішно збережено в папку «Downloads»."
 
-#: backends/platform/android/options.cpp:280
-#: backends/platform/android/options.cpp:313
+#: backends/platform/android/options.cpp:284
+#: backends/platform/android/options.cpp:317
 msgid "The game saves couldn't be backed up"
 msgstr "Не вдалося створити резервну копію збережених ігор"
 
-#: backends/platform/android/options.cpp:282
+#: backends/platform/android/options.cpp:286
 msgid "An error occured while saving the backup."
 msgstr "Під час збереження резервної копії сталася помилка."
 
-#: backends/platform/android/options.cpp:289
+#: backends/platform/android/options.cpp:293
 msgid ""
 "Restoring a backup will erase the current configuration and overwrite "
 "existing saves. Do you want to proceed?"
@@ -5344,19 +5348,19 @@ msgstr ""
 "Відновлення резервної копії видалить поточну конфігурацію та перезапише "
 "існуючі збереження. Продовжити?"
 
-#: backends/platform/android/options.cpp:294
+#: backends/platform/android/options.cpp:298
 msgid "Select backup file"
 msgstr "Виберіть файл резервної копії"
 
-#: backends/platform/android/options.cpp:311
+#: backends/platform/android/options.cpp:315
 msgid "The backup has been restored successfully."
 msgstr "Резервну копію успішно відновлено."
 
-#: backends/platform/android/options.cpp:315
+#: backends/platform/android/options.cpp:319
 msgid "An error occured while restoring the backup."
 msgstr "Під час відновлення резервної копії сталася помилка."
 
-#: backends/platform/android/options.cpp:559
+#: backends/platform/android/options.cpp:572
 msgid "Remove"
 msgstr "Видалити"
 
@@ -6468,10 +6472,8 @@ msgid "Walk"
 msgstr "Іти"
 
 #: engines/access/metaengine.cpp:348
-#, fuzzy
-#| msgid "Page Up in save/load menu"
 msgid "Open save/load menu"
-msgstr "Попередня сторінка в меню збереження/завантаження"
+msgstr "Відкрити меню збереження/завантаження"
 
 #: engines/access/resources.cpp:43 engines/drascula/drascula.cpp:993
 #: engines/hugo/hugo.cpp:442 engines/lure/lure.cpp:57
@@ -6698,7 +6700,7 @@ msgstr "Ввімкнути захист від копіювання, який з
 
 #: engines/agi/metaengine.cpp:207
 msgid "Use PCjr's sound chip in 16-bit shift mode"
-msgstr ""
+msgstr "Використовувати звуковий чіп PCjr у режимі 16-бітного зсуву"
 
 #: engines/agi/metaengine.cpp:208
 msgid ""
@@ -6707,6 +6709,11 @@ msgid ""
 "especially in fanmade games, but original Sierra music designed strictly for "
 "PCjr may sound wrong."
 msgstr ""
+"У звуковому режимі PCjr емулювати нестандартний звуковий чіп SN76496, "
+"подібний до чіпів, що використовуються в консолях SEGA Master System. Це "
+"дозволить використовувати певні музичні ефекти, особливо у фанатських іграх, "
+"але оригінальна музика Sierra, розроблена виключно для PCjr, може звучати "
+"неправильно."
 
 #: engines/agi/metaengine.cpp:447 engines/asylum/asylum.cpp:655
 #: engines/buried/saveload.cpp:53 engines/mohawk/riven.cpp:759
@@ -6878,20 +6885,14 @@ msgid "Music volume up"
 msgstr "Гучність музики вище"
 
 #: engines/agos/metaengine.cpp:194 engines/vcruise/metaengine.cpp:201
-#, fuzzy
-#| msgid "Toggle music on/off"
 msgid "Toggle music on / off"
 msgstr "Перемикання музики"
 
 #: engines/agos/metaengine.cpp:199 engines/vcruise/metaengine.cpp:206
-#, fuzzy
-#| msgid "Toggle sound effects on/off"
 msgid "Toggle sound effects on / off"
 msgstr "Перемикання звукових ефектів"
 
 #: engines/agos/metaengine.cpp:204 engines/sky/metaengine.cpp:131
-#, fuzzy
-#| msgid "Toggle fast mode on/off"
 msgid "Toggle fast mode on / off"
 msgstr "Перемикання швидкого режиму"
 
@@ -6930,10 +6931,8 @@ msgid "Turn right"
 msgstr "Повернутися вправо"
 
 #: engines/agos/metaengine.cpp:241
-#, fuzzy
-#| msgid "Toggle fast mode"
 msgid "Toggle fight mode"
-msgstr "Перемикання швидкого режиму"
+msgstr "Перемикання режиму бою"
 
 #: engines/agos/metaengine.cpp:250
 msgid "Text speed - Fast"
@@ -6952,8 +6951,6 @@ msgid "Show objects to interact"
 msgstr "Показувати об'єкти для взаємодії"
 
 #: engines/agos/metaengine.cpp:272
-#, fuzzy
-#| msgid "Toggle background sounds on/off"
 msgid "Toggle background sounds on / off"
 msgstr "Перемикання фонових звукових ефектів"
 
@@ -6963,10 +6960,8 @@ msgid "Switch characters"
 msgstr "Переключити героїв"
 
 #: engines/agos/metaengine.cpp:287
-#, fuzzy
-#| msgid "Toggle hitbox names on/off"
 msgid "Toggle hitbox names on / off"
-msgstr "Перемикання назви хіт-боксів"
+msgstr "Перемикання назв хіт-боксів"
 
 #: engines/agos/metaengine.cpp:294
 msgid "Switches between speech only and combined speech and subtitles"
@@ -7080,13 +7075,9 @@ msgid ""
 msgstr "Ця гра потребує AGS-движок версії раніше 2.5, яка не підтримується."
 
 #: engines/ags/ags.cpp:157
-#, fuzzy
-#| msgid ""
-#| "The selected game uses a pre-2.5 version of the AGS engine, which is not "
-#| "supported."
 msgid ""
 "The selected game uses version 4 of the AGS engine, which is not supported."
-msgstr "Ця гра потребує AGS-движок версії раніше 2.5, яка не підтримується."
+msgstr "Ця гра потребує AGS-движок версії 4, яка не підтримується."
 
 #: engines/ags/ags.cpp:165
 msgid ""
@@ -7170,27 +7161,23 @@ msgstr ""
 
 #: engines/alcachofa/graphics-opengl.cpp:106
 msgid "Old OpenGL detected, some graphical errors will occur."
-msgstr ""
+msgstr "Виявлено старий OpenGL, можуть виникнути деякі графічні помилки."
 
 #: engines/alcachofa/metaengine.cpp:40
-#, fuzzy
-#| msgid "Music Quality:"
 msgid "High Quality"
-msgstr "Якість музики:"
+msgstr "Висока якість"
 
 #: engines/alcachofa/metaengine.cpp:41
-#, fuzzy
-#| msgid "Toggle sound effect on/off"
 msgid "Toggles some optional graphical effects"
-msgstr "Перемикання звукових ефектів"
+msgstr "Перемикає деякі додаткові графічні ефекти"
 
 #: engines/alcachofa/metaengine.cpp:51
 msgid "32 Bits"
-msgstr ""
+msgstr "32 біти"
 
 #: engines/alcachofa/metaengine.cpp:52
 msgid "Whether to render the game in 16-bit color"
-msgstr ""
+msgstr "Чи слід відображати гру в 16-бітному кольорі"
 
 #: engines/alcachofa/metaengine.cpp:87 engines/cine/metaengine.cpp:347
 #: engines/freescape/games/castle/castle.cpp:315
@@ -7208,12 +7195,15 @@ msgstr "Глянути на"
 #: engines/alg/metaengine.cpp:34
 msgid "Use lower quality single speed CD-ROM video"
 msgstr ""
+"Використовувати відео для CD-ROM одинарної швидкості, тобто нижчої якості"
 
 #: engines/alg/metaengine.cpp:35
 msgid ""
 "These videos are of lower quality, the default version uses double speed CD-"
 "ROM videos which are of better quality"
 msgstr ""
+"Ці відео нижчої якості, звичайна версія використовує відео CD-ROM з "
+"подвійною швидкістю, що забезпечує кращу якість"
 
 #: engines/asylum/metaengine.cpp:115
 msgid "Show version"
@@ -7258,8 +7248,6 @@ msgid "Open character inventory"
 msgstr "Відкрити інвентар героя"
 
 #: engines/asylum/metaengine.cpp:226
-#, fuzzy
-#| msgid "Toggle animation on/off"
 msgid "Toggle animation on / off"
 msgstr "Перемикання анімації"
 
@@ -7303,16 +7291,14 @@ msgstr "Все одно зчитати"
 
 #: engines/awe/metaengine.cpp:35
 msgid "Enable title and copy protection screens (if present)"
-msgstr ""
+msgstr "Ввімкнути екрани титулу та захисту від копіювання (якщо наявні)"
 
 #: engines/awe/metaengine.cpp:36
-#, fuzzy
-#| msgid ""
-#| "Enable any copy protection that would otherwise be bypassed by default."
 msgid ""
 "Displays title and copy protection screens that would otherwise be bypassed "
 "by default."
-msgstr "Ввімкнути захист від копіювання, який зазвичай перескакується."
+msgstr ""
+"Показує екрани титулу та захисту від копіювання, які зазвичай не показуються."
 
 #: engines/awe/metaengine.cpp:61
 msgid "Select/Kick/Run"

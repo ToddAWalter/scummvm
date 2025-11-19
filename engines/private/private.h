@@ -219,6 +219,7 @@ public:
 	void updateCursor(Common::Point);
 	bool cursorPauseMovie(Common::Point);
 	bool cursorExit(Common::Point);
+	bool cursorSafeDigit(Common::Point);
 	bool cursorMask(Common::Point);
 
 	bool hasFeature(EngineFeature f) const override;
@@ -297,9 +298,11 @@ public:
 	Common::String getDiaryLastPageSetting();
 	Common::String getPOGoBustMovieSetting();
 	Common::String getPoliceBustFromMOSetting();
+	Common::String getListenToPhoneSetting();
 	Common::String getAlternateGameVariable();
 	Common::String getPoliceIndexVariable();
 	Common::String getWallSafeValueVariable();
+	const char *getSymbolName(const char *name, const char *strippedName, const char *demoName = nullptr);
 
 	// movies
 	Common::String _nextMovie;
@@ -348,6 +351,7 @@ public:
 	Common::Array<MaskInfo> _locationMasks;
 	Common::Array<MaskInfo> _memoryMasks;
 	bool selectMemory(const Common::Point &mousePos);
+	int getMaxLocationValue();
 
 	// Save/Load games
 	MaskInfo _saveGameMask;
@@ -368,6 +372,7 @@ public:
 	void playSound(const Common::String &, uint, bool, bool);
 	void stopSound(bool);
 	bool isSoundActive();
+	void waitForSoundToStop();
 	bool _noStopSounds;
 
 	Common::String getPaperShuffleSound();
@@ -396,15 +401,15 @@ public:
 	void checkPhoneCall();
 
 	// Safe
-	uint32 _safeColor;
 	Common::String _safeNumberPath;
 	MaskInfo _safeDigitArea[3];
 	Common::Rect _safeDigitRect[3];
-	uint32 _safeDigit[3];
 
+	void initializeWallSafeValue();
 	bool selectSafeDigit(Common::Point);
 	void addSafeDigit(uint32, Common::Rect*);
-	void renderSafeDigit(uint32);
+	int getSafeDigit(uint32 d);
+	void incrementSafeDigit(uint32 d);
 
 	// Random values
 	bool getRandomBool(uint);

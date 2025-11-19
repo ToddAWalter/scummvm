@@ -53,7 +53,12 @@ static void fChgMode(ArgArray args) {
 
 	if (args.size() == 3) {
 		Symbol *location = g_private->maps.lookupLocation(args[2].u.sym->name);
-		setSymbol(location, true);
+		if (location->u.val == 0) {
+			// visited locations have non-zero values.
+			// set to an incrementing value to record the order visited.
+			int maxLocationValue = g_private->getMaxLocationValue();
+			setSymbol(location, maxLocationValue + 1);
+		}
 	}
 
 	if (g_private->_mode == 0) {
@@ -173,12 +178,7 @@ static void fSyncSound(ArgArray args) {
 		g_private->drawScreen();
 
 		g_private->playSound(s, 1, true, false);
-		while (g_private->isSoundActive())
-			g_private->ignoreEvents();
-
-		uint32 i = 100;
-		while (i--) // one second extra
-			g_private->ignoreEvents();
+		g_private->waitForSoundToStop();
 	}
 }
 
@@ -260,6 +260,8 @@ static void fBustMovie(ArgArray args) {
 	if (kPoliceBustVideos[videoIndex] == 2) {
 		Common::String s("global/transiti/audio/spoc02VO.wav");
 		g_private->playSound(s, 1, false, false);
+		g_private->changeCursor("default");
+		g_private->waitForSoundToStop();
 	}
 
 	g_private->_nextMovie = pv;
@@ -369,7 +371,14 @@ static void fInventory(ArgArray args) {
 	Datum e = args[3];
 	Datum i = args[4];
 	Datum c = args[5];
-	Datum snd = args[8];
+
+	Datum snd;
+	if (args.size() >= 9)
+		snd = args[8];
+	else {
+		snd.type = STRING;
+		snd.u.str = "\"\"";
+	}
 
 	assert(v1.type == STRING || v1.type == NAME);
 	assert(b1.type == STRING);
@@ -386,6 +395,10 @@ static void fInventory(ArgArray args) {
 	debugC(1, kPrivateDebugScript, "Inventory(...)");
 	Common::String mask(b1.u.str);
 	if (mask != "\"\"") {
+		if (bmp != "\"\"" && g_private->inInventory(bmp)) {
+			return;
+		}
+
 		MaskInfo m;
 		m.surf = g_private->loadMask(mask, 0, 0, true);
 

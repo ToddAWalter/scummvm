@@ -892,6 +892,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "princerave",			"Prince: Rave Un2 the Joy Fantastic" },
 	{ "relaxation",			"Solitudes: Natural Relaxation" },
 	{ "relaxplayer",		"Solitudes: Natural Relaxation Audio Player" },
+	{ "rednex",				"Inbred with Rednex" },
 	{ "royksoppam",			"Röyksopp: Melody A.M." },
 	{ "sarahsurfacing",		"Sarah McLachlan: Surfacing" },
 	{ "smashchillin",		"Smash Hits: Chillin' Out Summer 2001" },
@@ -1613,6 +1614,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "encartaatlas2000",   "Microsoft Encarta Interactive World Atlas 2000" },
 	{ "exoticjapan",		"Exotic Japan: A Guide to Japanese Culture and Language" },
 	{ "famdoc3",			"The Family Doctor, 3rd Edition" },
+	{ "encyclopediasoccer", "The Ultimate Encyclopedia of Soccer"},
 	{ "macworldexpo92",		"Macworld Expo CD Boston 1992" },
 	{ "manhole",			"The Manhole" },
 	{ "mazebrew",			"MazeBrew" },
@@ -4256,6 +4258,12 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINDEMO2t("encarta95", "1995 Demo", "ENCARTA.EXE", 		 "f3ed0fec480c8b0396bfd3b22044fa6f", 12015231,
 									    "SOUNDS/HURDY2.AIF", "a649e6394bc3f8b7037fead811bf7226", 217286, 404),
 
+	// MacFormat #40
+	MACDEMO2("encyclopediasoccer", "Demo", "PPC Projector", "rt:dbe7541cd99aed182bcfcd37d9a30de9",  57832,
+										   "LAWS.DIR",		"d:49a04fe6b22391139d6860d4dfc4084c", 1167212, 404),
+	WINDEMO2("encyclopediasoccer", "Demo", "SOCCER.EXE",	"t:d942e4d11e7d0a6d4da7659def16d179",  690039,
+										   "LAWS.DIR",		"f:49a04fe6b22391139d6860d4dfc4084c", 1167212, 404),
+
 	// From CD Loisirs Nº6
 	MACDEMO1("ephemeralfilms", "Demo", "Ephemeral Films", "77f4098988d5386794d1530065f514cd", 301669, 400),
 
@@ -5046,6 +5054,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME2_l("lulu", "", "LULU.EXE", 					 "t:a89aa6079ba7745917c63b99e52ade66", 876993,
 						   "CHAP/1CHAP.DXR",  			 "d:f4f62669342b305b789479014969e782", 5011138, Common::DE_DEU, 404),
 
+	// Macformat #40
+	// Original filename is Secrets®PPC
+	MACDEMO1("luxor", "Demo", "xn--SecretsPPC-xoa", "rt:7c7110c9da581141793e918c071d903d", 60068, 404),
+
 	// Pre-rendered CG animated adventure based on the popular comedy manga
 	// Developed by Future Pirates, published by Toshiba EMI
 	MACGAME1_l("macaroni", "", "Macaroni.PowerMac", "r:be7faef1b5c713e2d13a693eb6e1f5c9", 180025, Common::JA_JPN, 404),
@@ -5833,6 +5845,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	// from Great Adventures by Fisher-Price: Castle (1995)
 	MACDEMO1("readblasterjr", "Preview v1.0c", "Reading Blaster Power Mac", "49aa41e6b624e64e8e48850faa882cc8", 61732, 404),
 
+	// MacFormat #40
+	MACDEMO1("rednex", "Demo", "RedNex",	 "rt:99a4f9d7fb487053826c42e97aa96b33", 483490, 404),
+	WINDEMO1("rednex", "Demo", "REDNEX.EXE", "t:e1d181303fd8c2aed5cd1d69b0c985e7",  696877, 404),
+
 	MACDEMO1("redshift", "1994 Demo",	  "RSDEMO.MAC",	   "r:4f7ff33ce95ed9f42befdae4f9b6b690", 291988, 403),
 	// Sound / No Sound demos found on MacFormat August '94
 	MACDEMO2("redshift", "Sound Demo",	  "RedShift Demo", "r:22815cf659b911c4e07d0015cac5d98f", 301669,
@@ -6597,6 +6613,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	// Mac version is D4
 	WINGAME1f("amber", "", "AMBER_F/AMBER_JB.EXE", "t:9041928550219b808fd23d96e7ad7c6d", 1418103, 500, GF_32BPP),
+	// Amber: Reisen ins Jenseits (TRAC #16349)
+	WINGAME1f_l("amber", "", "AMBER_F/AMBER_JB.EXE", "t:a6de30cf9261cc1a910e87b25f0d0e1b", 1418087, Common::DE_DEU, 500, GF_32BPP),
 	WINDEMO2t("amber", "Demo", "DEMO.EXE", "98f65233a8d80a75513267fed14c1e18", 1417811,
 							   "AMBERHUB.DXR", "a95601f2521fd00c88ac424d66da1605", 868766, 501),
 

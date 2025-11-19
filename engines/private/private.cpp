@@ -119,7 +119,6 @@ PrivateEngine::PrivateEngine(OSystem *syst, const ADGameDescription *gd)
 	_safeNumberPath = "sg/search_s/sgsaf%d.bmp";
 	for (uint d = 0 ; d < 3; d++) {
 		_safeDigitArea[d].clear();
-		_safeDigit[d] = 0;
 		_safeDigitRect[d] = Common::Rect(0, 0);
 	}
 }
@@ -157,6 +156,13 @@ PrivateEngine::~PrivateEngine() {
 		if (m.surf != nullptr) {
 			m.surf->free();
 			delete m.surf;
+		}
+	}
+
+	for (uint i = 0; i < ARRAYSIZE(_safeDigitArea); i++) {
+		if (_safeDigitArea[i].surf != nullptr) {
+			_safeDigitArea[i].surf->free();
+			delete _safeDigitArea[i].surf;
 		}
 	}
 
@@ -284,13 +290,13 @@ Common::Error PrivateEngine::run() {
 	delete file;
 	if (maps.constants.size() == 0)
 		error("Failed to parse game script");
+	initializeWallSafeValue();
 
 	// Initialize graphics
 	_pixelFormat = Graphics::PixelFormat::createFormatCLUT8();
 	initGraphics(_screenW, _screenH, &_pixelFormat);
 	_transparentColor = 250;
 
-	_safeColor = _pixelFormat.RGBToColor(65, 65, 65);
 	_screenRect = Common::Rect(0, 0, _screenW, _screenH);
 	loadCursors();
 	changeCursor("default");
@@ -420,13 +426,6 @@ Common::Error PrivateEngine::run() {
 			_currentMovie = _nextMovie;
 			_nextMovie = "";
 			updateCursor(mousePos);
-			continue;
-		}
-
-		if (!_nextVS.empty() && _currentVS.empty() && (_currentSetting == getMainDesktopSetting())) {
-			loadImage(_nextVS, 160, 120);
-			drawScreen();
-			_currentVS = _nextVS;
 		}
 
 		if (_videoDecoder && !_videoDecoder->isPaused()) {
@@ -440,7 +439,7 @@ Common::Error PrivateEngine::run() {
 				if (_subtitles != nullptr) {
 					delete _subtitles;
 					_subtitles = nullptr;
-					g_system->clearOverlay();
+					g_system->hideOverlay();
 				}
 				_currentMovie = "";
 			} else if (!_videoDecoder->needsUpdate() && mouseMoved) {
@@ -467,6 +466,11 @@ Common::Error PrivateEngine::run() {
 			// are executed. Fixes the previous screen from being displayed
 			// when a video finishes playing.
 			if (_nextSetting.empty()) {
+				if (!_nextVS.empty() && _currentVS.empty() && _currentSetting == getMainDesktopSetting()) {
+					loadImage(_nextVS, 160, 120);
+					_currentVS = _nextVS;
+				}
+
 				updateCursor(mousePos);
 				drawScreen();
 			}
@@ -480,7 +484,7 @@ Common::Error PrivateEngine::run() {
 			} else {
 				delete _subtitles;
 				_subtitles = nullptr;
-				g_system->clearOverlay();
+				g_system->hideOverlay();
 			}
 		}
 	}
@@ -533,7 +537,6 @@ void PrivateEngine::clearAreas() {
 			delete _safeDigitArea[d].surf;
 		}
 		_safeDigitArea[d].clear();
-		_safeDigit[d] = 0;
 		_safeDigitRect[d] = Common::Rect(0, 0);
 	}
 }
@@ -584,6 +587,9 @@ void PrivateEngine::updateCursor(Common::Point mousePos) {
 	if (cursorPauseMovie(mousePos)) {
 		return;
 	}
+	if (cursorSafeDigit(mousePos)) {
+		return;
+	}
 	if (cursorMask(mousePos)) {
 		return;
 	}
@@ -617,6 +623,29 @@ bool PrivateEngine::cursorExit(Common::Point mousePos) {
 	if (!cursor.empty()) {
 		changeCursor(cursor);
 		return true;
+	}
+
+	return false;
+}
+
+bool PrivateEngine::cursorSafeDigit(Common::Point mousePos) {
+	if (_safeDigitArea[0].surf == nullptr) {
+		return false;
+	}
+
+	mousePos = mousePos - _origin;
+	if (mousePos.x < 0 || mousePos.y < 0) {
+		return false;
+	}
+
+	for (uint i = 0; i < 3; i++) {
+		MaskInfo &m = _safeDigitArea[i];
+		if (m.surf != nullptr) {
+			if (_safeDigitRect[i].contains(mousePos) && !m.cursor.empty()) {
+				changeCursor(m.cursor);
+				return true;
+			}
+		}
 	}
 
 	return false;
@@ -670,97 +699,76 @@ bool PrivateEngine::cursorPauseMovie(Common::Point mousePos) {
 }
 
 Common::String PrivateEngine::getPauseMovieSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kPauseMovie";
-
-	return "k3";
+	return getSymbolName("kPauseMovie", "k3");
 }
 
 Common::String PrivateEngine::getGoIntroSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR || _language == Common::JA_JPN) && _platform != Common::kPlatformMacintosh)
-		return "kGoIntro";
-
-	return "k1";
+	return getSymbolName("kGoIntro", "k1");
 }
 
 Common::String PrivateEngine::getAlternateGameVariable() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kAlternateGame";
-
-	return "k2";
+	return getSymbolName("kAlternateGame", "k2");
 }
 
 Common::String PrivateEngine::getMainDesktopSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kMainDesktop";
-
-	if (isDemo())
-		return "k45";
-
-	return "k183";
+	return getSymbolName("kMainDesktop", "k183", "k45");
 }
 
 Common::String PrivateEngine::getDiaryTOCSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kDiaryTOC";
-
-	return "k185";
+	return getSymbolName("kDiaryTOC", "k185");
 }
 
 Common::String PrivateEngine::getDiaryMiddleSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kDiaryMiddle";
-
-	return "k186";
+	return getSymbolName("kDiaryMiddle", "k186");
 }
 
 Common::String PrivateEngine::getDiaryLastPageSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kDiaryLastPage";
-
-	return "k187";
+	return getSymbolName("kDiaryLastPage", "k187");
 }
 
 Common::String PrivateEngine::getPoliceIndexVariable() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kPoliceIndex";
-
-	return "k0";
+	return getSymbolName("kPoliceIndex", "k0");
 }
 
 Common::String PrivateEngine::getPOGoBustMovieSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kPOGoBustMovie";
-
-	return "k7";
+	return getSymbolName("kPOGoBustMovie", "k7");
 }
 
 Common::String PrivateEngine::getPoliceBustFromMOSetting() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kPoliceBustFromMO";
+	return getSymbolName("kPoliceBustFromMO", "k6");
+}
 
-	return "k6";
+Common::String PrivateEngine::getListenToPhoneSetting() {
+	return getSymbolName("kListenToPhone", "k9");
 }
 
 Common::String PrivateEngine::getWallSafeValueVariable() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kWallSafeValue";
-
-	return "k3";
+	return getSymbolName("kWallSafeValue", "k3");
 }
 
 Common::String PrivateEngine::getExitCursor() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kExit";
-
-	return "k5";
+	return getSymbolName("kExit", "k5");
 }
 
 Common::String PrivateEngine::getInventoryCursor() {
-	if ((_language == Common::EN_USA || _language == Common::RU_RUS || _language == Common::KO_KOR) && _platform != Common::kPlatformMacintosh)
-		return "kInventory";
+	return getSymbolName("kInventory", "k7");
+}
 
-	return "k7";
+const char *PrivateEngine::getSymbolName(const char *name, const char *strippedName, const char *demoName) {
+	if (_platform == Common::kPlatformWindows) {
+		if (_language == Common::EN_USA ||
+			_language == Common::JA_JPN ||
+			_language == Common::KO_KOR ||
+			_language == Common::RU_RUS) {
+			return name;
+		}
+	}
+
+	if (demoName != nullptr && isDemo()) {
+		return demoName;
+	}
+
+	return strippedName;
 }
 
 void PrivateEngine::selectPauseGame(Common::Point mousePos) {
@@ -1120,11 +1128,17 @@ void PrivateEngine::selectPhoneArea(Common::Point mousePos) {
 		return;
 
 	if (inMask(_phoneArea.surf, mousePos)) {
-		const PhoneInfo &i = _phone.back();
-		setSymbol(i.flag, i.val);
+		const PhoneInfo &i = _phone.front();
+		// -100 indicates that the variable should be decremented
+		if (i.val == -100) {
+			setSymbol(i.flag, i.flag->u.val - 1);
+		} else {
+			setSymbol(i.flag, i.val);
+		}
 		Common::String sound = _phonePrefix + i.sound + ".wav";
 		playSound(sound, 1, true, false);
-		_phone.pop_back();
+		_phone.pop_front();
+		_nextSetting = getListenToPhoneSetting();
 	}
 }
 
@@ -1233,6 +1247,20 @@ bool PrivateEngine::selectDossierPrevSuspect(Common::Point mousePos) {
 	return false;
 }
 
+void PrivateEngine::initializeWallSafeValue() {
+	if (isDemo()) {
+		return;
+	}
+
+	// initialize to a random value that is not the combination
+	Private::Symbol *sym = maps.variables.getVal(getWallSafeValueVariable());
+	int value;
+	do {
+		value = _rnd->getRandomNumber(999);
+	} while (value == 426);
+	sym->u.val = value;
+}
+
 bool PrivateEngine::selectSafeDigit(Common::Point mousePos) {
 	if (_safeDigitArea[0].surf == nullptr)
 		return false;
@@ -1243,10 +1271,8 @@ bool PrivateEngine::selectSafeDigit(Common::Point mousePos) {
 
 	for (uint d = 0 ; d < 3; d ++)
 		if (_safeDigitRect[d].contains(mousePos)) {
-			_safeDigit[d] = (_safeDigit[d] + 1) % 10;
-			renderSafeDigit(d);
-			Private::Symbol *sym = maps.variables.getVal(getWallSafeValueVariable());
-			sym->u.val = 100*_safeDigit[0] + 10*_safeDigit[1] + _safeDigit[2];
+			incrementSafeDigit(d);
+			_nextSetting = _safeDigitArea[d].nextSetting;
 			return true;
 		}
 
@@ -1257,33 +1283,43 @@ void PrivateEngine::addSafeDigit(uint32 d, Common::Rect *rect) {
 
 	MaskInfo m;
 	_safeDigitRect[d] = *rect;
-	fillRect(_safeColor, _safeDigitRect[d]);
-	m.surf = loadMask(Common::String::format(_safeNumberPath.c_str(), _safeDigit[d]), _safeDigitRect[d].left, _safeDigitRect[d].top, true);
+	int digitValue = getSafeDigit(d);
+	m.surf = loadMask(Common::String::format(_safeNumberPath.c_str(), digitValue), _safeDigitRect[d].left, _safeDigitRect[d].top, true);
 	m.cursor = g_private->getExitCursor();
-	m.nextSetting = "";
+	m.nextSetting = _currentSetting;
 	m.flag1 = nullptr;
 	m.flag2 = nullptr;
 	_safeDigitArea[d] = m;
-	drawScreen();
 }
 
+int PrivateEngine::getSafeDigit(uint32 d) {
+	assert(d < 3);
 
-void PrivateEngine::renderSafeDigit(uint32 d) {
+	Private::Symbol *sym = maps.variables.getVal(getWallSafeValueVariable());
+	int value = sym->u.val;
 
-	if (_safeDigitArea[d].surf != nullptr) {
-		_safeDigitArea[d].surf->free();
-		delete _safeDigitArea[d].surf;
-		_safeDigitArea[d].clear();
-	}
-	fillRect(_safeColor, _safeDigitRect[d]);
-	MaskInfo m;
-	m.surf = loadMask(Common::String::format(_safeNumberPath.c_str(), _safeDigit[d]), _safeDigitRect[d].left, _safeDigitRect[d].top, true);
-	m.cursor = g_private->getExitCursor();
-	m.nextSetting = "";
-	m.flag1 = nullptr;
-	m.flag2 = nullptr;
-	_safeDigitArea[d] = m;
-	drawScreen();
+	byte digits[3];
+	digits[0] = value / 100;
+	digits[1] = (value / 10) % 10;
+	digits[2] = value % 10;
+
+	return digits[d];
+}
+
+void PrivateEngine::incrementSafeDigit(uint32 d) {
+	assert(d < 3);
+
+	Private::Symbol *sym = maps.variables.getVal(getWallSafeValueVariable());
+	int value = sym->u.val;
+
+	byte digits[3];
+	digits[0] = value / 100;
+	digits[1] = (value / 10) % 10;
+	digits[2] = value % 10;
+
+	digits[d] = (digits[d] + 1) % 10;
+	
+	sym->u.val = (100 * digits[0]) + (10 * digits[1]) + digits[2];
 }
 
 void PrivateEngine::selectLoadGame(Common::Point mousePos) {
@@ -1342,6 +1378,9 @@ void PrivateEngine::restartGame() {
 
 	// VSPicture
 	_nextVS = "";
+
+	// Wall Safe
+	initializeWallSafeValue();
 }
 
 Common::Error PrivateEngine::loadGameStream(Common::SeekableReadStream *stream) {
@@ -1623,24 +1662,59 @@ bool PrivateEngine::isSoundActive() {
 	return _mixer->isSoundIDActive(-1);
 }
 
+void PrivateEngine::waitForSoundToStop() {
+	while (g_private->isSoundActive())
+		g_private->ignoreEvents();
+
+	uint32 i = 100;
+	while (i--) // one second extra
+		g_private->ignoreEvents();
+}
+
 void PrivateEngine::adjustSubtitleSize() {
 	debugC(1, kPrivateDebugFunction, "%s()", __FUNCTION__);
 	if (_subtitles) {
+		// Subtitle positioning constants (as percentages of screen height)
+		const int HORIZONTAL_MARGIN = 20;
+		const float BOTTOM_MARGIN_PERCENT = 0.009f;  // ~20px at 2160p
+		const float MAIN_MENU_HEIGHT_PERCENT = 0.093f;  // ~200px at 2160p
+		const float ALTERNATE_MODE_HEIGHT_PERCENT = 0.102f;  // ~220px at 2160p
+		const float DEFAULT_HEIGHT_PERCENT = 0.074f;  // ~160px at 2160p
+
+		// Font sizing constants (as percentage of screen height)
+		const int MIN_FONT_SIZE = 8;
+		const float BASE_FONT_SIZE_PERCENT = 0.023f;  // ~50px at 2160p
+
 		int16 h = g_system->getOverlayHeight();
 		int16 w = g_system->getOverlayWidth();
-		float scale = h / 2160.f;
+
+		int bottomMargin = int(h * BOTTOM_MARGIN_PERCENT);
+
 		// If we are in the main menu, we need to adjust the position of the subtitles
 		if (_mode == 0) {
-			_subtitles->setBBox(Common::Rect(20, h - 200 * scale, w - 20, h - 20));
+			int topOffset = int(h * MAIN_MENU_HEIGHT_PERCENT);
+			_subtitles->setBBox(Common::Rect(HORIZONTAL_MARGIN,
+											h - topOffset,
+											w - HORIZONTAL_MARGIN,
+											h - bottomMargin));
 		} else if (_mode == -1) {
-			_subtitles->setBBox(Common::Rect(20, h - 220 * scale, w - 20, h - 20));
+			int topOffset = int(h * ALTERNATE_MODE_HEIGHT_PERCENT);
+			_subtitles->setBBox(Common::Rect(HORIZONTAL_MARGIN,
+											h - topOffset,
+											w - HORIZONTAL_MARGIN,
+											h - bottomMargin));
 		} else {
-			_subtitles->setBBox(Common::Rect(20, h - 160 * scale, w - 20, h - 20));
+			int topOffset = int(h * DEFAULT_HEIGHT_PERCENT);
+			_subtitles->setBBox(Common::Rect(HORIZONTAL_MARGIN,
+											h - topOffset,
+											w - HORIZONTAL_MARGIN,
+											h - bottomMargin));
 		}
-		int fontSize = MAX(8, int(50 * scale));
+
+		int fontSize = MAX(MIN_FONT_SIZE, int(h * BASE_FONT_SIZE_PERCENT));
 		_subtitles->setColor(0xff, 0xff, 0x80);
-		_subtitles->setFont("LiberationSans-Regular.ttf", fontSize, "regular");
-		_subtitles->setFont("LiberationSans-Italic.ttf", fontSize, "italic");
+		_subtitles->setFont("LiberationSans-Regular.ttf", fontSize, Video::Subtitles::kFontStyleRegular);
+		_subtitles->setFont("LiberationSans-Italic.ttf", fontSize, Video::Subtitles::kFontStyleItalic);
 	}
 }
 
@@ -1660,16 +1734,24 @@ void PrivateEngine::loadSubtitles(const Common::Path &path) {
 	subPath = subPath.appendComponent(language);
 	subPath = subPath.appendComponent(subPathStr);
 	debugC(1, kPrivateDebugFunction, "Loading subtitles from %s", subPath.toString().c_str());
-	if (Common::File::exists(subPath)) {
-		_subtitles = new Video::Subtitles();
-		_subtitles->loadSRTFile(subPath);
-		g_system->showOverlay(false);
-		adjustSubtitleSize();
-	} else if (_subtitles != nullptr) {
+
+	if (_subtitles != nullptr) {
 		delete _subtitles;
 		_subtitles = nullptr;
-		g_system->clearOverlay();
+		g_system->hideOverlay();
 	}
+
+	_subtitles = new Video::Subtitles();
+	_subtitles->loadSRTFile(subPath);
+	if (!_subtitles->isLoaded()) {
+		delete _subtitles;
+		_subtitles = nullptr;
+		return;
+	}
+
+	g_system->showOverlay(false);
+	g_system->clearOverlay();
+	adjustSubtitleSize();
 }
 void PrivateEngine::playVideo(const Common::String &name) {
 	debugC(1, kPrivateDebugFunction, "%s(%s)", __FUNCTION__, name.c_str());
@@ -1750,7 +1832,7 @@ void PrivateEngine::skipVideo() {
 	if (_subtitles != nullptr) {
 		delete _subtitles;
 		_subtitles = nullptr;
-		g_system->clearOverlay();
+		g_system->hideOverlay();
 	}
 	_currentMovie = "";
 }
@@ -1762,6 +1844,11 @@ void PrivateEngine::destroyVideo() {
 	delete _videoDecoder;
 	_videoDecoder = nullptr;
 	_pausedVideo = nullptr;
+	if (_subtitles != nullptr) {
+		delete _subtitles;
+		_subtitles = nullptr;
+		g_system->hideOverlay();
+	}
 }
 
 void PrivateEngine::stopSound(bool all) {
@@ -2155,36 +2242,60 @@ void PrivateEngine::removeTimer() {
 // Diary
 
 void PrivateEngine::loadLocations(const Common::Rect &rect) {
-	uint32 i = 0;
-	int16 offset = 44;
+	// Locations are displayed in the order they are visited.
+	// maps.locations and maps.locationList contain all locations.
+	// A non-zero symbol value indicates that a location has been
+	// visited and the order in which it was visited.
+
+	// Create an array of visited locations, sorted by order visited
+	Common::Array<const Symbol *> visitedLocations;
+	Common::HashMap<const Symbol *, int> locationIDs;
+	int locationID = 1; // one-based for image file names
 	for (NameList::const_iterator it = maps.locationList.begin(); it != maps.locationList.end(); ++it) {
 		const Private::Symbol *sym = maps.locations.getVal(*it);
-		i++;
-		if (sym->u.val) {
-			offset = offset + 22;
-			Common::String s =
-				Common::String::format("%sdryloc%d.bmp", _diaryLocPrefix.c_str(), i);
-
-			MaskInfo m;
-			loadMaskAndInfo(&m, s, rect.left + 120, rect.top + offset, true);
-			m.cursor = g_private->getExitCursor();
-			m.nextSetting = getDiaryMiddleSetting();
-			m.flag1 = nullptr;
-			m.flag2 = nullptr;
-			m.useBoxCollision = true;
-			_masks.push_front(m);
-			_locationMasks.push_back(m);
+		if (sym->u.val != 0) {
+			visitedLocations.push_back(sym);
+			locationIDs[sym] = locationID;
 		}
+		locationID++;
+	}
+	Common::sort(visitedLocations.begin(), visitedLocations.end(), [&locationIDs](const Symbol *a, const Symbol *b) {
+		if (a->u.val != b->u.val) {
+			return a->u.val < b->u.val;
+		} else {
+			// backwards compatibility for older saves files that stored 1
+			// for visited locations and displayed them in a fixed order.
+			return locationIDs[a] < locationIDs[b];
+		}
+	});
+
+	// Load the sorted visited locations
+	int16 offset = 54;
+	for (uint i = 0; i < visitedLocations.size(); i++) {
+		const Private::Symbol *sym = visitedLocations[i];
+		Common::String s =
+			Common::String::format("%sdryloc%d.bmp", _diaryLocPrefix.c_str(), locationIDs[sym]);
+
+		MaskInfo m;
+		loadMaskAndInfo(&m, s, rect.left + 90, rect.top + offset, true);
+		m.cursor = g_private->getExitCursor();
+		m.nextSetting = getDiaryMiddleSetting();
+		m.flag1 = nullptr;
+		m.flag2 = nullptr;
+		m.useBoxCollision = true;
+		_masks.push_front(m);
+		_locationMasks.push_back(m);
+		offset += 26;
 	}
 }
 
 void PrivateEngine::loadInventory(uint32 x, const Common::Rect &r1, const Common::Rect &r2) {
 	int16 offset = 0;
 	for (NameList::const_iterator it = inventory.begin(); it != inventory.end(); ++it) {
-		offset = offset + 22;
 		Graphics::Surface *surface = loadMask(*it, r1.left, r1.top + offset, true);
 		surface->free();
 		delete surface;
+		offset += 20;
 	}
 }
 
@@ -2217,6 +2328,15 @@ void PrivateEngine::loadMemories(const Common::Rect &rect, uint rightPageOffset,
 			currentVerticalOffset = 0;
 		}
 	}
+}
+
+int PrivateEngine::getMaxLocationValue() {
+	int maxValue = 0;
+	for (SymbolMap::iterator it = maps.locations.begin(); it != maps.locations.end(); ++it) {
+		Symbol *s = it->_value;
+		maxValue = MAX(maxValue, s->u.val);
+	}
+	return maxValue;
 }
 
 } // End of namespace Private
