@@ -53,11 +53,15 @@ static void fChgMode(ArgArray args) {
 
 	if (args.size() == 3) {
 		Symbol *location = g_private->maps.lookupLocation(args[2].u.sym->name);
-		if (location->u.val == 0) {
-			// visited locations have non-zero values.
-			// set to an incrementing value to record the order visited.
-			int maxLocationValue = g_private->getMaxLocationValue();
-			setSymbol(location, maxLocationValue + 1);
+		g_private->setLocationAsVisited(location);
+
+		// set a game flag when visiting the police station.
+		if (!g_private->isDemo()) {
+			if (*(args[2].u.sym->name) == g_private->getPoliceStationLocation()) {
+				Common::String beenDowntownName = g_private->getBeenDowntownVariable();
+				Symbol *beenDowntown = g_private->maps.lookupVariable(&beenDowntownName);
+				setSymbol(beenDowntown, 1);
+			}
 		}
 	}
 
@@ -224,50 +228,39 @@ static void fRestartGame(ArgArray args) {
 static void fPoliceBust(ArgArray args) {
 	// assert types
 	assert(args.size() == 1 || args.size() == 2);
-	g_private->_policeBustEnabled = args[0].u.val;
-	//debug("Number of clicks %d", g_private->computePoliceIndex());
-
-	if (g_private->_policeBustEnabled)
-		g_private->startPoliceBust();
-
-	if (args.size() == 2) {
-		if (args[1].u.val == 2) {
-			// Unclear what it means
-		} else if (args[1].u.val == 3) {
-			g_private->_nextSetting = g_private->getMainDesktopSetting();
-			g_private->_mode = 0;
-			g_private->_origin = Common::Point(kOriginZero[0], kOriginZero[1]);
-		} else
-			assert(0);
+	int mode = (args.size() == 2) ? args[1].u.val : 0;
+	debugC(1, kPrivateDebugScript, "PoliceBust(%d, %d)", args[0].u.val, mode);
+	
+	if (mode == 3) {
+		g_private->completePoliceBust();
+		return;
 	}
-	debugC(1, kPrivateDebugScript, "PoliceBust(%d, ..)", args[0].u.val);
-	debugC(1, kPrivateDebugScript, "WARNING: PoliceBust partially implemented");
+	if (mode == 2) {
+		g_private->wallSafeAlarm();
+		return;
+	}
+	if (mode == 1) {
+		// Not implemented: a special mode for police busts
+		// in Marlowe's office that was removed from the game.
+		return;
+	}
+
+	if (args[0].u.val) {
+		g_private->startPoliceBust();
+	} else {
+		g_private->stopPoliceBust();
+	}
 }
 
 static void fBustMovie(ArgArray args) {
 	// assert types
 	assert(args.size() == 1);
 	debugC(1, kPrivateDebugScript, "BustMovie(%s)", args[0].u.sym->name->c_str());
-	uint policeIndex = g_private->maps.variables.getVal(g_private->getPoliceIndexVariable())->u.val;
-	int videoIndex = policeIndex / 2 - 1;
-	if (videoIndex < 0)
-		videoIndex = 0;
-	assert(videoIndex <= 5);
-	Common::String pv =
-		Common::String::format("po/animatio/spoc%02dxs.smk",
-							   kPoliceBustVideos[videoIndex]);
 
-	if (kPoliceBustVideos[videoIndex] == 2) {
-		Common::String s("global/transiti/audio/spoc02VO.wav");
-		g_private->playSound(s, 1, false, false);
-		g_private->changeCursor("default");
-		g_private->waitForSoundToStop();
-	}
-
-	g_private->_nextMovie = pv;
+	g_private->_nextMovie = g_private->_policeBustMovie;
 	g_private->_nextSetting = args[0].u.sym->name->c_str();
 
-	Common::String memoryPath = pv;
+	Common::String memoryPath = g_private->_policeBustMovie;
 	memoryPath.replace('/', '\\');
 	g_private->addMemory(memoryPath);
 }
@@ -298,6 +291,11 @@ static void fDossierChgSheet(ArgArray args) {
 	Common::String s(args[0].u.str);
 	MaskInfo m;
 
+	// do nothing if suspect only has one sheet
+	if (g_private->_dossiers[g_private->_dossierSuspect].page2.empty()) {
+		return;
+	}
+
 	int p = args[1].u.val;
 	int x = args[2].u.val;
 	int y = args[3].u.val;
@@ -322,6 +320,10 @@ static void fDossierPrevSuspect(ArgArray args) {
 	Common::String s(args[0].u.str);
 	MaskInfo m;
 
+	if (g_private->_dossierSuspect == 0) {
+		return;
+	}
+
 	int x = args[1].u.val;
 	int y = args[2].u.val;
 
@@ -338,6 +340,10 @@ static void fDossierNextSuspect(ArgArray args) {
 	assert(args.size() == 3);
 	Common::String s(args[0].u.str);
 	MaskInfo m;
+
+	if ((g_private->_dossierSuspect + 1) >= g_private->_dossiers.size()) {
+		return;
+	}
 
 	int x = args[1].u.val;
 	int y = args[2].u.val;
@@ -359,8 +365,9 @@ static void fNoStopSounds(ArgArray args) {
 
 static void fLoseInventory(ArgArray args) {
 	assert(args.size() == 0);
-	debugC(1, kPrivateDebugScript, "LoveInventory()");
-	g_private->inventory.clear();
+	debugC(1, kPrivateDebugScript, "LoseInventory()");
+
+	g_private->removeRandomInventory();
 }
 
 static void fInventory(ArgArray args) {
@@ -432,20 +439,16 @@ static void fInventory(ArgArray args) {
 			g_private->playSound(g_private->getTakeLeaveSound(), 1, false, false);
 		}
 	} else {
+		Common::String flag;
 		if (v1.type == NAME) {
-			v1.u.sym = g_private->maps.lookupVariable(v1.u.sym->name);
 			if (strcmp(c.u.str, "\"REMOVE\"") == 0) {
-				v1.u.sym->u.val = 0;
-				if (g_private->inInventory(bmp))
-					g_private->inventory.remove(bmp);
+				g_private->removeInventory(bmp);
 			} else {
-				v1.u.sym->u.val = 1;
-				if (!g_private->inInventory(bmp))
-					g_private->inventory.push_back(bmp);
+				flag = *(v1.u.sym->name);
+				g_private->addInventory(bmp, flag);
 			}
 		} else {
-			if (!g_private->inInventory(bmp))
-				g_private->inventory.push_back(bmp);
+			g_private->addInventory(bmp, flag);
 		}
 		if (v2.type == NAME) {
 			v2.u.sym = g_private->maps.lookupVariable(v2.u.sym->name);

@@ -40,6 +40,8 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  AGI:
    - Added Text-to-Speech support.
+   - Added support for SQ2 French translation.
+   - Added support for KQ1, KQ2, KQ3 Hebrew translations.
    - Fixed Mickey's Space Adventure sound on PS3, Wii, and other big-endian
      ports.
 
@@ -132,16 +134,27 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added keymapper support.
 
  Private:
+   - Added several important missing graphics and gameplay sounds,
+     the engine is now considered to be at feature parity with the original game.
+   - Fixed inaccessible places, missing interactions or conversations.
+   - Added option to highlight decision areas for improved visibility. 
+   - Added support for third party subtitles.
+   - Added missing features and fixed crashes in the desktop screen.
+   - Fixed various graphics and cursor glitches.
    - Added keymapper support.
 
  Queen:
    - Added keymapper support.
 
  SCI:
-   - Fixed the palette in SLATER Mac.
-   - Fixed LSL6 temporary freeze after control panel.
-   - Fixed PEPPER spinning in Ben Franklin's workshop.
-   - Enabled extra LSL6 messages when clicking on Larry.
+   - Fixed PHANT1 losing save files. (ScummVM 2.9.0 bug)
+   - Fixed QFG4 v1.1/German lockup when entering cave at end of game.
+   - Fixed PQ2 PC-98 Japanese text not displaying on certain screens.
+   - Fixed KQ1 Amiga crash when incorrectly guessing gnome's name.
+   - Fixed LONGBOW Amiga crash when going to abbey.
+   - Fixed SQ4 Amiga taking three minutes to display title screen.
+   - Fixed script bugs in ECO1, LSL6, PEPPER.
+   - Added support for SLATER Macintosh.
    - Virtual keyboard now correctly triggers on/off wherever text input is
      needed.
 

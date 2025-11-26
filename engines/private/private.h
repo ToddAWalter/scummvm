@@ -82,6 +82,12 @@ typedef struct ExitInfo {
 	Common::String nextSetting;
 	Common::Rect   rect;
 	Common::String cursor;
+
+	void clear() {
+		nextSetting.clear();
+		rect.setEmpty();
+		cursor.clear();
+	}
 } ExitInfo;
 
 typedef struct MaskInfo {
@@ -141,6 +147,11 @@ typedef struct DiaryPage {
 	int locationID;
 } DiaryPage;
 
+typedef struct InventoryItem {
+	Common::String diaryImage;
+	Common::String flag;
+} InventoryItem;
+
 // funcs
 
 typedef struct FuncTable {
@@ -157,7 +168,7 @@ typedef Common::List<ExitInfo> ExitList;
 typedef Common::List<MaskInfo> MaskList;
 typedef Common::List<Common::String> SoundList;
 typedef Common::List<PhoneInfo> PhoneList;
-typedef Common::List<Common::String> InvList;
+typedef Common::List<InventoryItem> InvList;
 typedef Common::List<Common::Rect *> RectList;
 
 // arrays
@@ -302,6 +313,9 @@ public:
 	Common::String getAlternateGameVariable();
 	Common::String getPoliceIndexVariable();
 	Common::String getWallSafeValueVariable();
+	Common::String getPoliceArrivedVariable();
+	Common::String getBeenDowntownVariable();
+	Common::String getPoliceStationLocation();
 	const char *getSymbolName(const char *name, const char *strippedName, const char *demoName = nullptr);
 
 	// movies
@@ -312,10 +326,12 @@ public:
 	DossierArray _dossiers;
 	uint _dossierSuspect;
 	uint _dossierPage;
+	MaskInfo _dossierPageMask;
 	MaskInfo _dossierNextSuspectMask;
 	MaskInfo _dossierPrevSuspectMask;
 	MaskInfo _dossierNextSheetMask;
 	MaskInfo _dossierPrevSheetMask;
+	bool selectDossierPage(Common::Point);
 	bool selectDossierNextSuspect(Common::Point);
 	bool selectDossierPrevSuspect(Common::Point);
 	bool selectDossierNextSheet(Common::Point);
@@ -325,20 +341,30 @@ public:
 
 	// Police Bust
 	bool _policeBustEnabled;
+	bool _policeSirenPlayed;
+	int _numberOfClicks;
+	int _numberClicksAfterSiren;
+	int _policeBustMovieIndex;
+	Common::String _policeBustMovie;
+	Common::String _policeBustPreviousSetting;
+	void resetPoliceBust();
 	void startPoliceBust();
+	void stopPoliceBust();
+	void wallSafeAlarm();
+	void completePoliceBust();
 	void checkPoliceBust();
-	int _numberClicks;
-	int _maxNumberClicks;
-	int _sirenWarning;
-	Common::String _policeBustSetting;
 
 	// Diary
 	InvList inventory;
 	bool inInventory(const Common::String &bmp) const;
+	void addInventory(const Common::String &bmp, Common::String &flag);
+	void removeInventory(const Common::String &bmp);
+	void removeRandomInventory();
 	Common::String _diaryLocPrefix;
 	void loadLocations(const Common::Rect &);
 	void loadInventory(uint32, const Common::Rect &, const Common::Rect &);
 	bool _toTake;
+	bool _haveTakenItem;
 	DiaryPages _diaryPages;
 	int _currentDiaryPage;
 	ExitInfo _diaryNextPageExit;
@@ -351,6 +377,7 @@ public:
 	Common::Array<MaskInfo> _locationMasks;
 	Common::Array<MaskInfo> _memoryMasks;
 	bool selectMemory(const Common::Point &mousePos);
+	void setLocationAsVisited(Symbol *location);
 	int getMaxLocationValue();
 
 	// Save/Load games
