@@ -19,32 +19,39 @@
  *
  */
 
-#include "engines/advancedDetector.h"
+#ifndef DIRECTOR_LINGO_XTRAS_S_STAYTOONEDOBER_H
+#define DIRECTOR_LINGO_XTRAS_S_STAYTOONEDOBER_H
 
-static const PlainGameDescriptor agdsGames[] = {
-	{"nibiru", "NiBiRu: Age of Secrets"},
-	{"black-mirror", "Black Mirror"},
-	{0, 0}};
+namespace Director {
 
-#include "agds/detection_tables.h"
-
-class AGDSMetaEngineDetection : public AdvancedMetaEngineDetection<ADGameDescription> {
+class StayToonedOberXtraObject : public Object<StayToonedOberXtraObject> {
 public:
-	AGDSMetaEngineDetection() : AdvancedMetaEngineDetection(AGDS::gameDescriptions, agdsGames) {
-		_maxScanDepth = 1;
-	}
+	StayToonedOberXtraObject(ObjectType objType);
 
-	const char *getName() const override {
-		return "agds";
-	}
-
-	const char *getEngineName() const override {
-		return "AGDS Engine";
-	}
-
-	const char *getOriginalCopyright() const override {
-		return "AGDS (C) Future Games";
-	}
+	bool hasProp(const Common::String &propName) override;
+	Datum getProp(const Common::String &propName) override;
 };
 
-REGISTER_PLUGIN_STATIC(AGDS_DETECTION, PLUGIN_TYPE_ENGINE_DETECTION, AGDSMetaEngineDetection);
+namespace StayToonedOberXtra {
+
+extern const char *xlibName;
+extern const XlibFileDesc fileNames[];
+
+void open(ObjectType type, const Common::Path &path);
+void close(ObjectType type);
+
+void m_new(int nargs);
+void m_mInitRandom(int nargs);
+void m_mBuildTable(int nargs);
+void m_mInitGame(int nargs);
+void m_mInitGun(int nargs);
+void m_mOPERATEGAME(int nargs);
+void m_mReturnData(int nargs);
+void m_mGactions(int nargs);
+void m_mCastStarts(int nargs);
+
+} // End of namespace StayToonedOberXtra
+
+} // End of namespace Director
+
+#endif
