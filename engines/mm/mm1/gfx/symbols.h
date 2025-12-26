@@ -19,18 +19,31 @@
  *
  */
 
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
+#ifndef MM1_GFX_SYMBOLS_H
+#define MM1_GFX_SYMBOLS_H
 
-#include "backends/fs/atari/atari-fs.h"
+#include "graphics/managed_surface.h"
 
-void AtariFilesystemNode::setFlags() {
-	DrivePOSIXFilesystemNode::setFlags();
+namespace MM {
+namespace MM1 {
+namespace Gfx {
 
-	if (!_displayNameChecked) {
-		if (_fileHashMap.contains(_displayName))
-			_displayName = _fileHashMap[_displayName];
+#define MAX_SYMBOLS 20
+#define SYMBOL_WIDTH 8
+#define SYMBOL_HEIGHT 8
 
-		_displayNameChecked = true;
-	}
-}
+class Symbols {
+private:
+	Graphics::ManagedSurface _data[20];
+
+public:
+	void load();
+
+	void draw(Graphics::ManagedSurface &dest, const Common::Point &destPos, int symbolNum);
+};
+
+} // namespace Gfx
+} // namespace MM1
+} // namespace MM
+
+#endif

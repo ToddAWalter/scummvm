@@ -112,6 +112,8 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed protection from elements spell.
    - Added Text-to-Speech support.
    - Fixed errors with M&M1 monster advancement in combat.
+   - Fixed doors color in M&M1 enhanced mode
+   - Fix rendering of M&M1 enhanced main menu circles
 
  Mohawk:
    - Fixed popping noise in speech in some game releases (bug in the original).
@@ -167,6 +169,8 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added support for SLATER Macintosh.
    - Virtual keyboard now correctly triggers on/off wherever text input is
      needed.
+   - Inside the Chest and Behind the Developer's Shieled are now handled as
+     two separate demos, detected from the same set of files.
 
  SCUMM:
    - Added support for the classic SE variants of MI1, MI2, DOTT and FT.
