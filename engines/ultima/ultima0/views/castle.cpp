@@ -66,6 +66,7 @@ void Castle::draw() {
 
 void Castle::firstTime() {
 	auto s = getSurface();
+	const auto &player = g_engine->_player;
 
 	if (_mode >= NAMING && _mode <= FIRST_TASK) {
 		s.writeString(Common::Point(5, 2), "Welcome Peasant into the halls of\n"
@@ -90,14 +91,14 @@ void Castle::firstTime() {
 			"dungeons and to return only after\n"
 			"killing ");
 		s.setColor(C_VIOLET);
-		s.writeString(getTaskName(1));
+		s.writeString(getTaskName(player._task));
 
 		pressAnyKey();
 	}
 }
 
 void Castle::taskCompleted() {
-	const auto &player = g_engine->_player;
+	auto &player = g_engine->_player;
 	auto s = getSurface();
 
 	s.writeString(Common::Point(0, 3), "Aaaahhhh.... ");
@@ -113,13 +114,18 @@ void Castle::taskCompleted() {
 			"try difficulty level ");
 		s.writeString(Common::String::format("%d.", player._skill + 1));
 	} else {
+		// LB gives you extra attributes
+		for (int i = 0; i < MAX_ATTR; i++)
+			player._attr[i]++;
+
+		// Choose the next task
 		nextTask();
 
 		s.writeString("Unfortunately, this is not enough to\n"
 			"become a knight.\n\n");
 		s.writeString("Thou must now kill ");
 		s.setColor(C_VIOLET);
-		s.writeString(getTaskName(1));
+		s.writeString(getTaskName(player._task));
 
 		s.setColor(C_TEXT_DEFAULT);
 		s.writeString("\n\n");
@@ -195,12 +201,8 @@ bool Castle::msgAction(const ActionMessage &msg) {
 void Castle::nextTask() {
 	auto &player = g_engine->_player;
 
-	player._task++;
+	player._task = CLIP(player._attr[AT_WISDOM] / 3, 1, 10);
 	player._taskCompleted = false;
-
-	// LB gives you extra attributes
-	for (int i = 0; i < MAX_ATTR; i++)
-		player._attr[i]++;
 }
 
 Common::String Castle::getTaskName(int taskNum) const {
