@@ -188,6 +188,11 @@ protected:
 	void removeGame(int item);
 
 	/**
+	 * Remove multiple games and their addons.
+	 */
+	void removeGamesWithAddons(const Common::StringArray &domainsToRemove);
+
+	/**
 	 * Handle "Edit game..." button.
 	 */
 	void editGame(int item);
@@ -248,6 +253,7 @@ protected:
 	void selectTarget(const Common::String &target) override;
 	int getSelected() override;
 	void build() override;
+	void removeMultipleGames(const Common::Array<int> &selectedItems);
 
 private:
 	GroupedListWidget *_list;
