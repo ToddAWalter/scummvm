@@ -447,7 +447,7 @@ Common::KeymapArray SherlockMetaEngine::initKeymaps(const char *target) const {
 		act->addDefaultInputMapping(getKey(kFixedText_Game_Hotkeys, curLanguageEntry, target, 8));
 		scalpelKeymap->addAction(act);
 
-		act = new Action("SETUP", _("Setup"));
+		act = new Action("SETUP", _("Settings"));
 		act->setCustomEngineActionEvent(kActionScalpelSetup);
 		act->addDefaultInputMapping(getKey(kFixedText_Game_Hotkeys, curLanguageEntry, target, 11));
 		scalpelKeymap->addAction(act);
@@ -1212,14 +1212,14 @@ Common::KeymapArray SherlockMetaEngine::initKeymaps(const char *target) const {
 		tattooPasswordKeymap->addAction(act);
 
 		// I18N: (Game name: The Lost Files of Sherlock Holmes: The Case of the Rose Tattoo) This action is used to go to the start of the password input field
-		act = new Action("GOSTART", _("Go to the line start"));
+		act = new Action("GOSTART", _("Go to start of line"));
 		act->setCustomEngineActionEvent(kActionTattooPasswordStart);
 		act->addDefaultInputMapping("HOME");
 		act->addDefaultInputMapping("KP7");
 		tattooPasswordKeymap->addAction(act);
 
 		// I18N: (Game name: The Lost Files of Sherlock Holmes: The Case of the Rose Tattoo) This action is used to go to the end of the password input field
-		act = new Action("GOEND", _("Go to the line end"));
+		act = new Action("GOEND", _("Go to end of line"));
 		act->setCustomEngineActionEvent(kActionTattooPasswordEnd);
 		act->addDefaultInputMapping("END");
 		act->addDefaultInputMapping("KP1");
