@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-01-26 23:16+0000\n"
+"POT-Creation-Date: 2026-01-28 11:57+0000\n"
 "PO-Revision-Date: 2021-03-21 08:24+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Belarusian <https://translations.scummvm.org/projects/scummvm/"
@@ -75,7 +75,7 @@ msgstr "Даступныя рухавічкі:"
 msgid "Close"
 msgstr "Закрыць"
 
-#: gui/browser.cpp:74 backends/dialogs/macosx/macosx-dialogs.mm:90
+#: gui/browser.cpp:74 backends/dialogs/macosx/macosx-dialogs.mm:108
 msgid "Show hidden files"
 msgstr "Паказваць схаваныя файлы"
 
@@ -135,7 +135,7 @@ msgstr "Адмена"
 #: gui/browser.cpp:82 gui/chooser.cpp:46 gui/filebrowser-dialog.cpp:69
 #: gui/remotebrowser.cpp:60 gui/shaderbrowser-dialog.cpp:81
 #: gui/themebrowser.cpp:55 backends/dialogs/gtk/gtk-dialogs.cpp:64
-#: backends/dialogs/macosx/macosx-dialogs.mm:144
+#: backends/dialogs/macosx/macosx-dialogs.mm:162
 #: backends/dialogs/win32/win32-dialogs.cpp:136
 msgid "Choose"
 msgstr "Абраць"
@@ -339,7 +339,7 @@ msgstr "Цяпер працуе іншае сховішча. Перапыніц�
 #: engines/hypno/metaengine.cpp:192 engines/kyra/gui/saveload_eob.cpp:611
 #: engines/kyra/gui/saveload_eob.cpp:644 engines/lab/metaengine.cpp:197
 #: engines/parallaction/metaengine.cpp:169
-#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4321
+#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4341
 #: engines/sherlock/metaengine.cpp:638 engines/sherlock/metaengine.cpp:1244
 #: engines/sludge/event.cpp:144 engines/toon/toon.cpp:1550
 #: engines/zvision/zvision.cpp:321
@@ -357,7 +357,7 @@ msgstr "Так"
 #: engines/hypno/metaengine.cpp:198 engines/kyra/gui/saveload_eob.cpp:611
 #: engines/kyra/gui/saveload_eob.cpp:644 engines/lab/metaengine.cpp:204
 #: engines/parallaction/metaengine.cpp:175
-#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4321
+#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4341
 #: engines/sherlock/metaengine.cpp:643 engines/sherlock/metaengine.cpp:1250
 #: engines/sludge/event.cpp:144 engines/toon/toon.cpp:1550
 #: engines/zvision/zvision.cpp:322
@@ -386,7 +386,7 @@ msgstr ""
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:123
 #: engines/drascula/saveload.cpp:51 engines/grim/inputdialog.cpp:83
 #: engines/parallaction/saveload.cpp:270 engines/sci/engine/kgraphics.cpp:76
-#: engines/sci/graphics/controls32.cpp:934 engines/scumm/scumm.cpp:4333
+#: engines/sci/graphics/controls32.cpp:934 engines/scumm/scumm.cpp:4353
 #: engines/sword1/control.cpp:2816
 msgid "OK"
 msgstr "OK"
@@ -1404,7 +1404,7 @@ msgstr ""
 msgid "~Q~uit"
 msgstr "~В~ыхад"
 
-#: gui/launcher.cpp:267 backends/platform/sdl/macosx/appmenu_osx.mm:302
+#: gui/launcher.cpp:267 backends/platform/sdl/macosx/appmenu_osx.mm:307
 msgid "Quit ScummVM"
 msgstr "Завяршыць ScummVM"
 
@@ -1414,7 +1414,7 @@ msgstr "Завяршыць ScummVM"
 msgid "A~b~out"
 msgstr "Пра п~р~аграму..."
 
-#: gui/launcher.cpp:271 backends/platform/sdl/macosx/appmenu_osx.mm:296
+#: gui/launcher.cpp:271 backends/platform/sdl/macosx/appmenu_osx.mm:301
 msgid "About ScummVM"
 msgstr "Пра праграму ScummVM"
 
@@ -3301,7 +3301,7 @@ msgstr ""
 #: engines/mohawk/riven_stacks/aspit.cpp:454
 #: engines/neverhood/metaengine.cpp:200 engines/saga/metaengine.cpp:449
 #: engines/scumm/help.cpp:84 engines/scumm/help.cpp:86
-#: engines/scumm/scumm.cpp:4333 engines/sludge/keymapper_tables.h:95
+#: engines/scumm/scumm.cpp:4353 engines/sludge/keymapper_tables.h:95
 #: engines/sludge/keymapper_tables.h:144 engines/sludge/keymapper_tables.h:223
 #: engines/sludge/keymapper_tables.h:343 engines/sludge/keymapper_tables.h:355
 #: engines/sludge/keymapper_tables.h:416 engines/sludge/keymapper_tables.h:429
@@ -5708,23 +5708,23 @@ msgid ""
 "| `Ctrl+Alt+d` | Opens the ScummVM debugger\n"
 msgstr ""
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:298
+#: backends/platform/sdl/macosx/appmenu_osx.mm:303
 msgid "Hide ScummVM"
 msgstr "Схаваць ScummVM"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:299
+#: backends/platform/sdl/macosx/appmenu_osx.mm:304
 msgid "Hide Others"
 msgstr "Схаваць астатнія"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:300
+#: backends/platform/sdl/macosx/appmenu_osx.mm:305
 msgid "Show All"
 msgstr "Паказаць усё"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:305
+#: backends/platform/sdl/macosx/appmenu_osx.mm:310
 msgid "Window"
 msgstr "Акно"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:307
+#: backends/platform/sdl/macosx/appmenu_osx.mm:312
 msgid "Minimize"
 msgstr "Згарнуць"
 
@@ -5733,100 +5733,100 @@ msgstr "Згарнуць"
 #. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
 #. ONLINE HELP
 #. I18N: Opens the help screen.
-#: backends/platform/sdl/macosx/appmenu_osx.mm:312
+#: backends/platform/sdl/macosx/appmenu_osx.mm:319
 #: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
 #: engines/ngi/metaengine.cpp:162 engines/supernova/metaengine.cpp:238
 #: engines/tucker/metaengine.cpp:215 engines/zvision/metaengine.cpp:246
 msgid "Help"
 msgstr "Дапамога"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:317
+#: backends/platform/sdl/macosx/appmenu_osx.mm:324
 msgid "User Manual"
 msgstr "Дапаможнік карыстача"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:319
+#: backends/platform/sdl/macosx/appmenu_osx.mm:326
 msgid "General Information"
 msgstr "Агульная інфармацыя"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:320
+#: backends/platform/sdl/macosx/appmenu_osx.mm:327
 msgid "What's New in ScummVM"
 msgstr "Што новага ў ScummVM"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:322
+#: backends/platform/sdl/macosx/appmenu_osx.mm:329
 msgid "Credits"
 msgstr "Аўтары"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:323
+#: backends/platform/sdl/macosx/appmenu_osx.mm:330
 msgid "GPL License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:324
+#: backends/platform/sdl/macosx/appmenu_osx.mm:331
 msgid "LGPL License"
 msgstr "Ліцэнзія LGPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:325
+#: backends/platform/sdl/macosx/appmenu_osx.mm:332
 msgid "OFL License"
 msgstr "Ліцэнзія OFL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:326
+#: backends/platform/sdl/macosx/appmenu_osx.mm:333
 msgid "BSD License"
 msgstr "Ліцэнзія BSD"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:328
+#: backends/platform/sdl/macosx/appmenu_osx.mm:335
 #, fuzzy
 #| msgid "GPL License"
 msgid "Apache License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:329
+#: backends/platform/sdl/macosx/appmenu_osx.mm:336
 #, fuzzy
 #| msgid "BSD License"
 msgid "BSL License"
 msgstr "Ліцэнзія BSD"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:330
+#: backends/platform/sdl/macosx/appmenu_osx.mm:337
 #, fuzzy
 #| msgid "GPL License"
 msgid "GLAD License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:331
+#: backends/platform/sdl/macosx/appmenu_osx.mm:338
 #, fuzzy
 #| msgid "BSD License"
 msgid "ISC License"
 msgstr "Ліцэнзія BSD"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:332
+#: backends/platform/sdl/macosx/appmenu_osx.mm:339
 #, fuzzy
 #| msgid "GPL License"
 msgid "Lua License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:333
+#: backends/platform/sdl/macosx/appmenu_osx.mm:340
 #, fuzzy
 #| msgid "GPL License"
 msgid "MIT License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:334
+#: backends/platform/sdl/macosx/appmenu_osx.mm:341
 #, fuzzy
 #| msgid "GPL License"
 msgid "MKV License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:335
+#: backends/platform/sdl/macosx/appmenu_osx.mm:342
 #, fuzzy
 #| msgid "GPL License"
 msgid "MPL License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:336
+#: backends/platform/sdl/macosx/appmenu_osx.mm:343
 #, fuzzy
 #| msgid "GPL License"
 msgid "TinyGL License"
 msgstr "Ліцэнзія GPL"
 
-#: backends/platform/sdl/macosx/appmenu_osx.mm:337
+#: backends/platform/sdl/macosx/appmenu_osx.mm:344
 #, fuzzy
 #| msgid "Freefont License"
 msgid "Catharon License"
@@ -6870,7 +6870,7 @@ msgstr ""
 msgid "Quick load or save game isn't supported in this location"
 msgstr ""
 
-#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3275
+#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3295
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -6881,7 +6881,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3262
+#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3282
 #, c-format
 msgid ""
 "Failed to save game to file:\n"
@@ -6892,7 +6892,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3295
+#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3315
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -12232,42 +12232,7 @@ msgstr ""
 "гульнёй, пераназваўшы яго 4.PAT. Без гэтага патча музыка General MIDI будзе "
 "моцна перакручана."
 
-#: engines/sci/sci.cpp:531
-msgid "Download patch"
-msgstr "Спампаваць патч"
-
-#: engines/sci/sci.cpp:532
-msgid ""
-"(or click 'Download patch' button. But note - it only downloads, you will "
-"have to continue from there)\n"
-msgstr ""
-"(або націсніце кнопку \"Спампаваць патч\". Але заўважце: гэта толькі спампуе "
-"яго, вам трэба будзе працягнуць самастойна)\n"
-
-#: engines/sci/sci.cpp:539
-#, fuzzy
-#| msgid ""
-#| "GK2 has a fan made subtitles, available thanks to the good persons at "
-#| "SierraHelp.\n"
-#| "\n"
-#| "Installation:\n"
-#| "- download http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
-#| "GK2Subtitles.zip\n"
-msgid ""
-"GK2 has fan made subtitles, available thanks to the good people at "
-"SierraHelp.\n"
-"\n"
-"Installation:\n"
-"- download http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
-"GK2Subtitles.zip\n"
-msgstr ""
-"Для GK2 ёсць субтытры, зробленыя добрымі фанатамі з сайта SierraHelp.\n"
-"\n"
-"Усталёўка:\n"
-"- спампуйце http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
-"GK2Subtitles.zip\n"
-
-#: engines/sci/sci.cpp:972
+#: engines/sci/sci.cpp:938
 msgid ""
 "Characters saved inside ScummVM are shown automatically. Character files "
 "saved in the original interpreter need to be put inside ScummVM's saved "
@@ -12350,7 +12315,7 @@ msgid "Your Name:"
 msgstr "Назва:"
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4339
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4359
 msgid "Host"
 msgstr ""
 
@@ -12362,7 +12327,7 @@ msgid "Querying games..."
 msgstr "Захоўваю гульню..."
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4339
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4359
 msgid "Join"
 msgstr ""
 
@@ -13303,7 +13268,7 @@ msgid ""
 "this save file."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:314
+#: engines/scumm/scumm.cpp:315
 msgid ""
 "You have enabled 'aspect ratio correction'. However, FM-TOWNS' natural "
 "resolution is 320x240, which doesn't allow aspect ratio correction.\n"
@@ -13311,18 +13276,18 @@ msgid ""
 "320x200, under 'engine' tab."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1345
+#: engines/scumm/scumm.cpp:1355
 #, c-format
 msgid "This game requires the '%s' Macintosh executable for its fonts."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1354
+#: engines/scumm/scumm.cpp:1364
 #, c-format
 msgid ""
 "This game requires the '%s' Macintosh executable for its music and fonts."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1358
+#: engines/scumm/scumm.cpp:1368
 #, fuzzy, c-format
 #| msgid ""
 #| "Could not find the 'Monkey Island' Macintosh executable to read the\n"
@@ -13335,25 +13300,25 @@ msgstr ""
 "прачытаць\n"
 "дадзеныя пра інструменты. Музыка будзе выключана."
 
-#: engines/scumm/scumm.cpp:1359
+#: engines/scumm/scumm.cpp:1369
 msgid "The Mac GUI"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1359
+#: engines/scumm/scumm.cpp:1369
 msgid "The music and the Mac GUI"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1388
+#: engines/scumm/scumm.cpp:1398
 #, c-format
 msgid "Could not open Macintosh resource file %s"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1391
+#: engines/scumm/scumm.cpp:1401
 #, c-format
 msgid "Could not find resource fork in Macintosh resource file %s"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1398
+#: engines/scumm/scumm.cpp:1408
 #, c-format
 msgid ""
 "'%s' appears to be the wrong Dig executable. It may be the launcher one "
@@ -13362,14 +13327,22 @@ msgid ""
 "its sub-folders should be what you need."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1811
+#: engines/scumm/scumm.cpp:1569
+msgid ""
+"It appears your ScummVM version was not built with TrueType Fonts support.\n"
+"\n"
+"Since the One-Stop Fun Shop series makes extensive use of TTF fonts,\n"
+"some of the graphics on screen will be missing."
+msgstr ""
+
+#: engines/scumm/scumm.cpp:1831
 msgid ""
 "Audio files compressed with ScummVM Tools were detected; *.BUN/*.SOU\n"
 "compression is not supported anymore for this game, audio will be disabled.\n"
 "Please copy the game from the original media without compression."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:2301
+#: engines/scumm/scumm.cpp:2321
 #, c-format
 msgid ""
 "Native MIDI support requires the Roland Upgrade from LucasArts,\n"
@@ -13378,13 +13351,13 @@ msgstr ""
 "Рэжым \"роднага\" MIDI патрабуе абнаўленне Roland Upgrade ад\n"
 "LucasArts, але бракуе %s. Пераключаюся на AdLib."
 
-#: engines/scumm/scumm.cpp:2316
+#: engines/scumm/scumm.cpp:2336
 msgid ""
 "This particular version of Monkey Island 1 is known to miss some\n"
 "required resources for MT-32. Using AdLib instead."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:4215
+#: engines/scumm/scumm.cpp:4235
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -13395,7 +13368,7 @@ msgstr ""
 "унутры дырэкторыі гульні Tentacle і сама гульня павінна быць дададзена ў "
 "ScummVM."
 
-#: engines/scumm/scumm.cpp:4339
+#: engines/scumm/scumm.cpp:4359
 #, fuzzy
 msgid "Would you like to host or join a network play session?"
 msgstr "Ці вы хочаце захаваць або загрузіць гульню?"
@@ -17337,6 +17310,38 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Download patch"
+#~ msgstr "Спампаваць патч"
+
+#~ msgid ""
+#~ "(or click 'Download patch' button. But note - it only downloads, you will "
+#~ "have to continue from there)\n"
+#~ msgstr ""
+#~ "(або націсніце кнопку \"Спампаваць патч\". Але заўважце: гэта толькі "
+#~ "спампуе яго, вам трэба будзе працягнуць самастойна)\n"
+
+#, fuzzy
+#~| msgid ""
+#~| "GK2 has a fan made subtitles, available thanks to the good persons at "
+#~| "SierraHelp.\n"
+#~| "\n"
+#~| "Installation:\n"
+#~| "- download http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
+#~| "GK2Subtitles.zip\n"
+#~ msgid ""
+#~ "GK2 has fan made subtitles, available thanks to the good people at "
+#~ "SierraHelp.\n"
+#~ "\n"
+#~ "Installation:\n"
+#~ "- download http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
+#~ "GK2Subtitles.zip\n"
+#~ msgstr ""
+#~ "Для GK2 ёсць субтытры, зробленыя добрымі фанатамі з сайта SierraHelp.\n"
+#~ "\n"
+#~ "Усталёўка:\n"
+#~ "- спампуйце http://www.sierrahelp.com/Files/Patches/GabrielKnight/"
+#~ "GK2Subtitles.zip\n"
 
 #, fuzzy
 #~| msgid "Toggle fullscreen"

@@ -190,21 +190,21 @@ bool sizeofGUIelement_interior(ButtonDrawRec *bdr, M4Rect *myRect) {
 }
 
 bool drawGUIelement(ButtonDrawRec *bdr, M4Rect *myRect) {
-	int32 topLeftColor, interiorColor, bottomRightColor, bottomLeftPix, topRightPix;
+	if (!bdr)
+		return false;
+
 	const int32 x1 = bdr->x1;
 	const int32 y1 = bdr->y1;
 	const int32 x2 = bdr->x2;
 	const int32 y2 = bdr->y2;
 	const bool pressed = bdr->pressed;
 
-	if (!bdr)
-		return false;
-
 	if (bdr->el_type == MESSAGE) {
 		sizeofGUIelement_interior(bdr, myRect);
 		return true;
 	}
 
+	int32 topLeftColor, interiorColor, bottomRightColor, bottomLeftPix, topRightPix;
 	if ((bdr->el_type == TEXTFIELD) || (bdr->el_type == LISTBOX)) {
 		if (!pressed) {
 			topLeftColor = __DKGRAY;
@@ -422,11 +422,10 @@ static int32 item_string_write(Buffer *target, char *myStr, int32 x, int32 y, in
 }
 
 static void CorrectItemWidthHeight(Item *item, int32 fontHeight) {
-	int32 tempWidth, tempHeight, minWidth, minHeight;
-
 	if (!item)
 		return;
 
+	int32 tempWidth, tempHeight, minWidth, minHeight;
 	switch (item->type) {
 	case LISTBOX:
 		minHeight = scrollUpHeight + thumbHeight + scrollDownHeight + _G(items).buttonHeight * 3;	//scrollup + thumb + scrolldown heights + (newHeight for each)
@@ -977,7 +976,7 @@ bool DoubleClickOnListBox(Item *myItem, int32 xOffset, int32 yOffset) {
 	Font *currFont = gr_font_get();
 	if (currFont != myItem->myFont)
 		gr_font_set(myItem->myFont);
-	int32 fontHeight = gr_font_get_height();
+	const int32 fontHeight = gr_font_get_height();
 	if (currFont != myItem->myFont)
 		gr_font_set(currFont);
 
@@ -1116,7 +1115,7 @@ bool ClickOnListBox(Item *myItem, int32 xOffset, int32 yOffset, int32 scrollType
 		Font *currFont = gr_font_get();
 		if (myItem->myFont != currFont)
 			gr_font_set(myItem->myFont);
-		int32 fontHeight = gr_font_get_height();
+		const int32 fontHeight = gr_font_get_height();
 		if (myItem->myFont != currFont)
 			gr_font_set(currFont);
 
@@ -1199,7 +1198,7 @@ bool Item_change_prompt(Item *myItem, const char *newPrompt) {
 	Font *currFont = gr_font_get();
 	if (myItem->myFont != currFont)
 		gr_font_set(myItem->myFont);
-	int32 fontHeight = gr_font_get_height();
+	const int32 fontHeight = gr_font_get_height();
 	CorrectItemWidthHeight(myItem, fontHeight);
 	if (myItem->myFont != currFont)
 		gr_font_set(currFont);
@@ -1535,7 +1534,7 @@ bool Item_show(Item *i, void *bdrDialog, Buffer *scrBuf, int32 itemType) {
 	Font *currFont = gr_font_get();
 	if (i->myFont != currFont)
 		gr_font_set(i->myFont);
-	int32 fontHeight = gr_font_get_height();
+	const int32 fontHeight = gr_font_get_height();
 
 	gr_color_set(__LTGRAY);
 	gr_buffer_rect_fill(scrBuf, x1, y1, i->w, i->h);
@@ -1780,11 +1779,13 @@ Item *Item_set_next_default(Item *currDefault, Item *itemList) {
 		if (currDefault) {
 			currDefault->status = ITEM_NORMAL;
 		}
-		if (nextDefault->type == TEXTFIELD) {
-			nextDefault->aux = nextDefault->prompt;
-			nextDefault->aux2 = &(nextDefault->prompt[strlen(nextDefault->prompt)]);
+		if (nextDefault) {
+			if (nextDefault->type == TEXTFIELD) {
+				nextDefault->aux = nextDefault->prompt;
+				nextDefault->aux2 = &(nextDefault->prompt[strlen(nextDefault->prompt)]);
+			}
+			nextDefault->status = ITEM_PRESSED;
 		}
-		nextDefault->status = ITEM_PRESSED;
 	}
 	return nextDefault;
 }
@@ -1812,11 +1813,13 @@ Item *Item_set_prev_default(Item *currDefault, Item *listBottom) {
 		if (currDefault) {
 			currDefault->status = ITEM_NORMAL;
 		}
-		if (prevDefault->type == TEXTFIELD) {
-			prevDefault->aux = prevDefault->prompt;
-			prevDefault->aux2 = &(prevDefault->prompt[strlen(prevDefault->prompt)]);
+		if (prevDefault) {
+			if (prevDefault->type == TEXTFIELD) {
+				prevDefault->aux = prevDefault->prompt;
+				prevDefault->aux2 = &(prevDefault->prompt[strlen(prevDefault->prompt)]);
+			}
+			prevDefault->status = ITEM_PRESSED;
 		}
-		prevDefault->status = ITEM_PRESSED;
 	}
 	return prevDefault;
 }
