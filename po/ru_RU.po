@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-01-28 11:57+0000\n"
-"PO-Revision-Date: 2025-03-27 07:17+0000\n"
+"POT-Creation-Date: 2026-02-01 19:29+0000\n"
+"PO-Revision-Date: 2026-02-01 10:04+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ru/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 5.7.2\n"
+"X-Generator: Weblate 5.15.1\n"
 "X-Language-name: Русский\n"
 
 #: audio/mac_plugin.cpp:30
@@ -313,8 +313,8 @@ msgstr "Сейчас работает другое хранилище. Вы хо
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
-#: gui/launcher.cpp:523 gui/launcher.cpp:1444 gui/launcher.cpp:1823
-#: gui/options.cpp:3485 gui/options.cpp:3859 base/main.cpp:594
+#: gui/launcher.cpp:523 gui/launcher.cpp:1841 gui/options.cpp:3485
+#: gui/options.cpp:3859 base/main.cpp:594
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:102
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
@@ -332,8 +332,8 @@ msgstr "Да"
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
-#: gui/launcher.cpp:523 gui/launcher.cpp:1444 gui/launcher.cpp:1823
-#: gui/options.cpp:3485 gui/options.cpp:3859 engines/buried/buried.cpp:598
+#: gui/launcher.cpp:523 gui/launcher.cpp:1841 gui/options.cpp:3485
+#: gui/options.cpp:3859 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:102
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
 #: engines/efh/metaengine.cpp:368 engines/grim/grim.cpp:366
@@ -1019,7 +1019,7 @@ msgstr "GUI"
 #: engines/mohawk/riven.cpp:853 engines/sludge/keymapper_tables.h:40
 #: engines/supernova/metaengine.cpp:226 engines/teenagent/metaengine.cpp:207
 #: engines/ultima/ultima4/metaengine.cpp:42
-#: engines/ultima/ultima4/metaengine.cpp:146 engines/voyeur/metaengine.cpp:192
+#: engines/ultima/ultima4/metaengine.cpp:147 engines/voyeur/metaengine.cpp:192
 msgid "Interact"
 msgstr "Взаимодействие"
 
@@ -1034,8 +1034,8 @@ msgstr "Взаимодействие"
 #: engines/twine/metaengine.cpp:497 engines/twp/metaengine.cpp:154
 #: engines/ultima/ultima0/metaengine.cpp:45
 #: engines/ultima/ultima4/metaengine.cpp:44
-#: engines/ultima/ultima4/metaengine.cpp:138
-#: engines/ultima/ultima4/metaengine.cpp:148
+#: engines/ultima/ultima4/metaengine.cpp:139
+#: engines/ultima/ultima4/metaengine.cpp:149
 #: engines/wintermute/keymapper_tables.h:1290
 #: engines/wintermute/keymapper_tables.h:1373
 #: engines/wintermute/keymapper_tables.h:1449
@@ -1055,8 +1055,8 @@ msgstr "Вверх"
 #: engines/twine/metaengine.cpp:505 engines/twp/metaengine.cpp:155
 #: engines/ultima/ultima0/metaengine.cpp:46
 #: engines/ultima/ultima4/metaengine.cpp:45
-#: engines/ultima/ultima4/metaengine.cpp:139
-#: engines/ultima/ultima4/metaengine.cpp:149
+#: engines/ultima/ultima4/metaengine.cpp:140
+#: engines/ultima/ultima4/metaengine.cpp:150
 #: engines/wintermute/keymapper_tables.h:1296
 #: engines/wintermute/keymapper_tables.h:1379
 #: engines/wintermute/keymapper_tables.h:1456
@@ -1074,8 +1074,8 @@ msgstr "Вниз"
 #: engines/scumm/metaengine.cpp:1000 engines/twine/metaengine.cpp:452
 #: engines/twine/metaengine.cpp:520 engines/twp/metaengine.cpp:152
 #: engines/ultima/ultima4/metaengine.cpp:46
-#: engines/ultima/ultima4/metaengine.cpp:140
-#: engines/ultima/ultima4/metaengine.cpp:150
+#: engines/ultima/ultima4/metaengine.cpp:141
+#: engines/ultima/ultima4/metaengine.cpp:151
 #: engines/wintermute/keymapper_tables.h:320
 #: engines/wintermute/keymapper_tables.h:1302
 #: engines/wintermute/keymapper_tables.h:1385
@@ -1094,8 +1094,8 @@ msgstr "Влево"
 #: engines/scumm/metaengine.cpp:1007 engines/twine/metaengine.cpp:444
 #: engines/twine/metaengine.cpp:513 engines/twp/metaengine.cpp:153
 #: engines/ultima/ultima4/metaengine.cpp:47
-#: engines/ultima/ultima4/metaengine.cpp:141
-#: engines/ultima/ultima4/metaengine.cpp:151
+#: engines/ultima/ultima4/metaengine.cpp:142
+#: engines/ultima/ultima4/metaengine.cpp:152
 #: engines/wintermute/keymapper_tables.h:326
 #: engines/wintermute/keymapper_tables.h:1308
 #: engines/wintermute/keymapper_tables.h:1391
@@ -1649,91 +1649,92 @@ msgstr "Вид списка"
 msgid "Grid view"
 msgstr "Вид сетки"
 
-#: gui/launcher.cpp:1117
+#: gui/launcher.cpp:1120
 msgid "~S~tart"
 msgstr "П~у~ск"
 
-#: gui/launcher.cpp:1117
+#: gui/launcher.cpp:1120
 msgid "Start selected game"
 msgstr "Запустить выбранную игру"
 
-#: gui/launcher.cpp:1120
+#: gui/launcher.cpp:1123
 msgid "~L~oad..."
 msgstr "~З~агрузить..."
 
-#: gui/launcher.cpp:1120
+#: gui/launcher.cpp:1123
 msgid "Load saved game for selected game"
 msgstr "Загрузить сохранение для выбранной игры"
 
-#: gui/launcher.cpp:1122
+#: gui/launcher.cpp:1125
 msgid "Record..."
 msgstr "Запись..."
 
-#: gui/launcher.cpp:1128
+#: gui/launcher.cpp:1131
 msgid "~G~ame Options..."
 msgstr "Настройки ~и~гры..."
 
-#: gui/launcher.cpp:1128
+#: gui/launcher.cpp:1131
 msgid "Change game options"
 msgstr "Изменить настройки игры"
 
-#: gui/launcher.cpp:1128
+#: gui/launcher.cpp:1131
 msgctxt "lowres"
 msgid "~G~ame Opts..."
 msgstr "Настр. ~и~гры..."
 
-#: gui/launcher.cpp:1213
+#: gui/launcher.cpp:1217
 msgid "Add-on"
 msgstr ""
 
 #. I18N: List grouping when no engine is specified
-#: gui/launcher.cpp:1263 gui/launcher.cpp:1529
+#: gui/launcher.cpp:1268 gui/launcher.cpp:1513
 msgid "Unknown Engine"
 msgstr "Неизвестный движок"
 
 #. I18N: List grouping when no publisher is specified
 #. I18N: List group when no publisher is specified
-#: gui/launcher.cpp:1280 gui/launcher.cpp:1546
+#: gui/launcher.cpp:1285 gui/launcher.cpp:1530
 msgid "Unknown Publisher"
 msgstr "Неизвестный издатель"
 
 #. I18N: List group when no game series is specified
 #. I18N: List grouping when no game series is specified
-#: gui/launcher.cpp:1297 gui/launcher.cpp:1563
+#: gui/launcher.cpp:1302 gui/launcher.cpp:1547
 msgid "No Series"
 msgstr "Без серии"
 
 #. I18N: List group when no language is specified
-#: gui/launcher.cpp:1311 gui/launcher.cpp:1577
+#: gui/launcher.cpp:1316 gui/launcher.cpp:1561
 msgid "Language not detected"
 msgstr "Язык не определён"
 
 #. I18N: List group when no platform is specified
-#: gui/launcher.cpp:1325 gui/launcher.cpp:1591
+#: gui/launcher.cpp:1330 gui/launcher.cpp:1575
 msgid "Platform not detected"
 msgstr "Платформа не определена"
 
 #. I18N: List group when no year is specified
-#: gui/launcher.cpp:1342 gui/launcher.cpp:1608
+#: gui/launcher.cpp:1347 gui/launcher.cpp:1592
 msgid "Unknown Year"
 msgstr "Год неизвестен"
 
-#: gui/launcher.cpp:1434 gui/launcher.cpp:1810
-#, fuzzy
-#| msgid "Do you really want to remove this game configuration?"
-msgid ""
-"Do you really want to remove the following game configurations?\n"
-"\n"
-msgstr "Вы действительно хотите удалить настройки для этой игры?"
-
 #. I18N: Group for All items
-#: gui/launcher.cpp:1615 gui/widgets/groupedlist.cpp:81
+#: gui/launcher.cpp:1599 gui/widgets/groupedlist.cpp:81
 msgid "All"
 msgstr "Все"
 
-#: gui/launcher.cpp:1781
+#: gui/launcher.cpp:1767
 msgid "Icons per row:"
 msgstr "Иконок в ряду:"
+
+#: gui/launcher.cpp:1817
+#, c-format
+msgid ""
+"Do you really want to remove the following %d game configuration(s)?\n"
+"\n"
+msgstr ""
+"Вы действительно хотите удалить %d настроек для игр?\n"
+"\n"
 
 #: gui/massadd.cpp:77 gui/massadd.cpp:80
 msgid "... progress ..."
@@ -2853,7 +2854,7 @@ msgstr "Записать"
 msgid "Playback"
 msgstr "Воспроизвести"
 
-#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:360
+#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:336
 msgid "Edit"
 msgstr "Редактировать"
 
@@ -3046,11 +3047,11 @@ msgstr ""
 msgid "Clear value"
 msgstr "Очистить значение"
 
-#: gui/widgets/grid.cpp:354
+#: gui/widgets/grid.cpp:330
 msgid "Play"
 msgstr "Играть"
 
-#: gui/widgets/grid.cpp:357
+#: gui/widgets/grid.cpp:333
 msgid "Saves"
 msgstr "Сохранения"
 
@@ -3836,18 +3837,15 @@ msgid "Start anyway"
 msgstr "Всё равно запустить"
 
 #: engines/engine.cpp:827
-#, fuzzy, c-format
-#| msgid ""
-#| "WARNING: The game you are about to start is not yet fully supported by "
-#| "ScummVM. As such, it is likely to be unstable, and any saved game you "
-#| "make might not work in future versions of ScummVM."
+#, c-format
 msgid ""
 "WARNING: the game you are about to start contains the add-on \"%s\" which is "
 "not yet fully supported by ScummVM. As such, it is likely to be unstable, "
 "and any saved game you make might not work in future versions of ScummVM."
 msgstr ""
-"ПРЕДУПРЕЖДЕНИЕ: эта игра все ещё не поддерживается ScummVM полностью. Она, "
-"скорее всего, не будет работать стабильно, и сохранения игр могут не "
+"ВНИМАНИЕ: игра, которую вы собираетесь запустить, содержит дополнение "
+"\"%s\", которое пока не полностью поддерживается ScummVM. Поэтому она, "
+"вероятно, будет нестабильной, и любые сохраненные вами игры могут не "
 "работать в будущих версиях ScummVM."
 
 #: engines/engine.cpp:852
@@ -3934,7 +3932,7 @@ msgstr "Раскладка клавиш по умолчанию"
 #: engines/touche/metaengine.cpp:122 engines/trecision/metaengine.cpp:125
 #: engines/tsage/metaengine.cpp:178 engines/tucker/metaengine.cpp:172
 #: engines/ultima/ultima0/metaengine.cpp:180
-#: engines/ultima/ultima4/metaengine.cpp:226
+#: engines/ultima/ultima4/metaengine.cpp:227
 #: engines/ultima/nuvie/metaengine.cpp:238
 #: engines/ultima/ultima8/metaengine.cpp:139 engines/vcruise/metaengine.cpp:158
 #: engines/wintermute/keymapper_tables.h:42 engines/zvision/metaengine.cpp:203
@@ -3969,7 +3967,7 @@ msgstr "Средний щелчок"
 #: engines/toon/metaengine.cpp:92 engines/touche/metaengine.cpp:128
 #: engines/trecision/metaengine.cpp:131 engines/tsage/metaengine.cpp:184
 #: engines/tucker/metaengine.cpp:178 engines/ultima/ultima0/metaengine.cpp:186
-#: engines/ultima/ultima4/metaengine.cpp:232
+#: engines/ultima/ultima4/metaengine.cpp:233
 #: engines/ultima/nuvie/metaengine.cpp:244
 #: engines/ultima/ultima8/metaengine.cpp:145
 #: engines/wintermute/keymapper_tables.h:48 engines/zvision/metaengine.cpp:209
@@ -4191,7 +4189,7 @@ msgstr "Эмулятор динамика ПК"
 msgid "IBM PCjr emulator"
 msgstr "Эмулятор IBM PCjr"
 
-#: audio/softsynth/sid.cpp:1435
+#: audio/softsynth/sid.cpp:1466
 msgid "C64 Audio emulator"
 msgstr "Эмулятор звука C64"
 
@@ -5546,10 +5544,8 @@ msgid "Remove folder authorizations..."
 msgstr "Удалить авторизацию для папок..."
 
 #: backends/platform/android/options.cpp:272
-#, fuzzy
-#| msgid "Select the orientation:"
 msgid "Select backup destination"
-msgstr "Выберите ориентацию:"
+msgstr "Куда сохранять резервную копию"
 
 #: backends/platform/android/options.cpp:280
 msgid "The backup has been saved successfully."
@@ -5567,10 +5563,8 @@ msgid "The game saves couldn't be backed up"
 msgstr "шейдер не может быть изменён"
 
 #: backends/platform/android/options.cpp:286
-#, fuzzy
-#| msgid "An error occurred while writing the save game"
 msgid "An error occured while saving the backup."
-msgstr "Возникла ошибка при записи сохранения игры"
+msgstr "Произошла ошибка при сохранении резервной копии."
 
 #: backends/platform/android/options.cpp:293
 msgid ""
@@ -5589,10 +5583,8 @@ msgid "The backup has been restored successfully."
 msgstr ""
 
 #: backends/platform/android/options.cpp:319
-#, fuzzy
-#| msgid "An error occurred while writing the save game"
 msgid "An error occured while restoring the backup."
-msgstr "Возникла ошибка при записи сохранения игры"
+msgstr "Произошла ошибка при восстановлении резервной копии."
 
 #: backends/platform/android/options.cpp:572
 msgid "Remove"
@@ -6685,7 +6677,7 @@ msgstr "Взять"
 #: engines/sky/metaengine.cpp:95 engines/sludge/keymapper_tables.h:333
 #: engines/supernova/metaengine.cpp:356 engines/tot/metaengine.cpp:139
 #: engines/tsage/metaengine.cpp:211 engines/twp/metaengine.cpp:186
-#: engines/ultima/ultima4/metaengine.cpp:73
+#: engines/ultima/ultima4/metaengine.cpp:74
 #: engines/ultima/nuvie/metaengine.cpp:69
 #: engines/wintermute/keymapper_tables.h:140
 #: engines/wintermute/keymapper_tables.h:1552
@@ -6702,7 +6694,7 @@ msgstr ""
 #: engines/scumm/help.cpp:174 engines/scumm/help.cpp:226
 #: engines/sherlock/metaengine.cpp:415 engines/supernova/metaengine.cpp:361
 #: engines/tot/metaengine.cpp:124 engines/tsage/metaengine.cpp:216
-#: engines/ultima/ultima4/metaengine.cpp:72
+#: engines/ultima/ultima4/metaengine.cpp:73
 #: engines/ultima/nuvie/metaengine.cpp:68
 msgid "Talk"
 msgstr "Говорить"
@@ -7461,10 +7453,8 @@ msgid "Old OpenGL detected, some graphical errors will occur."
 msgstr ""
 
 #: engines/alcachofa/metaengine.cpp:40
-#, fuzzy
-#| msgid "Music Quality:"
 msgid "High Quality"
-msgstr "Качество музыки:"
+msgstr "Высокое качество"
 
 #: engines/alcachofa/metaengine.cpp:41
 #, fuzzy
@@ -8706,10 +8696,8 @@ msgid "Enable gamma correction"
 msgstr "Включить гамма-коррекцию"
 
 #: engines/director/metaengine.cpp:71
-#, fuzzy
-#| msgid "Brighten the graphics to simulate a Macintosh monitor."
 msgid "Brighten the graphics to simulate a Macintosh monitor"
-msgstr "Увеличивает яркость картинки для симуляции монитора Macinotsh."
+msgstr "Увеличить яркость картинки для симуляции монитора Macinotsh"
 
 #: engines/director/metaengine.cpp:81
 msgid "Force true color"
@@ -9216,10 +9204,8 @@ msgid "Leave"
 msgstr ""
 
 #: engines/efh/metaengine.cpp:500 engines/efh/metaengine.cpp:536
-#, fuzzy
-#| msgid "Status:"
 msgid "Status"
-msgstr "Состояние:"
+msgstr "Состояние"
 
 #: engines/efh/metaengine.cpp:518
 msgid "Defend"
@@ -10859,16 +10845,12 @@ msgid "Exit map display"
 msgstr ""
 
 #: engines/lab/metaengine.cpp:379
-#, fuzzy
-#| msgid "Debug level:"
 msgid "Up one level"
-msgstr "Уровень отладки:"
+msgstr "На уровень выше"
 
 #: engines/lab/metaengine.cpp:385
-#, fuzzy
-#| msgid "Debug level:"
 msgid "Down one level"
-msgstr "Уровень отладки:"
+msgstr "На уровень ниже"
 
 #: engines/lab/metaengine.cpp:391
 #, fuzzy
@@ -11192,7 +11174,7 @@ msgstr "Поменять порядок команды"
 #. I18N: Action of hero party in Might & Magic 1
 #. I18N: (Game: The Lost Files of Sherlock Holmes: The Case of the Serrated Scalpel) The game has a journal, this action is used to search the journal
 #: engines/mm/mm1/metaengine.cpp:111 engines/sherlock/metaengine.cpp:514
-#: engines/sherlock/metaengine.cpp:961 engines/ultima/ultima4/metaengine.cpp:70
+#: engines/sherlock/metaengine.cpp:961 engines/ultima/ultima4/metaengine.cpp:71
 msgid "Search"
 msgstr "Поиск"
 
@@ -11206,7 +11188,7 @@ msgstr "Бить"
 msgid "Unlock"
 msgstr "Открыть"
 
-#: engines/mm/mm1/metaengine.cpp:122 engines/ultima/ultima4/metaengine.cpp:111
+#: engines/mm/mm1/metaengine.cpp:122 engines/ultima/ultima4/metaengine.cpp:112
 msgid "Goto location"
 msgstr "Перейти в локацию"
 
@@ -12129,10 +12111,8 @@ msgid "Display SFX subtitles"
 msgstr "Вкл/выкл субтитры"
 
 #: engines/private/metaengine.cpp:40
-#, fuzzy
-#| msgid "Use TTS to read the subtitles (if TTS is available)"
 msgid "Use SFX subtitles (if subtitles are enabled)."
-msgstr "Использовать TTS для чтения субтитров вслух (если TTS доступна)"
+msgstr "Использовать субтитры для звуковых эффектов (если субтитры включены)."
 
 #: engines/private/metaengine.cpp:50
 #, fuzzy
@@ -14751,10 +14731,8 @@ msgid "Perform default action"
 msgstr "Смотреть на"
 
 #: engines/supernova/metaengine.cpp:244
-#, fuzzy
-#| msgid "Interpolation:"
 msgid "Instructions"
-msgstr "Интерполяция:"
+msgstr "Инструкции"
 
 #: engines/supernova/metaengine.cpp:250
 #, fuzzy
@@ -15085,10 +15063,8 @@ msgid "Remote"
 msgstr "Удалить"
 
 #: engines/titanic/metaengine.cpp:254
-#, fuzzy
-#| msgid "Room:"
 msgid "Rooms"
-msgstr "Комната:"
+msgstr "Комнаты"
 
 #: engines/titanic/metaengine.cpp:259
 msgid "Real life"
@@ -15107,10 +15083,8 @@ msgid "Scroll to bottom"
 msgstr "Переместиться вниз"
 
 #: engines/titanic/metaengine.cpp:291
-#, fuzzy
-#| msgid "Transitions:"
 msgid "Translation"
-msgstr "Переходы:"
+msgstr "Перевод"
 
 #: engines/titanic/metaengine.cpp:307
 msgid "Toggle between Star Map and photo of your home"
@@ -15727,11 +15701,11 @@ msgid ""
 msgstr "Вы выбрали Ransome *несигнализирован* (DLC), но DLC не обнаружен!"
 
 #: engines/twp/twp.cpp:1019
-#, fuzzy
-#| msgid "This game requires the FoxTail subengine, which is not compiled in."
 msgid ""
 "This game requires OpenGL with shaders, which is not supported on your system"
-msgstr "Эта игра требует движок FoxTail, который не был скомпилирован."
+msgstr ""
+"Для этой игры требуется OpenGL с шейдерами, которая не поддерживается вашей "
+"системой"
 
 #: engines/twp/twp.cpp:1025
 msgid ""
@@ -15960,9 +15934,9 @@ msgid "Dungeon Keys"
 msgstr ""
 
 #: engines/ultima/ultima4/metaengine.cpp:43
-#: engines/ultima/ultima4/metaengine.cpp:132
-#: engines/ultima/ultima4/metaengine.cpp:137
-#: engines/ultima/ultima4/metaengine.cpp:147
+#: engines/ultima/ultima4/metaengine.cpp:133
+#: engines/ultima/ultima4/metaengine.cpp:138
+#: engines/ultima/ultima4/metaengine.cpp:148
 #, fuzzy
 #| msgid "Next action"
 msgid "Abort action"
@@ -16020,221 +15994,212 @@ msgstr "Новый перс"
 msgid "Open door"
 msgstr "Открыть голокарту"
 
-#: engines/ultima/ultima4/metaengine.cpp:65
-#, fuzzy
-#| msgid "Password:"
+#. I18N: Going over something carefully
+#: engines/ultima/ultima4/metaengine.cpp:66
 msgid "Pass"
-msgstr "Пароль:"
+msgstr "Пробраться"
 
 #. I18N: Peer is used to look through keyholes or other small openings
-#: engines/ultima/ultima4/metaengine.cpp:67
+#: engines/ultima/ultima4/metaengine.cpp:68
 msgid "Peer"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:68
+#: engines/ultima/ultima4/metaengine.cpp:69
 #, fuzzy
 #| msgid "Quick save"
 msgid "Quit and save"
 msgstr "Быстрое сохнарение"
 
-#: engines/ultima/ultima4/metaengine.cpp:69
+#: engines/ultima/ultima4/metaengine.cpp:70
 #, fuzzy
 #| msgid "Next action"
 msgid "Ready weapon"
 msgstr "Следующее действие"
 
-#: engines/ultima/ultima4/metaengine.cpp:71
-#, fuzzy
-#| msgid "Status:"
+#: engines/ultima/ultima4/metaengine.cpp:72
 msgid "Stats"
-msgstr "Состояние:"
+msgstr "Статистика"
 
-#: engines/ultima/ultima4/metaengine.cpp:74
+#: engines/ultima/ultima4/metaengine.cpp:75
 msgid "Wear armor"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:75
+#: engines/ultima/ultima4/metaengine.cpp:76
 msgid "Yell"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:81
-#, fuzzy
-#| msgid "Speed:"
-msgid "Speed up"
-msgstr "Скорость:"
-
 #: engines/ultima/ultima4/metaengine.cpp:82
+msgid "Speed up"
+msgstr "Ускориться"
+
+#: engines/ultima/ultima4/metaengine.cpp:83
 #, fuzzy
 #| msgid "Move down"
 msgid "Speed down"
 msgstr "Идти вниз"
 
-#: engines/ultima/ultima4/metaengine.cpp:83
+#: engines/ultima/ultima4/metaengine.cpp:84
 #, fuzzy
 #| msgid "Speech Only"
 msgid "Speed normal"
 msgstr "Только озвучка"
 
-#: engines/ultima/ultima4/metaengine.cpp:84
+#: engines/ultima/ultima4/metaengine.cpp:85
 msgid "Combat speed up"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:85
+#: engines/ultima/ultima4/metaengine.cpp:86
 #, fuzzy
 #| msgid "Rotate down"
 msgid "Combat speed down"
 msgstr "Повернуть вниз"
 
-#: engines/ultima/ultima4/metaengine.cpp:86
+#: engines/ultima/ultima4/metaengine.cpp:87
 msgid "Combat speed normal"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:92
+#: engines/ultima/ultima4/metaengine.cpp:93
 msgid "Party - None"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:93
+#: engines/ultima/ultima4/metaengine.cpp:94
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #1"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:94
+#: engines/ultima/ultima4/metaengine.cpp:95
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #2"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:95
+#: engines/ultima/ultima4/metaengine.cpp:96
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #3"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:96
+#: engines/ultima/ultima4/metaengine.cpp:97
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #4"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:97
+#: engines/ultima/ultima4/metaengine.cpp:98
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #5"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:98
+#: engines/ultima/ultima4/metaengine.cpp:99
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #6"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:99
+#: engines/ultima/ultima4/metaengine.cpp:100
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #7"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:100
+#: engines/ultima/ultima4/metaengine.cpp:101
 #, fuzzy
 #| msgid "Transfer Character"
 msgid "Party - Character #8"
 msgstr "Перенести героя"
 
-#: engines/ultima/ultima4/metaengine.cpp:106
+#: engines/ultima/ultima4/metaengine.cpp:107
 msgid "Destroy all creatures"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:107
+#: engines/ultima/ultima4/metaengine.cpp:108
 #, fuzzy
 #| msgctxt "Options menu"
 #| msgid "Wall collision on"
 msgid "Toggle collision handling"
 msgstr "Столкновение со стенами включено"
 
-#: engines/ultima/ultima4/metaengine.cpp:108
+#: engines/ultima/ultima4/metaengine.cpp:109
 #, fuzzy
 #| msgid "Next object"
 msgid "Destroy object"
 msgstr "Следующий объект"
 
-#: engines/ultima/ultima4/metaengine.cpp:109
+#: engines/ultima/ultima4/metaengine.cpp:110
 msgid "Full equipment"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:110
+#: engines/ultima/ultima4/metaengine.cpp:111
 #, fuzzy
 #| msgid "Toggle Combat"
 msgid "Flee combat"
 msgstr "Переключить режим боя"
 
-#: engines/ultima/ultima4/metaengine.cpp:112
+#: engines/ultima/ultima4/metaengine.cpp:113
 msgid "Help - Teleport to Lord British"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:113
+#: engines/ultima/ultima4/metaengine.cpp:114
 msgid "Give items"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:114
+#: engines/ultima/ultima4/metaengine.cpp:115
 msgid "List karma"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:115
+#: engines/ultima/ultima4/metaengine.cpp:116
 #, fuzzy
 #| msgid "Next location"
 msgid "Leave location"
 msgstr "Следующая локация"
 
-#: engines/ultima/ultima4/metaengine.cpp:116
+#: engines/ultima/ultima4/metaengine.cpp:117
 msgid "Give mixtures"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:117
+#: engines/ultima/ultima4/metaengine.cpp:118
 msgid "Combat encounters"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:118
+#: engines/ultima/ultima4/metaengine.cpp:119
 #, fuzzy
 #| msgid "Toggle Drag Mode"
 msgid "Toggle overhead view"
 msgstr "Вкл/выкл режим перетаскивания"
 
-#: engines/ultima/ultima4/metaengine.cpp:119
+#: engines/ultima/ultima4/metaengine.cpp:120
 msgid "Full party"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:120
+#: engines/ultima/ultima4/metaengine.cpp:121
 msgid "Give reagents"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:121
+#: engines/ultima/ultima4/metaengine.cpp:122
 msgid "Full stats"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:122
+#: engines/ultima/ultima4/metaengine.cpp:123
 #, fuzzy
 #| msgid "Create directory"
 msgid "Create transport"
 msgstr "Создать каталог"
 
-#: engines/ultima/ultima4/metaengine.cpp:123
-#, fuzzy
-#| msgid "Debug level:"
-msgid "Up level"
-msgstr "Уровень отладки:"
-
 #: engines/ultima/ultima4/metaengine.cpp:124
-#, fuzzy
-#| msgid "Debug level:"
-msgid "Down level"
-msgstr "Уровень отладки:"
+msgid "Up level"
+msgstr "На уровень выше"
 
 #: engines/ultima/ultima4/metaengine.cpp:125
+msgid "Down level"
+msgstr "На уровень ниже"
+
+#: engines/ultima/ultima4/metaengine.cpp:126
 msgid "Grant virtue"
 msgstr ""
 
-#: engines/ultima/ultima4/metaengine.cpp:126
+#: engines/ultima/ultima4/metaengine.cpp:127
 #, fuzzy
 #| msgid "Change sound"
 msgid "Change wind"

@@ -1,4 +1,3 @@
-
 /* ScummVM - Graphic Adventure Engine
  *
  * ScummVM is the legal property of its developers, whose names
@@ -20,38 +19,33 @@
  *
  */
 
-#ifndef M4_BURGER_INVENTORY_H
-#define M4_BURGER_INVENTORY_H
+#include "audio/sid.h"
+#include "audio/softsynth/sid.h"
 
-#include "common/array.h"
-#include "m4/adv_r/adv_inv.h"
+#include "common/textconsole.h"
 
-namespace M4 {
-namespace Burger {
+namespace SID {
 
-struct InventoryItem {
-	const char *_asset = nullptr;
-	const char *_name = nullptr;
-	int _scene = 0;
-
-	InventoryItem() {}
-	InventoryItem(const char *name, int scene) : _asset(name), _name(name), _scene(scene) {}
-};
-
-struct Inventory : public InventoryBase {
-public:
-	Common::Array<InventoryItem> _items;
-public:
-	void init();
-	virtual ~Inventory() {}
-
-	void add(const Common::String &name, const Common::String &verbs, int32 sprite, int32 cursor) override;
-	void set_scroll(int32 scroll) override;
-	void remove(const Common::String &name) override;
-	void reset();
-};
-
-} // namespace Burger
-} // namespace M4
-
+SID *Config::create(SidType type) {
+#ifdef USE_SID_AUDIO
+	// For now this is fixed to the ReSID emulator.
+	Resid::SID *sid = new Resid::SID(type);
+	return sid;
+#else
+	return nullptr;
 #endif
+}
+
+bool SID::_hasInstance = false;
+
+SID::SID() {
+	if (_hasInstance)
+		error("There are multiple SID output instances running.");
+	_hasInstance = true;
+}
+
+SID::~SID() {
+	_hasInstance = false;
+}
+
+} // End of namespace SID

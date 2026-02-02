@@ -1,4 +1,3 @@
-
 /* ScummVM - Graphic Adventure Engine
  *
  * ScummVM is the legal property of its developers, whose names
@@ -20,38 +19,57 @@
  *
  */
 
-#ifndef M4_BURGER_INVENTORY_H
-#define M4_BURGER_INVENTORY_H
+#ifndef AUDIO_SID_H
+#define AUDIO_SID_H
 
-#include "common/array.h"
-#include "m4/adv_r/adv_inv.h"
+#include "audio/chip.h"
 
-namespace M4 {
-namespace Burger {
+namespace SID {
 
-struct InventoryItem {
-	const char *_asset = nullptr;
-	const char *_name = nullptr;
-	int _scene = 0;
+class SID;
 
-	InventoryItem() {}
-	InventoryItem(const char *name, int scene) : _asset(name), _name(name), _scene(scene) {}
+class Config {
+public:
+	enum SidType {
+		kSidPAL,
+		kSidNTSC
+	};
+
+	/**
+	 * Creates a SID driver.
+	 */
+	static SID *create(SidType type);
 };
 
-struct Inventory : public InventoryBase {
-public:
-	Common::Array<InventoryItem> _items;
-public:
-	void init();
-	virtual ~Inventory() {}
+class SID : virtual public Audio::Chip {
+private:
+	static bool _hasInstance;
 
-	void add(const Common::String &name, const Common::String &verbs, int32 sprite, int32 cursor) override;
-	void set_scroll(int32 scroll) override;
-	void remove(const Common::String &name) override;
-	void reset();
+public:
+	SID();
+	virtual ~SID();
+
+	/**
+	 * Initializes the SID emulator.
+	 *
+	 * @return		true on success, false on failure
+	 */
+	virtual bool init() = 0;
+
+	/**
+	 * Reinitializes the SID emulator
+	 */
+	virtual void reset() = 0;
+
+	/**
+	 * Function to directly write to a specific SID register.
+	 *
+	 * @param r		hardware register number to write to
+	 * @param v		value, which will be written
+	 */
+	virtual void writeReg(int r, int v) = 0;
 };
 
-} // namespace Burger
-} // namespace M4
+} // End of namespace SID
 
 #endif

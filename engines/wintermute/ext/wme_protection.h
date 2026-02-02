@@ -1,4 +1,3 @@
-
 /* ScummVM - Graphic Adventure Engine
  *
  * ScummVM is the legal property of its developers, whose names
@@ -20,38 +19,25 @@
  *
  */
 
-#ifndef M4_BURGER_INVENTORY_H
-#define M4_BURGER_INVENTORY_H
+#ifndef WINTERMUTE_PROTECTION_H
+#define WINTERMUTE_PROTECTION_H
 
-#include "common/array.h"
-#include "m4/adv_r/adv_inv.h"
+#include "common/str.h"
+#include "engines/wintermute/base/base_scriptable.h"
 
-namespace M4 {
-namespace Burger {
+namespace Wintermute {
 
-struct InventoryItem {
-	const char *_asset = nullptr;
-	const char *_name = nullptr;
-	int _scene = 0;
-
-	InventoryItem() {}
-	InventoryItem(const char *name, int scene) : _asset(name), _name(name), _scene(scene) {}
+class SXProtection : public BaseScriptable {
+public:
+	DECLARE_PERSISTENT(SXProtection, BaseScriptable)
+	ScValue *scGetProperty(const char *name) override;
+	bool scSetProperty(const char *name, ScValue *value) override;
+	bool scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack, const char *name) override;
+	const char *scToString() override;
+	SXProtection(BaseGame *inGame, ScStack *stack);
+	~SXProtection() override;
 };
 
-struct Inventory : public InventoryBase {
-public:
-	Common::Array<InventoryItem> _items;
-public:
-	void init();
-	virtual ~Inventory() {}
-
-	void add(const Common::String &name, const Common::String &verbs, int32 sprite, int32 cursor) override;
-	void set_scroll(int32 scroll) override;
-	void remove(const Common::String &name) override;
-	void reset();
-};
-
-} // namespace Burger
-} // namespace M4
+} // End of namespace Wintermute
 
 #endif

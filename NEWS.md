@@ -5,6 +5,15 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  General:
    - Improved PC-Speaker emulation.
+   - Implemented multiselect in the GUI launcher games list.
+
+ M4:
+   - Added music support in Ripley
+   - Fixed numerous bugs in Ripley
+   - Fixed some bugs in Orion Burger
+
+ Bagel:
+   - Fix Enter/Escape keys in The Guessing Game guess dialog
 
  MM:
    - Fixed M&M1 memory corruption on exit.
@@ -17,7 +26,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Implemented mouse scrolling of text window.
 
 
-#### 2026.1.0 (2026-01-31)
+#### 2026.1.0 "Like a version" (2026-01-31)
 
  New games:
    - Added support for Dark Seed.
@@ -101,7 +110,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added Text-to-Speech support.
 
  Grim:
- - Added support for the fantranslated Polish version of Grim Fandango.
+  - Added support for the fantranslated Polish version of Grim Fandango.
 
  Hugo:
    - Added Text-to-Speech support.
@@ -112,6 +121,7 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  Hypno:
    - Added keymapper support.
+   - Added support for third party subtitles.
 
  Illusions:
    - Fixed a crash when triggering the game menu early in the game.
