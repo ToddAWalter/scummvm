@@ -14,6 +14,9 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  Bagel:
    - Fix Enter/Escape keys in The Guessing Game guess dialog
+   - Fix using Enter key to close info dialogs
+   - Fix shell animations in Mankala minigame
+   - Fixed incorrect evolution logic in Game of Life
 
  MM:
    - Fixed M&M1 memory corruption on exit.
@@ -25,6 +28,8 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Numerous visual fixes.
    - Implemented mouse scrolling of text window.
 
+ iOS port:
+   - Added support for Text-to-Speech.
 
 #### 2026.1.0 "Like a version" (2026-01-31)
 

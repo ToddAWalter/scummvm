@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-01 19:29+0000\n"
+"POT-Creation-Date: 2026-02-03 08:01+0000\n"
 "PO-Revision-Date: 2020-09-26 21:13+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Galician <https://translations.scummvm.org/projects/scummvm/"
@@ -3693,7 +3693,7 @@ msgid "ERROR: Could not copy the savegame to a new slot"
 msgstr ""
 
 #: engines/engine.cpp:689 engines/savestate.cpp:98
-#: backends/platform/ios7/ios7_osys_main.cpp:260 engines/mm/xeen/saves.cpp:293
+#: backends/platform/ios7/ios7_osys_main.cpp:266 engines/mm/xeen/saves.cpp:293
 #: engines/sky/metaengine.cpp:218
 #, fuzzy
 msgid "Autosave"
@@ -11119,7 +11119,7 @@ msgid ""
 "%s"
 msgstr ""
 
-#: engines/myst3/myst3.cpp:1636 engines/pegasus/pegasus.cpp:749
+#: engines/myst3/myst3.cpp:1655 engines/pegasus/pegasus.cpp:749
 msgid "Invalid file name for saving"
 msgstr "Nome de ficheiro de gardado non válido"
 
@@ -12003,11 +12003,11 @@ msgid "Game does not contain menu resources"
 msgstr "Erro ao cambiar o almacenamento na nube!"
 
 #. I18N: 'Robot' is a video format name (as in 'MP4 video')
-#: engines/sci/detection_tables.h:4802
+#: engines/sci/detection_tables.h:4815
 msgid "This demo uses an unimplemented version of Robot videos"
 msgstr ""
 
-#: engines/sci/detection_tables.h:4857
+#: engines/sci/detection_tables.h:4870
 msgid "Incomplete game detected. You have to copy data from all the CDs."
 msgstr ""
 

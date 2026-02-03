@@ -722,7 +722,7 @@ void Myst3Engine::interactWithHoveredElement() {
 	_sound->playEffect(697, 5);
 }
 
-void Myst3Engine::drawFrame(bool noSwap) {
+void Myst3Engine::drawFrame(bool noSwap, bool pausePreloadedScriptMovies) {
 	_sound->update();
 	_gfx->clear();
 
@@ -755,7 +755,7 @@ void Myst3Engine::drawFrame(bool noSwap) {
 	}
 
 	for (int i = _movies.size() - 1; i >= 0 ; i--) {
-		_movies[i]->update();
+		_movies[i]->update(pausePreloadedScriptMovies);
 		_gfx->renderDrawable(_movies[i], _scene);
 	}
 
@@ -1136,6 +1136,26 @@ void Myst3Engine::loadMovie(uint16 id, uint16 condition, bool resetCond, bool lo
 		_state->setMovieScriptDriven(0);
 	}
 
+	if (_state->getMoviePreloadToMemory()) {
+		movie->setPreloaded(_state->getMoviePreloadToMemory());
+		_state->setMoviePreloadToMemory(0);
+	}
+
+	if (_state->getMovieNoFrameSkip()) {
+		movie->setNoFrameSkip(_state->getMovieNoFrameSkip());
+		_state->setMovieNoFrameSkip(0);
+	}
+
+	if (_state->getMovieUnk147()) {
+		movie->setUnk147(_state->getMovieUnk147());
+		_state->setMovieUnk147(0);
+	}
+
+	if (_state->getMovieUnk148()) {
+		movie->setUnk148(_state->getMovieUnk148());
+		_state->setMovieUnk148(0);
+	}
+
 	if (_state->getMovieStartFrameVar()) {
 		movie->setStartFrameVar(_state->getMovieStartFrameVar());
 		_state->setMovieStartFrameVar(0);
@@ -1301,8 +1321,7 @@ void Myst3Engine::playSimpleMovie(uint16 id, bool fullframe, bool refreshAmbient
 			_inputEscapePressedNotConsumed = false;
 			break;
 		}
-
-		drawFrame();
+		drawFrame(false, true);
 	}
 
 	_drawables.pop_back();
