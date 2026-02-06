@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-03 20:19+0000\n"
-"PO-Revision-Date: 2026-01-20 15:22+0000\n"
+"POT-Creation-Date: 2026-02-05 00:02+0000\n"
+"PO-Revision-Date: 2026-02-05 15:06+0000\n"
 "Last-Translator: Hoseok Seo <ddinghoya@gmail.com>\n"
 "Language-Team: Korean <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ko/>\n"
@@ -958,8 +958,9 @@ msgstr "유형:"
 msgid "Sine"
 msgstr "사인"
 
-#: gui/fluidsynth-dialog.cpp:137 backends/platform/sdl/ps3/ps3.cpp:43
-#: backends/platform/sdl/psp2/psp2.cpp:45 engines/dragons/metaengine.cpp:188
+#. I18N: Hardware key on controller
+#: gui/fluidsynth-dialog.cpp:137 backends/platform/sdl/ps3/ps3.cpp:47
+#: backends/platform/sdl/psp2/psp2.cpp:49 engines/dragons/metaengine.cpp:188
 msgid "Triangle"
 msgstr "삼각형"
 
@@ -1248,58 +1249,6 @@ msgid "Cloud"
 msgstr "클라우드"
 
 #: gui/helpdialog.cpp:71
-#, fuzzy
-#| msgid ""
-#| "## Connecting a cloud service - Quick mode\n"
-#| "\n"
-#| "1. From the Launcher, select **Global Options** and then select the "
-#| "**Cloud** tab.\n"
-#| "\n"
-#| "2. Select your preferred cloud storage service from the **Active "
-#| "storage** dropdown, then select **Connect**.\n"
-#| "\n"
-#| "\t  ![Select cloud service](choose_storage.png \"Select cloud service\")"
-#| "{w=70%}\n"
-#| "\n"
-#| "3. Select **Quick mode**.\n"
-#| "\n"
-#| "\t  ![Quick mode](quick_mode.png \"Quick mode\"){w=70%}\n"
-#| "\n"
-#| "4. Select **Run server** and then select **Next** \n"
-#| "\n"
-#| "\t  ![Run server](run_server.png \"Run server\"){w=70%}\n"
-#| "\n"
-#| "  ![Next step](server_next.png \"Next step\"){w=70%}\n"
-#| "\n"
-#| "5. Open the link.\n"
-#| "\n"
-#| "\t  ![Open the link](open_link.png \"Open the link\"){w=70%}\n"
-#| "\n"
-#| "6. In the browser window that opens, select the cloud service to "
-#| "connect. \n"
-#| "\n"
-#| "\t  ![Choose the cloud service](cloud_browser.png \"Choose the cloud "
-#| "service\"){w=70%}\n"
-#| "\n"
-#| "7. Sign in to the chosen cloud service. Once completed, return to "
-#| "ScummVM.\n"
-#| "\n"
-#| "8. On the success screen, select **Finish** to exit. \n"
-#| "\n"
-#| "\t  ![Success](cloud_success.png \"Success\"){w=70%}\n"
-#| "9. Back on the main Cloud tab, select **Enable storage**.\n"
-#| "\n"
-#| "\t  ![Enable storage](enable_storage.png \"Enable storage\"){w=70%}\n"
-#| "\n"
-#| "10. You're ready to go! Use the cloud functionality to sync saved games "
-#| "or game files between your devices.\n"
-#| "\n"
-#| "\t  ![Cloud functionality](cloud_functions.png \"Cloud functionality\")"
-#| "{w=70%}\n"
-#| "\n"
-#| "   For more information, including how to use the manual connection "
-#| "wizard, see our [Cloud documentation](https://docs.scummvm.org/en/latest/"
-#| "use_scummvm/connect_cloud.html) "
 msgid ""
 "## Connecting a cloud service - Quick mode\n"
 "\n"
@@ -1355,48 +1304,50 @@ msgstr ""
 "\n"
 "1. 런처에서, **글로벌 옵션**을 선택한 다음 **클라우드** 탭을 선택합니다.\n"
 "\n"
-"2. **활성 저장소** 드롭다운에서 선호하는 클라우드 저장소 서비스를 선택한 다"
-"음 **연결**을 선택합니다.\n"
+"2. **활성 저장소** 드롭다운에서 선호하는 클라우드 저장소 서비스를 선택한 "
+"다음 **연결**을 선택합니다.\n"
 "\n"
 "\t  ![클라우드 서비스 선택](choose_storage.png \"클라우드 서비스 선택\")"
-"{w=70%}\n"
+"{w=70%,maxw=50em}\n"
 "\n"
 "3. **빠른 모드**를 선택합니다.\n"
 "\n"
-"\t  ![빠른 모드](quick_mode.png \"빠른 모드\"){w=70%}\n"
+"\t  ![빠른 모드](quick_mode.png \"빠른 모드\"){w=70%,maxw=50em}\n"
 "\n"
 "4. **서버 실행**을 선택한 후 **다음**을 선택\n"
 "\n"
-"\t  ![서버 실행](run_server.png \"서버 실행\"){w=70%}\n"
+"\t  ![서버 실행](run_server.png \"서버 실행\"){w=70%,maxw=50em}\n"
 "\n"
-"  ![다음 단계](server_next.png \"다음 단계\"){w=70%}\n"
+"  ![다음 단계](server_next.png \"다음 단계\"){w=70%,maxw=50em}\n"
 "\n"
 "5. 링크를 엽니다.\n"
 "\n"
-"\t  ![링크 열기](open_link.png \"링크 열기\"){w=70%}\n"
+"\t  ![링크 열기](open_link.png \"링크 열기\"){w=70%,maxw=50em}\n"
 "\n"
 "6. 열리는 브라우저 창에서 연결할 클라우드 서비스를 선택합니다. \n"
 "\n"
 "\t  ![클라우드 서비스 선택](cloud_browser.png \"클라우드 서비스 선택\")"
-"{w=70%}\n"
+"{w=70%,maxw=50em}\n"
 "\n"
-"7. 선택한 클라우드 서비스에 로그인합니다. 완료되면, ScummVM.xt**로 돌아갑니"
-"다.\n"
+"7. 선택한 클라우드 서비스에 로그인합니다. 완료되면, ScummVM.xt**로 "
+"돌아갑니다.\n"
 "\n"
 "8. 성공 화면에서 **마침**을 선택하여 종료합니다. \n"
 "\n"
-"\t  ![성공](cloud_success.png \"성공\"){w=70%}\n"
+"\t  ![성공](cloud_success.png \"성공\"){w=70%,maxw=50em}\n"
 "9. 메인 클라우드 탭으로 돌아가서 **저장소 사용**을 선택합니다.\n"
 "\n"
-"\t  ![저장소 활성화](enable_storage.png \"저장소 활성화\"){w=70%}\n"
+"\t  ![저장소 활성화](enable_storage.png \"저장소 활성화\"){w=70%,maxw=50em}\n"
 "\n"
 "10. 이제 시작할 준비가 되었습니다! 클라우드 기능을 사용하여 저장된 게임이나 "
 "게임 파일을 기기 간에 동기화하세요.\n"
 "\n"
-"\t  ![클라우드 기능](cloud_functions.png \"클라우드 기능\"){w=70%}\n"
+"\t  ![클라우드 기능](cloud_functions.png \"클라우드 기능\"){w=70%,maxw=50em}"
 "\n"
-"   자세한 내용은, 수동 연결 마법사를 사용하는 방법을 포함하여 [클라우드 설명"
-"서](https://docs.scummvm.org/en/latest/use_scummvm/connect_cloud.html) 참조 "
+"\n"
+"   자세한 내용은, 수동 연결 마법사를 사용하는 방법을 포함하여 [클라우드 "
+"설명서](https://docs.scummvm.org/en/latest/use_scummvm/connect_cloud.html) "
+"참조 "
 
 #: gui/imagealbum-dialog.cpp:103 gui/saveload-dialog.cpp:843
 msgid "Prev"
@@ -1712,15 +1663,12 @@ msgid "Icons per row:"
 msgstr "열당 아이콘:"
 
 #: gui/launcher.cpp:1817
-#, fuzzy, c-format
-#| msgid ""
-#| "Do you really want to remove the following game configurations?\n"
-#| "\n"
+#, c-format
 msgid ""
 "Do you really want to remove the following %d game configuration(s)?\n"
 "\n"
 msgstr ""
-"다음 게임 설정을 정말로 삭제할까요?\n"
+"다음 %d개의 게임 설정을 정말로 삭제할까요?\n"
 "\n"
 
 #: gui/massadd.cpp:77 gui/massadd.cpp:80
@@ -4460,18 +4408,46 @@ msgid "Right shoulder"
 msgstr "오른쪽 숄더 버튼"
 
 #: backends/keymapper/hardware-input.cpp:266
+#: backends/platform/3ds/osystem-events.cpp:55
+#: backends/platform/ds/osystem_ds.cpp:182
+#: backends/platform/sdl/miyoo/miyoo.cpp:74
+#: backends/platform/sdl/miyoo/miyoo.cpp:101
+#: backends/platform/sdl/opendingux/opendingux.cpp:64
+#: backends/platform/sdl/ps3/ps3.cpp:57 backends/platform/sdl/psp2/psp2.cpp:56
+#: backends/platform/sdl/switch/switch.cpp:48
 msgid "D-pad up"
 msgstr "십자 패드 위쪽"
 
 #: backends/keymapper/hardware-input.cpp:267
+#: backends/platform/3ds/osystem-events.cpp:56
+#: backends/platform/ds/osystem_ds.cpp:183
+#: backends/platform/sdl/miyoo/miyoo.cpp:75
+#: backends/platform/sdl/miyoo/miyoo.cpp:102
+#: backends/platform/sdl/opendingux/opendingux.cpp:65
+#: backends/platform/sdl/ps3/ps3.cpp:58 backends/platform/sdl/psp2/psp2.cpp:57
+#: backends/platform/sdl/switch/switch.cpp:49
 msgid "D-pad down"
 msgstr "십자 패드 아래쪽"
 
 #: backends/keymapper/hardware-input.cpp:268
+#: backends/platform/3ds/osystem-events.cpp:57
+#: backends/platform/ds/osystem_ds.cpp:184
+#: backends/platform/sdl/miyoo/miyoo.cpp:76
+#: backends/platform/sdl/miyoo/miyoo.cpp:103
+#: backends/platform/sdl/opendingux/opendingux.cpp:66
+#: backends/platform/sdl/ps3/ps3.cpp:59 backends/platform/sdl/psp2/psp2.cpp:58
+#: backends/platform/sdl/switch/switch.cpp:50
 msgid "D-pad left"
 msgstr "십자 패드 왼쪽"
 
 #: backends/keymapper/hardware-input.cpp:269
+#: backends/platform/3ds/osystem-events.cpp:58
+#: backends/platform/ds/osystem_ds.cpp:185
+#: backends/platform/sdl/miyoo/miyoo.cpp:77
+#: backends/platform/sdl/miyoo/miyoo.cpp:104
+#: backends/platform/sdl/opendingux/opendingux.cpp:67
+#: backends/platform/sdl/ps3/ps3.cpp:60 backends/platform/sdl/psp2/psp2.cpp:59
+#: backends/platform/sdl/switch/switch.cpp:51
 msgid "D-pad right"
 msgstr "십자 패드 오른쪽"
 
@@ -4488,18 +4464,28 @@ msgid "Right trigger"
 msgstr "오른쪽 트리거 버튼"
 
 #: backends/keymapper/hardware-input.cpp:277
+#: backends/platform/sdl/opendingux/opendingux.cpp:78
+#: backends/platform/sdl/ps3/ps3.cpp:67 backends/platform/sdl/psp2/psp2.cpp:64
+#: backends/platform/sdl/switch/switch.cpp:58
 msgid "Left stick X"
 msgstr "왼쪽 스틱 X"
 
 #: backends/keymapper/hardware-input.cpp:278
+#: backends/platform/sdl/opendingux/opendingux.cpp:79
+#: backends/platform/sdl/ps3/ps3.cpp:68 backends/platform/sdl/psp2/psp2.cpp:65
+#: backends/platform/sdl/switch/switch.cpp:59
 msgid "Left stick Y"
 msgstr "왼쪽 스틱 Y"
 
 #: backends/keymapper/hardware-input.cpp:279
+#: backends/platform/sdl/ps3/ps3.cpp:69 backends/platform/sdl/psp2/psp2.cpp:66
+#: backends/platform/sdl/switch/switch.cpp:60
 msgid "Right stick X"
 msgstr "오른쪽 스틱 X"
 
 #: backends/keymapper/hardware-input.cpp:280
+#: backends/platform/sdl/ps3/ps3.cpp:70 backends/platform/sdl/psp2/psp2.cpp:67
+#: backends/platform/sdl/switch/switch.cpp:61
 msgid "Right stick Y"
 msgstr "오른쪽 스틱 Y"
 
@@ -4777,6 +4763,7 @@ msgid "Y"
 msgstr "Y 버튼"
 
 #. I18N: Hardware key
+#. I18N: Hardware key on controller
 #. I18N: Return key
 #. I18N: Select party member command in Might & Magic 1
 #: backends/platform/3ds/osystem-events.cpp:49
@@ -4784,7 +4771,7 @@ msgstr "Y 버튼"
 #: backends/platform/sdl/miyoo/miyoo.cpp:67
 #: backends/platform/sdl/miyoo/miyoo.cpp:94
 #: backends/platform/sdl/opendingux/opendingux.cpp:57
-#: backends/platform/sdl/ps3/ps3.cpp:44 backends/platform/sdl/psp2/psp2.cpp:46
+#: backends/platform/sdl/ps3/ps3.cpp:49 backends/platform/sdl/psp2/psp2.cpp:51
 #: engines/bagel/metaengine.cpp:64 engines/efh/metaengine.cpp:397
 #: engines/got/metaengine.cpp:76 engines/hypno/metaengine.cpp:363
 #: engines/mm/mm1/metaengine.cpp:49 engines/mm/mm1/metaengine.cpp:92
@@ -4795,12 +4782,13 @@ msgid "Select"
 msgstr "선택 버튼"
 
 #. I18N: Hardware key
+#. I18N: Hardware key on controller
 #: backends/platform/3ds/osystem-events.cpp:50
 #: backends/platform/ds/osystem_ds.cpp:179
 #: backends/platform/sdl/miyoo/miyoo.cpp:69
 #: backends/platform/sdl/miyoo/miyoo.cpp:96
 #: backends/platform/sdl/opendingux/opendingux.cpp:59
-#: backends/platform/sdl/ps3/ps3.cpp:46 backends/platform/sdl/psp2/psp2.cpp:47
+#: backends/platform/sdl/ps3/ps3.cpp:52 backends/platform/sdl/psp2/psp2.cpp:53
 #: engines/sludge/keymapper_tables.h:349
 msgid "Start"
 msgstr "시작 버튼"
@@ -4821,7 +4809,7 @@ msgstr "ZR 버튼"
 #: backends/platform/sdl/miyoo/miyoo.cpp:71
 #: backends/platform/sdl/miyoo/miyoo.cpp:98
 #: backends/platform/sdl/opendingux/opendingux.cpp:61
-#: backends/platform/sdl/psp2/psp2.cpp:48
+#: backends/platform/sdl/psp2/psp2.cpp:54
 #: backends/platform/sdl/switch/switch.cpp:46
 msgid "L"
 msgstr "L 버튼"
@@ -4832,57 +4820,17 @@ msgstr "L 버튼"
 #: backends/platform/sdl/miyoo/miyoo.cpp:73
 #: backends/platform/sdl/miyoo/miyoo.cpp:100
 #: backends/platform/sdl/opendingux/opendingux.cpp:63
-#: backends/platform/sdl/psp2/psp2.cpp:49
+#: backends/platform/sdl/psp2/psp2.cpp:55
 #: backends/platform/sdl/switch/switch.cpp:47
 msgid "R"
 msgstr "R 버튼"
 
-#: backends/platform/3ds/osystem-events.cpp:55
-#: backends/platform/ds/osystem_ds.cpp:182
-#: backends/platform/sdl/miyoo/miyoo.cpp:74
-#: backends/platform/sdl/miyoo/miyoo.cpp:101
-#: backends/platform/sdl/opendingux/opendingux.cpp:64
-#: backends/platform/sdl/ps3/ps3.cpp:51 backends/platform/sdl/psp2/psp2.cpp:50
-#: backends/platform/sdl/switch/switch.cpp:48
-msgid "D-pad Up"
-msgstr "십자 패드 위쪽"
-
-#: backends/platform/3ds/osystem-events.cpp:56
-#: backends/platform/ds/osystem_ds.cpp:183
-#: backends/platform/sdl/miyoo/miyoo.cpp:75
-#: backends/platform/sdl/miyoo/miyoo.cpp:102
-#: backends/platform/sdl/opendingux/opendingux.cpp:65
-#: backends/platform/sdl/ps3/ps3.cpp:52 backends/platform/sdl/psp2/psp2.cpp:51
-#: backends/platform/sdl/switch/switch.cpp:49
-msgid "D-pad Down"
-msgstr "십자 패드 아래쪽"
-
-#: backends/platform/3ds/osystem-events.cpp:57
-#: backends/platform/ds/osystem_ds.cpp:184
-#: backends/platform/sdl/miyoo/miyoo.cpp:76
-#: backends/platform/sdl/miyoo/miyoo.cpp:103
-#: backends/platform/sdl/opendingux/opendingux.cpp:66
-#: backends/platform/sdl/ps3/ps3.cpp:53 backends/platform/sdl/psp2/psp2.cpp:52
-#: backends/platform/sdl/switch/switch.cpp:50
-msgid "D-pad Left"
-msgstr "십자 패드 왼쪽"
-
-#: backends/platform/3ds/osystem-events.cpp:58
-#: backends/platform/ds/osystem_ds.cpp:185
-#: backends/platform/sdl/miyoo/miyoo.cpp:77
-#: backends/platform/sdl/miyoo/miyoo.cpp:104
-#: backends/platform/sdl/opendingux/opendingux.cpp:67
-#: backends/platform/sdl/ps3/ps3.cpp:54 backends/platform/sdl/psp2/psp2.cpp:53
-#: backends/platform/sdl/switch/switch.cpp:51
-msgid "D-pad Right"
-msgstr "십자 패드 오른쪽"
-
 #: backends/platform/3ds/osystem-events.cpp:63
-msgid "C-Pad X"
+msgid "C-pad X"
 msgstr "C-패드 X"
 
 #: backends/platform/3ds/osystem-events.cpp:64
-msgid "C-Pad Y"
+msgid "C-pad Y"
 msgstr "C-패드 Y"
 
 #: backends/platform/3ds/osystem-events.cpp:69
@@ -5007,75 +4955,6 @@ msgid "Touch Controls"
 msgstr "터치 조작"
 
 #: backends/platform/android/android.cpp:1091
-#, fuzzy
-#| msgid ""
-#| "## Touch control modes\n"
-#| "The touch control mode can be changed by tapping or clicking on the "
-#| "controller icon in the upper right corner\n"
-#| "### Direct mouse \n"
-#| "\n"
-#| "The touch controls are direct. The pointer jumps to where the finger "
-#| "touches the screen (default for menus).\n"
-#| "\n"
-#| "  ![Direct mouse mode](mouse.png \"Direct mouse mode\"){w=10em}\n"
-#| "\n"
-#| "### Touchpad emulation \n"
-#| "\n"
-#| "The touch controls are indirect, like on a laptop touchpad.\n"
-#| "\n"
-#| "  ![Touchpad mode](touchpad.png \"Touchpad mode\"){w=10em}\n"
-#| "\n"
-#| "### Gamepad emulation \n"
-#| "\n"
-#| "Fingers must be placed on lower left and right of the screen to emulate a "
-#| "directional pad and action buttons.\n"
-#| "\n"
-#| "  ![Gamepad mode](gamepad.png \"Gamepad mode\"){w=10em}\n"
-#| "\n"
-#| "To select the preferred touch mode for menus, 2D games, and 3D games, go "
-#| "to **Global Options > Backend > Choose the preferred touch mode**.\n"
-#| "\n"
-#| "## Touch actions \n"
-#| "\n"
-#| "### Two finger scroll \n"
-#| "\n"
-#| "To scroll, slide two fingers up or down the screen\n"
-#| "### Two finger tap\n"
-#| "\n"
-#| "To do a two finger tap, hold one finger down and then tap with a second "
-#| "finger.\n"
-#| "\n"
-#| "### Three finger tap\n"
-#| "\n"
-#| "To do a three finger tap, start with holding down one finger and "
-#| "progressively touch down the other two fingers, one at a time, while "
-#| "still holding down the previous fingers. Imagine you are impatiently "
-#| "tapping your fingers on a surface, but then slow down that movement so it "
-#| "is rhythmic, but not too slow.\n"
-#| "\n"
-#| "### Immersive Sticky fullscreen mode\n"
-#| "\n"
-#| "Swipe from the edge to reveal the system bars.  They remain semi-"
-#| "transparent and disappear after a few seconds unless you interact with "
-#| "them.\n"
-#| "\n"
-#| "### Global Main Menu\n"
-#| "\n"
-#| "To open the Global Main Menu, tap on the menu icon at the top right of "
-#| "the screen.\n"
-#| "\n"
-#| "  ![Menu icon](menu.png \"Menu icon\"){w=10em}\n"
-#| "\n"
-#| "## Virtual keyboard\n"
-#| "\n"
-#| "To open the virtual keyboard, long press on the controller icon at the "
-#| "top right of the screen, or tap on any editable text field. To hide the "
-#| "virtual keyboard, tap the controller icon again, or tap outside the text "
-#| "field.\n"
-#| "\n"
-#| "\n"
-#| "  ![Keyboard icon](keyboard.png \"Keyboard icon\"){w=10em}\n"
-#| "\n"
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -5144,12 +5023,12 @@ msgid ""
 "\n"
 msgstr ""
 "## 터치 컨트롤 모드\n"
-"터치 컨트롤 모드는 오른쪽 상단 모서리에 있는 컨트롤러 아이콘을 탭하거나 클릭"
-"하여 변경할 수 있음\n"
+"터치 컨트롤 모드는 오른쪽 상단 모서리에 있는 컨트롤러 아이콘을 탭하거나 "
+"클릭하여 변경할 수 있음\n"
 "### 직접 마우스 \n"
 "\n"
-"터치 컨트롤은 직접적입니다. 포인터는 (메뉴의 기본값) 손가락이 화면을 터치하"
-"는 곳으로 이동합니다.\n"
+"터치 컨트롤은 직접적입니다. 포인터는 (메뉴의 기본값) 손가락이 화면을 "
+"터치하는 곳으로 이동합니다.\n"
 "\n"
 "  ![Direct mouse mode](mouse.png \"Direct mouse mode\"){w=10em}\n"
 "\n"
@@ -5161,13 +5040,13 @@ msgstr ""
 "\n"
 "### 게임패드 에뮬레이션 \n"
 "\n"
-"방향 패드와 액션 버튼을 에뮬레이션 하려면 손가락을 화면의 왼쪽과 오른쪽 아래"
-"에 놓아야 합니다.\n"
+"방향 패드와 액션 버튼을 에뮬레이션 하려면 손가락을 화면의 왼쪽과 오른쪽 "
+"아래에 놓아야 합니다.\n"
 "\n"
 "  ![Gamepad mode](gamepad.png \"Gamepad mode\"){w=10em}\n"
 "\n"
-"메뉴, 2D 게임, 3D 게임에 대한 기본 터치 모드를 선택하려면 **글로벌 옵션 > 백"
-"엔드 > 기본 터치 모드 선택**으로 이동하세요.\n"
+"메뉴, 2D 게임, 3D 게임에 대한 기본 터치 모드를 선택하려면 **글로벌 옵션 > "
+"백엔드 > 기본 터치 모드 선택**으로 이동하세요.\n"
 "\n"
 "## 터치 동작 \n"
 "\n"
@@ -5180,15 +5059,15 @@ msgstr ""
 "\n"
 "### 세 손가락 탭\n"
 "\n"
-"세 손가락으로 탭하려면 한 손가락을 누른 상태에서 다른 두 손가락을 한 번에 하"
-"나씩 점진적으로 터치하면서 이전 손가락은 계속 누릅니다. 손가락을 표면에 대고 "
-"참을성 없이 탭하는 모습을 상상해 보세요. 하지만 그 움직임을 느리게 해서 리듬"
-"을 맞추되 너무 느리지 않게 합니다.\n"
+"세 손가락으로 탭하려면 한 손가락을 누른 상태에서 다른 두 손가락을 한 번에 "
+"하나씩 점진적으로 터치하면서 이전 손가락은 계속 누릅니다. 손가락을 표면에 "
+"대고 참을성 없이 탭하는 모습을 상상해 보세요. 하지만 그 움직임을 느리게 해서 "
+"리듬을 맞추되 너무 느리지 않게 합니다.\n"
 "\n"
 "### 몰입형 스티키 전체 화면 모드\n"
 "\n"
-"가장자리에서 밀어 시스템 바를 표시합니다.  바는 반투명 상태로 유지되며, 상호"
-"작용하지 않는 한 몇 초 후에 사라집니다.\n"
+"가장자리에서 밀어 시스템 바를 표시합니다.  바는 반투명 상태로 유지되며, "
+"상호작용하지 않는 한 몇 초 후에 사라집니다.\n"
 "\n"
 "### 글로벌 메인 메뉴\n"
 "\n"
@@ -5213,43 +5092,6 @@ msgid "Adding Games"
 msgstr "게임 추가"
 
 #: backends/platform/android/android.cpp:1150
-#, fuzzy
-#| msgid ""
-#| "## Adding Games \n"
-#| "\n"
-#| "1. Select **Add Game...** from the launcher. \n"
-#| "\n"
-#| "2. Inside the ScummVM file browser, select **Go Up** until you reach the "
-#| "root folder which has the **<Add a new folder>** option. \n"
-#| "\n"
-#| "  ![ScummVM file browser root](browser-root.png \"ScummVM file browser "
-#| "root\"){w=70%}\n"
-#| "\n"
-#| "3. Double-tap **<Add a new folder>**. In your device's file browser, "
-#| "navigate to the folder containing all your game folders. For example, "
-#| "**SD Card > ScummVMgames**. \n"
-#| "\n"
-#| "4. Select **Use this folder**. \n"
-#| "\n"
-#| "  ![OS selectable folder](fs-folder.png \"OS selectable folder\"){w=70%}\n"
-#| "\n"
-#| "5. Select **ALLOW** to give ScummVM permission to access the folder. \n"
-#| "\n"
-#| "  ![OS access permission dialog](fs-permission.png \"OS access "
-#| "permission\"){w=70%}\n"
-#| "\n"
-#| "6. In the ScummVM file browser, double-tap to browse through your added "
-#| "folder. Add a game by selecting the sub-folder containing the game files, "
-#| "then tap **Choose**. \n"
-#| "\n"
-#| "  ![SAF folder added](browser-folder-in-list.png \"SAF folder added\")"
-#| "{w=70%}\n"
-#| "\n"
-#| "Step 2 and 3 are done only once. To add more games, repeat Steps 1 and "
-#| "6. \n"
-#| "\n"
-#| "See our [Android documentation](https://docs.scummvm.org/en/latest/"
-#| "other_platforms/android.html) for more information.\n"
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -5291,31 +5133,34 @@ msgstr ""
 "\n"
 "1. 런처에서 **게임 추가...**를 선택합니다. \n"
 "\n"
-"2. ScummVM 파일 브라우저에서 **<새 폴더 추가>** 옵션이 있는 루트 폴더에 도달"
-"할 때까지 **위로 이동**을 선택합니다. \n"
+"2. ScummVM 파일 브라우저에서 **<새 폴더 추가>** 옵션이 있는 루트 폴더에 "
+"도달할 때까지 **위로 이동**을 선택합니다. \n"
 "\n"
-"  ![ScummVM 파일 브라우저 루트](browser-root.png \"ScummVM 파일 브라우저 루트"
-"\"){w=70%}\n"
+"  ![ScummVM 파일 브라우저 루트](browser-root.png \"ScummVM 파일 브라우저 "
+"루트\"){w=70%,maxw=50em}\n"
 "\n"
-"3. **<새 폴더 추가>**를 두 번 탭합니다. 기기의 파일 브라우저에서 모든 게임 폴"
-"더가 있는 폴더로 이동합니다. 예를 들어, **SD 카드 > ScummVMgames**. \n"
+"3. **<새 폴더 추가>**를 두 번 탭합니다. 기기의 파일 브라우저에서 모든 게임 "
+"폴더가 있는 폴더로 이동합니다. 예를 들어, **SD 카드 > ScummVMgames**. \n"
 "\n"
 "4. **이 폴더 사용**을 선택합니다. \n"
 "\n"
-"  ![OS 선택 가능 폴더](fs-folder.png \"OS 선택 가능 폴더\"){w=70%}\n"
+"  ![OS 선택 가능 폴더](fs-folder.png \"OS 선택 가능 폴더\"){w=70%,maxw=50em}"
+"\n"
 "\n"
 "5. **허용**을 선택하여 ScummVM에 폴더에 접속할 수 있는 권한을 부여합니다. \n"
 "\n"
 "  ![OS 접속 권한 대화 상자](fs-permission.png \"OS 접속 권한 대화 상자\")"
-"{w=70%}\n"
+"{w=70%,maxw=50em}\n"
 "\n"
-"6. ScummVM 파일 브라우저에서 두 번 탭하여 추가한 폴더를 탐색합니다. 게임 파일"
-"이 들어 있는 하위 폴더를 선택하여 게임을 추가한 다음 **선택**을 탭합니다. \n"
+"6. ScummVM 파일 브라우저에서 두 번 탭하여 추가한 폴더를 탐색합니다. 게임 "
+"파일이 들어 있는 하위 폴더를 선택하여 게임을 추가한 다음 **선택**을 "
+"탭합니다. \n"
 "\n"
-"  ![SAF 폴더 추가됨](browser-folder-in-list.png \"SAF 폴더 추가됨\"){w=70%}\n"
+"  ![SAF 폴더 추가됨](browser-folder-in-list.png \"SAF 폴더 추가됨\")"
+"{w=70%,maxw=50em}\n"
 "\n"
-"2단계와 3단계는 한 번만 수행합니다. 게임을 더 추가하려면 1단계와 6단계를 반복"
-"합니다. \n"
+"2단계와 3단계는 한 번만 수행합니다. 게임을 더 추가하려면 1단계와 6단계를 "
+"반복합니다. \n"
 "\n"
 "자세한 내용은 [안드로이드 설명서](https://docs.scummvm.org/en/latest/"
 "other_platforms/android.html)를 참조하세요.\n"
@@ -6137,21 +5982,21 @@ msgstr "Catharon 라이선스"
 #. I18N: Hardware key
 #: backends/platform/sdl/miyoo/miyoo.cpp:79
 #: backends/platform/sdl/miyoo/miyoo.cpp:106
-#: backends/platform/sdl/ps3/ps3.cpp:59
+#: backends/platform/sdl/ps3/ps3.cpp:65
 msgid "L2"
 msgstr "L2 버튼"
 
 #. I18N: Hardware key
 #: backends/platform/sdl/miyoo/miyoo.cpp:81
 #: backends/platform/sdl/miyoo/miyoo.cpp:108
-#: backends/platform/sdl/ps3/ps3.cpp:60
+#: backends/platform/sdl/ps3/ps3.cpp:66
 msgid "R2"
 msgstr "R2 버튼"
 
 #. I18N: Hardware key
 #: backends/platform/sdl/miyoo/miyoo.cpp:83
 #: backends/platform/sdl/miyoo/miyoo.cpp:114
-#: engines/alcachofa/metaengine.cpp:99 engines/grim/grim.cpp:545
+#: engines/alcachofa/metaengine.cpp:110 engines/grim/grim.cpp:545
 #: engines/grim/grim.cpp:645 engines/hdb/metaengine.cpp:264
 #: engines/made/metaengine.cpp:186 engines/toltecs/metaengine.cpp:252
 msgid "Menu"
@@ -6160,66 +6005,47 @@ msgstr "메뉴"
 #. I18N: Hardware key
 #: backends/platform/sdl/miyoo/miyoo.cpp:110
 #: backends/platform/sdl/opendingux/opendingux.cpp:73
-#: backends/platform/sdl/ps3/ps3.cpp:47
+#: backends/platform/sdl/ps3/ps3.cpp:53
 #: backends/platform/sdl/switch/switch.cpp:44
 msgid "L3"
 msgstr "L3 버튼"
 
 #. I18N: Hardware key
 #: backends/platform/sdl/miyoo/miyoo.cpp:112
-#: backends/platform/sdl/ps3/ps3.cpp:48
+#: backends/platform/sdl/ps3/ps3.cpp:54
 #: backends/platform/sdl/switch/switch.cpp:45
 msgid "R3"
 msgstr "R3 버튼"
 
-#: backends/platform/sdl/opendingux/opendingux.cpp:78
-#: backends/platform/sdl/ps3/ps3.cpp:61 backends/platform/sdl/psp2/psp2.cpp:58
-#: backends/platform/sdl/switch/switch.cpp:58
-msgid "Left Stick X"
-msgstr "왼쪽 스틱 X"
-
-#: backends/platform/sdl/opendingux/opendingux.cpp:79
-#: backends/platform/sdl/ps3/ps3.cpp:62 backends/platform/sdl/psp2/psp2.cpp:59
-#: backends/platform/sdl/switch/switch.cpp:59
-msgid "Left Stick Y"
-msgstr "왼쪽 스틱 Y"
-
-#: backends/platform/sdl/ps3/ps3.cpp:40 backends/platform/sdl/psp2/psp2.cpp:42
+#. I18N: Hardware key on controller
+#: backends/platform/sdl/ps3/ps3.cpp:41 backends/platform/sdl/psp2/psp2.cpp:43
 #: engines/dragons/metaengine.cpp:200
 msgid "Cross"
 msgstr "엑스 버튼"
 
-#: backends/platform/sdl/ps3/ps3.cpp:41 backends/platform/sdl/psp2/psp2.cpp:43
+#. I18N: Hardware key on controller
+#: backends/platform/sdl/ps3/ps3.cpp:43 backends/platform/sdl/psp2/psp2.cpp:45
 #: engines/dragons/metaengine.cpp:194
 msgid "Circle"
 msgstr "원 버튼"
 
-#: backends/platform/sdl/ps3/ps3.cpp:42 backends/platform/sdl/psp2/psp2.cpp:44
+#. I18N: Hardware key on controller
+#: backends/platform/sdl/ps3/ps3.cpp:45 backends/platform/sdl/psp2/psp2.cpp:47
 #: engines/dragons/metaengine.cpp:182
 msgid "Square"
 msgstr "네모 버튼"
 
-#: backends/platform/sdl/ps3/ps3.cpp:45
+#: backends/platform/sdl/ps3/ps3.cpp:50
 msgid "PS"
 msgstr "PS"
 
-#: backends/platform/sdl/ps3/ps3.cpp:49
+#: backends/platform/sdl/ps3/ps3.cpp:55
 msgid "L1"
 msgstr "L1 버튼"
 
-#: backends/platform/sdl/ps3/ps3.cpp:50
+#: backends/platform/sdl/ps3/ps3.cpp:56
 msgid "R1"
 msgstr "R1 버튼"
-
-#: backends/platform/sdl/ps3/ps3.cpp:63 backends/platform/sdl/psp2/psp2.cpp:60
-#: backends/platform/sdl/switch/switch.cpp:60
-msgid "Right Stick X"
-msgstr "오른쪽 스틱 X"
-
-#: backends/platform/sdl/ps3/ps3.cpp:64 backends/platform/sdl/psp2/psp2.cpp:61
-#: backends/platform/sdl/switch/switch.cpp:61
-msgid "Right Stick Y"
-msgstr "오른쪽 스틱 Y"
 
 #: backends/platform/sdl/switch/switch.cpp:41
 msgid "Minus"
@@ -6363,7 +6189,7 @@ msgstr "런처"
 msgid "Check for Updates..."
 msgstr "업데이트 확인 중..."
 
-#: engines/access/metaengine.cpp:198 engines/alcachofa/metaengine.cpp:83
+#: engines/access/metaengine.cpp:198 engines/alcachofa/metaengine.cpp:94
 #: engines/bbvs/metaengine.cpp:92 engines/buried/metaengine.cpp:133
 #: engines/chamber/metaengine.cpp:59 engines/cine/metaengine.cpp:270
 #: engines/cruise/metaengine.cpp:168 engines/dm/metaengine.cpp:124
@@ -6539,7 +6365,7 @@ msgid "Take"
 msgstr "잡기"
 
 #. I18N: Action in In Cold Blood
-#: engines/access/metaengine.cpp:322 engines/alcachofa/metaengine.cpp:105
+#: engines/access/metaengine.cpp:322 engines/alcachofa/metaengine.cpp:116
 #: engines/cine/metaengine.cpp:337 engines/crab/input/input.cpp:251
 #: engines/cruise/metaengine.cpp:192 engines/draci/metaengine.cpp:237
 #: engines/dragons/metaengine.cpp:147 engines/drascula/metaengine.cpp:218
@@ -7047,10 +6873,8 @@ msgid "Show objects to interact"
 msgstr "소통할 개체 표시"
 
 #: engines/agos/metaengine.cpp:272
-#, fuzzy
-#| msgid "Toggle background sounds on / off"
 msgid "Toggle background sounds"
-msgstr "배경음 켜기 / 끄기 전환"
+msgstr "배경음 전환"
 
 #. I18N: Characters are game actors
 #: engines/agos/metaengine.cpp:281
@@ -7058,10 +6882,8 @@ msgid "Switch characters"
 msgstr "캐릭터 전환"
 
 #: engines/agos/metaengine.cpp:287
-#, fuzzy
-#| msgid "Toggle hitbox names on / off"
 msgid "Toggle hitbox names"
-msgstr "히트박스 이름 켜기 / 끄기 전환"
+msgstr "히트박스 이름 전환"
 
 #: engines/agos/metaengine.cpp:294
 msgid "Switches between speech only and combined speech and subtitles"
@@ -7257,7 +7079,7 @@ msgstr ""
 "일, 또는\n"
 "2. QfG2 리메이크 게임 디렉터리 내의 모든 .sav 파일"
 
-#: engines/alcachofa/graphics-opengl.cpp:106
+#: engines/alcachofa/graphics-opengl.cpp:108
 msgid "Old OpenGL detected, some graphical errors will occur."
 msgstr "이전 OpenGL이 감지되어 일부 그래픽 오류가 발생합니다."
 
@@ -7277,18 +7099,31 @@ msgstr "32 비트"
 msgid "Whether to render the game in 16-bit color"
 msgstr "게임을 16비트 컬러로 렌더링할지 여부"
 
-#: engines/alcachofa/metaengine.cpp:87 engines/cine/metaengine.cpp:347
+#: engines/alcachofa/metaengine.cpp:62
+msgid "Filter textures"
+msgstr "필터 텍스처"
+
+#: engines/alcachofa/metaengine.cpp:63
+msgid "Whether textures should be linearly filtered"
+msgstr "텍스처에 선형 필터링을 적용해야 하는지 여부"
+
+#: engines/alcachofa/metaengine.cpp:98 engines/cine/metaengine.cpp:347
 #: engines/freescape/games/castle/castle.cpp:315
 msgid "Activate"
 msgstr "활성화"
 
-#: engines/alcachofa/metaengine.cpp:93 engines/queen/metaengine.cpp:279
+#: engines/alcachofa/metaengine.cpp:104 engines/queen/metaengine.cpp:279
 #: engines/saga/metaengine.cpp:354 engines/scumm/help.cpp:202
 #: engines/scumm/help.cpp:214 engines/twp/metaengine.cpp:182
 #: engines/wintermute/keymapper_tables.h:122
 #: engines/wintermute/keymapper_tables.h:1534
 msgid "Look at"
 msgstr "보기"
+
+#: engines/alcachofa/metaengine.cpp:122 engines/stark/metaengine.cpp:245
+#: engines/toon/metaengine.cpp:124 engines/wintermute/keymapper_tables.h:1345
+msgid "Toggle subtitles"
+msgstr "자막 전환"
 
 #: engines/alg/metaengine.cpp:34
 msgid "Use lower quality single speed CD-ROM video"
@@ -7344,10 +7179,8 @@ msgid "Open character inventory"
 msgstr "캐릭터 인벤토리 열기"
 
 #: engines/asylum/metaengine.cpp:226
-#, fuzzy
-#| msgid "Toggle animation on / off"
 msgid "Toggle animation"
-msgstr "애니메이션 켜기 / 끄기 전환"
+msgstr "애니메이션 전환"
 
 #: engines/asylum/metaengine.cpp:232
 msgid "Return to gameplay"
@@ -13032,6 +12865,11 @@ msgid ""
 "Since the One-Stop Fun Shop series makes extensive use of TTF fonts,\n"
 "some of the graphics on screen will be missing."
 msgstr ""
+"사용하는 ScummVM 버전이 TrueType 글꼴을 지원하지 않는 버전으로 빌드된 것 "
+"같습니다.\n"
+"\n"
+"One-Stop Fun Shop 시리즈는 TTF 글꼴을 많이 사용하기 때문에,\n"
+"화면의 일부 그래픽이 표시되지 않을 수 있습니다."
 
 #: engines/scumm/scumm.cpp:1831
 msgid ""
@@ -13526,10 +13364,8 @@ msgid "Open control panel"
 msgstr "제어판 열기"
 
 #: engines/sky/metaengine.cpp:136
-#, fuzzy
-#| msgid "Toggle really fast mode on / off"
 msgid "Toggle really fast mode"
-msgstr "정말 빠른 모드 켜기 / 끄기 전환"
+msgstr "정말 빠른 모드 전환"
 
 #: engines/sky/metaengine.cpp:156
 msgid "Floppy intro"
@@ -13673,11 +13509,6 @@ msgstr "비디오 리플레이"
 #: engines/stark/metaengine.cpp:235
 msgid "Game settings"
 msgstr "게임 설정"
-
-#: engines/stark/metaengine.cpp:245 engines/toon/metaengine.cpp:124
-#: engines/wintermute/keymapper_tables.h:1345
-msgid "Toggle subtitles"
-msgstr "자막 전환"
 
 #: engines/stark/metaengine.cpp:250
 msgid "Quit to menu"
@@ -16507,6 +16338,30 @@ msgstr ""
 "MIDI 재생을 사용할 수 없거나, 제대로 구성되지 않았습니다. 죠크 네미시스에는 "
 "MIDI 오디오가 필요한 여러 음악 퍼즐이 포함되어 있습니다.  이러한 퍼즐은 지원"
 "되는 경우 자막을 사용하여 해결할 수 있습니다. 게임을 계속 실행할까요?"
+
+#~ msgid "D-pad Up"
+#~ msgstr "십자 패드 위쪽"
+
+#~ msgid "D-pad Down"
+#~ msgstr "십자 패드 아래쪽"
+
+#~ msgid "D-pad Left"
+#~ msgstr "십자 패드 왼쪽"
+
+#~ msgid "D-pad Right"
+#~ msgstr "십자 패드 오른쪽"
+
+#~ msgid "Left Stick X"
+#~ msgstr "왼쪽 스틱 X"
+
+#~ msgid "Left Stick Y"
+#~ msgstr "왼쪽 스틱 Y"
+
+#~ msgid "Right Stick X"
+#~ msgstr "오른쪽 스틱 X"
+
+#~ msgid "Right Stick Y"
+#~ msgstr "오른쪽 스틱 Y"
 
 #~ msgid "Left Click"
 #~ msgstr "왼쪽 클릭"

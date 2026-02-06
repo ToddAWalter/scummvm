@@ -4,7 +4,7 @@
  * are too numerous to list here. Please refer to the COPYRIGHT
  * file distributed with this source distribution.
  *
- * This program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modifyhttps://store.steampowered.com/app/3012980/Moorhuhn_Kart_4/
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -204,12 +204,44 @@ public:
 		return Point(1024, 768);
 	}
 
+	Point getThumbnailResolution() override {
+		return Point(341, 256);
+	}
+
 	const char *const *getMapFiles() override {
 		return kMapFiles;
 	}
 
+	GameFileReference getScriptFileRef() override {
+		return GameFileReference("Script/SCRIPT.COD");
+	}
+
 	Span<const ScriptOp> getScriptOpMap() override {
 		return { kScriptOpMap, ARRAYSIZE(kScriptOpMap) };
+	}
+
+	const char *getDialogFileName() override {
+		return "Textos/DIALOGOS.nkr";
+	}
+
+	const char *getObjectFileName() override {
+		return "Textos/OBJETOS.nkr";
+	}
+
+	char getTextFileKey() override {
+		return kEmbeddedXORKey;
+	}
+
+	Point getSubtitlePos() override {
+		return Point(g_system->getWidth() / 2, g_system->getHeight() - 200);
+	}
+
+	const char *getMenuRoom() override {
+		return "MENUPRINCIPAL";
+	}
+
+	const char *getInitScriptName() override {
+		return "CREDITOS_INICIALES";
 	}
 
 	void updateScriptVariables() override {
@@ -219,6 +251,56 @@ public:
 
 		script.variable("EstanAmbos") = g_engine->world().mortadelo().room() == g_engine->world().filemon().room();
 		script.variable("textoson") = g_engine->config().subtitles() ? 1 : 0;
+	}
+
+	Path getVideoPath(int32 videoId) override {
+		return Path(String::format("Data/DATA%02d.BIN", videoId + 1));
+	}
+
+	String getSoundPath(const char *filename) override {
+		return String("Sonidos/") + filename;
+	}
+
+	String getMusicPath(int32 trackId) override {
+		return String::format("Sonidos/T%d", trackId);
+	}
+
+	int32 getCharacterJingle(MainCharacterKind kind) override {
+		return g_engine->script().variable(
+			kind == MainCharacterKind::Mortadelo ? "PistaMorta" : "PistaFile");
+	}
+
+	bool shouldFilterTexturesByDefault() override {
+		return true;
+	}
+
+	bool shouldClipCamera() override {
+		return g_engine->script().variable("EncuadrarCamara");
+	}
+
+	bool isAllowedToOpenMenu() override {
+		return !g_engine->script().variable("prohibirESC") &&
+			g_engine->sounds().musicSemaphore().isReleased();
+	}
+
+	bool isAllowedToInteract() override {
+		return g_engine->player().semaphore().isReleased();
+	}
+
+	bool shouldScriptLockInteraction() override {
+		return false;
+	}
+
+	bool shouldChangeCharacterUseGameLock() override {
+		return true;
+	}
+
+	bool shouldAvoidCollisions() override {
+		return true;
+	}
+
+	Point getMainCharacterSize() override {
+		return { 60, 310};
 	}
 
 	void onLoadedGameFiles() override {
@@ -383,34 +465,36 @@ public:
 
 	void missingAnimation(const String &fileName) override {
 		static const char *exemptions[] = {
-			"ANIMACION.AN0",
-			"DESPACHO_SUPER2_OL_SOMBRAS2.AN0",
-			"PP_MORTA.AN0",
-			"DESPACHO_SUPER2___FONDO_PP_SUPER.AN0",
-			"ESTOMAGO.AN0",
-			"CREDITOS.AN0",
-			"MONITOR___OL_EFECTO_FONDO.AN0",
+			"ANIMACION",
+			"DESPACHO_SUPER2_OL_SOMBRAS2",
+			"PP_MORTA",
+			"DESPACHO_SUPER2___FONDO_PP_SUPER",
+			"ESTOMAGO",
+			"CREDITOS",
+			"MONITOR___OL_EFECTO_FONDO",
 			nullptr
 		};
 
 		// these only happen in the german demo
 		static const char *demoExemptions[] = {
-			"TROZO_1.AN0",
-			"TROZO_2.AN0",
-			"TROZO_3.AN0",
-			"TROZO_4.AN0",
-			"TROZO_5.AN0",
-			"TROZO_6.AN0",
-			"NOTA_CINE_NEGRO.AN0",
-			"PP_JOHN_WAYNE_2.AN0",
-			"ARQUEOLOGO_ESTATICO_TIA.AN0",
-			"ARQUEOLOGO_HABLANDO_TIA.AN0",
+			"TROZO_1",
+			"TROZO_2",
+			"TROZO_3",
+			"TROZO_4",
+			"TROZO_5",
+			"TROZO_6",
+			"NOTA_CINE_NEGRO",
+			"PP_JOHN_WAYNE_2",
+			"ARQUEOLOGO_ESTATICO_TIA",
+			"ARQUEOLOGO_HABLANDO_TIA",
 			nullptr
 		};
 
+		bool hasExtension = fileName.hasSuffixIgnoreCase(".AN0");
 		const auto isInExemptions = [&] (const char *const *const list) {
 			for (const char *const *exemption = list; *exemption != nullptr; exemption++) {
-				if (fileName.equalsIgnoreCase(*exemption))
+				if ((hasExtension && fileName.hasPrefixIgnoreCase(*exemption)) ||
+					(!hasExtension && fileName.equalsIgnoreCase(*exemption)))
 					return true;
 			}
 			return false;
@@ -429,10 +513,10 @@ public:
 		Game::unknownAnimateObject(name);
 	}
 
-	void unknownSayTextCharacter(const char *name, int32 dialogId) override {
+	Character *unknownSayTextCharacter(const char *name, int32 dialogId) override {
 		if (!scumm_stricmp(name, "OFELIA") && dialogId == 3737)
-			return;
-		Game::unknownSayTextCharacter(name, dialogId);
+			return nullptr;
+		return Game::unknownSayTextCharacter(name, dialogId);
 	}
 
 	void missingSound(const String &fileName) override {
@@ -458,7 +542,7 @@ public:
 	}
 };
 
-Game *Game::createForMovieAdventure() {
+Game *Game::createForMovieAdventureSpecial() {
 	if (g_engine->version() == EngineVersion::V3_0)
 		return new GameMovieAdventureSpecialV30();
 	else

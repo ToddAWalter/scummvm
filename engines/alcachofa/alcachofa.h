@@ -56,14 +56,13 @@ struct AlcachofaGameDescription;
 
 constexpr int16 kSmallThumbnailWidth = 160; // for ScummVM
 constexpr int16 kSmallThumbnailHeight = 120;
-static constexpr int16 kBigThumbnailWidth = 341; // for in-game
-static constexpr int16 kBigThumbnailHeight = 256;
+// the in-game save thumbnail size is determined by engine verison
 
-
-enum class SaveVersion : Common::Serializer::Version {
-	Initial = 0
+namespace SaveVersion {
+	static constexpr const Common::Serializer::Version kInitial = 0;
+	static constexpr const Common::Serializer::Version kWithEngineV10 = 1;
 };
-static constexpr SaveVersion kCurrentSaveVersion = SaveVersion::Initial;
+static constexpr const Common::Serializer::Version kCurrentSaveVersion = SaveVersion::kWithEngineV10;
 
 class MySerializer : public Common::Serializer {
 public:
@@ -82,14 +81,14 @@ public:
 
 class Config {
 public:
-	Config();
-
 	inline bool &subtitles() { return _subtitles; }
 	inline bool &highQuality() { return _highQuality; }
 	inline bool &bits32() { return _bits32; }
+	inline bool &texFilter() { return _texFilter; }
 	inline uint8 &musicVolume() { return _musicVolume; }
 	inline uint8 &speechVolume() { return _speechVolume; }
 
+	static void registerDefaults();
 	void loadFromScummVM();
 	void saveToScummVM();
 
@@ -97,7 +96,8 @@ private:
 	bool
 		_subtitles = true,
 		_highQuality = true,
-		_bits32 = true;
+		_bits32 = true,
+		_texFilter = true;
 	uint8
 		_musicVolume = 255,
 		_speechVolume = 255;
@@ -123,7 +123,7 @@ public:
 	inline Input &input() { return _input; }
 	inline Sounds &sounds() { return _sounds; }
 	inline Player &player() { return *_player; }
-	inline World &world() { return *_world; }
+	inline World &world() { return _world; }
 	inline Script &script() { return *_script; }
 	inline GlobalUI &globalUI() { return *_globalUI; }
 	inline Menu &menu() { return *_menu; }
@@ -178,12 +178,12 @@ private:
 	Common::ScopedPtr<IDebugHandler> _debugHandler;
 	Common::ScopedPtr<IRenderer> _renderer;
 	Common::ScopedPtr<DrawQueue> _drawQueue;
-	Common::ScopedPtr<World> _world;
 	Common::ScopedPtr<Script> _script;
 	Common::ScopedPtr<Player> _player;
 	Common::ScopedPtr<GlobalUI> _globalUI;
 	Common::ScopedPtr<Menu> _menu;
 	Common::ScopedPtr<Game> _game;
+	World _world;
 	Camera _camera;
 	Input _input;
 	Sounds _sounds;
