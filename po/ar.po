@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-05 00:02+0000\n"
+"POT-Creation-Date: 2026-02-08 20:33+0000\n"
 "PO-Revision-Date: 2023-03-26 11:16+0000\n"
 "Last-Translator: Malek Bellasfar <bellasfarmalek450@gmail.com>\n"
 "Language-Team: Arabic <https://translations.scummvm.org/projects/scummvm/"
@@ -76,29 +76,42 @@ msgstr "المحركات المتوفرة:"
 msgid "Close"
 msgstr "إغلاق"
 
-#: gui/browser.cpp:74 backends/dialogs/macosx/macosx-dialogs.mm:108
+#. I18N: This keymap opens KIA's HELP tab.
+#. In Blade Runner's official localizations, there is a description of this keymap
+#. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
+#. ONLINE HELP
+#. I18N: Opens the help screen.
+#: gui/browser.cpp:64 gui/launcher.cpp:275 gui/launcher.cpp:953
+#: backends/platform/sdl/macosx/appmenu_osx.mm:319
+#: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
+#: engines/ngi/metaengine.cpp:162 engines/supernova/metaengine.cpp:238
+#: engines/tucker/metaengine.cpp:215 engines/zvision/metaengine.cpp:246
+msgid "Help"
+msgstr "المساعدة"
+
+#: gui/browser.cpp:77 backends/dialogs/macosx/macosx-dialogs.mm:108
 msgid "Show hidden files"
 msgstr "أظهر الملفات المخفية"
 
-#: gui/browser.cpp:74
+#: gui/browser.cpp:77
 msgid "Show files marked with the hidden attribute"
 msgstr "إظهار الملفات المميزة بالسمة المخفية"
 
-#: gui/browser.cpp:78 gui/remotebrowser.cpp:56
+#: gui/browser.cpp:81 gui/remotebrowser.cpp:56
 msgid "Go up"
 msgstr "اذهب للأعلى"
 
-#: gui/browser.cpp:78 gui/browser.cpp:80 gui/remotebrowser.cpp:56
+#: gui/browser.cpp:81 gui/browser.cpp:83 gui/remotebrowser.cpp:56
 #: gui/remotebrowser.cpp:58
 msgid "Go to previous directory level"
 msgstr "إنتقل إلى مستوى المجلد السابق"
 
-#: gui/browser.cpp:80 gui/remotebrowser.cpp:58
+#: gui/browser.cpp:83 gui/remotebrowser.cpp:58
 msgctxt "lowres"
 msgid "Go up"
 msgstr "اذهب للأعلى"
 
-#: gui/browser.cpp:81 gui/chooser.cpp:45 gui/cloudconnectionwizard.cpp:67
+#: gui/browser.cpp:84 gui/chooser.cpp:45 gui/cloudconnectionwizard.cpp:67
 #: gui/downloaddlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:272
 #: gui/downloadpacksdialog.cpp:465 gui/editgamedialog.cpp:340
 #: gui/editrecorddialog.cpp:66 gui/integrity-dialog.cpp:122
@@ -133,7 +146,7 @@ msgstr "اذهب للأعلى"
 msgid "Cancel"
 msgstr "إلغاء"
 
-#: gui/browser.cpp:82 gui/chooser.cpp:46 gui/filebrowser-dialog.cpp:69
+#: gui/browser.cpp:85 gui/chooser.cpp:46 gui/filebrowser-dialog.cpp:69
 #: gui/remotebrowser.cpp:60 gui/shaderbrowser-dialog.cpp:81
 #: gui/themebrowser.cpp:55 backends/dialogs/gtk/gtk-dialogs.cpp:64
 #: backends/dialogs/macosx/macosx-dialogs.mm:162
@@ -266,8 +279,8 @@ msgstr "لصق"
 msgid "Paste code from clipboard"
 msgstr "الصق الكود من الحافظة"
 
-#: gui/cloudconnectionwizard.cpp:387 gui/launcher.cpp:317
-#: engines/dialogs.cpp:94 engines/engine.cpp:1019 engines/mm/xeen/saves.cpp:259
+#: gui/cloudconnectionwizard.cpp:387 gui/launcher.cpp:322
+#: engines/dialogs.cpp:97 engines/engine.cpp:1019 engines/mm/xeen/saves.cpp:259
 #: engines/nancy/state/loadsave.cpp:108 engines/nancy/state/loadsave.cpp:153
 #: engines/parallaction/metaengine.cpp:151
 #: engines/parallaction/saveload.cpp:193 engines/pegasus/pegasus.cpp:388
@@ -328,8 +341,8 @@ msgstr "تخزين آخر يعمل الآن. هل تريد مقاطعته؟"
 
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
-#: gui/launcher.cpp:523 gui/launcher.cpp:1841 gui/options.cpp:3485
+#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:426 gui/launcher.cpp:455
+#: gui/launcher.cpp:528 gui/launcher.cpp:1858 gui/options.cpp:3485
 #: gui/options.cpp:3859 base/main.cpp:594
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:102
@@ -347,8 +360,8 @@ msgstr "نعم"
 
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
-#: gui/launcher.cpp:523 gui/launcher.cpp:1841 gui/options.cpp:3485
+#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:426 gui/launcher.cpp:455
+#: gui/launcher.cpp:528 gui/launcher.cpp:1858 gui/options.cpp:3485
 #: gui/options.cpp:3859 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:102
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
@@ -446,7 +459,7 @@ msgid "Select directory where to download game data"
 msgstr "حدد المجلد حيث سيتم تنزيل بيانات اللعبة"
 
 #: gui/downloaddialog.cpp:49 gui/dump-all-dialogs.cpp:117
-#: gui/dump-all-dialogs.cpp:142 gui/editgamedialog.cpp:586 gui/launcher.cpp:314
+#: gui/dump-all-dialogs.cpp:142 gui/editgamedialog.cpp:586 gui/launcher.cpp:319
 msgid "Select directory with game data"
 msgstr "حدد المجلد الذي يحتوي على بيانات اللعبة"
 
@@ -480,7 +493,7 @@ msgid ""
 "files with it?"
 msgstr "يبدو أن اتصالك محدود. هل تريد حقًا تنزيل الملفات به؟"
 
-#: gui/downloaddialog.cpp:136 gui/launcher.cpp:686
+#: gui/downloaddialog.cpp:136 gui/launcher.cpp:691
 msgid "ScummVM couldn't open the specified directory!"
 msgstr "ليس بإمكان ScummVM فتح هذا المجلد !"
 
@@ -584,11 +597,11 @@ msgstr "حزم الرموز"
 msgid "shader packs"
 msgstr "حزم تظليل"
 
-#: gui/dump-all-dialogs.cpp:146 gui/launcher.cpp:737
+#: gui/dump-all-dialogs.cpp:146 gui/launcher.cpp:742
 msgid "Pick the game:"
 msgstr "اختر اللعبة:"
 
-#: gui/editgamedialog.cpp:140 engines/dialogs.cpp:301
+#: gui/editgamedialog.cpp:140 engines/dialogs.cpp:309
 msgid "Game"
 msgstr "اللعبة"
 
@@ -611,11 +624,11 @@ msgctxt "lowres"
 msgid "Override global graphic settings"
 msgstr "تجاوز إعدادات الرسوم العامة"
 
-#: gui/editgamedialog.cpp:185 gui/options.cpp:2288 engines/dialogs.cpp:346
+#: gui/editgamedialog.cpp:185 gui/options.cpp:2288 engines/dialogs.cpp:354
 msgid "Keymaps"
 msgstr "خرائط المفاتيح"
 
-#: gui/editgamedialog.cpp:197 gui/options.cpp:2300 engines/dialogs.cpp:358
+#: gui/editgamedialog.cpp:197 gui/options.cpp:2300 engines/dialogs.cpp:366
 msgid "Backend"
 msgstr "الخلفية"
 
@@ -628,7 +641,7 @@ msgctxt "lowres"
 msgid "Override global backend settings"
 msgstr "تجاوز إعدادات الخلفية العامة"
 
-#: gui/editgamedialog.cpp:220 gui/options.cpp:2318 engines/dialogs.cpp:321
+#: gui/editgamedialog.cpp:220 gui/options.cpp:2318 engines/dialogs.cpp:329
 msgid "Audio"
 msgstr "الصوة"
 
@@ -751,11 +764,11 @@ msgstr "حفظ مسار:"
 msgid "Default"
 msgstr "الافتراضي"
 
-#: gui/editgamedialog.cpp:326 engines/dialogs.cpp:377
+#: gui/editgamedialog.cpp:326 engines/dialogs.cpp:385
 msgid "Achievements"
 msgstr "إنجازات"
 
-#: gui/editgamedialog.cpp:330 engines/dialogs.cpp:381
+#: gui/editgamedialog.cpp:330 engines/dialogs.cpp:389
 msgid "Statistics"
 msgstr "إحصائيات"
 
@@ -1376,7 +1389,7 @@ msgstr ""
 msgid "Select Group by"
 msgstr "حدد التجميع حسب"
 
-#: gui/launcher.cpp:234 gui/launcher.cpp:932
+#: gui/launcher.cpp:234 gui/launcher.cpp:937
 msgid "Group:"
 msgstr "مجموعة:"
 
@@ -1389,7 +1402,7 @@ msgid "Click here to see Help"
 msgstr ""
 
 #. I18N: Button Quit ScummVM program. Q is the shortcut, Ctrl+Q, put it in parens for non-latin (~Q~)
-#: gui/launcher.cpp:267 engines/dialogs.cpp:91
+#: gui/launcher.cpp:267 engines/dialogs.cpp:94
 msgid "~Q~uit"
 msgstr "~أ~خرج"
 
@@ -1406,91 +1419,97 @@ msgstr "~ب~شأن"
 msgid "About ScummVM"
 msgstr "بشأن ScummVM"
 
+#: gui/launcher.cpp:275 gui/launcher.cpp:953
+#, fuzzy
+#| msgid "Settings"
+msgid "General help"
+msgstr "إعدادات"
+
 #. I18N: Button caption. O is the shortcut, Ctrl+O, put it in parens for non-latin (~O~)
-#: gui/launcher.cpp:273
+#: gui/launcher.cpp:278
 msgid "Global ~O~ptions..."
 msgstr "~ال~خيارات العامة..."
 
-#: gui/launcher.cpp:273
+#: gui/launcher.cpp:278
 msgid "Change global ScummVM options"
 msgstr "تغيير إعدادات ScummVM العالمة"
 
-#: gui/launcher.cpp:273
+#: gui/launcher.cpp:278
 msgctxt "lowres"
 msgid "Global ~O~pts..."
 msgstr "~ال~خيارات العامة..."
 
-#: gui/launcher.cpp:277
+#: gui/launcher.cpp:282
 #, fuzzy
 #| msgid "Download game files"
 msgid "Download Games"
 msgstr "تحميل ملفات اللعبة"
 
-#: gui/launcher.cpp:277
+#: gui/launcher.cpp:282
 msgid "Download freeware games for ScummVM"
 msgstr ""
 
 #. I18N: Button caption. A is the shortcut, Ctrl+A, put it in parens for non-latin (~A~)
-#: gui/launcher.cpp:284
+#: gui/launcher.cpp:289
 msgid "~A~dd Game..."
 msgstr "~أ~ضف اللعبة ..."
 
-#: gui/launcher.cpp:284
+#: gui/launcher.cpp:289
 msgid "Add games to the list"
 msgstr "أضف الألعاب إلى القائمة"
 
-#: gui/launcher.cpp:284
+#: gui/launcher.cpp:289
 msgctxt "lowres"
 msgid "~A~dd Game..."
 msgstr "~أ~ضف اللعبة ..."
 
 #. I18N: Button caption. R is the shortcut, Ctrl+R, put it in parens for non-latin (~R~)
-#: gui/launcher.cpp:288
+#: gui/launcher.cpp:293
 msgid "~R~emove Game"
 msgstr "~إ~زالة اللعبة"
 
-#: gui/launcher.cpp:288
+#: gui/launcher.cpp:293
 msgid "Remove game from the list. The game data files stay intact"
 msgstr "إزالة اللعبة من القائمة. تظل ملفات بيانات اللعبة سليمة"
 
-#: gui/launcher.cpp:288
+#: gui/launcher.cpp:293
 msgctxt "lowres"
 msgid "~R~emove Game"
 msgstr "إ~ز~الة اللعبة"
 
 #. I18N: Button caption. Mass add games
-#: gui/launcher.cpp:291
+#: gui/launcher.cpp:296
 msgid "Mass Add..."
 msgstr "إضافة جماعية ..."
 
 #. I18N: Button caption for lower resolution GUI. Mass add games
-#: gui/launcher.cpp:294
+#: gui/launcher.cpp:299
 msgctxt "lowres"
 msgid "Mass Add..."
 msgstr "إضافة جماعية ..."
 
-#: gui/launcher.cpp:302 gui/launcher.cpp:902 gui/shaderbrowser-dialog.cpp:61
+#: gui/launcher.cpp:307 gui/launcher.cpp:907 gui/shaderbrowser-dialog.cpp:61
 #: gui/shaderbrowser-dialog.cpp:97
 msgid "Search in game list"
 msgstr "ابحث في قائمة الألعاب"
 
-#: gui/launcher.cpp:306 gui/launcher.cpp:923 gui/shaderbrowser-dialog.cpp:65
+#: gui/launcher.cpp:311 gui/launcher.cpp:928 gui/shaderbrowser-dialog.cpp:65
 #: gui/shaderbrowser-dialog.cpp:107
 msgid "Search:"
 msgstr "ابحث:"
 
-#: gui/launcher.cpp:317 engines/dialogs.cpp:94 engines/engine.cpp:1019
+#: gui/launcher.cpp:322 engines/dialogs.cpp:97 engines/engine.cpp:1019
 #: engines/mm/xeen/saves.cpp:259 engines/nancy/state/loadsave.cpp:153
 #: engines/pegasus/pegasus.cpp:388 engines/trecision/saveload.cpp:253
 #: engines/tsage/scenes.cpp:642 engines/wage/saveload.cpp:753
 msgid "Load game:"
 msgstr "حمل اللعبة:"
 
-#: gui/launcher.cpp:409
+#: gui/launcher.cpp:414
 msgid "This directory cannot be used yet, it is being downloaded into!"
 msgstr "لا يمكن استخدام هذا المجلد حتى الآن ، لأنه جاري التنزيل فيه!"
 
-#: gui/launcher.cpp:420
+#: gui/launcher.cpp:425
 msgid ""
 "Do you really want to run the mass game detector? This could potentially add "
 "a huge number of games."
@@ -1498,126 +1517,126 @@ msgstr ""
 "هل تريد حقًا تشغيل كاشف الألعاب الجماعية؟ يمكن أن يضيف هذا عددًا كبيرًا من "
 "الألعاب."
 
-#: gui/launcher.cpp:450
+#: gui/launcher.cpp:455
 msgid "Do you really want to remove this game configuration?"
 msgstr "هل تريد حقًا إزالة تكوين هذه اللعبة؟"
 
-#: gui/launcher.cpp:522
+#: gui/launcher.cpp:527
 msgid "Do you want to load saved game?"
 msgstr "هل تريد تحميل اللعبة المحفوظة؟"
 
-#: gui/launcher.cpp:579
+#: gui/launcher.cpp:584
 msgid "This game does not support loading games from the launcher."
 msgstr "هذه اللعبة لا تدعم تحميل الألعاب من المشغل."
 
-#: gui/launcher.cpp:583
+#: gui/launcher.cpp:588
 msgid "ScummVM could not find any engine capable of running the selected game!"
 msgstr "لم يتمكن ScummVM من العثور على أي محرك قادر على تشغيل اللعبة المحددة!"
 
-#: gui/launcher.cpp:689 gui/launcher.cpp:713
+#: gui/launcher.cpp:694 gui/launcher.cpp:718
 msgid ""
 "Have you given ScummVM access rights to this directory? Press the help "
 "button [?] on the top for detailed instructions"
 msgstr ""
 
-#: gui/launcher.cpp:710
+#: gui/launcher.cpp:715
 msgid "ScummVM could not find any game in the specified directory!"
 msgstr "لم يتمكن ScummVM من العثور على أي لعبة في المجلد المحدد!"
 
 #. I18N: Unknown game variant
-#: gui/launcher.cpp:731 engines/engine.cpp:1235
+#: gui/launcher.cpp:736 engines/engine.cpp:1235
 msgid "Unknown variant"
 msgstr "متغير غير معروف"
 
-#: gui/launcher.cpp:971 gui/saveload-dialog.cpp:381
+#: gui/launcher.cpp:988 gui/saveload-dialog.cpp:381
 msgid "List view"
 msgstr "عرض القائمة"
 
-#: gui/launcher.cpp:972 gui/saveload-dialog.cpp:382
+#: gui/launcher.cpp:989 gui/saveload-dialog.cpp:382
 msgid "Grid view"
 msgstr "عرض شبكي"
 
-#: gui/launcher.cpp:1120
+#: gui/launcher.cpp:1137
 msgid "~S~tart"
 msgstr "~ا~بدأ"
 
-#: gui/launcher.cpp:1120
+#: gui/launcher.cpp:1137
 msgid "Start selected game"
 msgstr "ابدأ اللعبة المختارة"
 
-#: gui/launcher.cpp:1123
+#: gui/launcher.cpp:1140
 msgid "~L~oad..."
 msgstr "~ح~مل..."
 
-#: gui/launcher.cpp:1123
+#: gui/launcher.cpp:1140
 msgid "Load saved game for selected game"
 msgstr "تحميل اللعبة المحفوظة للعبة المحددة"
 
-#: gui/launcher.cpp:1125
+#: gui/launcher.cpp:1142
 msgid "Record..."
 msgstr "سِجِلّ..."
 
-#: gui/launcher.cpp:1131
+#: gui/launcher.cpp:1148
 msgid "~G~ame Options..."
 msgstr "~خ~يارات اللعبة..."
 
-#: gui/launcher.cpp:1131
+#: gui/launcher.cpp:1148
 msgid "Change game options"
 msgstr "تغيير إعدادات اللعبة"
 
-#: gui/launcher.cpp:1131
+#: gui/launcher.cpp:1148
 msgctxt "lowres"
 msgid "~G~ame Opts..."
 msgstr "~خ~يارات اللعبة..."
 
-#: gui/launcher.cpp:1217
+#: gui/launcher.cpp:1234
 msgid "Add-on"
 msgstr ""
 
 #. I18N: List grouping when no engine is specified
-#: gui/launcher.cpp:1268 gui/launcher.cpp:1513
+#: gui/launcher.cpp:1285 gui/launcher.cpp:1530
 msgid "Unknown Engine"
 msgstr "محرك غير معروف"
 
 #. I18N: List grouping when no publisher is specified
 #. I18N: List group when no publisher is specified
-#: gui/launcher.cpp:1285 gui/launcher.cpp:1530
+#: gui/launcher.cpp:1302 gui/launcher.cpp:1547
 msgid "Unknown Publisher"
 msgstr "ناشر غير معروف"
 
 #. I18N: List group when no game series is specified
 #. I18N: List grouping when no game series is specified
-#: gui/launcher.cpp:1302 gui/launcher.cpp:1547
+#: gui/launcher.cpp:1319 gui/launcher.cpp:1564
 msgid "No Series"
 msgstr "لا توجد سلسلة"
 
 #. I18N: List group when no language is specified
-#: gui/launcher.cpp:1316 gui/launcher.cpp:1561
+#: gui/launcher.cpp:1333 gui/launcher.cpp:1578
 msgid "Language not detected"
 msgstr "لم يتم الكشف عن اللغة"
 
 #. I18N: List group when no platform is specified
-#: gui/launcher.cpp:1330 gui/launcher.cpp:1575
+#: gui/launcher.cpp:1347 gui/launcher.cpp:1592
 msgid "Platform not detected"
 msgstr "النظام الأساسي غير مكتشف"
 
 #. I18N: List group when no year is specified
-#: gui/launcher.cpp:1347 gui/launcher.cpp:1592
+#: gui/launcher.cpp:1364 gui/launcher.cpp:1609
 #, fuzzy
 #| msgid "Unknown error"
 msgid "Unknown Year"
 msgstr "خطأ غير معروف"
 
 #. I18N: Group for All items
-#: gui/launcher.cpp:1599 gui/widgets/groupedlist.cpp:81
+#: gui/launcher.cpp:1616 gui/widgets/groupedlist.cpp:81
 msgid "All"
 msgstr "الجميع"
 
-#: gui/launcher.cpp:1767
+#: gui/launcher.cpp:1784
 msgid "Icons per row:"
 msgstr "الرموز لكل صف:"
 
-#: gui/launcher.cpp:1817
+#: gui/launcher.cpp:1834
 #, fuzzy, c-format
 #| msgid "Do you really want to remove this game configuration?"
 msgid ""
@@ -3524,40 +3543,46 @@ msgid "Illegitimate game copy detected. We provide no support in such cases"
 msgstr ""
 "تم اكتشاف نسخة غير شرعية من اللعبة. نحن لا نقدم أي دعم في مثل هذه الحالات"
 
-#: engines/dialogs.cpp:68
+#: engines/dialogs.cpp:69
 msgid "~R~esume"
 msgstr "ا~ستئناف"
 
-#: engines/dialogs.cpp:70
+#: engines/dialogs.cpp:71
 msgid "~L~oad"
 msgstr "~ت~حميل"
 
-#: engines/dialogs.cpp:71
+#: engines/dialogs.cpp:72
 msgid "~S~ave"
 msgstr "~ ح~فظ"
 
-#: engines/dialogs.cpp:73
+#: engines/dialogs.cpp:74
 msgid "~O~ptions"
 msgstr "~ خ~ يارات"
 
-#: engines/dialogs.cpp:78
+#: engines/dialogs.cpp:79
+#, fuzzy
+#| msgid "~H~elp"
+msgid "Game ~H~elp"
+msgstr "~ م~ساعدة"
+
+#: engines/dialogs.cpp:83
 msgid "~H~elp"
 msgstr "~ م~ساعدة"
 
-#: engines/dialogs.cpp:82
+#: engines/dialogs.cpp:85
 msgid "~A~bout"
 msgstr "~ب~شأن"
 
-#: engines/dialogs.cpp:85 engines/dialogs.cpp:156
+#: engines/dialogs.cpp:88 engines/dialogs.cpp:164
 msgid "~R~eturn to Launcher"
 msgstr "~ ال~عودة إلى المشغل"
 
-#: engines/dialogs.cpp:87 engines/dialogs.cpp:158
+#: engines/dialogs.cpp:90 engines/dialogs.cpp:166
 msgctxt "lowres"
 msgid "~R~eturn to Launcher"
 msgstr "~ ال~عودة إلى المشغل"
 
-#: engines/dialogs.cpp:95 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
+#: engines/dialogs.cpp:98 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
 #: engines/avalanche/parser.cpp:1918 engines/cine/various.cpp:349
 #: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:390
 #: engines/dreamweb/saveload.cpp:261 engines/glk/streams.cpp:1432
@@ -3578,7 +3603,7 @@ msgstr "~ ال~عودة إلى المشغل"
 msgid "Save game:"
 msgstr "حفظ اللعبة:"
 
-#: engines/dialogs.cpp:95 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
+#: engines/dialogs.cpp:98 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
 #: engines/avalanche/parser.cpp:1918 engines/cine/various.cpp:349
 #: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:390
 #: engines/dreamweb/saveload.cpp:261 engines/glk/streams.cpp:1432
@@ -3603,7 +3628,7 @@ msgstr "حفظ اللعبة:"
 msgid "Save"
 msgstr "يحفظ"
 
-#: engines/dialogs.cpp:125
+#: engines/dialogs.cpp:128
 msgid ""
 "Sorry, this engine does not currently provide in-game help. Please consult "
 "the README for basic information, and for instructions on how to obtain "
@@ -3613,18 +3638,18 @@ msgstr ""
 "التمهيدي للحصول على المعلومات الأساسية ، وللحصول على إرشادات حول كيفية "
 "الحصول على مزيد من المساعدة."
 
-#: engines/dialogs.cpp:193 engines/ags/ags.cpp:359
+#: engines/dialogs.cpp:201 engines/ags/ags.cpp:359
 #: engines/glk/magnetic/magnetic.cpp:197 engines/scumm/saveload.cpp:167
 #, fuzzy
 #| msgid "This game does not support loading games from the launcher."
 msgid "This game does not support saving from the menu. Use in-game interface"
 msgstr "هذه اللعبة لا تدعم تحميل الألعاب من المشغل."
 
-#: engines/dialogs.cpp:202
+#: engines/dialogs.cpp:210
 msgid "This game cannot be saved at this time. Please try again later"
 msgstr ""
 
-#: engines/dialogs.cpp:221 engines/pegasus/pegasus.cpp:418
+#: engines/dialogs.cpp:229 engines/pegasus/pegasus.cpp:418
 #, c-format
 msgid ""
 "Failed to save game (%s)! Please consult the README for basic information, "
@@ -3633,22 +3658,22 @@ msgstr ""
 "فشل حفظ اللعبة (%s)! يرجى الرجوع إلى الملف التمهيدي للحصول على المعلومات "
 "الأساسية ، وللحصول على إرشادات حول كيفية الحصول على مزيد من المساعدة."
 
-#: engines/dialogs.cpp:234 engines/ags/ags.cpp:344
+#: engines/dialogs.cpp:242 engines/ags/ags.cpp:344
 #: engines/glk/magnetic/magnetic.cpp:187 engines/scumm/saveload.cpp:99
 #, fuzzy
 #| msgid "This game does not support loading games from the launcher."
 msgid "This game does not support loading from the menu. Use in-game interface"
 msgstr "هذه اللعبة لا تدعم تحميل الألعاب من المشغل."
 
-#: engines/dialogs.cpp:243
+#: engines/dialogs.cpp:251
 msgid "This game cannot be loaded at this time. Please try again later"
 msgstr ""
 
-#: engines/dialogs.cpp:392
+#: engines/dialogs.cpp:400
 msgid "~O~K"
 msgstr "~ح~سنا"
 
-#: engines/dialogs.cpp:393
+#: engines/dialogs.cpp:401
 msgid "~C~ancel"
 msgstr "~إ~لغاء"
 
@@ -3866,7 +3891,7 @@ msgstr "معرّفات اللعبة المتطابقة لمحرك%s:"
 msgid "Game not implemented"
 msgstr "معرّف اللعبة غير مدعوم"
 
-#: engines/metaengine.cpp:75 engines/saga/metaengine.cpp:267
+#: engines/metaengine.cpp:75
 msgid "Default game keymap"
 msgstr "خريطة مفاتيح اللعبة الافتراضية"
 
@@ -3890,7 +3915,7 @@ msgstr "خريطة مفاتيح اللعبة الافتراضية"
 #: engines/tucker/metaengine.cpp:172 engines/ultima/ultima0/metaengine.cpp:180
 #: engines/ultima/ultima4/metaengine.cpp:227
 #: engines/ultima/nuvie/metaengine.cpp:238
-#: engines/ultima/ultima8/metaengine.cpp:139 engines/vcruise/metaengine.cpp:158
+#: engines/ultima/ultima8/metaengine.cpp:138 engines/vcruise/metaengine.cpp:158
 #: engines/wintermute/keymapper_tables.h:42 engines/zvision/metaengine.cpp:203
 #, fuzzy
 #| msgid "Left Click"
@@ -3927,7 +3952,7 @@ msgstr "النقر الأوسط"
 #: engines/ultima/ultima0/metaengine.cpp:186
 #: engines/ultima/ultima4/metaengine.cpp:233
 #: engines/ultima/nuvie/metaengine.cpp:244
-#: engines/ultima/ultima8/metaengine.cpp:145
+#: engines/ultima/ultima8/metaengine.cpp:144
 #: engines/wintermute/keymapper_tables.h:48 engines/zvision/metaengine.cpp:209
 #, fuzzy
 #| msgid "Right Click"
@@ -3953,7 +3978,7 @@ msgid "Pause"
 msgstr "يوقف"
 
 #: engines/metaengine.cpp:105 engines/parallaction/metaengine.cpp:163
-#: engines/ultima/ultima8/metaengine.cpp:48
+#: engines/ultima/ultima8/metaengine.cpp:47
 msgid "Game menu"
 msgstr "قائمة اللعبة"
 
@@ -4941,15 +4966,15 @@ msgstr "R"
 
 #: backends/platform/3ds/osystem-events.cpp:63
 #, fuzzy
-#| msgid "C-Pad X"
-msgid "C-pad X"
-msgstr "C-Pad X"
+#| msgid "Circle"
+msgid "Circle Pad X"
+msgstr "دائرة"
 
 #: backends/platform/3ds/osystem-events.cpp:64
 #, fuzzy
-#| msgid "C-Pad Y"
-msgid "C-pad Y"
-msgstr "C-Pad Y"
+#| msgid "Circle"
+msgid "Circle Pad Y"
+msgstr "دائرة"
 
 #: backends/platform/3ds/osystem-events.cpp:69
 #: backends/platform/ds/osystem_ds.cpp:194
@@ -5779,18 +5804,6 @@ msgstr "نافذة"
 msgid "Minimize"
 msgstr "تصغير"
 
-#. I18N: This keymap opens KIA's HELP tab.
-#. In Blade Runner's official localizations, there is a description of this keymap
-#. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
-#. ONLINE HELP
-#. I18N: Opens the help screen.
-#: backends/platform/sdl/macosx/appmenu_osx.mm:319
-#: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
-#: engines/ngi/metaengine.cpp:162 engines/supernova/metaengine.cpp:238
-#: engines/tucker/metaengine.cpp:215 engines/zvision/metaengine.cpp:246
-msgid "Help"
-msgstr "المساعدة"
-
 #: backends/platform/sdl/macosx/appmenu_osx.mm:324
 msgid "User Manual"
 msgstr "دليل الاستخدام"
@@ -6137,7 +6150,7 @@ msgstr "تخطي الخط"
 #: engines/efh/metaengine.cpp:286 engines/hdb/metaengine.cpp:213
 #: engines/hypno/metaengine.cpp:302 engines/hypno/metaengine.cpp:356
 #: engines/nancy/input.cpp:195 engines/tinsel/metaengine.cpp:263
-#: engines/titanic/metaengine.cpp:324 engines/ultima/ultima8/metaengine.cpp:53
+#: engines/titanic/metaengine.cpp:324 engines/ultima/ultima8/metaengine.cpp:52
 msgid "Move up"
 msgstr "تحرك"
 
@@ -6147,7 +6160,7 @@ msgstr "تحرك"
 #: engines/efh/metaengine.cpp:293 engines/hdb/metaengine.cpp:219
 #: engines/hypno/metaengine.cpp:290 engines/hypno/metaengine.cpp:342
 #: engines/nancy/input.cpp:201 engines/tinsel/metaengine.cpp:269
-#: engines/titanic/metaengine.cpp:330 engines/ultima/ultima8/metaengine.cpp:54
+#: engines/titanic/metaengine.cpp:330 engines/ultima/ultima8/metaengine.cpp:53
 msgid "Move down"
 msgstr "تحرك لأسفل"
 
@@ -6160,7 +6173,7 @@ msgstr "تحرك لأسفل"
 #: engines/kyra/engine/eobcommon.cpp:373 engines/lure/metaengine.cpp:218
 #: engines/nancy/input.cpp:207 engines/tinsel/metaengine.cpp:275
 #: engines/titanic/metaengine.cpp:312 engines/titanic/metaengine.cpp:390
-#: engines/ultima/ultima8/metaengine.cpp:55
+#: engines/ultima/ultima8/metaengine.cpp:54
 msgid "Move left"
 msgstr "تحرك يسارا"
 
@@ -6173,7 +6186,7 @@ msgstr "تحرك يسارا"
 #: engines/kyra/engine/eobcommon.cpp:374 engines/lure/metaengine.cpp:226
 #: engines/nancy/input.cpp:213 engines/tinsel/metaengine.cpp:281
 #: engines/titanic/metaengine.cpp:318 engines/titanic/metaengine.cpp:396
-#: engines/ultima/ultima8/metaengine.cpp:56
+#: engines/ultima/ultima8/metaengine.cpp:55
 msgid "Move right"
 msgstr "تحرك يمينا"
 
@@ -6310,7 +6323,7 @@ msgid "Climb"
 msgstr ""
 
 #: engines/access/metaengine.cpp:337 engines/bbvs/metaengine.cpp:142
-#: engines/freescape/games/castle/castle.cpp:298
+#: engines/freescape/games/castle/castle.cpp:396
 #: engines/petka/metaengine.cpp:137 engines/scumm/help.cpp:225
 #: engines/tsage/metaengine.cpp:201
 msgid "Walk"
@@ -6327,7 +6340,7 @@ msgstr "انتقل إلى حفظ / تحميل القائمة"
 #: engines/mortevielle/mortevielle.cpp:300 engines/sky/compact.cpp:129
 #: engines/supernova/supernova.cpp:467 engines/teenagent/resources.cpp:312
 #: engines/tony/tony.cpp:187 engines/toon/toon.cpp:5425
-#: engines/ultima/ultima8/ultima8.cpp:193
+#: engines/ultima/ultima8/ultima8.cpp:179
 #, c-format
 msgid "Unable to locate the '%s' engine data file."
 msgstr "غير قادر على تحديد موقع ملف بيانات المحرك '%s'."
@@ -6700,12 +6713,12 @@ msgstr ""
 #: engines/illusions/metaengine.cpp:90 engines/lab/metaengine.cpp:152
 #: engines/lure/metaengine.cpp:169 engines/made/metaengine.cpp:133
 #: engines/mads/metaengine.cpp:275 engines/neverhood/metaengine.cpp:186
-#: engines/queen/metaengine.cpp:147 engines/sludge/keymapper_tables.h:33
-#: engines/stark/metaengine.cpp:185 engines/sword1/metaengine.cpp:267
-#: engines/tinsel/metaengine.cpp:241 engines/toon/metaengine.cpp:82
-#: engines/tot/metaengine.cpp:103 engines/touche/metaengine.cpp:119
-#: engines/trecision/metaengine.cpp:121 engines/tsage/metaengine.cpp:170
-#: engines/tucker/metaengine.cpp:168
+#: engines/queen/metaengine.cpp:147 engines/saga/metaengine.cpp:268
+#: engines/sludge/keymapper_tables.h:33 engines/stark/metaengine.cpp:185
+#: engines/sword1/metaengine.cpp:267 engines/tinsel/metaengine.cpp:241
+#: engines/toon/metaengine.cpp:82 engines/tot/metaengine.cpp:103
+#: engines/touche/metaengine.cpp:119 engines/trecision/metaengine.cpp:121
+#: engines/tsage/metaengine.cpp:170 engines/tucker/metaengine.cpp:168
 #, fuzzy
 #| msgid "Game Options"
 msgid "Game keymappings"
@@ -6770,7 +6783,7 @@ msgstr "اركض للخلف"
 #: engines/kyra/engine/eobcommon.cpp:375 engines/kyra/engine/lol.cpp:514
 #: engines/lab/metaengine.cpp:257 engines/mm/mm1/metaengine.cpp:97
 #: engines/mohawk/riven.cpp:901 engines/pegasus/pegasus.cpp:2740
-#: engines/twine/metaengine.cpp:353 engines/ultima/ultima8/metaengine.cpp:49
+#: engines/twine/metaengine.cpp:353 engines/ultima/ultima8/metaengine.cpp:48
 #: engines/wintermute/keymapper_tables.h:161
 #: engines/wintermute/keymapper_tables.h:741
 #: engines/wintermute/keymapper_tables.h:2122
@@ -6783,7 +6796,7 @@ msgstr "انعطف لليسار"
 #: engines/kyra/engine/eobcommon.cpp:376 engines/kyra/engine/lol.cpp:515
 #: engines/lab/metaengine.cpp:271 engines/mm/mm1/metaengine.cpp:98
 #: engines/mohawk/riven.cpp:907 engines/pegasus/pegasus.cpp:2747
-#: engines/twine/metaengine.cpp:346 engines/ultima/ultima8/metaengine.cpp:50
+#: engines/twine/metaengine.cpp:346 engines/ultima/ultima8/metaengine.cpp:49
 #: engines/wintermute/keymapper_tables.h:167
 #: engines/wintermute/keymapper_tables.h:746
 #: engines/wintermute/keymapper_tables.h:2128
@@ -7072,7 +7085,7 @@ msgid "Whether textures should be linearly filtered"
 msgstr ""
 
 #: engines/alcachofa/metaengine.cpp:98 engines/cine/metaengine.cpp:347
-#: engines/freescape/games/castle/castle.cpp:315
+#: engines/freescape/games/castle/castle.cpp:413
 #, fuzzy
 #| msgid "Active"
 msgid "Activate"
@@ -7118,7 +7131,7 @@ msgstr "تحميل سريع"
 #: engines/sludge/keymapper_tables.h:303 engines/sludge/keymapper_tables.h:410
 #: engines/sludge/keymapper_tables.h:465 engines/sludge/keymapper_tables.h:496
 #: engines/ultima/nuvie/metaengine.cpp:91
-#: engines/ultima/ultima8/metaengine.cpp:44
+#: engines/ultima/ultima8/metaengine.cpp:43
 #: engines/wintermute/keymapper_tables.h:930
 msgid "Quick save"
 msgstr "الحفظ السريع"
@@ -7551,8 +7564,8 @@ msgstr "تبديل مفتاح الخصوصية"
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
 #: engines/dgds/metaengine.cpp:75 engines/dm/metaengine.cpp:174
 #: engines/drascula/metaengine.cpp:285 engines/efh/metaengine.cpp:272
-#: engines/freescape/games/castle/castle.cpp:260
-#: engines/freescape/games/dark/dark.cpp:187
+#: engines/freescape/games/castle/castle.cpp:358
+#: engines/freescape/games/dark/dark.cpp:188
 #: engines/freescape/games/driller/driller.cpp:120
 #: engines/freescape/games/eclipse/eclipse.cpp:227
 #: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:165
@@ -7566,7 +7579,7 @@ msgstr "تبديل مفتاح الخصوصية"
 #: engines/stark/metaengine.cpp:208 engines/tetraedge/metaengine.cpp:110
 #: engines/titanic/metaengine.cpp:199 engines/toltecs/metaengine.cpp:234
 #: engines/toon/metaengine.cpp:112 engines/trecision/metaengine.cpp:169
-#: engines/tsage/metaengine.cpp:242 engines/ultima/ultima8/metaengine.cpp:45
+#: engines/tsage/metaengine.cpp:242 engines/ultima/ultima8/metaengine.cpp:44
 #: engines/vcruise/metaengine.cpp:175 engines/wintermute/keymapper_tables.h:920
 msgid "Save game"
 msgstr "حفظ اللعبة"
@@ -7579,8 +7592,8 @@ msgstr "حفظ اللعبة"
 #: engines/cge/metaengine.cpp:227 engines/cge2/metaengine.cpp:241
 #: engines/dgds/metaengine.cpp:74 engines/drascula/metaengine.cpp:260
 #: engines/efh/metaengine.cpp:279 engines/efh/metaengine.cpp:613
-#: engines/freescape/games/castle/castle.cpp:265
-#: engines/freescape/games/dark/dark.cpp:192
+#: engines/freescape/games/castle/castle.cpp:363
+#: engines/freescape/games/dark/dark.cpp:193
 #: engines/freescape/games/driller/driller.cpp:125
 #: engines/freescape/games/eclipse/eclipse.cpp:232
 #: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:198
@@ -7592,7 +7605,7 @@ msgstr "حفظ اللعبة"
 #: engines/stark/metaengine.cpp:213 engines/tetraedge/metaengine.cpp:104
 #: engines/titanic/metaengine.cpp:205 engines/toltecs/metaengine.cpp:240
 #: engines/toon/metaengine.cpp:118 engines/trecision/metaengine.cpp:175
-#: engines/ultima/ultima8/metaengine.cpp:46 engines/vcruise/metaengine.cpp:180
+#: engines/ultima/ultima8/metaengine.cpp:45 engines/vcruise/metaengine.cpp:180
 #: engines/wintermute/keymapper_tables.h:925
 #: engines/wintermute/keymapper_tables.h:1265
 msgid "Load game"
@@ -7635,8 +7648,8 @@ msgstr "قاعدة بيانات الدليل"
 #: engines/bladerunner/metaengine.cpp:375 engines/cruise/metaengine.cpp:229
 #: engines/darkseed/metaengine.cpp:60 engines/dragons/metaengine.cpp:223
 #: engines/efh/metaengine.cpp:373 engines/efh/metaengine.cpp:619
-#: engines/freescape/games/castle/castle.cpp:273
-#: engines/freescape/games/dark/dark.cpp:197
+#: engines/freescape/games/castle/castle.cpp:371
+#: engines/freescape/games/dark/dark.cpp:198
 #: engines/freescape/games/driller/driller.cpp:130
 #: engines/freescape/games/eclipse/eclipse.cpp:237
 #: engines/mads/metaengine.cpp:361 engines/saga/metaengine.cpp:437
@@ -7735,7 +7748,7 @@ msgstr "ينظر الى"
 #: engines/kyra/engine/eobcommon.cpp:371 engines/kyra/engine/lol.cpp:510
 #: engines/mohawk/riven.cpp:881 engines/titanic/metaengine.cpp:336
 #: engines/titanic/metaengine.cpp:378 engines/twine/metaengine.cpp:332
-#: engines/ultima/ultima8/metaengine.cpp:51
+#: engines/ultima/ultima8/metaengine.cpp:50
 #: engines/wintermute/keymapper_tables.h:149
 #: engines/wintermute/keymapper_tables.h:731
 #: engines/wintermute/keymapper_tables.h:2116
@@ -8859,10 +8872,10 @@ msgstr ""
 
 #. I18N: Run is a movement type
 #. I18N: Action in In Cold Blood
-#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:293
+#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:391
 #: engines/grim/grim.cpp:501 engines/grim/grim.cpp:596
 #: engines/hpl1/metaengine.cpp:82 engines/icb/icb.cpp:131
-#: engines/icb/icb.cpp:197 engines/ultima/ultima8/metaengine.cpp:57
+#: engines/icb/icb.cpp:197 engines/ultima/ultima8/metaengine.cpp:56
 msgid "Run"
 msgstr "ركض"
 
@@ -9107,20 +9120,20 @@ msgstr "تغيير الأمر"
 msgid "Info menu"
 msgstr "القائمة"
 
-#: engines/freescape/games/castle/castle.cpp:250
+#: engines/freescape/games/castle/castle.cpp:348
 #, fuzzy
 #| msgid "Select shader"
 msgid "Select Prince"
 msgstr "حدد تظليل"
 
-#: engines/freescape/games/castle/castle.cpp:255
+#: engines/freescape/games/castle/castle.cpp:353
 #, fuzzy
 #| msgid "Select shader"
 msgid "Select Princess"
 msgstr "حدد تظليل"
 
-#: engines/freescape/games/castle/castle.cpp:278
-#: engines/freescape/games/dark/dark.cpp:207
+#: engines/freescape/games/castle/castle.cpp:376
+#: engines/freescape/games/dark/dark.cpp:208
 #: engines/freescape/games/driller/driller.cpp:138
 #: engines/freescape/games/eclipse/eclipse.cpp:245
 #, fuzzy
@@ -9128,8 +9141,8 @@ msgstr "حدد تظليل"
 msgid "Toggle Sound"
 msgstr "تبديل كتم الصوت"
 
-#: engines/freescape/games/castle/castle.cpp:283
-#: engines/freescape/games/dark/dark.cpp:213
+#: engines/freescape/games/castle/castle.cpp:381
+#: engines/freescape/games/dark/dark.cpp:214
 #: engines/freescape/games/driller/driller.cpp:144
 #: engines/freescape/games/eclipse/eclipse.cpp:250
 #, fuzzy
@@ -9137,8 +9150,8 @@ msgstr "تبديل كتم الصوت"
 msgid "Rotate Left"
 msgstr "مهاجم اليسار"
 
-#: engines/freescape/games/castle/castle.cpp:288
-#: engines/freescape/games/dark/dark.cpp:218
+#: engines/freescape/games/castle/castle.cpp:386
+#: engines/freescape/games/dark/dark.cpp:219
 #: engines/freescape/games/driller/driller.cpp:149
 #: engines/freescape/games/eclipse/eclipse.cpp:255
 #, fuzzy
@@ -9146,42 +9159,42 @@ msgstr "مهاجم اليسار"
 msgid "Rotate Right"
 msgstr "مهاجم الأيمن"
 
-#: engines/freescape/games/castle/castle.cpp:304
+#: engines/freescape/games/castle/castle.cpp:402
 msgid "Crawl"
 msgstr ""
 
-#: engines/freescape/games/castle/castle.cpp:310
+#: engines/freescape/games/castle/castle.cpp:408
 #: engines/freescape/games/eclipse/eclipse.cpp:284
 #, fuzzy
 #| msgid "Move Forward"
 msgid "Face Forward"
 msgstr "تحرك إلى الأمام"
 
-#: engines/freescape/games/dark/dark.cpp:223
+#: engines/freescape/games/dark/dark.cpp:224
 #: engines/freescape/games/driller/driller.cpp:183
-#: engines/ultima/ultima8/metaengine.cpp:98
+#: engines/ultima/ultima8/metaengine.cpp:97
 #, fuzzy
 #| msgid "Move left"
 msgid "Roll left"
 msgstr "تحرك يسارا"
 
-#: engines/freescape/games/dark/dark.cpp:228
+#: engines/freescape/games/dark/dark.cpp:229
 #: engines/freescape/games/driller/driller.cpp:188
-#: engines/ultima/ultima8/metaengine.cpp:99
+#: engines/ultima/ultima8/metaengine.cpp:98
 #, fuzzy
 #| msgid "Move right"
 msgid "Roll right"
 msgstr "تحرك يمينا"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/dark/dark.cpp:234
+#: engines/freescape/games/dark/dark.cpp:235
 #: engines/freescape/games/driller/driller.cpp:155
 #, fuzzy
 #| msgid "Increasing Volume"
 msgid "Increase Turn Angle"
 msgstr "زيادة حجم الصوت"
 
-#: engines/freescape/games/dark/dark.cpp:239
+#: engines/freescape/games/dark/dark.cpp:240
 #: engines/freescape/games/driller/driller.cpp:160
 #, fuzzy
 #| msgid "Decreasing Volume"
@@ -9189,7 +9202,7 @@ msgid "Decrease Turn Angle"
 msgstr "تقليل الحجم صوت"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:245
+#: engines/freescape/games/dark/dark.cpp:246
 #: engines/freescape/games/driller/driller.cpp:166
 #, fuzzy
 #| msgid "Increase the scale factor"
@@ -9197,26 +9210,26 @@ msgid "Increase Step Size"
 msgstr "زيادة معامل القياس"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:251
+#: engines/freescape/games/dark/dark.cpp:252
 #: engines/freescape/games/driller/driller.cpp:172
 #, fuzzy
 #| msgid "Decrease the scale factor"
 msgid "Decrease Step Size"
 msgstr "إنقاص عامل القياس"
 
-#: engines/freescape/games/dark/dark.cpp:256
+#: engines/freescape/games/dark/dark.cpp:257
 #: engines/freescape/games/driller/driller.cpp:177
 msgid "Rise/Fly up"
 msgstr ""
 
-#: engines/freescape/games/dark/dark.cpp:262
+#: engines/freescape/games/dark/dark.cpp:263
 #: engines/freescape/games/driller/driller.cpp:193
 #, fuzzy
 #| msgid "Fly down"
 msgid "Lower/Fly down"
 msgstr "طر للأسفل"
 
-#: engines/freescape/games/dark/dark.cpp:268
+#: engines/freescape/games/dark/dark.cpp:269
 msgid "Enable/Disable Jetpack"
 msgstr ""
 
@@ -11416,7 +11429,7 @@ msgstr ""
 "يمكن تنزيل التحديثات من:\n"
 "%s"
 
-#: engines/myst3/myst3.cpp:1655 engines/pegasus/pegasus.cpp:749
+#: engines/myst3/myst3.cpp:1659 engines/pegasus/pegasus.cpp:749
 msgid "Invalid file name for saving"
 msgstr "اسم ملف غير صالح للحفظ"
 
@@ -12018,39 +12031,41 @@ msgstr "الإصدار التجريبي لجهاز كمبيوتر الجيب غ�
 msgid "I Have No Mouth support not compiled in"
 msgstr "ليس لدي دعم الفم لم يتم تجميعه في"
 
-#: engines/saga/metaengine.cpp:268
+#: engines/saga/metaengine.cpp:267
 #, fuzzy
-#| msgid "Game Options"
-msgid "Game keymapping"
-msgstr "خيارات اللعبة"
+#| msgid "Default game keymap"
+msgid "Default game keymappings"
+msgstr "خريطة مفاتيح اللعبة الافتراضية"
 
 #: engines/saga/metaengine.cpp:269
 #, fuzzy
 #| msgid "Game Options"
-msgid "Option panel keymapping"
+msgid "Option panel keymappings"
 msgstr "خيارات اللعبة"
 
 #: engines/saga/metaengine.cpp:270
 #, fuzzy
 #| msgid "Game Options"
-msgid "Save panel keymapping"
+msgid "Save panel keymappings"
 msgstr "خيارات اللعبة"
 
 #: engines/saga/metaengine.cpp:271
 #, fuzzy
 #| msgid "Game Options"
-msgid "Load panel keymapping"
+msgid "Load panel keymappings"
 msgstr "خيارات اللعبة"
 
 #: engines/saga/metaengine.cpp:272
 #, fuzzy
 #| msgid "Game Options"
-msgid "Quit panel keymapping"
+msgid "Quit panel keymappings"
 msgstr "خيارات اللعبة"
 
 #: engines/saga/metaengine.cpp:273
-msgid "Converse panel keymapping"
-msgstr ""
+#, fuzzy
+#| msgid "Game Options"
+msgid "Converse panel keymappings"
+msgstr "خيارات اللعبة"
 
 #. I18N: the boss key is a feature,
 #. that allows players to quickly switch to a fake screen that looks like a business application,
@@ -13194,7 +13209,7 @@ msgid "Fighting controls (numpad):"
 msgstr "ضوابط القتال (Numpad):"
 
 #: engines/scumm/help.cpp:309 engines/scumm/help.cpp:310
-#: engines/scumm/help.cpp:311 engines/ultima/ultima8/metaengine.cpp:97
+#: engines/scumm/help.cpp:311 engines/ultima/ultima8/metaengine.cpp:96
 msgid "Step back"
 msgstr "خطوة للخلف"
 
@@ -15778,7 +15793,7 @@ msgid "Board"
 msgstr ""
 
 #: engines/ultima/ultima4/metaengine.cpp:52
-#: engines/ultima/ultima8/metaengine.cpp:108
+#: engines/ultima/ultima8/metaengine.cpp:107
 msgid "Descend"
 msgstr ""
 
@@ -16561,234 +16576,234 @@ msgstr ""
 msgid "Transfer Character"
 msgstr "نقل الحرف"
 
-#: engines/ultima/ultima8/metaengine.cpp:47
+#: engines/ultima/ultima8/metaengine.cpp:46
 msgid "Draw weapon / Combat"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:52
+#: engines/ultima/ultima8/metaengine.cpp:51
 #, fuzzy
 #| msgid "Move Back"
 msgid "Move back"
 msgstr "ارجع للوراء"
 
-#: engines/ultima/ultima8/metaengine.cpp:58
+#: engines/ultima/ultima8/metaengine.cpp:57
 #, fuzzy
 #| msgid "Highlight next dialogue"
 msgid "Highlight items"
 msgstr "قم بتمييز الحوار التالي"
 
-#: engines/ultima/ultima8/metaengine.cpp:64
+#: engines/ultima/ultima8/metaengine.cpp:63
 msgid "Use bedroll"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:65
+#: engines/ultima/ultima8/metaengine.cpp:64
 #, fuzzy
 #| msgid "Backend"
 msgid "Open backpack"
 msgstr "الخلفية"
 
-#: engines/ultima/ultima8/metaengine.cpp:66
+#: engines/ultima/ultima8/metaengine.cpp:65
 #, fuzzy
 #| msgid "Use RGB rendering"
 msgid "Use keyring"
 msgstr "استخدم عرض RGB"
 
-#: engines/ultima/ultima8/metaengine.cpp:67
+#: engines/ultima/ultima8/metaengine.cpp:66
 #, fuzzy
 #| msgid "Open Holomap"
 msgid "Open minimap"
 msgstr "افتح خريطة Holo"
 
-#: engines/ultima/ultima8/metaengine.cpp:68
+#: engines/ultima/ultima8/metaengine.cpp:67
 msgid "Use recall"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:69
+#: engines/ultima/ultima8/metaengine.cpp:68
 #, fuzzy
 #| msgid "Open/Close Inventory"
 msgid "Open inventory & statistics"
 msgstr "فتح / إغلاق الجرد"
 
 #. I18N: gump is Graphical User Menu Pop-up
-#: engines/ultima/ultima8/metaengine.cpp:71
+#: engines/ultima/ultima8/metaengine.cpp:70
 msgid "Close all displays"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:72
+#: engines/ultima/ultima8/metaengine.cpp:71
 msgid "Jump (fake both-button-click)"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:73
+#: engines/ultima/ultima8/metaengine.cpp:72
 msgid "Careful step"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:79
+#: engines/ultima/ultima8/metaengine.cpp:78
 #, fuzzy
 #| msgid "Cycle through stretch modes"
 msgid "Cycle through weapon inventory"
 msgstr "التنقل بين أوضاع التمدد"
 
-#: engines/ultima/ultima8/metaengine.cpp:80
+#: engines/ultima/ultima8/metaengine.cpp:79
 #, fuzzy
 #| msgid "Cycle through stretch modes"
 msgid "Cycle through item inventory"
 msgstr "التنقل بين أوضاع التمدد"
 
-#: engines/ultima/ultima8/metaengine.cpp:81
+#: engines/ultima/ultima8/metaengine.cpp:80
 #, fuzzy
 #| msgid "Inventory"
 msgid "Use inventory item"
 msgstr "قائمة الجرد"
 
-#: engines/ultima/ultima8/metaengine.cpp:82
+#: engines/ultima/ultima8/metaengine.cpp:81
 msgid "Use medikit"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:83
+#: engines/ultima/ultima8/metaengine.cpp:82
 #, fuzzy
 #| msgid "Inventory"
 msgid "Use energy cube"
 msgstr "قائمة الجرد"
 
-#: engines/ultima/ultima8/metaengine.cpp:84
+#: engines/ultima/ultima8/metaengine.cpp:83
 msgid "Detonate bomb"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:86
+#: engines/ultima/ultima8/metaengine.cpp:85
 #, fuzzy
 #| msgid "Drop page"
 msgid "Drop weapon"
 msgstr "إفلات الصفحة"
 
-#: engines/ultima/ultima8/metaengine.cpp:87
+#: engines/ultima/ultima8/metaengine.cpp:86
 #, fuzzy
 #| msgid "Select a Theme"
 msgid "Search / Select item"
 msgstr "حدد موضوعًا"
 
-#: engines/ultima/ultima8/metaengine.cpp:88
+#: engines/ultima/ultima8/metaengine.cpp:87
 #, fuzzy
 #| msgid "Next action"
 msgid "Use selection"
 msgstr "الحدث التالي"
 
-#: engines/ultima/ultima8/metaengine.cpp:89
+#: engines/ultima/ultima8/metaengine.cpp:88
 msgid "Grab items"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:90
+#: engines/ultima/ultima8/metaengine.cpp:89
 #, fuzzy
 #| msgid "Next action"
 msgid "Fire weapon"
 msgstr "الحدث التالي"
 
-#: engines/ultima/ultima8/metaengine.cpp:91
+#: engines/ultima/ultima8/metaengine.cpp:90
 #, fuzzy
 #| msgid "Camera moves with Silencer"
 msgid "Center screen on Silencer"
 msgstr "الكاميرا تتحرك مع كاتم الصوت"
 
-#: engines/ultima/ultima8/metaengine.cpp:92
+#: engines/ultima/ultima8/metaengine.cpp:91
 msgid "Jump / Roll / Crouch"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:93
+#: engines/ultima/ultima8/metaengine.cpp:92
 #, fuzzy
 #| msgid "Shorty mode"
 msgid "Short jump"
 msgstr "وضع قليل"
 
-#: engines/ultima/ultima8/metaengine.cpp:94
+#: engines/ultima/ultima8/metaengine.cpp:93
 #, fuzzy
 #| msgid "Slide Left"
 msgid "Sidestep left"
 msgstr "الشريحة إلى اليسار"
 
-#: engines/ultima/ultima8/metaengine.cpp:95
+#: engines/ultima/ultima8/metaengine.cpp:94
 #, fuzzy
 #| msgid "Slide Right"
 msgid "Sidestep right"
 msgstr "انزلاق لليمين"
 
-#: engines/ultima/ultima8/metaengine.cpp:96
+#: engines/ultima/ultima8/metaengine.cpp:95
 #, fuzzy
 #| msgid "Move Forward"
 msgid "Step forward"
 msgstr "تحرك إلى الأمام"
 
-#: engines/ultima/ultima8/metaengine.cpp:100
+#: engines/ultima/ultima8/metaengine.cpp:99
 #, fuzzy
 #| msgid "Toggle Combat"
 msgid "Toggle crouch"
 msgstr "تبديل القتال"
 
-#: engines/ultima/ultima8/metaengine.cpp:101
+#: engines/ultima/ultima8/metaengine.cpp:100
 msgid "Side step / Advance / Retreat"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:106
+#: engines/ultima/ultima8/metaengine.cpp:105
 #, fuzzy
 #| msgid "Toggle Combat"
 msgid "Toggle clipping"
 msgstr "تبديل القتال"
 
-#: engines/ultima/ultima8/metaengine.cpp:107
+#: engines/ultima/ultima8/metaengine.cpp:106
 msgid "Ascend"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:115
+#: engines/ultima/ultima8/metaengine.cpp:114
 #, fuzzy
 #| msgid "Show hints"
 msgid "Show touching items"
 msgstr "تلميحات المعرض"
 
-#: engines/ultima/ultima8/metaengine.cpp:116
+#: engines/ultima/ultima8/metaengine.cpp:115
 #, fuzzy
 #| msgid "Speech Options"
 msgid "Show editor items"
 msgstr "خيارات الكلام"
 
-#: engines/ultima/ultima8/metaengine.cpp:117
+#: engines/ultima/ultima8/metaengine.cpp:116
 msgid "Decrement map sort order"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:118
+#: engines/ultima/ultima8/metaengine.cpp:117
 msgid "Increment map sort order"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:119
+#: engines/ultima/ultima8/metaengine.cpp:118
 #, fuzzy
 #| msgid "Toggle fast mode"
 msgid "Toggle frame by frame"
 msgstr "تبديل الوضع السريع"
 
-#: engines/ultima/ultima8/metaengine.cpp:120
+#: engines/ultima/ultima8/metaengine.cpp:119
 msgid "Advance frame"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:121
+#: engines/ultima/ultima8/metaengine.cpp:120
 msgid "Toggle Avatar in stasis"
 msgstr ""
 
-#: engines/ultima/ultima8/metaengine.cpp:122
+#: engines/ultima/ultima8/metaengine.cpp:121
 #, fuzzy
 #| msgid "Show scene geometry"
 msgid "Show shape viewer"
 msgstr "إظهار هندسة المشهد"
 
-#: engines/ultima/ultima8/metaengine.cpp:132
+#: engines/ultima/ultima8/metaengine.cpp:131
 msgid "Ultima VIII"
 msgstr "Ultima الثامن"
 
-#: engines/ultima/ultima8/metaengine.cpp:132
+#: engines/ultima/ultima8/metaengine.cpp:131
 msgid "Crusader"
 msgstr "الصليبي"
 
-#: engines/ultima/ultima8/metaengine.cpp:175
+#: engines/ultima/ultima8/metaengine.cpp:174
 msgid "Ultima VIII Cheats"
 msgstr "غش Ultima الثامن"
 
-#: engines/ultima/ultima8/metaengine.cpp:190
+#: engines/ultima/ultima8/metaengine.cpp:189
 msgid "Ultima VIII Debug"
 msgstr "تصحيح أخطاء Ultima VIII"
 
@@ -16802,7 +16817,7 @@ msgstr ""
 "المضغوط. المزيد من التعليمات موجودة على الويكي: https://wiki.scummvm.org/"
 "index.php?title=Crusader:_No_Remorse."
 
-#: engines/ultima/ultima8/games/u8_game.cpp:108
+#: engines/ultima/ultima8/games/u8_game.cpp:104
 msgid ""
 "Missing Required File\n"
 "\n"
@@ -17672,6 +17687,21 @@ msgstr ""
 
 #~ msgid "D-pad Right"
 #~ msgstr "D-pad الأيمن"
+
+#, fuzzy
+#~| msgid "Game Options"
+#~ msgid "Game keymapping"
+#~ msgstr "خيارات اللعبة"
+
+#, fuzzy
+#~| msgid "C-Pad X"
+#~ msgid "C-pad X"
+#~ msgstr "C-Pad X"
+
+#, fuzzy
+#~| msgid "C-Pad Y"
+#~ msgid "C-pad Y"
+#~ msgstr "C-Pad Y"
 
 #~ msgid "Left Stick X"
 #~ msgstr "العصا اليسرى X"

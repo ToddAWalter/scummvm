@@ -60,8 +60,8 @@ static const Common::HardwareInputTableEntry ctrJoystickButtons[] = {
 };
 
 static const Common::AxisTableEntry ctrJoystickAxes[] = {
-	{ "JOY_LEFT_STICK_X", Common::JOYSTICK_AXIS_LEFT_STICK_X, Common::kAxisTypeFull, _s("C-pad X") },
-	{ "JOY_LEFT_STICK_Y", Common::JOYSTICK_AXIS_LEFT_STICK_Y, Common::kAxisTypeFull, _s("C-pad Y") },
+	{ "JOY_LEFT_STICK_X", Common::JOYSTICK_AXIS_LEFT_STICK_X, Common::kAxisTypeFull, _s("Circle Pad X") },
+	{ "JOY_LEFT_STICK_Y", Common::JOYSTICK_AXIS_LEFT_STICK_Y, Common::kAxisTypeFull, _s("Circle Pad Y") },
 	{ nullptr,            0,                                  Common::kAxisTypeFull, nullptr       }
 };
 

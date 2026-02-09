@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.5.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-05 00:02+0000\n"
-"PO-Revision-Date: 2026-02-04 22:18+0000\n"
+"POT-Creation-Date: 2026-02-08 20:33+0000\n"
+"PO-Revision-Date: 2026-02-08 22:22+0000\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/sv/>\n"
@@ -70,29 +70,42 @@ msgstr "Tillgängliga motorer:"
 msgid "Close"
 msgstr "Stäng"
 
-#: gui/browser.cpp:74 backends/dialogs/macosx/macosx-dialogs.mm:108
+#. I18N: This keymap opens KIA's HELP tab.
+#. In Blade Runner's official localizations, there is a description of this keymap
+#. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
+#. ONLINE HELP
+#. I18N: Opens the help screen.
+#: gui/browser.cpp:64 gui/launcher.cpp:275 gui/launcher.cpp:953
+#: backends/platform/sdl/macosx/appmenu_osx.mm:319
+#: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
+#: engines/ngi/metaengine.cpp:162 engines/supernova/metaengine.cpp:238
+#: engines/tucker/metaengine.cpp:215 engines/zvision/metaengine.cpp:246
+msgid "Help"
+msgstr "Hjälp"
+
+#: gui/browser.cpp:77 backends/dialogs/macosx/macosx-dialogs.mm:108
 msgid "Show hidden files"
 msgstr "Visa dolda filer"
 
-#: gui/browser.cpp:74
+#: gui/browser.cpp:77
 msgid "Show files marked with the hidden attribute"
 msgstr "Visa filer markerade med dolt attribut"
 
-#: gui/browser.cpp:78 gui/remotebrowser.cpp:56
+#: gui/browser.cpp:81 gui/remotebrowser.cpp:56
 msgid "Go up"
 msgstr "Gå uppåt"
 
-#: gui/browser.cpp:78 gui/browser.cpp:80 gui/remotebrowser.cpp:56
+#: gui/browser.cpp:81 gui/browser.cpp:83 gui/remotebrowser.cpp:56
 #: gui/remotebrowser.cpp:58
 msgid "Go to previous directory level"
 msgstr "Gå till föregående katalognivå"
 
-#: gui/browser.cpp:80 gui/remotebrowser.cpp:58
+#: gui/browser.cpp:83 gui/remotebrowser.cpp:58
 msgctxt "lowres"
 msgid "Go up"
 msgstr "Gå uppåt"
 
-#: gui/browser.cpp:81 gui/chooser.cpp:45 gui/cloudconnectionwizard.cpp:67
+#: gui/browser.cpp:84 gui/chooser.cpp:45 gui/cloudconnectionwizard.cpp:67
 #: gui/downloaddlcsdialog.cpp:61 gui/downloadpacksdialog.cpp:272
 #: gui/downloadpacksdialog.cpp:465 gui/editgamedialog.cpp:340
 #: gui/editrecorddialog.cpp:66 gui/integrity-dialog.cpp:122
@@ -127,7 +140,7 @@ msgstr "Gå uppåt"
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: gui/browser.cpp:82 gui/chooser.cpp:46 gui/filebrowser-dialog.cpp:69
+#: gui/browser.cpp:85 gui/chooser.cpp:46 gui/filebrowser-dialog.cpp:69
 #: gui/remotebrowser.cpp:60 gui/shaderbrowser-dialog.cpp:81
 #: gui/themebrowser.cpp:55 backends/dialogs/gtk/gtk-dialogs.cpp:64
 #: backends/dialogs/macosx/macosx-dialogs.mm:162
@@ -259,8 +272,8 @@ msgstr "Klistra in"
 msgid "Paste code from clipboard"
 msgstr "Klistra in kod från urklipp"
 
-#: gui/cloudconnectionwizard.cpp:387 gui/launcher.cpp:317
-#: engines/dialogs.cpp:94 engines/engine.cpp:1019 engines/mm/xeen/saves.cpp:259
+#: gui/cloudconnectionwizard.cpp:387 gui/launcher.cpp:322
+#: engines/dialogs.cpp:97 engines/engine.cpp:1019 engines/mm/xeen/saves.cpp:259
 #: engines/nancy/state/loadsave.cpp:108 engines/nancy/state/loadsave.cpp:153
 #: engines/parallaction/metaengine.cpp:151
 #: engines/parallaction/saveload.cpp:193 engines/pegasus/pegasus.cpp:388
@@ -313,8 +326,8 @@ msgstr "En annan lagring fungerar just nu. Vill du avbryta den?"
 
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
-#: gui/launcher.cpp:523 gui/launcher.cpp:1841 gui/options.cpp:3485
+#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:426 gui/launcher.cpp:455
+#: gui/launcher.cpp:528 gui/launcher.cpp:1858 gui/options.cpp:3485
 #: gui/options.cpp:3859 base/main.cpp:594
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:102
@@ -332,8 +345,8 @@ msgstr "Ja"
 
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:421 gui/launcher.cpp:450
-#: gui/launcher.cpp:523 gui/launcher.cpp:1841 gui/options.cpp:3485
+#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:426 gui/launcher.cpp:455
+#: gui/launcher.cpp:528 gui/launcher.cpp:1858 gui/options.cpp:3485
 #: gui/options.cpp:3859 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:102
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
@@ -421,7 +434,7 @@ msgid "Select directory where to download game data"
 msgstr "Välj katalogen där du vill hämta ner speldata"
 
 #: gui/downloaddialog.cpp:49 gui/dump-all-dialogs.cpp:117
-#: gui/dump-all-dialogs.cpp:142 gui/editgamedialog.cpp:586 gui/launcher.cpp:314
+#: gui/dump-all-dialogs.cpp:142 gui/editgamedialog.cpp:586 gui/launcher.cpp:319
 msgid "Select directory with game data"
 msgstr "Välj katalog med speldata"
 
@@ -457,7 +470,7 @@ msgstr ""
 "Det verkar som att din anslutning är begränsad. Vill du verkligen använda "
 "den för att hämta ner filer?"
 
-#: gui/downloaddialog.cpp:136 gui/launcher.cpp:686
+#: gui/downloaddialog.cpp:136 gui/launcher.cpp:691
 msgid "ScummVM couldn't open the specified directory!"
 msgstr "ScummVM kunde inte öppna den angivna katalogen!"
 
@@ -559,11 +572,11 @@ msgstr "ikonpaket"
 msgid "shader packs"
 msgstr "shader-paket"
 
-#: gui/dump-all-dialogs.cpp:146 gui/launcher.cpp:737
+#: gui/dump-all-dialogs.cpp:146 gui/launcher.cpp:742
 msgid "Pick the game:"
 msgstr "Välj spel:"
 
-#: gui/editgamedialog.cpp:140 engines/dialogs.cpp:301
+#: gui/editgamedialog.cpp:140 engines/dialogs.cpp:309
 msgid "Game"
 msgstr "Spel"
 
@@ -586,11 +599,11 @@ msgctxt "lowres"
 msgid "Override global graphic settings"
 msgstr "Åsidosätt globala grafikinställningar"
 
-#: gui/editgamedialog.cpp:185 gui/options.cpp:2288 engines/dialogs.cpp:346
+#: gui/editgamedialog.cpp:185 gui/options.cpp:2288 engines/dialogs.cpp:354
 msgid "Keymaps"
 msgstr "Tangenter"
 
-#: gui/editgamedialog.cpp:197 gui/options.cpp:2300 engines/dialogs.cpp:358
+#: gui/editgamedialog.cpp:197 gui/options.cpp:2300 engines/dialogs.cpp:366
 msgid "Backend"
 msgstr "Backend"
 
@@ -603,7 +616,7 @@ msgctxt "lowres"
 msgid "Override global backend settings"
 msgstr "Åsidosätt globala backend-inställningar"
 
-#: gui/editgamedialog.cpp:220 gui/options.cpp:2318 engines/dialogs.cpp:321
+#: gui/editgamedialog.cpp:220 gui/options.cpp:2318 engines/dialogs.cpp:329
 msgid "Audio"
 msgstr "Ljud"
 
@@ -726,11 +739,11 @@ msgstr "Sparningssökväg:"
 msgid "Default"
 msgstr "Standard"
 
-#: gui/editgamedialog.cpp:326 engines/dialogs.cpp:377
+#: gui/editgamedialog.cpp:326 engines/dialogs.cpp:385
 msgid "Achievements"
 msgstr "Prestationer"
 
-#: gui/editgamedialog.cpp:330 engines/dialogs.cpp:381
+#: gui/editgamedialog.cpp:330 engines/dialogs.cpp:389
 msgid "Statistics"
 msgstr "Statistik"
 
@@ -1439,7 +1452,7 @@ msgstr "År"
 msgid "Select Group by"
 msgstr "Välj grupp efter"
 
-#: gui/launcher.cpp:234 gui/launcher.cpp:932
+#: gui/launcher.cpp:234 gui/launcher.cpp:937
 msgid "Group:"
 msgstr "Grupp:"
 
@@ -1452,7 +1465,7 @@ msgid "Click here to see Help"
 msgstr "Klicka här för att se hjälp"
 
 #. I18N: Button Quit ScummVM program. Q is the shortcut, Ctrl+Q, put it in parens for non-latin (~Q~)
-#: gui/launcher.cpp:267 engines/dialogs.cpp:91
+#: gui/launcher.cpp:267 engines/dialogs.cpp:94
 msgid "~Q~uit"
 msgstr "~A~vsluta"
 
@@ -1469,90 +1482,94 @@ msgstr "~O~m"
 msgid "About ScummVM"
 msgstr "Om ScummVM"
 
+#: gui/launcher.cpp:275 gui/launcher.cpp:953
+msgid "General help"
+msgstr "Allmän hjälp"
+
 #. I18N: Button caption. O is the shortcut, Ctrl+O, put it in parens for non-latin (~O~)
-#: gui/launcher.cpp:273
+#: gui/launcher.cpp:278
 msgid "Global ~O~ptions..."
 msgstr "Globala a~l~ternativ..."
 
-#: gui/launcher.cpp:273
+#: gui/launcher.cpp:278
 msgid "Change global ScummVM options"
 msgstr "Redigera globala ScummVM-inställningar"
 
-#: gui/launcher.cpp:273
+#: gui/launcher.cpp:278
 msgctxt "lowres"
 msgid "Global ~O~pts..."
 msgstr "Globala i~n~st..."
 
-#: gui/launcher.cpp:277
+#: gui/launcher.cpp:282
 msgid "Download Games"
 msgstr "Hämta ner spel"
 
-#: gui/launcher.cpp:277
+#: gui/launcher.cpp:282
 msgid "Download freeware games for ScummVM"
 msgstr "Hämta ner freeware-spel till ScummVM"
 
 #. I18N: Button caption. A is the shortcut, Ctrl+A, put it in parens for non-latin (~A~)
-#: gui/launcher.cpp:284
+#: gui/launcher.cpp:289
 msgid "~A~dd Game..."
 msgstr "Lägg ~t~ill spel..."
 
-#: gui/launcher.cpp:284
+#: gui/launcher.cpp:289
 msgid "Add games to the list"
 msgstr "Lägg till spel till listan"
 
-#: gui/launcher.cpp:284
+#: gui/launcher.cpp:289
 msgctxt "lowres"
 msgid "~A~dd Game..."
 msgstr "Lä~g~g till spel..."
 
 #. I18N: Button caption. R is the shortcut, Ctrl+R, put it in parens for non-latin (~R~)
-#: gui/launcher.cpp:288
+#: gui/launcher.cpp:293
 msgid "~R~emove Game"
 msgstr "~T~a bort spel"
 
-#: gui/launcher.cpp:288
+#: gui/launcher.cpp:293
 msgid "Remove game from the list. The game data files stay intact"
 msgstr "Ta bort spelet från listan. Spelets datafiler påverkas inte"
 
-#: gui/launcher.cpp:288
+#: gui/launcher.cpp:293
 msgctxt "lowres"
 msgid "~R~emove Game"
 msgstr "~T~a bort spel"
 
 #. I18N: Button caption. Mass add games
-#: gui/launcher.cpp:291
+#: gui/launcher.cpp:296
 msgid "Mass Add..."
 msgstr "Lägg till flera..."
 
 #. I18N: Button caption for lower resolution GUI. Mass add games
-#: gui/launcher.cpp:294
+#: gui/launcher.cpp:299
 msgctxt "lowres"
 msgid "Mass Add..."
 msgstr "Lägg till flera..."
 
-#: gui/launcher.cpp:302 gui/launcher.cpp:902 gui/shaderbrowser-dialog.cpp:61
+#: gui/launcher.cpp:307 gui/launcher.cpp:907 gui/shaderbrowser-dialog.cpp:61
 #: gui/shaderbrowser-dialog.cpp:97
 msgid "Search in game list"
 msgstr "Sök i spellistan"
 
-#: gui/launcher.cpp:306 gui/launcher.cpp:923 gui/shaderbrowser-dialog.cpp:65
+#: gui/launcher.cpp:311 gui/launcher.cpp:928 gui/shaderbrowser-dialog.cpp:65
 #: gui/shaderbrowser-dialog.cpp:107
 msgid "Search:"
 msgstr "Sök:"
 
-#: gui/launcher.cpp:317 engines/dialogs.cpp:94 engines/engine.cpp:1019
+#: gui/launcher.cpp:322 engines/dialogs.cpp:97 engines/engine.cpp:1019
 #: engines/mm/xeen/saves.cpp:259 engines/nancy/state/loadsave.cpp:153
 #: engines/pegasus/pegasus.cpp:388 engines/trecision/saveload.cpp:253
 #: engines/tsage/scenes.cpp:642 engines/wage/saveload.cpp:753
 msgid "Load game:"
 msgstr "Läs in spel:"
 
-#: gui/launcher.cpp:409
+#: gui/launcher.cpp:414
 msgid "This directory cannot be used yet, it is being downloaded into!"
 msgstr ""
 "Den här katalogen kan inte användas än, eftersom något hämtas ner till den!"
 
-#: gui/launcher.cpp:420
+#: gui/launcher.cpp:425
 msgid ""
 "Do you really want to run the mass game detector? This could potentially add "
 "a huge number of games."
@@ -1560,23 +1577,23 @@ msgstr ""
 "Vill du verkligen använda denna funktion för att söka efter flera spel? "
 "Processen kan potentiellt lägga till ett enormt antal spel."
 
-#: gui/launcher.cpp:450
+#: gui/launcher.cpp:455
 msgid "Do you really want to remove this game configuration?"
 msgstr "Vill du verkligen ta bort den här spelkonfigurationen?"
 
-#: gui/launcher.cpp:522
+#: gui/launcher.cpp:527
 msgid "Do you want to load saved game?"
 msgstr "Vill du läsa in sparat spel?"
 
-#: gui/launcher.cpp:579
+#: gui/launcher.cpp:584
 msgid "This game does not support loading games from the launcher."
 msgstr "Det här spelet saknar stöd för inläsning av spel från spelstartaren."
 
-#: gui/launcher.cpp:583
+#: gui/launcher.cpp:588
 msgid "ScummVM could not find any engine capable of running the selected game!"
 msgstr "ScummVM kunde inte hitta någon motor som kan köra det valda spelet!"
 
-#: gui/launcher.cpp:689 gui/launcher.cpp:713
+#: gui/launcher.cpp:694 gui/launcher.cpp:718
 msgid ""
 "Have you given ScummVM access rights to this directory? Press the help "
 "button [?] on the top for detailed instructions"
@@ -1584,102 +1601,102 @@ msgstr ""
 "Har du gett ScummVM åtkomstbehörighet för denna katalog? Tryck på "
 "hjälpknappen [?] i toppen för detaljerade instruktioner"
 
-#: gui/launcher.cpp:710
+#: gui/launcher.cpp:715
 msgid "ScummVM could not find any game in the specified directory!"
 msgstr "ScummVM kunde inte hitta några spel i den valda katalogen!"
 
 #. I18N: Unknown game variant
-#: gui/launcher.cpp:731 engines/engine.cpp:1235
+#: gui/launcher.cpp:736 engines/engine.cpp:1235
 msgid "Unknown variant"
 msgstr "Okänd variant"
 
-#: gui/launcher.cpp:971 gui/saveload-dialog.cpp:381
+#: gui/launcher.cpp:988 gui/saveload-dialog.cpp:381
 msgid "List view"
 msgstr "Listvy"
 
-#: gui/launcher.cpp:972 gui/saveload-dialog.cpp:382
+#: gui/launcher.cpp:989 gui/saveload-dialog.cpp:382
 msgid "Grid view"
 msgstr "Rutnätsvy"
 
-#: gui/launcher.cpp:1120
+#: gui/launcher.cpp:1137
 msgid "~S~tart"
 msgstr "~S~tarta"
 
-#: gui/launcher.cpp:1120
+#: gui/launcher.cpp:1137
 msgid "Start selected game"
 msgstr "Starta det valda spelet"
 
-#: gui/launcher.cpp:1123
+#: gui/launcher.cpp:1140
 msgid "~L~oad..."
 msgstr "~L~äs in..."
 
-#: gui/launcher.cpp:1123
+#: gui/launcher.cpp:1140
 msgid "Load saved game for selected game"
 msgstr "Läs in sparat spel för det valda spelet"
 
-#: gui/launcher.cpp:1125
+#: gui/launcher.cpp:1142
 msgid "Record..."
 msgstr "Spela in..."
 
-#: gui/launcher.cpp:1131
+#: gui/launcher.cpp:1148
 msgid "~G~ame Options..."
 msgstr "Spela~l~ternativ..."
 
-#: gui/launcher.cpp:1131
+#: gui/launcher.cpp:1148
 msgid "Change game options"
 msgstr "Redigera spelalternativen"
 
-#: gui/launcher.cpp:1131
+#: gui/launcher.cpp:1148
 msgctxt "lowres"
 msgid "~G~ame Opts..."
 msgstr "Spela~l~ternativ..."
 
-#: gui/launcher.cpp:1217
+#: gui/launcher.cpp:1234
 msgid "Add-on"
 msgstr "Tillägg"
 
 #. I18N: List grouping when no engine is specified
-#: gui/launcher.cpp:1268 gui/launcher.cpp:1513
+#: gui/launcher.cpp:1285 gui/launcher.cpp:1530
 msgid "Unknown Engine"
 msgstr "Okänd motor"
 
 #. I18N: List grouping when no publisher is specified
 #. I18N: List group when no publisher is specified
-#: gui/launcher.cpp:1285 gui/launcher.cpp:1530
+#: gui/launcher.cpp:1302 gui/launcher.cpp:1547
 msgid "Unknown Publisher"
 msgstr "Okänd utgivare"
 
 #. I18N: List group when no game series is specified
 #. I18N: List grouping when no game series is specified
-#: gui/launcher.cpp:1302 gui/launcher.cpp:1547
+#: gui/launcher.cpp:1319 gui/launcher.cpp:1564
 msgid "No Series"
 msgstr "Ingen serie"
 
 #. I18N: List group when no language is specified
-#: gui/launcher.cpp:1316 gui/launcher.cpp:1561
+#: gui/launcher.cpp:1333 gui/launcher.cpp:1578
 msgid "Language not detected"
 msgstr "Språk upptäcktes inte"
 
 #. I18N: List group when no platform is specified
-#: gui/launcher.cpp:1330 gui/launcher.cpp:1575
+#: gui/launcher.cpp:1347 gui/launcher.cpp:1592
 msgid "Platform not detected"
 msgstr "Plattform upptäcktes inte"
 
 #. I18N: List group when no year is specified
-#: gui/launcher.cpp:1347 gui/launcher.cpp:1592
+#: gui/launcher.cpp:1364 gui/launcher.cpp:1609
 msgid "Unknown Year"
 msgstr "Okänt år"
 
 #. I18N: Group for All items
-#: gui/launcher.cpp:1599 gui/widgets/groupedlist.cpp:81
+#: gui/launcher.cpp:1616 gui/widgets/groupedlist.cpp:81
 msgid "All"
 msgstr "Alt"
 
-#: gui/launcher.cpp:1767
+#: gui/launcher.cpp:1784
 msgid "Icons per row:"
 msgstr "Ikoner per rad:"
 
-#: gui/launcher.cpp:1817
+#: gui/launcher.cpp:1834
 #, c-format
 msgid ""
 "Do you really want to remove the following %d game configuration(s)?\n"
@@ -3508,40 +3525,44 @@ msgstr "Prestation upplåst!"
 msgid "Illegitimate game copy detected. We provide no support in such cases"
 msgstr "Olaglig spelkopia upptäckt. Vi ger ingen support i sådana fall"
 
-#: engines/dialogs.cpp:68
+#: engines/dialogs.cpp:69
 msgid "~R~esume"
 msgstr "~F~ortsätt"
 
-#: engines/dialogs.cpp:70
+#: engines/dialogs.cpp:71
 msgid "~L~oad"
 msgstr "~L~äs in"
 
-#: engines/dialogs.cpp:71
+#: engines/dialogs.cpp:72
 msgid "~S~ave"
 msgstr "~S~para"
 
-#: engines/dialogs.cpp:73
+#: engines/dialogs.cpp:74
 msgid "~O~ptions"
 msgstr "A~I~termativ"
 
-#: engines/dialogs.cpp:78
+#: engines/dialogs.cpp:79
+msgid "Game ~H~elp"
+msgstr "Spel~h~jälp"
+
+#: engines/dialogs.cpp:83
 msgid "~H~elp"
 msgstr "~H~jälp"
 
-#: engines/dialogs.cpp:82
+#: engines/dialogs.cpp:85
 msgid "~A~bout"
 msgstr "O~m~"
 
-#: engines/dialogs.cpp:85 engines/dialogs.cpp:156
+#: engines/dialogs.cpp:88 engines/dialogs.cpp:164
 msgid "~R~eturn to Launcher"
 msgstr "Åte~r~vänd till spelstartaren"
 
-#: engines/dialogs.cpp:87 engines/dialogs.cpp:158
+#: engines/dialogs.cpp:90 engines/dialogs.cpp:166
 msgctxt "lowres"
 msgid "~R~eturn to Launcher"
 msgstr "Åte~r~vänd till spelstartaren"
 
-#: engines/dialogs.cpp:95 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
+#: engines/dialogs.cpp:98 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
 #: engines/avalanche/parser.cpp:1918 engines/cine/various.cpp:349
 #: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:390
 #: engines/dreamweb/saveload.cpp:261 engines/glk/streams.cpp:1432
@@ -3562,7 +3583,7 @@ msgstr "Åte~r~vänd till spelstartaren"
 msgid "Save game:"
 msgstr "Spara spelet:"
 
-#: engines/dialogs.cpp:95 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
+#: engines/dialogs.cpp:98 engines/engine.cpp:1048 engines/agi/saveload.cpp:766
 #: engines/avalanche/parser.cpp:1918 engines/cine/various.cpp:349
 #: engines/dm/loadsave.cpp:199 engines/drascula/saveload.cpp:390
 #: engines/dreamweb/saveload.cpp:261 engines/glk/streams.cpp:1432
@@ -3587,7 +3608,7 @@ msgstr "Spara spelet:"
 msgid "Save"
 msgstr "Spara"
 
-#: engines/dialogs.cpp:125
+#: engines/dialogs.cpp:128
 msgid ""
 "Sorry, this engine does not currently provide in-game help. Please consult "
 "the README for basic information, and for instructions on how to obtain "
@@ -3597,18 +3618,18 @@ msgstr ""
 "till README-filen för grundläggande information och instruktioner för att få "
 "ytterligare hjälp."
 
-#: engines/dialogs.cpp:193 engines/ags/ags.cpp:359
+#: engines/dialogs.cpp:201 engines/ags/ags.cpp:359
 #: engines/glk/magnetic/magnetic.cpp:197 engines/scumm/saveload.cpp:167
 msgid "This game does not support saving from the menu. Use in-game interface"
 msgstr ""
 "Det här spelet saknar stöd för sparning från menyn. Använd gränssnittet i "
 "spelet"
 
-#: engines/dialogs.cpp:202
+#: engines/dialogs.cpp:210
 msgid "This game cannot be saved at this time. Please try again later"
 msgstr "Detta spel kan inte sparas just nu. Prova igen senare"
 
-#: engines/dialogs.cpp:221 engines/pegasus/pegasus.cpp:418
+#: engines/dialogs.cpp:229 engines/pegasus/pegasus.cpp:418
 #, c-format
 msgid ""
 "Failed to save game (%s)! Please consult the README for basic information, "
@@ -3617,22 +3638,22 @@ msgstr ""
 "Kunde inte spara data (%s)! Läs README-filen för grundläggande information "
 "och instruktioner för hur du kan få mer hjälp."
 
-#: engines/dialogs.cpp:234 engines/ags/ags.cpp:344
+#: engines/dialogs.cpp:242 engines/ags/ags.cpp:344
 #: engines/glk/magnetic/magnetic.cpp:187 engines/scumm/saveload.cpp:99
 msgid "This game does not support loading from the menu. Use in-game interface"
 msgstr ""
 "Det här spelet saknar stöd för inläsning från menyn. Använd gränssnittet i "
 "spelet"
 
-#: engines/dialogs.cpp:243
+#: engines/dialogs.cpp:251
 msgid "This game cannot be loaded at this time. Please try again later"
 msgstr "Detta spelet kan inte läsas in just nu. Prova igen senare"
 
-#: engines/dialogs.cpp:392
+#: engines/dialogs.cpp:400
 msgid "~O~K"
 msgstr "~O~K"
 
-#: engines/dialogs.cpp:393
+#: engines/dialogs.cpp:401
 msgid "~C~ancel"
 msgstr "A~v~bryt"
 
@@ -3848,7 +3869,7 @@ msgstr "Matchande spel-id:n för motorn %s:"
 msgid "Game not implemented"
 msgstr "Spelet är inte implementerat"
 
-#: engines/metaengine.cpp:75 engines/saga/metaengine.cpp:267
+#: engines/metaengine.cpp:75
 msgid "Default game keymap"
 msgstr "Förvald knappuppsättning"
 
@@ -3872,7 +3893,7 @@ msgstr "Förvald knappuppsättning"
 #: engines/tucker/metaengine.cpp:172 engines/ultima/ultima0/metaengine.cpp:180
 #: engines/ultima/ultima4/metaengine.cpp:227
 #: engines/ultima/nuvie/metaengine.cpp:238
-#: engines/ultima/ultima8/metaengine.cpp:139 engines/vcruise/metaengine.cpp:158
+#: engines/ultima/ultima8/metaengine.cpp:138 engines/vcruise/metaengine.cpp:158
 #: engines/wintermute/keymapper_tables.h:42 engines/zvision/metaengine.cpp:203
 msgid "Left click"
 msgstr "Vänsterklick"
@@ -3905,7 +3926,7 @@ msgstr "Mittenklick"
 #: engines/ultima/ultima0/metaengine.cpp:186
 #: engines/ultima/ultima4/metaengine.cpp:233
 #: engines/ultima/nuvie/metaengine.cpp:244
-#: engines/ultima/ultima8/metaengine.cpp:145
+#: engines/ultima/ultima8/metaengine.cpp:144
 #: engines/wintermute/keymapper_tables.h:48 engines/zvision/metaengine.cpp:209
 msgid "Right click"
 msgstr "Högerklick"
@@ -3929,7 +3950,7 @@ msgid "Pause"
 msgstr "Pausa"
 
 #: engines/metaengine.cpp:105 engines/parallaction/metaengine.cpp:163
-#: engines/ultima/ultima8/metaengine.cpp:48
+#: engines/ultima/ultima8/metaengine.cpp:47
 msgid "Game menu"
 msgstr "Spelmeny"
 
@@ -4871,16 +4892,12 @@ msgid "R"
 msgstr "R"
 
 #: backends/platform/3ds/osystem-events.cpp:63
-#, fuzzy
-#| msgid "C-Pad X"
-msgid "C-pad X"
-msgstr "C-pad X"
+msgid "Circle Pad X"
+msgstr "Circle Pad X"
 
 #: backends/platform/3ds/osystem-events.cpp:64
-#, fuzzy
-#| msgid "C-Pad Y"
-msgid "C-pad Y"
-msgstr "C-pad Y"
+msgid "Circle Pad Y"
+msgstr "Circle Pad Y"
 
 #: backends/platform/3ds/osystem-events.cpp:69
 #: backends/platform/ds/osystem_ds.cpp:194
@@ -5964,18 +5981,6 @@ msgstr "Fönster"
 msgid "Minimize"
 msgstr "Minimera"
 
-#. I18N: This keymap opens KIA's HELP tab.
-#. In Blade Runner's official localizations, there is a description of this keymap
-#. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
-#. ONLINE HELP
-#. I18N: Opens the help screen.
-#: backends/platform/sdl/macosx/appmenu_osx.mm:319
-#: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
-#: engines/ngi/metaengine.cpp:162 engines/supernova/metaengine.cpp:238
-#: engines/tucker/metaengine.cpp:215 engines/zvision/metaengine.cpp:246
-msgid "Help"
-msgstr "Hjälp"
-
 #: backends/platform/sdl/macosx/appmenu_osx.mm:324
 msgid "User Manual"
 msgstr "Användarhandbok"
@@ -6296,7 +6301,7 @@ msgstr "Hoppa över film"
 #: engines/efh/metaengine.cpp:286 engines/hdb/metaengine.cpp:213
 #: engines/hypno/metaengine.cpp:302 engines/hypno/metaengine.cpp:356
 #: engines/nancy/input.cpp:195 engines/tinsel/metaengine.cpp:263
-#: engines/titanic/metaengine.cpp:324 engines/ultima/ultima8/metaengine.cpp:53
+#: engines/titanic/metaengine.cpp:324 engines/ultima/ultima8/metaengine.cpp:52
 msgid "Move up"
 msgstr "Flytta uppåt"
 
@@ -6306,7 +6311,7 @@ msgstr "Flytta uppåt"
 #: engines/efh/metaengine.cpp:293 engines/hdb/metaengine.cpp:219
 #: engines/hypno/metaengine.cpp:290 engines/hypno/metaengine.cpp:342
 #: engines/nancy/input.cpp:201 engines/tinsel/metaengine.cpp:269
-#: engines/titanic/metaengine.cpp:330 engines/ultima/ultima8/metaengine.cpp:54
+#: engines/titanic/metaengine.cpp:330 engines/ultima/ultima8/metaengine.cpp:53
 msgid "Move down"
 msgstr "Flytta neråt"
 
@@ -6319,7 +6324,7 @@ msgstr "Flytta neråt"
 #: engines/kyra/engine/eobcommon.cpp:373 engines/lure/metaengine.cpp:218
 #: engines/nancy/input.cpp:207 engines/tinsel/metaengine.cpp:275
 #: engines/titanic/metaengine.cpp:312 engines/titanic/metaengine.cpp:390
-#: engines/ultima/ultima8/metaengine.cpp:55
+#: engines/ultima/ultima8/metaengine.cpp:54
 msgid "Move left"
 msgstr "Flytta åt vänster"
 
@@ -6332,7 +6337,7 @@ msgstr "Flytta åt vänster"
 #: engines/kyra/engine/eobcommon.cpp:374 engines/lure/metaengine.cpp:226
 #: engines/nancy/input.cpp:213 engines/tinsel/metaengine.cpp:281
 #: engines/titanic/metaengine.cpp:318 engines/titanic/metaengine.cpp:396
-#: engines/ultima/ultima8/metaengine.cpp:56
+#: engines/ultima/ultima8/metaengine.cpp:55
 msgid "Move right"
 msgstr "Flytta åt höger"
 
@@ -6459,7 +6464,7 @@ msgid "Climb"
 msgstr "Klättra"
 
 #: engines/access/metaengine.cpp:337 engines/bbvs/metaengine.cpp:142
-#: engines/freescape/games/castle/castle.cpp:298
+#: engines/freescape/games/castle/castle.cpp:396
 #: engines/petka/metaengine.cpp:137 engines/scumm/help.cpp:225
 #: engines/tsage/metaengine.cpp:201
 msgid "Walk"
@@ -6474,7 +6479,7 @@ msgstr "Öppna menyn för spara/läs in"
 #: engines/mortevielle/mortevielle.cpp:300 engines/sky/compact.cpp:129
 #: engines/supernova/supernova.cpp:467 engines/teenagent/resources.cpp:312
 #: engines/tony/tony.cpp:187 engines/toon/toon.cpp:5425
-#: engines/ultima/ultima8/ultima8.cpp:193
+#: engines/ultima/ultima8/ultima8.cpp:179
 #, c-format
 msgid "Unable to locate the '%s' engine data file."
 msgstr "Kunde inte hitta spelmotorns datafil '%s'."
@@ -6852,12 +6857,12 @@ msgstr "Huvudsakliga för AGOS"
 #: engines/illusions/metaengine.cpp:90 engines/lab/metaengine.cpp:152
 #: engines/lure/metaengine.cpp:169 engines/made/metaengine.cpp:133
 #: engines/mads/metaengine.cpp:275 engines/neverhood/metaengine.cpp:186
-#: engines/queen/metaengine.cpp:147 engines/sludge/keymapper_tables.h:33
-#: engines/stark/metaengine.cpp:185 engines/sword1/metaengine.cpp:267
-#: engines/tinsel/metaengine.cpp:241 engines/toon/metaengine.cpp:82
-#: engines/tot/metaengine.cpp:103 engines/touche/metaengine.cpp:119
-#: engines/trecision/metaengine.cpp:121 engines/tsage/metaengine.cpp:170
-#: engines/tucker/metaengine.cpp:168
+#: engines/queen/metaengine.cpp:147 engines/saga/metaengine.cpp:268
+#: engines/sludge/keymapper_tables.h:33 engines/stark/metaengine.cpp:185
+#: engines/sword1/metaengine.cpp:267 engines/tinsel/metaengine.cpp:241
+#: engines/toon/metaengine.cpp:82 engines/tot/metaengine.cpp:103
+#: engines/touche/metaengine.cpp:119 engines/trecision/metaengine.cpp:121
+#: engines/tsage/metaengine.cpp:170 engines/tucker/metaengine.cpp:168
 msgid "Game keymappings"
 msgstr "Kortkommandon för spel"
 
@@ -6906,7 +6911,7 @@ msgstr "Vänd bakåt"
 #: engines/kyra/engine/eobcommon.cpp:375 engines/kyra/engine/lol.cpp:514
 #: engines/lab/metaengine.cpp:257 engines/mm/mm1/metaengine.cpp:97
 #: engines/mohawk/riven.cpp:901 engines/pegasus/pegasus.cpp:2740
-#: engines/twine/metaengine.cpp:353 engines/ultima/ultima8/metaengine.cpp:49
+#: engines/twine/metaengine.cpp:353 engines/ultima/ultima8/metaengine.cpp:48
 #: engines/wintermute/keymapper_tables.h:161
 #: engines/wintermute/keymapper_tables.h:741
 #: engines/wintermute/keymapper_tables.h:2122
@@ -6919,7 +6924,7 @@ msgstr "Sväng vänster"
 #: engines/kyra/engine/eobcommon.cpp:376 engines/kyra/engine/lol.cpp:515
 #: engines/lab/metaengine.cpp:271 engines/mm/mm1/metaengine.cpp:98
 #: engines/mohawk/riven.cpp:907 engines/pegasus/pegasus.cpp:2747
-#: engines/twine/metaengine.cpp:346 engines/ultima/ultima8/metaengine.cpp:50
+#: engines/twine/metaengine.cpp:346 engines/ultima/ultima8/metaengine.cpp:49
 #: engines/wintermute/keymapper_tables.h:167
 #: engines/wintermute/keymapper_tables.h:746
 #: engines/wintermute/keymapper_tables.h:2128
@@ -7188,7 +7193,7 @@ msgid "Whether textures should be linearly filtered"
 msgstr "Huruvida texturer ska linjärt filtreras"
 
 #: engines/alcachofa/metaengine.cpp:98 engines/cine/metaengine.cpp:347
-#: engines/freescape/games/castle/castle.cpp:315
+#: engines/freescape/games/castle/castle.cpp:413
 msgid "Activate"
 msgstr "Aktivera"
 
@@ -7234,7 +7239,7 @@ msgstr "Snabbinläsning"
 #: engines/sludge/keymapper_tables.h:303 engines/sludge/keymapper_tables.h:410
 #: engines/sludge/keymapper_tables.h:465 engines/sludge/keymapper_tables.h:496
 #: engines/ultima/nuvie/metaengine.cpp:91
-#: engines/ultima/ultima8/metaengine.cpp:44
+#: engines/ultima/ultima8/metaengine.cpp:43
 #: engines/wintermute/keymapper_tables.h:930
 msgid "Quick save"
 msgstr "Snabbsparning"
@@ -7641,8 +7646,8 @@ msgstr "Växla sekretess för ledtrådar"
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
 #: engines/dgds/metaengine.cpp:75 engines/dm/metaengine.cpp:174
 #: engines/drascula/metaengine.cpp:285 engines/efh/metaengine.cpp:272
-#: engines/freescape/games/castle/castle.cpp:260
-#: engines/freescape/games/dark/dark.cpp:187
+#: engines/freescape/games/castle/castle.cpp:358
+#: engines/freescape/games/dark/dark.cpp:188
 #: engines/freescape/games/driller/driller.cpp:120
 #: engines/freescape/games/eclipse/eclipse.cpp:227
 #: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:165
@@ -7656,7 +7661,7 @@ msgstr "Växla sekretess för ledtrådar"
 #: engines/stark/metaengine.cpp:208 engines/tetraedge/metaengine.cpp:110
 #: engines/titanic/metaengine.cpp:199 engines/toltecs/metaengine.cpp:234
 #: engines/toon/metaengine.cpp:112 engines/trecision/metaengine.cpp:169
-#: engines/tsage/metaengine.cpp:242 engines/ultima/ultima8/metaengine.cpp:45
+#: engines/tsage/metaengine.cpp:242 engines/ultima/ultima8/metaengine.cpp:44
 #: engines/vcruise/metaengine.cpp:175 engines/wintermute/keymapper_tables.h:920
 msgid "Save game"
 msgstr "Spara spel"
@@ -7669,8 +7674,8 @@ msgstr "Spara spel"
 #: engines/cge/metaengine.cpp:227 engines/cge2/metaengine.cpp:241
 #: engines/dgds/metaengine.cpp:74 engines/drascula/metaengine.cpp:260
 #: engines/efh/metaengine.cpp:279 engines/efh/metaengine.cpp:613
-#: engines/freescape/games/castle/castle.cpp:265
-#: engines/freescape/games/dark/dark.cpp:192
+#: engines/freescape/games/castle/castle.cpp:363
+#: engines/freescape/games/dark/dark.cpp:193
 #: engines/freescape/games/driller/driller.cpp:125
 #: engines/freescape/games/eclipse/eclipse.cpp:232
 #: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:198
@@ -7682,7 +7687,7 @@ msgstr "Spara spel"
 #: engines/stark/metaengine.cpp:213 engines/tetraedge/metaengine.cpp:104
 #: engines/titanic/metaengine.cpp:205 engines/toltecs/metaengine.cpp:240
 #: engines/toon/metaengine.cpp:118 engines/trecision/metaengine.cpp:175
-#: engines/ultima/ultima8/metaengine.cpp:46 engines/vcruise/metaengine.cpp:180
+#: engines/ultima/ultima8/metaengine.cpp:45 engines/vcruise/metaengine.cpp:180
 #: engines/wintermute/keymapper_tables.h:925
 #: engines/wintermute/keymapper_tables.h:1265
 msgid "Load game"
@@ -7719,8 +7724,8 @@ msgstr "Databas för ledtrådar"
 #: engines/bladerunner/metaengine.cpp:375 engines/cruise/metaengine.cpp:229
 #: engines/darkseed/metaengine.cpp:60 engines/dragons/metaengine.cpp:223
 #: engines/efh/metaengine.cpp:373 engines/efh/metaengine.cpp:619
-#: engines/freescape/games/castle/castle.cpp:273
-#: engines/freescape/games/dark/dark.cpp:197
+#: engines/freescape/games/castle/castle.cpp:371
+#: engines/freescape/games/dark/dark.cpp:198
 #: engines/freescape/games/driller/driller.cpp:130
 #: engines/freescape/games/eclipse/eclipse.cpp:237
 #: engines/mads/metaengine.cpp:361 engines/saga/metaengine.cpp:437
@@ -7801,7 +7806,7 @@ msgstr "Titta åt höger"
 #: engines/kyra/engine/eobcommon.cpp:371 engines/kyra/engine/lol.cpp:510
 #: engines/mohawk/riven.cpp:881 engines/titanic/metaengine.cpp:336
 #: engines/titanic/metaengine.cpp:378 engines/twine/metaengine.cpp:332
-#: engines/ultima/ultima8/metaengine.cpp:51
+#: engines/ultima/ultima8/metaengine.cpp:50
 #: engines/wintermute/keymapper_tables.h:149
 #: engines/wintermute/keymapper_tables.h:731
 #: engines/wintermute/keymapper_tables.h:2116
@@ -8731,10 +8736,10 @@ msgstr "Försvara"
 
 #. I18N: Run is a movement type
 #. I18N: Action in In Cold Blood
-#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:293
+#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:391
 #: engines/grim/grim.cpp:501 engines/grim/grim.cpp:596
 #: engines/hpl1/metaengine.cpp:82 engines/icb/icb.cpp:131
-#: engines/icb/icb.cpp:197 engines/ultima/ultima8/metaengine.cpp:57
+#: engines/icb/icb.cpp:197 engines/ultima/ultima8/metaengine.cpp:56
 msgid "Run"
 msgstr "Spring"
 
@@ -8928,90 +8933,90 @@ msgstr "Ändra läge"
 msgid "Info menu"
 msgstr "Info-meny"
 
-#: engines/freescape/games/castle/castle.cpp:250
+#: engines/freescape/games/castle/castle.cpp:348
 msgid "Select Prince"
 msgstr "Välj prins"
 
-#: engines/freescape/games/castle/castle.cpp:255
+#: engines/freescape/games/castle/castle.cpp:353
 msgid "Select Princess"
 msgstr "Välj prinsessa"
 
-#: engines/freescape/games/castle/castle.cpp:278
-#: engines/freescape/games/dark/dark.cpp:207
+#: engines/freescape/games/castle/castle.cpp:376
+#: engines/freescape/games/dark/dark.cpp:208
 #: engines/freescape/games/driller/driller.cpp:138
 #: engines/freescape/games/eclipse/eclipse.cpp:245
 msgid "Toggle Sound"
 msgstr "Växla ljud"
 
-#: engines/freescape/games/castle/castle.cpp:283
-#: engines/freescape/games/dark/dark.cpp:213
+#: engines/freescape/games/castle/castle.cpp:381
+#: engines/freescape/games/dark/dark.cpp:214
 #: engines/freescape/games/driller/driller.cpp:144
 #: engines/freescape/games/eclipse/eclipse.cpp:250
 msgid "Rotate Left"
 msgstr "Rotera vänster"
 
-#: engines/freescape/games/castle/castle.cpp:288
-#: engines/freescape/games/dark/dark.cpp:218
+#: engines/freescape/games/castle/castle.cpp:386
+#: engines/freescape/games/dark/dark.cpp:219
 #: engines/freescape/games/driller/driller.cpp:149
 #: engines/freescape/games/eclipse/eclipse.cpp:255
 msgid "Rotate Right"
 msgstr "Rotera höger"
 
-#: engines/freescape/games/castle/castle.cpp:304
+#: engines/freescape/games/castle/castle.cpp:402
 msgid "Crawl"
 msgstr "Kryp"
 
-#: engines/freescape/games/castle/castle.cpp:310
+#: engines/freescape/games/castle/castle.cpp:408
 #: engines/freescape/games/eclipse/eclipse.cpp:284
 msgid "Face Forward"
 msgstr "Vänd framåt"
 
-#: engines/freescape/games/dark/dark.cpp:223
+#: engines/freescape/games/dark/dark.cpp:224
 #: engines/freescape/games/driller/driller.cpp:183
-#: engines/ultima/ultima8/metaengine.cpp:98
+#: engines/ultima/ultima8/metaengine.cpp:97
 msgid "Roll left"
 msgstr "Rulla åt vänster"
 
-#: engines/freescape/games/dark/dark.cpp:228
+#: engines/freescape/games/dark/dark.cpp:229
 #: engines/freescape/games/driller/driller.cpp:188
-#: engines/ultima/ultima8/metaengine.cpp:99
+#: engines/ultima/ultima8/metaengine.cpp:98
 msgid "Roll right"
 msgstr "Rulla åt höger"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/dark/dark.cpp:234
+#: engines/freescape/games/dark/dark.cpp:235
 #: engines/freescape/games/driller/driller.cpp:155
 msgid "Increase Turn Angle"
 msgstr "Öka vändvinkeln"
 
-#: engines/freescape/games/dark/dark.cpp:239
+#: engines/freescape/games/dark/dark.cpp:240
 #: engines/freescape/games/driller/driller.cpp:160
 msgid "Decrease Turn Angle"
 msgstr "Minska vändvinkeln"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:245
+#: engines/freescape/games/dark/dark.cpp:246
 #: engines/freescape/games/driller/driller.cpp:166
 msgid "Increase Step Size"
 msgstr "Öka stegstorlek"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:251
+#: engines/freescape/games/dark/dark.cpp:252
 #: engines/freescape/games/driller/driller.cpp:172
 msgid "Decrease Step Size"
 msgstr "Minska stegstorlek"
 
-#: engines/freescape/games/dark/dark.cpp:256
+#: engines/freescape/games/dark/dark.cpp:257
 #: engines/freescape/games/driller/driller.cpp:177
 msgid "Rise/Fly up"
 msgstr "Stig/flyg upp"
 
-#: engines/freescape/games/dark/dark.cpp:262
+#: engines/freescape/games/dark/dark.cpp:263
 #: engines/freescape/games/driller/driller.cpp:193
 msgid "Lower/Fly down"
 msgstr "Sänk/flyg ner"
 
-#: engines/freescape/games/dark/dark.cpp:268
+#: engines/freescape/games/dark/dark.cpp:269
 msgid "Enable/Disable Jetpack"
 msgstr "Aktivera/inaktivera jetpack"
 
@@ -11012,7 +11017,7 @@ msgstr ""
 "Uppdateringarna kan hämtas ner från:\n"
 "%s"
 
-#: engines/myst3/myst3.cpp:1655 engines/pegasus/pegasus.cpp:749
+#: engines/myst3/myst3.cpp:1659 engines/pegasus/pegasus.cpp:749
 msgid "Invalid file name for saving"
 msgstr "Ogiltigt filnamn på sparfilen"
 
@@ -11515,28 +11520,38 @@ msgstr "Testversionen för Pocket PC stöds inte"
 msgid "I Have No Mouth support not compiled in"
 msgstr "Stöd för I Have No Mouth har inte kompilerats in"
 
-#: engines/saga/metaengine.cpp:268
-msgid "Game keymapping"
-msgstr "Tangentmappning för spel"
+#: engines/saga/metaengine.cpp:267
+msgid "Default game keymappings"
+msgstr "Standardinställningar för tangentbordskommandon i spelet"
 
 #: engines/saga/metaengine.cpp:269
-msgid "Option panel keymapping"
+#, fuzzy
+#| msgid "Option panel keymapping"
+msgid "Option panel keymappings"
 msgstr "Tangentmappning för alternativpanel"
 
 #: engines/saga/metaengine.cpp:270
-msgid "Save panel keymapping"
+#, fuzzy
+#| msgid "Save panel keymapping"
+msgid "Save panel keymappings"
 msgstr "Tangentmappning för sparningspanel"
 
 #: engines/saga/metaengine.cpp:271
-msgid "Load panel keymapping"
+#, fuzzy
+#| msgid "Load panel keymapping"
+msgid "Load panel keymappings"
 msgstr "Tangentmappning för inläsningspanel"
 
 #: engines/saga/metaengine.cpp:272
-msgid "Quit panel keymapping"
+#, fuzzy
+#| msgid "Quit panel keymapping"
+msgid "Quit panel keymappings"
 msgstr "Tangentmappning för avslutningspanel"
 
 #: engines/saga/metaengine.cpp:273
-msgid "Converse panel keymapping"
+#, fuzzy
+#| msgid "Converse panel keymapping"
+msgid "Converse panel keymappings"
 msgstr "Tangentmappning för konversationspanel"
 
 #. I18N: the boss key is a feature,
@@ -12652,7 +12667,7 @@ msgid "Fighting controls (numpad):"
 msgstr "Slagsmålskontroller (nr. tangenter):"
 
 #: engines/scumm/help.cpp:309 engines/scumm/help.cpp:310
-#: engines/scumm/help.cpp:311 engines/ultima/ultima8/metaengine.cpp:97
+#: engines/scumm/help.cpp:311 engines/ultima/ultima8/metaengine.cpp:96
 msgid "Step back"
 msgstr "Steg bakåt"
 
@@ -14874,7 +14889,7 @@ msgid "Board"
 msgstr "Borda"
 
 #: engines/ultima/ultima4/metaengine.cpp:52
-#: engines/ultima/ultima8/metaengine.cpp:108
+#: engines/ultima/ultima8/metaengine.cpp:107
 msgid "Descend"
 msgstr "Stig neråt"
 
@@ -15512,184 +15527,184 @@ msgstr "The Savage Empire"
 msgid "Transfer Character"
 msgstr "Överför karaktär"
 
-#: engines/ultima/ultima8/metaengine.cpp:47
+#: engines/ultima/ultima8/metaengine.cpp:46
 msgid "Draw weapon / Combat"
 msgstr "Dra vapen / Strid"
 
-#: engines/ultima/ultima8/metaengine.cpp:52
+#: engines/ultima/ultima8/metaengine.cpp:51
 msgid "Move back"
 msgstr "Stega bakåt"
 
-#: engines/ultima/ultima8/metaengine.cpp:58
+#: engines/ultima/ultima8/metaengine.cpp:57
 msgid "Highlight items"
 msgstr "Markera objekt"
 
-#: engines/ultima/ultima8/metaengine.cpp:64
+#: engines/ultima/ultima8/metaengine.cpp:63
 msgid "Use bedroll"
 msgstr "Använd sovsäck"
 
-#: engines/ultima/ultima8/metaengine.cpp:65
+#: engines/ultima/ultima8/metaengine.cpp:64
 msgid "Open backpack"
 msgstr "Öppna ryggsäck"
 
-#: engines/ultima/ultima8/metaengine.cpp:66
+#: engines/ultima/ultima8/metaengine.cpp:65
 msgid "Use keyring"
 msgstr "Använd nyckelring"
 
-#: engines/ultima/ultima8/metaengine.cpp:67
+#: engines/ultima/ultima8/metaengine.cpp:66
 msgid "Open minimap"
 msgstr "Öppna minikarta"
 
-#: engines/ultima/ultima8/metaengine.cpp:68
+#: engines/ultima/ultima8/metaengine.cpp:67
 msgid "Use recall"
 msgstr "Använd återkallning"
 
-#: engines/ultima/ultima8/metaengine.cpp:69
+#: engines/ultima/ultima8/metaengine.cpp:68
 msgid "Open inventory & statistics"
 msgstr "Öppna inventarier och statistik"
 
 #. I18N: gump is Graphical User Menu Pop-up
-#: engines/ultima/ultima8/metaengine.cpp:71
+#: engines/ultima/ultima8/metaengine.cpp:70
 msgid "Close all displays"
 msgstr "Stäng alla skärmar"
 
-#: engines/ultima/ultima8/metaengine.cpp:72
+#: engines/ultima/ultima8/metaengine.cpp:71
 msgid "Jump (fake both-button-click)"
 msgstr "Hoppa (fejka båda-knappar-klick)"
 
-#: engines/ultima/ultima8/metaengine.cpp:73
+#: engines/ultima/ultima8/metaengine.cpp:72
 msgid "Careful step"
 msgstr "Försiktigt steg"
 
-#: engines/ultima/ultima8/metaengine.cpp:79
+#: engines/ultima/ultima8/metaengine.cpp:78
 msgid "Cycle through weapon inventory"
 msgstr "Bläddra genom vapeninventarier"
 
-#: engines/ultima/ultima8/metaengine.cpp:80
+#: engines/ultima/ultima8/metaengine.cpp:79
 msgid "Cycle through item inventory"
 msgstr "Bläddra genom objektinventarier"
 
-#: engines/ultima/ultima8/metaengine.cpp:81
+#: engines/ultima/ultima8/metaengine.cpp:80
 msgid "Use inventory item"
 msgstr "Använd inventarieobjekt"
 
-#: engines/ultima/ultima8/metaengine.cpp:82
+#: engines/ultima/ultima8/metaengine.cpp:81
 msgid "Use medikit"
 msgstr "Använd medicinlåda"
 
-#: engines/ultima/ultima8/metaengine.cpp:83
+#: engines/ultima/ultima8/metaengine.cpp:82
 msgid "Use energy cube"
 msgstr "Använd energikub"
 
-#: engines/ultima/ultima8/metaengine.cpp:84
+#: engines/ultima/ultima8/metaengine.cpp:83
 msgid "Detonate bomb"
 msgstr "Detonera bomb"
 
-#: engines/ultima/ultima8/metaengine.cpp:86
+#: engines/ultima/ultima8/metaengine.cpp:85
 msgid "Drop weapon"
 msgstr "Släpp vapen"
 
-#: engines/ultima/ultima8/metaengine.cpp:87
+#: engines/ultima/ultima8/metaengine.cpp:86
 msgid "Search / Select item"
 msgstr "Sök / Välj objekt"
 
-#: engines/ultima/ultima8/metaengine.cpp:88
+#: engines/ultima/ultima8/metaengine.cpp:87
 msgid "Use selection"
 msgstr "Använd val"
 
-#: engines/ultima/ultima8/metaengine.cpp:89
+#: engines/ultima/ultima8/metaengine.cpp:88
 msgid "Grab items"
 msgstr "Ta objekt"
 
-#: engines/ultima/ultima8/metaengine.cpp:90
+#: engines/ultima/ultima8/metaengine.cpp:89
 msgid "Fire weapon"
 msgstr "Avfyra vapen"
 
-#: engines/ultima/ultima8/metaengine.cpp:91
+#: engines/ultima/ultima8/metaengine.cpp:90
 msgid "Center screen on Silencer"
 msgstr "Centrera skärmen på Silencer"
 
-#: engines/ultima/ultima8/metaengine.cpp:92
+#: engines/ultima/ultima8/metaengine.cpp:91
 msgid "Jump / Roll / Crouch"
 msgstr "Hoppa / Rulla / Kryp"
 
-#: engines/ultima/ultima8/metaengine.cpp:93
+#: engines/ultima/ultima8/metaengine.cpp:92
 msgid "Short jump"
 msgstr "Kort hopp"
 
-#: engines/ultima/ultima8/metaengine.cpp:94
+#: engines/ultima/ultima8/metaengine.cpp:93
 msgid "Sidestep left"
 msgstr "Sidosteg åt vänster"
 
-#: engines/ultima/ultima8/metaengine.cpp:95
+#: engines/ultima/ultima8/metaengine.cpp:94
 msgid "Sidestep right"
 msgstr "Sidosteg åt höger"
 
-#: engines/ultima/ultima8/metaengine.cpp:96
+#: engines/ultima/ultima8/metaengine.cpp:95
 msgid "Step forward"
 msgstr "Stega framåt"
 
-#: engines/ultima/ultima8/metaengine.cpp:100
+#: engines/ultima/ultima8/metaengine.cpp:99
 msgid "Toggle crouch"
 msgstr "Växla krypning"
 
-#: engines/ultima/ultima8/metaengine.cpp:101
+#: engines/ultima/ultima8/metaengine.cpp:100
 msgid "Side step / Advance / Retreat"
 msgstr "Sidosteg / Avancera framåt / Retirera"
 
-#: engines/ultima/ultima8/metaengine.cpp:106
+#: engines/ultima/ultima8/metaengine.cpp:105
 msgid "Toggle clipping"
 msgstr "Växla klippning"
 
-#: engines/ultima/ultima8/metaengine.cpp:107
+#: engines/ultima/ultima8/metaengine.cpp:106
 msgid "Ascend"
 msgstr "Stig uppåt"
 
-#: engines/ultima/ultima8/metaengine.cpp:115
+#: engines/ultima/ultima8/metaengine.cpp:114
 msgid "Show touching items"
 msgstr "Visa rörande objekt"
 
-#: engines/ultima/ultima8/metaengine.cpp:116
+#: engines/ultima/ultima8/metaengine.cpp:115
 msgid "Show editor items"
 msgstr "Visa redigerarobjekt"
 
-#: engines/ultima/ultima8/metaengine.cpp:117
+#: engines/ultima/ultima8/metaengine.cpp:116
 msgid "Decrement map sort order"
 msgstr "Minska sorteringsordning på karta"
 
-#: engines/ultima/ultima8/metaengine.cpp:118
+#: engines/ultima/ultima8/metaengine.cpp:117
 msgid "Increment map sort order"
 msgstr "Öka sorteringsordning på karta"
 
-#: engines/ultima/ultima8/metaengine.cpp:119
+#: engines/ultima/ultima8/metaengine.cpp:118
 msgid "Toggle frame by frame"
 msgstr "Växla bildruta för bildruta"
 
-#: engines/ultima/ultima8/metaengine.cpp:120
+#: engines/ultima/ultima8/metaengine.cpp:119
 msgid "Advance frame"
 msgstr "Avancera bildruta"
 
-#: engines/ultima/ultima8/metaengine.cpp:121
+#: engines/ultima/ultima8/metaengine.cpp:120
 msgid "Toggle Avatar in stasis"
 msgstr "Växla avatar i stasis"
 
-#: engines/ultima/ultima8/metaengine.cpp:122
+#: engines/ultima/ultima8/metaengine.cpp:121
 msgid "Show shape viewer"
 msgstr "Visa formvisare"
 
-#: engines/ultima/ultima8/metaengine.cpp:132
+#: engines/ultima/ultima8/metaengine.cpp:131
 msgid "Ultima VIII"
 msgstr "Ultima VIII"
 
-#: engines/ultima/ultima8/metaengine.cpp:132
+#: engines/ultima/ultima8/metaengine.cpp:131
 msgid "Crusader"
 msgstr "Crusader"
 
-#: engines/ultima/ultima8/metaengine.cpp:175
+#: engines/ultima/ultima8/metaengine.cpp:174
 msgid "Ultima VIII Cheats"
 msgstr "Ultima VIII-fusk"
 
-#: engines/ultima/ultima8/metaengine.cpp:190
+#: engines/ultima/ultima8/metaengine.cpp:189
 msgid "Ultima VIII Debug"
 msgstr "Ultima VIII-felsökning"
 
@@ -15703,7 +15718,7 @@ msgstr ""
 "katalogerna har kopierats från cd-skivan. Mer instruktioner finns på "
 "wikisidan: https://wiki.scummvm.org/index.php?title=Crusader:_No_Remorse."
 
-#: engines/ultima/ultima8/games/u8_game.cpp:108
+#: engines/ultima/ultima8/games/u8_game.cpp:104
 msgid ""
 "Missing Required File\n"
 "\n"
@@ -16530,6 +16545,19 @@ msgstr ""
 
 #~ msgid "D-pad Right"
 #~ msgstr "Riktningsknapp höger"
+
+#~ msgid "Game keymapping"
+#~ msgstr "Tangentmappning för spel"
+
+#, fuzzy
+#~| msgid "C-Pad X"
+#~ msgid "C-pad X"
+#~ msgstr "C-pad X"
+
+#, fuzzy
+#~| msgid "C-Pad Y"
+#~ msgid "C-pad Y"
+#~ msgstr "C-pad Y"
 
 #~ msgid "Left Stick X"
 #~ msgstr "Vänsterspak X"

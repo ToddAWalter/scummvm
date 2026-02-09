@@ -296,9 +296,27 @@ void ScriptedMovie::update(bool pauseAtFirstFrame) {
 		effectiveStartFrame = effectiveEndFrame;
 	}
 
-	if (getId() == 13011) {
-		// Special case for the looping movie 13011 of the looping swiming jellyfish at node LIFO 11
-		effectiveStartFrame = 0;
+	switch (getId()) {
+	case 13011:
+		// Special case for the looping movie 13011 (room: 603 age: 6) of the looping swiming jellyfish at node LIFO 11
+		if (_vm->_state->getLocationRoom() == 603 && _vm->_state->getLocationAge() == 6) {
+			effectiveStartFrame = 0;
+		}
+		break;
+
+	case 20003:
+		// Special case for movie 20003 (room: 501 age: 5) of Saavedro running away at node LEIS 3, when the player first arrives at J'nanin
+		// Prevents Saavedro appearing as though he's "blinking in" (he's already there when the player arrives, and running away).
+		// (Original Bug)
+		// NOTE this movie id also exists in the Main Menu -> Options (room: 901 age: 9) (Archive::kStillMovie)
+		// and the startFrame should not be changed there (from 0)
+		if (_vm->_state->getLocationRoom() == 501 && _vm->_state->getLocationAge() == 5) {
+			effectiveStartFrame = 1;
+		}
+		break;
+
+	default:
+		break;
 	}
 
 	if (_posUVar) {
@@ -372,8 +390,11 @@ void ScriptedMovie::update(bool pauseAtFirstFrame) {
 				if (currFrame != nextFrame - 1) {
 					// Don't seek if we just want to display the next frame
 					if (currFrame + 1 != nextFrame - 1) {
-						if (getId() == 12001 && nextFrame >= 200 && nextFrame < 250) {
-							// fix glitchy transition for rotation of the left turntable track (movie id 12001),
+						if (getId() == 12001
+						    && _vm->_state->getLocationRoom() == 1005 && _vm->_state->getLocationAge() == 10
+						    && nextFrame >= 200 && nextFrame < 250) {
+							debug("effectiveStartframe for getId(): %d (room: %d, age: %d) is: %d", getId(), _vm->_state->getLocationRoom(), _vm->_state->getLocationAge(), effectiveStartFrame);
+							// fix glitchy transition for rotation of the left turntable track (movie id 12001, room: 1005, age: 10),
 							// eg. when the left dial panel has no wood pegs
 							if (nextFrame >= 247) {
 								// values 247 and 248 should stay at the same frame

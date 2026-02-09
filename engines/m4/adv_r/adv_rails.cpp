@@ -32,13 +32,9 @@ namespace M4 {
 #define BOTTOM_EDGE 0x04
 #define RIGHT_EDGE  0x08
 
-bool InitRails() {
-	int32 i;
-
+void InitRails() {
 	// Register with the stash the frequently used structs
-	if (!mem_register_stash_type(&_G(rails).memtypePATHN, sizeof(pathNode), 32, "+PATHNODE")) {
-		return false;
-	}
+	mem_register_stash_type(&_G(rails).memtypePATHN, sizeof(pathNode), 32, "+PATHNODE");
 
 	// Create the stack. Since any path through a series of nodes can have at most MAXRAILNODES...
 	_G(rails).stackBottom = (railNode **)mem_alloc(sizeof(railNode *) * MAXRAILNODES, STR_RAILNODE);
@@ -46,7 +42,7 @@ bool InitRails() {
 	// Allocate the array of railNode pointers and initialize...
 	_G(rails).myNodes = (railNode **)mem_alloc(sizeof(railNode *) * MAXRAILNODES, STR_RAILNODE);
 
-	for (i = 0; i < MAXRAILNODES; i++) {
+	for (int32 i = 0; i < MAXRAILNODES; i++) {
 		_G(rails).myNodes[i] = nullptr;
 	}
 
@@ -57,8 +53,6 @@ bool InitRails() {
 
 	// Set the parameters and return
 	_G(rails).noWalkRectList = nullptr;
-
-	return true;
 }
 
 
@@ -128,7 +122,7 @@ noWalkRect *intr_add_no_walk_rect(int32 x1, int32 y1, int32 x2, int32 y2, int32 
 	// Add the alternate walkto node - this node must exist
 	newRect->alternateWalkToNode = AddRailNode(altX, altY, walkCodes, false);
 	if (newRect->alternateWalkToNode < 0) {
-		error_show(FL, 'IADN', "could not add node. coord: %d %d", altX, altY);
+		error_show(FL, "could not add node. coord: %d %d", altX, altY);
 	}
 
 	// Now add the corner nodes.  Not as important if these don't exist
@@ -589,7 +583,7 @@ int32 AddRailNode(int32 x, int32 y, Buffer *walkCodes, bool restoreEdges) {
 	if (i < MAXRAILNODES) {
 		railNode *newNode = (railNode *)mem_alloc(sizeof(railNode), "railNode");
 
-		newNode->nodeID = (Byte)i;
+		newNode->nodeID = (byte)i;
 		newNode->x = (int16)x;
 		newNode->y = (int16)y;
 		_G(rails).myNodes[i] = newNode;
