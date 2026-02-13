@@ -56,7 +56,7 @@ struct LoadSave_Enter_Script : public Script::Command {
 	LoadSave_Enter_Script(const Common::Array<Common::String> &args) : reloading(args[0]), notReloading(args[1]) {}
 	void exec(Script::ExecutionContext &ctx) const override {
 		debug("LoadSave_Enter_Script %s, %s", reloading.c_str(), notReloading.c_str());
-		auto loading = g_engine->isLoading();
+		auto loading = g_engine->enterScript();
 		g_engine->setVariable(reloading, loading);
 		g_engine->setVariable(notReloading, !loading);
 	}
@@ -440,9 +440,10 @@ struct LoadSave_Context_Restored : public Script::Command {
 
 	LoadSave_Context_Restored(const Common::Array<Common::String> &args) : progress(args[0]), done(args[1]) {}
 	void exec(Script::ExecutionContext &ctx) const override {
-		debug("LoadSave_Context_Restored: semi-stub: can be used to report that loading is in a progress");
+		int value = g_engine->getVariable(progress);
+		debug("LoadSave_Context_Restored: %s -> %d -> %s", progress.c_str(), value, done.c_str());
 		g_engine->setVariable(progress, 0);
-		g_engine->setVariable(done, g_engine->isLoading());
+		g_engine->setVariable(done, value);
 	}
 };
 
@@ -525,30 +526,21 @@ struct Scroll : public Script::Command {
 };
 
 struct Rollover : public Script::Command {
-	int arg;
+	int textId;
+	RolloverType type;
 
-	Rollover(const Common::Array<Common::String> &args) : arg(atoi(args[0].c_str())) {}
+	Rollover(const Common::Array<Common::String> &args, RolloverType t = RolloverType::Default) : textId(atoi(args[0].c_str())), type(t) {}
 	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->rollover({57, 427, 409, 480}, arg, 14, 1, 0);
+		g_engine->rollover(textId, type);
 	}
 };
 
-struct RolloverMalette : public Script::Command {
-	int arg;
-
-	RolloverMalette(const Common::Array<Common::String> &args) : arg(atoi(args[0].c_str())) {}
-	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->rollover({251, 346, 522, 394}, arg, 18, 1, 0xD698);
-	}
+struct RolloverMalette : public Rollover {
+	RolloverMalette(const Common::Array<Common::String> &args) : Rollover(args, RolloverType::Malette) {}
 };
 
-struct RolloverSecretaire : public Script::Command {
-	int arg;
-
-	RolloverSecretaire(const Common::Array<Common::String> &args) : arg(atoi(args[0].c_str())) {}
-	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->rollover({216, 367, 536, 430}, arg, 12, 1, 0xFFFF);
-	}
+struct RolloverSecretaire : public Rollover {
+	RolloverSecretaire(const Common::Array<Common::String> &args) : Rollover(args, RolloverType::Secretaire) {}
 };
 
 struct PorteFRollover : public Script::Command {
@@ -648,7 +640,7 @@ Script::CommandPtr createCommand(const Common::String &cmd, const Common::Array<
 }
 
 struct IfAnd : public Script::Conditional {
-	using Script::Conditional::Conditional;
+	IfAnd(Common::Array<Common::String> args) : Script::Conditional(Common::move(args)) {}
 	void exec(Script::ExecutionContext &ctx) const override {
 		bool result = true;
 		for (auto &var : vars) {
@@ -667,7 +659,7 @@ struct IfAnd : public Script::Conditional {
 };
 
 struct IfOr : public Script::Conditional {
-	using Script::Conditional::Conditional;
+	IfOr(Common::Array<Common::String> args) : Script::Conditional(Common::move(args)) {}
 	void exec(Script::ExecutionContext &ctx) const override {
 		bool result = false;
 		for (auto &var : vars) {
@@ -848,6 +840,11 @@ struct PlaySound : public Script::Command {
 
 struct PlayMusique : public PlaySound {
 	PlayMusique(Common::String s, int v) : PlaySound(Common::move(s), v, -1) {}
+
+	void exec(Script::ExecutionContext &ctx) const override {
+		g_engine->setCurrentMusic(sound, volume);
+		PlaySound::exec(ctx);
+	}
 };
 
 struct StopSound : public Script::Command {

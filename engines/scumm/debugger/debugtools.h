@@ -19,33 +19,19 @@
  *
  */
 
-#ifndef M4_DBG_DBG_DEFS_H
-#define M4_DBG_DBG_DEFS_H
+#ifndef SCUMM_DEBUGTOOLS_H
+#define SCUMM_DEBUGTOOLS_H
 
-#include "m4/m4_types.h"
-#include "m4/dbg/dbg_defs.h"
-#include "m4/gui/gui_dialog.h"
-#include "m4/wscript/ws_machine.h"
+namespace Scumm {
 
-namespace M4 {
+namespace Editor {
 
-struct DBGSequSR {
-	DBGSequSR *next;
-	int32 prevSequHash;
-	int32 returnOffset;
-};
+void onImGuiInit();
+void onImGuiRender();
+void onImGuiCleanup();
 
-struct DBGWatch {
-	DBGWatch *next;
-	DBGWatch *prev;
-	machine *m;
-	Dialog *d;
-	bool moreInfo;
-	bool machStep;
-	int32 sequHash;
-	bool sequStep;
-};
+} // namespace Editor
 
-} // namespace M4
+} // namespace Scumm
 
 #endif

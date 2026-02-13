@@ -52,6 +52,12 @@ namespace PhoenixVR {
 struct PhoenixVRGameDescription;
 struct GameState;
 
+enum struct RolloverType {
+	Default,
+	Malette,
+	Secretaire
+};
+
 class PhoenixVREngine : public Engine {
 private:
 	static constexpr uint kFPSLimit = 60;
@@ -112,6 +118,10 @@ public:
 	void playSound(const Common::String &sound, uint8 volume, int loops, bool spatial = false, float angle = 0);
 	void stopSound(const Common::String &sound);
 	void playMovie(const Common::String &movie);
+	void setCurrentMusic(const Common::String &name, int volume) {
+		_currentMusic = name;
+		_currentMusicVolume = volume;
+	}
 
 	void declareVariable(const Common::String &name);
 	void setVariable(const Common::String &name, int value);
@@ -160,19 +170,17 @@ public:
 	void setContextLabel(const Common::String &contextLabel) {
 		_contextLabel = contextLabel;
 	}
-
-	bool isLoading() const {
-		return _loading;
-	}
+	bool enterScript();
+	bool isLoading() const { return !_loadedState.empty(); }
 
 	void saveVariables();
 	void loadVariables();
 
-	void rollover(Common::Rect dstRect, int textId, int size, bool bold, uint16_t color);
+	void rollover(int textId, RolloverType type);
 
 private:
 	static Common::String removeDrive(const Common::String &path);
-	Common::Path resolve(const Common::String &name);
+	Common::SeekableReadStream *open(const Common::String &name);
 
 	Graphics::Surface *loadSurface(const Common::String &path);
 	Graphics::Surface *loadCursor(const Common::String &path);
@@ -186,6 +194,7 @@ private:
 	void renderVR(float dt);
 
 private:
+	bool _hasFocus = true;
 	Common::Point _mousePos, _mouseRel;
 	Common::String _nextScript;
 	Common::Path _currentScriptPath;
@@ -220,13 +229,14 @@ private:
 
 	Common::Array<Common::Array<Common::String>> _cursors;
 	Common::String _defaultCursor[2];
+	Common::String _currentMusic;
+	int _currentMusicVolume = 0;
 
 	VR _vr;
 	float _fov;
 	AngleX _angleX;
 	AngleY _angleY;
 	Audio::Mixer *_mixer;
-	bool _loading = false;
 	bool _showRegions = false;
 
 	static constexpr byte kPaused = 2;
@@ -237,6 +247,7 @@ private:
 	Common::String _contextScript;
 	Common::String _contextLabel;
 	Common::Array<byte> _capturedState;
+	Common::Array<byte> _loadedState;
 
 	Common::HashMap<int, Common::String> _textes;
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-10 12:45+0000\n"
+"POT-Creation-Date: 2026-02-13 09:17+0000\n"
 "PO-Revision-Date: 2024-12-01 22:18+0000\n"
 "Last-Translator: 复予 <clonewith@qq.com>\n"
 "Language-Team: Chinese (Simplified Han script) <https://"
@@ -74,7 +74,7 @@ msgstr "关闭"
 #. on the KIA Help Page, under Keyboard Shortcuts. In the English version it is
 #. ONLINE HELP
 #. I18N: Opens the help screen.
-#: gui/browser.cpp:64 gui/launcher.cpp:275 gui/launcher.cpp:953
+#: gui/browser.cpp:64 gui/launcher.cpp:277 gui/launcher.cpp:955
 #: backends/platform/sdl/macosx/appmenu_osx.mm:319
 #: engines/access/metaengine.cpp:343 engines/bladerunner/metaengine.cpp:321
 #: engines/ngi/metaengine.cpp:162 engines/supernova/metaengine.cpp:238
@@ -271,7 +271,7 @@ msgstr "粘贴"
 msgid "Paste code from clipboard"
 msgstr "从剪贴板粘贴代码"
 
-#: gui/cloudconnectionwizard.cpp:387 gui/launcher.cpp:322
+#: gui/cloudconnectionwizard.cpp:387 gui/launcher.cpp:324
 #: engines/dialogs.cpp:97 engines/engine.cpp:1019 engines/mm/xeen/saves.cpp:259
 #: engines/nancy/state/loadsave.cpp:108 engines/nancy/state/loadsave.cpp:153
 #: engines/parallaction/metaengine.cpp:151
@@ -325,8 +325,8 @@ msgstr "另一存储正工作中。您要中断它吗？"
 
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:426 gui/launcher.cpp:455
-#: gui/launcher.cpp:528 gui/launcher.cpp:1858 gui/options.cpp:3485
+#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:428 gui/launcher.cpp:457
+#: gui/launcher.cpp:530 gui/launcher.cpp:1908 gui/options.cpp:3485
 #: gui/options.cpp:3859 base/main.cpp:594
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:102
@@ -335,7 +335,7 @@ msgstr "另一存储正工作中。您要中断它吗？"
 #: engines/hypno/metaengine.cpp:192 engines/kyra/gui/saveload_eob.cpp:611
 #: engines/kyra/gui/saveload_eob.cpp:644 engines/lab/metaengine.cpp:197
 #: engines/parallaction/metaengine.cpp:169
-#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4344
+#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4355
 #: engines/sherlock/metaengine.cpp:638 engines/sherlock/metaengine.cpp:1244
 #: engines/sludge/event.cpp:144 engines/toon/toon.cpp:1550
 #: engines/zvision/zvision.cpp:321
@@ -344,8 +344,8 @@ msgstr "是"
 
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
-#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:426 gui/launcher.cpp:455
-#: gui/launcher.cpp:528 gui/launcher.cpp:1858 gui/options.cpp:3485
+#: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:428 gui/launcher.cpp:457
+#: gui/launcher.cpp:530 gui/launcher.cpp:1909 gui/options.cpp:3485
 #: gui/options.cpp:3859 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:102
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
@@ -353,7 +353,7 @@ msgstr "是"
 #: engines/hypno/metaengine.cpp:198 engines/kyra/gui/saveload_eob.cpp:611
 #: engines/kyra/gui/saveload_eob.cpp:644 engines/lab/metaengine.cpp:204
 #: engines/parallaction/metaengine.cpp:175
-#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4344
+#: engines/sci/graphics/controls32.cpp:937 engines/scumm/scumm.cpp:4355
 #: engines/sherlock/metaengine.cpp:643 engines/sherlock/metaengine.cpp:1250
 #: engines/sludge/event.cpp:144 engines/toon/toon.cpp:1550
 #: engines/zvision/zvision.cpp:322
@@ -380,7 +380,7 @@ msgstr "JSON 代码内容有误。"
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:123
 #: engines/drascula/saveload.cpp:51 engines/grim/inputdialog.cpp:83
 #: engines/parallaction/saveload.cpp:270 engines/sci/engine/kgraphics.cpp:76
-#: engines/sci/graphics/controls32.cpp:934 engines/scumm/scumm.cpp:4356
+#: engines/sci/graphics/controls32.cpp:934 engines/scumm/scumm.cpp:4367
 #: engines/sword1/control.cpp:2816
 msgid "OK"
 msgstr "确认"
@@ -433,7 +433,7 @@ msgid "Select directory where to download game data"
 msgstr "选择下载保存游戏数据的目录"
 
 #: gui/downloaddialog.cpp:49 gui/dump-all-dialogs.cpp:117
-#: gui/dump-all-dialogs.cpp:142 gui/editgamedialog.cpp:586 gui/launcher.cpp:319
+#: gui/dump-all-dialogs.cpp:142 gui/editgamedialog.cpp:586 gui/launcher.cpp:321
 msgid "Select directory with game data"
 msgstr "选择包含游戏数据的目录"
 
@@ -467,7 +467,7 @@ msgid ""
 "files with it?"
 msgstr "你的连接似乎受限。确定要使用它下载文件吗？"
 
-#: gui/downloaddialog.cpp:136 gui/launcher.cpp:691
+#: gui/downloaddialog.cpp:136 gui/launcher.cpp:693
 msgid "ScummVM couldn't open the specified directory!"
 msgstr "ScummVM 无法打开指定目录！"
 
@@ -565,7 +565,7 @@ msgstr "图标包"
 msgid "shader packs"
 msgstr "光影包"
 
-#: gui/dump-all-dialogs.cpp:146 gui/launcher.cpp:742
+#: gui/dump-all-dialogs.cpp:146 gui/launcher.cpp:744
 msgid "Pick the game:"
 msgstr "选择游戏："
 
@@ -1410,305 +1410,305 @@ msgid "Save Image"
 msgstr "保存图像"
 
 #. I18N: Group name for the game list
-#: gui/launcher.cpp:106
+#: gui/launcher.cpp:108
 msgctxt "group"
 msgid "None"
 msgstr "无"
 
 #. I18N: Group name for the game list, grouped by the first letter of the game title
-#: gui/launcher.cpp:108
+#: gui/launcher.cpp:110
 msgctxt "group"
 msgid "First letter"
 msgstr "首字母"
 
-#: gui/launcher.cpp:108
+#: gui/launcher.cpp:110
 msgctxt "group"
 msgid "Initial"
 msgstr "初始"
 
 #. I18N: Group name for the game list, grouped by game engine
-#: gui/launcher.cpp:110
+#: gui/launcher.cpp:112
 msgctxt "group"
 msgid "Engine"
 msgstr "引擎"
 
 #. I18N: Group name for the game list, grouped by game series
-#: gui/launcher.cpp:112
+#: gui/launcher.cpp:114
 msgctxt "group"
 msgid "Series"
 msgstr "系列"
 
 #. I18N: Group name for the game list, grouped by game publisher
-#: gui/launcher.cpp:114
+#: gui/launcher.cpp:116
 msgctxt "group"
 msgid "Publisher"
 msgstr "发行商"
 
 #. I18N: Group name for the game list, grouped by language
-#: gui/launcher.cpp:116
+#: gui/launcher.cpp:118
 msgctxt "group"
 msgid "Language"
 msgstr "语言"
 
 #. I18N: Group name for the game list, grouped by game platform
-#: gui/launcher.cpp:118
+#: gui/launcher.cpp:120
 msgctxt "group"
 msgid "Platform"
 msgstr "平台"
 
 #. I18N: Group name for the game list, grouped by year
-#: gui/launcher.cpp:120
+#: gui/launcher.cpp:122
 msgctxt "year"
 msgid "Year"
 msgstr "年份"
 
-#: gui/launcher.cpp:230
+#: gui/launcher.cpp:232
 msgid "Select Group by"
 msgstr "分组依据"
 
-#: gui/launcher.cpp:234 gui/launcher.cpp:937
+#: gui/launcher.cpp:236 gui/launcher.cpp:939
 msgid "Group:"
 msgstr "分组："
 
-#: gui/launcher.cpp:236
+#: gui/launcher.cpp:238
 msgid "Select a criteria to group the entries"
 msgstr "选择项目分类规则"
 
-#: gui/launcher.cpp:263
+#: gui/launcher.cpp:265
 msgid "Click here to see Help"
 msgstr "点击此处查看帮助"
 
 #. I18N: Button Quit ScummVM program. Q is the shortcut, Ctrl+Q, put it in parens for non-latin (~Q~)
-#: gui/launcher.cpp:267 engines/dialogs.cpp:94
+#: gui/launcher.cpp:269 engines/dialogs.cpp:94
 msgid "~Q~uit"
 msgstr "退出 (~Q~)"
 
-#: gui/launcher.cpp:267 backends/platform/sdl/macosx/appmenu_osx.mm:307
+#: gui/launcher.cpp:269 backends/platform/sdl/macosx/appmenu_osx.mm:307
 msgid "Quit ScummVM"
 msgstr "退出 ScummVM"
 
 #. I18N: Button About ScummVM program. b is the shortcut, Ctrl+b, put it in parens for non-latin (~b~)
-#: gui/launcher.cpp:271
+#: gui/launcher.cpp:273
 msgid "A~b~out"
 msgstr "关于 (~B~)"
 
-#: gui/launcher.cpp:271 backends/platform/sdl/macosx/appmenu_osx.mm:301
+#: gui/launcher.cpp:273 backends/platform/sdl/macosx/appmenu_osx.mm:301
 msgid "About ScummVM"
 msgstr "关于 ScummVM"
 
-#: gui/launcher.cpp:275 gui/launcher.cpp:953
+#: gui/launcher.cpp:277 gui/launcher.cpp:955
 #, fuzzy
 #| msgid "General Keys"
 msgid "General help"
 msgstr "通用密钥"
 
 #. I18N: Button caption. O is the shortcut, Ctrl+O, put it in parens for non-latin (~O~)
-#: gui/launcher.cpp:278
+#: gui/launcher.cpp:280
 msgid "Global ~O~ptions..."
 msgstr "全局设置 (~O~)..."
 
-#: gui/launcher.cpp:278
+#: gui/launcher.cpp:280
 msgid "Change global ScummVM options"
 msgstr "修改全局 ScummVM 设置"
 
-#: gui/launcher.cpp:278
+#: gui/launcher.cpp:280
 msgctxt "lowres"
 msgid "Global ~O~pts..."
 msgstr "全局设置 (~O~)..."
 
-#: gui/launcher.cpp:282
+#: gui/launcher.cpp:284
 msgid "Download Games"
 msgstr "下载游戏"
 
-#: gui/launcher.cpp:282
+#: gui/launcher.cpp:284
 msgid "Download freeware games for ScummVM"
 msgstr "为 ScummVM 下载免费游戏"
 
 #. I18N: Button caption. A is the shortcut, Ctrl+A, put it in parens for non-latin (~A~)
-#: gui/launcher.cpp:289
+#: gui/launcher.cpp:291
 msgid "~A~dd Game..."
 msgstr "添加游戏 (~A~)..."
 
-#: gui/launcher.cpp:289
+#: gui/launcher.cpp:291
 msgid "Add games to the list"
 msgstr "向列表添加游戏"
 
-#: gui/launcher.cpp:289
+#: gui/launcher.cpp:291
 msgctxt "lowres"
 msgid "~A~dd Game..."
 msgstr "添加游戏 (~A~)..."
 
 #. I18N: Button caption. R is the shortcut, Ctrl+R, put it in parens for non-latin (~R~)
-#: gui/launcher.cpp:293
+#: gui/launcher.cpp:295
 msgid "~R~emove Game"
 msgstr "删除游戏 (~R~)"
 
-#: gui/launcher.cpp:293
+#: gui/launcher.cpp:295
 msgid "Remove game from the list. The game data files stay intact"
 msgstr "从列表中移除游戏。将保留数据文件"
 
-#: gui/launcher.cpp:293
+#: gui/launcher.cpp:295
 msgctxt "lowres"
 msgid "~R~emove Game"
 msgstr "删除游戏 (~R~)"
 
 #. I18N: Button caption. Mass add games
-#: gui/launcher.cpp:296
+#: gui/launcher.cpp:298
 msgid "Mass Add..."
 msgstr "批量添加..."
 
 #. I18N: Button caption for lower resolution GUI. Mass add games
-#: gui/launcher.cpp:299
+#: gui/launcher.cpp:301
 msgctxt "lowres"
 msgid "Mass Add..."
 msgstr "批量添加..."
 
-#: gui/launcher.cpp:307 gui/launcher.cpp:907 gui/shaderbrowser-dialog.cpp:61
+#: gui/launcher.cpp:309 gui/launcher.cpp:909 gui/shaderbrowser-dialog.cpp:61
 #: gui/shaderbrowser-dialog.cpp:97
 msgid "Search in game list"
 msgstr "在游戏列表中搜索"
 
-#: gui/launcher.cpp:311 gui/launcher.cpp:928 gui/shaderbrowser-dialog.cpp:65
+#: gui/launcher.cpp:313 gui/launcher.cpp:930 gui/shaderbrowser-dialog.cpp:65
 #: gui/shaderbrowser-dialog.cpp:107
 msgid "Search:"
 msgstr "搜索："
 
-#: gui/launcher.cpp:322 engines/dialogs.cpp:97 engines/engine.cpp:1019
+#: gui/launcher.cpp:324 engines/dialogs.cpp:97 engines/engine.cpp:1019
 #: engines/mm/xeen/saves.cpp:259 engines/nancy/state/loadsave.cpp:153
 #: engines/pegasus/pegasus.cpp:388 engines/trecision/saveload.cpp:253
 #: engines/tsage/scenes.cpp:642 engines/wage/saveload.cpp:753
 msgid "Load game:"
 msgstr "载入游戏："
 
-#: gui/launcher.cpp:414
+#: gui/launcher.cpp:416
 msgid "This directory cannot be used yet, it is being downloaded into!"
 msgstr "这个目录还不能使用，文件正在下载中！"
 
-#: gui/launcher.cpp:425
+#: gui/launcher.cpp:427
 msgid ""
 "Do you really want to run the mass game detector? This could potentially add "
 "a huge number of games."
 msgstr "你确定要进行全盘扫描吗？这可能会添加大量的游戏。"
 
-#: gui/launcher.cpp:455
+#: gui/launcher.cpp:457
 msgid "Do you really want to remove this game configuration?"
 msgstr "你确定要删除此游戏配置吗？"
 
-#: gui/launcher.cpp:527
+#: gui/launcher.cpp:529
 msgid "Do you want to load saved game?"
 msgstr "你要载入存档吗？"
 
-#: gui/launcher.cpp:584
+#: gui/launcher.cpp:586
 msgid "This game does not support loading games from the launcher."
 msgstr "这个游戏不支持直接从启动器载入存档。"
 
-#: gui/launcher.cpp:588
+#: gui/launcher.cpp:590
 msgid "ScummVM could not find any engine capable of running the selected game!"
 msgstr "ScummVM 找不到能运行此游戏的引擎！"
 
-#: gui/launcher.cpp:694 gui/launcher.cpp:718
+#: gui/launcher.cpp:696 gui/launcher.cpp:720
 msgid ""
 "Have you given ScummVM access rights to this directory? Press the help "
 "button [?] on the top for detailed instructions"
 msgstr ""
 "你授予 ScummVM 访问此目录的权限了吗？点击顶部的帮助按钮 [?] 获取详细说明"
 
-#: gui/launcher.cpp:715
+#: gui/launcher.cpp:717
 msgid "ScummVM could not find any game in the specified directory!"
 msgstr "ScummVM 在指定目录找不到游戏！"
 
 #. I18N: Unknown game variant
-#: gui/launcher.cpp:736 engines/engine.cpp:1235
+#: gui/launcher.cpp:738 engines/engine.cpp:1235
 msgid "Unknown variant"
 msgstr "未知变体"
 
-#: gui/launcher.cpp:988 gui/saveload-dialog.cpp:381
+#: gui/launcher.cpp:990 gui/saveload-dialog.cpp:381
 msgid "List view"
 msgstr "列表视图"
 
-#: gui/launcher.cpp:989 gui/saveload-dialog.cpp:382
+#: gui/launcher.cpp:991 gui/saveload-dialog.cpp:382
 msgid "Grid view"
 msgstr "网格视图"
 
-#: gui/launcher.cpp:1137
+#: gui/launcher.cpp:1139
 msgid "~S~tart"
 msgstr "启动 (~S~)"
 
-#: gui/launcher.cpp:1137
+#: gui/launcher.cpp:1139
 msgid "Start selected game"
 msgstr "启动选中游戏"
 
-#: gui/launcher.cpp:1140
+#: gui/launcher.cpp:1142
 msgid "~L~oad..."
 msgstr "载入 (~L~)..."
 
-#: gui/launcher.cpp:1140
+#: gui/launcher.cpp:1142
 msgid "Load saved game for selected game"
 msgstr "为选定游戏载入存档"
 
-#: gui/launcher.cpp:1142
+#: gui/launcher.cpp:1144
 msgid "Record..."
 msgstr "录制..."
 
-#: gui/launcher.cpp:1148
+#: gui/launcher.cpp:1150
 msgid "~G~ame Options..."
 msgstr "游戏设置 (~G~)..."
 
-#: gui/launcher.cpp:1148
+#: gui/launcher.cpp:1150
 msgid "Change game options"
 msgstr "更改游戏设置"
 
-#: gui/launcher.cpp:1148
+#: gui/launcher.cpp:1150
 msgctxt "lowres"
 msgid "~G~ame Opts..."
 msgstr "游戏设置 (~G~)..."
 
-#: gui/launcher.cpp:1234
+#: gui/launcher.cpp:1236
 msgid "Add-on"
 msgstr ""
 
 #. I18N: List grouping when no engine is specified
-#: gui/launcher.cpp:1285 gui/launcher.cpp:1530
+#: gui/launcher.cpp:1287 gui/launcher.cpp:1532
 msgid "Unknown Engine"
 msgstr "未知引擎"
 
 #. I18N: List grouping when no publisher is specified
 #. I18N: List group when no publisher is specified
-#: gui/launcher.cpp:1302 gui/launcher.cpp:1547
+#: gui/launcher.cpp:1304 gui/launcher.cpp:1549
 msgid "Unknown Publisher"
 msgstr "未知发行商"
 
 #. I18N: List group when no game series is specified
 #. I18N: List grouping when no game series is specified
-#: gui/launcher.cpp:1319 gui/launcher.cpp:1564
+#: gui/launcher.cpp:1321 gui/launcher.cpp:1566
 msgid "No Series"
 msgstr "无系列"
 
 #. I18N: List group when no language is specified
-#: gui/launcher.cpp:1333 gui/launcher.cpp:1578
+#: gui/launcher.cpp:1335 gui/launcher.cpp:1580
 msgid "Language not detected"
 msgstr "未检测到语言"
 
 #. I18N: List group when no platform is specified
-#: gui/launcher.cpp:1347 gui/launcher.cpp:1592
+#: gui/launcher.cpp:1349 gui/launcher.cpp:1594
 msgid "Platform not detected"
 msgstr "未检测到平台"
 
 #. I18N: List group when no year is specified
-#: gui/launcher.cpp:1364 gui/launcher.cpp:1609
+#: gui/launcher.cpp:1366 gui/launcher.cpp:1611
 msgid "Unknown Year"
 msgstr "未知年份"
 
 #. I18N: Group for All items
-#: gui/launcher.cpp:1616 gui/widgets/groupedlist.cpp:81
+#: gui/launcher.cpp:1618 gui/widgets/groupedlist.cpp:81
 msgid "All"
 msgstr "全部"
 
-#: gui/launcher.cpp:1784
+#: gui/launcher.cpp:1786
 msgid "Icons per row:"
 msgstr "每行图标数："
 
-#: gui/launcher.cpp:1834
+#: gui/launcher.cpp:1836
 #, fuzzy, c-format
 #| msgid "Do you really want to remove this game configuration?"
 msgid ""
@@ -3241,7 +3241,7 @@ msgstr "<数值错误>"
 #. I18N: Abbreviation for 'bytes' as data size
 #. I18N: Hardware key
 #: common/util.cpp:183 backends/platform/3ds/osystem-events.cpp:46
-#: backends/platform/ds/osystem_ds.cpp:175
+#: backends/platform/ds/osystem_ds.cpp:178
 #: backends/platform/sdl/miyoo/miyoo.cpp:61
 #: backends/platform/sdl/miyoo/miyoo.cpp:88
 #: backends/platform/sdl/opendingux/opendingux.cpp:51
@@ -3311,7 +3311,7 @@ msgstr "图形冒险游戏引擎"
 #: engines/mohawk/riven_stacks/aspit.cpp:454
 #: engines/neverhood/metaengine.cpp:200 engines/saga/metaengine.cpp:449
 #: engines/scumm/help.cpp:84 engines/scumm/help.cpp:86
-#: engines/scumm/scumm.cpp:4356 engines/sludge/keymapper_tables.h:95
+#: engines/scumm/scumm.cpp:4367 engines/sludge/keymapper_tables.h:95
 #: engines/sludge/keymapper_tables.h:144 engines/sludge/keymapper_tables.h:223
 #: engines/sludge/keymapper_tables.h:343 engines/sludge/keymapper_tables.h:355
 #: engines/sludge/keymapper_tables.h:416 engines/sludge/keymapper_tables.h:429
@@ -4451,7 +4451,7 @@ msgstr "右肩键"
 
 #: backends/keymapper/hardware-input.cpp:266
 #: backends/platform/3ds/osystem-events.cpp:55
-#: backends/platform/ds/osystem_ds.cpp:182
+#: backends/platform/ds/osystem_ds.cpp:185
 #: backends/platform/sdl/miyoo/miyoo.cpp:74
 #: backends/platform/sdl/miyoo/miyoo.cpp:101
 #: backends/platform/sdl/opendingux/opendingux.cpp:64
@@ -4464,7 +4464,7 @@ msgstr "十字键 上"
 
 #: backends/keymapper/hardware-input.cpp:267
 #: backends/platform/3ds/osystem-events.cpp:56
-#: backends/platform/ds/osystem_ds.cpp:183
+#: backends/platform/ds/osystem_ds.cpp:186
 #: backends/platform/sdl/miyoo/miyoo.cpp:75
 #: backends/platform/sdl/miyoo/miyoo.cpp:102
 #: backends/platform/sdl/opendingux/opendingux.cpp:65
@@ -4477,7 +4477,7 @@ msgstr "十字键 下"
 
 #: backends/keymapper/hardware-input.cpp:268
 #: backends/platform/3ds/osystem-events.cpp:57
-#: backends/platform/ds/osystem_ds.cpp:184
+#: backends/platform/ds/osystem_ds.cpp:187
 #: backends/platform/sdl/miyoo/miyoo.cpp:76
 #: backends/platform/sdl/miyoo/miyoo.cpp:103
 #: backends/platform/sdl/opendingux/opendingux.cpp:66
@@ -4490,7 +4490,7 @@ msgstr "十字键 左"
 
 #: backends/keymapper/hardware-input.cpp:269
 #: backends/platform/3ds/osystem-events.cpp:58
-#: backends/platform/ds/osystem_ds.cpp:185
+#: backends/platform/ds/osystem_ds.cpp:188
 #: backends/platform/sdl/miyoo/miyoo.cpp:77
 #: backends/platform/sdl/miyoo/miyoo.cpp:104
 #: backends/platform/sdl/opendingux/opendingux.cpp:67
@@ -4798,7 +4798,7 @@ msgstr "顶部与底部"
 
 #. I18N: Hardware key
 #: backends/platform/3ds/osystem-events.cpp:45
-#: backends/platform/ds/osystem_ds.cpp:174
+#: backends/platform/ds/osystem_ds.cpp:177
 #: backends/platform/sdl/miyoo/miyoo.cpp:59
 #: backends/platform/sdl/miyoo/miyoo.cpp:86
 #: backends/platform/sdl/opendingux/opendingux.cpp:49
@@ -4808,7 +4808,7 @@ msgstr "A"
 
 #. I18N: Hardware key
 #: backends/platform/3ds/osystem-events.cpp:47
-#: backends/platform/ds/osystem_ds.cpp:176
+#: backends/platform/ds/osystem_ds.cpp:179
 #: backends/platform/sdl/miyoo/miyoo.cpp:63
 #: backends/platform/sdl/miyoo/miyoo.cpp:90
 #: backends/platform/sdl/opendingux/opendingux.cpp:53
@@ -4818,7 +4818,7 @@ msgstr "X"
 
 #. I18N: Hardware key
 #: backends/platform/3ds/osystem-events.cpp:48
-#: backends/platform/ds/osystem_ds.cpp:177
+#: backends/platform/ds/osystem_ds.cpp:180
 #: backends/platform/sdl/miyoo/miyoo.cpp:65
 #: backends/platform/sdl/miyoo/miyoo.cpp:92
 #: backends/platform/sdl/opendingux/opendingux.cpp:55
@@ -4831,7 +4831,7 @@ msgstr "Y"
 #. I18N: Return key
 #. I18N: Select party member command in Might & Magic 1
 #: backends/platform/3ds/osystem-events.cpp:49
-#: backends/platform/ds/osystem_ds.cpp:178
+#: backends/platform/ds/osystem_ds.cpp:181
 #: backends/platform/sdl/miyoo/miyoo.cpp:67
 #: backends/platform/sdl/miyoo/miyoo.cpp:94
 #: backends/platform/sdl/opendingux/opendingux.cpp:57
@@ -4848,7 +4848,7 @@ msgstr "Select"
 #. I18N: Hardware key
 #. I18N: Hardware key on controller
 #: backends/platform/3ds/osystem-events.cpp:50
-#: backends/platform/ds/osystem_ds.cpp:179
+#: backends/platform/ds/osystem_ds.cpp:182
 #: backends/platform/sdl/miyoo/miyoo.cpp:69
 #: backends/platform/sdl/miyoo/miyoo.cpp:96
 #: backends/platform/sdl/opendingux/opendingux.cpp:59
@@ -4869,7 +4869,7 @@ msgstr "ZR"
 
 #. I18N: Hardware key
 #: backends/platform/3ds/osystem-events.cpp:53
-#: backends/platform/ds/osystem_ds.cpp:180
+#: backends/platform/ds/osystem_ds.cpp:183
 #: backends/platform/sdl/miyoo/miyoo.cpp:71
 #: backends/platform/sdl/miyoo/miyoo.cpp:98
 #: backends/platform/sdl/opendingux/opendingux.cpp:61
@@ -4880,7 +4880,7 @@ msgstr "L"
 
 #. I18N: Hardware key
 #: backends/platform/3ds/osystem-events.cpp:54
-#: backends/platform/ds/osystem_ds.cpp:181
+#: backends/platform/ds/osystem_ds.cpp:184
 #: backends/platform/sdl/miyoo/miyoo.cpp:73
 #: backends/platform/sdl/miyoo/miyoo.cpp:100
 #: backends/platform/sdl/opendingux/opendingux.cpp:63
@@ -4902,7 +4902,7 @@ msgid "Circle Pad Y"
 msgstr "圆形"
 
 #: backends/platform/3ds/osystem-events.cpp:69
-#: backends/platform/ds/osystem_ds.cpp:194
+#: backends/platform/ds/osystem_ds.cpp:197
 msgid "Touch"
 msgstr "触摸"
 
@@ -5964,11 +5964,11 @@ msgstr ""
 msgid "Click Mode"
 msgstr "点击模式"
 
-#: backends/platform/sdl/sdl.cpp:1163
+#: backends/platform/sdl/sdl.cpp:1166
 msgid "Keyboard"
 msgstr "键盘"
 
-#: backends/platform/sdl/sdl.cpp:1166
+#: backends/platform/sdl/sdl.cpp:1169
 msgid ""
 "## Keyboard shortcuts\n"
 "\n"
@@ -5999,23 +5999,23 @@ msgstr ""
 "| --------------|------------------\n"
 "| `Ctrl+F5` | 显示全局主菜单\n"
 
-#: backends/platform/sdl/sdl.cpp:1178
+#: backends/platform/sdl/sdl.cpp:1181
 msgid "| `Cmd+q`    | Quit (macOS)\n"
 msgstr "| `Cmd+q`    | 退出 (macOS)\n"
 
-#: backends/platform/sdl/sdl.cpp:1180
+#: backends/platform/sdl/sdl.cpp:1183
 msgid "| `Alt+F4`  | Quit (Windows)\n"
 msgstr "| `Alt+F4`  | 退出 (Windows)\n"
 
-#: backends/platform/sdl/sdl.cpp:1182
+#: backends/platform/sdl/sdl.cpp:1185
 msgid "| `Ctrl+q`  | Quit (Linux/Unix)\n"
 msgstr "| `Ctrl+q`  | 退出 (Linux/Unix)\n"
 
-#: backends/platform/sdl/sdl.cpp:1183
+#: backends/platform/sdl/sdl.cpp:1186
 msgid "| `Ctrl+z`  | Quit (other platforms)\n"
 msgstr "| `Ctrl+z`  | 退出（其他平台）\n"
 
-#: backends/platform/sdl/sdl.cpp:1186
+#: backends/platform/sdl/sdl.cpp:1189
 msgid ""
 "| `Ctrl+u`  | Mutes all sounds\n"
 "| `Ctrl+m`  | Toggles mouse capture\n"
@@ -7118,7 +7118,7 @@ msgstr ""
 msgid "Quick load or save game isn't supported in this location"
 msgstr "此位置不支持快速存档或读档"
 
-#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3298
+#: engines/agos/saveload.cpp:160 engines/scumm/scumm.cpp:3309
 #, c-format
 msgid ""
 "Failed to load saved game from file:\n"
@@ -7129,7 +7129,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3285
+#: engines/agos/saveload.cpp:195 engines/scumm/scumm.cpp:3296
 #, c-format
 msgid ""
 "Failed to save game to file:\n"
@@ -7140,7 +7140,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3318
+#: engines/agos/saveload.cpp:203 engines/scumm/scumm.cpp:3329
 #, c-format
 msgid ""
 "Successfully saved game in file:\n"
@@ -12455,7 +12455,7 @@ msgid "Your Name:"
 msgstr "你的名字："
 
 #. I18N: Button, start hosting online multiplayer game
-#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4362
+#: engines/scumm/dialog-createsession.cpp:49 engines/scumm/scumm.cpp:4373
 msgid "Host"
 msgstr "主机"
 
@@ -12465,7 +12465,7 @@ msgid "Querying games..."
 msgstr "读取游戏中..."
 
 #. I18N: Join online multiplayer game
-#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4362
+#: engines/scumm/dialog-sessionselector.cpp:64 engines/scumm/scumm.cpp:4373
 msgid "Join"
 msgstr "加入"
 
@@ -13419,7 +13419,7 @@ msgstr ""
 "将会尝试加载，但游戏可能表现异常或崩溃。\n"
 "请相应地更改音频配置，来正确加载此存档。"
 
-#: engines/scumm/scumm.cpp:315
+#: engines/scumm/scumm.cpp:316
 msgid ""
 "You have enabled 'aspect ratio correction'. However, FM-TOWNS' natural "
 "resolution is 320x240, which doesn't allow aspect ratio correction.\n"
@@ -13430,13 +13430,13 @@ msgstr ""
 "正。\n"
 "可以通过在“引擎”标签页下将分辨率缩减为 320x200 实现宽高比矫正。"
 
-#: engines/scumm/scumm.cpp:1355
+#: engines/scumm/scumm.cpp:1356
 #, fuzzy, c-format
 #| msgid "This game requires the 'Indy' Macintosh executable for its fonts."
 msgid "This game requires the '%s' Macintosh executable for its fonts."
 msgstr "此游戏需要“Indy”Macintosh 可执行文件提供字体。"
 
-#: engines/scumm/scumm.cpp:1364
+#: engines/scumm/scumm.cpp:1365
 #, fuzzy, c-format
 #| msgid ""
 #| "This game requires the 'Loom' Macintosh executable for its music and "
@@ -13445,7 +13445,7 @@ msgid ""
 "This game requires the '%s' Macintosh executable for its music and fonts."
 msgstr "此游戏需要“Loom”Macintosh 可执行文件提供音乐与字体。"
 
-#: engines/scumm/scumm.cpp:1368
+#: engines/scumm/scumm.cpp:1369
 #, fuzzy, c-format
 #| msgid ""
 #| "Could not find the 'Monkey Island' Macintosh executable to read "
@@ -13458,25 +13458,25 @@ msgstr ""
 "找不到用于读取资源与乐器的“Monkey Island”\n"
 "Macintosh 可执行文件。音乐与 Mac 图形界面将被禁用。"
 
-#: engines/scumm/scumm.cpp:1369
+#: engines/scumm/scumm.cpp:1370
 msgid "The Mac GUI"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1369
+#: engines/scumm/scumm.cpp:1370
 msgid "The music and the Mac GUI"
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1398
+#: engines/scumm/scumm.cpp:1399
 #, c-format
 msgid "Could not open Macintosh resource file %s"
 msgstr "无法打开 Macintosh 资源文件 %s"
 
-#: engines/scumm/scumm.cpp:1401
+#: engines/scumm/scumm.cpp:1402
 #, c-format
 msgid "Could not find resource fork in Macintosh resource file %s"
 msgstr "在 Macintosh 资源文件 %s 中找不到资源分支"
 
-#: engines/scumm/scumm.cpp:1408
+#: engines/scumm/scumm.cpp:1409
 #, c-format
 msgid ""
 "'%s' appears to be the wrong Dig executable. It may be the launcher one "
@@ -13485,7 +13485,7 @@ msgid ""
 "its sub-folders should be what you need."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1569
+#: engines/scumm/scumm.cpp:1570
 msgid ""
 "It appears your ScummVM version was not built with TrueType Fonts support.\n"
 "\n"
@@ -13493,7 +13493,7 @@ msgid ""
 "some of the graphics on screen will be missing."
 msgstr ""
 
-#: engines/scumm/scumm.cpp:1831
+#: engines/scumm/scumm.cpp:1832
 msgid ""
 "Audio files compressed with ScummVM Tools were detected; *.BUN/*.SOU\n"
 "compression is not supported anymore for this game, audio will be disabled.\n"
@@ -13503,7 +13503,7 @@ msgstr ""
 "此游戏不再支持 *.BUN/*.SOU 压缩，将会禁用音频。\n"
 "请从原始媒介复制未经压缩的游戏。"
 
-#: engines/scumm/scumm.cpp:2321
+#: engines/scumm/scumm.cpp:2322
 #, c-format
 msgid ""
 "Native MIDI support requires the Roland Upgrade from LucasArts,\n"
@@ -13512,7 +13512,7 @@ msgstr ""
 "原生 MIDI 支持需要 LucasArts 提供的 Roland Upgrade，\n"
 "但缺失 %s。将转而使用 AdLib。"
 
-#: engines/scumm/scumm.cpp:2336
+#: engines/scumm/scumm.cpp:2337
 msgid ""
 "This particular version of Monkey Island 1 is known to miss some\n"
 "required resources for MT-32. Using AdLib instead."
@@ -13520,7 +13520,7 @@ msgstr ""
 "已知此版本的 Monkey Island 1 缺失\n"
 "MT-32 所需的一些资源。将转而使用 AdLib。"
 
-#: engines/scumm/scumm.cpp:4238
+#: engines/scumm/scumm.cpp:4249
 msgid ""
 "Usually, Maniac Mansion would start now. But for that to work, the game "
 "files for Maniac Mansion have to be in the 'Maniac' directory inside the "
@@ -13529,7 +13529,7 @@ msgstr ""
 "Maniac Mansion 此时通常会启动。但要启动，Maniac Mansion 的游戏文件必须放在 "
 "Tentacle 游戏目录下的“Maniac”目录中，同时游戏必须添加到 ScummVM 中。"
 
-#: engines/scumm/scumm.cpp:4362
+#: engines/scumm/scumm.cpp:4373
 msgid "Would you like to host or join a network play session?"
 msgstr "你想启动还是加入网络游玩会话？"
 

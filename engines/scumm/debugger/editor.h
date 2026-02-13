@@ -19,9 +19,29 @@
  *
  */
 
-#ifndef M4_DBG_DEBUG_H
-#define M4_DBG_DEBUG_H
+#ifndef SCUMM_EDITOR_H
+#define SCUMM_EDITOR_H
 
-#include "m4/dbg/dbg_wscript.h"
+#include "common/str.h"
+
+namespace Scumm {
+
+class ScummEngine;
+
+class ScummEditor {
+private:
+	ScummEngine *_engine;
+	Common::String _gameName;
+
+	void loadState();
+	void saveState();
+
+public:
+	ScummEditor(ScummEngine *engine);
+
+	void render();
+};
+
+} // End of namespace Scumm
 
 #endif
