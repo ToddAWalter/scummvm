@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-14 14:48+0000\n"
+"POT-Creation-Date: 2026-02-15 13:41+0000\n"
 "PO-Revision-Date: 2026-02-11 23:18+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
@@ -110,12 +110,13 @@ msgstr "Вверх"
 #: gui/editrecorddialog.cpp:66 gui/integrity-dialog.cpp:122
 #: gui/integrity-dialog.cpp:253 gui/filebrowser-dialog.cpp:68
 #: gui/fluidsynth-dialog.cpp:153 gui/massadd.cpp:93 gui/options.cpp:2416
-#: gui/predictivedialog.cpp:68 gui/recorderdialog.cpp:73
-#: gui/recorderdialog.cpp:212 gui/remotebrowser.cpp:59
-#: gui/saveload-dialog.cpp:64 gui/saveload-dialog.cpp:456
-#: gui/saveload-dialog.cpp:540 gui/saveload-dialog.cpp:839
-#: gui/saveload-dialog.cpp:1243 gui/shaderbrowser-dialog.cpp:80
-#: gui/themebrowser.cpp:54 gui/unknown-game-dialog.cpp:53 base/main.cpp:594
+#: gui/predictivedialog.cpp:68 gui/printing-dialog.cpp:93
+#: gui/recorderdialog.cpp:73 gui/recorderdialog.cpp:212
+#: gui/remotebrowser.cpp:59 gui/saveload-dialog.cpp:64
+#: gui/saveload-dialog.cpp:456 gui/saveload-dialog.cpp:540
+#: gui/saveload-dialog.cpp:839 gui/saveload-dialog.cpp:1243
+#: gui/shaderbrowser-dialog.cpp:80 gui/themebrowser.cpp:54
+#: gui/unknown-game-dialog.cpp:53 base/main.cpp:594
 #: dists/android.strings.xml.cpp:46 engines/engine.cpp:808
 #: engines/engine.cpp:833 backends/dialogs/gtk/gtk-dialogs.cpp:65
 #: backends/events/default/default-events.cpp:193
@@ -2803,6 +2804,28 @@ msgstr "*  Цфр"
 #: gui/predictivedialog.cpp:603
 msgid "*  Abc"
 msgstr "*  Abc"
+
+#: gui/printing-dialog.cpp:57
+msgid "Print"
+msgstr ""
+
+#: gui/printing-dialog.cpp:58
+#, fuzzy
+#| msgid "Save Image"
+msgid "Save as image"
+msgstr "Сохранить изображение"
+
+#: gui/printing-dialog.cpp:60
+#, fuzzy
+#| msgid "Pointer Speed:"
+msgid "Printer:"
+msgstr "Скорость указателя:"
+
+#: gui/printing-dialog.cpp:83
+#, fuzzy
+#| msgid "Next action"
+msgid "Orientation:"
+msgstr "Следующее действие"
 
 #: gui/recorderdialog.cpp:67
 msgid "Recorder or Playback Gameplay"
@@ -17959,11 +17982,6 @@ msgstr ""
 #~| msgid "The game in '%s' seems to be unknown."
 #~ msgid "Your set of game files seems to be unknown to us."
 #~ msgstr "Кажется, что игра '%s' ещё неизвестна."
-
-#, fuzzy
-#~| msgid "Next action"
-#~ msgid "Open action"
-#~ msgstr "Следующее действие"
 
 #, fuzzy
 #~| msgid "Next action"

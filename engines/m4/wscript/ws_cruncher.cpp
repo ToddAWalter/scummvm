@@ -261,7 +261,7 @@ bool ws_ChangeAnim8Program(machine *m, int32 newSequHash) {
 		return false;
 	}
 
-	// Intialize the Anim8
+	// Initialize the Anim8
 	myAnim8->switchTime = 0;
 	myAnim8->active = true;
 	myAnim8->eosReqOffset = -1;
@@ -297,7 +297,7 @@ void ws_RemoveAnim8FromCruncher(Anim8 *myAnim8) {
 		mem_free_to_stash((void *)tempEOSreq, _GWS(memtypeEOS));
 	}
 
-	// Incase we are in the middle of crunching
+	// In case we are in the middle of crunching
 	if (myAnim8 == _GWS(crunchNext)) {
 		_GWS(crunchNext) = myAnim8->next;
 	}
@@ -398,7 +398,7 @@ static bool ExtractArg(Anim8 *myAnim8, int32 myFormat, int32 myData, frac16 **ar
 			parentAnim8 = myAnim8->myParent;
 
 			// Range check to make sure we don't index off into hyperspace
-			if ((!parentAnim8) || (myIndex >= IDX_COUNT + parentAnim8->numLocalVars)) {
+			if (!parentAnim8 || (myIndex >= IDX_COUNT + parentAnim8->numLocalVars)) {
 				if (!parentAnim8) {
 					ws_LogErrorMsg(FL, "Trying to access a parent register - no parent exists");
 				} else {
@@ -430,7 +430,7 @@ static bool ExtractArg(Anim8 *myAnim8, int32 myFormat, int32 myData, frac16 **ar
 				return false;
 			}
 
-			// Dereferrence the dataHandle, add the offset to find the array of data for this anim8
+			// Dereference the dataHandle, add the offset to find the array of data for this anim8
 			dataArray = (uint32 *)((intptr)*(myAnim8->dataHandle) + myAnim8->dataOffset);
 
 			// Copy the data field into dataArg1, and set myArg1 to point to this location
@@ -967,7 +967,8 @@ static void op_PUSH(Anim8 *myAnim8) {
 	}
 	int32 direction = 1;
 	if (_GWS(myArg2)) {
-		if (*_GWS(myArg2) > 0) numOfArgs = (*_GWS(myArg2)) >> 16;
+		if (*_GWS(myArg2) > 00)
+			numOfArgs = (*_GWS(myArg2)) >> 16;
 		else {
 			numOfArgs = -(int)(*_GWS(myArg2)) >> 16;
 			direction = -1;
@@ -999,7 +1000,8 @@ static void op_POP(Anim8 *myAnim8) {
 	}
 	int32 direction = 1;
 	if (_GWS(myArg2)) {
-		if (*_GWS(myArg2) > 0) numOfArgs = (*_GWS(myArg2)) >> 16;
+		if (*_GWS(myArg2) > 0)
+			numOfArgs = (*_GWS(myArg2)) >> 16;
 		else {
 			numOfArgs = -(int)(*_GWS(myArg2)) >> 16;
 			direction = -1;
@@ -1189,7 +1191,8 @@ static void op_SET_DEPTH(Anim8 *myAnim8) {
 		ws_Error(myAnim8->myMachine, "op_SET_DEPTH() failed - no depth table.");
 	}
 	for (myDepth = 0; myDepth < 15; myDepth++) {
-		if (_GWS(myDepthTable)[myDepth + 1] < (int)(*_GWS(myArg1) >> 16)) break;
+		if (_GWS(myDepthTable)[myDepth + 1] < (int)(*_GWS(myArg1) >> 16))
+			break;
 	}
 	_GWS(dataArg1) = (myAnim8->myRegs[IDX_LAYER] & 0xffffff) + (myDepth << 24);
 	_GWS(myArg1) = &_GWS(dataArg1);

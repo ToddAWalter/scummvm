@@ -36,10 +36,6 @@ namespace M4 {
 
 #define CCB_NO_DRAW			(CCB_SKIP | CCB_HIDE)
 
-#define ERR_INTERNAL		0
-#define ERR_SEQU			1
-#define ERR_MACH			2
-
 struct WSHal_Globals {
 	RectList *_deadRectList = nullptr;
 };
@@ -61,9 +57,7 @@ void KillCCB(CCB *myCCB, bool restoreFlag);
 void Cel_msr(Anim8 *myAnim8);
 void ws_OverrideCrunchTime(machine *m);
 
-bool CheckAddr();
 void ws_Error(machine *m, const char *errMsg);
-void ws_DumpMachine(machine *m);
 void ws_LogErrorMsg(const char *sourceFile, uint32 lineNum, const char *fmt, ...);
 
 } // End of namespace M4

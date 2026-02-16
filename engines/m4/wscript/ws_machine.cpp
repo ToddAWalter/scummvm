@@ -34,8 +34,6 @@
 
 namespace M4 {
 
-#define COND_FLAG		0x80000000
-#define OP_COUNT		0x00007fff
 #define OP_JUMP			3
 #define OP_KILL			4
 
@@ -368,10 +366,8 @@ static bool op_START_SEQ(machine *m, int32 *pcOffset) {
 		if ((m->myAnim8 = ws_AddAnim8ToCruncher(m, *_GWS(myArg1) >> 16)) == nullptr) {
 			ws_Error(m, "start_seq() failed.");
 		}
-	} else {
-		if (!ws_ChangeAnim8Program(m, *_GWS(myArg1) >> 16)) {
-			ws_Error(m, "start_seq() failed.");
-		}
+	} else if (!ws_ChangeAnim8Program(m, *_GWS(myArg1) >> 16)) {
+		ws_Error(m, "start_seq() failed.");
 	}
 
 	return true;
@@ -631,10 +627,6 @@ void pauseEngines() {
 
 void unpauseEngines() {
 	_GWS(enginesPaused) = false;
-}
-
-void addPauseTime(int32 myTime) {
-	_GWS(pauseTime) += myTime;
 }
 
 void cycleEngines(Buffer *cleanBackground, int16 *depth_table, Buffer *screenCodes,
@@ -974,7 +966,8 @@ machine *TriggerMachineByHash(int32 myHash, Anim8 *parentAnim8, int32 dataHash, 
 	m->machID = _GWS(machineIDCount);
 	m->machName = mem_strdup(machName);
 
-	if ((m->machHandle = ws_GetMACH(myHash, &m->numOfStates, &m->stateTableOffset, &m->machInstrOffset)) == nullptr) {
+	m->machHandle = ws_GetMACH(myHash, &m->numOfStates, &m->stateTableOffset, &m->machInstrOffset);
+	if (m->machHandle == nullptr) {
 		ws_LogErrorMsg(FL, "Trying to trigger hash: %d, name: %s", myHash, machName);
 		return nullptr;
 	}
@@ -982,7 +975,8 @@ machine *TriggerMachineByHash(int32 myHash, Anim8 *parentAnim8, int32 dataHash, 
 	// Get the data handle and offset if requested
 	if (dataHash >= 0) {
 		m->dataHash = dataHash;
-		if ((m->dataHandle = ws_GetDATA(dataHash, (uint32)dataRow, &m->dataOffset)) == nullptr) {
+		m->dataHandle = ws_GetDATA(dataHash, (uint32)dataRow, &m->dataOffset);
+		if (m->dataHandle == nullptr) {
 			ws_LogErrorMsg(FL, "Trying to trigger hash: %d, name: %s", myHash, machName);
 			return nullptr;
 		}

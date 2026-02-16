@@ -1,4 +1,3 @@
-
 /* ScummVM - Graphic Adventure Engine
  *
  * ScummVM is the legal property of its developers, whose names
@@ -20,14 +19,19 @@
  *
  */
 
-#ifndef M4_WSCRIPT_WS_UNIV_H
-#define M4_WSCRIPT_WS_UNIV_H
+#ifndef BACKENDS_PRINTING_WIN32_PRINTMAN_H
+#define BACKENDS_PRINTING_WIN32_PRINTMAN_H
 
-#include "m4/m4_types.h"
+#ifdef WIN32
 
-namespace M4 {
+namespace Common {
+class PrintingManager;
+}
 
+/**
+ * Create an PrintingManager using the Win32 API
+ */
+Common::PrintingManager *createWin32PrintingManager();
 
-} // End of namespace M4
-
+#endif
 #endif

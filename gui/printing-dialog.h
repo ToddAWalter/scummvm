@@ -19,8 +19,42 @@
  *
  */
 
-#include "m4/wscript/wscript.h"
+#ifndef GUI_PRINTING_DIALOGS_H
+#define GUI_PRINTING_DIALOGS_H
 
-namespace M4 {
+#include "gui/dialog.h"
 
-} // End of namespace M4
+namespace GUI {
+class ButtonWidget;
+class CheckboxWidget;
+class PopUpWidget;
+class GraphicsWidget;
+
+class PrintingDialog : public Dialog {
+public:
+	enum {
+		kCmdPrint = 'PRNT',
+		kCmdSelectPrinterName = 'SLPN',
+		kCmdSelectOrientation = 'SLOR',
+	};
+
+	PrintingDialog(const Graphics::ManagedSurface &surface);
+
+	void handleCommand(CommandSender *sender, uint32 cmd, uint32 data) override;
+
+private:
+	const Graphics::ManagedSurface &_surface;
+
+	GraphicsWidget *_preview;
+	ButtonWidget *_printButton;
+	CheckboxWidget *_saveAsImageCheckbox;
+	PopUpWidget *_printersListPopUp;
+
+	PopUpWidget *_orientationPopUp;
+
+	Common::HashMap<uint32, Common::String> _tagToPrinterName;
+};
+
+} // End of namespace GUI
+
+#endif

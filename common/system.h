@@ -69,6 +69,7 @@ class TextToSpeechManager;
 #if defined(USE_SYSDIALOGS)
 class DialogManager;
 #endif
+class PrintingManager;
 class TimerManager;
 class SeekableReadStream;
 class WriteStream;
@@ -263,6 +264,13 @@ protected:
 	 * @note _fsFactory is deleted by the OSystem destructor.
 	 */
 	FilesystemFactory *_fsFactory;
+
+	/**
+	 * No default value is provided for _printingManager by OSystem.
+	 *
+	 * @note _printingManager is deleted by the OSystem destructor.
+	*/
+	Common::PrintingManager *_printingManager;
 
 	/**
 	 * Used by the DLC Manager implementation
@@ -1790,6 +1798,15 @@ public:
 	 */
 	virtual Common::TextToSpeechManager *getTextToSpeechManager() {
 		return _textToSpeechManager;
+	}
+
+	/**
+	 * Return the PrintingManager, used to handle printing.
+	 *
+	 * @return The PrintingManager for the current architecture.
+	 */
+	virtual Common::PrintingManager *getPrintingManager() {
+		return _printingManager;
 	}
 
 #if defined(USE_SYSDIALOGS)

@@ -263,12 +263,10 @@ void Vars::grab_fonts() {
 }
 
 void Vars::create_mouse_watch_dialog() {
-	int x_offset;
-
 	gr_font_set(_font_tiny);
 	_mousePosDialog = DialogCreateAbsolute(0, 380, 200, 480, 3 | SF_GET_MOUSE);
 	_showMousePos = false;
-	x_offset = 64;
+	int x_offset = 64;
 
 	Dialog_Add_Message(_mousePosDialog, 4, 4, "Scene:", 0);
 	Dialog_Add_Message(_mousePosDialog, x_offset, 4, "0", 1);

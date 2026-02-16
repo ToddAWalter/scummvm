@@ -455,21 +455,11 @@ void GetBezCoeffs(frac16 *ctrlPoints, frac16 *coeffs) {
 	coeffs[3] = y0mult3 - y1mult6 + y2mult3;
 	coeffs[5] = -(int)y0mult3 + y1mult3;
 	coeffs[7] = y0;
-
-	return;
 }
 
 void GetBezPoint(frac16 *x, frac16 *y, frac16 *coeffs, frac16 tVal) {
-
-	*x = coeffs[6] +
-		MulSF16(tVal, (coeffs[4] +
-			MulSF16(tVal, (coeffs[2] +
-				MulSF16(tVal, coeffs[0])))));
-
-	*y = coeffs[7] +
-		MulSF16(tVal, (coeffs[5] +
-			MulSF16(tVal, (coeffs[3] +
-				MulSF16(tVal, coeffs[1])))));
+	*x = coeffs[6] + MulSF16(tVal, (coeffs[4] + MulSF16(tVal, (coeffs[2] + MulSF16(tVal, coeffs[0])))));
+	*y = coeffs[7] + MulSF16(tVal, (coeffs[5] + MulSF16(tVal, (coeffs[3] + MulSF16(tVal, coeffs[1])))));
 }
 
 void InitCCB(CCB *myCCB) {
@@ -502,6 +492,7 @@ void InitCCB(CCB *myCCB) {
 void HideCCB(CCB *myCCB) {
 	if (!myCCB)
 		return;
+
 	myCCB->flags |= CCB_HIDE;
 
 	if ((myCCB->flags & CCB_STREAM) && myCCB->maxArea) {
@@ -558,7 +549,7 @@ void Cel_msr(Anim8 *myAnim8) {
 	}
 
 	CCB *myCCB = myAnim8->myCCB;
-	if ((!myCCB) || (!myCCB->source)) {
+	if (!myCCB || !myCCB->source) {
 		error_show(FL, "myCCB not set");
 	}
 
