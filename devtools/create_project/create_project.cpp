@@ -58,10 +58,13 @@
 #include <cstring>
 #include <ctime>
 
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
-#include "common/util.h"
-
+// We can't use the common/util.h header here, since create_project
+// is a standalone tool, and may be built individually from the rest
+// of the devtools.
+#ifdef ARRAYSIZE
+#undef ARRAYSIZE
+#endif
+#define ARRAYSIZE(x) ((int)(sizeof(x) / sizeof(x[0])))
 
 namespace {
 /**

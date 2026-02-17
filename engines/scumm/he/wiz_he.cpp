@@ -27,9 +27,10 @@
 #include "graphics/cursorman.h"
 #include "graphics/paletteman.h"
 #include "graphics/primitives.h"
-#include "scumm/he/font_he.h"
 
-#include "backends/printing/printman.h"
+#include "gui/gui-manager.h"
+
+#include "scumm/he/font_he.h"
 
 #include "scumm/he/logic_he.h"
 #include "scumm/he/intern_he.h"
@@ -482,8 +483,7 @@ WizPxShrdBuffer Wiz::drawAWizPrimEx(int globNum, int state, int x, int y, int z,
 
 		surf.setPalette(pal, 0, 256);
 
-		Common::PrintingManager *pm = _vm->_system->getPrintingManager();
-		pm->printImage(surf);
+		g_gui.printImage(surf);
 
 		if (_vm->_game.heversion <= 99 || (flags & kWRFAlloc) == 0)
 			destPtr = WizPxShrdBuffer();

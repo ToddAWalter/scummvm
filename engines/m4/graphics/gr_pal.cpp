@@ -112,6 +112,9 @@ void gr_pal_interface(RGB8 *fixpal) {
 	if (_GI().set_interface_palette(fixpal))
 		return;
 
+	// The following code is unreachable as set_interface_palette always returns true
+	// This is also present in the original code
+	// 
 	// Low intensity
 	gr_pal_set_RGB8(&fixpal[0], 0, 0, 0);		// r0 g0 b0		black
 	gr_pal_set_RGB8(&fixpal[1], 0, 0, 168);		// r0 g0 b2		blue

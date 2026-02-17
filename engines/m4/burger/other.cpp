@@ -33,13 +33,11 @@ static void other_fade_me_out(int32 trigger) {
 }
 
 void other_resurrect_player() {
-	KernelTriggerType old_mode;
-
 	if (!g_engine->autosaveExists())
 		error_show(FL, "Couldn't resume game");
 
 	_G(kernel).restore_slot = 0;
-	old_mode = _G(kernel).trigger_mode;
+	const KernelTriggerType old_mode = _G(kernel).trigger_mode;
 
 	_G(kernel).trigger_mode = KT_DAEMON;
 	other_fade_me_out(TRIG_RESTORE_GAME);

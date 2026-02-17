@@ -19,14 +19,13 @@
  *
  */
 
-#ifdef USE_SYSTEM_PRINTING
 #ifdef WIN32
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winspool.h>
 
-#include "backends/printing/printman.h"
+#include "common/printman.h"
 #include "backends/platform/sdl/win32/win32_wrapper.h"
 
 #include "win32-printman.h"
@@ -209,5 +208,4 @@ Common::PrintingManager *createWin32PrintingManager() {
 	return new Win32PrintingManager();
 }
 
-#endif
 #endif

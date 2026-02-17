@@ -24,6 +24,7 @@
 #include "m4/burger/vars.h"
 #include "m4/adv_r/adv_control.h"
 #include "m4/adv_r/adv_hotspot.h"
+#include "m4/core/imath.h"
 
 namespace M4 {
 namespace Burger {

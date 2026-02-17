@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef BACKENDS_PRINTING_PRINTMAN_H
-#define BACKENDS_PRINTING_PRINTMAN_H
+#ifndef COMMON_PRINTMAN_H
+#define COMMON_PRINTMAN_H
 
 #include "common/scummsys.h"
 #include "common/str.h"
@@ -48,8 +48,6 @@ public:
 		_orientation = kPageOrientationLandscape;
 		_jobName = "ScummVM";
 	}
-
-	void printImage(const Graphics::ManagedSurface &surf);
 
 	void saveAsImage(const Graphics::ManagedSurface &surf, const Common::String &fileName = "");
 

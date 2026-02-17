@@ -23,7 +23,6 @@
 #ifndef M4_BURGER_WALKER_H
 #define M4_BURGER_WALKER_H
 
-#include "common/array.h"
 #include "m4/adv_r/adv_walk.h"
 
 namespace M4 {

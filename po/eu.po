@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.5.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-15 13:41+0000\n"
+"POT-Creation-Date: 2026-02-16 18:31+0000\n"
 "PO-Revision-Date: 2024-02-05 18:42+0000\n"
 "Last-Translator: Josu Igoa <josuigoa@ni.eus>\n"
 "Language-Team: Basque <https://translations.scummvm.org/projects/scummvm/"
@@ -110,7 +110,7 @@ msgstr "Joan gora"
 #: gui/editrecorddialog.cpp:66 gui/integrity-dialog.cpp:122
 #: gui/integrity-dialog.cpp:253 gui/filebrowser-dialog.cpp:68
 #: gui/fluidsynth-dialog.cpp:153 gui/massadd.cpp:93 gui/options.cpp:2416
-#: gui/predictivedialog.cpp:68 gui/printing-dialog.cpp:93
+#: gui/predictivedialog.cpp:68 gui/printing-dialog.cpp:97
 #: gui/recorderdialog.cpp:73 gui/recorderdialog.cpp:212
 #: gui/remotebrowser.cpp:59 gui/saveload-dialog.cpp:64
 #: gui/saveload-dialog.cpp:456 gui/saveload-dialog.cpp:540
@@ -2799,23 +2799,23 @@ msgstr "* Zenb"
 msgid "*  Abc"
 msgstr "* Abc"
 
-#: gui/printing-dialog.cpp:57
+#: gui/printing-dialog.cpp:61
 msgid "Print"
 msgstr ""
 
-#: gui/printing-dialog.cpp:58
+#: gui/printing-dialog.cpp:62
 #, fuzzy
 #| msgid "Save Image"
 msgid "Save as image"
 msgstr "Gorde Irudia"
 
-#: gui/printing-dialog.cpp:60
+#: gui/printing-dialog.cpp:64
 #, fuzzy
 #| msgid "Pointer Speed:"
 msgid "Printer:"
 msgstr "Erakusle Abiadura:"
 
-#: gui/printing-dialog.cpp:83
+#: gui/printing-dialog.cpp:87
 #, fuzzy
 msgid "Orientation:"
 msgstr "~A~urrekoa"

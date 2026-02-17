@@ -61,11 +61,6 @@ static const char *USE[][2] = {
 	{ nullptr, nullptr }
 };
 
-Room201::Room201() : Section2Room() {
-	Common::fill(_items, _items + 12, 0);
-	Common::fill(_itemFlags, _itemFlags + 12, 0);
-}
-
 void Room201::preload() {
 	Section2Room::preload();
 	_G(player).walker_in_this_scene = !keyCheck();

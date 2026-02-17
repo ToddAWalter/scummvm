@@ -36,11 +36,11 @@ namespace Burger {
 #define NUM_SHADOW_SERIES  5
 
 // These are the walker types
-#define WALKER_PLAYER          0
+#define WALKER_PLAYER       0
 #define WALKER_ALT          1
 
 // These are the shadow types
-#define SHADOW_PLAYER          0
+#define SHADOW_PLAYER       0
 #define SHADOW_ALT          1
 
 static const char *WILBUR_SERIES[8] = {

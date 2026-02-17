@@ -114,8 +114,8 @@ static const PlainGameDescriptor wintermuteGames[] = {
 	{"mentalrepairs",   "Mental Repairs Inc"},
 	{"mirage",          "Mirage"},
 	{"miskatonic1",     "Miskatonic. Part One"},
-	{"msos",            "Monday Starts on Saturday"},
-	{"mukhtar",         "Mukhtar and his Team"},
+	{"msos",            "Monday Starts on Saturday"},  // Понедельник начинается в субботу
+	{"mukhtar",         "Mukhtar and his Team"},  // Мухтар и его команда
 	{"mystictriddle",   "Mystic Triddle"},
 	{"mythguff",        "Myth: A Guff's Tale"},
 	{"nightinthefog",   "Night in the Fog"},
@@ -130,12 +130,12 @@ static const PlainGameDescriptor wintermuteGames[] = {
 	{"paintaria",       "Paintaria"},
 	{"palladion",       "Palladion"},
 	{"pangea",          "Pangea 1/2"},
-	{"papasdaughters1", "Papa's Daughters"},
-	{"papasdaughters2", "Papa's Daughters Go to the Sea"},
-	{"petka02",         "Red Comrades 0.2: Operation F."},
+	{"papasdaughters1", "Papa's Daughters"},  // Папины дочки
+	{"papasdaughters2", "Papa's Daughters Go to the Sea"},  // Папины дочки 2
+	{"petka02",         "Red Comrades 0.2: Operation F."},  // Петька и Василий Иванович 0.2: Операция Ф
 	{"pigeons",         "Pigeons in the Park"},
 	{"pizzamorgana",    "Pizza Morgana: Episode 1 - Monsters and Manipulations in the Magical Forest"},
-	{"polechudes",      "Pole Chudes"},
+	{"polechudes",      "Pole Chudes"},  // По́ле Чуде́с
 	{"preciouspills",   "Precious Pills, Blasting Bacon and Mowing Minds"},
 	{"projectdoom",     "Project: Doom"},
 	{"projectjoe",      "Project Joe"},
@@ -166,10 +166,10 @@ static const PlainGameDescriptor wintermuteGames[] = {
 	{"strangechange",   "Strange Change"},
 	{"sunny",           "Sunny"},
 	{"sunrise",         "Sunrise: The game"},
-	{"susanrose1",      "Susan Rose: Mysterious Child"},
-	{"susanrose2",      "Susan Rose: Delicate Murder"},
-	{"tanya1",          "Tanya Grotter and the Magical Double Bass"},
-	{"tanya2",          "Tanya Grotter and the Disappearing Floor"},
+	{"susanrose1",      "Susan Rose: Mysterious Child"},  // Даша Васильева: Личное дело Женщины-кошки
+	{"susanrose2",      "Susan Rose: Delicate Murder"},  // Евлампия Романова: Нежный Cупруг Oлигарха
+	{"tanya1",          "Tanya Grotter and the Magical Double Bass"},  // Таня Гроттер и магический контрабас
+	{"tanya2",          "Tanya Grotter and the Disappearing Floor"},  // Таня Гроттер и исчезающий этаж
 	{"tehran1933",      "Murder In Tehran's Alleys 1933"},
 	{"tehran2016",      "Murder In Tehran's Alleys 2016"},
 	{"theancientmark1", "The Ancient Mark - Episode 1"},
@@ -178,8 +178,8 @@ static const PlainGameDescriptor wintermuteGames[] = {
 	{"thekite",         "The Kite"},
 	{"thelastcrownmh",  "The Last Crown - Midnight Horror"},
 	{"thelostcrowngha", "The Lost Crown - A Ghost-Hunting Adventure"},
-	{"tib",             "Fairy Tales About Toshechka and Boshechka"},
-	{"todaymama",       "Today, Mama!"},
+	{"tib",             "Fairy Tales About Toshechka and Boshechka"},  // Сказки про Тошечку и Бошечку
+	{"todaymama",       "Today, Mama!"},  // Сегодня, мама!
 	{"tradestory",      "The Trader of Stories"},
 	{"twc",             "The White Chamber"},
 	{"war",             "War"},
@@ -880,9 +880,16 @@ static const WMEGameDescription gameDescriptions[] = {
 		WME_ENTRY2s("actors.dcp", "170c7ade10edd7ff6d24b16f2eecd818", 453328582,
 					"stageplay.dcp", "ed67b4d6e35c19597241eb1d863aa315", 226453373), Common::EN_ANY, ADGF_UNSTABLE | GF_3D, WME_1_8_10),
 
+	// Dark Fall: Lost Souls (German)
 	WME_WINENTRY("darkfallls", "",
 		WME_ENTRY2s("actors.dcp", "17df9d381d49100d2bd79c5f3eefe53c", 454049405,
 					"stageplay.dcp", "037dcab0c7204a8c09f12aec4c4dd5e7", 198193043), Common::DE_DEU, ADGF_UNSTABLE | GF_3D, WME_1_8_10),
+
+	// Dark Fall: Lost Souls (Russian)
+	// TRAC report #16527
+	WME_WINENTRY("darkfallls", "",
+		WME_ENTRY2s("actors.dcp", "7201589b7cea09ec2554e9ce5aea826c", 385862728,
+					"stageplay.dcp", "1e434d76c15336c7463e0f30aa82ffc0", 183937509), Common::RU_RUS, ADGF_UNSTABLE | GF_3D, WME_1_8_10),
 
 	// Twilight: Dark Summer (Ario) (Persian)
 	WME_WINENTRY("darksummer", "",
@@ -1966,6 +1973,11 @@ static const WMEGameDescription gameDescriptions[] = {
 	// Papa's Daughters
 	WME_WINENTRY("papasdaughters1", "",
 		WME_ENTRY1s("data.dcp", "5d801bc95f28e64c33918380f961f454", 80569934), Common::RU_RUS, ADGF_UNSTABLE, WME_HEROCRAFT),
+
+	// Papa's Daughters (Alawar)
+	// TRAC report #16523
+	WME_WINENTRY("papasdaughters1", "",
+		WME_ENTRY1s("data.dcp", "772e4702ef20e146fe1dc6ba0c6aa882", 80342874), Common::RU_RUS, ADGF_UNSTABLE, WME_HEROCRAFT),
 
 	// Papa's Daughters 2
 	WME_WINENTRY("papasdaughters2", "",
@@ -5530,6 +5542,10 @@ static const WMEGameDescription gameDescriptions[] = {
 	WME_WINENTRY("sunrise", "",
 		WME_ENTRY1s("data.dcp", "d06744fc60982a30e82d96075698c8bc", 134409552), Common::DE_DEU, ADGF_UNSTABLE | GF_3D, WME_1_7_93),
 
+	// Sunrise: The game (Russian)
+	WME_WINENTRY("sunrise", "",
+		WME_ENTRY1s("data.dcp", "d0c9ac5a61b37ae9fcedb58fa1c98cd5", 135504102), Common::RU_RUS, ADGF_UNSTABLE | GF_3D, WME_1_7_93),
+
 	// Sunrise: The game (Spanish fanmade)
 	WME_WINENTRY("sunrise", "",
 		WME_ENTRY2s("data.dcp", "d06744fc60982a30e82d96075698c8bc", 134409552,
@@ -5715,6 +5731,18 @@ static const WMEGameDescription gameDescriptions[] = {
 	// The White Chamber (Version 1.7 - Definitive Edition) (multi-language + Spanish fanmade translation)
 	WME_WINENTRY("twc", "Spanish fanmade",
 		WME_ENTRY1s("data.dcp", "969a3c3025f6654fa26002e1ecb83662", 186452619), Common::UNK_LANG, ADGF_NO_FLAGS, WME_1_9_1),
+
+	// The White Chamber (Steam Anniversary Edition) (multi-language) (2023.09.07)
+	WME_WINENTRY("twc", "Anniversary Edition",
+		WME_ENTRY1s("data.dcp", "54f9d04ae5a416c573c650fdf93b4220", 219157795), Common::UNK_LANG, ADGF_NO_FLAGS, WME_1_9_1),
+
+	// The White Chamber (Steam Anniversary Edition) (multi-language) (2023.09.11)
+	WME_WINENTRY("twc", "Anniversary Edition",
+		WME_ENTRY1s("data.dcp", "a2731946082eb06211ec978c339592c0", 219157885), Common::UNK_LANG, ADGF_NO_FLAGS, WME_1_9_1),
+
+	// The White Chamber (Steam Anniversary Edition) (multi-language) (2023.09.13)
+	WME_WINENTRY("twc", "Anniversary Edition",
+		WME_ENTRY1s("data.dcp", "a77666061dc778992508c685997de840", 219837795), Common::UNK_LANG, ADGF_NO_FLAGS, WME_1_9_1),
 
 	// Today, Mama!
 	WME_WINENTRY("todaymama", "",

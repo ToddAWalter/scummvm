@@ -136,7 +136,7 @@ void Vars::game_systems_initialize(byte flags) {
 	fire_up_gui();
 
 	if (flags & INSTALL_SOUND_DRIVERS) {
-		int result = _midi.open();
+		const int result = _midi.open();
 		if (result > 0)
 			warning("MIDI Player init failed: \"%s\"", MidiDriver::getErrorName(result));
 	} else {
@@ -266,7 +266,7 @@ void Vars::create_mouse_watch_dialog() {
 	gr_font_set(_font_tiny);
 	_mousePosDialog = DialogCreateAbsolute(0, 380, 200, 480, 3 | SF_GET_MOUSE);
 	_showMousePos = false;
-	int x_offset = 64;
+	const int x_offset = 64;
 
 	Dialog_Add_Message(_mousePosDialog, 4, 4, "Scene:", 0);
 	Dialog_Add_Message(_mousePosDialog, x_offset, 4, "0", 1);
@@ -298,8 +298,6 @@ void Vars::create_mouse_watch_dialog() {
 }
 
 void Vars::initMouseSeries(const Common::String &assetName, RGB8 *myPalette) {
-	int32 maxW, maxH;
-
 	_mouseSeriesHandle = nullptr;
 	_mouseSeriesOffset = 0;
 	_mouseSeriesPalOffset = 0;
@@ -312,6 +310,7 @@ void Vars::initMouseSeries(const Common::String &assetName, RGB8 *myPalette) {
 	if (LoadSpriteSeries(assetName.c_str(), &_mouseSeriesHandle, &_mouseSeriesOffset, &_mouseSeriesPalOffset, myPalette) > 0) {
 		_mouseSeriesResource = assetName;
 
+		int32 maxW, maxH;
 		if (ws_GetSSMaxWH(_mouseSeriesHandle, _mouseSeriesOffset, &maxW, &maxH)) {
 			if (maxW && maxH) {
 				_mouseBuffer.data = (byte *)mem_alloc(maxW * maxH, "mouse graphic");

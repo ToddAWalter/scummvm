@@ -77,7 +77,7 @@ static const InvObject INVENTORY_ITEMS[] = {
 };
 
 void Inventory::init() {
-	bool isFrench = g_engine->getLanguage() == Common::FR_FRA;
+	const bool isFrench = g_engine->getLanguage() == Common::FR_FRA;
 
 	for (const InvObject *item = INVENTORY_ITEMS; item->_name; ++item) {
 		const char *foreignName = isFrench ? item->_frenchName : item->_germanName;

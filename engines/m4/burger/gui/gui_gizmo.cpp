@@ -194,7 +194,7 @@ static void gizmo_digi_wait(int spriteIndex1, int spriteIndex2) {
 		gizmo_restore_sprite(spriteNum);
 		spriteNum = (spriteNum == spriteIndex2) ? spriteIndex1 : spriteNum + 1;
 
-		uint32 timer = timer_read_60();
+		const uint32 timer = timer_read_60();
 
 		while (!g_engine->shouldQuit() && (timer_read_60() - timer) < 6)
 			gizmo_sound();
@@ -368,8 +368,7 @@ static void gizmo_free_gui(Gizmo *gizmo) {
 	}
 
 	GrBuff *grBuff = gizmo->_grBuff;
-	if (grBuff)
-		delete grBuff;
+	delete grBuff;
 
 	mem_free(gizmo);
 }

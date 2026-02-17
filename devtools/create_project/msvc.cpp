@@ -84,7 +84,7 @@ std::string MSVCProvider::getLibraryFromFeature(const char *feature, const Build
 		{   "updates", "WinSparkle.lib",            nullptr,           kSDLVersionAny, nullptr                                           },
 		{       "tts", nullptr,                     nullptr,           kSDLVersionAny, "sapi.lib"                                        },
 		{    "opengl", nullptr,                     nullptr,           kSDLVersionAny, nullptr                                           },
-		{  "printing", nullptr,                     nullptr,           kSDLVersionAny, "Msimg32.lib"                                     },
+		{  "printing", nullptr,                     nullptr,           kSDLVersionAny, "winspool.lib"                                    },
 		{      "enet", nullptr,                     nullptr,           kSDLVersionAny, "winmm.lib ws2_32.lib"                            }
 	};
 
@@ -226,7 +226,7 @@ void MSVCProvider::createWorkspaceXml(const BuildSetup &setup) {
 
 	const std::string &svmProjectUUID = svmUUID->second;
 	assert(!svmProjectUUID.empty());
-	
+
 	std::ofstream solution((setup.outputDir + '/' + setup.projectName + ".slnx").c_str());
 	if (!solution || !solution.is_open()) {
 		error("Could not open \"" + setup.outputDir + '/' + setup.projectName + ".slnx\" for writing");
@@ -241,9 +241,9 @@ void MSVCProvider::createWorkspaceXml(const BuildSetup &setup) {
 	solution << "\t\t<BuildType Name=\"Debug\" />\n";
 	solution << "\t\t<BuildType Name=\"LLVM\" />\n";
 	solution << "\t\t<BuildType Name=\"Release\" />\n";
-	
+
 	for (const auto &arch : _archs) {
-		solution << "\t\t<Platform Name=\"" << getMSVCConfigName(arch) << "\" />\n"; 
+		solution << "\t\t<Platform Name=\"" << getMSVCConfigName(arch) << "\" />\n";
 	}
 	solution << "\t</Configurations>\n";
 
@@ -260,7 +260,7 @@ void MSVCProvider::createWorkspaceXml(const BuildSetup &setup) {
 			<< "\" Id=\"" << engineUuid.second
 			<< "\" />\n";
 	}
-	
+
 	solution << "</Solution>\n";
 }
 

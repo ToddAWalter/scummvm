@@ -20,7 +20,6 @@
  */
 
 #include "m4/burger/rooms/section.h"
-#include "m4/gui/gui_vmng.h"
 #include "m4/burger/vars.h"
 #include "m4/m4.h"
 #include "m4/adv_r/adv_control.h"
@@ -30,7 +29,7 @@ namespace Burger {
 namespace Rooms {
 
 void Section::global_room_init() {
-	int roomId = _G(game).room_id;
+	const int roomId = _G(game).room_id;
 
 	if (roomId <= 800)
 		_GINT().show();
@@ -134,7 +133,7 @@ void Section::init_series_players() {
 }
 
 void Section::tick() {
-	int oldTrigger = _G(kernel).trigger;
+	const int oldTrigger = _G(kernel).trigger;
 	_G(kernel).trigger = kCALLED_EACH_LOOP;
 	g_engine->game_daemon_code();
 	_G(kernel).trigger = oldTrigger;

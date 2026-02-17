@@ -25,6 +25,7 @@
 #include "m4/burger/burger.h"
 #include "m4/adv_r/adv_control.h"
 #include "m4/gui/gui_sys.h"
+#include "m4/core/imath.h"
 
 namespace M4 {
 namespace Burger {

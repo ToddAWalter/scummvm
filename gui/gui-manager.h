@@ -155,6 +155,9 @@ public:
 
 	Graphics::MacWindowManager *getWM();
 
+	// Defined in printing-dialog.cpp
+	void printImage(const Graphics::ManagedSurface &surf);
+
 protected:
 	enum RedrawStatus {
 		kRedrawDisabled = 0,

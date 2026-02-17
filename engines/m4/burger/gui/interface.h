@@ -25,7 +25,6 @@
 
 #include "m4/adv_r/adv_interface.h"
 #include "m4/adv_r/adv_hotspot.h"
-#include "m4/graphics/graphics.h"
 #include "m4/burger/gui/inventory.h"
 
 namespace M4 {

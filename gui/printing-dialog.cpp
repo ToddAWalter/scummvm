@@ -19,10 +19,9 @@
  *
  */
 
+#include "common/printman.h"
 #include "common/translation.h"
 #include "common/system.h"
-
-#include "backends/printing/printman.h"
 
 #include "gui/printing-dialog.h"
 #include "gui/widget.h"
@@ -32,6 +31,11 @@
 #include "gui/ThemeEval.h"
 
 namespace GUI {
+
+void GuiManager::printImage(const Graphics::ManagedSurface &surf) {
+	GUI::PrintingDialog dialog(surf);
+	dialog.runModal();
+}
 
 PrintingDialog::PrintingDialog(const Graphics::ManagedSurface &surface)
 	: Dialog("PrintingDialog"), _surface(surface) {

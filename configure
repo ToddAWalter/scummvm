@@ -7237,7 +7237,7 @@ echo_n "Building system printing support... "
 case $_host_os in
 mingw*)
 	echo "win32"
-	append_var LIBS '-lMsimg32'
+	append_var LIBS '-lwinspool'
 	;;
 *)
 	echo "no"

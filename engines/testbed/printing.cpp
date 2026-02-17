@@ -33,8 +33,6 @@
 
 #include "gui/gui-manager.h"
 
-#include "backends/printing/printman.h"
-
 #include "testbed/printing.h"
 
 namespace Testbed {
@@ -57,12 +55,6 @@ TestExitStatus PrintingTests::printTestPage() {
 		return kTestSkipped;
 	}
 
-	Common::PrintingManager *pm = g_system->getPrintingManager();
-	if (!pm) {
-		warning("Could not get PrintingManager!");
-		return kTestFailed;
-	}
-
 	// Print ScummVM logo
 	const Graphics::ManagedSurface *logo = g_gui.theme()->getImageSurface("logo.bmp");
 	if (!logo) {
@@ -70,11 +62,11 @@ TestExitStatus PrintingTests::printTestPage() {
 		return kTestFailed;
 	}
 
-	pm->printImage(*logo);
+	g_gui.printImage(*logo);
 
 	// The test pattern is CLUT-8
 	Graphics::ManagedSurface *testPattern = Graphics::renderPM5544(800, 800);
-	pm->printImage(*testPattern);
+	g_gui.printImage(*testPattern);
 
 	return kTestPassed;
 }

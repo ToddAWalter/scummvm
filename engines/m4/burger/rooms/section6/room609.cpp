@@ -22,6 +22,7 @@
 #include "m4/burger/rooms/section6/room609.h"
 #include "m4/burger/rooms/section6/section6.h"
 #include "m4/burger/vars.h"
+#include "m4/core/imath.h"
 
 namespace M4 {
 namespace Burger {

@@ -23,7 +23,9 @@
 #include "m4/core/cstring.h"
 #include "m4/core/errors.h"
 #include "m4/graphics/gr_series.h"
+#include "m4/graphics/graphics.h"
 #include "m4/gui/gui_event.h"
+#include "m4/burger/gui/game_menu.h"
 #include "m4/burger/burger.h"
 #include "m4/burger/vars.h"
 #include "m4/adv_r/other.h"
@@ -273,7 +275,7 @@ void Interface::refresh_left_arrow() {
 }
 
 void Interface::trackIcons() {
-	KernelTriggerType oldMode = _G(kernel).trigger_mode;
+	const KernelTriggerType oldMode = _G(kernel).trigger_mode;
 	_G(kernel).trigger_mode = KT_DAEMON;
 
 	switch (_interfaceBox->_highlight_index) {
@@ -359,6 +361,9 @@ void Interface::trackIcons() {
 		}
 		break;
 
+	default:
+		break;
+
 	}
 
 	_G(kernel).trigger_mode = oldMode;
@@ -411,9 +416,9 @@ ControlStatus Interface::trackHotspots(int event, int x, int y) {
 		_hotspot = nullptr;
 
 		return SELECTED;
-	} else {
-		return IN_CONTROL;
 	}
+
+	return IN_CONTROL;
 }
 
 void Interface::dispatch_command() {
@@ -439,8 +444,8 @@ void Interface::dispatch_command() {
 }
 
 void Interface::handleState(ControlStatus status) {
-	int highlight = _inventory->_highlight;
-	int index = _inventory->_scroll + highlight;
+	const int highlight = _inventory->_highlight;
+	const int index = _inventory->_scroll + highlight;
 
 	switch (status) {
 	case NOTHING:
