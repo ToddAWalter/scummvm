@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.6.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-16 18:31+0000\n"
+"POT-Creation-Date: 2026-02-17 18:53+0000\n"
 "PO-Revision-Date: 2026-02-17 04:22+0000\n"
 "Last-Translator: Xaviu <xaviu@xaviu.com>\n"
 "Language-Team: Catalan <https://translations.scummvm.org/projects/scummvm/"
@@ -6438,11 +6438,21 @@ msgstr "Desactiva els efectes d'esvaïment"
 msgid "Don't fade every screen to black when leaving a room."
 msgstr "No esvaeixis cada pantalla a negre quan surtis d'una habitació."
 
-#: engines/agos/dialogs.cpp:96 engines/sci/detection_options.h:263
+#: engines/agos/dialogs.cpp:93
+#, fuzzy
+#| msgid "Use original save/load screens"
+msgid "Use original Acorn system cursor"
+msgstr "Utilitza les pantalles originals de desat/càrrega"
+
+#: engines/agos/dialogs.cpp:94
+msgid "Toggle between the system cursor and the default cursor."
+msgstr ""
+
+#: engines/agos/dialogs.cpp:107 engines/sci/detection_options.h:263
 msgid "MIDI mode:"
 msgstr "mode MIDI:"
 
-#: engines/agos/dialogs.cpp:97 engines/sci/detection_options.h:264
+#: engines/agos/dialogs.cpp:108 engines/sci/detection_options.h:264
 msgid ""
 "When using external MIDI devices (e.g. through USB-MIDI), select your device "
 "here"
@@ -6450,15 +6460,15 @@ msgstr ""
 "Al utilitzar dispositius externs MIDI (ex: per USB-MIDI), tria el teu "
 "dispositiu aqui"
 
-#: engines/agos/dialogs.cpp:102 engines/sci/detection_options.h:269
+#: engines/agos/dialogs.cpp:113 engines/sci/detection_options.h:269
 msgid "Standard (GM / MT-32)"
 msgstr "Estàndard (GM / MT-32)"
 
-#: engines/agos/dialogs.cpp:106 engines/sci/detection_options.h:281
+#: engines/agos/dialogs.cpp:117 engines/sci/detection_options.h:281
 msgid "Casio MT-540"
 msgstr "Casio MT-540"
 
-#: engines/agos/dialogs.cpp:110 engines/sci/detection_options.h:285
+#: engines/agos/dialogs.cpp:121 engines/sci/detection_options.h:285
 msgid "Casio CT-460 / CSM-1"
 msgstr "Casio CT-460 / CSM-1"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-16 18:31+0000\n"
+"POT-Creation-Date: 2026-02-17 18:53+0000\n"
 "PO-Revision-Date: 2026-02-05 15:06+0000\n"
 "Last-Translator: Hoseok Seo <ddinghoya@gmail.com>\n"
 "Language-Team: Korean <https://translations.scummvm.org/projects/scummvm/"
@@ -6775,25 +6775,35 @@ msgstr "페이드아웃 효과 비활성화"
 msgid "Don't fade every screen to black when leaving a room."
 msgstr "룸을 나갈 때 모든 화면이 어두워지지 않도록 하세요."
 
-#: engines/agos/dialogs.cpp:96 engines/sci/detection_options.h:263
+#: engines/agos/dialogs.cpp:93
+#, fuzzy
+#| msgid "Use original save/load screens"
+msgid "Use original Acorn system cursor"
+msgstr "원본 저장/불러오기 화면 사용"
+
+#: engines/agos/dialogs.cpp:94
+msgid "Toggle between the system cursor and the default cursor."
+msgstr ""
+
+#: engines/agos/dialogs.cpp:107 engines/sci/detection_options.h:263
 msgid "MIDI mode:"
 msgstr "미디 모드:"
 
-#: engines/agos/dialogs.cpp:97 engines/sci/detection_options.h:264
+#: engines/agos/dialogs.cpp:108 engines/sci/detection_options.h:264
 msgid ""
 "When using external MIDI devices (e.g. through USB-MIDI), select your device "
 "here"
 msgstr "외부 미디 장치(예: USB-미디)를 사용하는 경우, 여기에서 장치를 선택"
 
-#: engines/agos/dialogs.cpp:102 engines/sci/detection_options.h:269
+#: engines/agos/dialogs.cpp:113 engines/sci/detection_options.h:269
 msgid "Standard (GM / MT-32)"
 msgstr "일반 (GM / MT-32)"
 
-#: engines/agos/dialogs.cpp:106 engines/sci/detection_options.h:281
+#: engines/agos/dialogs.cpp:117 engines/sci/detection_options.h:281
 msgid "Casio MT-540"
 msgstr "카시오 MT-540"
 
-#: engines/agos/dialogs.cpp:110 engines/sci/detection_options.h:285
+#: engines/agos/dialogs.cpp:121 engines/sci/detection_options.h:285
 msgid "Casio CT-460 / CSM-1"
 msgstr "카시오 CT-460 / CSM-1"
 

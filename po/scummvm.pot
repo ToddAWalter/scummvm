@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2026.1.1git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-16 18:31+0000\n"
+"POT-Creation-Date: 2026-02-17 18:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -6161,25 +6161,33 @@ msgstr ""
 msgid "Don't fade every screen to black when leaving a room."
 msgstr ""
 
-#: engines/agos/dialogs.cpp:96 engines/sci/detection_options.h:263
+#: engines/agos/dialogs.cpp:93
+msgid "Use original Acorn system cursor"
+msgstr ""
+
+#: engines/agos/dialogs.cpp:94
+msgid "Toggle between the system cursor and the default cursor."
+msgstr ""
+
+#: engines/agos/dialogs.cpp:107 engines/sci/detection_options.h:263
 msgid "MIDI mode:"
 msgstr ""
 
-#: engines/agos/dialogs.cpp:97 engines/sci/detection_options.h:264
+#: engines/agos/dialogs.cpp:108 engines/sci/detection_options.h:264
 msgid ""
 "When using external MIDI devices (e.g. through USB-MIDI), select your device "
 "here"
 msgstr ""
 
-#: engines/agos/dialogs.cpp:102 engines/sci/detection_options.h:269
+#: engines/agos/dialogs.cpp:113 engines/sci/detection_options.h:269
 msgid "Standard (GM / MT-32)"
 msgstr ""
 
-#: engines/agos/dialogs.cpp:106 engines/sci/detection_options.h:281
+#: engines/agos/dialogs.cpp:117 engines/sci/detection_options.h:281
 msgid "Casio MT-540"
 msgstr ""
 
-#: engines/agos/dialogs.cpp:110 engines/sci/detection_options.h:285
+#: engines/agos/dialogs.cpp:121 engines/sci/detection_options.h:285
 msgid "Casio CT-460 / CSM-1"
 msgstr ""
 

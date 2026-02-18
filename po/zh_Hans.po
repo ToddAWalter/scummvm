@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-16 18:31+0000\n"
+"POT-Creation-Date: 2026-02-17 18:53+0000\n"
 "PO-Revision-Date: 2024-12-01 22:18+0000\n"
 "Last-Translator: 复予 <clonewith@qq.com>\n"
 "Language-Team: Chinese (Simplified Han script) <https://"
@@ -6908,25 +6908,35 @@ msgstr "禁用淡出效果"
 msgid "Don't fade every screen to black when leaving a room."
 msgstr "离开房间时不要将屏幕渐变为黑色。"
 
-#: engines/agos/dialogs.cpp:96 engines/sci/detection_options.h:263
+#: engines/agos/dialogs.cpp:93
+#, fuzzy
+#| msgid "Use original save/load screens"
+msgid "Use original Acorn system cursor"
+msgstr "使用原始存档/读档屏幕"
+
+#: engines/agos/dialogs.cpp:94
+msgid "Toggle between the system cursor and the default cursor."
+msgstr ""
+
+#: engines/agos/dialogs.cpp:107 engines/sci/detection_options.h:263
 msgid "MIDI mode:"
 msgstr "MIDI 模式："
 
-#: engines/agos/dialogs.cpp:97 engines/sci/detection_options.h:264
+#: engines/agos/dialogs.cpp:108 engines/sci/detection_options.h:264
 msgid ""
 "When using external MIDI devices (e.g. through USB-MIDI), select your device "
 "here"
 msgstr "当使用外部 MIDI 设备时（例如通过 USB-MIDI），请在这里选择设备"
 
-#: engines/agos/dialogs.cpp:102 engines/sci/detection_options.h:269
+#: engines/agos/dialogs.cpp:113 engines/sci/detection_options.h:269
 msgid "Standard (GM / MT-32)"
 msgstr "标准 (GM / MT-32)\""
 
-#: engines/agos/dialogs.cpp:106 engines/sci/detection_options.h:281
+#: engines/agos/dialogs.cpp:117 engines/sci/detection_options.h:281
 msgid "Casio MT-540"
 msgstr "Casio MT-540"
 
-#: engines/agos/dialogs.cpp:110 engines/sci/detection_options.h:285
+#: engines/agos/dialogs.cpp:121 engines/sci/detection_options.h:285
 msgid "Casio CT-460 / CSM-1"
 msgstr "Casio CT-460 / CSM-1"
 
