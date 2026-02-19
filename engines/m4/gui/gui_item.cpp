@@ -1306,6 +1306,8 @@ bool Item_show(Item *i, void *bdrDialog, Buffer *scrBuf, int32 itemType) {
 	if (i->myFont != currFont)
 		gr_font_set(i->myFont);
 	const int32 fontHeight = gr_font_get_height();
+	if (fontHeight < 0)
+		return false;
 
 	gr_color_set(__LTGRAY);
 	gr_buffer_rect_fill(scrBuf, x1, y1, i->w, i->h);

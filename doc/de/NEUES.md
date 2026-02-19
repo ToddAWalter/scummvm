@@ -7,15 +7,43 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Verbesserte PC-Speaker-Emulation.
    - Unterstützung für Mehrfach-Auswahl in der Spiele-Liste im ScummVM-Launcher hinzugefügt.
 
+ Bagel:
+   - Verhalten der Enter-/Escape-Taste im Raten-Dialog in The Guessing Game korrigiert.
+   - Die Enter-Taste kann jetzt genutzt werden, um alle Info-Dialoge zu schließen.
+   - Oberflächen-Animationen im Mankala-Minigame korrigiert.
+   - Fehlerhafte Evolutions-Logik in Game of Life korrigiert.
+
+ M4:
+   - Musik-Unterstützung in Ripley hinzugefügt.
+   - Mehrere Fehler in Ripley korrigiert.
+   - Mehrere Fehler in Orion Burger korrigiert.
+
  MM:
    - Speicherkorruption beim Beenden von M&M1 behoben.
    - Darstellungsfehler in M&M1, die beim Aufnehmen von Gegenständen auftreten.
    - Fehlerhafte Namen beim Angriff von Monstern in Kampf-Szenen korrigiert.
 
+ MYST3:
+   - Umgebungs-Geräusche im Tonhöhen-Puzzle in Amateria wiederhergestellt.
+   - Die Animationen im Drehteller-Puzzle in Amateria werden jetzt korrekt zurückgesetzt.
+   - Synchronisationsprobleme bei aufeinanderfolgenden Videos korrigiert.
+   - Übersprungene Frames in einigen sich wiederholenden Videos korrigiert.
+   - Umgebungsgeräusche in geskripteten Videos korrigiert.
+   - Mehrere Verbesserungen bei der Darstellung von Untertiteln und des Inventars
+     in Verbindung mit dem Widescreen-Mod vorgenommen.
+   - Skalierungs-Fehler in Untertiteln, Gegenständen, der Inventarleiste sowie des Hauptmenüs
+     in Verbindung mit dem Widescreen-Mod vorgenommen.
+
+ SCUMM:
+   - Unterstützung für den originalen Titel-Bildschirm hinzugefügt (funktioniert nur mit PRG-Dateien).
+
  WAGE:
    - Kampf-System implementiert.
    - Korrektur mehrerer Darstellungsfehler.
    - Maus-Scrolling in Text-Fenstern implementiert.
+
+ iOS-Portierung:
+   - Unterstützung für Text-to-Speech hinzugefügt.
 
 
 #### 2026.1.0 "Like a version" (31.01.2026)

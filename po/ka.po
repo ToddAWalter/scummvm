@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: ScummVM 2.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
 "POT-Creation-Date: 2026-02-17 18:53+0000\n"
-"PO-Revision-Date: 2026-02-04 10:22+0000\n"
+"PO-Revision-Date: 2026-02-18 22:40+0000\n"
 "Last-Translator: NorwayFun <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ka/>\n"
@@ -1362,10 +1362,8 @@ msgid "About ScummVM"
 msgstr "ScummVM-ის შესახებ"
 
 #: gui/launcher.cpp:277 gui/launcher.cpp:955
-#, fuzzy
-#| msgid "General Keys"
 msgid "General help"
-msgstr "ზოგადი გასაღებები"
+msgstr "ზოგადი დახმარება"
 
 #. I18N: Button caption. O is the shortcut, Ctrl+O, put it in parens for non-latin (~O~)
 #: gui/launcher.cpp:280
@@ -2632,22 +2630,16 @@ msgid "Print"
 msgstr ""
 
 #: gui/printing-dialog.cpp:62
-#, fuzzy
-#| msgid "Save Image"
 msgid "Save as image"
-msgstr "გამოსახულების შენახვა"
+msgstr "შენახვა გამოსახულების სახით"
 
 #: gui/printing-dialog.cpp:64
-#, fuzzy
-#| msgid "Pointer Speed:"
 msgid "Printer:"
-msgstr "კურსორის სიჩქარე:"
+msgstr "პრინტერი:"
 
 #: gui/printing-dialog.cpp:87
-#, fuzzy
-#| msgid "Options"
 msgid "Orientation:"
-msgstr "პარამეტრები"
+msgstr "ორიენტაცია:"
 
 #: gui/recorderdialog.cpp:67
 msgid "Recorder or Playback Gameplay"
@@ -3336,10 +3328,8 @@ msgid "~O~ptions"
 msgstr "~მ~ორგება"
 
 #: engines/dialogs.cpp:79
-#, fuzzy
-#| msgid "~H~elp"
 msgid "Game ~H~elp"
-msgstr "~დ~ახმარება"
+msgstr "თამაშის ~დ~ახმარება"
 
 #: engines/dialogs.cpp:83
 msgid "~H~elp"
@@ -3625,8 +3615,6 @@ msgid "Game not implemented"
 msgstr "თამაში განხორციელებული არაა"
 
 #: engines/metaengine.cpp:75 engines/saga/metaengine.cpp:267
-#, fuzzy
-#| msgid "Default game keymap"
 msgid "Default game keymappings"
 msgstr "ნაგულისხმევი თამაშების ღილაკების ასახვა"
 
@@ -4635,16 +4623,12 @@ msgid "R"
 msgstr "წითელი"
 
 #: backends/platform/3ds/osystem-events.cpp:63
-#, fuzzy
-#| msgid "Circle"
 msgid "Circle Pad X"
-msgstr "წრე"
+msgstr "წრე პადი X"
 
 #: backends/platform/3ds/osystem-events.cpp:64
-#, fuzzy
-#| msgid "Circle"
 msgid "Circle Pad Y"
-msgstr "წრე"
+msgstr "წრე პადი Y"
 
 #: backends/platform/3ds/osystem-events.cpp:69
 #: backends/platform/ds/osystem_ds.cpp:197
@@ -6206,10 +6190,8 @@ msgid "Don't fade every screen to black when leaving a room."
 msgstr ""
 
 #: engines/agos/dialogs.cpp:93
-#, fuzzy
-#| msgid "Use original save/load screens"
 msgid "Use original Acorn system cursor"
-msgstr "ორიგინალი შენახვა/ჩატვირთვის ეკრანების გამოყენება"
+msgstr "ორიგინალი Acorn-ის სისტემური კურსორის გამოყენება"
 
 #: engines/agos/dialogs.cpp:94
 msgid "Toggle between the system cursor and the default cursor."
@@ -6550,10 +6532,8 @@ msgid "Whether to render the game in 16-bit color"
 msgstr ""
 
 #: engines/alcachofa/metaengine.cpp:62
-#, fuzzy
-#| msgid "Give mixtures"
 msgid "Filter textures"
-msgstr "ნარევების მიცემა"
+msgstr "ტექსტურების გაფილტვრა"
 
 #: engines/alcachofa/metaengine.cpp:63
 msgid "Whether textures should be linearly filtered"
@@ -10658,32 +10638,22 @@ msgid "I Have No Mouth support not compiled in"
 msgstr ""
 
 #: engines/saga/metaengine.cpp:269
-#, fuzzy
-#| msgid "Option panel keymapping"
 msgid "Option panel keymappings"
 msgstr "პარამეტრების პანელის კლავიატურის მალსახმობები"
 
 #: engines/saga/metaengine.cpp:270
-#, fuzzy
-#| msgid "Save panel keymapping"
 msgid "Save panel keymappings"
 msgstr "პანელის კლავიატურის მალსახმობების შენახვა"
 
 #: engines/saga/metaengine.cpp:271
-#, fuzzy
-#| msgid "Load panel keymapping"
 msgid "Load panel keymappings"
 msgstr "პანელის კლავიატურის მალსახმობების ჩატვირთვა"
 
 #: engines/saga/metaengine.cpp:272
-#, fuzzy
-#| msgid "Quit panel keymapping"
 msgid "Quit panel keymappings"
 msgstr "პანელის კლავიატურის მალსახმობების ფანჯრიდან გასვლა"
 
 #: engines/saga/metaengine.cpp:273
-#, fuzzy
-#| msgid "Converse panel keymapping"
 msgid "Converse panel keymappings"
 msgstr "პანელის კლავიატურის მალსახმობების განლაგება"
 

@@ -352,6 +352,10 @@ void PhoenixVREngine::playAnimation(const Common::String &name, const Common::St
 	_vr.playAnimation(name, var, varValue, speed);
 }
 
+void PhoenixVREngine::stopAnimation(const Common::String &name) {
+	_vr.stopAnimation(name);
+}
+
 void PhoenixVREngine::resetLockKey() {
 	debug("resetlockkey");
 	_prevWarp = -1; // original game does only this o_O
@@ -594,6 +598,7 @@ void PhoenixVREngine::tick(float dt) {
 		if (!_mixer->isSoundHandleActive(sound.handle)) {
 			_mixer->stopHandle(sound.handle);
 			finishedSounds.push_back(kv._key);
+			continue;
 		}
 		if (!sound.spatial)
 			continue;
@@ -995,7 +1000,8 @@ bool PhoenixVREngine::enterScript() {
 		  currentWarpIdx, currentWarpTests);
 
 	setAngle(toAngle(angleX), toAngle(angleY));
-	setXMax(toAngle(angleXMax));
+	if (angleXMax != -1)
+		setXMax(toAngle(angleXMax));
 	if (angleYMin != -1 && angleYMax != -1)
 		setYMax(toAngle(angleYMin), toAngle(angleYMax));
 

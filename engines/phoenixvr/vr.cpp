@@ -383,6 +383,16 @@ void VR::playAnimation(const Common::String &name, const Common::String &variabl
 		g_engine->setVariable(variable, value);
 }
 
+void VR::stopAnimation(const Common::String &name) {
+	auto it = Common::find_if(_animations.begin(), _animations.end(), [&](const Animation &a) { return a.name.compareToIgnoreCase(name) == 0; });
+	if (it == _animations.end()) {
+		debug("no animation %s", name.c_str());
+		return;
+	}
+	auto &animation = *it;
+	animation.active = false;
+}
+
 void VR::Animation::renderNextFrame(Graphics::Surface &pic) {
 	assert(active);
 	if (frameIndex >= frames.size()) {
@@ -455,6 +465,11 @@ void VR::render(Graphics::Screen *screen, float ax, float ay, float fov, float d
 			if (regY < 0)
 				regY += kTau;
 		}
+		float hint = 0;
+		if (regSet) {
+			hint = fmod(_hint + dt * kTau, kTau);
+			_hint = hint;
+		}
 		for (int dstY = 0; dstY != h; ++dstY, line += incrementY) {
 			if (regSet) {
 				regX = ax - fov / 2;
@@ -464,6 +479,8 @@ void VR::render(Graphics::Screen *screen, float ax, float ay, float fov, float d
 					regX -= kTau;
 			}
 			Vector3d pixel = line;
+			int dx = regSet ? static_cast<int>(5 * cosf(hint + 100.0f * dstY / h)) : 0;
+
 			for (int dstX = 0; dstX != w; ++dstX, pixel += incrementX) {
 				Vector3d ray = pixel.getNormalized();
 				auto cube = toCube(ray.x(), ray.y(), ray.z());
@@ -475,6 +492,7 @@ void VR::render(Graphics::Screen *screen, float ax, float ay, float fov, float d
 				srcY &= 0xff;
 				srcY += (tileId << 8);
 				auto color = _pic->getPixel(srcX, srcY);
+				int x = dstX;
 				if (regSet) {
 					regX += regDX;
 					if (regX >= kTau)
@@ -483,14 +501,15 @@ void VR::render(Graphics::Screen *screen, float ax, float ay, float fov, float d
 						if (reg.contains3D(regX, kTau - regY)) {
 							byte r, g, b;
 							_pic->format.colorToRGB(color, r, g, b);
-							r ^= _rnd.getRandomNumber(31);
-							g ^= _rnd.getRandomNumber(31);
-							b ^= _rnd.getRandomNumber(31);
-							color = screen->format.RGBToColor(r, g, b);
+							x += dx;
 						}
 					}
 				}
-				screen->setPixel(dstX, dstY, color);
+				if (x < 0)
+					x = 0;
+				else if (x >= screen->w)
+					x = screen->w - 1;
+				screen->setPixel(x, dstY, color);
 			}
 			if (regSet) {
 				regY += regDY;

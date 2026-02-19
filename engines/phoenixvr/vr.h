@@ -23,7 +23,6 @@
 #define PHOENIXVR_VR_H
 
 #include "common/array.h"
-#include "common/random.h"
 #include "common/stream.h"
 #include "graphics/managed_surface.h"
 #include "graphics/pixelformat.h"
@@ -60,13 +59,14 @@ class VR {
 		void render(Graphics::Surface &pic, float dt);
 	};
 	Common::Array<Animation> _animations;
-	Common::RandomSource _rnd = {"vr"};
+	float _hint = 0;
 
 public:
 	static VR loadStatic(const Graphics::PixelFormat &format, Common::SeekableReadStream &s);
 	void render(Graphics::Screen *screen, float ax, float ay, float fov, float dt, RegionSet *regSet);
 	bool isVR() const { return _vr; }
 	void playAnimation(const Common::String &name, const Common::String &variable, int value, float speed);
+	void stopAnimation(const Common::String &name);
 	Graphics::Surface &getSurface() { return *_pic->surfacePtr(); }
 };
 } // namespace PhoenixVR

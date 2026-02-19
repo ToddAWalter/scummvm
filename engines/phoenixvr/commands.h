@@ -89,7 +89,8 @@ struct Stop_AnimBloc : public Script::Command {
 
 	Stop_AnimBloc(const Common::Array<Common::String> &args) : name(args[0]) {}
 	void exec(Script::ExecutionContext &ctx) const override {
-		warning("Stop_AnimBloc %s", name.c_str());
+		debug("Stop_AnimBloc %s", name.c_str());
+		g_engine->stopAnimation(name);
 	}
 };
 

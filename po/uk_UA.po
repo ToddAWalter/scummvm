@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
 "POT-Creation-Date: 2026-02-17 18:53+0000\n"
-"PO-Revision-Date: 2026-02-10 00:00+0000\n"
+"PO-Revision-Date: 2026-02-18 22:40+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/uk/>\n"
@@ -2809,25 +2809,19 @@ msgstr "*  Abc"
 
 #: gui/printing-dialog.cpp:61
 msgid "Print"
-msgstr ""
+msgstr "Друкувати"
 
 #: gui/printing-dialog.cpp:62
-#, fuzzy
-#| msgid "Save Image"
 msgid "Save as image"
-msgstr "Зберегти зображ"
+msgstr "Зберегти як зображення"
 
 #: gui/printing-dialog.cpp:64
-#, fuzzy
-#| msgid "Pointer Speed:"
 msgid "Printer:"
-msgstr "Швидкість вказівника:"
+msgstr "Друкарка:"
 
 #: gui/printing-dialog.cpp:87
-#, fuzzy
-#| msgid "Next action"
 msgid "Orientation:"
-msgstr "Наступна дія"
+msgstr "Орієнтація:"
 
 #: gui/recorderdialog.cpp:67
 msgid "Recorder or Playback Gameplay"
@@ -6856,14 +6850,12 @@ msgid "Don't fade every screen to black when leaving a room."
 msgstr "Не затемнювати екран під час кожного переходу між кімнатами."
 
 #: engines/agos/dialogs.cpp:93
-#, fuzzy
-#| msgid "Use original save/load screens"
 msgid "Use original Acorn system cursor"
-msgstr "Використовувати ориг. екрани збереження/завантаження"
+msgstr "Використовувати ориг. курсори Acorn"
 
 #: engines/agos/dialogs.cpp:94
 msgid "Toggle between the system cursor and the default cursor."
-msgstr ""
+msgstr "Перемкнути між системним курсором та курсором за замовченням."
 
 #: engines/agos/dialogs.cpp:107 engines/sci/detection_options.h:263
 msgid "MIDI mode:"
