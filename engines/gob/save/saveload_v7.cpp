@@ -1612,7 +1612,7 @@ int32 SaveLoad_v7::SpriteHandler::getSize() {
 }
 
 bool SaveLoad_v7::SpriteHandler::load(int16 dataVar, int32 size, int32 offset) {
-	if (!TempSpriteHandler::createFromSprite(dataVar, size, offset))
+	if (!TempSpriteHandler::createFromSprite(size, offset))
 		return false;
 
 	Common::String fileName = _file.build();
@@ -1726,8 +1726,8 @@ int32 SaveLoad_v7::DrawingOnFloppyDiskHandler::getSize() {
 	}
 }
 
-bool SaveLoad_v7::DrawingOnFloppyDiskHandler::load(int16 dataVar, int32 size, int32 offset) {
-	if (!TempSpriteHandler::createFromSprite(dataVar, size, offset))
+bool SaveLoad_v7::DrawingOnFloppyDiskHandler::load(int16 dataVar, int32 index_as_size, int32 offset) {
+	if (!TempSpriteHandler::createFromSprite(index_as_size, offset))
 		return false;
 
 	if (!_reader->load())
@@ -1741,7 +1741,7 @@ bool SaveLoad_v7::DrawingOnFloppyDiskHandler::load(int16 dataVar, int32 size, in
 	if (!_reader->readPart(part, _sprite))
 		return false;
 
-	return TempSpriteHandler::load(dataVar, size, offset);
+	return TempSpriteHandler::load(dataVar, index_as_size, offset);
 }
 
 bool SaveLoad_v7::DrawingOnFloppyDiskHandler::save(int16 dataVar, int32 size, int32 offset) {

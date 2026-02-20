@@ -40,6 +40,8 @@ namespace Graphics {
 MacTextCanvas::~MacTextCanvas() {
 	delete _surface;
 	delete _shadowSurface;
+	delete _glyphMask;
+	delete _charBoxMask;
 
 	for (auto &t : _text) {
 		delete t.table;
@@ -642,6 +644,11 @@ void MacTextCanvas::reallocSurface() {
 
 	if (!_surface) {
 		_surface = new ManagedSurface(_maxWidth, _textMaxHeight, _wm->_pixelformat);
+		_charBoxMask = new ManagedSurface(_maxWidth, _textMaxHeight, Graphics::PixelFormat::createFormatCLUT8());
+		_glyphMask = new ManagedSurface(_maxWidth, _textMaxHeight, Graphics::PixelFormat::createFormatCLUT8());
+
+		_charBoxMask->clear(0);
+		_glyphMask->clear(0);
 
 		if (_textShadow)
 			_shadowSurface = new ManagedSurface(_maxWidth, _textMaxHeight, _wm->_pixelformat);
@@ -670,9 +677,9 @@ void MacTextCanvas::reallocSurface() {
 	}
 }
 
-void MacTextCanvas::render(int from, int to, int shadow) {
+void MacTextCanvas::render(int from, int to, ManagedSurface *target, uint32 fillColor, bool bboxesOnly) {
 	int w = MIN(_maxWidth, _textMaxWidth);
-	ManagedSurface *surface = shadow ? _shadowSurface : _surface;
+	ManagedSurface *surface = target ? target : _surface;
 
 	int myFrom = from, myTo = to + 1, delta = 1;
 
@@ -736,16 +743,28 @@ void MacTextCanvas::render(int from, int to, int shadow) {
 				yOffset = maxAscentForRow - _text[i].chunks[j].font->getFontAscent();
 			}
 
+			int x1 = xOffset;
+
 			if (_text[i].chunks[j].plainByteMode()) {
 				Common::String str = _text[i].chunks[j].getEncodedText();
-				_text[i].chunks[j].getFont()->drawString(surface, str, xOffset, _text[i].y + yOffset, w, shadow ? _wm->_colorBlack : _text[i].chunks[j].fgcolor, kTextAlignLeft, 0, true);
+
+				if (!bboxesOnly)
+					_text[i].chunks[j].getFont()->drawString(surface, str, xOffset, _text[i].y + yOffset, w, target ? fillColor : _text[i].chunks[j].fgcolor, kTextAlignLeft, 0, true);
+
 				xOffset += _text[i].chunks[j].getFont()->getStringWidth(str);
 			} else {
-				if (_wm->_language == Common::HE_ISR)
-					_text[i].chunks[j].getFont()->drawString(surface, convertBiDiU32String(_text[i].chunks[j].text, Common::BIDI_PAR_RTL), xOffset, _text[i].y + yOffset, w, shadow ? _wm->_colorBlack : _text[i].chunks[j].fgcolor, kTextAlignLeft, 0, true);
-				else
-					_text[i].chunks[j].getFont()->drawString(surface, convertBiDiU32String(_text[i].chunks[j].text), xOffset, _text[i].y + yOffset, w, shadow ? _wm->_colorBlack : _text[i].chunks[j].fgcolor, kTextAlignLeft, 0, true);
+				if (!bboxesOnly) {
+					if (_wm->_language == Common::HE_ISR)
+						_text[i].chunks[j].getFont()->drawString(surface, convertBiDiU32String(_text[i].chunks[j].text, Common::BIDI_PAR_RTL), xOffset, _text[i].y + yOffset, w, target ? fillColor : _text[i].chunks[j].fgcolor, kTextAlignLeft, 0, true);
+					else
+						_text[i].chunks[j].getFont()->drawString(surface, convertBiDiU32String(_text[i].chunks[j].text), xOffset, _text[i].y + yOffset, w, target ? fillColor : _text[i].chunks[j].fgcolor, kTextAlignLeft, 0, true);
+				}
 				xOffset += _text[i].chunks[j].getFont()->getStringWidth(_text[i].chunks[j].text);
+			}
+
+			if (bboxesOnly) {
+				Common::Rect bbox(x1, _text[i].y + yOffset, xOffset, _text[i].y + yOffset + _text[i].chunks[j].font->getFontHeight());
+				surface->fillRect(bbox, 0xff);
 			}
 		}
 	}
@@ -765,9 +784,11 @@ void MacTextCanvas::render(int from, int to) {
 
 	// render the shadow surface;
 	if (_textShadow)
-		render(from, to, _textShadow);
+		render(from, to, _shadowSurface, _wm->_colorBlack);
 
-	render(from, to, 0);
+	render(from, to, _glyphMask, 0xff);
+	render(from, to, _charBoxMask, 0xff, true);
+	render(from, to, nullptr);
 
 	debugPrint("MacTextCanvas::render");
 }

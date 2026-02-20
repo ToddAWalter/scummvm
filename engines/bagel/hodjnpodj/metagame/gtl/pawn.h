@@ -67,7 +67,9 @@ namespace Gtl {
 #define PAWN_BLURB_COLOR    RGB(0,0,255)
 
 class CPawnShop : public CDialog {
-// Construction
+private:
+	bool bFirstTime = true;              // flag for first time information is displayed
+
 public:
 	CPawnShop(CWnd* pParent, CPalette *pPalette, CInventory *pGeneralStore, CInventory *pInventory);
 

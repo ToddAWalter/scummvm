@@ -2441,6 +2441,8 @@ Swedish
      -
    * - Adrian Frühwirth
      -
+   * - Daniel Nylander
+     -
 
 Ukrainian
 ^^^^^^^^^
@@ -2449,6 +2451,8 @@ Ukrainian
    :widths: 35 65
 
    * - Lubomyr Lisen
+     -
+   * - Eugene Sandulenko
      -
 
 Game Translations

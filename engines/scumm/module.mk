@@ -54,6 +54,7 @@ MODULE_OBJS := \
 	midiparser_ro.o \
 	object.o \
 	palette.o \
+	playback.o \
 	players/player_ad.o \
 	players/player_apple2.o \
 	players/player_he.o \

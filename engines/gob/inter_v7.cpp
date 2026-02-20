@@ -35,6 +35,7 @@
 #include "graphics/cursorman.h"
 #include "graphics/wincursor.h"
 
+#include "gui/gui-manager.h"
 #include "gui/message.h"
 
 #include "image/iff.h"
@@ -1956,6 +1957,55 @@ void Inter_v7::o7_writeData(OpFuncParams &params) {
 		   file.c_str(), dataVar, size, offset);
 
 	WRITE_VAR(1, 1);
+
+	if (file.compareToIgnoreCase("PRINTER") == 0) {
+		// Send a sprite to the printer.
+		int32 spriteIndex = -size - 1;
+		if (spriteIndex < 0 || spriteIndex >= Draw::kSpriteCount) {
+			warning("o7_writeData: Invalid sprite index %d for printing", spriteIndex);
+			return;
+		}
+
+		SurfacePtr sprite = _vm->_draw->_spritesArray[spriteIndex];
+		if (!sprite) {
+			warning("o7_writeData: no sprite at index %d for printing", spriteIndex);
+			return;
+		}
+
+		Graphics::ManagedSurface surf(sprite->getWidth(),
+									  sprite->getHeight(),
+									  sprite->getBPP() > 1 ? _vm->getPixelFormat()
+														   : Graphics::PixelFormat::createFormatCLUT8());
+
+		if (sprite->getBPP() > 1) {
+			// Fill the background with white color, and ensure 0 is treated as the transparent color key
+			surf.fillRect(Common::Rect(0, 0, surf.w, surf.h),
+						  surf.format.RGBToColor(255, 255, 255));
+			surf.copyRectToSurfaceWithKey(sprite->getData(),
+										  sprite->getWidth() * sprite->getBPP(),
+										  0,
+										  0,
+										  sprite->getWidth(),
+										  sprite->getHeight(),
+										  0);
+		} else {
+			byte pal[768];
+			int16 numcolors = _vm->_global->_setAllPalette ? 256 : 16;
+			for (int i = 0; i < numcolors; i++) {
+				_vm->_video->setPalColor(pal + i * 3, _vm->_global->_pPaletteDesc->vgaPal[i]);
+			}
+			surf.setPalette(pal, 0, numcolors);
+			surf.copyRectToSurface(sprite->getData(),
+								   sprite->getWidth() * sprite->getBPP(),
+								   0,
+								   0,
+								   sprite->getWidth(),
+								   sprite->getHeight());
+		}
+
+		g_gui.printImage(surf);
+		return;
+	}
 
 	if (size == 0) {
 		dataVar = 0;

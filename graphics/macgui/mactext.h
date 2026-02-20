@@ -75,6 +75,9 @@ public:
 	void drawToPoint(ManagedSurface *g, Common::Point dstPoint);
 
 	ManagedSurface *getSurface() { return _canvas._surface; }
+	ManagedSurface *getGlyphMask() { return _canvas._glyphMask; }
+	ManagedSurface *getCharBoxMask() { return _canvas._charBoxMask; }
+
 	int getInterLinear() { return _canvas._interLinear; }
 	void setInterLinear(int interLinear);
 	void setMaxWidth(int maxWidth);
@@ -87,7 +90,7 @@ public:
 	virtual Common::Point calculateOffset();
 	void setActive(bool active) override;
 	void setEditable(bool editable);
-	void setInputPadding(bool enable){ _addInputPadding = enable; }	
+	void setInputPadding(bool enable){ _addInputPadding = enable; }
 
 	void setColors(uint32 fg, uint32 bg) override;
 	// set fgcolor for line x

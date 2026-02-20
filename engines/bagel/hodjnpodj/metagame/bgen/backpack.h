@@ -61,7 +61,9 @@ namespace Gtl {
 
 
 class CBackpack : public CDialog {
-	// Construction
+private:
+	bool bFirstTime = true;              // flag for first time information is displayed
+
 public:
 	CBackpack(CWnd *pParent, CPalette *pPalette,
 		CInventory *pInventory);

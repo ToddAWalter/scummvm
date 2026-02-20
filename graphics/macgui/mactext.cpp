@@ -633,6 +633,8 @@ void MacText::setDefaultFormatting(uint16 fontId, byte textSlant, uint16 fontSiz
 void MacText::render() {
 	if (_fullRefresh) {
 		_canvas._surface->clear(_canvas._tbgcolor);
+		_canvas._glyphMask->clear(0);
+		_canvas._charBoxMask->clear(0);
 		if (_canvas._textShadow)
 			_canvas._shadowSurface->clear(_canvas._tbgcolor);
 
@@ -830,7 +832,7 @@ void MacText::appendText_(const Common::U32String &strWithFont, uint oldLen) {
 
 	Common::U32String finalText = strWithFont;
 
-    if (_addInputPadding && _editable && strWithFont.lastChar() != '\n') 
+    if (_addInputPadding && _editable && strWithFont.lastChar() != '\n')
 		finalText += '\n';
 
 	_canvas.splitString(finalText, -1, _defaultFormatting);

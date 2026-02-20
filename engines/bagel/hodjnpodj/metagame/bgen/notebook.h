@@ -82,7 +82,9 @@ namespace Gtl {
 
 
 class CNotebook : public CDialog {
-	// Construction
+private:
+	bool bFirstTime = true;              // flag for first time information is displayed
+
 public:
 	CNotebook(CWnd *pParent, CPalette *pPalette, CNote *pNoteList, CNote *pNote);
 

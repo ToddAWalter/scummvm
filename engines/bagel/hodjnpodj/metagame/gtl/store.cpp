@@ -89,7 +89,6 @@ static  CFont       *pFont = nullptr;                  // font to use for displa
 //static  char        chPathName[128];                // buffer to hold path name of the store file
 
 static  bool        bActiveWindow = false;          // whether our window is active
-static  bool        bFirstTime = true;              // flag for first time information is displayed
 static  int         nStore_DX, nStore_DY;           // size of useable store background
 static  int         nItem_DDX, nItem_DDY;           // space separation between inventory items
 static  int         nItemsPerColumn, nItemsPerRow;  // span of items that fit on the background
@@ -232,11 +231,10 @@ void CGeneralStore::OnCancel() {
 void CGeneralStore::OnDestroy() {
 	bool    bUpdateNeeded;
 
-	if (pFont != nullptr)
-		delete pFont;                               // release the font file
-
-	if (pOKButton != nullptr)                          // release the button
-		delete pOKButton;
+	delete pFont;                               // release the font file
+	delete pOKButton;
+	pFont = nullptr;
+	pOKButton = nullptr;
 
 	if (m_bKeyboardHook)                                // remove keyboard hook, if present
 		RemoveKeyboardHook();
@@ -284,6 +282,7 @@ void CGeneralStore::OnDestroy() {
 		pTitleText = nullptr;
 	}
 
+	bFirstTime = true;
 	CDialog::OnDestroy();
 }
 

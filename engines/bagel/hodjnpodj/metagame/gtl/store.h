@@ -69,6 +69,9 @@ namespace Gtl {
 
 class CGeneralStore : public CDialog {
 // Construction
+private:
+	bool bFirstTime = true;
+
 public:
 	CGeneralStore(CWnd* pParent, CPalette *pPalette, CInventory *pStore, CInventory *pInventory);
 

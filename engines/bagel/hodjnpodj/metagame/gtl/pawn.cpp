@@ -86,7 +86,6 @@ static  CFont       *pFont = nullptr;                  // font to use for displa
 //static  char        chPathName[128];                // buffer to hold path name of the pawn file
 
 static  bool        bActiveWindow = false;          // whether our window is active
-static  bool        bFirstTime = true;              // flag for first time information is displayed
 static  int         nPawn_DX, nPawn_DY;             // size of useable pawn background
 static  int         nItem_DDX, nItem_DDY;           // space separation between inventory items
 static  int         nItemsPerColumn, nItemsPerRow;  // span of items that fit on the background
@@ -282,6 +281,7 @@ void CPawnShop::OnDestroy() {
 		pTitleText = nullptr;
 	}
 
+	bFirstTime = true;
 	CDialog::OnDestroy();
 }
 

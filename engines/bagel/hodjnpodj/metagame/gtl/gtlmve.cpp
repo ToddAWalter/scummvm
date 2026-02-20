@@ -463,7 +463,6 @@ bool CGtlData::EndMoveProcessing()
 	const CLocTable * xpLocTable = CMgStatic::cLocTable, *xpLocEntry ;
 	int iLocFunctionCode ;  // MG_GAME_xxxx or MG_VISIT_xxxx
 	bool bExitDll = false ;
-	static bool bFirstTime = true;
 	CSound *pSound;
 
 	if (xpXodj && xpXodj->m_iCharNode >= 0 && xpXodj->m_iCharNode < m_iNodes && !(lpNode = m_lpNodes + xpXodj->m_iCharNode)->m_bDeleted && lpNode->m_bRelocatable) {
@@ -1544,7 +1543,6 @@ bool CGtlData::InitInterface(int iCode, bool & bExitDll)
 
 			CDC         *pDC = nullptr;
 			if ((pDC = gpMyView->GetDC()) != nullptr) {
-
 				m_cBgbMgr.m_xpBsuSet->PrepareDc(pDC, true);
 				if ((pSpinner = new CSpinner(xpGtlView, pDC, 0, 0, m_xpCurXodj->m_bHodj)) != nullptr) {
 					point = pDC->GetViewportOrg();
