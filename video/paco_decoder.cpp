@@ -221,7 +221,7 @@ void PacoDecoder::readNextPacket() {
 	if (_audioTrack) {
 		while (_audioTrack->needsAudio() && (_audioStream->pos() < _audioStream->size())) {
 			// buffer as much audio as we need
-			int64 currentPos = _audioStream->pos();
+			//int64 currentPos = _audioStream->pos();
 			int frameType = _audioStream->readByte();
 			int v = _audioStream->readByte();
 			uint32 chunkSize =  (v << 16 ) | _audioStream->readUint16BE();

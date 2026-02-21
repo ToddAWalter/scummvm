@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
 "PO-Revision-Date: 2025-08-14 14:36+0000\n"
 "Last-Translator: SkiffPL <skiff@windowslive.com>\n"
 "Language-Team: Polish <https://translations.scummvm.org/projects/scummvm/"
@@ -7122,7 +7122,8 @@ msgid "AGOS main"
 msgstr "Główny AGOS"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -7140,8 +7141,8 @@ msgstr "Główny AGOS"
 msgid "Game keymappings"
 msgstr "Mapowanie klawiszy gry"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
 msgstr "Mapowanie klawiszy tak/nie"
 
 #: engines/agos/metaengine.cpp:170
@@ -7254,16 +7255,17 @@ msgstr "Przełącza między samą mową a mową i napisami"
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "Przełącza między samymi napisami a łączoną mową i napisami"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Włączanie/wyłączanie trybu dużej prędkości w Swampy Adventures"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Naciśnij klawisz \"Tak\""
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Naciśnij klawisz \"Nie\""
 
@@ -8202,10 +8204,6 @@ msgstr "Tryb dla daltonistów"
 msgid "Enable Color Blind Mode by default"
 msgstr "Domyślnie włącz tryb dla daltonistów"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Mapowanie klawiszy"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 msgid "Exit / Skip"
@@ -8225,39 +8223,57 @@ msgstr "Potwierdź zamknięcie"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "Zmieniony przedmiot (ALT)"
 
 #: engines/cge/metaengine.cpp:257
-msgid "Inventory Item 1 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 1 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:262
-msgid "Inventory Item 2 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 2 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:267
-msgid "Inventory Item 3 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 3 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:272
-msgid "Inventory Item 4 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 4 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:277
-msgid "Inventory Item 5 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 5 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:282
-msgid "Inventory Item 6 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 6 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:287
-msgid "Inventory Item 7 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 7 (zaznacz/odznacz)"
 
 #: engines/cge/metaengine.cpp:292
-msgid "Inventory Item 8 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "Pozycja ekwipunku 8 (zaznacz/odznacz)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -10766,10 +10782,6 @@ msgstr "Mapowanie klawiszy sekwencji walki"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "Mapowanie klawiszy indeksu"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Mapowanie klawiszy tak/nie"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -14034,7 +14046,7 @@ msgstr "Mapowanie klawiszy menu"
 #: engines/sherlock/metaengine.cpp:784
 #, fuzzy
 #| msgid "Save/Load keymappings"
-msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "Mapowanie klawiszy zapisywania i wczytywania"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -17220,6 +17232,12 @@ msgstr ""
 "Nemesis zawiera kilka łamigłówek muzycznych, które wymagają dźwięku MIDI do "
 "rozwiązania. Te łamigłówki można również rozwiązać za pomocą napisów, jeśli "
 "są obsługiwane. Kontynuować uruchamianie gry?"
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Mapowanie klawiszy tak/nie"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Mapowanie klawiszy"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Domyślne mapowanie klawiatury"

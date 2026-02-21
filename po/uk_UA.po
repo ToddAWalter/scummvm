@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
-"PO-Revision-Date: 2026-02-18 22:40+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
+"PO-Revision-Date: 2026-02-20 22:05+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/uk/>\n"
@@ -6892,7 +6892,8 @@ msgid "AGOS main"
 msgstr "Головна AGOS"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -6910,9 +6911,9 @@ msgstr "Головна AGOS"
 msgid "Game keymappings"
 msgstr "Мапа клавіш гри"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
-msgstr "Мапа клавіш Так/Ні"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
+msgstr "Мапа клавіш для Так/Ні"
 
 #: engines/agos/metaengine.cpp:170
 msgid "Exit cutscene"
@@ -7018,16 +7019,17 @@ msgstr "Перемикання між лише озвучкою і комбін�
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "Перемикання між лише субтитрами і комбінованими озвучкою та субтитрами"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Перемкнути пришвидшений режим у Swampy Adventures"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Натисніть клавішу \"Так\""
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Натисніть клавішу \"Ні\""
 
@@ -7939,10 +7941,6 @@ msgstr "Режим без кольору"
 msgid "Enable Color Blind Mode by default"
 msgstr "Ввімкнути режим для людей з погіршенним сприяттям кольору"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Мапа клавіш гри"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 msgid "Exit / Skip"
@@ -7962,39 +7960,39 @@ msgstr "Запит виходу з гри"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "АЛЬТернативний елемент"
 
 #: engines/cge/metaengine.cpp:257
-msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "Інвентар 1 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:262
-msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "Інвентар 2 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:267
-msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "Інвентар 3 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:272
-msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "Інвентар 4 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:277
-msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "Інвентар 5 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:282
-msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "Інвентар 6 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:287
-msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "Інвентар 7 (Вибрати / Скасувати вибір)"
 
 #: engines/cge/metaengine.cpp:292
-msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "Інвентар 8 (Вибрати / Скасувати вибір)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -10313,10 +10311,6 @@ msgstr "Мапа клавіш бою"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "Мапа клавіш вказівника"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Мапа клавіш для Так/Ні"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -12959,16 +12953,16 @@ msgid "Enable demo/kiosk mode in the full retail version of Maniac Mansion."
 msgstr "Ввімкнути режим демо/кіоска для повної версії Maniac Mansion."
 
 #: engines/scumm/metaengine.cpp:839
-#, fuzzy
-#| msgid "Playback"
 msgid "Disable Playback"
-msgstr "Відтворити"
+msgstr "Вимкнути програвання"
 
 #: engines/scumm/metaengine.cpp:840
 msgid ""
 "Disable the scripted part of the demo (dangerous!). This makes it "
 "interactive, but as this was never intended, expect frequent crashes!"
 msgstr ""
+"Вимікає скриптову частину демо-гри (небезпечно!). Це зробить її "
+"інтерактивною, але оскільки це ніколи не передбачалося, будуть часті збої!"
 
 #: engines/scumm/metaengine.cpp:848
 msgid "Use remastered audio"
@@ -13475,8 +13469,8 @@ msgid "Menu scrolling keymappings"
 msgstr "Мапа клавіш прокрутки меню"
 
 #: engines/sherlock/metaengine.cpp:784
-msgid "save / load menu keymappings"
-msgstr "Мапв клавіш меню збережкння / завантаження"
+msgid "Save / load menu keymappings"
+msgstr "Мапа клавіш меню збереження / завантаження"
 
 #: engines/sherlock/metaengine.cpp:785
 msgid "Save files name editing keymappings"
@@ -16566,6 +16560,12 @@ msgstr ""
 "містить кілька музичних головоломок, для розв'язання яких потрібне MIDI-"
 "аудіо. Ці головоломки також можна розв'язати за допомогою субтитрів, якщо "
 "вони підтримуються. Продовжити запуск гри?"
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Мапа клавіш Так/Ні"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Мапа клавіш гри"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Мапа клавіш гри за замовчунням"

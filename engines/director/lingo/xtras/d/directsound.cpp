@@ -27,7 +27,7 @@
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/lingo-utils.h"
-#include "director/lingo/xtras/directsound.h"
+#include "director/lingo/xtras/d/directsound.h"
 
 /**************************************************
  *

@@ -12,6 +12,8 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Die Enter-Taste kann jetzt genutzt werden, um alle Info-Dialoge zu schließen.
    - Oberflächen-Animationen im Mankala-Minigame korrigiert.
    - Fehlerhafte Evolutions-Logik in Game of Life korrigiert.
+   - Absturz beim Betreten der Brettspiel-Geschäfte korrigiert.
+   - Absturz beim Ausblenden des Spinners für den Beginn einer Brettspielrunde korrigiert.
 
  M4:
    - Musik-Unterstützung in Ripley hinzugefügt.
@@ -36,6 +38,8 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
 
  SCUMM:
    - Unterstützung für den originalen Titel-Bildschirm hinzugefügt (funktioniert nur mit PRG-Dateien).
+   - Unterstützung für die originale Wiedergabe-Datei in der DOS-Version der 
+     nicht-interaktiven Demo von Monkey Island 2 hinzugefügt.
 
  WAGE:
    - Kampf-System implementiert.

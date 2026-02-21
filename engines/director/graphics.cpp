@@ -715,6 +715,9 @@ void DirectorPlotData::inkBlitSurface(Common::Rect &srcRect, const Graphics::Sur
 	if (!srf)
 		return;
 
+	if (mask && srfMask)
+		error("DirectorPlotData::inkBlitSurface: Masking not supported on surfaces with separate mask");
+
 	// TODO: Determine why colourization causes problems in Warlock
 	if (sprite == kTextSprite || sprite == kButtonSprite || sprite == kCheckboxSprite || sprite == kRadioButtonSprite)
 		applyColor = false;
@@ -754,13 +757,16 @@ void DirectorPlotData::inkBlitSurface(Common::Rect &srcRect, const Graphics::Sur
 		srcPoint.x = abs(srcRect.left - destRect.left);
 		const byte *msk = mask ? (const byte *)mask->getBasePtr(srcPoint.x, srcPoint.y) : nullptr;
 
+		if (srfMask)
+			msk = (const byte *)srfMask->getBasePtr(srcPoint.x, srcPoint.y);
+
 		for (int j = 0; j < destRect.width(); j++, srcPoint.x++) {
 			if (!srfClip.contains(srcPoint)) {
 				failedBoundsCheck = true;
 				continue;
 			}
 
-			if (!mask || (msk && (*msk++))) {
+			if (!(mask || srfMask) || (msk && (*msk++))) {
 				if (d->_wm->_pixelformat.bytesPerPixel == 1) {
 					primitives->drawPoint(destRect.left + j, destRect.top + i,
 										preprocessColor(*((byte *)srf->getBasePtr(srcPoint.x, srcPoint.y))), this);

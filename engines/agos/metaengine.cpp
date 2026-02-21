@@ -152,7 +152,7 @@ Common::KeymapArray AgosMetaEngine::initKeymaps(const char *target) const {
 	// It is never disabled and it is not game specific
 	Keymap *engineKeyMap = new Keymap(Keymap::kKeymapTypeGame, "agos-main", _("AGOS main"));
 	Keymap *gameKeyMap = new Keymap(Keymap::kKeymapTypeGame, "game-shortcuts", _("Game keymappings"));
-	Keymap *yesNoKeymap = new Keymap(Keymap::kKeymapTypeGame, "game-Yes/No", _("Yes/No keymapping"));
+	Keymap *yesNoKeymap = new Keymap(Keymap::kKeymapTypeGame, "game-Yes/No", _("Yes/No keymappings"));
 	Action *act;
 
 	act = new Action(kStandardActionLeftClick, _("Left click"));
@@ -307,6 +307,7 @@ Common::KeymapArray AgosMetaEngine::initKeymaps(const char *target) const {
 	if (gameId == "swampy" ||
 			gameId == "puzzle" ||
 			gameId == "jumble") {
+		// I18N: Swampy Adventures is the name of the game
 		act = new Action("HIGHSPEED", _("High speed mode on/off in Swampy Adventures"));
 		act->setCustomEngineActionEvent(kActionSpeed_GTYPEPP);
 		act->addDefaultInputMapping("F12");

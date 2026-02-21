@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
 "PO-Revision-Date: 2025-03-07 00:18+0000\n"
 "Last-Translator: Hovánszki Tamás <gahex68379@lofiey.com>\n"
 "Language-Team: Hungarian <https://translations.scummvm.org/projects/scummvm/"
@@ -7142,7 +7142,8 @@ msgid "AGOS main"
 msgstr "Fő AGOS"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -7160,9 +7161,9 @@ msgstr "Fő AGOS"
 msgid "Game keymappings"
 msgstr "Játék gombkiosztások"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
-msgstr "Igen/Nem gombkiosztás"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
+msgstr "Igen/Nem gombkiosztások"
 
 #: engines/agos/metaengine.cpp:170
 msgid "Exit cutscene"
@@ -7278,16 +7279,17 @@ msgstr "Csak beszéd valamint beszéd és felirat mód közötti váltás"
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "Csak felirat valamint beszéd és felirat mód közötti váltás"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Gyors sebességű mód be/ki a Swampy Adentures-ben"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Noymja meg az \"Igen\" gombot"
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Nyomja meg a \"Nem\" gombot"
 
@@ -8259,10 +8261,6 @@ msgstr "Színvak Mód"
 msgid "Enable Color Blind Mode by default"
 msgstr "Szinvak mód bekapcsolása alapértelmezettként"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Játék Gombkiosztás"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 #, fuzzy
@@ -8288,55 +8286,57 @@ msgstr "Kilépés Ablak"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "MegvALToztatott Tárgy"
 
 #: engines/cge/metaengine.cpp:257
 #, fuzzy
 #| msgid "Inventory Item 1 (Select/Deselect)"
-msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "1. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:262
 #, fuzzy
 #| msgid "Inventory Item 2 (Select/Deselect)"
-msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "2. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:267
 #, fuzzy
 #| msgid "Inventory Item 3 (Select/Deselect)"
-msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "3. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:272
 #, fuzzy
 #| msgid "Inventory Item 4 (Select/Deselect)"
-msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "4. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:277
 #, fuzzy
 #| msgid "Inventory Item 5 (Select/Deselect)"
-msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "5. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:282
 #, fuzzy
 #| msgid "Inventory Item 6 (Select/Deselect)"
-msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "6. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:287
 #, fuzzy
 #| msgid "Inventory Item 7 (Select/Deselect)"
-msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "7. Tárgy (Kiválaszt/Választás törlés)"
 
 #: engines/cge/metaengine.cpp:292
 #, fuzzy
 #| msgid "Inventory Item 8 (Select/Deselect)"
-msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "8. Tárgy (Kiválaszt/Választás törlés)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -10955,10 +10955,6 @@ msgstr "Harc jelenet gombkiosztás"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "Index gombkiosztás"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Igen/Nem gombkiosztások"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -14310,7 +14306,7 @@ msgstr "Játék gombkiosztások"
 #: engines/sherlock/metaengine.cpp:784
 #, fuzzy
 #| msgid "Save/Load keymappings"
-msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "Gombkiosztás Mentés/Betöltés"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -17894,6 +17890,12 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Igen/Nem gombkiosztás"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Játék Gombkiosztás"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Alapértelmezett billentyűzet kiosztás"

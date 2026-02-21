@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.3.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
 "PO-Revision-Date: 2026-02-07 15:22+0000\n"
 "Last-Translator: Einar Johan Trøan Sømåen <einarjohants@gmail.com>\n"
 "Language-Team: Norwegian Bokmål <https://translations.scummvm.org/projects/"
@@ -7199,7 +7199,8 @@ msgid "AGOS main"
 msgstr "AGOS primær"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -7217,9 +7218,9 @@ msgstr "AGOS primær"
 msgid "Game keymappings"
 msgstr "Spilltasteoppsett"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
-msgstr "Ja-/Nei-tasteoppsett"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
+msgstr "Ja/Nei-tasteoppsett"
 
 #: engines/agos/metaengine.cpp:170
 msgid "Exit cutscene"
@@ -7335,16 +7336,17 @@ msgstr "Bytter mellom kun tale og kombinert tale og undertekster"
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "Bytter mellom kun undertekst og kombinert tale og undertekster"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Hurtigmodus på/av i Swampy Adventures"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Trykk på «Ja»-tasten"
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Trykk på «Nei»-tasten"
 
@@ -8322,10 +8324,6 @@ msgstr "Fargeblindmodus"
 msgid "Enable Color Blind Mode by default"
 msgstr "Aktiver fargeblindmodus som standard"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Spilltasteoppsett"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 #, fuzzy
@@ -8351,55 +8349,57 @@ msgstr "Avslutt-varsel"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "ALTernativt element"
 
 #: engines/cge/metaengine.cpp:257
 #, fuzzy
 #| msgid "Inventory Item 1 (Select/Deselect)"
-msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "Utstyrslisteelement 1 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:262
 #, fuzzy
 #| msgid "Inventory Item 2 (Select/Deselect)"
-msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "Utstyrslisteelement 2 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:267
 #, fuzzy
 #| msgid "Inventory Item 3 (Select/Deselect)"
-msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "Utstyrslisteelement 3 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:272
 #, fuzzy
 #| msgid "Inventory Item 4 (Select/Deselect)"
-msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "Utstyrslisteelement 4 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:277
 #, fuzzy
 #| msgid "Inventory Item 5 (Select/Deselect)"
-msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "Utstyrslisteelement 5 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:282
 #, fuzzy
 #| msgid "Inventory Item 6 (Select/Deselect)"
-msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "Utstyrslisteelement 6 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:287
 #, fuzzy
 #| msgid "Inventory Item 7 (Select/Deselect)"
-msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "Utstyrslisteelement 7 (Velg/Fjern valg)"
 
 #: engines/cge/metaengine.cpp:292
 #, fuzzy
 #| msgid "Inventory Item 8 (Select/Deselect)"
-msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "Utstyrslisteelement 8 (Velg/Fjern valg)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -11027,10 +11027,6 @@ msgstr "Kampsekvens-tasteoppsett"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "Indeks-tasteoppsett"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Ja/Nei-tasteoppsett"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -14400,7 +14396,7 @@ msgstr "Spilltasteoppsett"
 #: engines/sherlock/metaengine.cpp:784
 #, fuzzy
 #| msgid "Game Options"
-msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "Spillinnstillinger"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -18064,6 +18060,12 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Ja-/Nei-tasteoppsett"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Spilltasteoppsett"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Spillets standard knappoppsett"

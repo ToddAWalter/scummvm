@@ -183,18 +183,18 @@ MODULE_OBJS = \
 	lingo/xlibs/y/yasix.o \
 	lingo/xtras/b/budapi.o \
 	lingo/xtras/a/audio.o \
-	lingo/xtras/directsound.o \
+	lingo/xtras/d/directsound.o \
 	lingo/xtras/d/displayres.o \
-	lingo/xtras/filextra.o \
-	lingo/xtras/keypoll.o \
-	lingo/xtras/masterapp.o \
+	lingo/xtras/f/filextra.o \
+	lingo/xtras/k/keypoll.o \
+	lingo/xtras/m/masterapp.o \
 	lingo/xtras/m/mui.o \
-	lingo/xtras/openurl.o \
-	lingo/xtras/oscheck.o \
-	lingo/xtras/qtvrxtra.o \
+	lingo/xtras/o/openurl.o \
+	lingo/xtras/o/oscheck.o \
+	lingo/xtras/q/qtvrxtra.o \
 	lingo/xtras/r/registryreader.o \
-	lingo/xtras/rtk.o \
-	lingo/xtras/scrnutil.o \
+	lingo/xtras/r/rtk.o \
+	lingo/xtras/s/scrnutil.o \
 	lingo/xtras/s/smacker.o \
 	lingo/xtras/s/staytoonedhall.o \
 	lingo/xtras/s/staytoonedball.o \
@@ -202,8 +202,8 @@ MODULE_OBJS = \
 	lingo/xtras/s/staytoonedhigh.o \
 	lingo/xtras/s/staytoonedober.o \
 	lingo/xtras/s/staytoonedtoon.o \
-	lingo/xtras/timextra.o \
-	lingo/xtras/xsound.o
+	lingo/xtras/t/timextra.o \
+	lingo/xtras/x/xsound.o
 
 
 ifdef USE_IMGUI

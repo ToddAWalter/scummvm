@@ -33,7 +33,7 @@
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-builtins.h"
 #include "director/lingo/lingo-utils.h"
-#include "director/lingo/xtras/qtvrxtra.h"
+#include "director/lingo/xtras/q/qtvrxtra.h"
 
 /**************************************************
  *

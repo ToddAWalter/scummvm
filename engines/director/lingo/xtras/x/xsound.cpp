@@ -25,7 +25,7 @@
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/lingo-utils.h"
-#include "director/lingo/xtras/xsound.h"
+#include "director/lingo/xtras/x/xsound.h"
 
 /**************************************************
  *

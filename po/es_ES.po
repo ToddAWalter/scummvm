@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.4.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
-"PO-Revision-Date: 2026-02-17 23:31+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
+"PO-Revision-Date: 2026-02-20 12:15+0000\n"
 "Last-Translator: IlDucci <pajaroloco_2@hotmail.com>\n"
 "Language-Team: Spanish <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/es/>\n"
@@ -6969,7 +6969,8 @@ msgid "AGOS main"
 msgstr "AGOS - Principal"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -6987,9 +6988,9 @@ msgstr "AGOS - Principal"
 msgid "Game keymappings"
 msgstr "Asignaciones del juego"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
-msgstr "Asignación a Sí/No"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
+msgstr "Asignaciones de Sí/No"
 
 #: engines/agos/metaengine.cpp:170
 msgid "Exit cutscene"
@@ -7095,16 +7096,17 @@ msgstr "Alterna entre los modos de Solo voces y Voces y subtítulos"
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "Alterna entre los modos de Solo subtítulos y Voces y subtítulos"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Activa o desactiva el modo de alta velocidad en Swampy Adventures"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Pulsar tecla «Sí»"
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Pulsar tecla «No»"
 
@@ -8033,10 +8035,6 @@ msgstr "Modo para daltónicos"
 msgid "Enable Color Blind Mode by default"
 msgstr "Activar el modo para daltónicos por defecto"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Asignaciones del juego"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 msgid "Exit / Skip"
@@ -8056,39 +8054,57 @@ msgstr "Ventana para salir"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "Objeto ALTerado"
 
 #: engines/cge/metaengine.cpp:257
-msgid "Inventory Item 1 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "Objeto de inventario 1 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:262
-msgid "Inventory Item 2 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "Objeto de inventario 2 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:267
-msgid "Inventory Item 3 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "Objeto de inventario 3 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:272
-msgid "Inventory Item 4 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "Objeto de inventario 4 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:277
-msgid "Inventory Item 5 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "Objeto de inventario 5 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:282
-msgid "Inventory Item 6 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "Objeto de inventario 6 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:287
-msgid "Inventory Item 7 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "Objeto de inventario 7 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:292
-msgid "Inventory Item 8 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "Objeto de inventario 8 (seleccionar/deseleccionar)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -10440,10 +10456,6 @@ msgstr "Asignaciones de secuencias de lucha"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "Asignaciones de índice"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Asignaciones de Sí/No"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -13134,16 +13146,17 @@ msgstr ""
 "Mansion."
 
 #: engines/scumm/metaengine.cpp:839
-#, fuzzy
-#| msgid "Playback"
 msgid "Disable Playback"
-msgstr "Reproducción"
+msgstr "Desactivar reproducción"
 
 #: engines/scumm/metaengine.cpp:840
 msgid ""
 "Disable the scripted part of the demo (dangerous!). This makes it "
 "interactive, but as this was never intended, expect frequent crashes!"
 msgstr ""
+"Desactiva la parte preprogramada de la demo (¡es peligroso!). La convertirá "
+"en interactiva, pero al no estar pensada para serlo, ¡habrá cuelgues a "
+"menudo!"
 
 #: engines/scumm/metaengine.cpp:848
 msgid "Use remastered audio"
@@ -13663,7 +13676,9 @@ msgid "Menu scrolling keymappings"
 msgstr "Asignaciones de despl. en menús"
 
 #: engines/sherlock/metaengine.cpp:784
-msgid "save / load menu keymappings"
+#, fuzzy
+#| msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "Asignaciones del menú de guardar/cargar"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -16785,6 +16800,12 @@ msgstr ""
 "que es imprescindible tener audio en MIDI para poder resolverlos.  También "
 "se podrían resolver estos acertijos con subtítulos, si están disponibles. "
 "¿Quieres seguir ejecutando el juego?"
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Asignación a Sí/No"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Asignaciones del juego"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Asignación predet. del juego"

@@ -25,6 +25,8 @@
 
 #include "graphics/macgui/mactext.h"
 
+#include "image/png.h"
+
 namespace Graphics {
 
 enum {
@@ -643,11 +645,37 @@ void MacText::render() {
 		_fullRefresh = false;
 
 #if 0
+		byte pal[256 * 3];
 		Common::DumpFile out;
-		Common::String filename = Common::String::format("z-%p.png", (void *)this);
+		Common::Path filename(Common::String::format("z-%p-1-image.png", (void *)this));
 		if (out.open(filename)) {
-			warning("Wrote: %s", filename.c_str());
-			Image::writePNG(out, _canvas._surface->rawSurface());
+			warning("Wrote: %s", filename.toString().c_str());
+			_canvas._surface->grabPalette(pal, 0, 256);
+			Image::writePNG(out, _canvas._surface->rawSurface(), pal);
+			out.flush();
+			out.close();
+		}
+
+		// set b/w palette for mask
+		memset(pal, 0, sizeof(pal));
+		pal[0xff * 3 + 0] = 0xff;
+		pal[0xff * 3 + 1] = 0xff;
+		pal[0xff * 3 + 2] = 0xff;
+
+		filename = Common::Path(Common::String::format("z-%p-2-glyphMask.png", (void *)this));
+		if (out.open(filename)) {
+			warning("Wrote: %s", filename.toString().c_str());
+			Image::writePNG(out, _canvas._glyphMask->rawSurface(), pal);
+			out.flush();
+			out.close();
+		}
+
+		filename = Common::Path(Common::String::format("z-%p-3-charBoxMask.png", (void *)this));
+		if (out.open(filename)) {
+			warning("Wrote: %s", filename.toString().c_str());
+			Image::writePNG(out, _canvas._charBoxMask->rawSurface(), pal);
+			out.flush();
+			out.close();
 		}
 #endif
 	}

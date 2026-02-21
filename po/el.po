@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.10.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
-"PO-Revision-Date: 2026-02-11 14:23+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
+"PO-Revision-Date: 2026-02-20 15:48+0000\n"
 "Last-Translator: Antoniou Athanasios <a.antoniou79@gmail.com>\n"
 "Language-Team: Greek <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/el/>\n"
@@ -2872,25 +2872,19 @@ msgstr "*  Abc"
 
 #: gui/printing-dialog.cpp:61
 msgid "Print"
-msgstr ""
+msgstr "Εκτύπωση"
 
 #: gui/printing-dialog.cpp:62
-#, fuzzy
-#| msgid "Save Image"
 msgid "Save as image"
-msgstr "Αποθήκευση Εικόνας"
+msgstr "Αποθήκευση ως εικόνα"
 
 #: gui/printing-dialog.cpp:64
-#, fuzzy
-#| msgid "Pointer Speed:"
 msgid "Printer:"
-msgstr "Ταχύτητα δείκτη:"
+msgstr "Εκτυπωτής:"
 
 #: gui/printing-dialog.cpp:87
-#, fuzzy
-#| msgid "Next action"
 msgid "Orientation:"
-msgstr "Επόμενη ενέργεια"
+msgstr "Προσανατολισμός:"
 
 #: gui/recorderdialog.cpp:67
 msgid "Recorder or Playback Gameplay"
@@ -7038,14 +7032,13 @@ msgstr ""
 "έξοδος από ένα δωμάτιο."
 
 #: engines/agos/dialogs.cpp:93
-#, fuzzy
-#| msgid "Use original save/load screens"
 msgid "Use original Acorn system cursor"
-msgstr "Χρήση αρχικών οθονών αποθήκευσης/φόρτωσης"
+msgstr "Χρήση αρχικού κέρσορα για το σύστημα Acorn"
 
 #: engines/agos/dialogs.cpp:94
 msgid "Toggle between the system cursor and the default cursor."
 msgstr ""
+"Εναλλαγή μεταξύ του κέρσορα του συστήματος και του προεπιλεγμένου κέρσορα."
 
 #: engines/agos/dialogs.cpp:107 engines/sci/detection_options.h:263
 msgid "MIDI mode:"
@@ -7082,7 +7075,8 @@ msgid "AGOS main"
 msgstr "AGOS - Κύρια"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -7100,8 +7094,8 @@ msgstr "AGOS - Κύρια"
 msgid "Game keymappings"
 msgstr "Πλήκτρα παιχνιδιού"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
 msgstr "Πλήκτρα για Ναι/Όχι"
 
 #: engines/agos/metaengine.cpp:170
@@ -7208,16 +7202,17 @@ msgstr "Εναλλαγή μεταξύ μόνο ομιλίας και συνδυ�
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "Εναλλαγή μεταξύ μόνο υπότιτλων και συνδυασμού ομιλίας με υπότιτλους"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Απ/ενεργοποίηση λειτουργίας υψηλής ταχύτητας στο Swampy Adventures"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Πατήστε το πλήκτρο για \"Ναι\""
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Πατήστε το πλήκτρο για \"Όχι\""
 
@@ -7429,14 +7424,12 @@ msgid "Whether to render the game in 16-bit color"
 msgstr "Aπεικόνιση του παιχνιδιού με 16-bit ή 32-bit χρώματα"
 
 #: engines/alcachofa/metaengine.cpp:62
-#, fuzzy
-#| msgid "Filter graphics"
 msgid "Filter textures"
-msgstr "Φίλτρο γραφικών"
+msgstr "Φίλτρο υφών"
 
 #: engines/alcachofa/metaengine.cpp:63
 msgid "Whether textures should be linearly filtered"
-msgstr ""
+msgstr "Eφαρμογή γραμμικού φίλτρου στις υφές"
 
 #: engines/alcachofa/metaengine.cpp:98 engines/cine/metaengine.cpp:347
 #: engines/freescape/games/castle/castle.cpp:413
@@ -7512,10 +7505,8 @@ msgid "Open character inventory"
 msgstr "Άνοιγμα υπαρχόντων χαρακτήρα"
 
 #: engines/asylum/metaengine.cpp:226
-#, fuzzy
-#| msgid "Toggle animation on / off"
 msgid "Toggle animation"
-msgstr "Εναλλαγή με / χωρίς κίνηση (animation)"
+msgstr "Εναλλαγή χρήσης κίνησης (animation)"
 
 #: engines/asylum/metaengine.cpp:232
 msgid "Return to gameplay"
@@ -8082,51 +8073,47 @@ msgstr "Επανάληψη του πρόσφατου σχολίου από ΑΙ"
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the Artificial Intelligence biochip.
 #: engines/buried/metaengine.cpp:237
 msgid "Biochip AI"
-msgstr ""
+msgstr "Βιοτσίπ ΤΝ"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the blank biochip.
 #: engines/buried/metaengine.cpp:243
 msgid "Biochip blank"
-msgstr ""
+msgstr "Κενό βιοτσίπ"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the cloak biochip.
 #: engines/buried/metaengine.cpp:249
 msgid "Biochip cloak"
-msgstr ""
+msgstr "Βιοτσίπ κάλυψης"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the evidence biochip.
 #: engines/buried/metaengine.cpp:255
 msgid "Biochip evidence"
-msgstr ""
+msgstr "Βιοτσίπ αποδεικτικών στοιχείων"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the files biochip.
 #: engines/buried/metaengine.cpp:261
-#, fuzzy
-#| msgid "Show hidden files"
 msgid "Biochip files"
-msgstr "Προβολή κρυφών αρχείων"
+msgstr "Βιοτσίπ αρχείων"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the interface biochip.
 #: engines/buried/metaengine.cpp:267
 msgid "Biochip interface"
-msgstr ""
+msgstr "Βιοτσίπ διεπαφής"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the jump biochip.
 #: engines/buried/metaengine.cpp:273
 msgid "Biochip jump"
-msgstr ""
+msgstr "Βιοτσίπ άλματος"
 
 #. I18N: The game has an inventory with a list of biochips. This action is used to switch the equipped biochip to the translate biochip.
 #: engines/buried/metaengine.cpp:279
 msgid "Biochip translate"
-msgstr ""
+msgstr "Βιοτσίπ μετάφρασης"
 
 #. I18N: Shows a summary of collected points in the game.
 #: engines/buried/metaengine.cpp:285
-#, fuzzy
-#| msgid "Show hints"
 msgid "Show points"
-msgstr "Προβολή υποδείξεων"
+msgstr "Προβολή πόντων"
 
 #: engines/buried/saveload.cpp:80
 msgid ""
@@ -8161,122 +8148,104 @@ msgstr "Λειτουργία για Άτομα με Αχρωματοψία"
 msgid "Enable Color Blind Mode by default"
 msgstr "Ενεργοποίηση λειτουργίας για Άτομα με Αχρωματοψία εξ'ορισμού"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Πλήκτρα παιχνιδιού"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
-#, fuzzy
-#| msgid "Exit/Skip"
 msgid "Exit / Skip"
-msgstr "Έξοδος/Παράλειψη"
+msgstr "Έξοδος / Παράλειψη"
 
 #. I18N: 3-4 dialogs of game version info, (translation) credits, etc.
 #: engines/cge/metaengine.cpp:234 engines/cge2/metaengine.cpp:248
-#, fuzzy
-#| msgid "Game Info"
 msgid "Game info"
-msgstr "Πληροφορίες Παιχνιδιού"
+msgstr "Πληροφορίες παιχνιδιού"
 
 #. I18N: This opens a Quit Prompt where you have to choose
 #. [Confirm] or [Continue Playing] lines with Left Click.
 #: engines/cge/metaengine.cpp:242 engines/cge2/metaengine.cpp:256
-#, fuzzy
-#| msgid "Quit Prompt"
 msgid "Quit prompt"
-msgstr "Έξοδος"
+msgstr "Ερώτηση για έξοδο"
 
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "Κάλπικο Αντικείμενο"
 
 #: engines/cge/metaengine.cpp:257
 #, fuzzy
-#| msgid "Inventory Item 1 (Select/Deselect)"
-msgid "Inventory Item 1 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 1 (Απ/Επιλογή)"
+#| msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 1 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:262
 #, fuzzy
-#| msgid "Inventory Item 2 (Select/Deselect)"
-msgid "Inventory Item 2 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 2 (Απ/Επιλογή)"
+#| msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 2 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:267
 #, fuzzy
-#| msgid "Inventory Item 3 (Select/Deselect)"
-msgid "Inventory Item 3 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 3 (Απ/Επιλογή)"
+#| msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 3 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:272
 #, fuzzy
-#| msgid "Inventory Item 4 (Select/Deselect)"
-msgid "Inventory Item 4 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 4 (Απ/Επιλογή)"
+#| msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 4 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:277
 #, fuzzy
-#| msgid "Inventory Item 5 (Select/Deselect)"
-msgid "Inventory Item 5 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 5 (Απ/Επιλογή)"
+#| msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 5 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:282
 #, fuzzy
-#| msgid "Inventory Item 6 (Select/Deselect)"
-msgid "Inventory Item 6 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 6 (Απ/Επιλογή)"
+#| msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 6 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:287
 #, fuzzy
-#| msgid "Inventory Item 7 (Select/Deselect)"
-msgid "Inventory Item 7 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 7 (Απ/Επιλογή)"
+#| msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 7 (Απ/ Επιλογή)"
 
 #: engines/cge/metaengine.cpp:292
 #, fuzzy
-#| msgid "Inventory Item 8 (Select/Deselect)"
-msgid "Inventory Item 8 (Select / Deselect)"
-msgstr "Αντικείμενο Υπαρχόντων 8 (Απ/Επιλογή)"
+#| msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
+msgstr "Αντικείμενο Υπαρχόντων 8 (Απ/ Επιλογή)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
 #. You switch between them from numbered buttons on interface.
 #. Sets the current access to only the first Location
 #: engines/cge/metaengine.cpp:300
-#, fuzzy
-#| msgid "DEBUG: Access to Location 1"
 msgid "DEBUG: Access to location 1"
-msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε Τοποθεσία 1"
+msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε τοποθεσία 1"
 
 #. I18N: Sets the current access to Locations 1 to 8.
 #: engines/cge/metaengine.cpp:306
-#, fuzzy
-#| msgid "DEBUG: Access to Locations 1-8"
 msgid "DEBUG: Access to locations 1-8"
-msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε Τοποθεσίες 1-8"
+msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε τοποθεσίες 1-8"
 
 #. I18N: Sets the current access to Locations 1 to 16.
 #: engines/cge/metaengine.cpp:312
-#, fuzzy
-#| msgid "DEBUG: Access to Locations 1-16"
 msgid "DEBUG: Access to locations 1-16"
-msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε Τοποθεσίες 1-16"
+msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε τοποθεσίες 1-16"
 
 #. I18N: Sets the current access to Locations 1 to 23.
 #: engines/cge/metaengine.cpp:318
-#, fuzzy
-#| msgid "DEBUG: Access to Locations 1-23"
 msgid "DEBUG: Access to locations 1-23"
-msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε Τοποθεσίες 1-23"
+msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε τοποθεσίες 1-23"
 
 #. I18N: Sets the current access to Locations 1 to 24.
 #: engines/cge/metaengine.cpp:324
-#, fuzzy
-#| msgid "DEBUG: Access to Locations 1-24"
 msgid "DEBUG: Access to locations 1-24"
-msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε Τοποθεσίες 1-24"
+msgstr "ΑΠΟΣΦΑΛΜΑΤΩΣΗ: Πρόσβαση σε τοποθεσίες 1-24"
 
 #: engines/cge2/metaengine.cpp:59 engines/draci/metaengine.cpp:44
 #: engines/prince/metaengine.cpp:40 engines/teenagent/metaengine.cpp:49
@@ -8292,8 +8261,8 @@ msgstr "Αφήγηση κειμένου για Αντικείμενα και Ε�
 #: engines/twine/metaengine.cpp:145 engines/wage/metaengine.cpp:52
 msgid "Use TTS to read the descriptions (if TTS is available)"
 msgstr ""
-"Χρήση λειτουργίας Αφήγησης Κειμένου (TTS) για την ανάγνωση περιγραφών (αν "
-"είναι διαθέσιμη)"
+"Χρήση λειτουργίας Αφήγησης Κειμένου (TTS) (αν είναι διαθέσιμη) για την "
+"ανάγνωση περιγραφών"
 
 #: engines/cge2/metaengine.cpp:71 engines/draci/metaengine.cpp:56
 #: engines/dreamweb/metaengine.cpp:85 engines/prince/metaengine.cpp:52
@@ -8306,21 +8275,17 @@ msgstr "Αφήγηση κειμένου για Υπότιτλους"
 #: engines/teenagent/metaengine.cpp:62
 msgid "Use TTS to read the subtitles (if TTS is available)"
 msgstr ""
-"Χρήση λειτουργίας Αφήγησης Κειμένου (TTS) για την ανάγνωση υπότιτλων (αν "
-"είναι διαθέσιμη)"
+"Χρήση λειτουργίας Αφήγησης Κειμένου (TTS) (αν είναι διαθέσιμη) για την "
+"ανάγνωση υπότιτλων"
 
 #. I18N: This closes the Dialog/text box.
 #: engines/cge2/metaengine.cpp:229
-#, fuzzy
-#| msgid "Close the Dialogue box"
 msgid "Close the dialog box"
 msgstr "Κλείσιμο παραθύρου διαλόγου"
 
 #: engines/chamber/metaengine.cpp:61 engines/drascula/metaengine.cpp:208
 #: engines/lab/metaengine.cpp:151 engines/sherlock/metaengine.cpp:338
 #: engines/sherlock/metaengine.cpp:790 engines/tot/metaengine.cpp:104
-#, fuzzy
-#| msgid "Quit panel keymapping"
 msgid "Quit dialog keymappings"
 msgstr "Πλήκτρα για πάνελ εξόδου"
 
@@ -8423,10 +8388,8 @@ msgstr ""
 "αποθηκεύσετε εκ νέου το παιχνίδι σας."
 
 #: engines/crab/input/input.cpp:119
-#, fuzzy
-#| msgid "Talk/Interact"
 msgid "Talk / Interact"
-msgstr "Μίλα/Αλληλεπίδρασε"
+msgstr "Μίλα / Αλληλεπίδρασε"
 
 #. I18N: Combat command in Might & Magic 1
 #: engines/crab/input/input.cpp:125 engines/efh/metaengine.cpp:487
@@ -8560,10 +8523,8 @@ msgstr ""
 "SOUND."
 
 #: engines/darkseed/dialogs.cpp:121
-#, fuzzy
-#| msgid "SFX volume:"
 msgid "SFX mode:"
-msgstr "Ένταση εφέ:"
+msgstr "Επιλογή εφέ:"
 
 #: engines/darkseed/dialogs.cpp:122
 msgid ""
@@ -8571,18 +8532,21 @@ msgid ""
 "additional floppy SFX, or floppy SFX only. Floppy SFX are only available if "
 "floppy music is used."
 msgstr ""
+"Καθορίζει αν το παιχνίδι θα χρησιμοποιήσει τα ηχητικά εφέ μόνο από την "
+"έκδοση για CD, συνδυασμό των εφέ από την έκδοση για CD με πρόσθετα εφέ από "
+"την έκδοση για δισκέτες, ή εφέ μόνο από την έκδοση για δισκέτες."
 
 #: engines/darkseed/dialogs.cpp:127
 msgid "CD version SFX only"
-msgstr ""
+msgstr "Εφέ μόνο από έκδοση για CD"
 
 #: engines/darkseed/dialogs.cpp:131
 msgid "CD + extra floppy SFX"
-msgstr ""
+msgstr "Εφέ από έκδοση για CD και έκδοση για δισκέτες"
 
 #: engines/darkseed/dialogs.cpp:135
 msgid "Floppy version SFX only"
-msgstr ""
+msgstr "Εφέ μόνο από έκδοση για δισκέτες"
 
 #. I18N: Perform action on object where cursor points
 #: engines/darkseed/metaengine.cpp:42 engines/dragons/metaengine.cpp:135
@@ -8592,16 +8556,12 @@ msgid "Action"
 msgstr "Πράξη"
 
 #: engines/darkseed/metaengine.cpp:48 engines/dragons/metaengine.cpp:141
-#, fuzzy
-#| msgid "Change Command"
 msgid "Change command"
-msgstr "Αλλαγή Εντολής"
+msgstr "Αλλαγή εντολής"
 
 #: engines/darkseed/metaengine.cpp:54
-#, fuzzy
-#| msgid "Time Advance"
 msgid "Time advance"
-msgstr "Πρόοδος Ρολογιού"
+msgstr "Πρόοδος ρολογιού"
 
 #: engines/dgds/metaengine.cpp:76
 msgid "Toggle Menu"
@@ -8664,10 +8624,8 @@ msgstr ""
 "παιχνίδι δεν σχεδιάστηκε με τέτοια υποστήριξη"
 
 #: engines/dm/metaengine.cpp:125
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Dialog choice selection keymappings"
-msgstr "Πλήκτρα για μενού έναρξης"
+msgstr "Πλήκτρα για επιλογές διαλόγου"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. One of them can be assigned the "leader". This action toggles the inventory screen of the leader champion.
 #: engines/dm/metaengine.cpp:137
@@ -8679,80 +8637,60 @@ msgstr "Εναλλαγή προβολής υπαρχόντων/Πόντων IQ"
 #. I18N: (Game name: Dungeon Master) The game has multi-choice dialogs. If there is only one choice, then this action can be used to select it.
 #: engines/dm/metaengine.cpp:144
 msgid "Select dialog choice (only works if there is a single choice)"
-msgstr ""
+msgstr "Επιλογή διαλόγου (μόνο όταν δίνεται μια επιλογή)"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 1.
 #: engines/dm/metaengine.cpp:151
-#, fuzzy
-#| msgid "Toggle Inventory/IQ Points display"
 msgid "Toggle champion 1 inventory"
-msgstr "Εναλλαγή προβολής υπαρχόντων/Πόντων IQ"
+msgstr "Προβολή υπαρχόντων πρωταθλητή 1"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 2.
 #: engines/dm/metaengine.cpp:157
-#, fuzzy
-#| msgid "Toggle Inventory/IQ Points display"
 msgid "Toggle champion 2 inventory"
-msgstr "Εναλλαγή προβολής υπαρχόντων/Πόντων IQ"
+msgstr "Προβολή υπαρχόντων πρωταθλητή 2"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 3.
 #: engines/dm/metaengine.cpp:163
-#, fuzzy
-#| msgid "Toggle Inventory/IQ Points display"
 msgid "Toggle champion 3 inventory"
-msgstr "Εναλλαγή προβολής υπαρχόντων/Πόντων IQ"
+msgstr "Προβολή υπαρχόντων πρωταθλητή 3"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. This action toggles the inventory screen of champion 4.
 #: engines/dm/metaengine.cpp:169
-#, fuzzy
-#| msgid "Toggle Inventory/IQ Points display"
 msgid "Toggle champion 4 inventory"
-msgstr "Εναλλαγή προβολής υπαρχόντων/Πόντων IQ"
+msgstr "Προβολή υπαρχόντων πρωταθλητή 4"
 
 #: engines/dm/metaengine.cpp:216 engines/freescape/movement.cpp:49
 #: engines/hpl1/metaengine.cpp:78 engines/mm/mm1/metaengine.cpp:99
-#, fuzzy
-#| msgid "Strafe Left"
 msgid "Strafe left"
-msgstr "Πλάγια στα Αριστερά"
+msgstr "Πλάγια στα αριστερά"
 
 #: engines/dm/metaengine.cpp:226 engines/titanic/metaengine.cpp:343
 #: engines/titanic/metaengine.cpp:384
-#, fuzzy
-#| msgid "Move backwards"
 msgid "Move backward"
 msgstr "Προχώρησε προς τα πίσω"
 
 #: engines/dm/metaengine.cpp:236 engines/freescape/movement.cpp:56
 #: engines/hpl1/metaengine.cpp:79 engines/mm/mm1/metaengine.cpp:100
-#, fuzzy
-#| msgid "Strafe Right"
 msgid "Strafe right"
-msgstr "Πλάγια στα Δεξιά"
+msgstr "Πλάγια στα δεξιά"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. The champions can be put to sleep. This action wakes up the sleeping champion.
 #: engines/dm/metaengine.cpp:247
 msgid "Wake up champion"
-msgstr ""
+msgstr "Ξύπνησε τον πρωταθλητή"
 
 #: engines/draci/metaengine.cpp:68 engines/prince/metaengine.cpp:64
-#, fuzzy
-#| msgid "Enable Text to Speech for Subtitles"
 msgid "Enable Text to Speech for Missing Voiceovers"
-msgstr "Αφήγηση κειμένου για Υπότιτλους"
+msgstr "Αφήγηση κειμένου στις εκφωνήσεις που λείπουν"
 
 #: engines/draci/metaengine.cpp:69 engines/prince/metaengine.cpp:65
-#, fuzzy
-#| msgid "Use TTS to read the subtitles (if TTS is available)"
 msgid ""
 "Use TTS to read the subtitles of missing voiceovers (if TTS is available)"
 msgstr ""
-"Χρήση λειτουργίας Αφήγησης Κειμένου (TTS) για την ανάγνωση υπότιτλων (αν "
-"είναι διαθέσιμη)"
+"Χρήση λειτουργίας Αφήγησης Κειμένου (TTS) (αν είναι διαθέσιμη) για τις "
+"περιπτώσεις εκφωνήσεων που λείπουν από το παιχνίδι"
 
 #: engines/draci/metaengine.cpp:212
-#, fuzzy
-#| msgid "Skip intro/Exit map or inventory"
 msgid "Skip intro / Exit map or inventory"
 msgstr "Παράκαμψη εισαγωγής / Έξοδος από χάρτη ή υπάρχοντα"
 
@@ -8817,10 +8755,8 @@ msgstr ""
 " Δείτε και εδώ %s"
 
 #: engines/dragons/metaengine.cpp:218
-#, fuzzy
-#| msgid "Debug Graphics"
 msgid "Debug graphics"
-msgstr "Αποσφαλμάτωση Γραφικών"
+msgstr "Αποσφαλμάτωση γραφικών"
 
 #: engines/drascula/metaengine.cpp:207 engines/sherlock/metaengine.cpp:330
 #, fuzzy
@@ -8830,58 +8766,40 @@ msgstr "Πλήκτρα επιλογής"
 
 #: engines/drascula/metaengine.cpp:212 engines/sherlock/metaengine.cpp:343
 #: engines/tetraedge/metaengine.cpp:92
-#, fuzzy
-#| msgid "Move left"
 msgid "Move / Interact / Select"
-msgstr "Κίνηση αριστερά"
+msgstr "Κίνηση / Αλληλεπίδραση / Επιλογή"
 
 #: engines/drascula/metaengine.cpp:235 engines/tot/metaengine.cpp:129
-#, fuzzy
-#| msgid "Pick up"
 msgid "Pick"
-msgstr "Μάζεψε"
+msgstr "Πάρε"
 
 #: engines/drascula/metaengine.cpp:266
-#, fuzzy
-#| msgid "Use Selected Object"
 msgid "Reset selected verb"
-msgstr "Χρήση Επιλεγμένου Αντικειμένου"
+msgstr "Απεπιλογή επιλεγμένης ενέργειας"
 
 #: engines/drascula/metaengine.cpp:272 engines/tot/metaengine.cpp:159
-#, fuzzy
-#| msgid "Touch Controls"
 msgid "Volume controls"
-msgstr "Χειρισμός Αφής"
+msgstr "Ρυθμίσεις έντασης"
 
 #: engines/drascula/metaengine.cpp:279
-#, fuzzy
-#| msgid "Saved games"
 msgid "Save / load game"
-msgstr "Αποθηκευμένα παιχνίδια"
+msgstr "Αποθήκευση / φόρτωση παιχνιδιού"
 
 #: engines/drascula/metaengine.cpp:292
-#, fuzzy
-#| msgid "Toggle subtitles"
 msgid "Enable subtitles"
-msgstr "Εναλλαγή υπότιτλων"
+msgstr "Χρήση υπότιτλων"
 
 #: engines/drascula/metaengine.cpp:298
-#, fuzzy
-#| msgid "Toggle subtitles"
 msgid "Disable subtitles"
-msgstr "Εναλλαγή υπότιτλων"
+msgstr "Απενεργοποίηση υπότιτλων"
 
 #: engines/drascula/metaengine.cpp:315
-#, fuzzy
-#| msgid "Mute speech"
 msgid "Pause speech"
-msgstr "Σίγαση ομιλίας"
+msgstr "Διακοπή ομιλίας"
 
 #: engines/drascula/metaengine.cpp:322 engines/tot/metaengine.cpp:169
-#, fuzzy
-#| msgid "Confirm"
 msgid "Confirm quit"
-msgstr "Επιβεβαίωση"
+msgstr "Επιβεβαίωση εξόδου"
 
 #: engines/drascula/saveload.cpp:49
 msgid ""
@@ -8915,113 +8833,77 @@ msgstr ""
 "Αφήγηση κειμένου για Αντικείμενα, Επιλογές, και το Απόφθευγμα της Βίβλου"
 
 #: engines/efh/metaengine.cpp:235
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 1"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 1"
 
 #: engines/efh/metaengine.cpp:236
-#, fuzzy
-#| msgid "Select Actor 2"
 msgid "Select option 2"
-msgstr "Επιλογή Ηθοποιού 2"
+msgstr "Επιλογή 2"
 
 #: engines/efh/metaengine.cpp:237
-#, fuzzy
-#| msgid "Select Actor 3"
 msgid "Select option 3"
-msgstr "Επιλογή Ηθοποιού 3"
+msgstr "Επιλογή 3"
 
 #: engines/efh/metaengine.cpp:238
-#, fuzzy
-#| msgid "Select Actor 4"
 msgid "Select option 4"
-msgstr "Επιλογή Ηθοποιού 4"
+msgstr "Επιλογή 4"
 
 #: engines/efh/metaengine.cpp:239
-#, fuzzy
-#| msgid "Select Actor 5"
 msgid "Select option 5"
-msgstr "Επιλογή Ηθοποιού 5"
+msgstr "Επιλογή 5"
 
 #: engines/efh/metaengine.cpp:240
-#, fuzzy
-#| msgid "Select Actor 6"
 msgid "Select option 6"
-msgstr "Επιλογή Ηθοποιού 6"
+msgstr "Επιλογή 6"
 
 #: engines/efh/metaengine.cpp:241
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 7"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 7"
 
 #: engines/efh/metaengine.cpp:242
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 8"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 8"
 
 #: engines/efh/metaengine.cpp:243
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 9"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 9"
 
 #: engines/efh/metaengine.cpp:244
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 10"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 10"
 
 #: engines/efh/metaengine.cpp:245
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 11"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 11"
 
 #: engines/efh/metaengine.cpp:246
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 12"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 12"
 
 #: engines/efh/metaengine.cpp:247
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 13"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 13"
 
 #: engines/efh/metaengine.cpp:248
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 14"
-msgstr "Επιλογή Ηθοποιού 1"
+msgstr "Επιλογή 14"
 
 #: engines/efh/metaengine.cpp:257 engines/hypno/metaengine.cpp:312
 #: engines/sludge/keymapper_tables.h:35 engines/supernova/metaengine.cpp:218
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Menu keymappings"
-msgstr "Πλήκτρα παιχνιδιού"
+msgstr "Πλήκτρα μενού"
 
 #: engines/efh/metaengine.cpp:258 engines/sherlock/metaengine.cpp:329
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Quit keymappings"
-msgstr "Πλήκτρα για Escape"
+msgstr "Πλήκτρα για έξοδο"
 
 #: engines/efh/metaengine.cpp:259
-#, fuzzy
-#| msgid "Save/Load keymappings"
 msgid "Skip video keymappings"
-msgstr "Πλήκτρα για Αποθήκευση/Φόρτωση"
+msgstr "Πλήκτρα για παράλειψη βίντεο"
 
 #: engines/efh/metaengine.cpp:260
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Skip song keymappings"
-msgstr "Πλήκτρα παιχνιδιού"
+msgstr "Πλήκτρα παράλειψη τραγουδιού"
 
 #: engines/efh/metaengine.cpp:261
 #, fuzzy
@@ -10867,10 +10749,6 @@ msgstr "Πλήκτρα για μάχη"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "Πλήκτρα επιλογής"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Πλήκτρα για Ναι/Όχι"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -14300,7 +14178,7 @@ msgstr "Πλήκτρα παιχνιδιού"
 #: engines/sherlock/metaengine.cpp:784
 #, fuzzy
 #| msgid "Save/Load keymappings"
-msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "Πλήκτρα για Αποθήκευση/Φόρτωση"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -17929,6 +17807,12 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Πλήκτρα για Ναι/Όχι"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Πλήκτρα παιχνιδιού"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Προκαθορισμένες αντιστοιχίες παιχνιδιού"

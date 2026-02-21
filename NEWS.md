@@ -13,6 +13,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fix shell animations in Mankala minigame.
    - Fixed incorrect evolution logic in Game of Life.
    - Hopeful fix for occasional crash entering boardgame stores.
+   - Fix crash when hiding boardgame turn start spinner.
 
  M4:
    - Added music support in Ripley.
@@ -104,7 +105,7 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added Text-to-Speech support.
 
  Cryomni3D:
-   - Added support for Chinese DOS/Win95 Versailles CD version
+   - Added support for Chinese DOS/Win95 Versailles CD version.
 
  Draci:
    - Added Text-to-Speech support.
@@ -315,16 +316,17 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Added support for several fan translations.
 
  ZVision:
-   - Added support for widescreen displays
-   - Added high quality panorama option (uses bilinear filtering)
-   - Improved directionality of 3D sound
-   - Improved accuracy of volume scaling
-   - Enabled high performance audiovisual effects in Zork Nemesis
-   - Improved behaviour of draggable lever controls
-   - Fixed bug causing audio to cut out after long periods of continuous gameplay
-   - Fixed bug causing some audio not to play in certain locations after restoring a saved game
-   - Fixed bug causing music puzzles not to play all notes when using MT-32
-   - Fixed various gameplay script bugs in Nemesis and Grand Inquisitor
+   - Added support for widescreen displays.
+   - Added high quality panorama option (uses bilinear filtering.)
+   - Improved directionality of 3D sound.
+   - Improved accuracy of volume scaling.
+   - Enabled high performance audiovisual effects in Zork Nemesis.
+   - Improved behaviour of draggable lever controls.
+   - Fixed bug causing audio to cut out after long periods of continuous gameplay.
+   - Fixed bug causing some audio not to play in certain locations after
+     restoring a saved game.
+   - Fixed bug causing music puzzles not to play all notes when using MT-32.
+   - Fixed various gameplay script bugs in Nemesis and Grand Inquisitor.
 
  Desktop ports:
    - Allow the user to disable manual resizing of the ScummVM window (using Ctrl+R).
@@ -343,12 +345,12 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  Atari port:
    - Unified paths for FreeMiNT and TOS in scummvm.cfg (better delete the old
-     config file).
+     config file.)
    - Added translation for longer than 8+3 .dat filenames.
    - Fixed slow rendering of Eco Quest's intro.
    - Fixed cursor rendering of Phantasmagoria, KQ7 and other SCI32 games.
    - Increased stack size to 256k to avoid stack overflow in some engines (e.g.
-     Supernova).
+     Supernova.)
    - Fixed launching games from command line.
 
  DS port:

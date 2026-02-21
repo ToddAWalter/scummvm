@@ -781,7 +781,7 @@ Common::KeymapArray SherlockMetaEngine::initKeymaps(const char *target) const {
 		Keymap *tattooDartsKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-darts", _("Darts minigame keymappings"));
 		Keymap *tattooMapKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-map", _("Map keymappings"));
 		Keymap *tattooScrollingKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-scrolling", _("Menu scrolling keymappings"));
-		Keymap *tattooFilesKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-files", _("save / load menu keymappings"));
+		Keymap *tattooFilesKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-files", _("Save / load menu keymappings"));
 		Keymap *tattooFilesNameKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-files-name", _("Save files name editing keymappings"));
 		Keymap *tattooFoolscapKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-foolscap", _("Foolscap puzzle keymappings"));
 		Keymap *tattooInvKeymap = new Keymap(Keymap::kKeymapTypeGame, "tattoo-inv", _("Inventory keymappings"));

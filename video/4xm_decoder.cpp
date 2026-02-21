@@ -54,11 +54,11 @@ static const int8_t mv[256][2] = {
 class FourXMDecoder::FourXMAudioTrack : public AudioTrack {
 	uint _audioType;
 	uint _audioChannels;
-	uint _sampleRate;
+	//uint _sampleRate;
 	Common::ScopedPtr<Audio::PacketizedAudioStream> _output;
 
 public:
-	FourXMAudioTrack(FourXMDecoder *dec, uint trackIdx, uint audioType, uint audioChannels, uint sampleRate) : AudioTrack(Audio::Mixer::SoundType::kPlainSoundType), _audioType(audioType), _audioChannels(audioChannels), _sampleRate(sampleRate) {
+	FourXMAudioTrack(FourXMDecoder *dec, uint trackIdx, uint audioType, uint audioChannels, uint sampleRate) : AudioTrack(Audio::Mixer::SoundType::kPlainSoundType), _audioType(audioType), _audioChannels(audioChannels)/*, _sampleRate(sampleRate)*/ {
 		switch (_audioType) {
 		case 0: {
 			// Raw PCM data

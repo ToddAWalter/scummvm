@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
 "PO-Revision-Date: 2026-02-18 22:40+0000\n"
 "Last-Translator: NorwayFun <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://translations.scummvm.org/projects/scummvm/"
@@ -6230,7 +6230,8 @@ msgid "AGOS main"
 msgstr "მთავარი AGOS"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -6248,8 +6249,8 @@ msgstr "მთავარი AGOS"
 msgid "Game keymappings"
 msgstr "თამაშის კლავიატურის მალსახმობები"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
 msgstr "დიახ/არა კლავიატურის მალსახმობები"
 
 #: engines/agos/metaengine.cpp:170
@@ -6356,16 +6357,17 @@ msgstr ""
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr ""
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr ""
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "დააჭირეთ ღილაკს \"დიახ\""
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "დააჭირეთ ღილაკს \"არა\""
 
@@ -7214,10 +7216,6 @@ msgstr "რეჟიმი დალტონიკებისთვის"
 msgid "Enable Color Blind Mode by default"
 msgstr ""
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "თამაშის კლავიატურის მალსახმობები"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 msgid "Exit / Skip"
@@ -7237,39 +7235,49 @@ msgstr "გასვლის კითხვა"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "ალტერნატიული ნივთი"
 
 #: engines/cge/metaengine.cpp:257
-msgid "Inventory Item 1 (Select / Deselect)"
-msgstr ""
+#, fuzzy
+#| msgid "Inventory item 1"
+msgid "Inventory item 1 (Select / Deselect)"
+msgstr "ინვენტარის ნივთი 1"
 
 #: engines/cge/metaengine.cpp:262
-msgid "Inventory Item 2 (Select / Deselect)"
-msgstr ""
+#, fuzzy
+#| msgid "Inventory item 2"
+msgid "Inventory item 2 (Select / Deselect)"
+msgstr "ინვენტარის ნივთი 2"
 
 #: engines/cge/metaengine.cpp:267
-msgid "Inventory Item 3 (Select / Deselect)"
-msgstr ""
+#, fuzzy
+#| msgid "Inventory item 3"
+msgid "Inventory item 3 (Select / Deselect)"
+msgstr "ინვენტარის ნივთი 3"
 
 #: engines/cge/metaengine.cpp:272
-msgid "Inventory Item 4 (Select / Deselect)"
-msgstr ""
+#, fuzzy
+#| msgid "Inventory item 4"
+msgid "Inventory item 4 (Select / Deselect)"
+msgstr "ინვენტარის ნივთი 4"
 
 #: engines/cge/metaengine.cpp:277
-msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr ""
 
 #: engines/cge/metaengine.cpp:282
-msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr ""
 
 #: engines/cge/metaengine.cpp:287
-msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr ""
 
 #: engines/cge/metaengine.cpp:292
-msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr ""
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -9458,10 +9466,6 @@ msgstr "ბრძოლის მიმდევრობის კლავი�
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "ინდექსის კლავიატურის მალსახმობები"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "დიახ/არა კლავიატურის მალსახმობები"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -12370,7 +12374,9 @@ msgid "Menu scrolling keymappings"
 msgstr "მენიუს გადახვევის კლავიატურის მალსახმობები"
 
 #: engines/sherlock/metaengine.cpp:784
-msgid "save / load menu keymappings"
+#, fuzzy
+#| msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "მენიუს კლავიატურის მალსახმობების შენახვა/ჩატვირთვა"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -15372,6 +15378,12 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "დიახ/არა კლავიატურის მალსახმობები"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "თამაშის კლავიატურის მალსახმობები"
 
 #~ msgid "Default game keymap"
 #~ msgstr "ნაგულისხმევი თამაშების ღილაკების ასახვა"

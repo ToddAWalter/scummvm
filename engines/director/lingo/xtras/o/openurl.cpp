@@ -25,59 +25,65 @@
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/lingo-utils.h"
-#include "director/lingo/xtras/oscheck.h"
+#include "director/lingo/xtras/o/openurl.h"
 
 /**************************************************
  *
  * USED IN:
- * sinkha
+ * Cracking the Conspiracy
  *
  **************************************************/
 
 /*
--- xtra osCheck
+-- xtra OpenURL
 new object me
--- Template handlers --
-* chos -- returns true if Japan OS
+
+* gsOpenURL string URL -- opens URL in default browser; returns 1 for success, 0 for failure.
+
+-- Copyright: Gary Smith, 9th August, 1997.
+-- Email: gary@mods.com.au
+-- Web site: http://www.mods.com.au
+-- This Xtra may be freely distributed.
+
 
  */
 
 namespace Director {
 
-const char *OSCheckXtra::xlibName = "OSCheck";
-const XlibFileDesc OSCheckXtra::fileNames[] = {
-	{ "oscheck",   nullptr },
+const char *OpenURLXtra::xlibName = "OpenURL";
+const XlibFileDesc OpenURLXtra::fileNames[] = {
+	{ "openurl",   nullptr },
 	{ nullptr,        nullptr },
 };
 
 static MethodProto xlibMethods[] = {
-	{ "new",				OSCheckXtra::m_new,		 0, 0,	400 },
+	{ "new",				OpenURLXtra::m_new,		 0, 0,	500 },
 	{ nullptr, nullptr, 0, 0, 0 }
 };
 
 static BuiltinProto xlibBuiltins[] = {
-	{ "chos", OSCheckXtra::m_chos, 0, 0, 400, HBLTIN },
+	{ "gsOpenURL", OpenURLXtra::m_gsOpenURL, 1, 1, 500, HBLTIN },
 	{ nullptr, nullptr, 0, 0, 0, VOIDSYM }
 };
 
-OSCheckXtraObject::OSCheckXtraObject(ObjectType ObjectType) :Object<OSCheckXtraObject>("OSCheck") {
+OpenURLXtraObject::OpenURLXtraObject(ObjectType ObjectType) :Object<OpenURLXtraObject>("OpenURL") {
 	_objType = ObjectType;
 }
 
-bool OSCheckXtraObject::hasProp(const Common::String &propName) {
+bool OpenURLXtraObject::hasProp(const Common::String &propName) {
 	return (propName == "name");
 }
 
-Datum OSCheckXtraObject::getProp(const Common::String &propName) {
+Datum OpenURLXtraObject::getProp(const Common::String &propName) {
 	if (propName == "name")
-		return Datum(OSCheckXtra::xlibName);
-	warning("OSCheckXtra::getProp: unknown property '%s'", propName.c_str());
+		return Datum(OpenURLXtra::xlibName);
+	warning("OpenURLXtra::getProp: unknown property '%s'", propName.c_str());
 	return Datum();
 }
 
-void OSCheckXtra::open(ObjectType type, const Common::Path &path) {
-    OSCheckXtraObject::initMethods(xlibMethods);
-    OSCheckXtraObject *xobj = new OSCheckXtraObject(type);
+void OpenURLXtra::open(ObjectType type, const Common::Path &path) {
+    OpenURLXtraObject::initMethods(xlibMethods);
+    OpenURLXtraObject *xobj = new OpenURLXtraObject(type);
 	if (type == kXtraObj) {
 		g_lingo->_openXtras.push_back(xlibName);
 		g_lingo->_openXtraObjects.push_back(xobj);
@@ -86,18 +92,18 @@ void OSCheckXtra::open(ObjectType type, const Common::Path &path) {
     g_lingo->initBuiltIns(xlibBuiltins);
 }
 
-void OSCheckXtra::close(ObjectType type) {
-    OSCheckXtraObject::cleanupMethods();
+void OpenURLXtra::close(ObjectType type) {
+    OpenURLXtraObject::cleanupMethods();
     g_lingo->_globalvars[xlibName] = Datum();
 
 }
 
-void OSCheckXtra::m_new(int nargs) {
-	g_lingo->printSTUBWithArglist("OSCheckXtra::m_new", nargs);
+void OpenURLXtra::m_new(int nargs) {
+	g_lingo->printSTUBWithArglist("OpenURLXtra::m_new", nargs);
 	g_lingo->dropStack(nargs);
 	g_lingo->push(g_lingo->_state->me);
 }
 
-XOBJSTUB(OSCheckXtra::m_chos, 0)
+XOBJSTUB(OpenURLXtra::m_gsOpenURL, 0)
 
 }

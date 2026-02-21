@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
-"PO-Revision-Date: 2026-02-11 23:18+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
+"PO-Revision-Date: 2026-02-20 22:05+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ru/>\n"
@@ -601,7 +601,7 @@ msgstr "Перекрыть глобальные настройки график�
 
 #: gui/editgamedialog.cpp:185 gui/options.cpp:2288 engines/dialogs.cpp:354
 msgid "Keymaps"
-msgstr "Раскладки клавиш"
+msgstr "Раскладка клавиш"
 
 #: gui/editgamedialog.cpp:197 gui/options.cpp:2300 engines/dialogs.cpp:366
 msgid "Backend"
@@ -2810,22 +2810,16 @@ msgid "Print"
 msgstr ""
 
 #: gui/printing-dialog.cpp:62
-#, fuzzy
-#| msgid "Save Image"
 msgid "Save as image"
-msgstr "Сохранить изображение"
+msgstr "Сохранить как изображение"
 
 #: gui/printing-dialog.cpp:64
-#, fuzzy
-#| msgid "Pointer Speed:"
 msgid "Printer:"
-msgstr "Скорость указателя:"
+msgstr "Принтер:"
 
 #: gui/printing-dialog.cpp:87
-#, fuzzy
-#| msgid "Next action"
 msgid "Orientation:"
-msgstr "Следующее действие"
+msgstr "Ориентация:"
 
 #: gui/recorderdialog.cpp:67
 msgid "Recorder or Playback Gameplay"
@@ -5953,7 +5947,7 @@ msgstr ""
 "## Горячие клавиши\n"
 "\n"
 "ScummVM поддерживает различные внутриигровые сочетания клавиш и мыши, а "
-"начиная с версии 2.2.0 их можно настроить вручную на вкладке **Раскладки "
+"начиная с версии 2.2.0 их можно настроить вручную на вкладке **Раскладка "
 "клавиш** или в **файле конфигурации**.\n"
 "\n"
 "Информацию об элементах управления для конкретной игры см. [на вики](https://"
@@ -6862,10 +6856,8 @@ msgid "Don't fade every screen to black when leaving a room."
 msgstr "Не затемнять каждый экран при выходе из комнаты."
 
 #: engines/agos/dialogs.cpp:93
-#, fuzzy
-#| msgid "Use original save/load screens"
 msgid "Use original Acorn system cursor"
-msgstr "Использовать оригинальные экраны записи/чтения игры"
+msgstr "Использовать оригинальный системный курсор Acorn"
 
 #: engines/agos/dialogs.cpp:94
 msgid "Toggle between the system cursor and the default cursor."
@@ -6906,7 +6898,8 @@ msgid "AGOS main"
 msgstr "Главная AGOS"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -6924,8 +6917,8 @@ msgstr "Главная AGOS"
 msgid "Game keymappings"
 msgstr "Раскладка клавиш игры"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
 msgstr "Раскладка клавиш Да/Нет"
 
 #: engines/agos/metaengine.cpp:170
@@ -7034,16 +7027,17 @@ msgstr ""
 "Переключение между режимами «только субтитры» и «комбинированная речь и "
 "субтитры»"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Вкл/выкл режима высокой скорости в Swampy Adventures"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "Нажмите клавишу «Да»"
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "Нажмите клавишу «Нет»"
 
@@ -7442,7 +7436,7 @@ msgstr "Минимальные кнопки"
 #. I18N: Escape is a key
 #: engines/bbvs/metaengine.cpp:95
 msgid "Escape keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш выхода"
 
 #: engines/bbvs/metaengine.cpp:117 engines/hopkins/metaengine.cpp:229
 #: engines/illusions/metaengine.cpp:147 engines/sherlock/metaengine.cpp:839
@@ -7955,10 +7949,6 @@ msgstr "Режим без цвета"
 msgid "Enable Color Blind Mode by default"
 msgstr "Включить режим для людей со слабым восприятием цвета"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "Раскладки клавиш игры"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 msgid "Exit / Skip"
@@ -7978,39 +7968,39 @@ msgstr "Подтверждение выхода из игры"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "АЛЬТернативный предмет"
 
 #: engines/cge/metaengine.cpp:257
-msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "Предмет инвентаря 1 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:262
-msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "Предмет инвентаря 2 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:267
-msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "Предмет инвентаря 3 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:272
-msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "Предмет инвентаря 4 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:277
-msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "Предмет инвентаря 5 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:282
-msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "Предмет инвентаря 6 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:287
-msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "Предмет инвентаря 7 (выбрать/отменить выбор)"
 
 #: engines/cge/metaengine.cpp:292
-msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "Предмет инвентаря 8 (выбрать/отменить выбор)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -8104,11 +8094,11 @@ msgstr "Пустое автосохранение"
 
 #: engines/cine/metaengine.cpp:272
 msgid "Key to mouse keymappings"
-msgstr "Раскладки клавиш для мыши"
+msgstr "Раскладка клавиш мышь-клавиатура"
 
 #: engines/cine/metaengine.cpp:273
 msgid "Exit screen keymappings"
-msgstr "Раскладки клавиш экрана выхода"
+msgstr "Раскладка клавиш экрана выхода"
 
 #: engines/cine/metaengine.cpp:289
 msgid "Exit Sony intro screen"
@@ -8399,17 +8389,14 @@ msgid "Force true color"
 msgstr ""
 
 #: engines/director/metaengine.cpp:82
-#, fuzzy
-#| msgid "Use antialiasing to draw text even if the game does not ask for it"
 msgid "Use true color graphics mode, even if the game is not designed for it"
 msgstr ""
-"Использовать шрифты со сглаживанием, даже если игра этого не запрашивала"
+"Использовать режим полной цветопередачи, даже если игра его не "
+"предусматривала"
 
 #: engines/dm/metaengine.cpp:125
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Dialog choice selection keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш выбора в диалоге"
 
 #. I18N: (Game name: Dungeon Master) The player has a team of 4 characters called "champions" which they choose themselves. One of them can be assigned the "leader". This action toggles the inventory screen of the leader champion.
 #: engines/dm/metaengine.cpp:137
@@ -8462,17 +8449,15 @@ msgid "Wake up champion"
 msgstr ""
 
 #: engines/draci/metaengine.cpp:68 engines/prince/metaengine.cpp:64
-#, fuzzy
-#| msgid "Enable Text to Speech for Subtitles"
 msgid "Enable Text to Speech for Missing Voiceovers"
-msgstr "Включить озвучку текста субтритров"
+msgstr "Включить озвучку текста для отсутствующих фраз"
 
 #: engines/draci/metaengine.cpp:69 engines/prince/metaengine.cpp:65
-#, fuzzy
-#| msgid "Use TTS to read the subtitles (if TTS is available)"
 msgid ""
 "Use TTS to read the subtitles of missing voiceovers (if TTS is available)"
-msgstr "Использовать TTS для чтения субтитров вслух (если TTS доступна)"
+msgstr ""
+"Использовать TTS для чтения субтитров, для которых отсутствует озвучка (если "
+"TTS доступна)"
 
 #: engines/draci/metaengine.cpp:212
 msgid "Skip intro / Exit map or inventory"
@@ -8547,56 +8532,40 @@ msgstr "Раскладка клавиш указателя"
 
 #: engines/drascula/metaengine.cpp:212 engines/sherlock/metaengine.cpp:343
 #: engines/tetraedge/metaengine.cpp:92
-#, fuzzy
-#| msgid "Move left"
 msgid "Move / Interact / Select"
-msgstr "Идти влево"
+msgstr "Двигаться / Взаимодействовать / Выбрать"
 
 #: engines/drascula/metaengine.cpp:235 engines/tot/metaengine.cpp:129
 msgid "Pick"
 msgstr "Выбрать"
 
 #: engines/drascula/metaengine.cpp:266
-#, fuzzy
-#| msgid "Use Selected Object"
 msgid "Reset selected verb"
-msgstr "Использовать выбранный объект"
+msgstr "Сбросить выбранное действие"
 
 #: engines/drascula/metaengine.cpp:272 engines/tot/metaengine.cpp:159
-#, fuzzy
-#| msgid "Touch Controls"
 msgid "Volume controls"
-msgstr "Управление касанием"
+msgstr "Управление громкостью"
 
 #: engines/drascula/metaengine.cpp:279
-#, fuzzy
-#| msgid "Saved games"
 msgid "Save / load game"
-msgstr "Сохраненные игры"
+msgstr "Сохраннить / Загрузить игру"
 
 #: engines/drascula/metaengine.cpp:292
-#, fuzzy
-#| msgid "Toggle subtitles"
 msgid "Enable subtitles"
-msgstr "Вкл/выкл субтитры"
+msgstr "Включить субтитры"
 
 #: engines/drascula/metaengine.cpp:298
-#, fuzzy
-#| msgid "Toggle subtitles"
 msgid "Disable subtitles"
-msgstr "Вкл/выкл субтитры"
+msgstr "Выключить субтитры"
 
 #: engines/drascula/metaengine.cpp:315
-#, fuzzy
-#| msgid "Mute speech"
 msgid "Pause speech"
-msgstr "Выключить озвучку"
+msgstr "Озвучку на паузу"
 
 #: engines/drascula/metaengine.cpp:322 engines/tot/metaengine.cpp:169
-#, fuzzy
-#| msgid "Confirm"
 msgid "Confirm quit"
-msgstr "Подтвердить"
+msgstr "Подтвердить выход"
 
 #: engines/drascula/saveload.cpp:49
 msgid ""
@@ -8629,200 +8598,136 @@ msgid "Enable Text to Speech for Objects, Options, and the Bible Quote"
 msgstr "Включить озвучку текста для объектов, опций и цитаты из Библии"
 
 #: engines/efh/metaengine.cpp:235
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 1"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 1"
 
 #: engines/efh/metaengine.cpp:236
-#, fuzzy
-#| msgid "Select Actor 2"
 msgid "Select option 2"
-msgstr "Выбрать актера 2"
+msgstr "Выбрать вариант 2"
 
 #: engines/efh/metaengine.cpp:237
-#, fuzzy
-#| msgid "Select Actor 3"
 msgid "Select option 3"
-msgstr "Выбрать актера 3"
+msgstr "Выбрать вариант 3"
 
 #: engines/efh/metaengine.cpp:238
-#, fuzzy
-#| msgid "Select Actor 4"
 msgid "Select option 4"
-msgstr "Выбрать актера 4"
+msgstr "Выбрать вариант 4"
 
 #: engines/efh/metaengine.cpp:239
-#, fuzzy
-#| msgid "Select Actor 5"
 msgid "Select option 5"
-msgstr "Выбрать актера 5"
+msgstr "Выбрать вариант 5"
 
 #: engines/efh/metaengine.cpp:240
-#, fuzzy
-#| msgid "Select Group by"
 msgid "Select option 6"
-msgstr "Выбрать как группировать"
+msgstr "Выбрать вариант 6"
 
 #: engines/efh/metaengine.cpp:241
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 7"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 7"
 
 #: engines/efh/metaengine.cpp:242
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 8"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 8"
 
 #: engines/efh/metaengine.cpp:243
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 9"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 9"
 
 #: engines/efh/metaengine.cpp:244
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 10"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 10"
 
 #: engines/efh/metaengine.cpp:245
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 11"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 11"
 
 #: engines/efh/metaengine.cpp:246
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 12"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 12"
 
 #: engines/efh/metaengine.cpp:247
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 13"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 13"
 
 #: engines/efh/metaengine.cpp:248
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select option 14"
-msgstr "Выбрать актера 1"
+msgstr "Выбрать вариант 14"
 
 #: engines/efh/metaengine.cpp:257 engines/hypno/metaengine.cpp:312
 #: engines/sludge/keymapper_tables.h:35 engines/supernova/metaengine.cpp:218
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Menu keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш меню"
 
 #: engines/efh/metaengine.cpp:258 engines/sherlock/metaengine.cpp:329
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Quit keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш выхода"
 
 #: engines/efh/metaengine.cpp:259
-#, fuzzy
-#| msgid "Save/Load keymappings"
 msgid "Skip video keymappings"
-msgstr "Раскладки клавиш записи/сохранения"
+msgstr "Раскладка клавиш пропуска видео"
 
 #: engines/efh/metaengine.cpp:260
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Skip song keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш пропуска песен"
 
 #: engines/efh/metaengine.cpp:261
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Status menu navigation keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш навигации меню статуса"
 
 #: engines/efh/metaengine.cpp:262
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Status menu keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш меню статуса"
 
 #: engines/efh/metaengine.cpp:263
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Status menu submenu keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш подменю статуса"
 
 #: engines/efh/metaengine.cpp:264
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Interaction keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш взаимодействия"
 
 #: engines/efh/metaengine.cpp:265
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Fight keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш боя"
 
 #: engines/efh/metaengine.cpp:266
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Character selection keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш выбора героя"
 
 #: engines/efh/metaengine.cpp:267
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Enemy selection keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш выбора врага"
 
 #: engines/efh/metaengine.cpp:268
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Death menu keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш меню смерти"
 
 #. I18N: (Game name: Escape from hell) Character is a hero in-game
 #: engines/efh/metaengine.cpp:339
-#, fuzzy
-#| msgid "Show character portraits"
 msgid "Character 1 status"
-msgstr "Показывать портреты героев"
+msgstr "Статус героя 1"
 
 #. I18N: (Game name: Escape from hell) Character is a hero in-game
 #: engines/efh/metaengine.cpp:347
-#, fuzzy
-#| msgid "Show character portraits"
 msgid "Character 2 status"
-msgstr "Показывать портреты героев"
+msgstr "Статус героя 2"
 
 #. I18N: (Game name: Escape from hell) Character is a hero in-game
 #: engines/efh/metaengine.cpp:355
-#, fuzzy
-#| msgid "Show character portraits"
 msgid "Character 3 status"
-msgstr "Показывать портреты героев"
+msgstr "Статус героя 3"
 
 #: engines/efh/metaengine.cpp:385
-#, fuzzy
-#| msgid "Skip cutscene"
 msgid "Skip song"
-msgstr "Пропустить заставку"
+msgstr "Пропустить песню"
 
 #: engines/efh/metaengine.cpp:391
-#, fuzzy
-#| msgid "Skip intro"
 msgid "Skip song and intro"
-msgstr "Пропустить вступление"
+msgstr "Пропустить песню и вступление"
 
 #: engines/efh/metaengine.cpp:427
-#, fuzzy
-#| msgid "Active"
 msgid "Active skills"
-msgstr "Активно"
+msgstr "Активные умения"
 
 #. I18N: It's a Tetris game clone, this action drops current tetris item
 #: engines/efh/metaengine.cpp:432 engines/ultima/nuvie/metaengine.cpp:72
@@ -8845,10 +8750,8 @@ msgstr "Дать"
 
 #: engines/efh/metaengine.cpp:447 engines/ultima/ultima0/metaengine.cpp:70
 #: engines/ultima/ultima0/metaengine.cpp:84
-#, fuzzy
-#| msgid "Info Menu"
 msgid "Info"
-msgstr "Инфо-меню"
+msgstr "Инфо"
 
 #: engines/efh/metaengine.cpp:452
 msgid "Passive skills"
@@ -8859,16 +8762,12 @@ msgid "Trade"
 msgstr ""
 
 #: engines/efh/metaengine.cpp:467
-#, fuzzy
-#| msgid "Quit to menu"
 msgid "Exit status menu"
-msgstr "Выйти в меню"
+msgstr "Выйти из меню состояния"
 
 #: engines/efh/metaengine.cpp:481
-#, fuzzy
-#| msgid "Exit game"
 msgid "Exit submenu"
-msgstr "Выйти из игры"
+msgstr "Выйти из подменю"
 
 #: engines/efh/metaengine.cpp:493
 msgid "Leave"
@@ -8893,73 +8792,51 @@ msgstr "Бежать"
 
 #. I18N: (Game name: Escape from hell) This action is used to view the terrain during a fight so that the player can see where they can move if they decide to run.
 #: engines/efh/metaengine.cpp:543
-#, fuzzy
-#| msgid "Exit conversation"
 msgid "View terrain"
-msgstr "Выйти из диалога"
+msgstr "Просмотреть ландшафт"
 
 #. I18N: (Game name: Escape from hell) Character is a hero in-game
 #: engines/efh/metaengine.cpp:550
-#, fuzzy
-#| msgid "Select Actor 1"
 msgid "Select character 1"
 msgstr "Выбрать актера 1"
 
 #. I18N: (Game name: Escape from hell) Character is a hero in-game
 #: engines/efh/metaengine.cpp:557
-#, fuzzy
-#| msgid "Select Actor 2"
 msgid "Select character 2"
 msgstr "Выбрать актера 2"
 
 #. I18N: (Game name: Escape from hell) Character is a hero in-game
 #: engines/efh/metaengine.cpp:564
-#, fuzzy
-#| msgid "Select Actor 3"
 msgid "Select character 3"
 msgstr "Выбрать актера 3"
 
 #: engines/efh/metaengine.cpp:570
-#, fuzzy
-#| msgid "Change game options"
 msgid "Cancel character selection"
-msgstr "Изменить настройки игры"
+msgstr "Прервать выбор актера"
 
 #: engines/efh/metaengine.cpp:577
-#, fuzzy
-#| msgid "Select index"
 msgid "Select enemy 1"
-msgstr "Выбрать индекс"
+msgstr "Выбрать врага 1"
 
 #: engines/efh/metaengine.cpp:583
-#, fuzzy
-#| msgid "Select index"
 msgid "Select enemy 2"
-msgstr "Выбрать индекс"
+msgstr "Выбрать врага 2"
 
 #: engines/efh/metaengine.cpp:589
-#, fuzzy
-#| msgid "Select index"
 msgid "Select enemy 3"
-msgstr "Выбрать индекс"
+msgstr "Выбрать врага 3"
 
 #: engines/efh/metaengine.cpp:595
-#, fuzzy
-#| msgid "Select index"
 msgid "Select enemy 4"
-msgstr "Выбрать индекс"
+msgstr "Выбрать врага 4"
 
 #: engines/efh/metaengine.cpp:601
-#, fuzzy
-#| msgid "Select index"
 msgid "Select enemy 5"
-msgstr "Выбрать индекс"
+msgstr "Выбрать врага 5"
 
 #: engines/efh/metaengine.cpp:607
-#, fuzzy
-#| msgid "Change game options"
 msgid "Cancel enemy selection"
-msgstr "Изменить настройки игры"
+msgstr "Прервать выбор врага"
 
 #: engines/efh/metaengine.cpp:625 engines/lure/metaengine.cpp:203
 #: engines/tsage/metaengine.cpp:237
@@ -8967,44 +8844,32 @@ msgid "Restart game"
 msgstr "Перезапустить игру"
 
 #: engines/efh/metaengine.cpp:632
-#, fuzzy
-#| msgid "Play note 1: A"
 msgid "Play sound type 13"
-msgstr "Нота 1: Ля"
+msgstr "Проиграть звук тип 13"
 
 #: engines/efh/metaengine.cpp:637
-#, fuzzy
-#| msgid "Play note 1: A"
 msgid "Play sound type 14"
-msgstr "Нота 1: Ля"
+msgstr "Проиграть звук тип 14"
 
 #: engines/efh/metaengine.cpp:642
-#, fuzzy
-#| msgid "Play note 1: A"
 msgid "Play sound type 15"
-msgstr "Нота 1: Ля"
+msgstr "Проиграть звук тип 15"
 
 #: engines/efh/metaengine.cpp:647
-#, fuzzy
-#| msgid "Play note 5: E"
 msgid "Play sound type 5"
-msgstr "Нота 5: Ми-диез"
+msgstr "Проиграть звук тип 5"
 
 #: engines/efh/metaengine.cpp:652
-#, fuzzy
-#| msgid "Play note 1: A"
 msgid "Play sound type 10"
-msgstr "Нота 1: Ля"
+msgstr "Проиграть звук тип 10"
 
 #: engines/efh/metaengine.cpp:657
 msgid "Play sound type 9"
 msgstr ""
 
 #: engines/efh/metaengine.cpp:662
-#, fuzzy
-#| msgid "Play note 1: A"
 msgid "Play sound type 16"
-msgstr "Нота 1: Ля"
+msgstr "Проиграть звук тип 16"
 
 #: engines/freescape/metaengine.cpp:42
 msgid "Prerecorded sounds"
@@ -9110,8 +8975,6 @@ msgid "Change mode"
 msgstr "Изменить режим"
 
 #: engines/freescape/movement.cpp:106
-#, fuzzy
-#| msgid "Info Menu"
 msgid "Info menu"
 msgstr "Инфо-меню"
 
@@ -9859,10 +9722,8 @@ msgstr "Добавить конент, который был удалён в о�
 
 #: engines/hypno/metaengine.cpp:129 engines/lab/metaengine.cpp:154
 #: engines/ngi/metaengine.cpp:117 engines/voyeur/metaengine.cpp:188
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Intro keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш вступления"
 
 #: engines/hypno/metaengine.cpp:134
 msgid "Primary shoot"
@@ -9882,22 +9743,16 @@ msgid "Skip intro"
 msgstr "Пропустить вступление"
 
 #: engines/hypno/metaengine.cpp:167
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Exit menu keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш меню выхода"
 
 #: engines/hypno/metaengine.cpp:168
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Difficulty selection menu keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш выбора сложности"
 
 #: engines/hypno/metaengine.cpp:169
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Retry menu keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш меню новой попытки"
 
 #: engines/hypno/metaengine.cpp:172 engines/hypno/metaengine.cpp:270
 #: engines/hypno/metaengine.cpp:322
@@ -9948,16 +9803,12 @@ msgid "Begin new mission"
 msgstr ""
 
 #: engines/hypno/metaengine.cpp:313
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Pause keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш паузы"
 
 #: engines/hypno/metaengine.cpp:314
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Direction keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш направления"
 
 #: engines/hypno/metaengine.cpp:316 engines/mads/metaengine.cpp:349
 #: engines/tsage/metaengine.cpp:259
@@ -10386,24 +10237,18 @@ msgstr ""
 "необходимо использовать оригинальную игру и купить ключ у Wyrmkeep"
 
 #: engines/lab/metaengine.cpp:150 engines/sherlock/metaengine.cpp:777
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Exit keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш ухода"
 
 #: engines/lab/metaengine.cpp:155 engines/ngi/metaengine.cpp:116
 #: engines/sherlock/metaengine.cpp:339 engines/sherlock/metaengine.cpp:782
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Map keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш карты"
 
 #: engines/lab/metaengine.cpp:156 engines/queen/metaengine.cpp:148
 #: engines/sherlock/metaengine.cpp:334 engines/sherlock/metaengine.cpp:779
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Journal keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш журнала"
 
 #. I18N: Exits the game
 #: engines/lab/metaengine.cpp:166 engines/lab/metaengine.cpp:191
@@ -10560,15 +10405,11 @@ msgstr "Комментатор TTS"
 
 #: engines/lure/metaengine.cpp:170
 msgid "Fight sequence keymappings"
-msgstr "Раскладки клавиш боя"
+msgstr "Раскладка клавиш игры боя"
 
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
-msgstr "Раскладки клавиш указателя"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "Раскладки клавиш Да/Нет"
+msgstr "Раскладка клавиш указателя"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -10681,7 +10522,7 @@ msgstr "Откровенный режим игры"
 
 #: engines/mads/metaengine.cpp:276
 msgid "Start menu keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш стартового меню"
 
 #: engines/mads/metaengine.cpp:299
 msgid "Open game menu"
@@ -11442,16 +11283,12 @@ msgid "<original>"
 msgstr "<оригинал>"
 
 #: engines/neverhood/metaengine.cpp:187
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Save file management menus keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш меню управления сохранениями"
 
 #: engines/neverhood/metaengine.cpp:188
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Pause menu keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш меню паузы"
 
 #: engines/neverhood/metaengine.cpp:192 engines/ngi/metaengine.cpp:124
 #: engines/prince/metaengine.cpp:231 engines/queen/metaengine.cpp:180
@@ -11492,10 +11329,8 @@ msgid "Confirm the selected save / new save name"
 msgstr "Создать новую запись игры"
 
 #: engines/ngi/metaengine.cpp:118
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Credits keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш титров"
 
 #. I18N: Keymap for various dialogs such as save game dialog.
 #: engines/ngi/metaengine.cpp:120
@@ -13754,46 +13589,32 @@ msgid "Show windows with a partially transparent background"
 msgstr "Показывать окна с частично прозрачным фоном"
 
 #: engines/sherlock/metaengine.cpp:331
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Scroll keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш свитка"
 
 #: engines/sherlock/metaengine.cpp:332 engines/sherlock/metaengine.cpp:776
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Main user interface keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш главного интерфейса пользователя"
 
 #: engines/sherlock/metaengine.cpp:333 engines/sherlock/metaengine.cpp:781
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Darts minigame keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш мини-игры в дартс"
 
 #: engines/sherlock/metaengine.cpp:335
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Talk keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш разговора"
 
 #: engines/sherlock/metaengine.cpp:337
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Files keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш файлов"
 
 #: engines/sherlock/metaengine.cpp:340
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Settings keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш настроек"
 
 #: engines/sherlock/metaengine.cpp:341 engines/sherlock/metaengine.cpp:778
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Movie keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш ролика"
 
 #: engines/sherlock/metaengine.cpp:349
 #, fuzzy
@@ -13909,52 +13730,38 @@ msgid "Change fade mode"
 msgstr "Изменить режим"
 
 #: engines/sherlock/metaengine.cpp:780
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Journal search keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш поиска в журнале"
 
 #: engines/sherlock/metaengine.cpp:783
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Menu scrolling keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш прокрутки меню"
 
 #: engines/sherlock/metaengine.cpp:784
 #, fuzzy
-#| msgid "Save/Load keymappings"
-msgid "save / load menu keymappings"
-msgstr "Раскладки клавиш записи/сохранения"
+#| msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
+msgstr "Раскладка клавиш меню записи / сохранения"
 
 #: engines/sherlock/metaengine.cpp:785
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Save files name editing keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш редактирования имени сохранения"
 
 #: engines/sherlock/metaengine.cpp:786
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "Foolscap puzzle keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш головоломки Foolscap"
 
 #: engines/sherlock/metaengine.cpp:788
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Options menu keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш меню опций"
 
 #: engines/sherlock/metaengine.cpp:789
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Password entry keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш ввода пароля"
 
 #: engines/sherlock/metaengine.cpp:791
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Talk options keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш вариантов разговора"
 
 #: engines/sherlock/metaengine.cpp:793
 #, fuzzy
@@ -14118,16 +13925,12 @@ msgstr ""
 "ПРЕДУПРЕЖДЕНИЕ: Этот движок не поддерживает удаление слота автосохранения"
 
 #: engines/sludge/keymapper_tables.h:34
-#, fuzzy
-#| msgid "Default keymappings"
 msgid "Debug keymappings"
-msgstr "Раскладки клавиш по умолчанию"
+msgstr "Раскладка клавиш отладки"
 
 #: engines/sludge/keymapper_tables.h:36
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Minigame keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш мини-игры"
 
 #: engines/sludge/keymapper_tables.h:46
 #, fuzzy
@@ -14420,22 +14223,16 @@ msgstr ""
 "глаголы с помощью клавиатуры"
 
 #: engines/supernova/metaengine.cpp:220
-#, fuzzy
-#| msgid "Index keymappings"
 msgid "Improved mode keymappings"
-msgstr "Раскладки клавиш указателя"
+msgstr "Раскладка клавиш улучшенного режима"
 
 #: engines/supernova/metaengine.cpp:221
-#, fuzzy
-#| msgid "Exit screen keymappings"
 msgid "Text reader keymappings"
-msgstr "Раскладки клавиш экрана выхода"
+msgstr "Раскладка клавиш читалки текста"
 
 #: engines/supernova/metaengine.cpp:222
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Computer keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш компьютера"
 
 #: engines/supernova/metaengine.cpp:232
 #, fuzzy
@@ -14679,7 +14476,7 @@ msgstr ""
 
 #: engines/tinsel/metaengine.cpp:242
 msgid "Save/Load keymappings"
-msgstr "Раскладки клавиш записи/сохранения"
+msgstr "Раскладка клавиш записи/сохранения"
 
 #: engines/tinsel/metaengine.cpp:341
 #, fuzzy
@@ -14710,16 +14507,12 @@ msgid "Discworld Noir needs ScummVM with TinyGL enabled"
 msgstr ""
 
 #: engines/titanic/metaengine.cpp:173
-#, fuzzy
-#| msgid "Escape keymappings"
 msgid "PET keymappings"
-msgstr "Раскладки клавиш выхода"
+msgstr "Раскладка клавиш PET"
 
 #: engines/titanic/metaengine.cpp:174
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Real Life keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш Real Life"
 
 #: engines/titanic/metaengine.cpp:175
 #, fuzzy
@@ -14728,22 +14521,16 @@ msgid "Inventory shortcut"
 msgstr "Управление для KIA"
 
 #: engines/titanic/metaengine.cpp:176
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Continue game dialogue keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладкв клавиш диалога продолжения игры"
 
 #: engines/titanic/metaengine.cpp:177
-#, fuzzy
-#| msgid "Start menu keymappings"
 msgid "Star Map keymappings"
-msgstr "Раскладки клавиш стартового меню"
+msgstr "Раскладка клавиш звёздной карты"
 
 #: engines/titanic/metaengine.cpp:178
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Movement keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш движения"
 
 #: engines/titanic/metaengine.cpp:182
 #, fuzzy
@@ -16817,16 +16604,12 @@ msgid "Require a lockout code to start the game."
 msgstr "Для начала игры будет требоваться код блокировки."
 
 #: engines/voyeur/metaengine.cpp:186
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Room keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш комнаты"
 
 #: engines/voyeur/metaengine.cpp:187
-#, fuzzy
-#| msgid "Game keymappings"
 msgid "Camera keymappings"
-msgstr "Раскладки клавиш игры"
+msgstr "Раскладка клавиш камеры"
 
 #: engines/voyeur/metaengine.cpp:204
 #, fuzzy
@@ -17487,6 +17270,12 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "Раскладка клавиш Да/Нет"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "Раскладка клавиш игры"
 
 #~ msgid "Default game keymap"
 #~ msgstr "Раскладка клавиш игры по умолчанию"

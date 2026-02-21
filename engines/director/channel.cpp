@@ -33,6 +33,7 @@
 #include "director/castmember/digitalvideo.h"
 #include "director/castmember/filmloop.h"
 #include "director/castmember/movie.h"
+#include "director/castmember/text.h"
 
 #include "graphics/macgui/mactext.h"
 #include "graphics/macgui/macbutton.h"
@@ -133,6 +134,16 @@ DirectorPlotData Channel::getPlotData() {
 		pd.applyColor = false;
 	} else {
 		pd.setApplyColor();
+	}
+
+	pd.srfMask = nullptr;
+	if (_sprite->_cast && _sprite->_cast->_type == kCastText) {
+		if (_sprite->_ink == kInkTypeMatte) { // TODO: Other types also require it
+			Graphics::MacText *widget = ((TextCastMember *)_sprite->_cast)->getWidget();
+			if (widget) {
+				pd.srfMask = widget->getCharBoxMask();
+			}
+		}
 	}
 
 	return pd;

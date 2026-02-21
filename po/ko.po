@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-19 22:44+0000\n"
+"POT-Creation-Date: 2026-02-20 21:12+0000\n"
 "PO-Revision-Date: 2026-02-05 15:06+0000\n"
 "Last-Translator: Hoseok Seo <ddinghoya@gmail.com>\n"
 "Language-Team: Korean <https://translations.scummvm.org/projects/scummvm/"
@@ -6818,7 +6818,8 @@ msgid "AGOS main"
 msgstr "AGOS 메인"
 
 #: engines/agos/metaengine.cpp:154 engines/bbvs/metaengine.cpp:93
-#: engines/buried/metaengine.cpp:136 engines/chamber/metaengine.cpp:60
+#: engines/buried/metaengine.cpp:136 engines/cge/metaengine.cpp:199
+#: engines/cge2/metaengine.cpp:212 engines/chamber/metaengine.cpp:60
 #: engines/cine/metaengine.cpp:271 engines/cruise/metaengine.cpp:169
 #: engines/dm/metaengine.cpp:126 engines/draci/metaengine.cpp:196
 #: engines/drascula/metaengine.cpp:206 engines/hopkins/metaengine.cpp:207
@@ -6836,8 +6837,8 @@ msgstr "AGOS 메인"
 msgid "Game keymappings"
 msgstr "게임 키맵핑"
 
-#: engines/agos/metaengine.cpp:155
-msgid "Yes/No keymapping"
+#: engines/agos/metaengine.cpp:155 engines/lure/metaengine.cpp:172
+msgid "Yes/No keymappings"
 msgstr "예/아니요 키맵핑"
 
 #: engines/agos/metaengine.cpp:170
@@ -6944,16 +6945,17 @@ msgstr "음성만 또는 음성과 자막을 합친 것을 전환"
 msgid "Switches between subtitles only and combined speech and subtitles"
 msgstr "자막만 또는 음성과 자막을 합친 형태로 전환"
 
-#: engines/agos/metaengine.cpp:310
+#. I18N: Swampy Adventures is the name of the game
+#: engines/agos/metaengine.cpp:311
 msgid "High speed mode on/off in Swampy Adventures"
 msgstr "Swampy Adventures에서 고속 모드 켜기/끄기"
 
-#: engines/agos/metaengine.cpp:316 engines/lure/metaengine.cpp:295
+#: engines/agos/metaengine.cpp:317 engines/lure/metaengine.cpp:295
 #: engines/trecision/metaengine.cpp:181
 msgid "Press \"Yes\" key"
 msgstr "\"예\" 키를 누름"
 
-#: engines/agos/metaengine.cpp:321 engines/lure/metaengine.cpp:310
+#: engines/agos/metaengine.cpp:322 engines/lure/metaengine.cpp:310
 msgid "Press \"No\" key"
 msgstr "\"아니오\" 키를 누름"
 
@@ -7852,10 +7854,6 @@ msgstr "색맹 모드"
 msgid "Enable Color Blind Mode by default"
 msgstr "기본적으로 색맹 모드 활성화"
 
-#: engines/cge/metaengine.cpp:199 engines/cge2/metaengine.cpp:212
-msgid "Game Keymappings"
-msgstr "게임 키맵핑"
-
 #: engines/cge/metaengine.cpp:215 engines/hopkins/metaengine.cpp:223
 #: engines/sword1/metaengine.cpp:283
 msgid "Exit / Skip"
@@ -7875,39 +7873,57 @@ msgstr "프롬프트 종료"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-msgid "ALTered Item"
+#, fuzzy
+#| msgid "ALTered Item"
+msgid "ALTered item"
 msgstr "ALTered 아이템"
 
 #: engines/cge/metaengine.cpp:257
-msgid "Inventory Item 1 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 1 (Select / Deselect)"
+msgid "Inventory item 1 (Select / Deselect)"
 msgstr "인벤토리 아이템 1 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:262
-msgid "Inventory Item 2 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 2 (Select / Deselect)"
+msgid "Inventory item 2 (Select / Deselect)"
 msgstr "인벤토리 아이템 2 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:267
-msgid "Inventory Item 3 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 3 (Select / Deselect)"
+msgid "Inventory item 3 (Select / Deselect)"
 msgstr "인벤토리 아이템 3 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:272
-msgid "Inventory Item 4 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 4 (Select / Deselect)"
+msgid "Inventory item 4 (Select / Deselect)"
 msgstr "인벤토리 아이템 4 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:277
-msgid "Inventory Item 5 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 5 (Select / Deselect)"
+msgid "Inventory item 5 (Select / Deselect)"
 msgstr "인벤토리 아이템 5 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:282
-msgid "Inventory Item 6 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 6 (Select / Deselect)"
+msgid "Inventory item 6 (Select / Deselect)"
 msgstr "인벤토리 아이템 6 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:287
-msgid "Inventory Item 7 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 7 (Select / Deselect)"
+msgid "Inventory item 7 (Select / Deselect)"
 msgstr "인벤토리 아이템 7 (선택 / 해제)"
 
 #: engines/cge/metaengine.cpp:292
-msgid "Inventory Item 8 (Select / Deselect)"
+#, fuzzy
+#| msgid "Inventory Item 8 (Select / Deselect)"
+msgid "Inventory item 8 (Select / Deselect)"
 msgstr "인벤토리 아이템 8 (선택 / 해제)"
 
 #. I18N: There are 24 single-room/screen locations in the game.
@@ -10207,10 +10223,6 @@ msgstr "대결 시퀀스 키맵핑"
 #: engines/lure/metaengine.cpp:171
 msgid "Index keymappings"
 msgstr "색인 키맵핑"
-
-#: engines/lure/metaengine.cpp:172
-msgid "Yes/No keymappings"
-msgstr "예/아니요 키맵핑"
 
 #. I18N: Shift Cursor during fight to top left
 #: engines/lure/metaengine.cpp:233
@@ -13334,7 +13346,9 @@ msgid "Menu scrolling keymappings"
 msgstr "메뉴 스크롤 키맵핑"
 
 #: engines/sherlock/metaengine.cpp:784
-msgid "save / load menu keymappings"
+#, fuzzy
+#| msgid "save / load menu keymappings"
+msgid "Save / load menu keymappings"
 msgstr "메뉴 키맵핑 저장 / 로드"
 
 #: engines/sherlock/metaengine.cpp:785
@@ -16412,6 +16426,12 @@ msgstr ""
 "MIDI 재생을 사용할 수 없거나, 제대로 구성되지 않았습니다. 죠크 네미시스에는 "
 "MIDI 오디오가 필요한 여러 음악 퍼즐이 포함되어 있습니다.  이러한 퍼즐은 지원"
 "되는 경우 자막을 사용하여 해결할 수 있습니다. 게임을 계속 실행할까요?"
+
+#~ msgid "Yes/No keymapping"
+#~ msgstr "예/아니요 키맵핑"
+
+#~ msgid "Game Keymappings"
+#~ msgstr "게임 키맵핑"
 
 #~ msgid "Default game keymap"
 #~ msgstr "기본 게임 키설정"

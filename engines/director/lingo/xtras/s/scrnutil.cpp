@@ -25,65 +25,52 @@
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/lingo-utils.h"
-#include "director/lingo/xtras/openurl.h"
+#include "director/lingo/xtras/s/scrnutil.h"
 
 /**************************************************
  *
  * USED IN:
- * Cracking the Conspiracy
+ * amber
  *
  **************************************************/
 
 /*
--- xtra OpenURL
-new object me
-
-* gsOpenURL string URL -- opens URL in default browser; returns 1 for success, 0 for failure.
-
--- Copyright: Gary Smith, 9th August, 1997.
--- Email: gary@mods.com.au
--- Web site: http://www.mods.com.au
--- This Xtra may be freely distributed.
-
+-- xtra ScrnUtil
+-- ScrnUtil Xtra version 1.0 copyright (c) 1996 by g/matter, inc.
+-- Programming copyright (c) 1996 Little Planet Publishing
+-- For technical support or updates, contact http://www.gmatter.com or support@gmatter.com
+--
+-- Picture Capture Functions --
+* ScreenToClipboard integer left, integer top, integer right, integer bottom
+* ScreenToFile integer left, integer top, integer right, integer bottom, string filename
 
  */
 
 namespace Director {
 
-const char *OpenURLXtra::xlibName = "OpenURL";
-const XlibFileDesc OpenURLXtra::fileNames[] = {
-	{ "openurl",   nullptr },
-	{ nullptr,        nullptr },
+const char *const ScrnUtilXtra::xlibName = "ScrnUtil";
+const XlibFileDesc ScrnUtilXtra::fileNames[] = {
+	{ "scrnutil",	nullptr },
+	{ nullptr,		nullptr },
 };
 
-static MethodProto xlibMethods[] = {
-	{ "new",				OpenURLXtra::m_new,		 0, 0,	500 },
+static const MethodProto xlibMethods[] = {
 	{ nullptr, nullptr, 0, 0, 0 }
 };
 
-static BuiltinProto xlibBuiltins[] = {
-	{ "gsOpenURL", OpenURLXtra::m_gsOpenURL, 1, 1, 500, HBLTIN },
+static const BuiltinProto xlibBuiltins[] = {
+	{ "ScreenToClipboard", ScrnUtilXtra::m_ScreenToClipboard, 4, 4, 500, HBLTIN },
+	{ "ScreenToFile", ScrnUtilXtra::m_ScreenToFile, 5, 5, 500, HBLTIN },
 	{ nullptr, nullptr, 0, 0, 0, VOIDSYM }
 };
 
-OpenURLXtraObject::OpenURLXtraObject(ObjectType ObjectType) :Object<OpenURLXtraObject>("OpenURL") {
+ScrnUtilXtraObject::ScrnUtilXtraObject(ObjectType ObjectType) :Object<ScrnUtilXtraObject>("ScrnUtilXtra") {
 	_objType = ObjectType;
 }
 
-bool OpenURLXtraObject::hasProp(const Common::String &propName) {
-	return (propName == "name");
-}
-
-Datum OpenURLXtraObject::getProp(const Common::String &propName) {
-	if (propName == "name")
-		return Datum(OpenURLXtra::xlibName);
-	warning("OpenURLXtra::getProp: unknown property '%s'", propName.c_str());
-	return Datum();
-}
-
-void OpenURLXtra::open(ObjectType type, const Common::Path &path) {
-    OpenURLXtraObject::initMethods(xlibMethods);
-    OpenURLXtraObject *xobj = new OpenURLXtraObject(type);
+void ScrnUtilXtra::open(ObjectType type, const Common::Path &path) {
+    ScrnUtilXtraObject::initMethods(xlibMethods);
+    ScrnUtilXtraObject *xobj = new ScrnUtilXtraObject(type);
 	if (type == kXtraObj) {
 		g_lingo->_openXtras.push_back(xlibName);
 		g_lingo->_openXtraObjects.push_back(xobj);
@@ -92,18 +79,13 @@ void OpenURLXtra::open(ObjectType type, const Common::Path &path) {
     g_lingo->initBuiltIns(xlibBuiltins);
 }
 
-void OpenURLXtra::close(ObjectType type) {
-    OpenURLXtraObject::cleanupMethods();
+void ScrnUtilXtra::close(ObjectType type) {
+    ScrnUtilXtraObject::cleanupMethods();
     g_lingo->_globalvars[xlibName] = Datum();
 
 }
 
-void OpenURLXtra::m_new(int nargs) {
-	g_lingo->printSTUBWithArglist("OpenURLXtra::m_new", nargs);
-	g_lingo->dropStack(nargs);
-	g_lingo->push(g_lingo->_state->me);
-}
-
-XOBJSTUB(OpenURLXtra::m_gsOpenURL, 0)
+XOBJSTUB(ScrnUtilXtra::m_ScreenToClipboard, 0)
+XOBJSTUB(ScrnUtilXtra::m_ScreenToFile, 0)
 
 }
