@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-20 21:12+0000\n"
+"POT-Creation-Date: 2026-02-21 20:47+0000\n"
 "PO-Revision-Date: 2024-12-01 22:18+0000\n"
 "Last-Translator: 复予 <clonewith@qq.com>\n"
 "Language-Team: Chinese (Simplified Han script) <https://"
@@ -8584,11 +8584,15 @@ msgstr "开关物品栏/智商显示"
 msgid "Strafe left"
 msgstr "向左冲"
 
-#: engines/dm/metaengine.cpp:226 engines/titanic/metaengine.cpp:343
-#: engines/titanic/metaengine.cpp:384
+#: engines/dm/metaengine.cpp:226 engines/kyra/engine/eobcommon.cpp:372
+#: engines/kyra/engine/lol.cpp:511 engines/mohawk/riven.cpp:895
+#: engines/titanic/metaengine.cpp:343 engines/titanic/metaengine.cpp:384
+#: engines/twine/metaengine.cpp:339 engines/wintermute/keymapper_tables.h:155
+#: engines/wintermute/keymapper_tables.h:736
+#: engines/wintermute/keymapper_tables.h:2238
 #, fuzzy
 #| msgid "Move backwards"
-msgid "Move backward"
+msgid "Move backwards"
 msgstr "向后移动"
 
 #: engines/dm/metaengine.cpp:236 engines/freescape/movement.cpp:56
@@ -10293,16 +10297,6 @@ msgstr "EOB II FM-TOWNS 需要 16bit 颜色模式支持，但在你的 ScummVM �
 #: engines/kyra/metaengine.cpp:295
 msgid "Eye of Beholder support is not compiled in"
 msgstr "未编入 Eye of Beholder 支持"
-
-#: engines/kyra/engine/eobcommon.cpp:372 engines/kyra/engine/lol.cpp:511
-#: engines/mohawk/riven.cpp:895 engines/twine/metaengine.cpp:339
-#: engines/wintermute/keymapper_tables.h:155
-#: engines/wintermute/keymapper_tables.h:736
-#: engines/wintermute/keymapper_tables.h:2238
-#, fuzzy
-#| msgid "Move backwards"
-msgid "Move backwards"
-msgstr "向后移动"
 
 #: engines/kyra/engine/eobcommon.cpp:377
 #, fuzzy
@@ -17483,6 +17477,11 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Move backwards"
+#~ msgid "Move backward"
+#~ msgstr "向后移动"
 
 #~ msgid "Yes/No keymapping"
 #~ msgstr "是/否按键绑定"

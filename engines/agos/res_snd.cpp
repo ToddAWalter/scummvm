@@ -20,6 +20,7 @@
  */
 
 #include "common/config-manager.h"
+#include "common/array.h"
 #include "common/file.h"
 #include "common/memstream.h"
 #include "common/textconsole.h"
@@ -34,8 +35,79 @@
 
 #include "audio/audiostream.h"
 #include "audio/mods/protracker.h"
+#include "audio/mods/desktoptracker.h"
 
 namespace AGOS {
+
+
+static Common::Array<byte> unsquashAcornDesktopTracker(const byte *data, uint32 compLen) {
+
+	const byte mode = data[0];
+
+	uint32 pos = 4;
+	uint32 r6 = 4;
+
+	Common::Array<byte> out;
+
+	if (mode == 1) {
+		out.resize(compLen - 4);
+		if (compLen > 4)
+			memcpy(out.begin(), data + 4, compLen - 4);
+		return out;
+	}
+
+	uint16 bitbuf = 0;
+	uint32 bitsLeft = 0;
+
+	for (;;) {
+		if (r6 == compLen)
+			return out;
+
+		if (bitsLeft == 0) {
+
+			const byte lo = data[pos];
+			const byte hi = data[pos + 1];
+			pos += 2;
+			r6 += 2;
+
+			bitbuf = (uint16)(lo | (hi << 8));
+			bitsLeft = 16;
+
+			if (r6 == compLen)
+				return out;
+		}
+
+		const uint16 carry = (bitbuf & 1);
+		bitbuf >>= 1;
+		--bitsLeft;
+
+		if (carry == 0) {
+			if (r6 == compLen)
+				return out;
+
+			out.push_back(data[pos]);
+			++pos;
+			++r6;
+		} else {
+			if (r6 == compLen)
+				return out;
+
+			const byte b1 = data[pos];
+			const byte b2 = data[pos + 1];
+			pos += 2;
+			r6 += 2;
+
+			const uint32 length = (uint32)((b1 & 0x0F) + 1);
+			const uint32 offset = (uint32)(((b1 & 0xF0) << 4) + b2);
+
+			for (uint32 i = 0; i < length; ++i)
+				out.push_back(out[out.size() - offset]);
+		}
+
+		if (r6 >= compLen)
+			return out;
+	}
+}
 
 // This data is hardcoded in the executable.
 const int AGOSEngine_Simon1::SIMON1_GMF_SIZE[] = {
@@ -334,9 +406,38 @@ void AGOSEngine_Simon1::playMusic(uint16 music, uint16 track) {
 		_midi->play();
 	} else if (getPlatform() == Common::kPlatformAcorn) {
 		// Acorn floppy version.
+		// Music resources are Squash-compressed Desktop Tracker modules.
+		char filename[16];
+		Common::File f;
+		Common::sprintf_s(filename, "%dTUNE", music);
+		
+		f.open(filename);
+		if (!f.isOpen())
+			debug("playMusic(Acorn): Can't load mod from '%s'", filename);
 
-		// TODO: Add support for Desktop Tracker format in Acorn disk version
+		const uint32 compressedSize = (uint32)f.size();
+		Common::Array<byte> compresedBuffer;
+		compresedBuffer.resize(compressedSize);
+		f.read(compresedBuffer.begin(), compressedSize);
+
+		Common::Array<byte> moduleData;
+		
+		moduleData = unsquashAcornDesktopTracker(compresedBuffer.begin(), compressedSize);
+		
+		if (moduleData.size() < 4 || memcmp(moduleData.begin(), "DskT", 4) != 0)
+			debug("playMusic(Acorn): Unsquashed mod does not begin with 'DskT'");
+
+		byte *modBuffer = nullptr;
+		if (!moduleData.empty()) {
+			modBuffer = new byte[moduleData.size()];
+			memcpy(modBuffer, moduleData.begin(), moduleData.size());
+		}
+
+		Common::SeekableReadStream *memStream = new Common::MemoryReadStream(modBuffer, moduleData.size(), DisposeAfterUse::YES);
+		Audio::AudioStream *audioStream = Audio::makeDesktopTrackerStream(memStream, DisposeAfterUse::YES);
+		_mixer->playStream(Audio::Mixer::kMusicSoundType, &_modHandle, audioStream);
 	}
+
 }
 
 void AGOSEngine_Simon1::playMidiSfx(uint16 sound) {

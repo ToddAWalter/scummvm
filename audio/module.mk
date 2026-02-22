@@ -60,6 +60,7 @@ MODULE_OBJS := \
 	mods/rjp1.o \
 	mods/soundfx.o \
 	mods/tfmx.o \
+	mods/desktoptracker.o \
 	softsynth/cms.o \
 	softsynth/opl/dbopl.o \
 	softsynth/opl/dosbox.o \

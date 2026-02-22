@@ -310,6 +310,10 @@ void CastleEngine::loadAssetsAmigaDemo() {
 		}
 	}
 
+	// Load synthesized sound effects from command table
+	// Table at file offset 0x1469E (memory 0x14682), 30 entries
+	loadSoundsAmigaDemo(&file, 0x1469E, 30);
+
 	// Load embedded ProTracker module for background music
 	// Module is at file offset 0x3D5A6 (memory 0x3D58A), ~86260 bytes
 	static const int kModOffset = 0x3D5A6;

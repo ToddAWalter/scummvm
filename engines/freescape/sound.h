@@ -52,6 +52,15 @@ struct soundSpeakerFx {
 	Common::Array<struct soundSpeakerFx *>additionalSteps;
 };
 
+struct AmigaSfxEntry {
+	byte priority;
+	Common::Array<uint16> commands;
+};
+
+struct AmigaDmaSample {
+	Common::Array<int8> data;
+};
+
 // TODO: Migrate to Audio::PCSpeaker
 class SizedPCSpeaker : public Audio::PCSpeakerStream {
 public:

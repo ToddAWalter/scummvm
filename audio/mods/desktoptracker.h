@@ -19,47 +19,19 @@
  *
  */
 
-#ifndef CREATE_TEENAGENT_H
-#define CREATE_TEENAGENT_H
+#ifndef AUDIO_MODS_DESKTOPTRACKER_H
+#define AUDIO_MODS_DESKTOPTRACKER_H
 
-#include "util.h"
+#include "audio/audiostream.h"
+#include "common/stream.h"
+#include "common/types.h"
 
-#define TEENAGENT_DAT_VERSION 6
+namespace Audio {
 
-enum ResourceType {
-	kResDialogStacks = 0,
-	kResDialogs,
-	kResItems,
-	kResCredits,
-	kResSceneObjects,
-	kResMessages,
-	kResCombinations,
-};
+AudioStream *makeDesktopTrackerStream(Common::SeekableReadStream *stream, int offs, int rate, bool stereo);
 
-struct ResourceInfo {
-	byte _id;
-	uint32 _offset;
-	uint32 _size;
-};
+AudioStream *makeDesktopTrackerStream(Common::SeekableReadStream *stream, DisposeAfterUse::Flag disposeAfterUse);
 
-#define NUM_RESOURCES 7
-#define NUM_LANGS 4
-
-// If you are adding a new language here, make sure to sync with teenagent/resources.h
-// enum in DataLanguage around line 1165
-
-enum Language : byte {
-	CS_CZE = 3,
-	EN_ANY = 7,
-	PL_POL = 27,
-	RU_RUS = 30,
-};
-
-const Language supportedLanguages[NUM_LANGS] = {
-	CS_CZE,
-	EN_ANY,
-	PL_POL,
-	RU_RUS,
-};
+}
 
 #endif

@@ -489,7 +489,6 @@ public:
 	uint16 playSoundDOSSpeaker(uint16 startFrequency, soundSpeakerFx *speakerFxInfo);
 	void playSoundDOS(soundSpeakerFx *speakerFxInfo, bool sync, Audio::SoundHandle &handle);
 
-	void playSoundDrillerZX(int index, Audio::SoundHandle &handle);
 	void playSoundCPC(int index, Audio::SoundHandle &handle);
 	virtual void playSoundFx(int index, bool sync);
 	virtual void loadSoundsFx(Common::SeekableReadStream *file, int offset, int number);
@@ -498,6 +497,7 @@ public:
 	void loadSpeakerFxZX(Common::SeekableReadStream *file, int sfxTable, int sfxData);
 	Common::HashMap<uint16, soundSpeakerFx *> _soundsSpeakerFx;
 
+	virtual void playSoundZX(int index, Audio::SoundHandle &handle);
 	void playSoundZX(Common::Array<soundUnitZX> *data, Audio::SoundHandle &handle);
 	Common::HashMap<uint16, Common::Array<soundUnitZX>*> _soundsSpeakerFxZX;
 
@@ -505,6 +505,11 @@ public:
 	Common::Array<byte> _soundsCPCToneTable;
 	Common::Array<byte> _soundsCPCEnvelopeTable;
 	Common::Array<byte> _soundsCPCSoundDefTable;
+
+	void loadSoundsAmigaDemo(Common::SeekableReadStream *file, int offset, int numSounds);
+	void playSoundAmiga(int index, Audio::SoundHandle &handle);
+	Common::Array<AmigaSfxEntry> _amigaSfxTable;
+	Common::Array<AmigaDmaSample> _amigaDmaSamples;
 
 	int _soundIndexShoot;
 	int _soundIndexCollide;

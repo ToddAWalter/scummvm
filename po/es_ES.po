@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.4.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-20 21:12+0000\n"
-"PO-Revision-Date: 2026-02-20 12:15+0000\n"
+"POT-Creation-Date: 2026-02-21 20:47+0000\n"
+"PO-Revision-Date: 2026-02-21 10:21+0000\n"
 "Last-Translator: IlDucci <pajaroloco_2@hotmail.com>\n"
 "Language-Team: Spanish <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/es/>\n"
@@ -8054,56 +8054,38 @@ msgstr "Ventana para salir"
 #. I18N: Here ALTered Item refers to the dice that has been altered/changed.
 #. In order to escape the dice game loop press Right/Left Alt
 #: engines/cge/metaengine.cpp:250
-#, fuzzy
-#| msgid "ALTered Item"
 msgid "ALTered item"
 msgstr "Objeto ALTerado"
 
 #: engines/cge/metaengine.cpp:257
-#, fuzzy
-#| msgid "Inventory Item 1 (Select / Deselect)"
 msgid "Inventory item 1 (Select / Deselect)"
 msgstr "Objeto de inventario 1 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:262
-#, fuzzy
-#| msgid "Inventory Item 2 (Select / Deselect)"
 msgid "Inventory item 2 (Select / Deselect)"
 msgstr "Objeto de inventario 2 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:267
-#, fuzzy
-#| msgid "Inventory Item 3 (Select / Deselect)"
 msgid "Inventory item 3 (Select / Deselect)"
 msgstr "Objeto de inventario 3 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:272
-#, fuzzy
-#| msgid "Inventory Item 4 (Select / Deselect)"
 msgid "Inventory item 4 (Select / Deselect)"
 msgstr "Objeto de inventario 4 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:277
-#, fuzzy
-#| msgid "Inventory Item 5 (Select / Deselect)"
 msgid "Inventory item 5 (Select / Deselect)"
 msgstr "Objeto de inventario 5 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:282
-#, fuzzy
-#| msgid "Inventory Item 6 (Select / Deselect)"
 msgid "Inventory item 6 (Select / Deselect)"
 msgstr "Objeto de inventario 6 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:287
-#, fuzzy
-#| msgid "Inventory Item 7 (Select / Deselect)"
 msgid "Inventory item 7 (Select / Deselect)"
 msgstr "Objeto de inventario 7 (seleccionar/deseleccionar)"
 
 #: engines/cge/metaengine.cpp:292
-#, fuzzy
-#| msgid "Inventory Item 8 (Select / Deselect)"
 msgid "Inventory item 8 (Select / Deselect)"
 msgstr "Objeto de inventario 8 (seleccionar/deseleccionar)"
 
@@ -8547,9 +8529,13 @@ msgstr "Mostrar/Ocultar inventario de paladín 4"
 msgid "Strafe left"
 msgstr "Desplazarse a la izquierda"
 
-#: engines/dm/metaengine.cpp:226 engines/titanic/metaengine.cpp:343
-#: engines/titanic/metaengine.cpp:384
-msgid "Move backward"
+#: engines/dm/metaengine.cpp:226 engines/kyra/engine/eobcommon.cpp:372
+#: engines/kyra/engine/lol.cpp:511 engines/mohawk/riven.cpp:895
+#: engines/titanic/metaengine.cpp:343 engines/titanic/metaengine.cpp:384
+#: engines/twine/metaengine.cpp:339 engines/wintermute/keymapper_tables.h:155
+#: engines/wintermute/keymapper_tables.h:736
+#: engines/wintermute/keymapper_tables.h:2238
+msgid "Move backwards"
 msgstr "Retroceder"
 
 #: engines/dm/metaengine.cpp:236 engines/freescape/movement.cpp:56
@@ -10108,14 +10094,6 @@ msgstr ""
 #: engines/kyra/metaengine.cpp:295
 msgid "Eye of Beholder support is not compiled in"
 msgstr "No se ha incluido el soporte para Eye of Beholder."
-
-#: engines/kyra/engine/eobcommon.cpp:372 engines/kyra/engine/lol.cpp:511
-#: engines/mohawk/riven.cpp:895 engines/twine/metaengine.cpp:339
-#: engines/wintermute/keymapper_tables.h:155
-#: engines/wintermute/keymapper_tables.h:736
-#: engines/wintermute/keymapper_tables.h:2238
-msgid "Move backwards"
-msgstr "Retroceder"
 
 #: engines/kyra/engine/eobcommon.cpp:377
 msgid "Open / Close inventory"
@@ -13676,8 +13654,6 @@ msgid "Menu scrolling keymappings"
 msgstr "Asignaciones de despl. en menús"
 
 #: engines/sherlock/metaengine.cpp:784
-#, fuzzy
-#| msgid "save / load menu keymappings"
 msgid "Save / load menu keymappings"
 msgstr "Asignaciones del menú de guardar/cargar"
 
@@ -16800,6 +16776,9 @@ msgstr ""
 "que es imprescindible tener audio en MIDI para poder resolverlos.  También "
 "se podrían resolver estos acertijos con subtítulos, si están disponibles. "
 "¿Quieres seguir ejecutando el juego?"
+
+#~ msgid "Move backward"
+#~ msgstr "Retroceder"
 
 #~ msgid "Yes/No keymapping"
 #~ msgstr "Asignación a Sí/No"
