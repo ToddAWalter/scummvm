@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-22 15:38+0000\n"
+"POT-Creation-Date: 2026-02-23 14:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -6942,7 +6942,7 @@ msgstr ""
 #: engines/freescape/games/castle/castle.cpp:358
 #: engines/freescape/games/dark/dark.cpp:188
 #: engines/freescape/games/driller/driller.cpp:120
-#: engines/freescape/games/eclipse/eclipse.cpp:227
+#: engines/freescape/games/eclipse/eclipse.cpp:236
 #: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:165
 #: engines/lure/metaengine.cpp:191 engines/made/metaengine.cpp:192
 #: engines/mads/metaengine.cpp:305 engines/mohawk/myst.cpp:583
@@ -6970,7 +6970,7 @@ msgstr ""
 #: engines/freescape/games/castle/castle.cpp:363
 #: engines/freescape/games/dark/dark.cpp:193
 #: engines/freescape/games/driller/driller.cpp:125
-#: engines/freescape/games/eclipse/eclipse.cpp:232
+#: engines/freescape/games/eclipse/eclipse.cpp:241
 #: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:198
 #: engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/riven_stacks/aspit.cpp:349 engines/pegasus/pegasus.cpp:2831
@@ -7020,7 +7020,7 @@ msgstr ""
 #: engines/freescape/games/castle/castle.cpp:371
 #: engines/freescape/games/dark/dark.cpp:198
 #: engines/freescape/games/driller/driller.cpp:130
-#: engines/freescape/games/eclipse/eclipse.cpp:237
+#: engines/freescape/games/eclipse/eclipse.cpp:246
 #: engines/mads/metaengine.cpp:361 engines/phoenixvr/metaengine.cpp:80
 #: engines/saga/metaengine.cpp:437 engines/sherlock/metaengine.cpp:359
 #: engines/sherlock/metaengine.cpp:618 engines/sherlock/metaengine.cpp:852
@@ -8187,32 +8187,33 @@ msgid "Info menu"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:348
-msgid "Select Prince"
+msgid "Select prince"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:353
-msgid "Select Princess"
+msgid "Select princess"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:376
 #: engines/freescape/games/dark/dark.cpp:208
 #: engines/freescape/games/driller/driller.cpp:138
-#: engines/freescape/games/eclipse/eclipse.cpp:245
-msgid "Toggle Sound"
+#: engines/freescape/games/eclipse/eclipse.cpp:254
+#: engines/hugo/metaengine.cpp:154
+msgid "Toggle sound"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:381
 #: engines/freescape/games/dark/dark.cpp:214
 #: engines/freescape/games/driller/driller.cpp:144
-#: engines/freescape/games/eclipse/eclipse.cpp:250
-msgid "Rotate Left"
+#: engines/freescape/games/eclipse/eclipse.cpp:259
+msgid "Rotate left"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:386
 #: engines/freescape/games/dark/dark.cpp:219
 #: engines/freescape/games/driller/driller.cpp:149
-#: engines/freescape/games/eclipse/eclipse.cpp:255
-msgid "Rotate Right"
+#: engines/freescape/games/eclipse/eclipse.cpp:264
+msgid "Rotate right"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:402
@@ -8220,8 +8221,8 @@ msgid "Crawl"
 msgstr ""
 
 #: engines/freescape/games/castle/castle.cpp:408
-#: engines/freescape/games/eclipse/eclipse.cpp:284
-msgid "Face Forward"
+#: engines/freescape/games/eclipse/eclipse.cpp:293
+msgid "Face forward"
 msgstr ""
 
 #: engines/freescape/games/dark/dark.cpp:224
@@ -8239,38 +8240,38 @@ msgstr ""
 #. I18N: Illustrates the angle at which you turn left or right.
 #: engines/freescape/games/dark/dark.cpp:235
 #: engines/freescape/games/driller/driller.cpp:155
-msgid "Increase Turn Angle"
+msgid "Increase turn angle"
 msgstr ""
 
 #: engines/freescape/games/dark/dark.cpp:240
 #: engines/freescape/games/driller/driller.cpp:160
-msgid "Decrease Turn Angle"
+msgid "Decrease turn angle"
 msgstr ""
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
 #: engines/freescape/games/dark/dark.cpp:246
 #: engines/freescape/games/driller/driller.cpp:166
-msgid "Increase Step Size"
+msgid "Increase step size"
 msgstr ""
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
 #: engines/freescape/games/dark/dark.cpp:252
 #: engines/freescape/games/driller/driller.cpp:172
-msgid "Decrease Step Size"
+msgid "Decrease step size"
 msgstr ""
 
 #: engines/freescape/games/dark/dark.cpp:257
 #: engines/freescape/games/driller/driller.cpp:177
-msgid "Rise/Fly up"
+msgid "Rise / Fly up"
 msgstr ""
 
 #: engines/freescape/games/dark/dark.cpp:263
 #: engines/freescape/games/driller/driller.cpp:193
-msgid "Lower/Fly down"
+msgid "Lower / Fly down"
 msgstr ""
 
 #: engines/freescape/games/dark/dark.cpp:269
-msgid "Enable/Disable Jetpack"
+msgid "Enable / Disable jetpack"
 msgstr ""
 
 #. I18N: drilling rig is an in game item
@@ -8284,25 +8285,29 @@ msgid "Collect drilling rig"
 msgstr ""
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/eclipse/eclipse.cpp:261
-msgid "Change Angle"
+#: engines/freescape/games/eclipse/eclipse.cpp:270
+msgid "Change angle"
 msgstr ""
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/eclipse/eclipse.cpp:267
-msgid "Change Step Size"
+#: engines/freescape/games/eclipse/eclipse.cpp:276
+msgid "Change step size"
 msgstr ""
 
-#: engines/freescape/games/eclipse/eclipse.cpp:272
-msgid "Toggle Height"
+#: engines/freescape/games/eclipse/eclipse.cpp:281
+msgid "Toggle height"
 msgstr ""
 
 #. I18N: Action of hero party in Might & Magic 1
-#: engines/freescape/games/eclipse/eclipse.cpp:278
+#: engines/freescape/games/eclipse/eclipse.cpp:287
 #: engines/kyra/engine/lol.cpp:516 engines/mm/mm1/metaengine.cpp:109
 #: engines/ultima/nuvie/metaengine.cpp:195
 #: engines/ultima/nuvie/metaengine.cpp:200
 msgid "Rest"
+msgstr ""
+
+#: engines/freescape/games/eclipse/eclipse.cpp:298
+msgid "Toggle flashlight"
 msgstr ""
 
 #: engines/glk/glk_api.cpp:62
@@ -8735,10 +8740,6 @@ msgstr ""
 
 #: engines/hugo/metaengine.cpp:148
 msgid "User help"
-msgstr ""
-
-#: engines/hugo/metaengine.cpp:154
-msgid "Toggle sound"
 msgstr ""
 
 #: engines/hugo/metaengine.cpp:159

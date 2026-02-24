@@ -21,6 +21,9 @@
 
 #include "common/file.h"
 
+#include "audio/audiostream.h"
+#include "audio/mixer.h"
+
 #include "backends/keymapper/action.h"
 #include "backends/keymapper/keymap.h"
 #include "backends/keymapper/standard-actions.h"
@@ -31,6 +34,10 @@
 #include "freescape/language/8bitDetokeniser.h"
 
 namespace Freescape {
+
+// Forward declaration (defined in atari.music.cpp)
+Audio::AudioStream *makeEclipseAtariMusicStream(const byte *data, uint32 dataSize,
+                                                  int songNum = 1, int rate = 44100);
 
 EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEngine(syst, gd) {
 	// These sounds can be overriden by the class of each platform
@@ -87,6 +94,7 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_lastFiveSeconds = 0;
 	_lastSecond = -1;
 	_resting = false;
+	_flashlightOn = false;
 }
 
 void EclipseEngine::initGameState() {
@@ -102,6 +110,7 @@ void EclipseEngine::initGameState() {
 	_lastThirtySeconds = seconds / 30;
 	_lastFiveSeconds = seconds / 5;
 	_resting = false;
+	_flashlightOn = false;
 
 	// Start playing music, if any, in any supported format
 	playMusic("Total Eclipse Theme");
@@ -242,34 +251,34 @@ void EclipseEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *in
 		act->addDefaultInputMapping("ESCAPE");
 	infoScreenKeyMap->addAction(act);
 
-	act = new Common::Action("TOGGLESOUND", _("Toggle Sound"));
+	act = new Common::Action("TOGGLESOUND", _("Toggle sound"));
 	act->setCustomEngineActionEvent(kActionToggleSound);
 	act->addDefaultInputMapping("t");
 	infoScreenKeyMap->addAction(act);
 
-	act = new Common::Action("ROTL", _("Rotate Left"));
+	act = new Common::Action("ROTL", _("Rotate left"));
 	act->setCustomEngineActionEvent(kActionRotateLeft);
 	act->addDefaultInputMapping("q");
 	engineKeyMap->addAction(act);
 
-	act = new Common::Action("ROTR", _("Rotate Right"));
+	act = new Common::Action("ROTR", _("Rotate right"));
 	act->setCustomEngineActionEvent(kActionRotateRight);
 	act->addDefaultInputMapping("w");
 	engineKeyMap->addAction(act);
 
 	// I18N: Illustrates the angle at which you turn left or right.
-	act = new Common::Action("CHNGANGLE", _("Change Angle"));
+	act = new Common::Action("CHNGANGLE", _("Change angle"));
 	act->setCustomEngineActionEvent(kActionIncreaseAngle);
 	act->addDefaultInputMapping("a");
 	engineKeyMap->addAction(act);
 
 	// I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-	act = new Common::Action("CHNGSTEPSIZE", _("Change Step Size"));
+	act = new Common::Action("CHNGSTEPSIZE", _("Change step size"));
 	act->setCustomEngineActionEvent(kActionChangeStepSize);
 	act->addDefaultInputMapping("s");
 	engineKeyMap->addAction(act);
 
-	act = new Common::Action("TGGLHEIGHT", _("Toggle Height"));
+	act = new Common::Action("TGGLHEIGHT", _("Toggle height"));
 	act->setCustomEngineActionEvent(kActionToggleRiseLower);
 	act->addDefaultInputMapping("JOY_B");
 	act->addDefaultInputMapping("h");
@@ -281,9 +290,14 @@ void EclipseEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *in
 	act->addDefaultInputMapping("r");
 	engineKeyMap->addAction(act);
 
-	act = new Common::Action("FACEFRWARD", _("Face Forward"));
+	act = new Common::Action("FACEFRWARD", _("Face forward"));
 	act->setCustomEngineActionEvent(kActionFaceForward);
 	act->addDefaultInputMapping("f");
+	engineKeyMap->addAction(act);
+
+	act = new Common::Action("FLASHLIGHT", _("Toggle flashlight"));
+	act->setCustomEngineActionEvent(kActionToggleFlashlight);
+	act->addDefaultInputMapping("t");
 	engineKeyMap->addAction(act);
 }
 
@@ -330,6 +344,16 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 	_currentArea->_usualBackgroundColor = isCPC() ? 1 : 0;
 	if (isAmiga() || isAtariST())
 		_currentArea->_skyColor = 15;
+
+	// Start background music (Atari ST)
+	if (isAtariST() && !_musicData.empty() && !_mixer->isSoundHandleActive(_musicHandle)) {
+		Audio::AudioStream *musicStream = makeEclipseAtariMusicStream(
+			_musicData.data(), _musicData.size(), 1);
+		if (musicStream) {
+			_mixer->playStream(Audio::Mixer::kMusicSoundType,
+				&_musicHandle, musicStream);
+		}
+	}
 
 	resetInput();
 }
@@ -514,7 +538,82 @@ void EclipseEngine::pressedKey(const int keycode) {
 	} else if (keycode == kActionFaceForward) {
 		_pitch = 0;
 		updateCamera();
+	} else if (keycode == kActionToggleFlashlight) {
+		_flashlightOn = !_flashlightOn;
 	}
+}
+
+bool EclipseEngine::onScreenControls(Common::Point mouse) {
+	if (!isAmiga() && !isAtariST())
+		return false;
+
+	// Right-side arrow buttons
+	if (_lookUpArea.contains(mouse)) {
+		rotate(0, -5, 0);
+		return true;
+	} else if (_lookDownArea.contains(mouse)) {
+		rotate(0, 5, 0);
+		return true;
+	} else if (_turnLeftArea.contains(mouse)) {
+		rotate(-5, 0, 0);
+		return true;
+	} else if (_turnRightArea.contains(mouse)) {
+		rotate(5, 0, 0);
+		return true;
+	} else if (_uTurnArea.contains(mouse)) {
+		_yaw += 180;
+		updateCamera();
+		return true;
+	} else if (_faceForwardArea.contains(mouse)) {
+		pressedKey(kActionFaceForward);
+		return true;
+	}
+
+	// Left-side buttons (movement buttons just consume click, like Driller)
+	if (_moveBackwardArea.contains(mouse)) {
+		return true;
+	} else if (_stepBackwardArea.contains(mouse)) {
+		return true;
+	} else if (_interactArea.contains(mouse)) {
+		activate();
+		return true;
+	} else if (_infoDisplayArea.contains(mouse)) {
+		drawInfoMenu();
+		return true;
+	}
+
+	// Center/functional areas
+	if (_lanternArea.contains(mouse)) {
+		pressedKey(kActionToggleFlashlight);
+		return true;
+	} else if (_restArea.contains(mouse)) {
+		pressedKey(kActionRest);
+		return true;
+	}
+
+	// Status bar indicators
+	if (_stepSizeArea.contains(mouse)) {
+		pressedKey(kActionChangeStepSize);
+		return true;
+	} else if (_heightArea.contains(mouse)) {
+		pressedKey(kActionToggleRiseLower);
+		return true;
+	}
+
+	// Save/load
+	if (_saveGameArea.contains(mouse)) {
+		_gfx->setViewport(_fullscreenViewArea);
+		saveGameDialog();
+		_gfx->setViewport(_viewArea);
+		return true;
+	} else if (_loadGameArea.contains(mouse)) {
+		_gfx->setViewport(_fullscreenViewArea);
+		loadGameDialog();
+		_gfx->setViewport(_viewArea);
+		return true;
+	}
+
+	return false;
 }
 
 void EclipseEngine::releasedKey(const int keycode) {
@@ -753,19 +852,46 @@ void EclipseEngine::drawScoreString(int score, int x, int y, uint32 front, uint3
 			drawStringInSurface(scoreStr, x, y, front, back, surface);
 			return;
 		}
+	}
 
+	// Atari ST: use Font B (_fontScore) with dedicated score digit glyphs.
+	// Font B has 10 glyphs (0-9) for digits. In the original, the score bytes
+	// have $2F subtracted to map '0'→glyph 0, '1'→glyph 1, etc.
+	// For drawChar: chr = glyph_index + 32, so digit '0' → chr 32, '9' → chr 41.
+	if (isAtariST()) {
+		_fontScore.setBackground(back);
+		_fontScore.setSecondaryColor(front);
+		// Font B uses palette indices 1-4 like Font A
+		uint32 pal2 = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 182, 109, 36);
+		uint32 pal3 = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 218, 145, 36);
+		uint32 pal4 = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 255, 182, 36);
+		_fontScore.setSecondaryColor(pal2);
+		_fontScore.setTertiaryColor(pal3);
+		_fontScore.setQuaternaryColor(pal4);
+		for (int i = 0; i < int(scoreStr.size()); i++) {
+			int chr = (scoreStr[i] - '0') + 32;
+			_fontScore.drawChar(surface, chr, x, y, front);
+			x += 8;
+		}
+		return;
 	}
 
 	// Start in x,y and draw each digit, from left to right, adding a gap every 3 digits
 	int gapSize = isC64() ? 8 : 4;
+	int charStep = 8;
+
+	Font *scoreFont = &_font;
+	scoreFont->setBackground(back);
+	scoreFont->setSecondaryColor(front);
 
 	for (int i = 0; i < int(scoreStr.size()); i++) {
-		drawStringInSurface(Common::String(scoreStr[i]), x, y, front, back, surface);
-		x += 8;
+		Common::String digit(scoreStr[i]);
+		digit.toUppercase();
+		scoreFont->drawString(surface, digit, x, y, _screenW, front);
+		x += charStep;
 		if ((i - scoreStr.size() + 1) % 3 == 1)
 			x += gapSize;
 	}
-
 }
 
 

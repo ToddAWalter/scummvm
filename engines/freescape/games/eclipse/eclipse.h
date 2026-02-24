@@ -59,6 +59,7 @@ public:
 	int _soundIndexEndFalling;
 
 	bool _resting;
+	bool _flashlightOn;
 	int _lastThirtySeconds;
 	int _lastFiveSeconds;
 
@@ -87,6 +88,7 @@ public:
 	void drawCPCUI(Graphics::Surface *surface) override;
 	void drawC64UI(Graphics::Surface *surface) override;
 	void drawZXUI(Graphics::Surface *surface) override;
+	void drawAmigaAtariSTUI(Graphics::Surface *surface) override;
 	void drawAnalogClock(Graphics::Surface *surface, int x, int y, uint32 colorHand1, uint32 colorHand2, uint32 colorBack);
 	void drawAnalogClockHand(Graphics::Surface *surface, int x, int y, double degrees, double magnitude, uint32 color);
 	void drawCompass(Graphics::Surface *surface, int x, int y, double degrees, double magnitude, uint32 color);
@@ -95,6 +97,41 @@ public:
 	void drawScoreString(int score, int x, int y, uint32 front, uint32 back, Graphics::Surface *surface);
 
 	soundFx *load1bPCM(Common::SeekableReadStream *file, int offset);
+
+	Common::Array<byte> _musicData; // TEMUSIC.ST TEXT segment (Atari ST)
+
+	// Atari ST UI sprites (extracted from binary, pre-converted to target format)
+	Font _fontScore; // Font B (10 score digit glyphs, 4-plane at $249BE)
+	Common::Array<Graphics::ManagedSurface *> _eclipseSprites; // 2 eclipse animation frames (16x13)
+	Common::Array<Graphics::ManagedSurface *> _eclipseProgressSprites;  // 16 eclipse animation frames (16x16)
+	Common::Array<Graphics::ManagedSurface *> _compassSprites; // 37 pre-composited compass frames (32x27)
+	Common::Array<Graphics::ManagedSurface *> _lanternLightSprites;  // 6 lantern light animation frames (32x6)
+	Common::Array<Graphics::ManagedSurface *> _lanternSwitchSprites; // 2 lantern on/off frames (32x23)
+	Common::Array<Graphics::ManagedSurface *> _shootSprites;         // 2 shooting crosshair frames (32x25, 48x25)
+	Common::Array<Graphics::ManagedSurface *> _ankhSprites;          // 5 ankh fade-in frames (16x15)
+	Common::Array<Graphics::ManagedSurface *> _waterSprites;         // 9 water ripple frames (32x9)
+	Common::Array<Graphics::ManagedSurface *> _soundToggleSprites;   // 5 sound on/off toggle frames (16x11)
+	byte _compassLookup[72];  // direction-to-needle-frame lookup table
+
+	// Atari ST on-screen control hotspots (from binary hotspot table at prog $869A)
+	bool onScreenControls(Common::Point mouse) override;
+
+	Common::Rect _lookUpArea;
+	Common::Rect _lookDownArea;
+	Common::Rect _turnLeftArea;
+	Common::Rect _turnRightArea;
+	Common::Rect _uTurnArea;
+	Common::Rect _faceForwardArea;
+	Common::Rect _moveBackwardArea;
+	Common::Rect _stepBackwardArea;
+	Common::Rect _interactArea;
+	Common::Rect _infoDisplayArea;
+	Common::Rect _lanternArea;
+	Common::Rect _restArea;
+	Common::Rect _stepSizeArea;
+	Common::Rect _heightArea;
+	Common::Rect _saveGameArea;
+	Common::Rect _loadGameArea;
 
 	bool checkIfGameEnded() override;
 	void endGame() override;
