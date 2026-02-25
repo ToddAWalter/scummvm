@@ -43,6 +43,7 @@ private:
 
 	ScriptValue evaluateExpression();
 	ScriptValue evaluateExpression(ExpressionType expressionType);
+	void evaluateLValue(ScriptValue *&targetPtr);
 	ScriptValue evaluateOperation();
 	ScriptValue evaluateValue();
 	ScriptValue evaluateVariable();
@@ -59,12 +60,13 @@ private:
 	ScriptValue evaluateMethodCall(bool isIndirect = false);
 	ScriptValue evaluateMethodCall(BuiltInMethod method, uint paramCount);
 	void evaluateDeclareLocals();
-	ScriptValue evaluateReturn();
+	void evaluateReturn();
 	void evaluateReturnNoValue();
 	void evaluateWhileLoop();
 
 	static const uint MAX_LOOP_ITERATION_COUNT = 1000;
 	bool _returnImmediately = false;
+	ScriptValue _returnValue;
 	Common::Array<ScriptValue> _locals;
 	Common::Array<ScriptValue> *_args = nullptr;
 	ParameterReadStream *_bytecode = nullptr;

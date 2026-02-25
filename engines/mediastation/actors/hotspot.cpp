@@ -96,38 +96,52 @@ ScriptValue HotspotActor::callMethod(BuiltInMethod methodId, Common::Array<Scrip
 
 	switch (methodId) {
 	case kMouseActivateMethod: {
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		activate();
-		return returnValue;
+		break;
 	}
 
 	case kMouseDeactivateMethod: {
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		deactivate();
-		return returnValue;
+		break;
 	}
 
-	case kIsActiveMethod: {
-		assert(args.empty());
-		returnValue.setToBool(_isActive);
-		return returnValue;
+
+	case kIsPointInsideMethod: {
+		ARGCOUNTCHECK(2);
+		int16 xToCheck = static_cast<int16>(args[0].asFloat());
+		int16 yToCheck = static_cast<int16>(args[1].asFloat());
+		Common::Point pointToCheck(xToCheck, yToCheck);
+		bool pointIsInside = isInside(pointToCheck);
+		returnValue.setToBool(pointIsInside);
+		break;
 	}
 
 	case kTriggerAbsXPositionMethod: {
+		ARGCOUNTCHECK(0);
 		double mouseX = static_cast<double>(g_system->getEventManager()->getMousePos().x);
 		returnValue.setToFloat(mouseX);
-		return returnValue;
+		break;
 	}
 
 	case kTriggerAbsYPositionMethod: {
+		ARGCOUNTCHECK(0);
 		double mouseY = static_cast<double>(g_system->getEventManager()->getMousePos().y);
 		returnValue.setToFloat(mouseY);
-		return returnValue;
+		break;
+	}
+
+	case kIsActiveMethod: {
+		ARGCOUNTCHECK(0);
+		returnValue.setToBool(_isActive);
+		break;
 	}
 
 	default:
-		return SpatialEntity::callMethod(methodId, args);
+		returnValue = SpatialEntity::callMethod(methodId, args);
 	}
+	return returnValue;
 }
 
 uint16 HotspotActor::findActorToAcceptMouseEvents(
@@ -165,7 +179,7 @@ uint16 HotspotActor::findActorToAcceptMouseEvents(
 			result |= kMouseUpFlag;
 		}
 	} else {
-		debugC(5, kDebugEvents, "%s: %d: Inactive", __func__, id());
+		debugC(6, kDebugEvents, "[%s] %s: Inactive", debugName(),  __func__);
 	}
 
 	return result;
@@ -194,59 +208,59 @@ void HotspotActor::deactivate() {
 
 void HotspotActor::mouseDownEvent(const Common::Event &event) {
 	if (!_isActive) {
-		warning("%s: Called on inactive hotspot", __func__);
+		warning("[%s] %s: Inactive", debugName(), __func__);
 		return;
 	}
 
 	g_engine->setMouseDownHotspot(this);
-	runEventHandlerIfExists(kMouseDownEvent);
+	runScriptResponseIfExists(kMouseDownEvent);
 }
 
 void HotspotActor::mouseUpEvent(const Common::Event &event) {
 	if (!_isActive) {
-		warning("%s: Called on inactive hotspot", __func__);
+		warning("[%s] %s: Inactive", debugName(), __func__);
 		return;
 	}
 
 	g_engine->setMouseDownHotspot(nullptr);
-	runEventHandlerIfExists(kMouseUpEvent);
+	runScriptResponseIfExists(kMouseUpEvent);
 }
 
 void HotspotActor::mouseEnteredEvent(const Common::Event &event) {
 	if (!_isActive) {
-		warning("%s: Called on inactive hotspot", __func__);
+		warning("[%s] %s: Inactive", debugName(), __func__);
 		return;
 	}
 
 	g_engine->setMouseInsideHotspot(this);
 	if (_cursorResourceId != 0) {
-		debugC(5, kDebugEvents, "%s: Setting cursor %d for asset %d", __func__, _cursorResourceId, id());
+		debugC(5, kDebugEvents, "[%s] %s: Setting cursor %d", debugName(), __func__, _cursorResourceId);
 		g_engine->getCursorManager()->setAsTemporary(_cursorResourceId);
 	} else {
-		debugC(5, kDebugEvents, "%s: Unsetting cursor for asset %d", __func__, id());
+		debugC(5, kDebugEvents, "[%s] %s: Unsetting cursor", debugName(), __func__);
 		g_engine->getCursorManager()->unsetTemporary();
 	}
 
-	runEventHandlerIfExists(kMouseEnteredEvent);
+	runScriptResponseIfExists(kMouseEnteredEvent);
 }
 
 void HotspotActor::mouseMovedEvent(const Common::Event &event) {
 	if (!_isActive) {
-		warning("%s: Called on inactive hotspot", __func__);
+		warning("[%s] %s: Inactive", debugName(), __func__);
 		return;
 	}
 
-	runEventHandlerIfExists(kMouseMovedEvent);
+	runScriptResponseIfExists(kMouseMovedEvent);
 }
 
 void HotspotActor::mouseExitedEvent(const Common::Event &event) {
 	if (!_isActive) {
-		warning("%s: Called on inactive hotspot", __func__);
+		warning("[%s] %s: Inactive", debugName(), __func__);
 		return;
 	}
 
 	g_engine->setMouseInsideHotspot(nullptr);
-	runEventHandlerIfExists(kMouseExitedEvent);
+	runScriptResponseIfExists(kMouseExitedEvent);
 }
 
 } // End of namespace MediaStation

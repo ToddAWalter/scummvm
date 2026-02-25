@@ -105,19 +105,19 @@ enum BuiltInFunction {
 	kLegacy_PlatformFunction = 0x68,
 	kLegacy_SquareRootFunction = 0x69,
 	kLegacy_GetUniqueRandomFunction = 0x6A,
+	kLegacy_GetCurrentRunTimeFunction = 0x6B,
+	kLegacy_SetGammaCorrectionFunction = 0xAA,
+	kLegacy_GetDefaultGammaCorrectionFunction = 0xAB,
+	kLegacy_GetCurrentGammaCorrectionFunction = 0xAC,
 	kLegacy_DebugPrintFunction = 0xB4,
+	kLegacy_SetAudioVolumeFunction = 0xBE,
+	kLegacy_GetAudioVolumeFunction = 0xBF,
 	kLegacy_SystemLanguagePreferenceFunction = 0xC8,
 };
 const char *builtInFunctionToStr(BuiltInFunction function);
 
 enum BuiltInMethod {
 	kInvalidMethod = 0,
-	// TODO: What object types does CursorSet apply to?
-	// Currently it's only in var_7be1_cursor_currentTool in
-	// IBM/Crayola.
-	kCursorSetMethod = 0xC8,
-
-	// SPATIAL ENTITY METHODS.
 	kSpatialHideMethod = 0xCB,
 	kSpatialMoveToMethod = 0xCC,
 	kSpatialMoveToByOffsetMethod = 0xCD,
@@ -125,6 +125,8 @@ enum BuiltInMethod {
 	kSpatialShowMethod = 0xCA,
 	kTimePlayMethod = 0xCE,
 	kTimeStopMethod = 0xCF,
+	kTimePauseMethod = 0xD0,
+	kTimeResumeMethod = 0xD1,
 	kIsPlayingMethod = 0x174,
 	kSetDissolveFactorMethod = 0xF1,
 	kSpatialCenterMoveToMethod = 0xE6,
@@ -148,6 +150,17 @@ enum BuiltInMethod {
 	kSetXScaleMethod = 0x17F,
 	kGetYScaleMethod = 0x180,
 	kSetYScaleMethod = 0x181,
+	kStartCachingMethod = 0x113,
+	kIsCachingMethod = 0x114,
+	kPauseMethod = 0xD0,
+	kResumeMethod = 0xD1,
+	kIsPausedMethod = 0x175,
+
+	// STREAM MOVIE METHODS.
+	kStreamMovieSetProxyZIndex = 0x10B,
+	kStreamMovieGetProxyZIndex = 0x10C,
+	kStreamMovieMoveProxyToStageMethod = 0x17C,
+	kStreamMovieMoveProxyToRootStageMethod = 0x17D,
 
 	// HOTSPOT METHODS.
 	// NOTE: IDs 0xD2 and 0xD3 seem to be double-assigned
@@ -169,7 +182,9 @@ enum BuiltInMethod {
 	// NOTE: IDs 0xD2 and 0xD3 seem to be double-assigned
 	// between two hotspot methods and two stage methods.
 	kAddActorToStageMethod = 0xD2,
+	kAddActorToStageMethod2 = 0x170,
 	kRemoveActorFromStageMethod = 0xD3,
+	kRemoveActorFromStageMethod2 = 0x171,
 	kSetWorldSpaceExtentMethod = 0x16B,
 	kSetBoundsMethod = 0x11F,
 	kStageSetSizeMethod = 0x16B,
@@ -194,7 +209,10 @@ enum BuiltInMethod {
 	kPanToMethod = 0x172,
 
 	// CANVAS METHODS.
-	kClearToPaletteMethod = 0x17B,
+	kCanvasClearToTransparencyMethod = 0x172,
+	kCanvasStampImageMethod = 0x179,
+	kCanvasCopyScreenToMethod = 0x17A,
+	kCanvasClearToPaletteMethod = 0x17B,
 
 	// DOCUMENT METHODS.
 	kDocumentBranchToScreenMethod = 0xC9,
@@ -207,13 +225,40 @@ enum BuiltInMethod {
 	kDocumentContextIsLoadedMethod = 0x178,
 
 	// PATH METHODS.
-	kSetDurationMethod = 0x106,
-	kPercentCompleteMethod = 0x107,
+	kPathSetDurationMethod = 0x106,
+	kPathGetPercentCompleteMethod = 0x107,
+	kPathSetStartPointMethod = 0xf2,
+	kPathSetEndPointMethod = 0xf3,
+	kPathSetTotalStepsMethod = 0xf4,
+	kPathSetStepRateMethod = 0xf5,
 
 	// TEXT METHODS.
-	kTextMethod = 0x122,
-	kSetTextMethod = 0x123,
-	kSetMaximumTextLengthMethod = 0x125,
+	kTextSetEditableMethod = 0xD2,
+	kTextSetNonEditableMethod = 0xD3,
+	kTextGetFontActorMethod = 0x120,
+	kTextSetFontActorMethod = 0x121,
+	kTextGetTextMethod = 0x122,
+	kTextSetTextMethod = 0x123,
+	kTextGetMaxLengthMethod = 0x124,
+	kTextSetMaxLengthMethod = 0x125,
+	kGetLastPressedCharCodeMethod = 0x126,
+	kTextGetCursorPositionMethod = 0x127,
+	kTextSetCursorPositionMethod = 0x128,
+	kTextGetJustificationMethod = 0x14b,
+	kTextSetJustificationMethod = 0x14c,
+	kTextGetPositionMethod = 0x14d,
+	kTextSetPositionMethod = 0x14e,
+	kTextGetConstrainToWidthMethod = 0x150,
+	kTextSetConstrainToWidthMethod = 0x151,
+	kTextGetCursorIsVisibleMethod = 0x152,
+	kTextSetCursorIsVisibleMethod = 0x153,
+	kTextGetOverwriteModeMethod = 0x154,
+	kTextSetOverwriteModeMethod = 0x155,
+	kTextGetTranslatedCharCode = 0x156,
+	kTextAddAcceptedCharsMethod = 0x157,
+	kTextIsCharacterAcceptedMethod = 0x158,
+	kTextEnableDisableCharacterMethod = 0x159,
+	kTextIsEditableMethod = 0x173,
 
 	// COLLECTION METHODS.
 	// These are arrays used in Media Script.
@@ -239,6 +284,9 @@ enum BuiltInMethod {
 	// between two camera methods and two printer methods.
 	kOpenLensMethod = 0x15A,
 	kCloseLensMethod = 0x15B,
+
+	// CURSOR METHODS.
+	kCursorSetMethod = 0xC8,
 };
 const char *builtInMethodToStr(BuiltInMethod method);
 

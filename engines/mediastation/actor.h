@@ -26,7 +26,7 @@
 #include "common/keyboard.h"
 
 #include "mediastation/datafile.h"
-#include "mediastation/mediascript/eventhandler.h"
+#include "mediastation/mediascript/scriptresponse.h"
 #include "mediastation/mediascript/scriptconstants.h"
 #include "mediastation/mediascript/scriptvalue.h"
 
@@ -54,6 +54,7 @@ enum ActorType {
 	kActorTypePrinter = 0x0019, // PRT
 	kActorTypeMovie = 0x0016, // MOV
 	kActorTypePalette = 0x0017,
+	kActorTypeStreamMovieProxy = 0x18,
 	kActorTypeText = 0x001a, // TXT
 	kActorTypeFont = 0x001b, // FON
 	kActorTypeCamera = 0x001c, // CAM
@@ -64,10 +65,11 @@ enum ActorType {
 	kActorTypeRecorder = 0x0021,
 	kActorTypeFunction = 0x0069 // FUN
 };
+const char *actorTypeToStr(ActorType type);
 
 enum ActorHeaderSectionType {
 	kActorHeaderEmptySection = 0x0000,
-	kActorHeaderEventHandler = 0x0017,
+	kActorHeaderScriptResponse = 0x0017,
 	kActorHeaderChildActorId = 0x0019,
 	kActorHeaderActorId = 0x001a,
 	kActorHeaderChannelIdent = 0x001b,
@@ -79,12 +81,13 @@ enum ActorHeaderSectionType {
 	kActorHeaderZIndex = 0x001e,
 	kActorHeaderStartup = 0x001f,
 	kActorHeaderTransparency = 0x0020,
-	kActorHeaderHasOwnSubfile = 0x0021,
+	kActorHeaderDiscardAfterUse = 0x0021,
 	kActorHeaderCursorResourceId = 0x0022,
 	kActorHeaderFrameRate = 0x0024,
 	kActorHeaderLoadType = 0x0032,
 	kActorHeaderSoundInfo = 0x0033,
-	kActorHeaderMovieLoadType = 0x0037,
+	kActorHeaderCachingEnabled = 0x0034,
+	kActorHeaderInstallType = 0x0037,
 	kActorHeaderSpriteChunkCount = 0x03e8,
 	kActorHeaderPalette = 0x05aa,
 	kActorHeaderDissolveFactor = 0x05dc,
@@ -94,8 +97,8 @@ enum ActorHeaderSectionType {
 	kActorHeaderScaleXAndY = 0x77a,
 	kActorHeaderScaleX = 0x77c,
 	kActorHeaderScaleY = 0x77d,
-	kActorHeaderUnk0 = 0x7d0,
 	kActorHeaderActorName = 0x0bb8,
+	kStreamMovieProxyInfo = 0x06ac,
 
 	// PATH FIELDS.
 	kActorHeaderStartPoint = 0x060e,
@@ -110,10 +113,8 @@ enum ActorHeaderSectionType {
 	kActorHeaderCameraImageActor = 0x77b,
 
 	// CANVAS FIELDS.
-	kActorHeaderCanvasUnk1 = 0x491,
 	kActorHeaderCanvasDissolveFactor = 0x493,
-	kActorHeaderCanvasUnk2 = 0x494,
-	kActorHeaderCanvasUnk3 = 0x495,
+	kActorHeaderCanvasTransparency = 0x7d0,
 
 	// STAGE FIELDS.
 	kActorHeaderStageExtent = 0x0771,
@@ -122,18 +123,20 @@ enum ActorHeaderSectionType {
 
 	// TEXT FIELDS.
 	kActorHeaderEditable = 0x03eb,
-	kActorHeaderFontId = 0x0258,
+	kActorHeaderFontActorId = 0x0258,
 	kActorHeaderInitialText = 0x0259,
 	kActorHeaderTextMaxLength = 0x25a,
 	kActorHeaderTextJustification = 0x025b,
 	kActorHeaderTextPosition = 0x25f,
-	kActorHeaderTextUnk1 = 0x262,
-	kActorHeaderTextUnk2 = 0x263,
-	kActorHeaderTextCharacterClass = 0x0266,
+	kActorHeaderTextCursorIsVisible = 0x262,
+	kActorHeaderTextConstrainToWidth = 0x263,
+	kActorHeaderTextOverwriteMode = 0x264,
+	kActorHeaderTextAcceptedCharRange = 0x265,
+	kActorHeaderTextAcceptedCharRangeWithOffset = 0x0266,
 
 	// SPRITE FIELDS.
 	kActorHeaderSpriteClip = 0x03e9,
-	kActorHeaderCurrentSpriteClip = 0x03ea
+	kActorHeaderDefaultSpriteClip = 0x03ea
 };
 
 enum CylindricalWrapMode : int;
@@ -162,12 +165,31 @@ enum MouseEventFlag {
 	// There is no key up event.
 };
 
+// Argument count validation macros for built-in script methods.
+// For exact argument count.
+#define ARGCOUNTCHECK(n) \
+	if (args.size() != (n)) { \
+		warning("%s: Expected %d arguments, got %d", builtInMethodToStr(methodId), (n), args.size()); \
+	}
+
+// For a range of valid argument counts (min to max).
+#define ARGCOUNTRANGE(min, max) \
+	if ((int64)(min) > args.size() || args.size() > (int64)(max)) { \
+		warning("%s: Expected %d to %d arguments, got %d", builtInMethodToStr(methodId), (min), (max), args.size()); \
+	}
+
+// For minimum argument count (no maximum).
+#define ARGCOUNTMIN(min) \
+	if (args.size() < (min)) { \
+		warning("%s: Expected at least %d arguments, got %d", builtInMethodToStr(methodId), (min), args.size()); \
+	}
+
 class Actor {
 public:
 	Actor(ActorType type) : _type(type) {};
 	virtual ~Actor();
 
-	// Does any needed frame drawing, audio playing, event handlers, etc.
+	// Does any needed frame drawing, audio playing, script responses, etc.
 	virtual void process() { return; }
 
 	// Runs built-in bytecode methods.
@@ -179,26 +201,29 @@ public:
 	virtual void readParameter(Chunk &chunk, ActorHeaderSectionType paramType);
 	virtual void loadIsComplete();
 
-	void processTimeEventHandlers();
-	void runEventHandlerIfExists(EventType eventType, const ScriptValue &arg);
-	void runEventHandlerIfExists(EventType eventType);
+	void processTimeScriptResponses();
+	void runScriptResponseIfExists(EventType eventType, const ScriptValue &arg);
+	void runScriptResponseIfExists(EventType eventType);
 
 	ActorType type() const { return _type; }
 	uint id() const { return _id; }
 	uint contextId() const { return _contextId; }
-	void setId(uint id) { _id = id; }
+	void setId(uint id);
 	void setContextId(uint id) { _contextId = id; }
+	const char *debugName() const;
+	void updateDebugName();
 
 protected:
 	ActorType _type = kActorTypeEmpty;
 	bool _loadIsComplete = false;
 	uint _id = 0;
 	uint _contextId = 0;
+	Common::String _debugName;
 
 	uint _startTime = 0;
 	uint _lastProcessedTime = 0;
 	uint _duration = 0;
-	Common::HashMap<uint, Common::Array<EventHandler *> > _eventHandlers;
+	Common::HashMap<uint, Common::Array<ScriptResponse *> > _scriptResponses;
 };
 
 class SpatialEntity : public Actor {
@@ -218,7 +243,9 @@ public:
 	virtual bool isVisible() const { return _isVisible; }
 	virtual Common::Rect getBbox() const { return _boundingBox; }
 	int zIndex() const { return _zIndex; }
+	void moveTo(int16 x, int16 y);
 
+	virtual void currentMousePosition(Common::Point &point);
 	virtual void invalidateMouse();
 	virtual bool interactsWithMouse() const { return false; }
 
@@ -250,7 +277,7 @@ public:
 protected:
 	uint _stageId = 0;
 	int _zIndex = 0;
-	double _dissolveFactor = 0.0;
+	double _dissolveFactor = 1.0;
 	double _scaleX = 0.0;
 	double _scaleY = 0.0;
 	Common::Rect _boundingBox;
@@ -260,7 +287,6 @@ protected:
 	bool _getOffstageEvents = false;
 	StageActor *_parentStage = nullptr;
 
-	void moveTo(int16 x, int16 y);
 	void moveToCentered(int16 x, int16 y);
 	void setBounds(const Common::Rect &bounds);
 	void setZIndex(int zIndex);

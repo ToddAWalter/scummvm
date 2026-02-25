@@ -34,33 +34,22 @@
 
 namespace MediaStation {
 
-struct SpriteClip {
+struct SpriteMovieClip {
+	SpriteMovieClip() = default;
+	SpriteMovieClip(uint clipId, int first, int last);
+	Common::String getDebugString() const;
+
 	uint id = 0;
-	uint firstFrameIndex = 0;
-	uint lastFrameIndex = 0;
+	int firstFrameIndex = 0;
+	int lastFrameIndex = 0;
 };
 
-class SpriteFrameHeader : public BitmapHeader {
+class SpriteFrame : public PixMapImage {
 public:
-	SpriteFrameHeader(Chunk &chunk);
+	SpriteFrame(Chunk &chunk, uint index, Common::Point origin, const ImageInfo &imageInfo);
 
-	uint _index;
-	Common::Point _offset;
-};
-
-class SpriteFrame : public Bitmap {
-public:
-	SpriteFrame(Chunk &chunk, SpriteFrameHeader *header);
-	virtual ~SpriteFrame() override;
-
-	uint32 left();
-	uint32 top();
-	Common::Point topLeft();
-	Common::Rect boundingBox();
-	uint32 index();
-
-private:
-	SpriteFrameHeader *_bitmapHeader = nullptr;
+	int _index = 0;
+	Common::Point _origin;
 };
 
 // The original had a separate class that did reference counting,
@@ -68,6 +57,7 @@ private:
 struct SpriteAsset {
 	~SpriteAsset();
 
+	uint frameCount = 0;
 	Common::Array<SpriteFrame *> frames;
 };
 
@@ -82,24 +72,25 @@ public:
 	virtual void draw(DisplayContext &displayContext) override;
 
 	virtual void readParameter(Chunk &chunk, ActorHeaderSectionType paramType) override;
+	virtual void loadIsComplete() override;
 	virtual ScriptValue callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) override;
-
-	virtual bool isVisible() const override { return _isVisible; }
 
 	virtual void readChunk(Chunk &chunk) override;
 
 private:
-	static const uint DEFAULT_CLIP_ID = 1200;
-	uint _loadType = 0;
+	const uint DEFAULT_FORWARD_CLIP_ID = 0x4B0;
+	const uint DEFAULT_BACKWARD_CLIP_ID = 0x4B1;
+
+	bool _decompressImmediately = false;
 	uint _frameRate = 0;
-	uint _frameCount = 0;
 	uint _actorReference = 0;
-	Common::HashMap<uint, SpriteClip> _clips;
+	Common::HashMap<uint, SpriteMovieClip> _clips;
 	Common::SharedPtr<SpriteAsset> _asset;
 	bool _isPlaying = false;
-	uint _currentFrameIndex = 0;
+	int _currentFrameIndex = 0;
 	uint _nextFrameTime = 0;
-	SpriteClip _activeClip;
+	uint _defaultClipId = DEFAULT_FORWARD_CLIP_ID;
+	SpriteMovieClip _activeClip;
 
 	void play();
 	void stop();

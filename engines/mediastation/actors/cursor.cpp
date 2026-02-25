@@ -19,30 +19,34 @@
  *
  */
 
-#ifndef MEDIASTATION_MEDIASCRIPT_EVENTHANDLER_H
-#define MEDIASTATION_MEDIASCRIPT_EVENTHANDLER_H
-
-#include "common/str.h"
-
-#include "mediastation/datafile.h"
-#include "mediastation/mediascript/codechunk.h"
-#include "mediastation/mediascript/scriptconstants.h"
+#include "mediastation/actors/cursor.h"
+#include "mediastation/mediastation.h"
 
 namespace MediaStation {
 
-class EventHandler {
-public:
-	EventHandler(Chunk &chunk);
-	~EventHandler();
+void CursorActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) {
+	switch (paramType) {
+	case kActorHeaderCursorResourceId:
+		_cursorId = chunk.readUint32LE();
+		break;
 
-	ScriptValue execute(uint actorId);
-	EventType _type;
-	ScriptValue _argumentValue;
+	default:
+		Actor::readParameter(chunk, paramType);
+	}
+}
 
-private:
-	CodeChunk *_code = nullptr;
-};
+ScriptValue CursorActor::callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) {
+	ScriptValue returnValue;
+	switch (methodId) {
+	case kCursorSetMethod:
+		g_engine->getCursorManager()->setAsPermanent(_cursorId);
+		break;
+
+	default:
+		returnValue = Actor::callMethod(methodId, args);
+	}
+
+	return returnValue;
+}
 
 } // End of namespace MediaStation
-
-#endif

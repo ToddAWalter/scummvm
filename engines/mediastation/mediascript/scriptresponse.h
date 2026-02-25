@@ -19,25 +19,29 @@
  *
  */
 
-#ifndef MEDIASTATION_SCREEN_H
-#define MEDIASTATION_SCREEN_H
+#ifndef MEDIASTATION_MEDIASCRIPT_SCRIPTRESPONSE_H
+#define MEDIASTATION_MEDIASCRIPT_SCRIPTRESPONSE_H
 
-#include "mediastation/actor.h"
-#include "mediastation/mediascript/scriptvalue.h"
+#include "common/str.h"
+
+#include "mediastation/datafile.h"
+#include "mediastation/mediascript/codechunk.h"
 #include "mediastation/mediascript/scriptconstants.h"
 
 namespace MediaStation {
 
-// A Screen holds actor data and processes script responses for a Context.
-// The original separated them this way - there is a ContextParameters section,
-// then a Screen actor header.
-class ScreenActor : public Actor {
+// These handle events specifically for scripts.
+class ScriptResponse {
 public:
-	ScreenActor() : Actor(kActorTypeScreen) {};
+	ScriptResponse(Chunk &chunk);
+	~ScriptResponse();
 
-	virtual void readParameter(Chunk &chunk, ActorHeaderSectionType paramType) override;
+	ScriptValue execute(uint actorId);
+	EventType _type;
+	ScriptValue _argumentValue;
 
-	uint _cursorResourceId = 0;
+private:
+	CodeChunk *_code = nullptr;
 };
 
 } // End of namespace MediaStation

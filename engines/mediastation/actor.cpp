@@ -30,15 +30,87 @@
 
 namespace MediaStation {
 
-Actor::~Actor() {
-	for (auto it = _eventHandlers.begin(); it != _eventHandlers.end(); ++it) {
-		Common::Array<EventHandler *> &handlersForType = it->_value;
-		for (EventHandler *handler : handlersForType) {
-			delete handler;
-		}
-		handlersForType.clear();
+const char *actorTypeToStr(ActorType type) {
+	switch (type) {
+	case kActorTypeEmpty:
+		return "Empty";
+	case kActorTypeScreen:
+		return "Screen";
+	case kActorTypeStage:
+		return "Stage";
+	case kActorTypePath:
+		return "Path";
+	case kActorTypeSound:
+		return "Sound";
+	case kActorTypeTimer:
+		return "Timer";
+	case kActorTypeImage:
+		return "Image";
+	case kActorTypeHotspot:
+		return "Hotspot";
+	case kActorTypeCursor:
+		return "Cursor";
+	case kActorTypeSprite:
+		return "Sprite";
+	case kActorTypeLKZazu:
+		return "LKZazu";
+	case kActorTypeLKConstellations:
+		return "LKConstellations";
+	case kActorTypeDocument:
+		return "Document";
+	case kActorTypeImageSet:
+		return "ImageSet";
+	case kActorTypeMovie:
+		return "Movie";
+	case kActorTypeStreamMovieProxy:
+		return "StreamMovieProxy";
+	case kActorTypePalette:
+		return "Palette";
+	case kActorTypePrinter:
+		return "Printer";
+	case kActorTypeText:
+		return "Text";
+	case kActorTypeFont:
+		return "Font";
+	case kActorTypeCamera:
+		return "Camera";
+	case kActorTypeCanvas:
+		return "Canvas";
+	case kActorTypeXsnd:
+		return "Xsnd";
+	case kActorTypeXsndMidi:
+		return "XsndMidi";
+	case kActorTypeRecorder:
+		return "Recorder";
+	case kActorTypeFunction:
+		return "Function";
+	default:
+		return "UNKNOWN";
 	}
-	_eventHandlers.clear();
+}
+
+void Actor::setId(uint id) {
+	_id = id;
+	updateDebugName();
+}
+
+void Actor::updateDebugName() {
+	_debugName = g_engine->formatActorName(this);
+}
+
+const char *Actor::debugName() const {
+	return _debugName.c_str();
+}
+
+Actor::~Actor() {
+	for (auto it = _scriptResponses.begin(); it != _scriptResponses.end(); ++it) {
+		Common::Array<ScriptResponse *> &responsesForType = it->_value;
+		for (ScriptResponse *response : responsesForType) {
+			delete response;
+		}
+		responsesForType.clear();
+	}
+	_scriptResponses.clear();
 }
 
 void Actor::initFromParameterStream(Chunk &chunk) {
@@ -55,79 +127,82 @@ void Actor::initFromParameterStream(Chunk &chunk) {
 
 void Actor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) {
 	switch (paramType) {
-	case kActorHeaderEventHandler: {
-		EventHandler *eventHandler = new EventHandler(chunk);
-		Common::Array<EventHandler *> &eventHandlersForType = _eventHandlers.getOrCreateVal(eventHandler->_type);
+	case kActorHeaderScriptResponse: {
+		ScriptResponse *scriptResponse = new ScriptResponse(chunk);
+		Common::Array<ScriptResponse *> &scriptResponsesForType = _scriptResponses.getOrCreateVal(scriptResponse->_type);
 
 		// This is not a hashmap because we don't want to have to hash ScriptValues.
-		for (EventHandler *existingEventHandler : eventHandlersForType) {
-			if (existingEventHandler->_argumentValue == eventHandler->_argumentValue) {
-				error("%s: Event handler for %s (%s) already exists", __func__,
-					  eventTypeToStr(eventHandler->_type), eventHandler->_argumentValue.getDebugString().c_str());
+		for (ScriptResponse *existingScriptResponse : scriptResponsesForType) {
+			if (existingScriptResponse->_argumentValue == scriptResponse->_argumentValue) {
+				error("[%s] %s: Script response for %s (%s) already exists", debugName(), __func__,
+					eventTypeToStr(scriptResponse->_type), scriptResponse->_argumentValue.getDebugString().c_str());
 			}
 		}
-		eventHandlersForType.push_back(eventHandler);
+		scriptResponsesForType.push_back(scriptResponse);
 		break;
 	}
 
 	default:
-		error("Got unimplemented actor parameter 0x%x", static_cast<uint>(paramType));
+		error("[%s] %s: Got unimplemented actor parameter 0x%x", debugName(), __func__, static_cast<uint>(paramType));
 	}
 }
 
 void Actor::loadIsComplete() {
 	if (_loadIsComplete) {
-		warning("%s: Called more than once for actor %d", __func__, _id);
+		warning("[%s] %s: Already loaded", debugName(), __func__);
 	}
 	_loadIsComplete = true;
 }
 
 ScriptValue Actor::callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) {
-	warning("%s: Got unimplemented method call 0x%x (%s)", __func__, static_cast<uint>(methodId), builtInMethodToStr(methodId));
+	warning("[%s] %s: Got unimplemented method call 0x%x (%s)",
+		debugName(), __func__, static_cast<uint>(methodId), builtInMethodToStr(methodId));
 	return ScriptValue();
 }
 
-void Actor::processTimeEventHandlers() {
+void Actor::processTimeScriptResponses() {
 	// TODO: Replace with a queue.
 	uint currentTime = g_system->getMillis();
-	const Common::Array<EventHandler *> &_timeHandlers = _eventHandlers.getValOrDefault(kTimerEvent);
-	for (EventHandler *timeEvent : _timeHandlers) {
+	const Common::Array<ScriptResponse *> &_timeResponses = _scriptResponses.getValOrDefault(kTimerEvent);
+	for (ScriptResponse *timeEvent : _timeResponses) {
 		// Indeed float, not time.
 		double timeEventInFractionalSeconds = timeEvent->_argumentValue.asFloat();
 		uint timeEventInMilliseconds = timeEventInFractionalSeconds * 1000;
 		bool timeEventAlreadyProcessed = timeEventInMilliseconds < _lastProcessedTime;
-		bool timeEventNeedsToBeProcessed = timeEventInMilliseconds <= currentTime - _startTime;
+		bool timeEventNeedsToBeProcessed = timeEventInMilliseconds < currentTime - _startTime;
 		if (!timeEventAlreadyProcessed && timeEventNeedsToBeProcessed) {
-			debugC(5, kDebugScript, "Actor::processTimeEventHandlers(): Running On Time handler for time %d ms", timeEventInMilliseconds);
+			debugC(5, kDebugScript, "%s: Running On Time response for time %d ms (lastProcessedTime: %d, currentTime: %d)",
+				__func__, timeEventInMilliseconds, _lastProcessedTime, currentTime);
 			timeEvent->execute(_id);
 		}
 	}
 	_lastProcessedTime = currentTime - _startTime;
 }
 
-void Actor::runEventHandlerIfExists(EventType eventType, const ScriptValue &arg) {
-	const Common::Array<EventHandler *> &eventHandlers = _eventHandlers.getValOrDefault(eventType);
-	for (EventHandler *eventHandler : eventHandlers) {
-		const ScriptValue &argToCheck = eventHandler->_argumentValue;
+void Actor::runScriptResponseIfExists(EventType eventType, const ScriptValue &arg) {
+	const Common::Array<ScriptResponse *> &scriptResponses = _scriptResponses.getValOrDefault(eventType);
+	for (ScriptResponse *scriptResponse : scriptResponses) {
+		const ScriptValue &argToCheck = scriptResponse->_argumentValue;
 
 		if (arg.getType() != argToCheck.getType()) {
-			warning("Got event handler arg type %s, expected %s",
-					scriptValueTypeToStr(arg.getType()), scriptValueTypeToStr(argToCheck.getType()));
+			warning("[%s] %s: Got script response arg type %s, expected %s", debugName(), __func__,
+				scriptValueTypeToStr(arg.getType()), scriptValueTypeToStr(argToCheck.getType()));
 			continue;
 		}
 
 		if (arg == argToCheck) {
-			debugC(5, kDebugScript, "Executing handler for event type %s on actor %d", eventTypeToStr(eventType), _id);
-			eventHandler->execute(_id);
+			debugC(5, kDebugScript, "[%s] %s: Executing response for event type %s", debugName(), __func__, eventTypeToStr(eventType));
+			scriptResponse->execute(_id);
 			return;
 		}
 	}
-	debugC(5, kDebugScript, "No event handler for event type %s on actor %d", eventTypeToStr(eventType), _id);
+
+	debugC(5, kDebugScript, "[%s] %s: No script response for event type %s", debugName(), __func__, eventTypeToStr(eventType));
 }
 
-void Actor::runEventHandlerIfExists(EventType eventType) {
+void Actor::runScriptResponseIfExists(EventType eventType) {
 	ScriptValue scriptValue;
-	runEventHandlerIfExists(eventType, scriptValue);
+	runScriptResponseIfExists(eventType, scriptValue);
 }
 
 SpatialEntity::~SpatialEntity() {
@@ -140,7 +215,7 @@ ScriptValue SpatialEntity::callMethod(BuiltInMethod methodId, Common::Array<Scri
 	ScriptValue returnValue;
 	switch (methodId) {
 	case kSpatialMoveToMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 x = static_cast<int16>(args[0].asFloat());
 		int16 y = static_cast<int16>(args[1].asFloat());
 		moveTo(x, y);
@@ -148,7 +223,7 @@ ScriptValue SpatialEntity::callMethod(BuiltInMethod methodId, Common::Array<Scri
 	}
 
 	case kSpatialMoveToByOffsetMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 dx = static_cast<int16>(args[0].asFloat());
 		int16 dy = static_cast<int16>(args[1].asFloat());
 		int16 newX = _boundingBox.left + dx;
@@ -158,14 +233,14 @@ ScriptValue SpatialEntity::callMethod(BuiltInMethod methodId, Common::Array<Scri
 	}
 
 	case kSpatialZMoveToMethod: {
-		assert(args.size() == 1);
+		ARGCOUNTCHECK(1);
 		int zIndex = static_cast<int>(args[0].asFloat());
 		setZIndex(zIndex);
 		break;
 	}
 
 	case kSpatialCenterMoveToMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 x = static_cast<int16>(args[0].asFloat());
 		int16 y = static_cast<int16>(args[1].asFloat());
 		moveToCentered(x, y);
@@ -173,58 +248,84 @@ ScriptValue SpatialEntity::callMethod(BuiltInMethod methodId, Common::Array<Scri
 	}
 
 	case kGetLeftXMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_boundingBox.left);
 		break;
 
 	case kGetTopYMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_boundingBox.top);
 		break;
 
 	case kGetWidthMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_boundingBox.width());
 		break;
 
 	case kGetHeightMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_boundingBox.height());
 		break;
 
 	case kGetCenterXMethod: {
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		int centerX = _boundingBox.left + (_boundingBox.width() / 2);
 		returnValue.setToFloat(centerX);
 		break;
 	}
 
 	case kGetCenterYMethod: {
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		int centerY = _boundingBox.top + (_boundingBox.height() / 2);
 		returnValue.setToFloat(centerY);
 		break;
 	}
 
 	case kGetZCoordinateMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_zIndex);
 		break;
 
+	case kIsPointInsideMethod: {
+		ARGCOUNTCHECK(2);
+		int16 xToCheck = static_cast<int16>(args[0].asFloat());
+		int16 yToCheck = static_cast<int16>(args[1].asFloat());
+		Common::Point pointToCheck(xToCheck, yToCheck);
+		bool pointIsInside = getBbox().contains(pointToCheck);
+		returnValue.setToBool(pointIsInside);
+		break;
+	}
+
 	case kSetDissolveFactorMethod: {
-		assert(args.size() == 1);
+		ARGCOUNTCHECK(1);
 		double dissolveFactor = args[0].asFloat();
 		setDissolveFactor(dissolveFactor);
 		break;
 	}
 
+	case kGetMouseXOffsetMethod: {
+		Common::Point mouseOffset;
+		currentMousePosition(mouseOffset);
+		mouseOffset -= _originalBoundingBox.origin();
+		returnValue.setToFloat(static_cast<double>(mouseOffset.x));
+		break;
+	}
+
+	case kGetMouseYOffsetMethod: {
+		Common::Point mouseOffset;
+		currentMousePosition(mouseOffset);
+		mouseOffset -= _originalBoundingBox.origin();
+		returnValue.setToFloat(static_cast<double>(mouseOffset.y));
+		break;
+	}
+
 	case kIsVisibleMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToBool(isVisible());
 		break;
 
 	case kSetMousePositionMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 x = static_cast<int16>(args[0].asFloat());
 		int16 y = static_cast<int16>(args[1].asFloat());
 		setMousePosition(x, y);
@@ -233,31 +334,31 @@ ScriptValue SpatialEntity::callMethod(BuiltInMethod methodId, Common::Array<Scri
 
 	case kGetXScaleMethod1:
 	case kGetXScaleMethod2:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_scaleX);
 		break;
 
 	case kSetScaleMethod:
-		assert(args.size() == 1);
+		ARGCOUNTCHECK(1);
 		invalidateLocalBounds();
 		_scaleX = _scaleY = args[0].asFloat();
 		invalidateLocalBounds();
 		break;
 
 	case kSetXScaleMethod:
-		assert(args.size() == 1);
+		ARGCOUNTCHECK(1);
 		invalidateLocalBounds();
 		_scaleX = args[0].asFloat();
 		invalidateLocalBounds();
 		break;
 
 	case kGetYScaleMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(_scaleY);
 		break;
 
 	case kSetYScaleMethod:
-		assert(args.size() == 1);
+		ARGCOUNTCHECK(1);
 		invalidateLocalBounds();
 		_scaleY = args[0].asFloat();
 		invalidateLocalBounds();
@@ -312,14 +413,14 @@ void SpatialEntity::readParameter(Chunk &chunk, ActorHeaderSectionType paramType
 void SpatialEntity::loadIsComplete() {
 	Actor::loadIsComplete();
 	if (_stageId != 0) {
-		Actor *pendingParentStageActor = g_engine->getActorById(_stageId);
-		if (pendingParentStageActor == nullptr) {
-			error("%s: Actor %d doesn't exist", __func__, _stageId);
-		} else if (pendingParentStageActor->type() != kActorTypeStage) {
-			error("%s: Requested parent stage %d is not a stage", __func__, _stageId);
-		}
-		StageActor *pendingParentStage = static_cast<StageActor *>(pendingParentStageActor);
+		StageActor *pendingParentStage = static_cast<StageActor *>(g_engine->getActorByIdAndType(_stageId, kActorTypeStage));
 		pendingParentStage->addChildSpatialEntity(this);
+	}
+}
+
+void SpatialEntity::currentMousePosition(Common::Point &point) {
+	if (_parentStage != nullptr) {
+		_parentStage->currentMousePosition(point);
 	}
 }
 
@@ -334,6 +435,9 @@ void SpatialEntity::invalidateMouse() {
 
 void SpatialEntity::moveTo(int16 x, int16 y) {
 	Common::Point dest(x, y);
+	debugC(3, kDebugGraphics, "[%s] %s: (%d, %d) -> (%d, %d)", debugName(), __func__,
+		_originalBoundingBox.origin().x, _originalBoundingBox.origin().y, x, y);
+
 	if (dest == _boundingBox.origin()) {
 		// We aren't actually moving anywhere.
 		return;
@@ -355,6 +459,7 @@ void SpatialEntity::moveTo(int16 x, int16 y) {
 void SpatialEntity::moveToCentered(int16 x, int16 y) {
 	int16 targetX = x - (_boundingBox.width() / 2);
 	int16 targetY = y - (_boundingBox.height() / 2);
+	debugC(3, kDebugGraphics, "[%s] %s: (%d, %d)", debugName(), __func__, targetX, targetY);
 	moveTo(targetX, targetY);
 }
 
@@ -409,12 +514,14 @@ void SpatialEntity::invalidateLocalBounds() {
 		_parentStage->setAdjustedBounds(kWrapNone);
 		_parentStage->invalidateRect(getBbox());
 	} else {
-		error("%s: No parent stage for entity %d", __func__, _id);
+		warning("[%s] %s: No parent stage", debugName(), __func__);
 	}
 }
 
 void SpatialEntity::invalidateLocalZIndex() {
-	warning("STUB: %s", __func__);
+	if (_parentStage != nullptr) {
+		_parentStage->invalidateZIndexOf(this);
+	}
 }
 
 void SpatialEntity::setAdjustedBounds(CylindricalWrapMode alignmentMode) {
@@ -482,12 +589,13 @@ void SpatialEntity::setAdjustedBounds(CylindricalWrapMode alignmentMode) {
 
 	if (alignmentMode != kWrapNone) {
 		// TODO: Implement this once we have a title that actually uses it.
-		warning("%s: Actor %d: Wrapping mode %d not handled yet: (%d, %d, %d, %d) -= (%d, %d)", __func__, _id, static_cast<uint>(alignmentMode), PRINT_RECT(_boundingBox), offset.x, offset.y);
+		warning("[%s] %s: Wrapping mode %d not handled yet: (%d, %d, %d, %d) -= (%d, %d)", debugName(),  __func__,
+			static_cast<uint>(alignmentMode), PRINT_RECT(_boundingBox), offset.x, offset.y);
 	}
 
 	if (_scaleX != 0.0 || _scaleY != 0.0) {
 		// TODO: Implement this once we have a title that actually uses it.
-		warning("%s: Scale not handled yet (scaleX: %f, scaleY: %f)", __func__, _scaleX, _scaleY);
+		warning("[%s] %s: Scale not handled yet (scaleX: %f, scaleY: %f)", debugName(), __func__, _scaleX, _scaleY);
 	}
 }
 

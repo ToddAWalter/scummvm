@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef MEDIASTATION_PATH_H
-#define MEDIASTATION_PATH_H
+#ifndef MEDIASTATION_ACTORS_CURSOR_H
+#define MEDIASTATION_ACTORS_CURSOR_H
 
 #include "mediastation/actor.h"
 #include "mediastation/mediascript/scriptvalue.h"
@@ -28,47 +28,17 @@
 
 namespace MediaStation {
 
-enum PathPlayState {
-	kPathStopped = 1,
-	kPathPlaying = 2,
-	kPathPaused = 3,
-};
-
-class PathActor : public Actor {
+// The cursor actor's only purpose seems to be activating its pre-set cursor
+// when the appropriate method is called.
+class CursorActor : public Actor {
 public:
-	PathActor() : Actor(kActorTypePath) {};
-
-	virtual void process() override;
+	CursorActor() : Actor(kActorTypeCursor) {};
 
 	virtual void readParameter(Chunk &chunk, ActorHeaderSectionType paramType) override;
 	virtual ScriptValue callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) override;
 
 private:
-	PathPlayState _playState = kPathStopped;
-	double _percentComplete = 0.0;
-	bool _useTimeForCompletion = false;
-	double _duration = 0.0;
-	double _stepRate = 0.0;
-	uint _stepDurationInMilliseconds = 0;
-	uint _currentStep = 0;
-	uint _startTime = 0;
-	uint _pauseTime = 0;
-	uint _totalSteps = 0;
-	uint _nextPathStepTime = 0;
-
-	Common::Point _startPoint;
-	Common::Point _endPoint;
-	Common::Point _currentPoint;
-
-	void startPath();
-	void stopPath();
-	void pausePath();
-	void resumePath(bool shouldRestart);
-
-	double getPercentComplete();
-	bool step();
-	void timerEvent();
-	void scheduleNextTimerEvent();
+	uint _cursorId = 0;
 };
 
 } // End of namespace MediaStation

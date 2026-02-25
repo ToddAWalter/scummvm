@@ -34,6 +34,9 @@ CameraActor::~CameraActor() {
 		_parentStage->removeCamera(this);
 		_parentStage->removeChildSpatialEntity(this);
 	}
+	delete _childrenWithOverlaySurface;
+	_childrenWithOverlaySurface = nullptr;
+	_childrenWithOverlayContext._destImage = nullptr;
 }
 
 void CameraActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) {
@@ -41,7 +44,7 @@ void CameraActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) 
 	case kActorHeaderChannelIdent:
 		_channelIdent = chunk.readTypedChannelIdent();
 		registerWithStreamManager();
-		_image = Common::SharedPtr<ImageAsset>(new ImageAsset);
+		_overlayImage = Common::SharedPtr<ImageAsset>(new ImageAsset);
 		break;
 
 	case kActorHeaderStartup:
@@ -68,15 +71,8 @@ void CameraActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) 
 
 	case kActorHeaderCameraImageActor: {
 		uint actorReference = chunk.readTypedUint16();
-		Actor *referencedActor = g_engine->getActorById(actorReference);
-		if (referencedActor == nullptr) {
-			error("%s: Referenced actor %d doesn't exist or has not been read yet in this title", __func__, actorReference);
-		}
-		if (referencedActor->type() != kActorTypeCamera) {
-			error("%s: Type mismatch of referenced actor %d", __func__, actorReference);
-		}
-		CameraActor *referencedImage = static_cast<CameraActor *>(referencedActor);
-		_image = referencedImage->_image;
+		CameraActor *referencedCamera = static_cast<CameraActor *>(g_engine->getActorByIdAndType(actorReference, kActorTypeCamera));
+		_overlayImage = referencedCamera->_overlayImage;
 		break;
 	}
 
@@ -86,8 +82,8 @@ void CameraActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) 
 }
 
 void CameraActor::readChunk(Chunk &chunk) {
-	BitmapHeader *bitmapHeader = new BitmapHeader(chunk);
-	_image->bitmap = new Bitmap(chunk, bitmapHeader);
+	ImageInfo bitmapHeader(chunk);
+	_overlayImage->bitmap = new PixMapImage(chunk, bitmapHeader);
 }
 
 ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) {
@@ -102,7 +98,7 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 		break;
 
 	case kAddToStageMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		addToStage();
 		break;
 
@@ -116,12 +112,12 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 	}
 
 	case kAddedToStageMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToBool(_addedToStage);
 		break;
 
 	case kStartPanMethod: {
-		assert(args.size() == 3);
+		ARGCOUNTCHECK(3);
 		int16 deltaX = static_cast<uint16>(args[0].asFloat());
 		int16 deltaY = static_cast<int16>(args[1].asFloat());
 		double duration = args[2].asTime();
@@ -132,17 +128,17 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 	}
 
 	case kStopPanMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		stopPan();
 		break;
 
 	case kIsPanningMethod:
-		assert(args.empty());
+		ARGCOUNTCHECK(0);
 		returnValue.setToBool(_panState);
 		break;
 
 	case kViewportMoveToMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 x = static_cast<int16>(args[0].asFloat());
 		int16 y = static_cast<int16>(args[1].asFloat());
 		_nextViewportOrigin = Common::Point(x, y);
@@ -158,7 +154,7 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 	}
 
 	case kAdjustCameraViewportMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 xDiff = static_cast<int16>(args[0].asFloat());
 		int16 yDiff = static_cast<int16>(args[1].asFloat());
 		Common::Point viewportDelta(xDiff, yDiff);
@@ -176,16 +172,18 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 	}
 
 	case kAdjustCameraViewportSpatialCenterMethod: {
-		assert(args.size() == 2);
-		int16 xDiff = static_cast<int16>(args[0].asFloat());
-		int16 yDiff = static_cast<int16>(args[1].asFloat());
+		ARGCOUNTCHECK(2);
+		int16 x = static_cast<int16>(args[0].asFloat());
+		int16 y = static_cast<int16>(args[1].asFloat());
 
 		// Apply centering adjustment, which is indeed based on the entire camera actor's
 		// bounds, not just the current viewport bounds.
-		int16 centeredXDiff = xDiff - (getBbox().width() / 2);
-		int16 centeredYDiff = yDiff - (getBbox().height() / 2);
-		Common::Point viewportDelta(centeredXDiff, centeredYDiff);
-		_nextViewportOrigin = getViewportOrigin() + viewportDelta;
+		int16 centeredX = x - (getBbox().width() / 2);
+		int16 centeredY = y - (getBbox().height() / 2);
+		_nextViewportOrigin = Common::Point(centeredX, centeredY);
+		debugC(6, kDebugCamera, "%s: currentViewportOrigin: (%d, %d); nextViewportOrigin: (%d, %d)",
+			__func__, _currentViewportOrigin.x, _currentViewportOrigin.y, _nextViewportOrigin.x, _nextViewportOrigin.y);
+
 		adjustCameraViewport(_nextViewportOrigin);
 		if (!_addedToStage) {
 			_currentViewportOrigin = _nextViewportOrigin;
@@ -199,7 +197,7 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 	}
 
 	case kSetCameraBoundsMethod: {
-		assert(args.size() == 2);
+		ARGCOUNTCHECK(2);
 		int16 width = static_cast<int16>(args[0].asFloat());
 		int16 height = static_cast<int16>(args[1].asFloat());
 		Common::Rect newBounds(_originalBoundingBox.origin(), width, height);
@@ -213,17 +211,17 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 	}
 
 	case kXViewportPositionMethod:
-		assert(args.size() == 0);
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(getViewportOrigin().x);
 		break;
 
 	case kYViewportPositionMethod:
-		assert(args.size() == 0);
+		ARGCOUNTCHECK(0);
 		returnValue.setToFloat(getViewportOrigin().y);
 		break;
 
 	case kPanToMethod: {
-		assert(args.size() >= 3);
+		ARGCOUNTRANGE(3, 4);
 		int16 x = static_cast<int16>(args[0].asFloat());
 		int16 y = static_cast<int16>(args[1].asFloat());
 
@@ -231,18 +229,15 @@ ScriptValue CameraActor::callMethod(BuiltInMethod methodId, Common::Array<Script
 			uint panSteps = static_cast<uint>(args[2].asFloat());
 			double duration = args[3].asFloat();
 			panToByStepCount(x, y, panSteps, duration);
-		} else if (args.size() == 3) {
+		} else {
 			double duration = args[2].asFloat();
 			panToByTime(x, y, duration);
-		} else {
-			error("%s: Incorrect number of args for method %s", __func__, builtInMethodToStr(methodId));
 		}
 		break;
 	}
 
 	default:
 		returnValue = SpatialEntity::callMethod(methodId, args);
-		break;
 	}
 	return returnValue;
 }
@@ -259,8 +254,21 @@ void CameraActor::loadIsComplete() {
 		addToStage();
 	}
 
-	if (_image != nullptr) {
-		warning("%s: STUB: Camera image asset not handled yet", __func__);
+	if (_overlayImage != nullptr) {
+		// Create the intermediate surface where we'll draw the actors and the overlay.
+		ImageInfo imageInfo;
+		imageInfo._dimensions = Common::Point(getBbox().width(), getBbox().height());
+		imageInfo._stride = getBbox().width();
+		_childrenWithOverlaySurface = new PixMapImage(imageInfo);
+		_childrenWithOverlayContext._destImage = &_childrenWithOverlaySurface->_image;
+		_childrenWithOverlayContext.verifyClipSize();
+
+		// Mark this whole region dirty.
+		Region region;
+		Common::Rect cameraRect(0, 0, getBbox().width(), getBbox().height());
+		region.addRect(cameraRect);
+		_childrenWithOverlayContext.addClip();
+		_childrenWithOverlayContext.setClipTo(region);
 	}
 }
 
@@ -296,47 +304,67 @@ Common::Rect CameraActor::getViewportBounds() {
 	return viewportBounds;
 }
 
-void CameraActor::drawUsingCamera(DisplayContext &displayContext, const Common::Array<SpatialEntity *> &entitiesToDraw) {
-	Clip *currentClip = displayContext.currentClip();
+void CameraActor::drawUsingCamera(DisplayContext &destContext, const Common::Array<SpatialEntity *> &entitiesToDraw) {
+	// Establish the initial clipping region.
+	Clip *currentClip = destContext.currentClip();
 	if (currentClip != nullptr) {
-		Clip *previousClip = displayContext.previousClip();
+		Clip *previousClip = destContext.previousClip();
 		if (previousClip == nullptr) {
+			// Initialize the clip.
 			currentClip->addToRegion(currentClip->_bounds);
 		} else {
+			// Copy the previous clip to the current clip.
 			*currentClip = *previousClip;
 		}
 	}
 
-	Common::Rect cameraBounds = getBbox();
-	displayContext.intersectClipWith(cameraBounds);
-	displayContext.pushOrigin();
-
+	destContext.intersectClipWith(getBbox());
+	destContext.pushOrigin();
 	Common::Point viewportOrigin = getViewportOrigin();
-	Common::Point viewportOffset(
-		-viewportOrigin.x + cameraBounds.left,
-		-viewportOrigin.y + cameraBounds.top
-	);
-	displayContext._origin.x += viewportOffset.x;
-	displayContext._origin.y += viewportOffset.y;
+	destContext._origin += (getBbox().origin() - viewportOrigin);
 
-	if (_image != nullptr) {
-		// TODO: Handle image asset stuff.
-		warning("%s: Camera image asset not handled yet", __func__);
+	if (_overlayImage != nullptr) {
+		// Make sure we are ready to draw the overlay image.
+		_childrenWithOverlayContext.pushOrigin();
+		_childrenWithOverlayContext._origin -= _offset;
+		_childrenWithOverlayContext._origin -= viewportOrigin;
 	}
 
 	for (SpatialEntity *entityToDraw : entitiesToDraw) {
+		debugCN(6, kDebugGraphics, "[%s] %s: %s (viewport: %d, %d) (bounds: %d, %d, %d, %d) ", debugName(), __func__, entityToDraw->debugName(),
+			_currentViewportOrigin.x, _currentViewportOrigin.y, PRINT_RECT(entityToDraw->getBbox()));
+
 		if (entityToDraw->isVisible()) {
-			drawObject(displayContext, displayContext, entityToDraw);
+			if (_overlayImage == nullptr) {
+				// Draw this image directly to the provided display context.
+				debugC(6, kDebugGraphics, "(no overlay)");
+				drawObject(destContext, destContext, entityToDraw);
+			} else {
+				// Draw this image to our internal display context, so we can apply the
+				// overlay to the drawn items afterward.
+				debugC(6, kDebugGraphics, "(overlay)");
+				drawObject(destContext, _childrenWithOverlayContext, entityToDraw);
+			}
 		}
 	}
 
-	displayContext.popOrigin();
-	displayContext.emptyCurrentClip();
+	if (_overlayImage != nullptr) {
+		// Now actually apply the overlay.
+		destContext._origin += _offset;
+		g_engine->getDisplayManager()->imageDeltaBlit(
+			getViewportOrigin(), Common::Point(0, 0), _overlayImage->bitmap, _childrenWithOverlaySurface, 1.0, &destContext
+		);
+
+		_childrenWithOverlayContext.popOrigin();
+	}
+
+	destContext.popOrigin();
+	destContext.emptyCurrentClip();
 }
 
 void CameraActor::drawObject(DisplayContext &sourceContext, DisplayContext &destContext, SpatialEntity *objectToDraw) {
 	if (_parentStage == nullptr) {
-		warning("%s: No parent stage", __func__);
+		warning("[%s] %s: No parent stage", debugName(), __func__);
 		return;
 	}
 
@@ -347,11 +375,11 @@ void CameraActor::drawObject(DisplayContext &sourceContext, DisplayContext &dest
 	}
 
 	if (_parentStage->cylindricalX()) {
-		warning("%s: CylindricalX not handled yet", __func__);
+		warning("[%s] %s: CylindricalX not handled yet", debugName(), __func__);
 	}
 
 	if (_parentStage->cylindricalY()) {
-		warning("%s: CylindricalY not handled yet", __func__);
+		warning("[%s] %s: CylindricalY not handled yet", debugName(), __func__);
 	}
 	objectToDraw->setAdjustedBounds(kWrapNone);
 }
@@ -359,7 +387,7 @@ void CameraActor::drawObject(DisplayContext &sourceContext, DisplayContext &dest
 void CameraActor::setXYDelta(uint xDelta, uint yDelta) {
 	_panDelta.x = xDelta;
 	_panDelta.y = yDelta;
-	debugC(6, kDebugCamera, "%s: (%d, %d)", __func__, _panDelta.x, _panDelta.y);
+	debugC(6, kDebugCamera, "[%s] %s: (%d, %d)", debugName(), __func__, _panDelta.x, _panDelta.y);
 }
 
 void CameraActor::setXYDelta() {
@@ -376,7 +404,7 @@ void CameraActor::setXYDelta() {
 	} else if (_panDest.y < _panStart.y) {
 		_panDelta.y = -1;
 	}
-	debugC(6, kDebugCamera, "%s: (%d, %d)", __func__, _panDelta.x, _panDelta.y);
+	debugC(6, kDebugCamera, "[%s] %s: (%d, %d)", debugName(), __func__, _panDelta.x, _panDelta.y);
 }
 
 void CameraActor::panToByTime(int16 x, int16 y, double duration) {
@@ -387,8 +415,8 @@ void CameraActor::panToByTime(int16 x, int16 y, double duration) {
 	_currentPanStep = 1;
 	_startTime = g_system->getMillis();
 	_nextPanStepTime = 0;
-	debugC(6, kDebugCamera, "%s: panStart: (%d, %d); panDest: (%d, %d); panDuration: %f",
-		__func__, _panStart.x, _panStart.y, _panDest.x, _panDest.y, _panDuration);
+	debugC(6, kDebugCamera, "[%s] %s: panStart: (%d, %d); panDest: (%d, %d); panDuration: %f",
+		debugName(), __func__, _panStart.x, _panStart.y, _panDest.x, _panDest.y, _panDuration);
 	setXYDelta();
 	calcNewViewportOrigin();
 }
@@ -402,8 +430,8 @@ void CameraActor::panToByStepCount(int16 x, int16 y, uint panSteps, double durat
 	_maxPanStep = panSteps;
 	_startTime = g_system->getMillis();
 	_nextPanStepTime = 0;
-	debugC(6, kDebugCamera, "%s: panStart: (%d, %d); panDest: (%d, %d); panDuration: %f; maxPanStep: %d",
-		__func__, _panStart.x, _panStart.y, _panDest.x, _panDest.y, _panDuration, _maxPanStep);
+	debugC(6, kDebugCamera, "[%s] %s: panStart: (%d, %d); panDest: (%d, %d); panDuration: %f; maxPanStep: %d",
+		debugName(), __func__, _panStart.x, _panStart.y, _panDest.x, _panDest.y, _panDuration, _maxPanStep);
 	setXYDelta();
 	calcNewViewportOrigin();
 }
@@ -416,7 +444,7 @@ void CameraActor::startPan(uint xOffset, uint yOffset, double duration) {
 	_currentPanStep = 0;
 	_maxPanStep = 0;
 	setXYDelta(xOffset, yOffset);
-	debugC(6, kDebugCamera, "%s: xOffset: %u, yOffset: %u, duration: %f", __func__, xOffset, yOffset, duration);
+	debugC(6, kDebugCamera, "[%s] %s: xOffset: %u, yOffset: %u, duration: %f", debugName(), __func__, xOffset, yOffset, duration);
 }
 
 void CameraActor::stopPan() {
@@ -426,8 +454,8 @@ void CameraActor::stopPan() {
 	_nextPanStepTime = 0;
 	_currentPanStep = 0;
 	_maxPanStep = 0;
-	debugC(6, kDebugCamera, "%s: nextViewportOrigin: (%d, %d); actualViewportOrigin: (%d, %d)",
-		__func__,  _nextViewportOrigin.x, _nextViewportOrigin.y, _currentViewportOrigin.x, _currentViewportOrigin.y);
+	debugC(6, kDebugCamera, "[%s] %s: nextViewportOrigin: (%d, %d); actualViewportOrigin: (%d, %d)",
+		debugName(), __func__,  _nextViewportOrigin.x, _nextViewportOrigin.y, _currentViewportOrigin.x, _currentViewportOrigin.y);
 }
 
 bool CameraActor::continuePan() {
@@ -441,7 +469,7 @@ bool CameraActor::continuePan() {
 			panShouldContinue = false;
 		}
 	}
-	debugC(6, kDebugCamera, "%s: %s", __func__, panShouldContinue ? "true": "false");
+	debugC(6, kDebugCamera, "[%s] %s: %s", debugName(), __func__, panShouldContinue ? "true": "false");
 	return panShouldContinue;
 }
 
@@ -476,7 +504,7 @@ void CameraActor::timerEvent() {
 					// Common::Rect advanceRect = getAdvanceRect();
 					// _parentStage->preload(advanceRect);
 				} else {
-					runEventHandlerIfExists(kCameraPanAbortEvent);
+					runScriptResponseIfExists(kCameraPanAbortEvent);
 					stopPan();
 				}
 			} else {
@@ -487,7 +515,7 @@ void CameraActor::timerEvent() {
 					success = processViewportMove();
 				}
 				if (success) {
-					runEventHandlerIfExists(kCameraPanEndEvent);
+					runScriptResponseIfExists(kCameraPanEndEvent);
 					stopPan();
 				} else {
 					Common::Rect currentBounds = getBbox();
@@ -522,13 +550,13 @@ bool CameraActor::processViewportMove() {
 void CameraActor::processNextPanStep() {
 	// If pan type includes per-step updates (4-arg pan in original engine),
 	// advance the pan step counter. Then compute the new viewport origin
-	// and notify any script handlers registered for the pan-step event.
+	// and notify any script responses registered for the pan-step event.
 	if (_panState == kCameraPanByStepCount) {
 		_currentPanStep += 1;
 	}
 
 	calcNewViewportOrigin();
-	runEventHandlerIfExists(kCameraPanStepEvent);
+	runScriptResponseIfExists(kCameraPanStepEvent);
 
 	uint stepDurationInMilliseconds = 20; // Visually smooth.
 	_nextPanStepTime += stepDurationInMilliseconds;
@@ -536,24 +564,24 @@ void CameraActor::processNextPanStep() {
 
 void CameraActor::adjustCameraViewport(Common::Point &viewportToAdjust) {
 	if (_parentStage == nullptr) {
-		warning("%s: No parent stage", __func__);
+		warning("[%s] %s: No parent stage", debugName(), __func__);
 		return;
 	}
 
 	if (_parentStage->cylindricalX()) {
-		warning("%s: CylindricalX not handled yet", __func__);
+		warning("[%s] %s: CylindricalX not handled yet", debugName(), __func__);
 	}
 
 	if (_parentStage->cylindricalY()) {
-		warning("%s: CylindricalY not handled yet", __func__);
+		warning("[%s] %s: CylindricalY not handled yet", debugName(), __func__);
 	}
 }
 
 void CameraActor::calcNewViewportOrigin() {
 	if (_panState == kCameraPanningStarted) {
 		_nextViewportOrigin = _currentViewportOrigin + _panDelta;
-		debugC(6, kDebugCamera, "%s: (%d, %d) [panDelta: (%d, %d)]",
-			__func__, _nextViewportOrigin.x, _nextViewportOrigin.y, _panDelta.x, _panDelta.y);
+		debugC(6, kDebugCamera, "[%s] %s: (%d, %d) [panDelta: (%d, %d)]",
+			debugName(), __func__, _nextViewportOrigin.x, _nextViewportOrigin.y, _panDelta.x, _panDelta.y);
 	} else {
 		// Interpolate from the start to the dest based on percent complete.
 		double progress = percentComplete();
@@ -566,8 +594,8 @@ void CameraActor::calcNewViewportOrigin() {
 		double endY = static_cast<double>(_panDest.y);
 		double interpolatedY = startY + (endY - startY) * progress + 0.5;
 		_nextViewportOrigin.y = static_cast<int16>(interpolatedY);
-		debugC(6, kDebugCamera, "%s: (%d, %d) [panStart: (%d, %d); panDest: (%d, %d); percentComplete: %f]",
-			__func__, _nextViewportOrigin.x, _nextViewportOrigin.y, _panStart.x, _panStart.y, _panDest.x, _panDest.y, progress);
+		debugC(6, kDebugCamera, "[%s] %s: (%d, %d) [panStart: (%d, %d); panDest: (%d, %d); percentComplete: %f]",
+			debugName(), __func__, _nextViewportOrigin.x, _nextViewportOrigin.y, _panStart.x, _panStart.y, _panDest.x, _panDest.y, progress);
 	}
 }
 
@@ -588,7 +616,7 @@ bool CameraActor::cameraWithinStage(const Common::Point &candidate) {
 		} else if (candidate.x < 0) {
 			result = false;
 		}
-		debugC(6, kDebugCamera, "%s: %s [rightBoundary: %d, extent: %d]", __func__, result ? "true" : "false", candidateRightBoundary, _parentStage->extent().x);
+		debugC(6, kDebugCamera, "[%s] %s: %s [rightBoundary: %d, extent: %d]", debugName(), __func__, result ? "true" : "false", candidateRightBoundary, _parentStage->extent().x);
 	}
 
 	// We can only be out of vertical bounds if we have a requested delta and
@@ -602,7 +630,7 @@ bool CameraActor::cameraWithinStage(const Common::Point &candidate) {
 		} else if (candidate.y < 0) {
 			result = false;
 		}
-		debugC(6, kDebugCamera, "%s: %s [bottomBoundary: %d, extent: %d]", __func__, result ? "true" : "false", candidateBottomBoundary, _parentStage->extent().y);
+		debugC(6, kDebugCamera, "[%s] %s: %s [bottomBoundary: %d, extent: %d]", debugName(), __func__, result ? "true" : "false", candidateBottomBoundary, _parentStage->extent().y);
 	}
 	return result;
 }

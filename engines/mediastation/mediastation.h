@@ -43,6 +43,7 @@
 #include "mediastation/actor.h"
 #include "mediastation/cursors.h"
 #include "mediastation/graphics.h"
+#include "mediastation/profile.h"
 #include "mediastation/mediascript/function.h"
 #include "mediastation/actors/stage.h"
 
@@ -51,7 +52,7 @@ namespace MediaStation {
 struct MediaStationGameDescription;
 class HotspotActor;
 class RootStage;
-class Bitmap;
+class PixMapImage;
 
 // Most Media Station titles follow this file structure from the root directory
 // of the CD-ROM:
@@ -97,6 +98,7 @@ public:
 	void readHeaderSections(Subfile &subfile, Chunk &chunk);
 
 	Actor *getActorById(uint actorId);
+	Actor *getActorByIdAndType(uint actorId, ActorType expectedType);
 	SpatialEntity *getSpatialEntityById(uint spatialEntityId);
 	ChannelClient *getChannelClientByChannelIdent(uint channelIdent);
 	ScriptValue *getVariable(uint variableId);
@@ -106,6 +108,14 @@ public:
 	RootStage *getRootStage() { return _stageDirector->getRootStage(); }
 	StreamFeedManager *getStreamFeedManager() { return _streamFeedManager; }
 	Document *getDocument() { return _document; }
+
+	Common::String formatActorName(uint actorId, bool attemptToGetType = false) { return _profile->formatActorName(actorId, attemptToGetType); }
+	Common::String formatActorName(const Actor *actor) { return _profile->formatActorName(actor); }
+	Common::String formatFunctionName(uint functionId) { return _profile->formatFunctionName(functionId); }
+	Common::String formatFileName(uint fileId) { return _profile->formatFileName(fileId); }
+	Common::String formatVariableName(uint variableId) { return _profile->formatVariableName(variableId); }
+	Common::String formatParamTokenName(uint paramToken) { return _profile->formatParamTokenName(paramToken); }
+	Common::String formatAssetNameForChannelIdent(uint channelIdent) { return _profile->formatAssetNameForChannelIdent(channelIdent); }
 
 	const FileInfo &fileInfoForIdent(uint fileId) { return _fileMap.getValOrDefault(fileId); }
 	const StreamInfo &streamInfoForIdent(uint streamId) { return _streamMap.getValOrDefault(streamId); }
@@ -144,6 +154,7 @@ private:
 	DeviceOwner *_deviceOwner = nullptr;
 	StageDirector *_stageDirector = nullptr;
 	StreamFeedManager *_streamFeedManager = nullptr;
+	Profile *_profile = nullptr;
 
 	Common::HashMap<uint, Actor *> _actors;
 	SpatialEntity *_mouseInsideHotspot = nullptr;
@@ -169,6 +180,7 @@ private:
 	void initDeviceOwner();
 	void initStageDirector();
 	void initStreamFeedManager();
+	void initProfile();
 	void setupInitialStreamMap();
 
 	void runEventLoop();

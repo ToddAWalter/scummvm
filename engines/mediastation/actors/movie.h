@@ -39,23 +39,12 @@ enum MovieBlitType {
 	kCompressedDeltaMovieBlit = 3,
 };
 
-class MovieFrameHeader : public BitmapHeader {
+class MovieFrameImage : public PixMapImage {
 public:
-	MovieFrameHeader(Chunk &chunk);
+	MovieFrameImage(Chunk &chunk, uint index, uint keyframeEndInMilliseconds, const ImageInfo &imageInfo);
 
 	uint _index = 0;
 	uint _keyframeEndInMilliseconds = 0;
-};
-
-class MovieFrameImage : public Bitmap {
-public:
-	MovieFrameImage(Chunk &chunk, MovieFrameHeader *header);
-	virtual ~MovieFrameImage() override;
-
-	uint32 index() { return _bitmapHeader->_index; }
-
-private:
-	MovieFrameHeader *_bitmapHeader = nullptr;
 };
 
 enum MovieSectionType {
@@ -84,6 +73,27 @@ struct MovieFrame {
 };
 
 class StreamMovieActor;
+
+// Represents an individually controllable layer of a stream movie that is its own spatial entity
+// and can be in a different stage than its parent stream movie, but which references the parent's
+// frames at all times. Only frames with a layer ID matching a proxy's layer ID will be drawn when
+// that proxy is drawn. For example, this is used in the last section of the Dalmatians hide-and-seek
+// minigame to show a "light" layer that only appears when the player shines a flashlight on an area,
+// while a "dark" layer seamlessly displays otherwise.
+class StreamMovieProxy : public SpatialEntity {
+friend class StreamMovieActor;
+
+public:
+	StreamMovieProxy(Chunk &chunk, StreamMovieActor *parent);
+	virtual void draw(DisplayContext &displayContext) override;
+	virtual bool isVisible() const override;
+
+	uint _layerId = 0;
+	uint _scriptId = 0;
+
+private:
+	StreamMovieActor *_parent = nullptr;
+};
 
 // This is called `RT_stmvFrames` in the original.
 class StreamMovieActorFrames : public ChannelClient {
@@ -121,14 +131,15 @@ public:
 	virtual ~StreamMovieActor() override;
 
 	virtual void readChunk(Chunk &chunk) override;
-
+	virtual void loadIsComplete() override;
 	virtual void readParameter(Chunk &chunk, ActorHeaderSectionType paramType) override;
 	virtual ScriptValue callMethod(BuiltInMethod methodId, Common::Array<ScriptValue> &args) override;
 	virtual void process() override;
 
 	virtual void draw(DisplayContext &displayContext) override;
-
-	virtual bool isVisible() const override { return _isVisible; }
+	void drawLayer(DisplayContext &displayContext, uint layerId);
+	virtual void invalidateLocalBounds() override;
+	bool isLayerInSeparateZPlane(uint layerId);
 
 private:
 	ImtStreamFeed *_streamFeed = nullptr;
@@ -136,7 +147,7 @@ private:
 	uint _chunkCount = 0;
 	double _frameRate = 0;
 
-	uint _loadType = 0;
+	bool _shouldCache = false;
 	bool _isPlaying = false;
 	bool _hasStill = false;
 
@@ -144,6 +155,7 @@ private:
 	StreamMovieActorSound *_streamSound = nullptr;
 
 	Common::Array<MovieFrame *> _framesNotYetShown;
+	Common::Array<StreamMovieProxy *> _proxies;
 	Common::SortedArray<MovieFrame *, const MovieFrame *> _framesOnScreen;
 
 	// Script method implementations.
@@ -159,6 +171,8 @@ private:
 	void parseMovieChunkMarker(Chunk &chunk);
 
 	Common::Rect getFrameBoundingBox(MovieFrame *frame);
+	StreamMovieProxy *proxyOfId(uint layerId);
+	StreamMovieProxy *proxyOfScriptId(uint scriptId);
 	static int compareFramesByZIndex(const MovieFrame *a, const MovieFrame *b);
 };
 

@@ -24,11 +24,27 @@
 #include "mediastation/mediastation.h"
 
 namespace MediaStation {
+
+// For exact argument count.
+#define FUNCARGCHECK(n) \
+	if (args.size() != (n)) { \
+		warning("%s: expected %d argument%s, got %d", builtInFunctionToStr(static_cast<BuiltInFunction>(functionId)), (n), ((n) == 1 ? "" : "s"), args.size()); \
+	}
+
+// For a range of valid argument counts (min to max).
+#define FUNCARGRANGE(min, max) \
+	if (args.size() < (min) || args.size() > (max)) { \
+		warning("%s: expected %d to %d argument, got %d", builtInFunctionToStr(static_cast<BuiltInFunction>(functionId)), (min), (max), args.size()); \
+	}
+
+// For minimum argument count (no maximum).
+#define FUNCARGMIN(min) \
+	if (args.size() < (min)) { \
+		warning("%s: expected at least %d argument%s, got %d", builtInFunctionToStr(static_cast<BuiltInFunction>(functionId)), (min), ((min) == 1 ? "" : "s"), args.size()); \
+	}
+
 ScriptFunction::ScriptFunction(Chunk &chunk) {
 	_contextId = chunk.readTypedUint16();
-	// In PROFILE._ST (only present in some titles), the function ID is reported
-	// with 19900 added, so function 100 would be reported as 20000. But in
-	// bytecode, the zero-based ID is used, so that's what we'll store here.
 	_id = chunk.readTypedUint16();
 	_code = new CodeChunk(chunk);
 }
@@ -39,7 +55,8 @@ ScriptFunction::~ScriptFunction() {
 }
 
 ScriptValue ScriptFunction::execute(Common::Array<ScriptValue> &args) {
-	debugC(5, kDebugScript, "\n********** SCRIPT FUNCTION %d **********", _id);
+	Common::String name = g_engine->formatFunctionName(_id);
+	debugC(5, kDebugScript, "\n********** SCRIPT FUNCTION %s **********", name.c_str());
 	ScriptValue returnValue = _code->execute(&args);
 	debugC(5, kDebugScript, "********** END SCRIPT FUNCTION **********");
 	return returnValue;
@@ -86,12 +103,13 @@ ScriptValue FunctionManager::call(uint functionId, Common::Array<ScriptValue> &a
 	switch (functionId) {
 	case kRandomFunction:
 	case kLegacy_RandomFunction:
-		assert(args.size() == 2);
+		FUNCARGCHECK(2);
 		script_Random(args, returnValue);
 		break;
 
 	case kTimeOfDayFunction:
 	case kLegacy_TimeOfDayFunction:
+		FUNCARGCHECK(0);
 		script_TimeOfDay(args, returnValue);
 		break;
 
@@ -107,45 +125,55 @@ ScriptValue FunctionManager::call(uint functionId, Common::Array<ScriptValue> &a
 
 	case kPlatformFunction:
 	case kLegacy_PlatformFunction:
-		assert(args.empty());
+		FUNCARGCHECK(0);
 		script_GetPlatform(args, returnValue);
 		break;
 
 	case kSquareRootFunction:
 	case kLegacy_SquareRootFunction:
-		assert(args.size() == 1);
+		FUNCARGCHECK(1);
 		script_SquareRoot(args, returnValue);
 		break;
 
 	case kGetUniqueRandomFunction:
 	case kLegacy_GetUniqueRandomFunction:
-		assert(args.size() >= 2);
+		FUNCARGMIN(2);
 		script_GetUniqueRandom(args, returnValue);
 		break;
 
 	case kCurrentRunTimeFunction:
+	case kLegacy_GetCurrentRunTimeFunction:
+		FUNCARGCHECK(0);
 		script_CurrentRunTime(args, returnValue);
 		break;
 
 	case kSetGammaCorrectionFunction:
+	case kLegacy_SetGammaCorrectionFunction:
+		FUNCARGRANGE(1, 3);
 		script_SetGammaCorrection(args, returnValue);
 		break;
 
 	case kGetDefaultGammaCorrectionFunction:
+	case kLegacy_GetDefaultGammaCorrectionFunction:
+		FUNCARGCHECK(0);
 		script_GetDefaultGammaCorrection(args, returnValue);
 		break;
 
 	case kGetCurrentGammaCorrectionFunction:
+	case kLegacy_GetCurrentGammaCorrectionFunction:
+		FUNCARGCHECK(0);
 		script_GetCurrentGammaCorrection(args, returnValue);
 		break;
 
 	case kSetAudioVolumeFunction:
-		assert(args.size() == 1);
+	case kLegacy_SetAudioVolumeFunction:
+		FUNCARGCHECK(1);
 		script_SetAudioVolume(args, returnValue);
 		break;
 
 	case kGetAudioVolumeFunction:
-		assert(args.empty());
+	case kLegacy_GetAudioVolumeFunction:
+		FUNCARGCHECK(0);
 		script_GetAudioVolume(args, returnValue);
 		break;
 
@@ -191,6 +219,7 @@ ScriptValue FunctionManager::call(uint functionId, Common::Array<ScriptValue> &a
 		break;
 
 	case kLegacy_DebugPrintFunction:
+		// We don't need to check arg counts here. This just prints however many args we have.
 		script_DebugPrint(args, returnValue);
 		break;
 
@@ -298,7 +327,11 @@ void FunctionManager::script_Random(Common::Array<ScriptValue> &args, ScriptValu
 }
 
 void FunctionManager::script_TimeOfDay(Common::Array<ScriptValue> &args, ScriptValue &returnValue) {
-	warning("STUB: TimeOfDay");
+	TimeDate timeDate;
+	// Calculate seconds since midnight.
+	g_system->getTimeAndDate(timeDate);
+	uint32 secondsSinceMidnight = (timeDate.tm_hour * 60 + timeDate.tm_min) * 60 + timeDate.tm_sec;
+	returnValue.setToTime(static_cast<double>(secondsSinceMidnight));
 }
 
 void FunctionManager::script_SquareRoot(Common::Array<ScriptValue> &args, ScriptValue &returnValue) {
@@ -339,10 +372,9 @@ void FunctionManager::script_GetUniqueRandom(Common::Array<ScriptValue> &args, S
 		SWAP(top, bottom);
 	}
 
-	// Build list of unused (non-excluded) numbers in the range. For this numeric type,
-	// everything is treated as an integer (even though it's stored as a double).
+	// Build list of unused (non-excluded) integers in the range.
 	Common::Array<double> unusedNumbers;
-	for (double currentValue = bottom; currentValue < top; currentValue += 1.0) {
+	for (double currentValue = bottom; currentValue <= top; currentValue += 1.0) {
 		// Check if this value appears in the exclusion list (args 2 onwards).
 		bool isExcluded = false;
 		for (uint i = 2; i < args.size(); i++) {
@@ -358,7 +390,7 @@ void FunctionManager::script_GetUniqueRandom(Common::Array<ScriptValue> &args, S
 	}
 
 	if (unusedNumbers.size() > 0) {
-		uint randomIndex = g_engine->_randomSource.getRandomNumberRng(0, unusedNumbers.size());
+		uint randomIndex = g_engine->_randomSource.getRandomNumberRng(0, unusedNumbers.size() - 1);
 		returnValue.setToFloat(unusedNumbers[randomIndex]);
 	} else {
 		warning("%s: No unused numbers to choose from", __func__);
@@ -373,11 +405,6 @@ void FunctionManager::script_CurrentRunTime(Common::Array<ScriptValue> &args, Sc
 }
 
 void FunctionManager::script_SetGammaCorrection(Common::Array<ScriptValue> &args, ScriptValue &returnValue) {
-	if (args.size() != 1 && args.size() != 3) {
-		warning("%s: Expected 1 or 3 arguments, got %u", __func__, args.size());
-		return;
-	}
-
 	double red = 1.0;
 	double green = 1.0;
 	double blue = 1.0;
@@ -399,7 +426,7 @@ void FunctionManager::script_SetGammaCorrection(Common::Array<ScriptValue> &args
 			return;
 		}
 
-		Common::SharedPtr<Collection> collection = args[0].asCollection();
+		Collection *collection = args[0].asCollection();
 		if (collection->size() != 3) {
 			warning("%s: Collection must contain exactly 3 elements, got %u", __func__, collection->size());
 			return;
@@ -429,7 +456,7 @@ void FunctionManager::script_GetDefaultGammaCorrection(Common::Array<ScriptValue
 	double red, green, blue;
 	g_engine->getDisplayManager()->getDefaultGammaValues(red, green, blue);
 
-	Common::SharedPtr<Collection> collection = Common::SharedPtr<Collection>(new Collection());
+	Collection *collection = new Collection();
 	ScriptValue redValue;
 	redValue.setToFloat(red);
 	collection->push_back(redValue);
@@ -453,7 +480,7 @@ void FunctionManager::script_GetCurrentGammaCorrection(Common::Array<ScriptValue
 
 	double red, green, blue;
 	g_engine->getDisplayManager()->getGammaValues(red, green, blue);
-	Common::SharedPtr<Collection> collection = Common::SharedPtr<Collection>(new Collection());
+	Collection *collection = new Collection();
 
 	ScriptValue redValue;
 	redValue.setToFloat(red);

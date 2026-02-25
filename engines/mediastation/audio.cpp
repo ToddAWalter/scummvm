@@ -50,6 +50,14 @@ void AudioSequence::play() {
 	}
 }
 
+void AudioSequence::pause() {
+	g_engine->_mixer->pauseHandle(_handle, true);
+}
+
+void AudioSequence::resume() {
+	g_engine->_mixer->pauseHandle(_handle, false);
+}
+
 void AudioSequence::stop() {
 	g_engine->_mixer->stopHandle(_handle);
 	_handle = Audio::SoundHandle();
@@ -78,7 +86,6 @@ void AudioSequence::readChunk(Chunk &chunk) {
 		error("%s: Unknown audio encoding 0x%x", __func__, static_cast<uint>(_bitsPerSample));
 	}
 	_streams.push_back(stream);
-	debugC(5, kDebugLoading, "Finished reading audio chunk (@0x%llx)", static_cast<long long int>(chunk.pos()));
 }
 
 bool AudioSequence::isActive() {

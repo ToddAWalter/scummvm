@@ -174,8 +174,20 @@ const char *builtInFunctionToStr(BuiltInFunction function) {
 		return "Legacy SquareRoot";
 	case kLegacy_GetUniqueRandomFunction:
 		return "Legacy GetUniqueRandom";
+	case kLegacy_GetCurrentRunTimeFunction:
+		return "Legacy GetCurrentRunTime";
+	case kLegacy_SetGammaCorrectionFunction:
+		return "Legacy SetGammaCorrection";
+	case kLegacy_GetDefaultGammaCorrectionFunction:
+		return "Legacy GetDefaultGammaCorrection";
+	case kLegacy_GetCurrentGammaCorrectionFunction:
+		return "Legacy GetCurrentGammaCorrection";
 	case kLegacy_DebugPrintFunction:
 		return "DebugPrint";
+	case kLegacy_SetAudioVolumeFunction:
+		return "Legacy SetAudioVolume";
+	case kLegacy_GetAudioVolumeFunction:
+		return "Legacy GetAudioVolume";
 	case kLegacy_SystemLanguagePreferenceFunction:
 		return "Legacy SystemLanguagePreference";
 	default:
@@ -185,6 +197,8 @@ const char *builtInFunctionToStr(BuiltInFunction function) {
 
 const char *builtInMethodToStr(BuiltInMethod method) {
 	switch (method) {
+	case kInvalidMethod:
+		return "Invalid";
 	case kCursorSetMethod:
 		return "CursorSet";
 	case kSpatialHideMethod:
@@ -207,10 +221,11 @@ const char *builtInMethodToStr(BuiltInMethod method) {
 		return "IsPlaying/SetMultipleStreams";
 	case kSetDissolveFactorMethod:
 		return "SetDissolveFactor";
+	// NOTE: IDs 0xD2 and 0xD3 are double-assigned between hotspot, stage, and text methods.
 	case kMouseActivateMethod:
-		return "MouseActivate";
+		return "Activate";
 	case kMouseDeactivateMethod:
-		return "MouseDeactivate";
+		return "Deactivate";
 	case kGetLeftXMethod:
 		return "GetLeftX";
 	case kGetTopYMethod:
@@ -219,8 +234,9 @@ const char *builtInMethodToStr(BuiltInMethod method) {
 		return "TriggerAbsXPosition";
 	case kTriggerAbsYPositionMethod:
 		return "TriggerAbsYPosition";
+	// NOTE: ID 0x173 is double-assigned between hotspot and text methods.
 	case kIsActiveMethod:
-		return "IsActive";
+		return "IsActive/IsEditable";
 	case kGetWidthMethod:
 		return "GetWidth";
 	case kGetHeightMethod:
@@ -237,8 +253,22 @@ const char *builtInMethodToStr(BuiltInMethod method) {
 		return "GetMouseXOffset";
 	case kGetMouseYOffsetMethod:
 		return "GetMouseYOffset";
+	case kStreamMovieSetProxyZIndex:
+		return "SetProxyZIndex";
+	case kStreamMovieGetProxyZIndex:
+		return "GetProxyZIndex";
 	case kIsVisibleMethod:
 		return "IsVisible";
+	case kStartCachingMethod:
+		return "StartCaching";
+	case kIsCachingMethod:
+		return "IsCaching";
+	case kPauseMethod:
+		return "PauseWhileStarting";
+	case kResumeMethod:
+		return "ResumeStart";
+	case kIsPausedMethod:
+		return "SetMultipleSounds/IsPaused";
 	case kSetMousePositionMethod:
 		return "SetMousePosition";
 	case kGetXScaleMethod1:
@@ -271,8 +301,10 @@ const char *builtInMethodToStr(BuiltInMethod method) {
 	case kStageGetHeightMethod:
 		return "StageGetHeight";
 	case kAddToStageMethod:
+	case kAddActorToStageMethod2:
 		return "AddToStage\\OpenLens";
 	case kRemoveFromStageMethod:
+	case kRemoveActorFromStageMethod2:
 		return "RemoveFromStage\\CloseLens";
 	case kAddedToStageMethod:
 		return "AddedToStage";
@@ -295,9 +327,17 @@ const char *builtInMethodToStr(BuiltInMethod method) {
 	case kYViewportPositionMethod:
 		return "YViewportPosition";
 	case kPanToMethod:
-		return "PanTo";
-	case kClearToPaletteMethod:
+		return "PanTo/CanvasClearToTransparency";
+	case kCanvasStampImageMethod:
+		return "CanvasStampImage";
+	case kCanvasCopyScreenToMethod:
+		return "CanvasCopyScreenTo";
+	case kCanvasClearToPaletteMethod:
 		return "ClearToPalette";
+	case kStreamMovieMoveProxyToStageMethod:
+		return "MoveProxyToStage";
+	case kStreamMovieMoveProxyToRootStageMethod:
+		return "MoveProxyToRootStage";
 	case kDocumentLoadContextMethod:
 		return "LoadContext";
 	case kDocumentReleaseContextMethod:
@@ -308,20 +348,66 @@ const char *builtInMethodToStr(BuiltInMethod method) {
 		return "Quit";
 	case kDocumentContextLoadInProgressMethod:
 		return "ContextLoadInProgress";
-	case kDocumentSetMultipleSoundsMethod:
-		return "SetMultipleSounds";
 	case kDocumentContextIsLoadedMethod:
 		return "IsLoaded";
-	case kSetDurationMethod:
+	case kPathSetDurationMethod:
 		return "SetDuration";
-	case kPercentCompleteMethod:
+	case kPathGetPercentCompleteMethod:
 		return "PercentComplete";
-	case kTextMethod:
+	case kPathSetStartPointMethod:
+		return "SetStartPoint";
+	case kPathSetEndPointMethod:
+		return "SetEndPoint";
+	case kPathSetTotalStepsMethod:
+		return "SetTotalSteps";
+	case kPathSetStepRateMethod:
+		return "SetStepRate";
+	case kTextGetFontActorMethod:
+		return "GetFontActor";
+	case kTextSetFontActorMethod:
+		return "SetFontActor";
+	case kTextGetTextMethod:
 		return "Text";
-	case kSetTextMethod:
+	case kTextSetTextMethod:
 		return "SetText";
-	case kSetMaximumTextLengthMethod:
-		return "SetMaximumTextLength";
+	case kTextGetMaxLengthMethod:
+		return "GetMaxLength";
+	case kTextSetMaxLengthMethod:
+		return "SetMaxLength";
+	case kGetLastPressedCharCodeMethod:
+		return "GetLastPressedCharCode";
+	case kTextGetCursorPositionMethod:
+		return "GetCursorPosition";
+	case kTextSetCursorPositionMethod:
+		return "SetCursorPosition";
+	case kTextGetJustificationMethod:
+		return "GetJustification";
+	case kTextSetJustificationMethod:
+		return "SetJustification";
+	case kTextGetPositionMethod:
+		return "GetPosition";
+	case kTextSetPositionMethod:
+		return "SetPosition";
+	case kTextGetConstrainToWidthMethod:
+		return "GetConstrainToWidth";
+	case kTextSetConstrainToWidthMethod:
+		return "SetConstrainToWidth";
+	case kTextGetCursorIsVisibleMethod:
+		return "GetCursorIsVisible";
+	case kTextSetCursorIsVisibleMethod:
+		return "SetCursorIsVisible";
+	case kTextGetOverwriteModeMethod:
+		return "GetOverwriteMode";
+	case kTextSetOverwriteModeMethod:
+		return "SetOverwriteMode";
+	case kTextGetTranslatedCharCode:
+		return "GetTranslatedCharCode";
+	case kTextAddAcceptedCharsMethod:
+		return "AddAcceptedChars";
+	case kTextIsCharacterAcceptedMethod:
+		return "IsCharacterAccepted";
+	case kTextEnableDisableCharacterMethod:
+		return "EnableDisableCharacter";
 	case kAppendMethod:
 		return "Append";
 	case kApplyMethod:
@@ -443,7 +529,7 @@ const char *operandTypeToStr(OperandType type) {
 	case kOperandTypeString:
 		return "String";
 	case kOperandTypeParamToken:
-		return "DollarSignVariable";
+		return "ParamToken";
 	case kOperandTypeActorId:
 		return "ActorId";
 	case kOperandTypeTime:

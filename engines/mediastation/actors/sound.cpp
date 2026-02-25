@@ -41,7 +41,7 @@ void SoundActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) {
 		// as the ID we have already read.
 		uint32 duplicateActorId = chunk.readTypedUint16();
 		if (duplicateActorId != _id) {
-			warning("Duplicate actor ID %d does not match original ID %d", duplicateActorId, _id);
+			warning("[%s] %s: Duplicate actor ID %s does not match", debugName(), __func__, g_engine->formatActorName(duplicateActorId).c_str());
 		}
 		break;
 	}
@@ -51,16 +51,25 @@ void SoundActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) {
 		registerWithStreamManager();
 		break;
 
-	case kActorHeaderHasOwnSubfile:
-		_hasOwnSubfile = static_cast<bool>(chunk.readTypedByte());
+	case kActorHeaderDiscardAfterUse:
+		_discardAfterUse = static_cast<bool>(chunk.readTypedByte());
 		break;
 
 	case kActorHeaderSoundInfo:
 		_sequence.readParameters(chunk);
 		break;
 
-	case kActorHeaderMovieLoadType:
-		_loadType = chunk.readTypedByte();
+	case kActorHeaderCachingEnabled:
+		// This controls some caching behavior in the original, but since that is not currently
+		// implemented here, just throw it away.
+		chunk.readTypedByte();
+		break;
+
+	case kActorHeaderInstallType:
+		// In the original, this controls behavior if the files are NOT installed. But since
+		// the "installation" is just copying from the CD-ROM, we can treat the game as always
+		// installed. So just throw away this value.
+		chunk.readTypedByte();
 		break;
 
 	default:
@@ -69,15 +78,15 @@ void SoundActor::readParameter(Chunk &chunk, ActorHeaderSectionType paramType) {
 }
 
 void SoundActor::process() {
-	if (!_isPlaying) {
+	if (_playState != kSoundPlaying) {
 		return;
 	}
 
-	processTimeEventHandlers();
+	processTimeScriptResponses();
 	if (!_sequence.isActive()) {
-		_isPlaying = false;
+		_playState = kSoundStopped;
 		_sequence.stop();
-		runEventHandlerIfExists(kSoundEndEvent);
+		runScriptResponseIfExists(kSoundEndEvent);
 	}
 }
 void SoundActor::readChunk(Chunk &chunk) {
@@ -94,56 +103,95 @@ ScriptValue SoundActor::callMethod(BuiltInMethod methodId, Common::Array<ScriptV
 		// timer_6c06_AnsweringMachine, which calls SpatialShow on a sound.
 		// Since the engine is currently flagging errors on unimplemented
 		// methods for easier debugging, a no-op is used here to avoid the error.
-		assert(args.empty());
-		return returnValue;
+		ARGCOUNTCHECK(0);
+		break;
 
-	case kTimePlayMethod: {
-		assert(args.empty());
-		timePlay();
-		return returnValue;
+	case kTimePlayMethod:
+		ARGCOUNTCHECK(0);
+		start();
+		break;
+
+	case kTimeStopMethod:
+		ARGCOUNTCHECK(0);
+		stop();
+		break;
+
+	case kPauseMethod:
+		ARGCOUNTCHECK(0);
+		pause();
+		break;
+
+	case kResumeMethod: {
+		ARGCOUNTRANGE(0, 1);
+		bool shouldRestart = false;
+		if (args.size() == 1) {
+			shouldRestart = args[0].asBool();
+		}
+		resume(shouldRestart);
+		break;
 	}
 
-	case kTimeStopMethod: {
-		assert(args.empty());
-		timeStop();
-		return returnValue;
-	}
+	case kIsPlayingMethod:
+		returnValue.setToBool(_playState == kSoundPlaying || _playState == kSoundPaused);
+		break;
+
+	case kIsPausedMethod:
+		returnValue.setToBool(_playState == kSoundPaused);
+		break;
 
 	default:
-		return Actor::callMethod(methodId, args);
+		returnValue = Actor::callMethod(methodId, args);
+	}
+	return returnValue;
+}
+
+void SoundActor::start() {
+	if (_loadIsComplete) {
+		if (_playState == kSoundPlaying || _playState == kSoundPaused) {
+			stop();
+		}
+
+		openStream();
+		_playState = kSoundPlaying;
+		_startTime = g_system->getMillis();
+		_lastProcessedTime = 0;
+		_sequence.play();
+		runScriptResponseIfExists(kSoundBeginEvent);
+	} else {
+		warning("[%s] %s: Attempted to play sound before it was loaded", debugName(), __func__);
 	}
 }
 
-void SoundActor::timePlay() {
+void SoundActor::stop() {
+	if (_playState == kSoundPlaying || _playState == kSoundPaused) {
+		_playState = kSoundStopped;
+		_sequence.stop();
+		runScriptResponseIfExists(kSoundStoppedEvent);
+	}
+}
+
+void SoundActor::pause() {
+	if (_playState == kSoundPlaying) {
+		_sequence.pause();
+		_playState = kSoundPaused;
+		// There don't seem to be script events to trigger in this instance.
+	}
+}
+
+void SoundActor::resume(bool restart) {
+	if (_playState == kSoundPaused) {
+		_sequence.resume();
+	} else if (restart) {
+		start();
+	}
+	// There don't seem to be script events to trigger in this instance.
+}
+
+void SoundActor::openStream() {
 	if (_streamFeed == nullptr && !_isLoadedFromChunk) {
 		_streamFeed = g_engine->getStreamFeedManager()->openStreamFeed(_id);
 		_streamFeed->readData();
 	}
-
-	if (_isPlaying) {
-		return;
-	}
-
-	if (_sequence.isEmpty()) {
-		_isPlaying = false;
-		return;
-	}
-
-	_isPlaying = true;
-	_startTime = g_system->getMillis();
-	_lastProcessedTime = 0;
-	_sequence.play();
-	runEventHandlerIfExists(kSoundBeginEvent);
-}
-
-void SoundActor::timeStop() {
-	if (!_isPlaying) {
-		return;
-	}
-
-	_isPlaying = false;
-	_sequence.stop();
-	runEventHandlerIfExists(kSoundStoppedEvent);
 }
 
 } // End of namespace MediaStation
