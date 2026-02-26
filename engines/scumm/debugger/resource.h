@@ -19,31 +19,48 @@
  *
  */
 
-#ifndef AGI_SOUND_A2_H
-#define AGI_SOUND_A2_H
+#ifndef SCUMM_EDITOR_RESOURCE_H
+#define SCUMM_EDITOR_RESOURCE_H
 
-#include "audio/audiostream.h"
-#include "audio/softsynth/pcspk.h"
+#include "common/array.h"
+#include "common/noncopyable.h"
+#include "common/path.h"
 
-namespace Agi {
+namespace Scumm {
 
-class SoundGenA2 : public SoundGen {
-public:
-	SoundGenA2(AgiBase *vm, Audio::Mixer *pMixer);
-	~SoundGenA2() override;
+namespace Editor {
 
-	void play(int resnum) override;
-	void stop() override;
+class File;
 
-private:
-	bool _isPlaying;
-	Audio::PCSpeaker _speaker;
-
-	void onTimer();
-
-	static void timerProc(void *refCon);
+struct Block {
+	uint32 offset;
+	uint32 tag;
+	uint32 size;
+	int parent;
+	Common::Array<int> children;
 };
 
-} // End of namespace Agi
+class Resource : public Common::NonCopyable {
+private:
+	int _version;
+	Common::Array<File *> _files;
+	Common::Array<Common::Array<Block>> _blocks;
 
-#endif /* AGI_SOUND_A2_H */
+	void buildBlocks(File &file, uint32 startOffset, uint32 endOffset, int parentIndex, Common::Array<Block> &blocks);
+	bool isContainerBlock(uint32 tag) const;
+
+public:
+	Resource(int version);
+	~Resource();
+
+	void addFile(const Common::Path &path, byte encByte);
+	int getFileCount() const;
+	File *getFile(int index);
+	const Common::Array<Block> &getBlocks(int index) const;
+};
+
+} // End of namespace Editor
+
+} // End of namespace Scumm
+
+#endif

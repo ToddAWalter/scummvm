@@ -53,8 +53,12 @@ public:
 
 	void setJobName(const Common::String &jobName) { _jobName = jobName; }
 
+	virtual Common::Rect getPrintableArea() const;
+	virtual Common::Point getPrintableAreaOffset() const;
+	virtual Common::Rect getPaperDimensions() const;
+
 protected:
-	virtual void doPrint(const Graphics::ManagedSurface &surf);
+	virtual void doPrint(const Graphics::ManagedSurface &surf, const Common::Rect &destRect);
 
 	virtual Common::StringArray listPrinterNames() const;
 

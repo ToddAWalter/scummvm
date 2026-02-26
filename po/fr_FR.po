@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-23 14:24+0000\n"
+"POT-Creation-Date: 2026-02-25 19:00+0000\n"
 "PO-Revision-Date: 2026-02-23 19:51+0000\n"
 "Last-Translator: Purple T <ZEONK@hotmail.com>\n"
 "Language-Team: French <https://translations.scummvm.org/projects/scummvm/"
@@ -110,7 +110,7 @@ msgstr "Rép. préc."
 #: gui/editrecorddialog.cpp:66 gui/integrity-dialog.cpp:122
 #: gui/integrity-dialog.cpp:253 gui/filebrowser-dialog.cpp:68
 #: gui/fluidsynth-dialog.cpp:153 gui/massadd.cpp:93 gui/options.cpp:2416
-#: gui/predictivedialog.cpp:68 gui/printing-dialog.cpp:97
+#: gui/predictivedialog.cpp:68 gui/printing-dialog.cpp:96
 #: gui/recorderdialog.cpp:73 gui/recorderdialog.cpp:212
 #: gui/remotebrowser.cpp:59 gui/saveload-dialog.cpp:64
 #: gui/saveload-dialog.cpp:456 gui/saveload-dialog.cpp:540
@@ -329,7 +329,7 @@ msgstr ""
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:428 gui/launcher.cpp:457
-#: gui/launcher.cpp:530 gui/launcher.cpp:1908 gui/options.cpp:3485
+#: gui/launcher.cpp:530 gui/launcher.cpp:1909 gui/options.cpp:3485
 #: gui/options.cpp:3859 base/main.cpp:594
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:102
@@ -348,7 +348,7 @@ msgstr "Oui"
 #: gui/cloudconnectionwizard.cpp:530 gui/downloaddialog.cpp:118
 #: gui/downloaddialog.cpp:153 gui/filebrowser-dialog.cpp:135
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:428 gui/launcher.cpp:457
-#: gui/launcher.cpp:530 gui/launcher.cpp:1909 gui/options.cpp:3485
+#: gui/launcher.cpp:530 gui/launcher.cpp:1910 gui/options.cpp:3485
 #: gui/options.cpp:3859 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:102
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
@@ -1716,7 +1716,7 @@ msgstr "Tous"
 msgid "Icons per row:"
 msgstr "Icônes par ligne :"
 
-#: gui/launcher.cpp:1836
+#: gui/launcher.cpp:1837
 #, c-format
 msgid ""
 "Do you really want to remove the following %d game configuration(s)?\n"
@@ -2839,19 +2839,31 @@ msgstr "*  123"
 msgid "*  Abc"
 msgstr "*  Abc"
 
-#: gui/printing-dialog.cpp:61
+#: gui/printing-dialog.cpp:54
 msgid "Print"
 msgstr "Imprimer"
 
-#: gui/printing-dialog.cpp:62
+#: gui/printing-dialog.cpp:56
 msgid "Save as image"
 msgstr "Enregistrer comme image"
 
-#: gui/printing-dialog.cpp:64
+#: gui/printing-dialog.cpp:58
+#, fuzzy
+#| msgid "First page"
+msgid "Fit to page"
+msgstr "Première page"
+
+#: gui/printing-dialog.cpp:60 backends/graphics/opengl/opengl-graphics.cpp:315
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:127
+#: engines/twine/metaengine.cpp:312
+msgid "Center"
+msgstr "Centrer"
+
+#: gui/printing-dialog.cpp:63
 msgid "Printer:"
 msgstr "Imprimante :"
 
-#: gui/printing-dialog.cpp:87
+#: gui/printing-dialog.cpp:88
 msgid "Orientation:"
 msgstr "Orientation :"
 
@@ -2873,7 +2885,7 @@ msgstr "Enregistrer"
 msgid "Playback"
 msgstr "Lecture"
 
-#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:336
+#: gui/recorderdialog.cpp:77 gui/widgets/grid.cpp:340
 msgid "Edit"
 msgstr "Editer"
 
@@ -3070,11 +3082,11 @@ msgstr ""
 msgid "Clear value"
 msgstr "Effacer la valeur"
 
-#: gui/widgets/grid.cpp:330
+#: gui/widgets/grid.cpp:334
 msgid "Play"
 msgstr "Jouer"
 
-#: gui/widgets/grid.cpp:333
+#: gui/widgets/grid.cpp:337
 msgid "Saves"
 msgstr "Sauvegardes"
 
@@ -4353,12 +4365,6 @@ msgstr "Choisir un nouveau dossier"
 #: backends/graphics/sdl/sdl-graphics.cpp:515 engines/scumm/help.cpp:103
 msgid "Toggle aspect ratio correction"
 msgstr "Act. / Désact. correction du rapport d'aspect"
-
-#: backends/graphics/opengl/opengl-graphics.cpp:315
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:127
-#: engines/twine/metaengine.cpp:312
-msgid "Center"
-msgstr "Centrer"
 
 #: backends/graphics/opengl/opengl-graphics.cpp:316
 #: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:128
@@ -6582,7 +6588,7 @@ msgid "Climb"
 msgstr "Grimper"
 
 #: engines/access/metaengine.cpp:337 engines/bbvs/metaengine.cpp:142
-#: engines/freescape/games/castle/castle.cpp:396
+#: engines/freescape/games/castle/castle.cpp:397
 #: engines/petka/metaengine.cpp:137 engines/scumm/help.cpp:225
 #: engines/tsage/metaengine.cpp:201
 msgid "Walk"
@@ -7330,7 +7336,7 @@ msgid "Whether textures should be linearly filtered"
 msgstr "Force le filtrage linéaire des textures"
 
 #: engines/alcachofa/metaengine.cpp:98 engines/cine/metaengine.cpp:347
-#: engines/freescape/games/castle/castle.cpp:413
+#: engines/freescape/games/castle/castle.cpp:414
 msgid "Activate"
 msgstr "Activer"
 
@@ -7787,7 +7793,7 @@ msgstr "Act. / Désact. indice privé"
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
 #: engines/dgds/metaengine.cpp:75 engines/dm/metaengine.cpp:174
 #: engines/drascula/metaengine.cpp:285 engines/efh/metaengine.cpp:272
-#: engines/freescape/games/castle/castle.cpp:358
+#: engines/freescape/games/castle/castle.cpp:359
 #: engines/freescape/games/dark/dark.cpp:188
 #: engines/freescape/games/driller/driller.cpp:120
 #: engines/freescape/games/eclipse/eclipse.cpp:236
@@ -7815,7 +7821,7 @@ msgstr "Sauvegarder"
 #: engines/cge/metaengine.cpp:227 engines/cge2/metaengine.cpp:241
 #: engines/dgds/metaengine.cpp:74 engines/drascula/metaengine.cpp:260
 #: engines/efh/metaengine.cpp:279 engines/efh/metaengine.cpp:613
-#: engines/freescape/games/castle/castle.cpp:363
+#: engines/freescape/games/castle/castle.cpp:364
 #: engines/freescape/games/dark/dark.cpp:193
 #: engines/freescape/games/driller/driller.cpp:125
 #: engines/freescape/games/eclipse/eclipse.cpp:241
@@ -7865,7 +7871,7 @@ msgstr "Panneau des indices"
 #: engines/bladerunner/metaengine.cpp:375 engines/cruise/metaengine.cpp:229
 #: engines/darkseed/metaengine.cpp:60 engines/dragons/metaengine.cpp:223
 #: engines/efh/metaengine.cpp:373 engines/efh/metaengine.cpp:619
-#: engines/freescape/games/castle/castle.cpp:371
+#: engines/freescape/games/castle/castle.cpp:372
 #: engines/freescape/games/dark/dark.cpp:198
 #: engines/freescape/games/driller/driller.cpp:130
 #: engines/freescape/games/eclipse/eclipse.cpp:246
@@ -8890,7 +8896,7 @@ msgstr "Défendre"
 
 #. I18N: Run is a movement type
 #. I18N: Action in In Cold Blood
-#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:391
+#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:392
 #: engines/grim/grim.cpp:501 engines/grim/grim.cpp:596
 #: engines/hpl1/metaengine.cpp:82 engines/icb/icb.cpp:131
 #: engines/icb/icb.cpp:197 engines/ultima/ultima8/metaengine.cpp:56
@@ -9087,15 +9093,15 @@ msgstr "Changer de mode"
 msgid "Info menu"
 msgstr "Menu d'information"
 
-#: engines/freescape/games/castle/castle.cpp:348
+#: engines/freescape/games/castle/castle.cpp:349
 msgid "Select prince"
 msgstr "Sélectionner le prince"
 
-#: engines/freescape/games/castle/castle.cpp:353
+#: engines/freescape/games/castle/castle.cpp:354
 msgid "Select princess"
 msgstr "Sélectionner la princesse"
 
-#: engines/freescape/games/castle/castle.cpp:376
+#: engines/freescape/games/castle/castle.cpp:377
 #: engines/freescape/games/dark/dark.cpp:208
 #: engines/freescape/games/driller/driller.cpp:138
 #: engines/freescape/games/eclipse/eclipse.cpp:254
@@ -9103,25 +9109,25 @@ msgstr "Sélectionner la princesse"
 msgid "Toggle sound"
 msgstr "Act. / Désact. le son"
 
-#: engines/freescape/games/castle/castle.cpp:381
+#: engines/freescape/games/castle/castle.cpp:382
 #: engines/freescape/games/dark/dark.cpp:214
 #: engines/freescape/games/driller/driller.cpp:144
 #: engines/freescape/games/eclipse/eclipse.cpp:259
 msgid "Rotate left"
 msgstr "Tourner à gauche"
 
-#: engines/freescape/games/castle/castle.cpp:386
+#: engines/freescape/games/castle/castle.cpp:387
 #: engines/freescape/games/dark/dark.cpp:219
 #: engines/freescape/games/driller/driller.cpp:149
 #: engines/freescape/games/eclipse/eclipse.cpp:264
 msgid "Rotate right"
 msgstr "Tourner à droite"
 
-#: engines/freescape/games/castle/castle.cpp:402
+#: engines/freescape/games/castle/castle.cpp:403
 msgid "Crawl"
 msgstr "Ramper"
 
-#: engines/freescape/games/castle/castle.cpp:408
+#: engines/freescape/games/castle/castle.cpp:409
 #: engines/freescape/games/eclipse/eclipse.cpp:293
 msgid "Face forward"
 msgstr "Marcher vers l'avant"
@@ -9312,12 +9318,12 @@ msgstr "Fichier rs incorrect."
 msgid "Save file created by different version."
 msgstr "Fichier de sauvegarde créé par une version différente."
 
-#: engines/gob/inter_geisha.cpp:237 engines/gob/inter_playtoons.cpp:284
+#: engines/gob/inter_geisha.cpp:237 engines/gob/inter_playtoons.cpp:285
 #: engines/gob/inter_v2.cpp:1512 engines/tinsel/saveload.cpp:590
 msgid "Failed to load saved game from file."
 msgstr "Échec du chargement de la sauvegarde depuis un fichier."
 
-#: engines/gob/inter_geisha.cpp:268 engines/gob/inter_playtoons.cpp:412
+#: engines/gob/inter_geisha.cpp:268 engines/gob/inter_playtoons.cpp:426
 #: engines/gob/inter_v2.cpp:1591 engines/tinsel/saveload.cpp:603
 msgid "Failed to save game to file."
 msgstr "Échec de l'enregistrement de la sauvegarde vers un fichier."

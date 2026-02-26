@@ -36,28 +36,30 @@ class Win32PrintingManager : public Common::PrintingManager {
 public:
 	virtual ~Win32PrintingManager();
 
-	void doPrint(const Graphics::ManagedSurface &surf) override;
+	void doPrint(const Graphics::ManagedSurface &surf, const Common::Rect &destRect) override;
 
 	Common::StringArray listPrinterNames() const override;
 
 	Common::String getDefaultPrinterName() const override;
 
+	Common::Rect getPrintableArea() const override;
+	Common::Point getPrintableAreaOffset() const override;
+	Common::Rect getPaperDimensions() const override;
+
 private:
-	HDC createDefaultPrinterContext();
-	HDC createPrinterContext(LPTSTR devName);
-	HBITMAP buildBitmap(HDC hdc, const Graphics::ManagedSurface &surf);
+	HDC createDefaultPrinterContext() const;
+	HDC createPrinterContext(LPTSTR devName) const;
+	HDC createPrinterContext() const;
+	BITMAPINFO *buildBitmapInfo(const Graphics::ManagedSurface &surf);
 };
 
 
 Win32PrintingManager::~Win32PrintingManager() {}
 
-void Win32PrintingManager::doPrint(const Graphics::ManagedSurface &surf) {
-
-	HDC hdcPrint;
-	if (!_printerName.size())
-		hdcPrint = createDefaultPrinterContext();
-	else
-		hdcPrint = createPrinterContext(Win32::stringToTchar(_printerName));
+void Win32PrintingManager::doPrint(const Graphics::ManagedSurface &surf, const Common::Rect &destRect) {
+	HDC hdcPrint = createPrinterContext();
+	if (!hdcPrint)
+		return;
 
 	DOCINFOA info;
 	info.cbSize = sizeof(info);
@@ -66,30 +68,45 @@ void Win32PrintingManager::doPrint(const Graphics::ManagedSurface &surf) {
 	info.lpszOutput = nullptr;
 	info.lpszDocName = _jobName.c_str();
 
-	HDC hdcImg = CreateCompatibleDC(hdcPrint);
-
-	HBITMAP bitmap = buildBitmap(hdcPrint, surf);
-	if (!bitmap) {
-		DeleteDC(hdcImg);
+	BITMAPINFO *bitmapInfo = buildBitmapInfo(surf);
+	if (!bitmapInfo) {
+		DeleteDC(hdcPrint);
 		return;
+	}
+
+	// Ensure the pitch is a multiple of 4, as required by StretchDIBits
+	int32 pitchCeiledUp = (surf.pitch + 3) / 4 * 4;
+	byte *dibPixels = nullptr;
+	if (pitchCeiledUp != surf.pitch) {
+		dibPixels = new byte[pitchCeiledUp * surf.h]();
+		const byte *src = (const byte *)surf.getPixels();
+		byte *dst = dibPixels;
+		for (int y = 0; y < surf.h; y++) {
+			memcpy(dst, src, surf.pitch);
+			src += surf.pitch;
+			dst += pitchCeiledUp;
+		}
 	}
 
 	StartDocA(hdcPrint, &info);
 	StartPage(hdcPrint);
 
-	SelectObject(hdcImg, bitmap);
+	StretchDIBits(hdcPrint,
+				  destRect.left, destRect.top, destRect.width(), destRect.height(),
+				  0, 0, surf.w, surf.h,
+				  dibPixels ? dibPixels : surf.getPixels(),
+				  bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 
-	BitBlt(hdcPrint, 0, 0, surf.w, surf.h, hdcImg, 0, 0, SRCCOPY);
+	delete[] dibPixels;
+	free(bitmapInfo);
 
 	EndPage(hdcPrint);
 	EndDoc(hdcPrint);
 
-	DeleteObject(bitmap);
-	DeleteDC(hdcImg);
 	DeleteDC(hdcPrint);
 }
 
-HDC Win32PrintingManager::createDefaultPrinterContext() {
+HDC Win32PrintingManager::createDefaultPrinterContext() const {
 	TCHAR szPrinter[MAX_PATH];
 	BOOL success;
 	DWORD cchPrinter(ARRAYSIZE(szPrinter));
@@ -101,7 +118,7 @@ HDC Win32PrintingManager::createDefaultPrinterContext() {
 	return createPrinterContext(szPrinter);
 }
 
-HDC Win32PrintingManager::createPrinterContext(LPTSTR devName) {
+HDC Win32PrintingManager::createPrinterContext(LPTSTR devName) const {
 	HANDLE handle;
 	BOOL success;
 
@@ -125,7 +142,14 @@ HDC Win32PrintingManager::createPrinterContext(LPTSTR devName) {
 	return printerDC;
 }
 
-HBITMAP Win32PrintingManager::buildBitmap(HDC hdc, const Graphics::ManagedSurface &surf) {
+HDC Win32PrintingManager::createPrinterContext() const {
+	if (_printerName.empty())
+		return createDefaultPrinterContext();
+	else
+		return createPrinterContext(Win32::stringToTchar(_printerName));
+}
+
+BITMAPINFO *Win32PrintingManager::buildBitmapInfo(const Graphics::ManagedSurface &surf) {
 	const uint colorCount = 256;
 	BITMAPINFO *bitmapInfo = (BITMAPINFO *)malloc(sizeof(BITMAPINFO) + sizeof(RGBQUAD) * (colorCount - 1));
 
@@ -137,7 +161,7 @@ HBITMAP Win32PrintingManager::buildBitmap(HDC hdc, const Graphics::ManagedSurfac
 	bitmapInfo->bmiHeader.biHeight = -((LONG)surf.h);
 	bitmapInfo->bmiHeader.biPlanes = 1;
 	bitmapInfo->bmiHeader.biBitCount = (surf.format.isCLUT8() ? 8 : surf.format.bpp());
-	bitmapInfo->bmiHeader.biCompression = BI_RGB;
+	bitmapInfo->bmiHeader.biCompression = (surf.format.isCLUT8() ? BI_RGB : BI_BITFIELDS);
 	bitmapInfo->bmiHeader.biSizeImage = 0;
 	bitmapInfo->bmiHeader.biClrUsed = (surf.format.isCLUT8() ? colorCount : 0);
 	bitmapInfo->bmiHeader.biClrImportant = (surf.format.isCLUT8() ? colorCount : 0);
@@ -155,13 +179,14 @@ HBITMAP Win32PrintingManager::buildBitmap(HDC hdc, const Graphics::ManagedSurfac
 		}
 
 		delete[] colors;
+	} else {
+		DWORD *masks = (DWORD *)bitmapInfo->bmiColors;
+		masks[0] = (DWORD)surf.format.rMax() << surf.format.rShift;
+		masks[1] = (DWORD)surf.format.gMax() << surf.format.gShift;
+		masks[2] = (DWORD)surf.format.bMax() << surf.format.bShift;
 	}
 
-	HBITMAP bitmap = CreateDIBitmap(hdc, &(bitmapInfo->bmiHeader), CBM_INIT, surf.getPixels(), bitmapInfo, DIB_RGB_COLORS);
-
-	free(bitmapInfo);
-
-	return bitmap;
+	return bitmapInfo;
 }
 
 Common::StringArray Win32PrintingManager::listPrinterNames() const {
@@ -202,6 +227,42 @@ Common::String Win32PrintingManager::getDefaultPrinterName() const {
 	delete[] str;
 
 	return name;
+}
+
+Common::Rect Win32PrintingManager::getPrintableArea() const {
+	HDC hdcPrint = createPrinterContext();
+	if (hdcPrint) {
+		int16 width = GetDeviceCaps(hdcPrint, HORZRES);
+		int16 height = GetDeviceCaps(hdcPrint, VERTRES);
+		DeleteDC(hdcPrint);
+		return Common::Rect(width, height);
+	}
+
+	return Common::Rect();
+}
+
+Common::Point Win32PrintingManager::getPrintableAreaOffset() const {
+	HDC hdcPrint = createPrinterContext();
+	if (hdcPrint) {
+		int16 x = GetDeviceCaps(hdcPrint, PHYSICALOFFSETX);
+		int16 y = GetDeviceCaps(hdcPrint, PHYSICALOFFSETY);
+		DeleteDC(hdcPrint);
+		return Common::Point(x, y);
+	}
+
+	return Common::Point();
+}
+
+Common::Rect Win32PrintingManager::getPaperDimensions() const {
+	HDC hdcPrint = createPrinterContext();
+	if (hdcPrint) {
+		int16 width = GetDeviceCaps(hdcPrint, PHYSICALWIDTH);
+		int16 height = GetDeviceCaps(hdcPrint, PHYSICALHEIGHT);
+		DeleteDC(hdcPrint);
+		return Common::Rect(width, height);
+	}
+
+	return Common::Rect();
 }
 
 Common::PrintingManager *createWin32PrintingManager() {

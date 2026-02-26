@@ -19,31 +19,46 @@
  *
  */
 
-#ifndef AGI_SOUND_A2_H
-#define AGI_SOUND_A2_H
+#ifndef SCUMM_EDITOR_FILE_H
+#define SCUMM_EDITOR_FILE_H
 
-#include "audio/audiostream.h"
-#include "audio/softsynth/pcspk.h"
+#include "common/noncopyable.h"
+#include "common/path.h"
+#include "common/stream.h"
 
-namespace Agi {
+namespace Scumm {
 
-class SoundGenA2 : public SoundGen {
-public:
-	SoundGenA2(AgiBase *vm, Audio::Mixer *pMixer);
-	~SoundGenA2() override;
+namespace Editor {
 
-	void play(int resnum) override;
-	void stop() override;
-
+class File : public Common::NonCopyable {
 private:
-	bool _isPlaying;
-	Audio::PCSpeaker _speaker;
+	Common::Path _path;
+	byte _encByte;
+	Common::SeekableReadStream *_stream;
 
-	void onTimer();
+public:
+	File();
+	~File();
 
-	static void timerProc(void *refCon);
+	bool open(const Common::Path &path, byte encByte);
+	void close();
+
+	const Common::Path &getPath() const;
+
+	int64 pos() const;
+	int64 size() const;
+	bool seek(int64 offs, int whence = SEEK_SET);
+	uint32 read(void *dataPtr, uint32 dataSize);
+
+	byte readByte();
+	uint16 readUint16LE();
+	uint32 readUint32LE();
+	uint16 readUint16BE();
+	uint32 readUint32BE();
 };
 
-} // End of namespace Agi
+} // End of namespace Editor
 
-#endif /* AGI_SOUND_A2_H */
+} // End of namespace Scumm
+
+#endif
