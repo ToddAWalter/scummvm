@@ -379,7 +379,7 @@ void DigitalVideoCastMember::startVideo() {
 	else
 		_video->start();
 
-	debugC(2, kDebugImages, "STARTING VIDEO %s", _filename.c_str());
+	debugC(2, kDebugImages, "STARTING VIDEO %s %d/%d", _filename.c_str(), getMovieCurrentTime(), getMovieTotalTime());
 
 	if (_channel && _channel->_stopTime == 0)
 		_channel->_stopTime = getMovieTotalTime();
@@ -678,6 +678,16 @@ void DigitalVideoCastMember::setField(int field, const Datum &d) {
 		return;
 	case kTheDuration:
 		warning("DigitalVideoCastMember::setField(): Attempt to set read-only field %s of cast %d", g_lingo->entity2str(field), _castId);
+		return;
+	case kTheFileName:
+		// Update the filename, then force the video to be replaced.
+		// Channel dimensions are replaced by the video.
+		CastMember::setField(field, d);
+		loadVideoFromCast();
+		if (_channel) {
+			_channel->setWidth(_initialRect.width());
+			_channel->setHeight(_initialRect.height());
+		}
 		return;
 	case kTheFrameRate:
 		_frameRate = d.asInt();

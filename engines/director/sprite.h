@@ -111,6 +111,8 @@ public:
 
 	Common::String formatInfo();
 
+	void replaceFrom(Sprite *nextSprite);
+
 	Frame *_frame;
 	Score *_score;
 	Movie *_movie;
