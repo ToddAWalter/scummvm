@@ -77,7 +77,7 @@ public:
 	 */
 	virtual void flipBuffer() {}
 	virtual void useColor(uint8 r, uint8 g, uint8 b) = 0;
-	virtual void depthTesting(bool enabled) {};
+	virtual void enableCulling(bool enabled) {};
 	virtual void polygonOffset(bool enabled) = 0;
 
 	virtual Texture *createTexture(const Graphics::Surface *surface, bool is3D = false) = 0;
@@ -294,10 +294,10 @@ public:
 
 	// debug flags
 	bool _debugRenderBoundingBoxes;
-	int _debugBoundingBoxFilterID;
+	bool _debugRenderOcclusionBoxes;
 	bool _debugRenderWireframe;
 	bool _debugRenderNormals;
-	int _debugHighlightObjectID;
+	Common::Array<uint8> _debugHighlightObjectIDs;
 
 	// for drawing bounding boxes
 	virtual void drawAABB(const Math::AABB &aabb, uint8 r, uint8 g, uint8 b) {}

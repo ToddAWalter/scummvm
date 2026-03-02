@@ -50,6 +50,7 @@ public:
 	void changeObjectID(uint16 objectID, uint16 newObjectID);
 	ObjectArray getSensors();
 	uint16 getAreaID();
+	Common::Array<Object *> &getSortedObjects() { return _sortedObjects; }
 	uint16 getAreaFlags();
 	uint8 getScale();
 	void remapColor(int index, int color);
@@ -102,6 +103,9 @@ public:
 	uint32 _lastTick;
 
 private:
+	Math::Vector3d _lastCameraPosition;
+	ObjectArray _sortedObjects;
+
 	uint16 _areaID;
 	uint16 _areaFlags;
 	ObjectMap *_objectsByID;

@@ -127,6 +127,8 @@ public:
 		#endif
 		#if defined(MACOSX)
 		LINK_PLUGIN(COREAUDIO)
+		#endif
+		#if defined(MACOSX) || defined(IPHONE) && !defined(IPHONE_TVOS)
 		LINK_PLUGIN(COREMIDI)
 		#endif
 		#ifdef USE_FLUIDSYNTH

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-26 08:39+0000\n"
+"POT-Creation-Date: 2026-03-01 23:53+0000\n"
 "PO-Revision-Date: 2024-07-11 17:47+0000\n"
 "Last-Translator: Krish <ganatrakrish2882005@gmail.com>\n"
 "Language-Team: Hindi <https://translations.scummvm.org/projects/scummvm/"
@@ -4003,11 +4003,11 @@ msgstr "PC-98 ऑडियो"
 msgid "SegaCD Audio"
 msgstr ""
 
-#: audio/softsynth/mt32.cpp:168
+#: audio/softsynth/mt32.cpp:289
 msgid "Initializing MT-32 Emulator"
 msgstr ""
 
-#: audio/softsynth/mt32.cpp:441
+#: audio/softsynth/mt32.cpp:562
 msgid "MT-32 emulator"
 msgstr ""
 
@@ -5848,16 +5848,16 @@ msgstr ""
 #: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:132
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
-#: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:127 engines/queen/metaengine.cpp:146
-#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
-#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
-#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
-#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/tot/metaengine.cpp:102
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:127
+#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
+#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
+#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
+#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
+#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/tot/metaengine.cpp:102 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 #, fuzzy
 #| msgid "Game Options"
 msgid "Default keymappings"
@@ -11139,24 +11139,6 @@ msgstr "ऑटोसेव स्किप करें"
 msgid "Restart sequence"
 msgstr "सेव गेम्स"
 
-#: engines/playground3d/metaengine.cpp:55
-#, fuzzy
-#| msgid "Switch to Game"
-msgid "Switch test"
-msgstr "गेम पर स्विच करे"
-
-#: engines/playground3d/metaengine.cpp:61
-#, fuzzy
-#| msgid "Disable falling"
-msgid "Enable/Disable fog"
-msgstr "गिरना डिसएबल करें"
-
-#: engines/playground3d/metaengine.cpp:67
-#, fuzzy
-#| msgid "Disable sensors"
-msgid "Enable/Disable scissor"
-msgstr "सेंसर डिसएबल करें"
-
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
 msgid "3DO Plumbers requires RGB support."
@@ -11238,12 +11220,12 @@ msgstr ""
 msgid "Skip text"
 msgstr "ऑटोसेव स्किप करें"
 
-#: engines/queen/metaengine.cpp:203
+#: engines/queen/metaengine.cpp:203 engines/stark/metaengine.cpp:292
 #, fuzzy
 msgid "Scroll inventory up"
 msgstr "नीचे देखो"
 
-#: engines/queen/metaengine.cpp:209
+#: engines/queen/metaengine.cpp:209 engines/stark/metaengine.cpp:299
 #, fuzzy
 msgid "Scroll inventory down"
 msgstr "नीचे देखो"
@@ -13514,24 +13496,15 @@ msgstr ""
 msgid "Display all exits on current location"
 msgstr ""
 
-#: engines/stark/metaengine.cpp:292
-msgid "Scroll up in inventory"
-msgstr ""
-
-#: engines/stark/metaengine.cpp:299
-#, fuzzy
-msgid "Scroll down in inventory"
-msgstr "नीचे देखो"
-
 #: engines/stark/metaengine.cpp:306
 #, fuzzy
 #| msgid "Scroll Up"
-msgid "Scroll up in your dialogs"
+msgid "Scroll dialogs up"
 msgstr "ऊपर स्क्रॉल करें"
 
 #: engines/stark/metaengine.cpp:312
 #, fuzzy
-msgid "Scroll down in your dialogs"
+msgid "Scroll dialogs down"
 msgstr "नीचे देखो"
 
 #: engines/stark/metaengine.cpp:318
@@ -16555,6 +16528,34 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Scroll down in inventory"
+#~ msgstr "नीचे देखो"
+
+#, fuzzy
+#~| msgid "Scroll Up"
+#~ msgid "Scroll up in your dialogs"
+#~ msgstr "ऊपर स्क्रॉल करें"
+
+#, fuzzy
+#~ msgid "Scroll down in your dialogs"
+#~ msgstr "नीचे देखो"
+
+#, fuzzy
+#~| msgid "Switch to Game"
+#~ msgid "Switch test"
+#~ msgstr "गेम पर स्विच करे"
+
+#, fuzzy
+#~| msgid "Disable falling"
+#~ msgid "Enable/Disable fog"
+#~ msgstr "गिरना डिसएबल करें"
+
+#, fuzzy
+#~| msgid "Disable sensors"
+#~ msgid "Enable/Disable scissor"
+#~ msgstr "सेंसर डिसएबल करें"
+
+#, fuzzy
 #~| msgid "Strafe Left"
 #~ msgid "Rotate Left"
 #~ msgstr "बाएं Strafe करें"
@@ -16687,15 +16688,6 @@ msgstr ""
 #~| msgid "Go to end of line"
 #~ msgid "Go to end of journal"
 #~ msgstr "पंक्ति के अंत में जाएँ"
-
-#, fuzzy
-#~| msgid "Scroll Up"
-#~ msgid "Scroll page up"
-#~ msgstr "ऊपर स्क्रॉल करें"
-
-#, fuzzy
-#~ msgid "Scroll page down"
-#~ msgstr "नीचे देखो"
 
 #, fuzzy
 #~| msgid "Quit Game"

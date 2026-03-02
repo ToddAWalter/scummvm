@@ -4143,7 +4143,7 @@ if test -n "$_host"; then
 			;;
 		tvos)
 			add_line_to_config_mk 'IPHONE = 1'
-			append_var DEFINES "-DIPHONE -DIPHONE_IOS7"
+			append_var DEFINES "-DIPHONE -DIPHONE_IOS7 -DIPHONE_TVOS"
 			_backend="ios7"
 			_seq_midi=no
 			_timidity=no
@@ -4269,8 +4269,8 @@ case $_backend in
 	ios7)
 		append_var LIBS "-lobjc -framework UIKit -framework CoreGraphics -framework OpenGLES"
 		append_var LIBS "-framework QuartzCore -framework CoreFoundation -framework Foundation"
-		append_var LIBS "-framework AudioToolbox -framework CoreAudio -framework SystemConfiguration "
-		append_var LIBS "-framework GameController"
+		append_var LIBS "-framework AudioToolbox -framework CoreAudio -framework SystemConfiguration"
+		append_var LIBS "-framework GameController -framework CoreMIDI"
 		if test "$_host" = 'tvos'; then
 			append_var LDFLAGS "-mtvos-version-min=9 -arch arm64"
 			append_var CFLAGS "-mtvos-version-min=9 -arch arm64"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.6.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-26 08:39+0000\n"
+"POT-Creation-Date: 2026-03-01 23:53+0000\n"
 "PO-Revision-Date: 2026-02-07 15:22+0000\n"
 "Last-Translator: Timo Mikkolainen <tmikkola@gmail.com>\n"
 "Language-Team: Finnish <https://translations.scummvm.org/projects/scummvm/"
@@ -4219,11 +4219,11 @@ msgstr "PC-98 Ääni"
 msgid "SegaCD Audio"
 msgstr "SegaCD Ääni"
 
-#: audio/softsynth/mt32.cpp:168
+#: audio/softsynth/mt32.cpp:289
 msgid "Initializing MT-32 Emulator"
 msgstr "Alustetaan MT-32 emulaattoria"
 
-#: audio/softsynth/mt32.cpp:441
+#: audio/softsynth/mt32.cpp:562
 msgid "MT-32 emulator"
 msgstr "MT-32 emulaattori"
 
@@ -6469,16 +6469,16 @@ msgstr "Tarkista päivitykset..."
 #: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:132
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
-#: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:127 engines/queen/metaengine.cpp:146
-#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
-#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
-#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
-#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/tot/metaengine.cpp:102
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:127
+#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
+#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
+#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
+#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
+#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/tot/metaengine.cpp:102 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 msgid "Default keymappings"
 msgstr "Näppäinten oletuskartoitukset"
 
@@ -11697,18 +11697,6 @@ msgstr "Ohita video"
 msgid "Restart sequence"
 msgstr "Uudelleenkäynnistä näkymä"
 
-#: engines/playground3d/metaengine.cpp:55
-msgid "Switch test"
-msgstr "Vaihda testiä"
-
-#: engines/playground3d/metaengine.cpp:61
-msgid "Enable/Disable fog"
-msgstr "Sumu päälle/pois"
-
-#: engines/playground3d/metaengine.cpp:67
-msgid "Enable/Disable scissor"
-msgstr "Sakset päälle/pois"
-
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
 msgid "3DO Plumbers requires RGB support."
@@ -11788,11 +11776,11 @@ msgstr ""
 msgid "Skip text"
 msgstr "Ohita teksti"
 
-#: engines/queen/metaengine.cpp:203
+#: engines/queen/metaengine.cpp:203 engines/stark/metaengine.cpp:292
 msgid "Scroll inventory up"
 msgstr "Vieritä inventaariota ylös"
 
-#: engines/queen/metaengine.cpp:209
+#: engines/queen/metaengine.cpp:209 engines/stark/metaengine.cpp:299
 msgid "Scroll inventory down"
 msgstr "Vieritä inventaariota alas"
 
@@ -14110,21 +14098,17 @@ msgstr "Siirry eteenpäin inventaariossa"
 msgid "Display all exits on current location"
 msgstr "Näytä kaikki tämän sijainnin uloskäynnit"
 
-#: engines/stark/metaengine.cpp:292
-msgid "Scroll up in inventory"
-msgstr "Vieritä inventaariota ylös"
-
-#: engines/stark/metaengine.cpp:299
-msgid "Scroll down in inventory"
-msgstr "Vieritä inventaariota alas"
-
 #: engines/stark/metaengine.cpp:306
-msgid "Scroll up in your dialogs"
-msgstr "Vieritä dialogeja ylös"
+#, fuzzy
+#| msgid "Scroll list up"
+msgid "Scroll dialogs up"
+msgstr "Vieritä listaa ylös"
 
 #: engines/stark/metaengine.cpp:312
-msgid "Scroll down in your dialogs"
-msgstr "Vieritä dialogeja alas"
+#, fuzzy
+#| msgid "Scroll list down"
+msgid "Scroll dialogs down"
+msgstr "Vieritä listaa alas"
 
 #: engines/stark/metaengine.cpp:318
 msgid "Go to next dialog"
@@ -17026,6 +17010,27 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Scroll up in inventory"
+#~ msgstr "Vieritä inventaariota ylös"
+
+#~ msgid "Scroll down in inventory"
+#~ msgstr "Vieritä inventaariota alas"
+
+#~ msgid "Scroll up in your dialogs"
+#~ msgstr "Vieritä dialogeja ylös"
+
+#~ msgid "Scroll down in your dialogs"
+#~ msgstr "Vieritä dialogeja alas"
+
+#~ msgid "Switch test"
+#~ msgstr "Vaihda testiä"
+
+#~ msgid "Enable/Disable fog"
+#~ msgstr "Sumu päälle/pois"
+
+#~ msgid "Enable/Disable scissor"
+#~ msgstr "Sakset päälle/pois"
 
 #~ msgid "Toggle Sound"
 #~ msgstr "Äänet päälle / pois"

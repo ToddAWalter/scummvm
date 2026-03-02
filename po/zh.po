@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-26 08:39+0000\n"
+"POT-Creation-Date: 2026-03-01 23:53+0000\n"
 "PO-Revision-Date: 2024-05-14 12:42+0000\n"
 "Last-Translator: 复予 <clonewith@qq.com>\n"
 "Language-Team: Chinese <https://translations.scummvm.org/projects/scummvm/"
@@ -3919,11 +3919,11 @@ msgstr ""
 msgid "SegaCD Audio"
 msgstr ""
 
-#: audio/softsynth/mt32.cpp:168
+#: audio/softsynth/mt32.cpp:289
 msgid "Initializing MT-32 Emulator"
 msgstr ""
 
-#: audio/softsynth/mt32.cpp:441
+#: audio/softsynth/mt32.cpp:562
 msgid "MT-32 emulator"
 msgstr ""
 
@@ -5758,16 +5758,16 @@ msgstr ""
 #: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:132
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
-#: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:127 engines/queen/metaengine.cpp:146
-#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
-#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
-#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
-#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/tot/metaengine.cpp:102
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:127
+#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
+#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
+#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
+#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
+#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/tot/metaengine.cpp:102 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 #, fuzzy
 #| msgid "Game Options"
 msgid "Default keymappings"
@@ -11013,22 +11013,6 @@ msgstr "语音"
 msgid "Restart sequence"
 msgstr "2D遊戲中"
 
-#: engines/playground3d/metaengine.cpp:55
-#, fuzzy
-#| msgid "Switch to Game"
-msgid "Switch test"
-msgstr "切换到游戏"
-
-#: engines/playground3d/metaengine.cpp:61
-#, fuzzy
-msgid "Enable/Disable fog"
-msgstr "关闭"
-
-#: engines/playground3d/metaengine.cpp:67
-#, fuzzy
-msgid "Enable/Disable scissor"
-msgstr "禁用自動存檔"
-
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
 msgid "3DO Plumbers requires RGB support."
@@ -11107,13 +11091,13 @@ msgstr ""
 msgid "Skip text"
 msgstr "跳过自动保存"
 
-#: engines/queen/metaengine.cpp:203
+#: engines/queen/metaengine.cpp:203 engines/stark/metaengine.cpp:292
 #, fuzzy
 #| msgid "Scroll Down"
 msgid "Scroll inventory up"
 msgstr "往下滾動"
 
-#: engines/queen/metaengine.cpp:209
+#: engines/queen/metaengine.cpp:209 engines/stark/metaengine.cpp:299
 #, fuzzy
 #| msgid "Scroll Down"
 msgid "Scroll inventory down"
@@ -13383,22 +13367,16 @@ msgstr ""
 msgid "Display all exits on current location"
 msgstr ""
 
-#: engines/stark/metaengine.cpp:292
-msgid "Scroll up in inventory"
-msgstr ""
-
-#: engines/stark/metaengine.cpp:299
-msgid "Scroll down in inventory"
-msgstr ""
-
 #: engines/stark/metaengine.cpp:306
-msgid "Scroll up in your dialogs"
-msgstr ""
+#, fuzzy
+#| msgid "Scroll Down"
+msgid "Scroll dialogs up"
+msgstr "往下滾動"
 
 #: engines/stark/metaengine.cpp:312
 #, fuzzy
 #| msgid "Scroll Down"
-msgid "Scroll down in your dialogs"
+msgid "Scroll dialogs down"
 msgstr "往下滾動"
 
 #: engines/stark/metaengine.cpp:318
@@ -16377,6 +16355,24 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~| msgid "Scroll Down"
+#~ msgid "Scroll down in your dialogs"
+#~ msgstr "往下滾動"
+
+#, fuzzy
+#~| msgid "Switch to Game"
+#~ msgid "Switch test"
+#~ msgstr "切换到游戏"
+
+#, fuzzy
+#~ msgid "Enable/Disable fog"
+#~ msgstr "关闭"
+
+#, fuzzy
+#~ msgid "Enable/Disable scissor"
+#~ msgstr "禁用自動存檔"
+
+#, fuzzy
 #~| msgid "Special sound effects volume"
 #~ msgid "Toggle Sound"
 #~ msgstr "特殊音效音量"
@@ -16503,16 +16499,6 @@ msgstr ""
 #~| msgid "Close popup"
 #~ msgid "Go to end of journal"
 #~ msgstr "关闭弹出窗口"
-
-#, fuzzy
-#~| msgid "Scroll Down"
-#~ msgid "Scroll page up"
-#~ msgstr "往下滾動"
-
-#, fuzzy
-#~| msgid "Scroll Down"
-#~ msgid "Scroll page down"
-#~ msgstr "往下滾動"
 
 #, fuzzy
 #~| msgid "Quit Game"

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.4.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-26 08:39+0000\n"
-"PO-Revision-Date: 2026-02-26 11:31+0000\n"
+"POT-Creation-Date: 2026-03-01 23:53+0000\n"
+"PO-Revision-Date: 2026-03-02 10:49+0000\n"
 "Last-Translator: IlDucci <pajaroloco_2@hotmail.com>\n"
 "Language-Team: Spanish <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/es/>\n"
@@ -4211,11 +4211,11 @@ msgstr "Audio PC-98"
 msgid "SegaCD Audio"
 msgstr "Audio de SegaCD/MegaCD"
 
-#: audio/softsynth/mt32.cpp:168
+#: audio/softsynth/mt32.cpp:289
 msgid "Initializing MT-32 Emulator"
 msgstr "Iniciando el emulador de MT-32"
 
-#: audio/softsynth/mt32.cpp:441
+#: audio/softsynth/mt32.cpp:562
 msgid "MT-32 emulator"
 msgstr "Emulación de MT-32"
 
@@ -6382,16 +6382,16 @@ msgstr "Buscar actualizaciones..."
 #: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:132
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
-#: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:127 engines/queen/metaengine.cpp:146
-#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
-#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
-#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
-#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/tot/metaengine.cpp:102
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:127
+#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
+#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
+#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
+#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
+#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/tot/metaengine.cpp:102 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 msgid "Default keymappings"
 msgstr "Asignaciones predeterminadas"
 
@@ -11558,18 +11558,6 @@ msgstr "Omitir subsecuencia"
 msgid "Restart sequence"
 msgstr "Reiniciar secuencia"
 
-#: engines/playground3d/metaengine.cpp:55
-msgid "Switch test"
-msgstr "Alternar prueba"
-
-#: engines/playground3d/metaengine.cpp:61
-msgid "Enable/Disable fog"
-msgstr "Activar/Desactivar niebla"
-
-#: engines/playground3d/metaengine.cpp:67
-msgid "Enable/Disable scissor"
-msgstr "Activar/Desactivar tijeras"
-
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
 msgid "3DO Plumbers requires RGB support."
@@ -11645,11 +11633,11 @@ msgstr "Mover/Omitir/Acción predet. en objeto de inventario"
 msgid "Skip text"
 msgstr "Omitir texto"
 
-#: engines/queen/metaengine.cpp:203
+#: engines/queen/metaengine.cpp:203 engines/stark/metaengine.cpp:292
 msgid "Scroll inventory up"
 msgstr "Subir inventario"
 
-#: engines/queen/metaengine.cpp:209
+#: engines/queen/metaengine.cpp:209 engines/stark/metaengine.cpp:299
 msgid "Scroll inventory down"
 msgstr "Bajar inventario"
 
@@ -13955,21 +13943,13 @@ msgstr "Objeto siguiente del cursor de inventario"
 msgid "Display all exits on current location"
 msgstr "Mostrar todas las salidas de la ubicación actual"
 
-#: engines/stark/metaengine.cpp:292
-msgid "Scroll up in inventory"
-msgstr "Avanzar en el inventario"
-
-#: engines/stark/metaengine.cpp:299
-msgid "Scroll down in inventory"
-msgstr "Retroceder en el inventario"
-
 #: engines/stark/metaengine.cpp:306
-msgid "Scroll up in your dialogs"
-msgstr "Subir en lista de diálogos"
+msgid "Scroll dialogs up"
+msgstr "Diálogo superior"
 
 #: engines/stark/metaengine.cpp:312
-msgid "Scroll down in your dialogs"
-msgstr "Bajar en lista de diálogos"
+msgid "Scroll dialogs down"
+msgstr "Diálogo inferior"
 
 #: engines/stark/metaengine.cpp:318
 msgid "Go to next dialog"
@@ -16781,6 +16761,27 @@ msgstr ""
 "que es imprescindible tener audio en MIDI para poder resolverlos.  También "
 "se podrían resolver estos acertijos con subtítulos, si están disponibles. "
 "¿Quieres seguir ejecutando el juego?"
+
+#~ msgid "Scroll up in inventory"
+#~ msgstr "Avanzar en el inventario"
+
+#~ msgid "Scroll down in inventory"
+#~ msgstr "Retroceder en el inventario"
+
+#~ msgid "Scroll up in your dialogs"
+#~ msgstr "Subir en lista de diálogos"
+
+#~ msgid "Scroll down in your dialogs"
+#~ msgstr "Bajar en lista de diálogos"
+
+#~ msgid "Switch test"
+#~ msgstr "Alternar prueba"
+
+#~ msgid "Enable/Disable fog"
+#~ msgstr "Activar/Desactivar niebla"
+
+#~ msgid "Enable/Disable scissor"
+#~ msgstr "Activar/Desactivar tijeras"
 
 #~ msgid "Toggle Sound"
 #~ msgstr "Alternar sonido"

@@ -146,13 +146,28 @@ static const MADSGameDescription gameDescriptions[] = {
 		GType_RexNebular,
 		0
 	},
-
+#ifdef ENABLE_MADSV2
 	{
 		// Return of the Phantom DOS English
 		{
 			"phantom",
 			0,
 			AD_ENTRY1s("section1.hag", "76e2d47a7aebafe48edc9884b3d91782", 1130939),
+			Common::EN_ANY,
+			Common::kPlatformDOS,
+			ADGF_UNSTABLE,
+			GUIO1(GAMEOPTION_EASY_MOUSE)
+		},
+		GType_Phantom,
+		0
+	},
+
+	{
+		// Return of the Phantom GOG DOS English
+		{
+			"phantom",
+			0,
+			AD_ENTRY1s("global.idx", "cf17ab33b5ab084763cf83c76a8d9634", 4638),
 			Common::EN_ANY,
 			Common::kPlatformDOS,
 			ADGF_UNSTABLE,
@@ -221,7 +236,7 @@ static const MADSGameDescription gameDescriptions[] = {
 		GType_Forest,
 		0
 	},
-
+#endif
 	{ AD_TABLE_END_MARKER, 0, 0 }
 };
 

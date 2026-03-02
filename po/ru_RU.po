@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-02-26 08:39+0000\n"
-"PO-Revision-Date: 2026-02-26 23:58+0000\n"
+"POT-Creation-Date: 2026-03-01 23:53+0000\n"
+"PO-Revision-Date: 2026-03-01 23:52+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ru/>\n"
@@ -4175,11 +4175,11 @@ msgstr "Аудио PC-98"
 msgid "SegaCD Audio"
 msgstr "Aудио SegaCD"
 
-#: audio/softsynth/mt32.cpp:168
+#: audio/softsynth/mt32.cpp:289
 msgid "Initializing MT-32 Emulator"
 msgstr "Настраиваю эмулятор MT-32"
 
-#: audio/softsynth/mt32.cpp:441
+#: audio/softsynth/mt32.cpp:562
 msgid "MT-32 emulator"
 msgstr "Эмулятор MT-32"
 
@@ -6325,16 +6325,16 @@ msgstr "Проверить обновления..."
 #: engines/lure/metaengine.cpp:168 engines/made/metaengine.cpp:132
 #: engines/mads/metaengine.cpp:274 engines/neverhood/metaengine.cpp:185
 #: engines/ngi/metaengine.cpp:115 engines/petka/metaengine.cpp:113
-#: engines/playground3d/metaengine.cpp:51 engines/prince/metaengine.cpp:227
-#: engines/private/metaengine.cpp:127 engines/queen/metaengine.cpp:146
-#: engines/sherlock/metaengine.cpp:313 engines/stark/metaengine.cpp:184
-#: engines/supernova/metaengine.cpp:217 engines/sword1/metaengine.cpp:266
-#: engines/sword25/metaengine.cpp:108 engines/teenagent/metaengine.cpp:197
-#: engines/tetraedge/metaengine.cpp:86 engines/tinsel/metaengine.cpp:240
-#: engines/titanic/metaengine.cpp:172 engines/toltecs/metaengine.cpp:212
-#: engines/toon/metaengine.cpp:81 engines/tot/metaengine.cpp:102
-#: engines/trecision/metaengine.cpp:120 engines/tsage/metaengine.cpp:169
-#: engines/tucker/metaengine.cpp:167 engines/voyeur/metaengine.cpp:184
+#: engines/prince/metaengine.cpp:227 engines/private/metaengine.cpp:127
+#: engines/queen/metaengine.cpp:146 engines/sherlock/metaengine.cpp:313
+#: engines/stark/metaengine.cpp:184 engines/supernova/metaengine.cpp:217
+#: engines/sword1/metaengine.cpp:266 engines/sword25/metaengine.cpp:108
+#: engines/teenagent/metaengine.cpp:197 engines/tetraedge/metaengine.cpp:86
+#: engines/tinsel/metaengine.cpp:240 engines/titanic/metaengine.cpp:172
+#: engines/toltecs/metaengine.cpp:212 engines/toon/metaengine.cpp:81
+#: engines/tot/metaengine.cpp:102 engines/trecision/metaengine.cpp:120
+#: engines/tsage/metaengine.cpp:169 engines/tucker/metaengine.cpp:167
+#: engines/voyeur/metaengine.cpp:184
 msgid "Default keymappings"
 msgstr "Раскладка клавиш по умолчанию"
 
@@ -11313,52 +11313,38 @@ msgid "Toggle center data display"
 msgstr "Включить показ центрального экрана данных"
 
 #: engines/pegasus/pegasus.cpp:2796
-#, fuzzy
-#| msgid "Toggle fullscreen"
 msgid "Toggle info screen"
-msgstr "Переключение на весь экран"
+msgstr "Переключить инфо-экран"
 
 #: engines/pegasus/pegasus.cpp:2803
-#, fuzzy
-#| msgid "Toggle fast mode"
 msgid "Toggle pause menu"
-msgstr "Переключить быстрый режим"
+msgstr "Переключить мкею паузы"
 
 #: engines/pegasus/pegasus.cpp:2810
 msgid "Toggle Chatty AI"
 msgstr "Переключить болтающий ИИ"
 
 #: engines/petka/metaengine.cpp:117
-#, fuzzy
-#| msgid "Go to next dialogue"
 msgid "Interact / Skip dialog"
-msgstr "Перейти к следующему диалогу"
+msgstr "Взаимодействовать / Пропустить диалог"
 
 #. I18N: (Game Name: Red Comrades 1: Save the Galaxy) The game has multiple actions that you can perform(take, use, etc.), the action menu allows you to select one of them.
 #: engines/petka/metaengine.cpp:124
-#, fuzzy
-#| msgid "Open action menu / Close menu"
 msgid "Open action menu / Close current interface"
-msgstr "Открыть меню действий / Закрыть меню"
+msgstr "Открыть меню действий / Закрыть текущий интерфейс"
 
 #. I18N: (Game Name: Red Comrades 1: Save the Galaxy) The game features two characters, but all actions are normally performed by Petka. This action allows you to "use" an object specifically with Chapayev instead.
 #: engines/petka/metaengine.cpp:166
-#, fuzzy
-#| msgid "Chapayev's action"
 msgid "Chapayev use object"
-msgstr "Действие Чапаева"
+msgstr "Чапаев использовать объект"
 
 #: engines/petka/metaengine.cpp:186
-#, fuzzy
-#| msgid "Show / Hide console"
 msgid "Show / Hide options screen"
-msgstr "Показать / убрать консоль"
+msgstr "Показать / Убрать экран настроек"
 
 #: engines/petka/metaengine.cpp:192
-#, fuzzy
-#| msgid "Easy mouse interface"
 msgid "Close current interface"
-msgstr "Простой интерфейс мыши"
+msgstr "Закрыть текущий интерфейс"
 
 #: engines/phoenixvr/metaengine.cpp:107
 #: engines/wintermute/keymapper_tables.h:239
@@ -11394,24 +11380,18 @@ msgid "This menu item is not yet implemented"
 msgstr "Этот пункт меню ещё не реализован"
 
 #: engines/pink/metaengine.cpp:128
-#, fuzzy
-#| msgid "Move left"
 msgid "Interact / Select"
-msgstr "Идти влево"
+msgstr "Взаимодействовать / Выбрать"
 
 #. I18N: (Game Name: Pink Panther) The player normally clicks on a target (character/object) to move toward it and interact (talk,use etc.) with it. This action makes the player still walk to the target but not start interacting when they arrive.
 #: engines/pink/metaengine.cpp:136
-#, fuzzy
-#| msgid "Change game options"
 msgid "Cancel interaction"
-msgstr "Изменить настройки игры"
+msgstr "Отменить действие"
 
 #. I18N: (Game Name: Pink Panther) The player normally clicks on a target (character/object) to move toward it and interact (talk,use etc.) with it. This action skips the walking animation and immediately start interacting.
 #: engines/pink/metaengine.cpp:144
-#, fuzzy
-#| msgid "Skip dialogue"
 msgid "Skip walk"
-msgstr "Пропустить диалог"
+msgstr "Пропустить ходьбу"
 
 #. I18N: (Game Name: Pink Panther) The player normally clicks on a target (character/object) to move toward it and interact (talk,use etc.) with it. This action skips the walking animation and also prevents the interaction, instead instantly placing the player next to the target.
 #: engines/pink/metaengine.cpp:151
@@ -11420,42 +11400,18 @@ msgstr ""
 
 #. I18N: (Game Name: Pink Panther) This action fully skips the current running sequence (cutscene, dialog, interaction, etc).
 #: engines/pink/metaengine.cpp:158
-#, fuzzy
-#| msgid "Skip cutscene"
 msgid "Skip sequence"
-msgstr "Пропустить заставку"
+msgstr "Пропустить весь ролик"
 
 #. I18N: (Game Name: Pink Panther) This action skips part of the current running sequence (cutscene, dialog, interaction, etc).
 #: engines/pink/metaengine.cpp:165
-#, fuzzy
-#| msgid "Skip cutscene"
 msgid "Skip sub-sequence"
-msgstr "Пропустить заставку"
+msgstr "Пропустить часть ролика"
 
 #. I18N: (Game Name: Pink Panther) This action restarts the current running sequence (cutscene, dialog, interaction, etc).
 #: engines/pink/metaengine.cpp:173
-#, fuzzy
-#| msgid "Restart the Scene"
 msgid "Restart sequence"
-msgstr "Перезапустить сцену"
-
-#: engines/playground3d/metaengine.cpp:55
-#, fuzzy
-#| msgid "Switch to Game"
-msgid "Switch test"
-msgstr "Переключиться в игру"
-
-#: engines/playground3d/metaengine.cpp:61
-#, fuzzy
-#| msgid "Enable/Disable Jetpack"
-msgid "Enable/Disable fog"
-msgstr "Включить/выключить реактивный ранец"
-
-#: engines/playground3d/metaengine.cpp:67
-#, fuzzy
-#| msgid "Enable/Disable Jetpack"
-msgid "Enable/Disable scissor"
-msgstr "Включить/выключить реактивный ранец"
+msgstr "Перезапустить ролик"
 
 #. I18N: Plumbers is the title of the game. 3DO is the name of platform
 #: engines/plumbers/metaengine.cpp:51
@@ -11463,40 +11419,30 @@ msgid "3DO Plumbers requires RGB support."
 msgstr "Игра Plumbers для 3DO требует поддержки RGB."
 
 #: engines/prince/metaengine.cpp:237
-#, fuzzy
-#| msgid "Open main menu"
 msgid "Open interaction menu"
-msgstr "Открыть главное меню"
+msgstr "Открыть меню взаимодействия"
 
 #. I18N: This refers to the Z key on a keyboard.
 #: engines/prince/metaengine.cpp:256
-#, fuzzy
-#| msgid "Boss key"
 msgid "Z key"
-msgstr "Босс-кнопка"
+msgstr "Кнопка Z"
 
 #. I18N: This refers to the X key on a keyboard.
 #: engines/prince/metaengine.cpp:263
-#, fuzzy
-#| msgid "Boss key"
 msgid "X key"
-msgstr "Босс-кнопка"
+msgstr "Кнопка X"
 
 #: engines/private/metaengine.cpp:39
-#, fuzzy
-#| msgid "Toggle subtitles"
 msgid "Display SFX subtitles"
-msgstr "Вкл/выкл субтитры"
+msgstr "Показать SFX-субтитры"
 
 #: engines/private/metaengine.cpp:40
 msgid "Use SFX subtitles (if subtitles are enabled)."
 msgstr "Использовать субтитры для звуковых эффектов (если субтитры включены)."
 
 #: engines/private/metaengine.cpp:50
-#, fuzzy
-#| msgid "Highlight next dialogue"
 msgid "Highlight decision areas"
-msgstr "Подсветить следующий диалог"
+msgstr "Подсветить области решений"
 
 #: engines/private/metaengine.cpp:51
 msgid "Highlight clickable areas in decision scenes."
@@ -11507,10 +11453,8 @@ msgid "Skip video"
 msgstr "Пропустить видео"
 
 #: engines/qdengine/dialogs.cpp:32
-#, fuzzy
-#| msgid "Enable the debug mode"
 msgid "Enable 16 bits per pixel mode"
-msgstr "Включить режим отладки"
+msgstr "Включить режим 16-битного цвета"
 
 #: engines/qdengine/dialogs.cpp:32
 msgid "Enable this if backend does not support 32bpp and/or to debug graphics"
@@ -11537,46 +11481,32 @@ msgid "Move / Skip / Use default action with inventory item"
 msgstr ""
 
 #: engines/queen/metaengine.cpp:198 engines/twp/metaengine.cpp:176
-#, fuzzy
-#| msgid "Skip Text"
 msgid "Skip text"
 msgstr "Пропустить текст"
 
-#: engines/queen/metaengine.cpp:203
-#, fuzzy
-#| msgid "Scroll up in inventory"
+#: engines/queen/metaengine.cpp:203 engines/stark/metaengine.cpp:292
 msgid "Scroll inventory up"
 msgstr "Прокрутить инвентарь вверх"
 
-#: engines/queen/metaengine.cpp:209
-#, fuzzy
-#| msgid "Scroll list down"
+#: engines/queen/metaengine.cpp:209 engines/stark/metaengine.cpp:299
 msgid "Scroll inventory down"
-msgstr "Прокрутить список вниз"
+msgstr "Прокрутить инвентарь вниз"
 
 #: engines/queen/metaengine.cpp:215
-#, fuzzy
-#| msgid "Inventory"
 msgid "Inventory item 1"
-msgstr "Инвентарь"
+msgstr "Предмет инвентаря 1"
 
 #: engines/queen/metaengine.cpp:220
-#, fuzzy
-#| msgid "Inventory"
 msgid "Inventory item 2"
-msgstr "Инвентарь"
+msgstr "Предмет инвентаря 2"
 
 #: engines/queen/metaengine.cpp:225
-#, fuzzy
-#| msgid "Inventory"
 msgid "Inventory item 3"
-msgstr "Инвентарь"
+msgstr "Предмет инвентаря 3"
 
 #: engines/queen/metaengine.cpp:230
-#, fuzzy
-#| msgid "Inventory"
 msgid "Inventory item 4"
-msgstr "Инвентарь"
+msgstr "Предмет инвентаря 4"
 
 #: engines/queen/metaengine.cpp:235
 #, fuzzy
@@ -13941,25 +13871,17 @@ msgstr "Прокрутить вперёд элементы курсора инв
 msgid "Display all exits on current location"
 msgstr "Показать все выходы в текущей локации"
 
-#: engines/stark/metaengine.cpp:292
-msgid "Scroll up in inventory"
-msgstr "Прокрутить инвентарь вверх"
-
-#: engines/stark/metaengine.cpp:299
-msgid "Scroll down in inventory"
-msgstr "Прокрутить инвентарь вниз"
-
 #: engines/stark/metaengine.cpp:306
 #, fuzzy
-#| msgid "Scroll up in your dialogues"
-msgid "Scroll up in your dialogs"
-msgstr "Прокрутить диалоги вверх"
+#| msgid "Scroll list up"
+msgid "Scroll dialogs up"
+msgstr "Прокрутить список вверх"
 
 #: engines/stark/metaengine.cpp:312
 #, fuzzy
-#| msgid "Scroll down in your dialogues"
-msgid "Scroll down in your dialogs"
-msgstr "Прокрутить диалоги вниз"
+#| msgid "Scroll list down"
+msgid "Scroll dialogs down"
+msgstr "Прокрутить список вниз"
 
 #: engines/stark/metaengine.cpp:318
 #, fuzzy
@@ -17111,6 +17033,35 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#~ msgid "Scroll up in inventory"
+#~ msgstr "Прокрутить инвентарь вверх"
+
+#~ msgid "Scroll down in inventory"
+#~ msgstr "Прокрутить инвентарь вниз"
+
+#, fuzzy
+#~| msgid "Scroll up in your dialogues"
+#~ msgid "Scroll up in your dialogs"
+#~ msgstr "Прокрутить диалоги вверх"
+
+#, fuzzy
+#~| msgid "Scroll down in your dialogues"
+#~ msgid "Scroll down in your dialogs"
+#~ msgstr "Прокрутить диалоги вниз"
+
+#~ msgid "Switch test"
+#~ msgstr "Переключить тест"
+
+#, fuzzy
+#~| msgid "Enable/Disable Jetpack"
+#~ msgid "Enable/Disable fog"
+#~ msgstr "Включить/выключить реактивный ранец"
+
+#, fuzzy
+#~| msgid "Enable/Disable Jetpack"
+#~ msgid "Enable/Disable scissor"
+#~ msgstr "Включить/выключить реактивный ранец"
 
 #~ msgid "Toggle Sound"
 #~ msgstr "Переключить звук"
