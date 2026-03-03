@@ -22,6 +22,7 @@
 #include "tinsel/tinsel.h"
 #include "tinsel/debugger.h"
 #include "tinsel/dialogs.h"
+#include "tinsel/handle.h"
 #include "tinsel/pcode.h"
 #include "tinsel/scene.h"
 #include "tinsel/sound.h"
@@ -69,10 +70,14 @@ Console::Console() : GUI::Debugger() {
 		registerCmd("list_clues",		WRAP_METHOD(Console, cmd_list_clues));
 	}
 	registerCmd("item",		WRAP_METHOD(Console, cmd_item));
+	registerCmd("scenes",		WRAP_METHOD(Console, cmd_scenes));
 	registerCmd("scene",		WRAP_METHOD(Console, cmd_scene));
 	registerCmd("music",		WRAP_METHOD(Console, cmd_music));
 	registerCmd("sound",		WRAP_METHOD(Console, cmd_sound));
 	registerCmd("string",		WRAP_METHOD(Console, cmd_string));
+	registerCmd("globals",		WRAP_METHOD(Console, cmd_globals));
+	registerCmd("global",		WRAP_METHOD(Console, cmd_global));
+	registerCmd("g",		WRAP_METHOD(Console, cmd_global)); // alias
 }
 
 Console::~Console() {
@@ -90,6 +95,23 @@ bool Console::cmd_item(int argc, const char **argv) {
 	return false;
 }
 
+bool Console::cmd_scenes(int argc, const char **argv) {
+	Common::String filter;
+	if (argc >= 2) {
+		filter = argv[1];
+	}
+
+	for (int i = 0; i < _vm->_handle->GetSceneCount(); i++) {
+		Common::String name = _vm->_handle->GetSceneName(i);
+		if (!name.empty()) {
+			if (filter.empty() || name.hasPrefixIgnoreCase(filter)) {
+				debugPrintf("scene %d: %s\n", i, name.c_str());
+			}
+		}
+	}
+	return true;
+}
+
 bool Console::cmd_scene(int argc, const char **argv) {
 	if (argc < 1 || argc > 3) {
 		debugPrintf("%s [scene_number [entry number]]\n", argv[0]);
@@ -99,7 +121,9 @@ bool Console::cmd_scene(int argc, const char **argv) {
 	}
 
 	if (argc == 1) {
-		debugPrintf("Current scene is %d\n", GetSceneHandle() >> SCNHANDLE_SHIFT);
+		int index = GetSceneHandle() >> SCNHANDLE_SHIFT;
+		Common::String name = _vm->_handle->GetSceneName(index);
+		debugPrintf("Current scene is %d: %s\n", index, name.c_str());
 		return true;
 	}
 
@@ -164,6 +188,37 @@ bool Console::cmd_string(int argc, const char **argv) {
 	LoadStringRes(id, tmp, TBUFSZ);
 	debugPrintf("%s\n", tmp);
 
+	return true;
+}
+
+bool Console::cmd_globals(int argc, const char **argv) {
+	for (int i = 0; i < GetGlobalCount(); i++) {
+		int value = GetGlobal(i);
+		debugPrintf("global %d == %08x (%d)\n", i, value, value);
+	}
+	return true;
+}
+
+bool Console::cmd_global(int argc, const char **argv) {
+	if (!(2 <= argc && argc <= 3)) {
+		debugPrintf("Print or set global variable\n");
+		debugPrintf("usage: %s <global> [new-value]\n", argv[0]);
+		return true;
+	}
+
+	int global = strToInt(argv[1]);
+	if (!(0 <= global && global < GetGlobalCount())) {
+		debugPrintf("maximum global: %d\n", GetGlobalCount() - 1);
+		return true;
+	}
+
+	if (argc == 3) {
+		int newValue = strToInt(argv[2]);
+		SetGlobal(global, newValue);
+	}
+
+	int value = GetGlobal(global);
+	debugPrintf("global %d == %08x (%d)\n", global, value, value);
 	return true;
 }
 
