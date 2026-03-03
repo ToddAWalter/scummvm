@@ -55,11 +55,28 @@ static const TinselGameDescription gameDescriptions[] = {
 
 	// ==== Discworld 1 entries ===============================================
 
-	{	// CD Demo V1 version, with *.gra files
+	{	// CD Demo V1 version, with *.gra files. March 1995
 		{
 			"dw",
 			"CD Demo",
 			AD_ENTRY2s("dw.gra", "ef5a2518c9e205f786f5a4526396e661", 781676,
+					   "english.smp", NULL, AD_NO_SIZE),
+			Common::EN_ANY,
+			Common::kPlatformDOS,
+			ADGF_DEMO | ADGF_CD,
+			GUIO0()
+		},
+		GID_DW1,
+		0,
+		0,
+		TINSEL_V1,
+	},
+
+	{	// CD Demo V1 version, with *.gra files. April 1995
+		{
+			"dw",
+			"CD Demo",
+			AD_ENTRY2s("dw.gra", "fa8cc1de3d5534fa5314493a37bae54f", 781692,
 					   "english.smp", NULL, AD_NO_SIZE),
 			Common::EN_ANY,
 			Common::kPlatformDOS,
@@ -482,6 +499,23 @@ static const TinselGameDescription gameDescriptions[] = {
 			AD_ENTRY2s("dw.scn", "6803f293c88758057cc685b9437f7637", 382248,
 					   "english.smp", NULL, AD_NO_SIZE),
 			Common::EN_ANY,
+			Common::kPlatformSaturn,
+			ADGF_CD,
+			GUIO0()
+		},
+		GID_DW1,
+		0,
+		GF_SCNFILES | GF_ENHANCED_AUDIO_SUPPORT | ADGF_UNSUPPORTED,
+		TINSEL_V1,
+	},
+
+	{	// Japanese Saturn CD
+		{
+			"dw",
+			_s("Saturn CD version is not yet supported"),
+			AD_ENTRY2s("dw.scn", "23c8c0644d88f0a7d176173192907188", 445124,
+					   "english.smp", NULL, AD_NO_SIZE),
+			Common::JA_JPN,
 			Common::kPlatformSaturn,
 			ADGF_CD,
 			GUIO0()

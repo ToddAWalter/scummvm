@@ -17,6 +17,8 @@ MODULE_OBJS := \
 	games/dark/amiga.o \
 	games/dark/atari.o \
 	games/dark/c64.o \
+	games/dark/c64.music.o \
+	games/dark/c64.sfx.o \
 	games/dark/cpc.o \
 	games/dark/dark.o \
 	games/dark/dos.o \
@@ -25,6 +27,7 @@ MODULE_OBJS := \
 	games/driller/atari.o \
 	games/driller/c64.o \
 	games/driller/c64.music.o \
+	games/driller/c64.sfx.o \
 	games/driller/cpc.o \
 	games/driller/dos.o \
 	games/driller/driller.o \

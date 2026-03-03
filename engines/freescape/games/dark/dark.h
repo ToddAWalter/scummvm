@@ -21,6 +21,8 @@
 
 #include "audio/mixer.h"
 #include "common/array.h"
+#include "freescape/games/dark/c64.music.h"
+#include "freescape/games/dark/c64.sfx.h"
 
 namespace Freescape {
 
@@ -49,6 +51,7 @@ enum DarkFontSize {
 class DarkEngine : public FreescapeEngine {
 public:
 	DarkEngine(OSystem *syst, const ADGameDescription *gd);
+	~DarkEngine();
 
 	uint32 _initialEnergy;
 	uint32 _initialShield;
@@ -104,6 +107,12 @@ public:
 	int _soundIndexRestoreECD;
 	int _soundIndexDestroyECD;
 	Audio::SoundHandle _soundFxHandleJetpack;
+
+	DarkSideC64SFXPlayer *_playerC64Sfx;
+	DarkSideC64MusicPlayer *_playerC64Music;
+	bool _c64UseSFX;
+	void playSoundC64(int index) override;
+	void toggleC64Sound();
 
 	Common::Array<byte> _musicData; // HDSMUSIC.AM TEXT segment (Amiga)
 

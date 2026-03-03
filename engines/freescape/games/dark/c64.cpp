@@ -162,8 +162,38 @@ void DarkEngine::loadAssetsC64FullGame() {
 	colorFile2.open("darkside.c64.title.colors2");
 
 	_title = loadAndConvertDoodleImage(&file, &colorFile1, &colorFile2, (byte *)&kC64Palette);
+
+	// Only one SID instance can be active at a time; music is the default.
+	// Create the inactive player first so its SID is destroyed before
+	// the active player's SID is created.
+	_playerC64Sfx = new DarkSideC64SFXPlayer();
+	_playerC64Sfx->destroySID();
+	_playerC64Music = new DarkSideC64MusicPlayer();
 }
 
+void DarkEngine::playSoundC64(int index) {
+	debugC(1, kFreescapeDebugMedia, "Playing Dark Side C64 SFX %d", index);
+	if (_playerC64Sfx && _c64UseSFX)
+		_playerC64Sfx->playSfx(index);
+}
+
+void DarkEngine::toggleC64Sound() {
+	if (_c64UseSFX) {
+		if (_playerC64Sfx)
+			_playerC64Sfx->destroySID();
+		if (_playerC64Music) {
+			_playerC64Music->initSID();
+			_playerC64Music->startMusic();
+		}
+		_c64UseSFX = false;
+	} else {
+		if (_playerC64Music)
+			_playerC64Music->destroySID();
+		if (_playerC64Sfx)
+			_playerC64Sfx->initSID();
+		_c64UseSFX = true;
+	}
+}
 
 void DarkEngine::drawC64UI(Graphics::Surface *surface) {
 	uint8 r, g, b;
