@@ -83,6 +83,10 @@ PhoenixVREngine::~PhoenixVREngine() {
 	delete _screen;
 }
 
+void PhoenixVREngine::showWaves() {
+	_vr.showWaves();
+}
+
 uint32 PhoenixVREngine::getFeatures() const {
 	return _gameDescription->flags;
 }
@@ -97,23 +101,37 @@ Common::String PhoenixVREngine::removeDrive(const Common::String &path) {
 	else
 		return path.substr(2);
 }
-Common::SeekableReadStream *PhoenixVREngine::open(const Common::String &name) {
-	debug("open %s", name.c_str());
-	auto packed = name.hasSuffixIgnoreCase(".lst");
-	auto filename = packed ? name.substr(0, name.size() - 4) + ".pak" : name;
-	auto p = _currentScriptPath.append(filename, '\\').normalize();
+
+Common::SeekableReadStream *PhoenixVREngine::tryOpen(const Common::Path &name) {
 	Common::ScopedPtr<Common::File> s(new Common::File());
-	debug("trying %s", p.toString().c_str());
-	if (s->open(p)) {
-		debug("opening %s: %s", name.c_str(), p.toString().c_str());
-		return packed ? unpack(*s) : s.release();
+	if (s->open(name)) {
+		auto nameStr = name.toString();
+		debug("opened %s", nameStr.c_str());
+		return s.release();
 	}
-	p = filename;
-	debug("trying %s", p.toString().c_str());
-	if (s->open(p)) {
-		debug("opening %s: %s", name.c_str(), p.toString().c_str());
-		return packed ? unpack(*s) : s.release();
+	auto pakName = name.toString();
+	auto dotPos = pakName.rfind('.');
+	if (dotPos == pakName.npos)
+		return nullptr;
+	pakName = pakName.substr(0, dotPos) + ".pak";
+	if (s->open(Common::Path{pakName})) {
+		debug("opened %s", pakName.c_str());
+		return unpack(*s);
 	}
+
+	return nullptr;
+}
+
+Common::SeekableReadStream *PhoenixVREngine::open(Common::String filename) {
+	debug("open %s", filename.c_str());
+	auto *stream = tryOpen(_currentScriptPath.append(filename, '\\').normalize());
+	if (stream)
+		return stream;
+
+	stream = tryOpen(Common::Path{filename});
+	if (stream)
+		return stream;
+
 	return nullptr;
 }
 
@@ -219,10 +237,13 @@ void PhoenixVREngine::wait(float seconds) {
 
 void PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 	debug("gotowarp %s, save prev: %d", warp.c_str(), savePrev);
-	if (warp != "N3M09L03W515E1.vr") // typo in Script4.lst
-		_nextWarp = _script->getWarp(warp);
-	else
+
+	// Typo in Necronomicon's Script4.lst
+	if (getGameId() == "necrono" && warp == "N3M09L03W515E1.vr")
 		_nextWarp = _script->getWarp("N3M09L03W51E1.vr");
+	else
+		_nextWarp = _script->getWarp(warp);
+
 	_hoverIndex = -1;
 	if (savePrev) {
 		assert(_warpIdx >= 0);
@@ -311,12 +332,12 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 	debug("playMovie %s", movie.c_str());
 	Video::FourXMDecoder dec;
 
-	auto *stream = open(movie);
+	Common::ScopedPtr<Common::SeekableReadStream> stream(open(movie));
 	if (!stream) {
 		warning("can't load movie %s", movie.c_str());
 		return;
 	}
-	if (dec.loadStream(stream)) {
+	if (dec.loadStream(stream.release())) {
 		dec.start();
 
 		bool playing = true;
@@ -352,6 +373,7 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 		warning("playMovie %s failed", movie.c_str());
 	}
 }
+
 void PhoenixVREngine::playAnimation(const Common::String &name, const Common::String &var, int varValue, float speed) {
 	_vr.playAnimation(name, var, varValue, speed);
 }
