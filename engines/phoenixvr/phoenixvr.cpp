@@ -36,6 +36,8 @@
 #include "graphics/fonts/ttf.h"
 #include "graphics/framelimiter.h"
 #include "graphics/managed_surface.h"
+#include "graphics/palette.h"
+#include "image/gif.h"
 #include "image/pcx.h"
 #include "phoenixvr/console.h"
 #include "phoenixvr/game_state.h"
@@ -45,6 +47,7 @@
 #include "phoenixvr/script.h"
 #include "phoenixvr/vr.h"
 #include "video/4xm_decoder.h"
+#include "video/smk_decoder.h"
 
 namespace PhoenixVR {
 
@@ -102,7 +105,7 @@ Common::String PhoenixVREngine::removeDrive(const Common::String &path) {
 		return path.substr(2);
 }
 
-Common::SeekableReadStream *PhoenixVREngine::tryOpen(const Common::Path &name) {
+Common::SeekableReadStream *PhoenixVREngine::tryOpen(const Common::Path &name, Common::String *origName) {
 	Common::ScopedPtr<Common::File> s(new Common::File());
 	if (s->open(name)) {
 		auto nameStr = name.toString();
@@ -116,19 +119,19 @@ Common::SeekableReadStream *PhoenixVREngine::tryOpen(const Common::Path &name) {
 	pakName = pakName.substr(0, dotPos) + ".pak";
 	if (s->open(Common::Path{pakName})) {
 		debug("opened %s", pakName.c_str());
-		return unpack(*s);
+		return unpack(*s, origName);
 	}
 
 	return nullptr;
 }
 
-Common::SeekableReadStream *PhoenixVREngine::open(Common::String filename) {
+Common::SeekableReadStream *PhoenixVREngine::open(const Common::String &filename, Common::String *origName) {
 	debug("open %s", filename.c_str());
-	auto *stream = tryOpen(_currentScriptPath.append(filename, '\\').normalize());
+	auto *stream = tryOpen(_currentScriptPath.append(filename, '\\').normalize(), origName);
 	if (stream)
 		return stream;
 
-	stream = tryOpen(Common::Path{filename});
+	stream = tryOpen(Common::Path{filename}, origName);
 	if (stream)
 		return stream;
 
@@ -330,19 +333,29 @@ void PhoenixVREngine::stopSound(const Common::String &sound) {
 
 void PhoenixVREngine::playMovie(const Common::String &movie) {
 	debug("playMovie %s", movie.c_str());
-	Video::FourXMDecoder dec;
+	Common::ScopedPtr<Video::VideoDecoder> dec;
+	if (movie.hasSuffixIgnoreCase(".4xm")) {
+		dec.reset(new Video::FourXMDecoder);
+	} else if (movie.hasSuffixIgnoreCase(".smk")) {
+		dec.reset(new Video::SmackerDecoder);
+	} else {
+		warning("can't play %s", movie.c_str());
+		return;
+	}
 
 	Common::ScopedPtr<Common::SeekableReadStream> stream(open(movie));
 	if (!stream) {
 		warning("can't load movie %s", movie.c_str());
 		return;
 	}
-	if (dec.loadStream(stream.release())) {
-		dec.start();
+
+	Common::ScopedPtr<Graphics::Palette> palette;
+	if (dec->loadStream(stream.release())) {
+		dec->start();
 
 		bool playing = true;
 		Graphics::FrameLimiter limiter(g_system, kFPSLimit);
-		while (!shouldQuit() && playing && !dec.endOfVideo()) {
+		while (!shouldQuit() && playing && !dec->endOfVideo()) {
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				switch (event.type) {
@@ -357,10 +370,15 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 					break;
 				}
 			}
-			if (dec.needsUpdate()) {
-				auto *s = dec.decodeNextFrame();
-				if (s)
-					_screen->simpleBlitFrom(*s);
+			if (dec->needsUpdate()) {
+				auto *s = dec->decodeNextFrame();
+				if (dec->hasDirtyPalette()) {
+					palette.reset(new Graphics::Palette(dec->getPalette(), 256));
+				}
+				if (s) {
+					if (!s->format.isCLUT8() || palette)
+						_screen->simpleBlitFrom(*s, Graphics::FLIP_NONE, false, 0xff, palette.get());
+				}
 			}
 
 			// Delay for a bit. All events loops should have a delay
@@ -392,26 +410,32 @@ void PhoenixVREngine::lockKey(int idx, const Common::String &warp) {
 }
 
 Graphics::Surface *PhoenixVREngine::loadSurface(const Common::String &path) {
-	Common::ScopedPtr<Common::SeekableReadStream> stream(open(path));
+	Common::String filename = path;
+	Common::ScopedPtr<Common::SeekableReadStream> stream(open(path, &filename));
 	if (!stream) {
 		warning("can't find image %s", path.c_str());
 		return nullptr;
 	}
-	if (path.hasSuffix(".pcx")) {
-		Image::PCXDecoder pcx;
-		if (pcx.loadStream(*stream)) {
-			auto *s = pcx.getSurface()->convertTo(Graphics::BlendBlit::getSupportedPixelFormat(), pcx.hasPalette() ? pcx.getPalette().data() : nullptr);
-			if (s) {
-				byte r = 0, g = 0, b = 0;
-				s->applyColorKey(r, g, b);
-			}
-			return s;
-		}
-		warning("pcx decode failed on %s", path.c_str());
+	Common::ScopedPtr<Image::ImageDecoder> dec;
+	if (filename.hasSuffixIgnoreCase(".pcx")) {
+		dec.reset(new Image::PCXDecoder);
+	} else if (filename.hasSuffixIgnoreCase(".gif")) {
+		dec.reset(new Image::GIFDecoder);
+	} else {
+		warning("can't find decoder for %s", filename.c_str());
 		return nullptr;
 	}
-	warning("can't find decoder for %s", path.c_str());
-	return nullptr;
+	if (!dec->loadStream(*stream)) {
+		warning("decoding %s failed", filename.c_str());
+		return nullptr;
+	}
+	auto *palette = dec->hasPalette() ? dec->getPalette().data() : nullptr;
+	auto *s = dec->getSurface()->convertTo(Graphics::BlendBlit::getSupportedPixelFormat(), palette);
+	if (s) {
+		byte r = 0, g = 0, b = 0;
+		s->applyColorKey(r, g, b);
+	}
+	return s;
 }
 
 Graphics::Surface *PhoenixVREngine::loadCursor(const Common::String &path) {
@@ -752,23 +776,23 @@ Common::Error PhoenixVREngine::run() {
 	}
 	{
 		Common::File textes;
-		if (!textes.open(Common::Path("textes.txt")))
-			error("can't read textes.txt");
-		while (!textes.eos()) {
-			auto text = textes.readLine();
-			if (text.empty() || text[0] != '*')
-				continue;
-			uint pos = 1;
-			while (pos < text.size() && Common::isSpace(text[pos]))
-				++pos;
-			int textId = atoi(text.c_str() + pos);
-			while (pos < text.size() && Common::isDigit(text[pos]))
-				++pos;
-			while (pos < text.size() && Common::isSpace(text[pos]))
-				++pos;
-			_textes.setVal(textId, text.substr(pos));
+		if (textes.open(Common::Path("textes.txt"))) {
+			while (!textes.eos()) {
+				auto text = textes.readLine();
+				if (text.empty() || text[0] != '*')
+					continue;
+				uint pos = 1;
+				while (pos < text.size() && Common::isSpace(text[pos]))
+					++pos;
+				int textId = atoi(text.c_str() + pos);
+				while (pos < text.size() && Common::isDigit(text[pos]))
+					++pos;
+				while (pos < text.size() && Common::isSpace(text[pos]))
+					++pos;
+				_textes.setVal(textId, text.substr(pos));
+			}
+			debug("loaded %u textes", _textes.size());
 		}
-		debug("loaded %u textes", _textes.size());
 	}
 	setNextScript("script.lst");
 
@@ -1123,7 +1147,7 @@ Common::Error PhoenixVREngine::saveGameStream(Common::WriteStream *slot, bool is
 	TimeDate td = {};
 	g_system->getTimeAndDate(td);
 	// Saturday 03 01 2026[\x00]23 h 17
-	state.info = Common::String::format("%s %02d %02d %04d%c%02d h %02d", wday[td.tm_wday], td.tm_mday, td.tm_mon + 1, td.tm_year, 0, td.tm_hour, td.tm_min);
+	state.info = Common::String::format("%s %02d %02d %04d%c%02d h %02d", wday[td.tm_wday], td.tm_mday, td.tm_mon + 1, td.tm_year + 1900, 0, td.tm_hour, td.tm_min);
 
 	state.thumbWidth = _thumbnail.w;
 	state.thumbHeight = _thumbnail.h;
