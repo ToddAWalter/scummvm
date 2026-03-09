@@ -78,6 +78,7 @@ PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDes
 }
 
 PhoenixVREngine::~PhoenixVREngine() {
+	_system->lockMouse(false);
 	for (auto it = _cursorCache.begin(); it != _cursorCache.end(); ++it) {
 		auto *s = it->_value;
 		s->free();
@@ -178,6 +179,7 @@ void PhoenixVREngine::loadNextScript() {
 
 void PhoenixVREngine::end() {
 	debug("end");
+	stopAllSounds();
 	if (_nextScript.empty() && _nextWarp < 0) {
 		debug("quit game");
 		quitGame();
@@ -238,8 +240,12 @@ void PhoenixVREngine::wait(float seconds) {
 	}
 }
 
-void PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
+bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 	debug("gotowarp %s, save prev: %d", warp.c_str(), savePrev);
+	if (_warp && _warp->vrFile == warp) {
+		debug("already at this location, skipping");
+		return false;
+	}
 
 	// Typo in Necronomicon's Script4.lst
 	if (getGameId() == "necrono" && warp == "N3M09L03W515E1.vr")
@@ -256,6 +262,7 @@ void PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 		screenshot->convertToInPlace(_rgb565);
 		_thumbnail.simpleBlitFrom(*screenshot, Graphics::FLIP_V);
 	}
+	return true;
 }
 
 void PhoenixVREngine::returnToWarp() {
@@ -283,12 +290,30 @@ void PhoenixVREngine::setCursorDefault(int idx, const Common::String &path) {
 
 void PhoenixVREngine::setCursor(const Common::String &path, const Common::String &wname, int idx) {
 	debug("setCursor %s %s:%d", path.c_str(), wname.c_str(), idx);
-	_cursors[_script->getWarp(wname)][idx] = path;
+	auto warp = _script->getWarp(wname);
+	if (warp < 0) {
+		debug("no warp %s", wname.c_str());
+		return;
+	}
+	auto &cursors = _cursors[warp];
+	if (idx >= 0 && idx < static_cast<int>(cursors.size()))
+		cursors[idx] = path;
+	else
+		debug("index %d is out of range", idx);
 }
 
-void PhoenixVREngine::hideCursor(const Common::String &warp, int idx) {
-	debug("hide cursor %s:%d", warp.c_str(), idx);
-	_cursors[_script->getWarp(warp)][idx].clear();
+void PhoenixVREngine::hideCursor(const Common::String &wname, int idx) {
+	debug("hide cursor %s:%d", wname.c_str(), idx);
+	auto warp = _script->getWarp(wname);
+	if (warp < 0) {
+		debug("no warp %s", wname.c_str());
+		return;
+	}
+	auto &cursors = _cursors[warp];
+	if (idx >= 0 && idx < static_cast<int>(cursors.size()))
+		cursors[idx].clear();
+	else
+		debug("index %d is out of range", idx);
 }
 
 void PhoenixVREngine::declareVariable(const Common::String &name) {
@@ -305,8 +330,13 @@ int PhoenixVREngine::getVariable(const Common::String &name) const {
 	return _variables.getVal(name);
 }
 
-void PhoenixVREngine::playSound(const Common::String &sound, uint8 volume, int loops, bool spatial, float angle) {
-	debug("play sound %s %d %d 3d: %d, angle: %g", sound.c_str(), volume, loops, spatial, angle);
+void PhoenixVREngine::playSound(const Common::String &sound, Audio::Mixer::SoundType type, uint8 volume, int loops, bool spatial, float angle) {
+	const bool music = type == Audio::Mixer::kMusicSoundType;
+	debug("play sound %s %d %d, music: %d, 3d: %d, angle: %g", sound.c_str(), volume, loops, music, spatial, angle);
+	if (_sounds.contains(sound)) {
+		debug("already playing, skipping...");
+		return;
+	}
 	Audio::SoundHandle h;
 	Common::ScopedPtr<Common::SeekableReadStream> stream(open(sound));
 	if (!stream) {
@@ -314,8 +344,15 @@ void PhoenixVREngine::playSound(const Common::String &sound, uint8 volume, int l
 		return;
 	}
 
-	_mixer->playStream(Audio::Mixer::kPlainSoundType, &h, Audio::makeWAVStream(stream.release(), DisposeAfterUse::YES), -1, volume);
-	if (loops < 0)
+	if (music) {
+		if (!_currentMusic.empty())
+			stopSound(_currentMusic);
+		_currentMusic = sound;
+		_currentMusicVolume = volume;
+	}
+
+	_mixer->playStream(type, &h, Audio::makeWAVStream(stream.release(), DisposeAfterUse::YES), -1, volume);
+	if (loops < 0 || music)
 		_mixer->loopChannel(h);
 	_sounds[sound] = Sound{h, spatial, angle, volume, loops};
 }
@@ -329,6 +366,12 @@ void PhoenixVREngine::stopSound(const Common::String &sound) {
 		_mixer->stopHandle(it->_value.handle);
 		_sounds.erase(it);
 	}
+}
+
+void PhoenixVREngine::stopAllSounds() {
+	_mixer->stopAll();
+	_currentMusic.clear();
+	_sounds.clear();
 }
 
 void PhoenixVREngine::playMovie(const Common::String &movie) {
@@ -349,6 +392,7 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 		return;
 	}
 
+	_mixer->pauseAll(true);
 	Common::ScopedPtr<Graphics::Palette> palette;
 	if (dec->loadStream(stream.release())) {
 		dec->start();
@@ -390,6 +434,7 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 	} else {
 		warning("playMovie %s failed", movie.c_str());
 	}
+	_mixer->pauseAll(false);
 }
 
 void PhoenixVREngine::playAnimation(const Common::String &name, const Common::String &var, int varValue, float speed) {
@@ -995,13 +1040,14 @@ void PhoenixVREngine::captureContext() {
 	};
 	Common::Array<SoundState> sounds, sounds3d;
 	for (auto &kv : _sounds) {
+		auto &name = kv._key;
 		auto &sound = kv._value;
-		if (sound.loops >= 0)
+		if (sound.loops >= 0 || name == _currentMusic)
 			continue;
 		if (sound.spatial)
-			sounds3d.push_back({kv._key, sound.volume, fromAngle(sound.angle)});
+			sounds3d.push_back({name, sound.volume, fromAngle(sound.angle)});
 		else
-			sounds.push_back({kv._key, sound.volume, 0});
+			sounds.push_back({name, sound.volume, 0});
 	}
 
 	// sound samples
@@ -1084,13 +1130,13 @@ bool PhoenixVREngine::enterScript() {
 		_lockKey[i] = lockKey;
 	}
 
-	_mixer->stopAll();
+	stopAllSounds();
 
 	_currentMusic = ms.readString(0, 257);
 	_currentMusicVolume = ms.readUint32LE();
 	debug("current music %s, volume: %u", _currentMusic.c_str(), _currentMusicVolume);
 	if (!_currentMusic.empty() && _currentMusicVolume > 0)
-		playSound(_currentMusic, _currentMusicVolume, -1);
+		playSound(_currentMusic, Audio::Mixer::kMusicSoundType, _currentMusicVolume, -1);
 
 	// sound samples
 	for (uint i = 0; i != 8; ++i) {
@@ -1098,8 +1144,8 @@ bool PhoenixVREngine::enterScript() {
 		auto vol = ms.readUint32LE();
 		auto flags = ms.readUint32LE();
 		debug("sound: %s vol: %u flags: %u", name.c_str(), vol, flags);
-		if (!name.empty())
-			playSound(name, vol, -1);
+		if (!name.empty() && name != _currentMusic)
+			playSound(name, Audio::Mixer::kSFXSoundType, vol, -1);
 	}
 
 	// sound samples 3D
@@ -1110,7 +1156,7 @@ bool PhoenixVREngine::enterScript() {
 		auto flags = ms.readUint32LE();
 		debug("3d sound: %s vol: %u flags: %u angle: %u", name.c_str(), vol, flags, angle);
 		if (!name.empty())
-			playSound(name, vol, -1, true, static_cast<float>(angle) * kPi);
+			playSound(name, Audio::Mixer::kSFXSoundType, vol, -1, true, static_cast<float>(angle) * kPi);
 	}
 	_loadedState.clear();
 	return true;
@@ -1212,6 +1258,18 @@ void PhoenixVREngine::drawSlot(int idx, int face, int x, int y) {
 	}
 	src->free();
 	delete src;
+}
+
+void PhoenixVREngine::syncSoundSettings() {
+	int musicVolume = ConfMan.getInt("music_volume");
+	int sfxVolume = ConfMan.getInt("sfx_volume");
+	debug("syncSoundSettings, music: %d, sfx: %d", musicVolume, sfxVolume);
+	bool muted = false;
+	if (ConfMan.hasKey("mute")) {
+		muted = ConfMan.getBool("mute");
+	}
+	_mixer->setVolumeForSoundType(Audio::Mixer::kMusicSoundType, muted ? 0 : musicVolume);
+	_mixer->setVolumeForSoundType(Audio::Mixer::kSFXSoundType, muted ? 0 : sfxVolume);
 }
 
 } // End of namespace PhoenixVR

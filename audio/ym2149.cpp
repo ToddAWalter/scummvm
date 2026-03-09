@@ -19,36 +19,27 @@
  *
  */
 
-#ifndef TINSEL_DEBUGGER_H
-#define TINSEL_DEBUGGER_H
+#include "audio/ym2149.h"
+#include "audio/softsynth/ym2149.h"
 
-#include "gui/debugger.h"
+#include "common/textconsole.h"
 
-namespace Tinsel {
+namespace YM2149 {
 
-class TinselEngine;
+YM2149 *Config::create() {
+	return new Audio::YM2149Emu();
+}
 
-class Console: public GUI::Debugger {
-public:
-	Console();
-	~Console() override;
+bool YM2149::_hasInstance = false;
 
-private:
-	bool cmd_add_clue(int argc, const char **argv);
-	bool cmd_add_all_clues(int argc, const char **argv);
-	bool cmd_cross_clue(int argc, const char **argv);
-	bool cmd_list_clues(int argc, const char **argv);
-	bool cmd_item(int argc, const char **argv);
-	bool cmd_scenes(int argc, const char **argv);
-	bool cmd_scene(int argc, const char **argv);
-	bool cmd_music(int argc, const char **argv);
-	bool cmd_sound(int argc, const char **argv);
-	bool cmd_string(int argc, const char **argv);
-	bool cmd_globals(int argc, const char **argv);
-	bool cmd_global(int argc, const char **argv);
-	bool cmd_psxdump(int argc, const char **argv);
-};
+YM2149::YM2149() {
+	if (_hasInstance)
+		error("There are multiple YM2149 output instances running.");
+	_hasInstance = true;
+}
 
-} // End of namespace Tinsel
+YM2149::~YM2149() {
+	_hasInstance = false;
+}
 
-#endif
+} // End of namespace YM2149

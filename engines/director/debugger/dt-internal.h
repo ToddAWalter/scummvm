@@ -34,6 +34,7 @@
 #include "backends/imgui/components/imgui_memory_editor.h"
 
 #include "director/types.h"
+#include "director/window.h"
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingodec/ast.h"
 #include "director/lingo/lingodec/handler.h"
@@ -125,6 +126,7 @@ struct DebuggerTheme {
 	ImU32 playhead_color;
 	ImU32 current_statement_bg;
 	ImU32 channel_toggle;
+	ImU32 channel_hide_bg;
 	ImU32 channelSelectedCol;
 	ImU32 channelHoveredCol;
 	ImU32 contColors[6];
@@ -269,6 +271,7 @@ typedef struct ImGuiState {
 	int _scoreFrameOffset = 1;
 	int _scorePageSlider = 0;
 	int _selectedChannel = -1;
+	bool _scrollToChannel = false;
 
 	ImFont *_tinyFont = nullptr;
 
@@ -287,6 +290,10 @@ typedef struct ImGuiState {
 	} _archive;
 
 	ImGuiEx::ImGuiLogger *_logger = nullptr;
+	bool _ignoreMouse = false;
+	bool _enableMultiViewport = true;
+
+	Window *_windowToRedraw = nullptr;
 } ImGuiState;
 
 // debugtools.cpp

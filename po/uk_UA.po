@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-03-03 17:08+0000\n"
+"POT-Creation-Date: 2026-03-08 19:00+0000\n"
 "PO-Revision-Date: 2026-03-04 23:56+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
@@ -332,7 +332,7 @@ msgstr "Інше хмарне сховище вже є активним. Чи в
 #: gui/launcher.cpp:530 gui/launcher.cpp:1909 gui/options.cpp:3485
 #: gui/options.cpp:3859 base/main.cpp:597
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
-#: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:102
+#: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:122
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
 #: engines/efh/metaengine.cpp:362 engines/grim/grim.cpp:366
 #: engines/hypno/metaengine.cpp:192 engines/kyra/gui/saveload_eob.cpp:611
@@ -350,7 +350,7 @@ msgstr "Так"
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:428 gui/launcher.cpp:457
 #: gui/launcher.cpp:530 gui/launcher.cpp:1910 gui/options.cpp:3485
 #: gui/options.cpp:3859 engines/buried/buried.cpp:598
-#: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:102
+#: engines/chamber/metaengine.cpp:97 engines/director/events.cpp:122
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
 #: engines/efh/metaengine.cpp:368 engines/grim/grim.cpp:366
 #: engines/hypno/metaengine.cpp:198 engines/kyra/gui/saveload_eob.cpp:611
@@ -8369,7 +8369,7 @@ msgstr "Підняти / взаємодіяти"
 msgid "Activate Inventory Object"
 msgstr "Активувати об'єкт інвентарю"
 
-#: engines/director/events.cpp:101
+#: engines/director/events.cpp:121
 msgid ""
 "The game prevents quitting at this moment. Are you sure you want to quit "
 "anyway?"
@@ -14073,7 +14073,7 @@ msgstr "Відновити пропущені сцени"
 msgid "Restore some scenes originally in the Windows edition"
 msgstr "Відновити деяки сцени, присутні в версії Windows"
 
-#: engines/tinsel/detection_tables.h:498 engines/tinsel/detection_tables.h:515
+#: engines/tinsel/detection_tables.h:500 engines/tinsel/detection_tables.h:517
 msgid "Saturn CD version is not yet supported"
 msgstr "Saturn CD версія ще не підтримується"
 
@@ -14112,7 +14112,7 @@ msgstr "Перейти до початку меню збереження / за�
 msgid "Go to end of save / load menu"
 msgstr "Перейти до кінця меню збереження / завантаження"
 
-#: engines/tinsel/tinsel.cpp:1040
+#: engines/tinsel/tinsel.cpp:1046
 msgid "Discworld Noir needs ScummVM with TinyGL enabled"
 msgstr "Discworld Noir потребує ScummVM з включеним TinyGL"
 

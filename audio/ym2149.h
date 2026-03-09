@@ -19,36 +19,53 @@
  *
  */
 
-#ifndef TINSEL_DEBUGGER_H
-#define TINSEL_DEBUGGER_H
+#ifndef AUDIO_YM2149_H
+#define AUDIO_YM2149_H
 
-#include "gui/debugger.h"
+#include "audio/chip.h"
+#include "common/scummsys.h"
 
-namespace Tinsel {
+namespace YM2149 {
 
-class TinselEngine;
+class YM2149;
 
-class Console: public GUI::Debugger {
+class Config {
 public:
-	Console();
-	~Console() override;
-
-private:
-	bool cmd_add_clue(int argc, const char **argv);
-	bool cmd_add_all_clues(int argc, const char **argv);
-	bool cmd_cross_clue(int argc, const char **argv);
-	bool cmd_list_clues(int argc, const char **argv);
-	bool cmd_item(int argc, const char **argv);
-	bool cmd_scenes(int argc, const char **argv);
-	bool cmd_scene(int argc, const char **argv);
-	bool cmd_music(int argc, const char **argv);
-	bool cmd_sound(int argc, const char **argv);
-	bool cmd_string(int argc, const char **argv);
-	bool cmd_globals(int argc, const char **argv);
-	bool cmd_global(int argc, const char **argv);
-	bool cmd_psxdump(int argc, const char **argv);
+	/**
+	 * Creates a YM2149 driver.
+	 */
+	static YM2149 *create();
 };
 
-} // End of namespace Tinsel
+class YM2149 : virtual public Audio::Chip {
+private:
+	static bool _hasInstance;
+
+public:
+	YM2149();
+	virtual ~YM2149();
+
+	/**
+	 * Initializes the YM2149 emulator.
+	 *
+	 * @return		true on success, false on failure
+	 */
+	virtual bool init() = 0;
+
+	/**
+	 * Reinitializes the YM2149 emulator
+	 */
+	virtual void reset() = 0;
+
+	/**
+	 * Function to directly write to a specific YM2149 register.
+	 *
+	 * @param r		hardware register number to write to
+	 * @param v		value, which will be written
+	 */
+	virtual void writeReg(int r, uint8 v) = 0;
+};
+
+} // End of namespace YM2149
 
 #endif

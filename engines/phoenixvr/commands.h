@@ -169,27 +169,27 @@ struct ChangeCurseur : public Script::Command {
 
 struct Add : public Script::Command {
 	Common::String dstVar;
-	Common::String srcVar;
-	int imm;
+	Common::String arg0;
+	Common::String arg1;
 
-	Add(const Common::Array<Common::String> &args) : dstVar(args[0]), srcVar(args[1]), imm(atoi(args[2].c_str())) {}
+	Add(const Common::Array<Common::String> &args) : dstVar(args[0]), arg0(args[1]), arg1(args[2]) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		debug("add %s %s %d", dstVar.c_str(), srcVar.c_str(), imm);
-		g_engine->setVariable(dstVar, g_engine->getVariable(srcVar) + imm);
+		debug("add %s %s %s", dstVar.c_str(), arg0.c_str(), arg1.c_str());
+		g_engine->setVariable(dstVar, valueOf(arg0) + valueOf(arg1));
 	}
 };
 
 struct Sub : public Script::Command {
 	Common::String dstVar;
-	Common::String srcVar;
-	int imm;
+	Common::String arg0;
+	Common::String arg1;
 
-	Sub(const Common::Array<Common::String> &args) : dstVar(args[0]), srcVar(args[1]), imm(atoi(args[2].c_str())) {}
+	Sub(const Common::Array<Common::String> &args) : dstVar(args[0]), arg0(args[1]), arg1(args[2]) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		debug("sub %s %s %d", dstVar.c_str(), srcVar.c_str(), imm);
-		g_engine->setVariable(dstVar, g_engine->getVariable(srcVar) - imm);
+		debug("sub %s %s %s", dstVar.c_str(), arg0.c_str(), arg1.c_str());
+		g_engine->setVariable(dstVar, valueOf(arg0) - valueOf(arg1));
 	}
 };
 
@@ -270,25 +270,26 @@ struct Cmp : public Script::Command {
 	Common::String negativeVar;
 	Common::String arg0;
 	Common::String op;
-	int arg1;
+	Common::String arg1;
 
 	Cmp(const Common::Array<Common::String> &args) : var(args[0]), negativeVar(args[1]),
-													 arg0(args[2]), op(args[3]), arg1(atoi(args[4].c_str())) {}
+													 arg0(args[2]), op(args[3]), arg1(args[4]) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		debug("cmp %s %s %s %s %d", var.c_str(), negativeVar.c_str(), arg0.c_str(), op.c_str(), arg1);
+		debug("cmp %s %s %s %s %s", var.c_str(), negativeVar.c_str(), arg0.c_str(), op.c_str(), arg1.c_str());
 		bool r;
-		auto value0 = g_engine->getVariable(arg0);
+		auto value0 = valueOf(arg0);
+		auto value1 = valueOf(arg1);
 		if (op == "==") {
-			r = value0 == arg1;
+			r = value0 == value1;
 		} else if (op == "<") {
-			r = value0 < arg1;
+			r = value0 < value1;
 		} else if (op == "<=") {
-			r = value0 <= arg1;
+			r = value0 <= value1;
 		} else if (op == ">") {
-			r = value0 > arg1;
+			r = value0 > value1;
 		} else if (op == ">=") {
-			r = value0 >= arg1;
+			r = value0 >= value1;
 		} else {
 			error("invalid cmp op %s", op.c_str());
 		}
@@ -804,8 +805,13 @@ struct AngleYMax : public Script::Command {
 	AngleYMax(float min, float max) : yMin(min), yMax(max) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		debug("angleymax %g %g", yMin, yMax);
-		g_engine->setYMax(yMin, yMax);
+		if (yMin != yMax) {
+			debug("angleymax %g %g", yMin, yMax);
+			g_engine->setYMax(yMin, yMax);
+		} else {
+			debug("angleymax: reset");
+			g_engine->resetYMax();
+		}
 	}
 };
 
@@ -834,8 +840,10 @@ struct GoToWarp : public Script::Command {
 	GoToWarp(Common::String w) : warp(Common::move(w)) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->goToWarp(warp);
-		ctx.running = false; // terminate script after warp
+		// terminate script after successful warp.
+		// continue if not (for instance, goto to the same location)
+		if (g_engine->goToWarp(warp))
+			ctx.running = false;
 	}
 };
 
@@ -843,21 +851,17 @@ struct PlaySound : public Script::Command {
 	Common::String sound;
 	int volume;
 	int loops;
+	Audio::Mixer::SoundType type;
 
-	PlaySound(Common::String s, int v, int l) : sound(Common::move(s)), volume(v), loops(l) {}
+	PlaySound(Common::String s, int v, int l, Audio::Mixer::SoundType t = Audio::Mixer::kSFXSoundType) : sound(Common::move(s)), volume(v), loops(l), type(t) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->playSound(sound, volume, loops);
+		g_engine->playSound(sound, type, volume, loops);
 	}
 };
 
 struct PlayMusique : public PlaySound {
-	PlayMusique(Common::String s, int v) : PlaySound(Common::move(s), v, -1) {}
-
-	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->setCurrentMusic(sound, volume);
-		PlaySound::exec(ctx);
-	}
+	PlayMusique(Common::String s, int v) : PlaySound(Common::move(s), v, -1, Audio::Mixer::kMusicSoundType) {}
 };
 
 struct StopSound : public Script::Command {
@@ -879,7 +883,7 @@ struct PlaySound3D : public Script::Command {
 	PlaySound3D(Common::String s, int v, float a, int l) : sound(Common::move(s)), volume(v), angle(a), loops(l) {}
 
 	void exec(Script::ExecutionContext &ctx) const override {
-		g_engine->playSound(sound, volume, loops, true, angle);
+		g_engine->playSound(sound, Audio::Mixer::kSFXSoundType, volume, loops, true, angle);
 	}
 };
 

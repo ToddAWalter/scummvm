@@ -368,11 +368,18 @@ void Script::parseLine(const Common::String &line, uint lineno) {
 		error("invalid directive at line %u: %s", lineno, line.c_str());
 }
 
+int Script::Command::valueOf(const Common::String &value) {
+	if (!value.empty() && (Common::isDigit(value[0]) || value[0] == '-' || value[0] == '+'))
+		return atoi(value.c_str());
+	return g_engine->getVariable(value);
+}
+
 Script::~Script() {
 }
 
 int Script::getWarp(const Common::String &name) const {
-	return _warpsIndex.getVal(name);
+	auto it = _warpsIndex.find(name);
+	return it != _warpsIndex.end() ? it->_value : -1;
 }
 
 Script::ConstWarpPtr Script::getWarp(int idx) const {

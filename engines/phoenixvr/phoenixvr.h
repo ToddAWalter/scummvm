@@ -107,21 +107,20 @@ public:
 		return false;
 	}
 
+	void syncSoundSettings() override;
+
 	// Script API
 	void setNextScript(const Common::String &path);
-	void goToWarp(const Common::String &warp, bool savePrev = false);
+	bool goToWarp(const Common::String &warp, bool savePrev = false);
 	void returnToWarp();
 	void setCursorDefault(int idx, const Common::String &path);
 	void setCursor(const Common::String &path, const Common::String &warp, int idx);
 	void hideCursor(const Common::String &warp, int idx);
 
-	void playSound(const Common::String &sound, uint8 volume, int loops, bool spatial = false, float angle = 0);
+	void playSound(const Common::String &sound, Audio::Mixer::SoundType type, uint8 volume, int loops, bool spatial = false, float angle = 0);
 	void stopSound(const Common::String &sound);
+	void stopAllSounds();
 	void playMovie(const Common::String &movie);
-	void setCurrentMusic(const Common::String &name, int volume) {
-		_currentMusic = name;
-		_currentMusicVolume = volume;
-	}
 
 	void declareVariable(const Common::String &name);
 	void setVariable(const Common::String &name, int value);
@@ -154,6 +153,10 @@ public:
 	// this is set to large values and effectively useless
 	void setYMax(float min, float max) {
 		_angleX.setRange(min, max);
+	}
+
+	void resetYMax() {
+		_angleX.resetRange();
 	}
 
 	void setAngle(float x, float y) {
