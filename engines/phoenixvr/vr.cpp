@@ -286,9 +286,9 @@ struct Cube {
 Cube toCube(float x, float y, float z) {
 	Cube cube = {};
 
-	float absX = fabs(x);
-	float absY = fabs(y);
-	float absZ = fabs(z);
+	float absX = ABS(x);
+	float absY = ABS(y);
+	float absZ = ABS(z);
 
 	bool isXPositive = x > 0;
 	bool isYPositive = y > 0;
@@ -396,16 +396,17 @@ void VR::stopAnimation(const Common::String &name) {
 
 void VR::Animation::renderNextFrame(Graphics::Surface &pic) {
 	assert(active);
-	if (frameIndex >= frames.size()) {
-		active = false;
-		g_engine->setVariable(variable, variableValue);
-	} else {
+	if (frameIndex < frames.size()) {
 		auto &frame = frames[frameIndex++];
 		frame.render(pic);
 		if (frame.restartAtFrame >= 0) {
 			frameIndex = frame.restartAtFrame;
 			t = 1;
 		}
+	}
+	if (frameIndex >= frames.size()) {
+		active = false;
+		g_engine->setVariable(variable, variableValue);
 	}
 }
 

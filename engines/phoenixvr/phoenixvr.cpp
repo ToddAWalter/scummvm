@@ -54,13 +54,14 @@ namespace PhoenixVR {
 PhoenixVREngine *g_engine;
 
 PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDesc) : Engine(syst),
+																					 _frameLimiter(g_system, kFPSLimit),
 																					 _gameDescription(gameDesc),
 																					 _randomSource("PhoenixVR"),
 																					 _rgb565(2, 5, 6, 5, 0, 11, 5, 0, 0),
 																					 _thumbnail(139, 103, _rgb565),
 																					 _lockKey(13),
 																					 _fov(kPi2),
-																					 _angleX(kPi),
+																					 _angleX(0),
 																					 _angleY(-kPi2),
 																					 _mixer(syst->getMixer()) {
 	g_engine = this;
@@ -75,6 +76,15 @@ PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDes
 	}
 	if (!pixelFormatFound)
 		error("Couldn't find 16/32-bit pixel format");
+
+	if (gameIdMatches("amerzone")) {
+		_levels.push_back("01VR_PHARE");
+		_levels.push_back("02VR_ILE");
+		_levels.push_back("03VR_PUEBLO");
+		_levels.push_back("04VR_FLEUVE");
+		_levels.push_back("05VR_VILLAGEMARAIS");
+		_levels.push_back("07VRTEMPLE_VOLCAN");
+	}
 }
 
 PhoenixVREngine::~PhoenixVREngine() {
@@ -95,8 +105,8 @@ uint32 PhoenixVREngine::getFeatures() const {
 	return _gameDescription->flags;
 }
 
-Common::String PhoenixVREngine::getGameId() const {
-	return _gameDescription->gameId;
+bool PhoenixVREngine::gameIdMatches(const char *gameId) const {
+	return strcmp(_gameDescription->gameId, gameId) == 0;
 }
 
 Common::String PhoenixVREngine::removeDrive(const Common::String &path) {
@@ -139,6 +149,17 @@ Common::SeekableReadStream *PhoenixVREngine::open(const Common::String &filename
 	return nullptr;
 }
 
+bool PhoenixVREngine::setNextLevel() {
+	if (_currentLevel < _levels.size()) {
+		auto &level = _levels[_currentLevel++];
+		debug("next level is %s", level.c_str());
+		setNextScript(Common::String::format("%s\\%s.lst", level.c_str(), _gameDescription->gameId));
+		_loaded = true;
+		return true;
+	} else
+		return false;
+}
+
 void PhoenixVREngine::setNextScript(const Common::String &nextScript) {
 	debug("setNextScript %s", nextScript.c_str());
 	_contextScript = nextScript;
@@ -166,6 +187,8 @@ void PhoenixVREngine::loadNextScript() {
 	_script.reset(new Script(*s));
 	for (auto &var : _script->getVarNames())
 		declareVariable(var);
+	if (gameIdMatches("amerzone"))
+		declareVariable("oeuf_pose"); // crash in chapter 7
 
 	int numWarps = _script->numWarps();
 	_cursors.clear();
@@ -181,14 +204,70 @@ void PhoenixVREngine::end() {
 	debug("end");
 	stopAllSounds();
 	if (_nextScript.empty() && _nextWarp < 0) {
-		debug("quit game");
-		quitGame();
+		if (!setNextLevel()) {
+			debug("quit game");
+			quitGame();
+		}
 	}
+}
+
+void PhoenixVREngine::interpolateAngle(float x, float y, float speed, float zoom) {
+	debug("interpolateAngle %g,%g, speed: %g, zoom: %g", x, y, speed, zoom);
+	unsigned frameDuration = 0;
+	static constexpr float kDuration = 4096 * 16 / 1000.0f;
+	auto x0 = _angleY.angle() + kPi2, y0 = _angleX.angle(), z0 = _fov;
+	auto dx = x - x0, dy = y - y0, dz = zoom - z0;
+	if (dy < -kPi)
+		dy += kTau;
+	if (dy > kPi)
+		dy -= kTau;
+	if (dx < -kPi)
+		dx += kTau;
+	if (dx > kPi)
+		dx -= kTau;
+	debug("dx: %g, dy: %g, dz: %g", dx, dy, dz);
+	float t = 0;
+	bool waiting = true;
+	while (!shouldQuit() && waiting && t < kDuration) {
+		auto t1 = t / kDuration; // normalise to 0..1 range
+		// angles are animated using square function, zoom is linear
+		auto t2 = t1 * t1;
+
+		setAngle(x0 + t2 * dx, y0 + t2 * dy);
+		if (zoom > 0) {
+			setZoom(z0 + t1 * dz);
+		}
+
+		renderVR(frameDuration / 1000.0f);
+
+		Common::Event event;
+		while (g_system->getEventManager()->pollEvent(event)) {
+			switch (event.type) {
+			case Common::EVENT_KEYDOWN: {
+				if (event.kbd.ascii == ' ') {
+					waiting = false;
+				}
+				break;
+			}
+			default:
+				break;
+			}
+		}
+
+		// Delay for a bit. All events loops should have a delay
+		// to prevent the system being unduly loaded
+		_frameLimiter.delayBeforeSwap();
+		_screen->update();
+		frameDuration = _frameLimiter.startFrame();
+		t += frameDuration / 1000.0f * speed;
+	}
+	setAngle(x, y);
+	if (zoom > 0)
+		setZoom(zoom);
 }
 
 void PhoenixVREngine::until(const Common::String &var, int value) {
 	debug("until %s %d", var.c_str(), value);
-	Graphics::FrameLimiter limiter(g_system, kFPSLimit);
 	unsigned frameDuration = 0;
 	while (!shouldQuit() && getVariable(var) != value) {
 		Common::Event event;
@@ -202,9 +281,9 @@ void PhoenixVREngine::until(const Common::String &var, int value) {
 
 		// Delay for a bit. All events loops should have a delay
 		// to prevent the system being unduly loaded
-		limiter.delayBeforeSwap();
+		_frameLimiter.delayBeforeSwap();
 		_screen->update();
-		frameDuration = limiter.startFrame();
+		frameDuration = _frameLimiter.startFrame();
 	}
 }
 
@@ -212,7 +291,6 @@ void PhoenixVREngine::wait(float seconds) {
 	debug("wait %gs", seconds);
 	auto begin = g_system->getMillis();
 	unsigned millis = seconds * 1000;
-	Graphics::FrameLimiter limiter(g_system, kFPSLimit);
 	bool waiting = true;
 	unsigned frameDuration = 0;
 	while (!shouldQuit() && waiting && g_system->getMillis() - begin < millis) {
@@ -234,10 +312,18 @@ void PhoenixVREngine::wait(float seconds) {
 
 		// Delay for a bit. All events loops should have a delay
 		// to prevent the system being unduly loaded
-		limiter.delayBeforeSwap();
+		_frameLimiter.delayBeforeSwap();
 		_screen->update();
-		frameDuration = limiter.startFrame();
+		frameDuration = _frameLimiter.startFrame();
 	}
+}
+
+void PhoenixVREngine::restart() {
+	debug("restart");
+	_restarted = true;
+	_currentLevel = 0;
+	setNextLevel();
+	_loaded = false;
 }
 
 bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
@@ -248,7 +334,7 @@ bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 	}
 
 	// Typo in Necronomicon's Script4.lst
-	if (getGameId() == "necrono" && warp == "N3M09L03W515E1.vr")
+	if (gameIdMatches("necrono") && warp == "N3M09L03W515E1.vr")
 		_nextWarp = _script->getWarp("N3M09L03W51E1.vr");
 	else
 		_nextWarp = _script->getWarp(warp);
@@ -327,6 +413,8 @@ void PhoenixVREngine::setVariable(const Common::String &name, int value) {
 }
 
 int PhoenixVREngine::getVariable(const Common::String &name) const {
+	if (gameIdMatches("lochness") && name == "tumuAccpet")
+		return _variables.getVal("tumuAccept");
 	return _variables.getVal(name);
 }
 
@@ -398,7 +486,6 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 		dec->start();
 
 		bool playing = true;
-		Graphics::FrameLimiter limiter(g_system, kFPSLimit);
 		while (!shouldQuit() && playing && !dec->endOfVideo()) {
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
@@ -427,9 +514,9 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 
 			// Delay for a bit. All events loops should have a delay
 			// to prevent the system being unduly loaded
-			limiter.delayBeforeSwap();
+			_frameLimiter.delayBeforeSwap();
 			_screen->update();
-			limiter.startFrame();
+			_frameLimiter.startFrame();
 		}
 	} else {
 		warning("playMovie %s failed", movie.c_str());
@@ -587,7 +674,7 @@ void PhoenixVREngine::rollover(int textId, RolloverType type) {
 	bool bold = false;
 	uint16 color = 0xFFFF;
 
-	if (getGameId() == "lochness") {
+	if (gameIdMatches("lochness")) {
 		size = 12;
 		bold = false;
 		switch (type) {
@@ -731,7 +818,7 @@ void PhoenixVREngine::tick(float dt) {
 		}
 
 		{
-			Common::ScopedPtr<Common::SeekableReadStream> stream(open(_warp->testFile));
+			Common::ScopedPtr<Common::SeekableReadStream> stream(!_warp->testFile.empty() ? open(_warp->testFile) : nullptr);
 			if (stream)
 				_regSet.reset(new RegionSet(*stream));
 			else
@@ -745,6 +832,7 @@ void PhoenixVREngine::tick(float dt) {
 			test->scope.exec(ctx);
 		else
 			warning("no default script!");
+		_restarted = false;
 	}
 
 	if (_nextTest >= 0) {
@@ -839,7 +927,12 @@ Common::Error PhoenixVREngine::run() {
 			debug("loaded %u textes", _textes.size());
 		}
 	}
-	setNextScript("script.lst");
+
+	// try load level-specific script first (amerzone)
+	if (setNextLevel())
+		_loaded = false; // reset flag or interface.vr will skip menu
+	else
+		setNextScript("script.lst");
 
 	// Set the engine's debugger console
 	setDebugger(new Console());
@@ -854,7 +947,6 @@ Common::Error PhoenixVREngine::run() {
 
 	Common::Event event;
 
-	Graphics::FrameLimiter limiter(g_system, kFPSLimit);
 	uint frameDuration = 0;
 	while (!shouldQuit()) {
 		while (g_system->getEventManager()->pollEvent(event)) {
@@ -972,9 +1064,9 @@ Common::Error PhoenixVREngine::run() {
 
 		// Delay for a bit. All events loops should have a delay
 		// to prevent the system being unduly loaded
-		limiter.delayBeforeSwap();
+		_frameLimiter.delayBeforeSwap();
 		_screen->update();
-		frameDuration = limiter.startFrame();
+		frameDuration = _frameLimiter.startFrame();
 	}
 
 	return Common::kNoError;
@@ -1165,8 +1257,22 @@ bool PhoenixVREngine::enterScript() {
 Common::Error PhoenixVREngine::loadGameStream(Common::SeekableReadStream *slot) {
 	auto state = GameState::load(*slot);
 
+	_loaded = true;
 	killTimer();
 	setNextScript(state.script);
+	if (!_levels.empty()) {
+		uint i = 0, n = _levels.size();
+		for (; i != n; ++i) {
+			auto &level = _levels[i];
+			if (state.script.hasPrefixIgnoreCase(level)) {
+				debug("current level is %u", i);
+				_currentLevel = i + 1;
+				break;
+			}
+		}
+		if (i == n)
+			warning("couldn't find current level index for script %s", state.script.c_str());
+	}
 	// keep it alive until loading finishes.
 	auto currentScript = Common::move(_script);
 	assert(!_nextScript.empty());
@@ -1178,6 +1284,7 @@ Common::Error PhoenixVREngine::loadGameStream(Common::SeekableReadStream *slot) 
 		Script::ExecutionContext ctx;
 		test->scope.exec(ctx);
 	}
+	_loaded = false;
 
 	return Common::kNoError;
 }
@@ -1258,6 +1365,12 @@ void PhoenixVREngine::drawSlot(int idx, int face, int x, int y) {
 	}
 	src->free();
 	delete src;
+}
+
+void PhoenixVREngine::setGlobalVolume(int volume) {
+	ConfMan.setInt("music_volume", volume);
+	ConfMan.setInt("sfx_volume", volume);
+	syncSoundSettings();
 }
 
 void PhoenixVREngine::syncSoundSettings() {

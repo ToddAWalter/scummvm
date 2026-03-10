@@ -34,6 +34,7 @@
 #include "common/util.h"
 #include "engines/engine.h"
 #include "engines/savestate.h"
+#include "graphics/framelimiter.h"
 #include "graphics/screen.h"
 #include "video/video_decoder.h"
 
@@ -62,6 +63,7 @@ class PhoenixVREngine : public Engine {
 private:
 	static constexpr uint kFPSLimit = 60;
 
+	Graphics::FrameLimiter _frameLimiter;
 	Graphics::Screen *_screen = nullptr;
 	Common::Point _screenCenter;
 	const ADGameDescription *_gameDescription;
@@ -79,10 +81,7 @@ public:
 
 	uint32 getFeatures() const;
 
-	/**
-	 * Returns the game Id
-	 */
-	Common::String getGameId() const;
+	bool gameIdMatches(const char *gameId) const;
 
 	/**
 	 * Gets a random number
@@ -141,9 +140,10 @@ public:
 	void killTimer();
 	void playAnimation(const Common::String &name, const Common::String &var, int varValue, float speed);
 	void stopAnimation(const Common::String &name);
-	void setZoom(int fov) {
-		_fov = kPi * fov / 180;
+	void setZoom(float fov) {
+		_fov = fov;
 	}
+	void interpolateAngle(float x, float y, float speed, float zoom);
 
 	void setXMax(float max) {
 		static const float baseX = -kPi2;
@@ -161,8 +161,11 @@ public:
 
 	void setAngle(float x, float y) {
 		_angleX.set(y);
-		static const float baseX = -kPi2;
-		_angleY.set(baseX + x);
+		_angleY.set(x - kPi2);
+	}
+
+	void setNord(float a) {
+		_angleX.add(a);
 	}
 
 	bool testSaveSlot(int idx) const;
@@ -177,11 +180,18 @@ public:
 	bool enterScript();
 	bool isLoading() const { return !_loadedState.empty(); }
 
+	bool wasRestarted() const { return _restarted; }
+	bool wasLoaded() const { return _loaded; }
+
 	void saveVariables();
 	void loadVariables();
 
 	void rollover(int textId, RolloverType type);
 	void showWaves();
+	void restart();
+	bool setNextLevel();
+
+	void setGlobalVolume(int vol);
 
 private:
 	static Common::String removeDrive(const Common::String &path);
@@ -263,6 +273,12 @@ private:
 
 	Common::ScopedPtr<Graphics::ManagedSurface> _text;
 	Common::Rect _textRect;
+
+	Common::Array<Common::String> _levels;
+	uint _currentLevel = 0;
+
+	bool _restarted = false;
+	bool _loaded = false;
 };
 
 extern PhoenixVREngine *g_engine;
