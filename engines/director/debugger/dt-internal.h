@@ -97,7 +97,15 @@ typedef struct ImGuiWindows {
 	bool archive = false;
 	bool watchedVars = false;
 	bool executionContext = false;
+	bool search = false;
 } ImGuiWindows;
+
+
+enum SearchMode {
+	kSearchAll = 0,
+	kSearchHandlerNames,
+	kSearchScriptBody,
+};
 
 typedef struct ScriptData {
 	Common::Array<ImGuiScript> _scripts;
@@ -179,7 +187,6 @@ typedef struct ImGuiState {
 		Common::String varName;
 		Common::String value;
 		Common::String scriptRef;
-		bool isWrite;
 	};
 
 	struct ScoreConfig {
@@ -225,8 +232,16 @@ typedef struct ImGuiState {
 		bool _scrollToPC = false;
 		uint _lastLinePC = 0;
 		uint _callstackSize = 0;
+		Common::String _highlightQuery; // lowercased, empty disables highlight
+		bool _suppressHighlight = false; // used to disable highlighting in Execution Context
 	} _dbg;
 
+	struct {
+		char input[256] = {};
+		bool dirty = false;
+		int mode = kSearchAll;
+		Common::Array<ImGuiScript> results;
+	} _search;
 
 	struct {
 		DatumHash _locals;
@@ -300,6 +315,10 @@ typedef struct ImGuiState {
 ImGuiScript toImGuiScript(ScriptType scriptType, CastMemberID id, const Common::String &handlerId);
 ScriptContext *getScriptContext(CastMemberID id);
 ScriptContext *getScriptContext(uint32 nameIndex, CastMemberID castId, Common::String handler);
+ScriptContext *resolveHandlerContext(int32 nameIndex, const CastMemberID &refId, const Common::String &handlerName);
+ImGuiScript buildImGuiHandlerScript(ScriptContext *ctx, int castLibID, const Common::String &handlerName, const Common::String &moviePath);
+void maybeHighlightLastItem(const Common::String &text);
+void addToOpenHandlers(ImGuiScript handler);
 void setScriptToDisplay(const ImGuiScript &script);
 Director::Breakpoint *getBreakpoint(const Common::String &handlerName, uint16 scriptId, uint pc);
 void displayScriptRef(CastMemberID &scriptId);
@@ -343,6 +362,9 @@ void showHandlers();
 void saveCurrentState();
 void loadSavedState();
 Common::Array<WindowFlag> getWindowFlags();
+
+// dt-search.cpp
+void showSearchBar();
 
 extern ImGuiState *_state;
 

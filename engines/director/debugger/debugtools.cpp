@@ -79,6 +79,9 @@ const LingoDec::Handler *getHandler(const Cast *cast, CastMemberID id, const Com
 
 const LingoDec::Handler *getHandler(CastMemberID id, const Common::String &handlerId) {
 	const Director::Movie *movie = g_director->getCurrentMovie();
+	if (id.castLib == SHARED_CAST_LIB)
+		return getHandler(movie->getSharedCast(), id, handlerId);
+
 	const Cast *cast = movie->getCasts()->getVal(id.castLib);
 
 	const LingoDec::Handler *handler = getHandler(cast, id, handlerId);
@@ -126,6 +129,11 @@ ScriptContext *getScriptContext(CastMemberID id) {
 	const Director::Movie *movie = g_director->getCurrentMovie();;
 	const Cast *cast = movie->getCasts()->getVal(id.castLib);
 
+	if (id.castLib == SHARED_CAST_LIB)
+		cast = movie->getSharedCast();
+	else
+		cast = movie->getCasts()->getVal(id.castLib);
+
 	if (!cast) {
 		return nullptr;
 	}
@@ -150,6 +158,105 @@ ScriptContext *getScriptContext(uint32 nameIndex, CastMemberID id, Common::Strin
 	}
 
 	return nullptr;
+}
+
+static ScriptContext *findHandlerContext(Cast *cast, const Common::String &handlerName) {
+	if (!cast || !cast->_lingoArchive)
+		return nullptr;
+
+	for (int i = 0; i <= kMaxScriptType; i++) {
+		if (cast->_lingoArchive->scriptContexts[i].empty())
+			continue;
+		for (auto &scriptContext : cast->_lingoArchive->scriptContexts[i]) {
+			if (scriptContext._value && scriptContext._value->_functionHandlers.contains(handlerName))
+				return scriptContext._value;
+		}
+	}
+	return nullptr;
+}
+
+ScriptContext *resolveHandlerContext(int32 nameIndex, const CastMemberID &refId, const Common::String &handlerName) {
+	Movie *movie = g_director->getCurrentMovie();
+	if (!movie)
+		return nullptr;
+
+	Cast *cast = nullptr;
+	if (refId.castLib == SHARED_CAST_LIB) {
+		cast = movie->getSharedCast();
+	} else {
+		cast = movie->getCasts()->getVal(refId.castLib);
+	}
+
+	if (cast && cast->_lingoArchive && nameIndex >= 0 && (uint32)nameIndex < cast->_lingoArchive->names.size()) {
+		if (cast->_lingoArchive->names[nameIndex] != handlerName) {
+			ScriptContext *local = cast->_lingoArchive->findScriptContext(refId.member);
+			if (local && local->_functionHandlers.contains(handlerName))
+				return local;
+		}
+	}
+
+	if (ScriptContext *ctx = findHandlerContext(cast, handlerName))
+		return ctx;
+
+	Cast *shared = movie->getSharedCast();
+	if (shared && shared != cast) {
+		if (ScriptContext *ctx = findHandlerContext(shared, handlerName))
+			return ctx;
+	}
+
+	return nullptr;
+}
+
+ImGuiScript buildImGuiHandlerScript(ScriptContext *ctx, int castLibID, const Common::String &handlerName, const Common::String &moviePath) {
+	ImGuiScript script;
+	if (!ctx)
+		return script;
+
+	Movie *movie = g_director->getCurrentMovie();
+	Cast *cast = nullptr;
+	if (castLibID == SHARED_CAST_LIB) {
+		cast = movie ? movie->getSharedCast() : nullptr;
+	} else {
+		cast = movie ? movie->getCasts()->getVal(castLibID) : nullptr;
+	}
+
+	int castId = ctx->_id;
+	bool childScript = false;
+	if (castId == -1) {
+		childScript = true;
+		if (cast) {
+			castId = cast->getCastIdByScriptId(ctx->_parentNumber);
+		}
+	}
+
+	CastMemberID memberID(castId, castLibID);
+	script = toImGuiScript(ctx->_scriptType, memberID, handlerName);
+	script.byteOffsets = ctx->_functionByteOffsets[script.handlerId];
+	script.moviePath = moviePath;
+	script.handlerName = formatHandlerName(ctx->_scriptId, castId, script.handlerId, ctx->_scriptType, childScript);
+	return script;
+}
+
+void maybeHighlightLastItem(const Common::String &text) {
+	if (!_state)
+		return;
+	const Common::String &q = _state->_dbg._highlightQuery;
+	if (q.empty() || text.empty() || _state->_dbg._suppressHighlight)
+		return;
+
+	Common::String lower = text;
+	lower.toLowercase();
+	if (!lower.contains(q.c_str()))
+		return;
+
+	ImDrawList *dl = ImGui::GetWindowDrawList();
+	const ImVec2 min = ImGui::GetItemRectMin();
+	const ImVec2 max = ImGui::GetItemRectMax();
+	if (max.x <= min.x || max.y <= min.y)
+		return;
+
+	ImU32 col = IM_COL32(255, 230, 0, 90);
+	dl->AddRectFilled(min, max, col, 2.0f);
 }
 
 Director::Breakpoint *getBreakpoint(const Common::String &handlerName, uint16 scriptId, uint pc) {
@@ -397,6 +504,11 @@ static void addScriptCastToDisplay(CastMemberID &id) {
 	_state->_scriptCasts.push_back(id);
 }
 
+void addToOpenHandlers(ImGuiScript handler) {
+	_state->_openHandlers.erase(handler.id.member);
+	_state->_openHandlers[handler.id.member] = handler;
+}
+
 void setScriptToDisplay(const ImGuiScript &script) {
 	ScriptData *scriptData = &_state->_functions._windowScriptData.getOrCreateVal(g_director->getCurrentWindow());
 	uint index = scriptData->_scripts.size();
@@ -502,7 +614,7 @@ static const DebuggerTheme themes[kThemeCount] = {
 		IM_COL32(0xB4, 0x32, 0x32, 0xC8), // channel_hide_bg
 		IM_COL32(0x94, 0x00, 0xD3, 0xFF), // channelSelectedCol
 		IM_COL32(0xFF, 0xFF, 0x00, 0x3C), // channelHoveredCol
-		{                                 // contColors
+		{								 // contColors
 			IM_COL32(0xCE, 0xCE, 0xFF, 0x80),
 			IM_COL32(0xFF, 0xFF, 0xCE, 0x80),
 			IM_COL32(0xCE, 0xFF, 0xCE, 0x80),
@@ -560,7 +672,7 @@ static const DebuggerTheme themes[kThemeCount] = {
 		IM_COL32(0xDC, 0x3C, 0x3C, 0xC8), // channel_hide_bg
 		IM_COL32(0x94, 0x00, 0xD3, 0xFF), // channelSelectedCol
 		IM_COL32(0xD0, 0x90, 0x00, 0x50), // channelHoveredCol
-		{                                 // contColors
+		{								 // contColors
 			IM_COL32(0xCE, 0xCE, 0xFF, 0x80),
 			IM_COL32(0xFF, 0xFF, 0xCE, 0x80),
 			IM_COL32(0xCE, 0xFF, 0xCE, 0x80),
@@ -589,21 +701,21 @@ static const DebuggerTheme themes[kThemeCount] = {
 		ImVec4(0.80f, 0.00f, 0.00f, 1.0f), // var_ref_changed
 		ImVec4(0.60f, 0.00f, 0.60f, 1.0f), // var_ref_out_of_scope
 
-		ImVec4(0.1f, 0.1f, 0.1f, 1.0f),    // cp_color
-		ImVec4(0.8f, 0.0f, 0.0f, 1.0f),    // cp_color_red
-		ImVec4(0.8f, 0.4f, 0.0f, 1.0f),    // cp_active_color
-		ImVec4(0.7f, 0.8f, 1.0f, 0.5f),    // cp_bgcolor
-		ImVec4(0.0f, 0.0f, 0.8f, 1.0f),    // cp_playing_color
+		ImVec4(0.1f, 0.1f, 0.1f, 1.0f),	// cp_color
+		ImVec4(0.8f, 0.0f, 0.0f, 1.0f),	// cp_color_red
+		ImVec4(0.8f, 0.4f, 0.0f, 1.0f),	// cp_active_color
+		ImVec4(0.7f, 0.8f, 1.0f, 0.5f),	// cp_bgcolor
+		ImVec4(0.0f, 0.0f, 0.8f, 1.0f),	// cp_playing_color
 		ImVec4(0.55f, 0.42f, 0.05f, 1.0f), // cp_path_color
 
-		ImVec4(0.8f, 0.0f, 0.0f, 1.0f),    // logger_error_b
-		ImVec4(0.8f, 0.4f, 0.0f, 1.0f),    // logger_warning_b
-		ImVec4(0.1f, 0.1f, 0.1f, 1.0f),    // logger_info_b
-		ImVec4(0.4f, 0.4f, 0.4f, 1.0f),    // logger_debug_b
-		ImVec4(0.7f, 0.0f, 0.0f, 1.0f),    // logger_error
-		ImVec4(0.7f, 0.4f, 0.0f, 1.0f),    // logger_warning
+		ImVec4(0.8f, 0.0f, 0.0f, 1.0f),	// logger_error_b
+		ImVec4(0.8f, 0.4f, 0.0f, 1.0f),	// logger_warning_b
+		ImVec4(0.1f, 0.1f, 0.1f, 1.0f),	// logger_info_b
+		ImVec4(0.4f, 0.4f, 0.4f, 1.0f),	// logger_debug_b
+		ImVec4(0.7f, 0.0f, 0.0f, 1.0f),	// logger_error
+		ImVec4(0.7f, 0.4f, 0.0f, 1.0f),	// logger_warning
 		ImVec4(0.15f, 0.15f, 0.15f, 1.0f), // logger_info
-		ImVec4(0.4f, 0.4f, 0.4f, 1.0f)     // logger_debug
+		ImVec4(0.4f, 0.4f, 0.4f, 1.0f)	 // logger_debug
 	}
 };
 
@@ -769,6 +881,7 @@ void onImGuiRender() {
 
 			ImGui::MenuItem("Control Panel", NULL, &_state->_w.controlPanel);
 			ImGui::MenuItem("Score", NULL, &_state->_w.score);
+			ImGui::MenuItem("Search", NULL, &_state->_w.search);
 			ImGui::MenuItem("Functions", NULL, &_state->_w.funcList);
 			ImGui::MenuItem("Cast", NULL, &_state->_w.cast);
 			ImGui::MenuItem("Channels", NULL, &_state->_w.channels);
@@ -805,6 +918,7 @@ void onImGuiRender() {
 	showCastDetails();
 	showFuncList();
 	showScore();
+	showSearchBar();
 	showBreakpointList();
 	showSettings();
 	showArchive();
