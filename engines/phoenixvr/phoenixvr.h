@@ -50,10 +50,11 @@ class Font;
 
 namespace PhoenixVR {
 
+class ARN;
 struct PhoenixVRGameDescription;
 struct GameState;
 
-enum struct RolloverType {
+enum struct RolloverType : uint8 {
 	Default,
 	Malette,
 	Secretaire
@@ -62,6 +63,7 @@ enum struct RolloverType {
 class PhoenixVREngine : public Engine {
 private:
 	static constexpr uint kFPSLimit = 60;
+	static constexpr float kMaxTick = 4.0f / kFPSLimit;
 
 	Graphics::FrameLimiter _frameLimiter;
 	Graphics::Screen *_screen = nullptr;
@@ -71,6 +73,7 @@ private:
 	Graphics::PixelFormat _pixelFormat;
 	Graphics::PixelFormat _rgb565;
 	Graphics::ManagedSurface _thumbnail;
+	Common::ScopedPtr<ARN> _arn;
 
 	// Engine APIs
 	Common::Error run() override;
@@ -144,6 +147,7 @@ public:
 		_fov = fov;
 	}
 	void interpolateAngle(float x, float y, float speed, float zoom);
+	void fade(int start, int stop, int speed);
 
 	void setXMax(float max) {
 		static const float baseX = -kPi2;
@@ -161,7 +165,7 @@ public:
 
 	void setAngle(float x, float y) {
 		_angleX.set(y);
-		_angleY.set(x - kPi2);
+		_angleY.set(kPi2 - x);
 	}
 
 	void setNord(float a) {
@@ -208,6 +212,8 @@ private:
 	void tickTimer(float dt);
 	void loadNextScript();
 	void renderVR(float dt);
+	void renderTimer();
+	void renderFade(int color);
 
 private:
 	bool _hasFocus = true;
@@ -258,7 +264,7 @@ private:
 	static constexpr byte kPaused = 2;
 	static constexpr byte kActive = 4;
 	byte _timerFlags = 0;
-	float _timer = 0;
+	float _timer = 0, _initialTimer = 0;
 
 	Common::String _contextScript;
 	Common::String _contextLabel;
