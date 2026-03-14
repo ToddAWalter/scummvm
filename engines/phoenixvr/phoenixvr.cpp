@@ -88,6 +88,13 @@ PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDes
 	}
 }
 
+void PhoenixVREngine::resetState() {
+	_angleX.resetRange();
+	_angleX.set(0);
+	_angleY.resetRange();
+	_angleY.set(-kPi2);
+}
+
 PhoenixVREngine::~PhoenixVREngine() {
 	_system->lockMouse(false);
 	for (auto it = _cursorCache.begin(); it != _cursorCache.end(); ++it) {
@@ -199,6 +206,7 @@ void PhoenixVREngine::loadNextScript() {
 		_cursors[i].resize(warp->tests.size());
 	}
 	_warpIdx = 0;
+	resetState();
 }
 
 void PhoenixVREngine::end() {
@@ -313,7 +321,7 @@ void PhoenixVREngine::fade(int start, int stop, int speed) {
 		renderVR(dt);
 		renderFade(pos);
 
-		pos += 1 + dt * speedMs;
+		pos += dt * speedMs + ((speed >= 0) ? 1 : -1);
 
 		// Delay for a bit. All events loops should have a delay
 		// to prevent the system being unduly loaded
