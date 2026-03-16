@@ -389,9 +389,11 @@ void PhoenixVREngine::wait(float seconds) {
 
 void PhoenixVREngine::restart() {
 	debug("restart");
+	resetState();
 	_restarted = true;
 	_currentLevel = 0;
 	setNextLevel();
+	_prevWarp = -1;
 	_loaded = false;
 }
 
@@ -409,7 +411,7 @@ bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 		_nextWarp = _script->getWarp(warp);
 
 	_hoverIndex = -1;
-	if (savePrev && !gameIdMatches("amerzone")) {
+	if (savePrev) {
 		assert(_warpIdx >= 0);
 		_prevWarp = _warpIdx;
 		// saving thumbnail
@@ -765,7 +767,7 @@ void PhoenixVREngine::loadVariables() {
 	_variableSnapshot.clear();
 }
 
-const Graphics::Font *PhoenixVREngine::getFont(int size) const {
+const Graphics::Font *PhoenixVREngine::getFont(int size, bool bold) const {
 #ifdef USE_FREETYPE2
 	if (size < 14)
 		return _font12.get();
@@ -820,7 +822,7 @@ void PhoenixVREngine::rollover(int textId, RolloverType type) {
 		}
 	}
 
-	auto *font = getFont(size);
+	auto *font = getFont(size, bold);
 
 	if (!font)
 		return;
@@ -1471,6 +1473,14 @@ void PhoenixVREngine::drawSlot(int idx, int face, int x, int y) {
 		srcRect.bottom = src->h;
 		dst.copyRectToSurface(*src, x, (tileY + 3) * 256, srcRect);
 	}
+	auto *font = getFont(12, false);
+	static int kMargin = 14;
+	if (font) {
+		auto color = dst.format.RGBToColor(0, 0, 0);
+		auto dstY = splitV ? (tileY + 3) * 256 - srcSplitY : y;
+		font->drawString(&dst, state.info, x, dstY + kMargin + src->h, src->w, color, Graphics::TextAlign::kTextAlignCenter);
+	}
+
 	src->free();
 	delete src;
 }
