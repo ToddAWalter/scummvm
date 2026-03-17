@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.3.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-03-15 19:21+0000\n"
+"POT-Creation-Date: 2026-03-16 21:09+0000\n"
 "PO-Revision-Date: 2023-02-26 15:01+0000\n"
 "Last-Translator: Kastuś K. <oakum2334@gmail.com>\n"
 "Language-Team: Belarusian (Taraškievica) <https://translations.scummvm.org/"
@@ -3584,11 +3584,11 @@ msgstr "Да S~c~ummVM"
 #: engines/groovie/script.cpp:2324 engines/hugo/file.cpp:297
 #: engines/illusions/menusystem.cpp:702 engines/kingdom/kingdom.cpp:731
 #: engines/lab/savegame.cpp:242 engines/mads/nebular/dialogs_nebular.cpp:358
-#: engines/mm/xeen/saves.cpp:280 engines/mtropolis/saveload.cpp:76
-#: engines/nancy/state/loadsave.cpp:136 engines/neverhood/menumodule.cpp:925
-#: engines/pegasus/pegasus.cpp:407 engines/prince/saveload.cpp:54
-#: engines/sci/engine/guest_additions.cpp:746 engines/sci/engine/kfile.cpp:1104
-#: engines/sherlock/scalpel/scalpel.cpp:1250
+#: engines/mads/phantom/dialogs_phantom.cpp:354 engines/mm/xeen/saves.cpp:280
+#: engines/mtropolis/saveload.cpp:76 engines/nancy/state/loadsave.cpp:136
+#: engines/neverhood/menumodule.cpp:925 engines/pegasus/pegasus.cpp:407
+#: engines/prince/saveload.cpp:54 engines/sci/engine/guest_additions.cpp:746
+#: engines/sci/engine/kfile.cpp:1104 engines/sherlock/scalpel/scalpel.cpp:1250
 #: engines/sherlock/tattoo/widget_files.cpp:81 engines/startrek/saveload.cpp:42
 #: engines/toltecs/menu.cpp:308 engines/toon/toon.cpp:3820
 #: engines/trecision/saveload.cpp:67 engines/tsage/scenes.cpp:640
@@ -3606,9 +3606,10 @@ msgstr "Захаваць гульню:"
 #: engines/hugo/file.cpp:297 engines/illusions/menusystem.cpp:702
 #: engines/kingdom/kingdom.cpp:731 engines/lab/savegame.cpp:237
 #: engines/lab/savegame.cpp:242 engines/mads/nebular/dialogs_nebular.cpp:358
-#: engines/mm/xeen/saves.cpp:280 engines/mtropolis/saveload.cpp:76
-#: engines/nancy/state/loadsave.cpp:108 engines/nancy/state/loadsave.cpp:136
-#: engines/neverhood/menumodule.cpp:925 engines/parallaction/metaengine.cpp:157
+#: engines/mads/phantom/dialogs_phantom.cpp:354 engines/mm/xeen/saves.cpp:280
+#: engines/mtropolis/saveload.cpp:76 engines/nancy/state/loadsave.cpp:108
+#: engines/nancy/state/loadsave.cpp:136 engines/neverhood/menumodule.cpp:925
+#: engines/parallaction/metaengine.cpp:157
 #: engines/parallaction/saveload.cpp:208 engines/pegasus/pegasus.cpp:407
 #: engines/prince/saveload.cpp:54 engines/saga/metaengine.cpp:469
 #: engines/sci/engine/guest_additions.cpp:747 engines/sci/engine/kfile.cpp:1104
@@ -6564,6 +6565,7 @@ msgstr "Гэтая гульня не падтрымліваецца."
 #: engines/hugo/file.cpp:399 engines/illusions/menusystem.cpp:679
 #: engines/kingdom/kingdom.cpp:741 engines/lab/savegame.cpp:257
 #: engines/mads/nebular/dialogs_nebular.cpp:385
+#: engines/mads/phantom/dialogs_phantom.cpp:381
 #: engines/mtropolis/saveload.cpp:120 engines/neverhood/menumodule.cpp:938
 #: engines/prince/saveload.cpp:63 engines/sci/engine/guest_additions.cpp:749
 #: engines/sci/engine/kfile.cpp:1246 engines/sherlock/scalpel/scalpel.cpp:1263
@@ -6584,6 +6586,7 @@ msgstr "Аднавіць гульню:"
 #: engines/illusions/menusystem.cpp:679 engines/kingdom/kingdom.cpp:741
 #: engines/lab/savegame.cpp:237 engines/lab/savegame.cpp:257
 #: engines/mads/nebular/dialogs_nebular.cpp:385
+#: engines/mads/phantom/dialogs_phantom.cpp:381
 #: engines/mtropolis/saveload.cpp:120 engines/neverhood/menumodule.cpp:938
 #: engines/prince/saveload.cpp:63 engines/sci/engine/guest_additions.cpp:750
 #: engines/sci/engine/kfile.cpp:1246 engines/sherlock/scalpel/scalpel.cpp:1263
@@ -13303,19 +13306,19 @@ msgstr "Лёт направа"
 msgid "Fly to lower right"
 msgstr "Лёт уніз направа"
 
-#: engines/scumm/input.cpp:1405
+#: engines/scumm/input.cpp:1431
 msgid "Snap scroll on"
 msgstr "Прагортваньне скокамі далучана"
 
-#: engines/scumm/input.cpp:1407
+#: engines/scumm/input.cpp:1433
 msgid "Snap scroll off"
 msgstr "Прагортваньне скокамі адлучана"
 
-#: engines/scumm/input.cpp:1420
+#: engines/scumm/input.cpp:1446
 msgid "Music volume: "
 msgstr "Гучнасьць музыкі: "
 
-#: engines/scumm/input.cpp:1437
+#: engines/scumm/input.cpp:1463
 msgid "Subtitle speed: "
 msgstr "Хуткасьць субтытраў: "
 
@@ -14722,13 +14725,6 @@ msgstr "Рыштунак"
 #| msgid "Open/Close Inventory"
 msgid "Close inventory"
 msgstr "Адкрыць/закрыць рыштунак"
-
-#. I18N: Runs tests in interactive mode
-#: engines/testbed/metaengine.cpp:39 engines/testbed/metaengine.cpp:40
-#, fuzzy
-#| msgid "Interact"
-msgid "Run in interactive mode"
-msgstr "Інтэракцыя"
 
 #: engines/tetraedge/metaengine.cpp:32
 #, fuzzy
@@ -17627,6 +17623,11 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Interact"
+#~ msgid "Run in interactive mode"
+#~ msgstr "Інтэракцыя"
 
 #, fuzzy
 #~| msgid "Open/Close Inventory"

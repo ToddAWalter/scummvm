@@ -172,6 +172,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "fff",				"Four Footed Friends" },
 	{ "finegardening",		"Fine Gardening Propagation" },
 	{ "finkletimes",		"Professor Finkle's Times Table Factory" },
+	{ "finklemania",		"Professor Finkle's Math Mania" },
 	{ "fishwish",			"The Fish Who Could Wish" },
 	{ "flipper",			"Flipper" },
 	{ "flipper1",           "The Three Worlds of Flipper & Lopaka" },
@@ -1056,6 +1057,7 @@ static const PlainGameDescriptor directorGames[] = {
 	{ "otelo",				"o.tel.o Online 01011" },
 	{ "physicus2",			"Physicus: Die Rückkehr" },
 	{ "ponkymath12",		"Durchstarten mit Ponky: Mathe 1. + 2. Klasse" },
+	{ "rainbowfishjr2",		"Der Regenbogenfisch Junior 2: Kraktors Geburtstag" },
 	{ "ravecard2001",		"Ravecard 2001" },
 	{ "ravensburger",		"Ravensburger Interactive Demo-Sampler" },
 	{ "raveshuttle",		"Rave Shuttle: The Cosmic Challenge" },
@@ -8504,6 +8506,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1("exploder", "", "Winblows Exploder", "r:089658f6d7d68f07eece8a68e5fdc35e",  115391, 600),
 	WINGAME1("exploder", "", "EXPLODER.EXE",	  "t:ae488c615d7ecb621c96c59b98eccf9b", 4712625, 600),
 
+	WINGAME2f("finklemania", "CD 1", "MANIA.EXE",	  "t:870ffc676c55b1fb7b1b489ce6d17f3e", 1708689,
+			"MAIN.DXR", "f:f16e0cf9386e52d8bd961ddf12c56a69", 7034800, 600, GF_32BPP),
+	WINGAME2f("finklemania", "CD 2", "MANIA.EXE",	  "t:870ffc676c55b1fb7b1b489ce6d17f3e", 1708689,
+			"MAIN.DXR", "f:027b5108850dd528bcee19c2a5ef4624", 7047084, 600, GF_32BPP),
+
 	MACGAME1("flingshot", "", "FlingShot", "769cbb727ae2dda3f8ab6682d65ab439", 1031461, 650),
 
 	MACGAME1_l("forestia", "", "FORESTIA", "r:3c0d928e84acac2ee6739a4360e70fc6", 1032406, Common::FR_FRA, 602),
@@ -10714,6 +10721,10 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1_l("pixeline9", "", "Pixeline - I Det Vilde Westen", "bb6be483050bd1524c5440229b595f7a", 236019, Common::DA_DNK, 900),
 	MACGAME1_l("pixeline9", "OS X", "Pixeline - Mac OS X", 		 "4a522e1da5d5b8570e3ab625945b19cf", 234733, Common::DA_DNK, 900),
 	WINGAME1_l("pixeline9", "", "Pixeline 9 DK.exe",			 "c612aa43e7ef55aa4fd2e1085fb1ef7a", 2816536, Common::DA_DNK, 900),
+
+	// Published by EMME, only in Germany?
+	// TRAC report #16387
+	WINGAME1_l("rainbowfishjr2", "", "regenbogenfisch jr 2.exe", "t:d2a055700b5410886197c4c72d9edf1f", 2188712, Common::DE_DEU, 900),
 
 	WINGAME1("sajaklucky", "Deluxe", "LuckyLettersDeluxe.exe", "001d65a360a61861118f3cfa92c68ef3", 14018695, 900),
 
