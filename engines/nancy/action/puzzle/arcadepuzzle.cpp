@@ -19,6 +19,9 @@
  *
  */
 
+#include "common/system.h"
+#include "common/random.h"
+
 #include "engines/nancy/nancy.h"
 #include "engines/nancy/graphics.h"
 #include "engines/nancy/resource.h"
@@ -28,9 +31,6 @@
 
 #include "engines/nancy/state/scene.h"
 #include "engines/nancy/action/puzzle/arcadepuzzle.h"
-
-#include "common/system.h"
-#include "common/random.h"
 
 namespace Nancy {
 namespace Action {
@@ -135,7 +135,7 @@ void ArcadePuzzle::readData(Common::SeekableReadStream &stream) {
 	_scoreStepSize    = stream.readSint32LE();           // +0x305
 	_timeBonusMax     = stream.readSint32LE();           // +0x309
 	_timeLimitSec     = stream.readSint32LE();           // +0x30d
-	_scoreParam4      = stream.readSint32LE();           // +0x311
+	stream.skip(4);                                      // +0x311 (unused score param)
 
 	for (int i = 0; i < 6; ++i)                          // 6×49 = 294 bytes, +0x315..+0x43a
 		_sounds[i].readNormal(stream);
