@@ -641,6 +641,8 @@ protected:
 	// and/or ambient sounds are currently muted.
 	uint16 _effectsVolume;
 	bool _useDigitalSfx;
+	bool _pendingWaitCommandDelay;
+	bool _pendingPNWaitScreenDelay;
 
 	uint8 _saveGameNameLen;
 	uint16 _saveLoadRowCurPos;
@@ -1394,7 +1396,10 @@ public:
 	void setupOpcodes() override;
 	void setupVideoOpcodes(VgaOpcodeProc *op) override;
 	void windowDrawChar(WindowBlock *window, uint x, uint y, byte chr) override;
-
+	void saveInventoryPalette();
+	void applyInventoryPalette();
+	void restoreInventoryPalette();
+	
 	void executeOpcode(int opcode) override;
 
 	int actCallD(int n);

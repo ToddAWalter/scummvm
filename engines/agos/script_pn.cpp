@@ -24,6 +24,7 @@
 #include "agos/vga.h"
 
 #include "common/endian.h"
+#include "common/str.h"
 #include "common/textconsole.h"
 
 namespace AGOS {
@@ -500,6 +501,10 @@ void AGOSEngine_PN::opn_opcode37() {
 	_inputReady = true;
 	interact(_inputline, 49);
 
+	Common::String typed(_inputline);
+	typed.trim();
+	_pendingWaitCommandDelay = typed.equalsIgnoreCase("wait");
+
 	if ((_inpp = strchr(_inputline,'\n')) != nullptr)
 		*_inpp = '\0';
 	_inpp = _inputline;
@@ -705,6 +710,12 @@ void AGOSEngine_PN::opn_opcode63() {
 
 int AGOSEngine_PN::inventoryOn(int val) {
 	writeVariable(210, val);
+
+	if (getPlatform() == Common::kPlatformAtariST || getPlatform() == Common::kPlatformAmiga) {
+		saveInventoryPalette();
+		applyInventoryPalette();
+	}
+
 	if (_videoLockOut & 0x10) {
 		iconPage();
 	} else {
@@ -729,6 +740,10 @@ int AGOSEngine_PN::inventoryOff() {
 		_windowArray[2]->textColor = 15;
 
 		restoreBlock(48, 2, 272, 130);
+
+		if (getPlatform() == Common::kPlatformAtariST || getPlatform() == Common::kPlatformAmiga) {
+			restoreInventoryPalette();
+		}
 
 		_hitAreaList = _hitAreas;
 		_videoLockOut &= ~0x10;
