@@ -1394,7 +1394,7 @@ void GameLogic::r0_handleRoomEvent1() {
 	_vm->drawImageToSurface(m04Gxl, "menu.pcx", _menuSurface, 113, 20);
 	_menuOffSprite = m04Gxl->loadSurface("ff.pcx");
 	_menuOnSprite = m04Gxl->loadSurface("n.pcx");
-	
+
 	menuDrawSoundEnabled();
 	menuDrawMusicEnabled();
 	// sysMouseDriver(1);
@@ -2933,12 +2933,73 @@ void GameLogic::r5_refreshRoomBackground() {
 	}
 }
 
+void GameLogic::r5_handleCassandra(const char *filename, int startFrame, int maxFrame, int startX, int startY, int targetX, int targetY, int width, int height, int totalSpeed, bool refreshBackground) {
+	const int stepX = (targetX > startX) ? 1 : -1;
+	const int stepY = (targetY > startY) ? 1 : -1;
+	const int deltaX = abs(targetX - startX);
+	const int deltaY = abs(targetY - startY);
+
+	int velX, velY;
+
+	if (deltaX == 0) {
+		velX = 0;
+		velY = totalSpeed * stepY;
+	} else if (deltaY == 0) {
+		velY = 0;
+		velX = totalSpeed * stepX;
+	} else if (deltaX > deltaY) {
+		velX = totalSpeed * stepX;
+		velY = ((totalSpeed * deltaY) / deltaX) * stepY;
+	} else {
+		velY = totalSpeed * stepY;
+		velX = ((totalSpeed * deltaX) / deltaY) * stepX;
+	}
+
+	const int stepNumb = abs(deltaX / velX);
+	WWSurface *workBackground = new WWSurface(320, 150);
+	workBackground->drawSurface(_vm->_backgroundSurface, 0, 0);
+	// sysMouseDriver(2)
+
+	int curX = startX;
+	int curY = startY;
+
+	// The original has a lot of scaling code and a bunch of code to handle how to position Garth and Wayne as if Cassandra was walking by them
+	// As she stop before them, and as the scaling computed was 1:1, the code has been significantly simplified
+	
+	WWSurface *cassSurface = new WWSurface(width, height);
+	for (int i = 0; i < stepNumb; ++i) {
+		updateRoomAnimations();
+		if (i > 0) {
+			_vm->_backgroundSurface->copyRectToSurface((Graphics::Surface)*workBackground, curX - velX, curY - velY - height, Common::Rect(curX - velX, curY - velY - height, curX - velX + width, curY - velY));
+		}
+		const int key = (i % maxFrame) + startFrame;
+		Common::String curFile = Common::String::format("%s%d.pcx", filename, key);
+		_vm->drawImageToSurface(_vm->_roomGxl, curFile.c_str(), cassSurface, 0, 0);
+
+		_vm->_backgroundSurface->drawSurfaceTransparent(cassSurface, curX, curY - height);
+		_vm->refreshActors();
+		curX += velX;
+		curY += velY;
+
+		// Add delay for better visual result
+		_vm->waitMillis(45);
+	}
+	
+	delete cassSurface;
+	delete workBackground;
+
+	// sysMouseDriver(1);
+	// if (refreshBackground) {
+	//		_vm->drawRoomImageToBackground("backg.pcx", 0, 0);
+	//		r5_refreshRoomBackground();
+	// }
+}
+
 void GameLogic::r5_handleRoomEvent() {
 	_r5_flags |= 0x01;
 	_vm->walkTo(195, 102, -1, 209, 96);
-	// TODO sub_185C0("wcass2", 0, 4, 0, 104, 170, 104, 26, 46, 8, 1);
-	// TODO sub_185C0("scass", 2, 1, 170, 104, 171, 104, 15, 46, 2, 0);
-	warning("STUB - r5_handleRoomEvent - sub_185C0?");
+	r5_handleCassandra("wcass2", 0, 4, 0, 104, 170, 104, 26, 46, 8, true);
+	r5_handleCassandra("scass", 2, 1, 170, 104, 171, 104, 15, 46, 2, false);
 	_vm->displayTextLines("c04r", 87, 150, 30, 1);
 	_vm->setDialogChoices(170, 171, 172, 173, 174);
 	_vm->startDialog();
@@ -4392,7 +4453,7 @@ void GameLogic::r10_buyItem() {
 		_vm->playAnimation("getmon", 0, 3, 98, 7, 0, 100);
 		_vm->displayText("c04r", 8, 0, 320, 115, 0);
 		_vm->playAnimation("gest", 0, 7, 127, 7, 0, 200);
-		_vm->playAnimation("getmon", 4, 2, 98, 7, 0, 100);
+		_vm->playAnimation("getmon", 3, 2, 98, 7, 0, 100);
 		if (_r10_selectedItemToBuy == 1) {
 			_r10_flags |= 0x08;
 		} else {
@@ -6159,7 +6220,7 @@ void GameLogic::r24_climbLadder(int wayneX, int wayneLadderX, int wayneLadderY, 
 	WWSurface *gclimbSprites[4];
 	WWSurface *getladSprites[3];
 	GxlArchive *roomLib = _vm->_roomGxl;
-	
+
 	for (int index = 0; index < 4; index++) {
 		tempFilename = Common::String::format("wclimb%d", index);
 		wclimbSprites[index] = roomLib->loadRoomSurface(tempFilename.c_str());
@@ -6258,7 +6319,7 @@ void GameLogic::r24_handleRoomEvent(int wayneLadderX, int wayneX, int wayneLadde
 	WWSurface *gclimbSprites[4];
 	WWSurface *getladSprites[3];
 	GxlArchive *roomLib = _vm->_roomGxl;
-	
+
 	for (int index = 0; index < 4; index++) {
 		tempFilename = Common::String::format("wclimb%d", index);
 		wclimbSprites[index] = roomLib->loadRoomSurface(tempFilename.c_str());
@@ -7025,7 +7086,7 @@ void GameLogic::r31_handleRoomEvent4() {
 			r31_correctAnswerSelected();
 		}
 	}
-	
+
 	r31_runBabeoff();
 }
 
@@ -7631,7 +7692,7 @@ int GameLogic::r35_handleVerbUse() {
 	default:
 		actionTextIndex = 0;
 		break;
-	}	
+	}
 	return actionTextIndex;
 }
 
@@ -7951,7 +8012,7 @@ void GameLogic::r37_climbExitLadderUp() {
 		tempFilename = Common::String::format("wgetldr%d", index);
 		getldrSprites[index] = roomLib->loadRoomSurface(tempFilename.c_str());
 	}
-	
+
 	WWSurface *workBackground = new WWSurface(320, 150);
 
 	for (int index = 0; index < 3; index++) {
@@ -7965,7 +8026,7 @@ void GameLogic::r37_climbExitLadderUp() {
 	for (int index = 0; index < 3; index++) {
 		delete getldrSprites[index];
 	}
-	
+
 	for (int index = 0; index < 4; index++) {
 		tempFilename = Common::String::format("gclimb%d", index);
 		gclimbSprites[index] = roomLib->loadRoomSurface(tempFilename.c_str());
@@ -8046,7 +8107,7 @@ void GameLogic::r37_climbLadderDown() {
 
 	int wayneLadderY = 26;
 	int climbCtr = 0, garthLadderY = wayneLadderY;
-	
+
 	while (garthLadderY < 92) {
 		if (climbCtr % 2 == 0) {
 			wayneLadderY += 7;
@@ -8061,7 +8122,7 @@ void GameLogic::r37_climbLadderDown() {
 			workBackground->drawSurfaceTransparent(ggetldlSprites[climbCtr - 12], 168, 26);
 		} else {
 			workBackground->drawSurfaceTransparent(gclimbSprites[climbCtr % 4], 187, garthLadderY);
-		} 
+		}
 		if (climbCtr < 20) {
 			workBackground->drawSurfaceTransparent(wclimbSprites[climbCtr % 4], 187, wayneLadderY);
 		} else if (climbCtr <= 22) {
@@ -8185,7 +8246,7 @@ void GameLogic::r37_climbLadderUp() {
 		workBackground->drawSurfaceTransparent(ggetldlSprites[index], 168, 28);
 		workBackground->drawSurfaceTransparent(_vm->_wayneSprites[0], 155, 26);
 		_vm->_screen->drawSurface(workBackground, 0, 0);
-		_vm->waitMillis(200);		
+		_vm->waitMillis(200);
 	}
 
 	for (int index = 0; index < 4; index++) {
@@ -8339,7 +8400,7 @@ void GameLogic::r37_climbEnterLadderDown() {
 	}
 
 	delete workBackground;
-	
+
 	_vm->setWaynePosition(163, 70);
 	_vm->setGarthPosition(138, 75);
 	_vm->refreshActors();
@@ -8509,7 +8570,7 @@ int GameLogic::r39_handleVerbUse() {
 	return actionTextIndex;
 }
 
-int GameLogic::r39_handleVerbOpen() {	
+int GameLogic::r39_handleVerbOpen() {
 	int actionTextIndex = -1;
 	switch (_vm->_objectNumber) {
 	case kObjectIdDoor39:
@@ -8619,7 +8680,7 @@ void GameLogic::closeSaveLoadMenu() {
 
 void GameLogic::menuSaveLoadMenu(bool isLoad) {
 	_menuIsSaveLoad = isLoad ? 2 : 1;
-	
+
 	GxlArchive *m04Gxl = new GxlArchive("m04");
 	// sysMouseDriver(2);
 	_vm->setMouseBounds(71, 248, 35, 141);
@@ -8722,7 +8783,7 @@ bool GameLogic::saveSavegame(int slot, const Common::String *desc) {
 		header.saveName = *desc;
 	else
 		header.saveName = Common::String::format("Unnamed savegame %2d", slot);
-	
+
 	header.version = kWWSavegameVersion;
 	_vm->writeSavegameHeader(saveFile, header);
 	delete saveFile;
@@ -8733,7 +8794,7 @@ bool GameLogic::saveSavegame(int slot, const Common::String *desc) {
 bool GameLogic::loadSavegame(int slot, bool rstSave) {
 	Common::InSaveFile *saveFile;
 	byte *buffer = nullptr;
-	
+
 	if (rstSave) {
 		Common::File fd;
 		if (!fd.open(Common::Path("ww.rst")))
@@ -8824,7 +8885,7 @@ void GameLogic::handleGameMenu() {
 			menuExit();
 		}
 		refresh = false;
-	} else {		
+	} else {
 		switch ((_vm->_mouseClickY - 24) / 16) {
 		case 0:
 			toggleMusicEnabled();
@@ -8862,7 +8923,7 @@ void GameLogic::handleGameMenu() {
 				// menuExit() must absolutely called after r0_flags is set otherwise it reset the menu mode.
 				menuExit();
 
-				// in the original this code is in a separate function r0_startPizzathonDialog 
+				// in the original this code is in a separate function r0_startPizzathonDialog
 				_vm->displayText("c11", 0, 0, -1, -1, 0);
 				_vm->setDialogChoices(29, 30, 31, 32, 33);
 				_vm->waitSeconds(2);

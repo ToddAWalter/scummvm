@@ -125,7 +125,7 @@ void WaynesWorldEngine::walkCalcOtherActorDest(int flag, int &x, int &y) {
     case 7:
         y += actorDistance;
         break;
-  
+
     default:
     	break;
     }
@@ -187,7 +187,7 @@ bool WaynesWorldEngine::walkFindPoint(int flag, int &sourceX, int &sourceY, int 
         int scan1Sign = -1;
         while (scan1Sign < 2 && !walkable) {
             if (ABS(slopeX) >= 1.0f) {
-                float slopeY = 1.0f / slopeX;
+	            const float slopeY = 1.0f / slopeX;
                 scan1Y = sourceY + scan1Incr * scan1Sign;
                 scan1X = sourceX + (scan1Y - sourceY) * slopeY;
             } else {
@@ -447,7 +447,7 @@ bool WaynesWorldEngine::walkTo(int actor1_destX, int actor1_destY, int direction
             if (flag1 == 0) {
                 scale = drawActors(actor1Points[pointIndex].direction, 0, 1, (walkIncr % 8) / 2, _wayneWalkPoints[pointIndex].x - _scrollPosition, _wayneWalkPoints[pointIndex].y, _garthSpriteX, _garthSpriteY);
             } else {
-                scale = drawActors(actor1Points[pointIndex].direction, 1, 0, (walkIncr % 8) / 2, _wayneSpriteX, _wayneSpriteY, _garthWalkPoints[pointIndex].x - _scrollPosition, _garthWalkPoints[pointIndex].y);            
+                scale = drawActors(actor1Points[pointIndex].direction, 1, 0, (walkIncr % 8) / 2, _wayneSpriteX, _wayneSpriteY, _garthWalkPoints[pointIndex].x - _scrollPosition, _garthWalkPoints[pointIndex].y);
             }
         } else {
             if (flag2 == 0) {
@@ -463,7 +463,7 @@ bool WaynesWorldEngine::walkTo(int actor1_destX, int actor1_destY, int direction
         waitMillis(100); // TODO Fix this
         if (_scrollRemaining > 0) {
 			warning("STUB - Missing scrolling in WalkTo");
-            // TOOD
+            // TODO
             // if (updateGame()) {
             //     return true;
             // }
