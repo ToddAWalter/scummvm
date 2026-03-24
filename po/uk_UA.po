@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: ScummVM 1.9.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
 "POT-Creation-Date: 2026-03-23 00:14+0000\n"
-"PO-Revision-Date: 2026-03-23 00:14+0000\n"
+"PO-Revision-Date: 2026-03-23 23:21+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Ukrainian <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/uk/>\n"
@@ -7375,18 +7375,14 @@ msgstr ""
 "Показує екрани титулу та захисту від копіювання, які зазвичай не показуються."
 
 #: engines/awe/metaengine.cpp:61
-#, fuzzy
-#| msgid "Select/Kick/Run"
 msgid "Select / Kick / Run"
-msgstr "Вибрати/Ударити/Бігти"
+msgstr "Вибрати / Ударити / Бігти"
 
 #: engines/awe/metaengine.cpp:62 engines/hpl1/metaengine.cpp:83
 msgid "Jump"
 msgstr "Стрибок"
 
 #: engines/awe/metaengine.cpp:63
-#, fuzzy
-#| msgid "Enter Level Code"
 msgid "Enter level code"
 msgstr "Ввести код рівня"
 
@@ -9707,7 +9703,7 @@ msgstr "Мапа клавіш вступу"
 
 #: engines/hypno/metaengine.cpp:134
 msgid "Primary shoot"
-msgstr "Освновний вистріл"
+msgstr "Основний вистріл"
 
 #: engines/hypno/metaengine.cpp:140
 msgid "Secondary shoot"
@@ -15577,7 +15573,7 @@ msgstr "Виділити елементи"
 
 #: engines/ultima/ultima8/metaengine.cpp:63
 msgid "Use bedroll"
-msgstr "Використовувати постільну білизну"
+msgstr "Використовувати спальний мішок"
 
 #: engines/ultima/ultima8/metaengine.cpp:64
 msgid "Open backpack"
