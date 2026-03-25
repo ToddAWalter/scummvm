@@ -45,6 +45,11 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Stop in-progress speech when closing a minigame exit dialog.
    - Fix using Enter key after typing savegame name to save it.
 
+ Gob:
+   - Optimized the number of screen blits, making Gobliiins and Ween
+     noticeably more responsive on weaker platforms. Other Gob games
+     are also positively affected.
+
  M4:
    - Added music support in Ripley.
    - Fixed numerous bugs in Ripley.
@@ -110,6 +115,10 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Implemented mouse scrolling of text window.
    - Implemented way to show startup screen and play startup sound for games
      what have those files. There will be new items in the About menu.
+
+ Atari port:
+   - Included out-of-tree m68k code optimizations for the SCUMM engine and
+     audio mixing to gather user feedback.
 
  macOS port:
    - Added support for the newer Text-to-Speech API of macOS 10.14+.
