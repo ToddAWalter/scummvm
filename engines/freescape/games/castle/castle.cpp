@@ -59,6 +59,8 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	else if (isCPC())
 		initCPC();
 
+	// Messages are assigned after loading in initGameState()
+
 	_playerHeightNumber = 1;
 	_playerHeightMaxNumber = 1;
 	_lastTenSeconds = -1;
@@ -83,12 +85,22 @@ CastleEngine::CastleEngine(OSystem *syst, const ADGameDescription *gd) : Freesca
 	_spiritsMeterIndicatorSideFrame = nullptr;
 	_strenghtBackgroundFrame = nullptr;
 	_strenghtBarFrame = nullptr;
+	_strenghtBackgroundCLUT8 = nullptr;
+	_strenghtBarCLUT8 = nullptr;
+	_spiritsMeterBgCLUT8 = nullptr;
+	_spiritsMeterIndCLUT8 = nullptr;
+	_keysBorderCLUT8 = nullptr;
 	_menu = nullptr;
 	_menuButtons = nullptr;
+	_cursorData = nullptr;
+	_crosshairData = nullptr;
+	_cursorW = 0;
+	_cursorH = 0;
 
 	_riddleTopFrame = nullptr;
 	_riddleBottomFrame = nullptr;
 	_riddleBackgroundFrame = nullptr;
+	_riddleNailFrame = nullptr;
 
 	_endGameThroneFrame = nullptr;
 	_endGameBackgroundFrame = nullptr;
@@ -328,6 +340,120 @@ Common::Array<Graphics::ManagedSurface *> CastleEngine::loadFramesWithHeaderCPC(
 	return frames;
 }
 
+void CastleEngine::convertCPCSprite(Graphics::ManagedSurface *clut8, Graphics::ManagedSurface *&argb, bool transparentInk0) {
+	if (argb) {
+		argb->free();
+		delete argb;
+	}
+	if (transparentInk0) {
+		// Ink 0 = value 0 (transparent for copyRectToSurfaceWithKey with back=0)
+		argb = new Graphics::ManagedSurface();
+		argb->create(clut8->w, clut8->h, _gfx->_texturePixelFormat);
+		argb->fillRect(Common::Rect(0, 0, clut8->w, clut8->h), 0);
+
+		byte palette[4 * 3];
+		clut8->grabPalette(palette, 0, 4);
+
+		for (int y = 0; y < clut8->h; y++) {
+			for (int x = 0; x < clut8->w; x++) {
+				byte idx = clut8->getPixel(x, y);
+				if (idx != 0) {
+					uint32 color = _gfx->_texturePixelFormat.ARGBToColor(0xFF,
+						palette[idx * 3], palette[idx * 3 + 1], palette[idx * 3 + 2]);
+					argb->setPixel(x, y, color);
+				}
+			}
+		}
+	} else {
+		// Opaque: ink 0 = solid black, fully covers what's beneath
+		Graphics::Surface *converted = _gfx->convertImageFormatIfNecessary(clut8);
+		argb = new Graphics::ManagedSurface();
+		argb->copyFrom(*converted);
+		converted->free();
+		delete converted;
+	}
+}
+
+Graphics::ManagedSurface *CastleEngine::loadFrameWithHeaderCPCIndexed(Common::SeekableReadStream *file, int pos) {
+	file->seek(pos);
+	int w = file->readByte();
+	int h = file->readByte();
+	file->readByte(); // mask
+	file->readUint16LE(); // frameSize
+	Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
+	surface->create(w * 4, h, Graphics::PixelFormat::createFormatCLUT8());
+	surface->fillRect(Common::Rect(0, 0, w * 4, h), 0);
+	for (int y = 0; y < h; y++)
+		for (int col = 0; col < w; col++) {
+			byte cpc_byte = file->readByte();
+			for (int i = 0; i < 4; i++)
+				surface->setPixel(col * 4 + i, y, getCPCPixel(cpc_byte, i, true));
+		}
+	return surface;
+}
+
+Common::Array<Graphics::ManagedSurface *> CastleEngine::loadFramesWithHeaderCPCIndexed(Common::SeekableReadStream *file, int pos, int numFrames) {
+	file->seek(pos);
+	int w = file->readByte();
+	int h = file->readByte();
+	file->readByte(); // mask
+	file->readUint16LE(); // frameSize
+	Common::Array<Graphics::ManagedSurface *> frames;
+	for (int f = 0; f < numFrames; f++) {
+		Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
+		surface->create(w * 4, h, Graphics::PixelFormat::createFormatCLUT8());
+		surface->fillRect(Common::Rect(0, 0, w * 4, h), 0);
+		for (int y = 0; y < h; y++)
+			for (int col = 0; col < w; col++) {
+				byte cpc_byte = file->readByte();
+				for (int i = 0; i < 4; i++)
+					surface->setPixel(col * 4 + i, y, getCPCPixel(cpc_byte, i, true));
+			}
+		frames.push_back(surface);
+	}
+	return frames;
+}
+
+void CastleEngine::updateCPCSpritesPalette() {
+	byte palette[4 * 3];
+	for (int c = 0; c < 4; c++) {
+		uint8 r, g, b;
+		_gfx->selectColorFromFourColorPalette(c, r, g, b);
+		palette[c * 3 + 0] = r;
+		palette[c * 3 + 1] = g;
+		palette[c * 3 + 2] = b;
+	}
+
+	if (_keysBorderCLUT8) {
+		_keysBorderCLUT8->setPalette(palette, 0, 4);
+		convertCPCSprite(_keysBorderCLUT8, _keysBorderFrames[0], true);
+	}
+	if (_spiritsMeterBgCLUT8) {
+		_spiritsMeterBgCLUT8->setPalette(palette, 0, 4);
+		convertCPCSprite(_spiritsMeterBgCLUT8, _spiritsMeterIndicatorBackgroundFrame);
+	}
+	if (_spiritsMeterIndCLUT8) {
+		_spiritsMeterIndCLUT8->setPalette(palette, 0, 4);
+		convertCPCSprite(_spiritsMeterIndCLUT8, _spiritsMeterIndicatorFrame, true);
+	}
+	if (_strenghtBackgroundCLUT8) {
+		_strenghtBackgroundCLUT8->setPalette(palette, 0, 4);
+		convertCPCSprite(_strenghtBackgroundCLUT8, _strenghtBackgroundFrame);
+	}
+	if (_strenghtBarCLUT8) {
+		_strenghtBarCLUT8->setPalette(palette, 0, 4);
+		convertCPCSprite(_strenghtBarCLUT8, _strenghtBarFrame);
+	}
+	for (int f = 0; f < (int)_strenghtWeightsCLUT8.size(); f++) {
+		_strenghtWeightsCLUT8[f]->setPalette(palette, 0, 4);
+		convertCPCSprite(_strenghtWeightsCLUT8[f], _strenghtWeightsFrames[f], true);
+	}
+	for (int f = 0; f < (int)_flagCLUT8.size(); f++) {
+		_flagCLUT8[f]->setPalette(palette, 0, 4);
+		convertCPCSprite(_flagCLUT8[f], _flagFrames[f]);
+	}
+}
+
 Graphics::ManagedSurface *CastleEngine::loadFrameCPC(Common::SeekableReadStream *file, Graphics::ManagedSurface *surface, int width, int height, const uint32 *cpcPalette) {
 	for (int y = 0; y < height; y++) {
 		for (int col = 0; col < width; col++) {
@@ -397,7 +523,7 @@ void CastleEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *inf
 	act = new Common::Action("WALK", _("Walk"));
 	act->setCustomEngineActionEvent(kActionWalkMode);
 	act->addDefaultInputMapping("JOY_B");
-	act->addDefaultInputMapping("w");
+	act->addDefaultInputMapping(_useWASDControls ? "2" : "w");
 	engineKeyMap->addAction(act);
 
 	act = new Common::Action("CRAWL", _("Crawl"));
@@ -413,8 +539,17 @@ void CastleEngine::initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *inf
 
 	act = new Common::Action("ACTIVATE", _("Activate"));
 	act->setCustomEngineActionEvent(kActionActivate);
-	act->addDefaultInputMapping("a");
+	act->addDefaultInputMapping(_useWASDControls ? "e" : "a");
 	engineKeyMap->addAction(act);
+
+	if (_useWASDControls) {
+		act = new Common::Action("RUNMOD", _("Run (hold)"));
+		act->setCustomEngineActionEvent(kActionRunModifier);
+		act->addDefaultInputMapping("LSHIFT");
+		act->addDefaultInputMapping("RSHIFT");
+		act->addDefaultInputMapping("JOY_LEFT_TRIGGER");
+		engineKeyMap->addAction(act);
+	}
 }
 
 void CastleEngine::beforeStarting() {
@@ -487,6 +622,14 @@ void CastleEngine::gotoArea(uint16 areaID, int entranceID) {
 	_gfx->clearColorPairArray();
 
 	swapPalette(areaID);
+
+	// Enable/disable COLOR15 cycling based on per-area flag (Amiga/Atari)
+	if ((isAmiga() || isAtariST()) && _currentArea)
+		_gfx->_colorCyclingTimer = _currentArea->_colorCycling ? 0 : -1;
+
+	if (isCPC())
+		updateCPCSpritesPalette();
+
 	if (isDOS()) {
 		_gfx->_colorPair[_currentArea->_underFireBackgroundColor] = _currentArea->_extraColor[1];
 		_gfx->_colorPair[_currentArea->_usualBackgroundColor] = _currentArea->_extraColor[0];
@@ -534,6 +677,39 @@ void CastleEngine::gotoArea(uint16 areaID, int entranceID) {
 void CastleEngine::initGameState() {
 	FreescapeEngine::initGameState();
 	_playerHeightNumber = 1;
+
+	// Platform-specific message strings (indices differ between DOS and Amiga)
+	if (isAmiga() || isAtariST()) {
+		_notEnoughRoomMessage = _messagesList[21];
+		_tooWeakMessage = _messagesList[22];
+		_crawlSelectedMessage = _messagesList[23];
+		_walkSelectedMessage = _messagesList[24];
+		_runSelectedMessage = _messagesList[25];
+		_ghostInAreaMessage = _messagesList[126];
+	} else if (isDOS()) {
+		_notEnoughRoomMessage = _messagesList[11];
+		_tooWeakMessage = _messagesList[12];
+		_crawlSelectedMessage = _messagesList[13];
+		_walkSelectedMessage = _messagesList[14];
+		_runSelectedMessage = _messagesList[15];
+		_ghostInAreaMessage = _messagesList[116];
+	} else {
+		// ZX/CPC: same indices for movement messages, no ghost warning message
+		_notEnoughRoomMessage = _messagesList[11];
+		_tooWeakMessage = _messagesList[12];
+		_crawlSelectedMessage = _messagesList[13];
+		_walkSelectedMessage = _messagesList[14];
+		_runSelectedMessage = _messagesList[15];
+		_ghostInAreaMessage = "";
+	}
+
+	// Fix typos in the original Spanish releases
+	if (_language == Common::ES_ESP) {
+		for (uint i = 0; i < _messagesList.size(); i++) {
+			Common::replace(_messagesList[i], "ELIGIDO", "ELEGIDO");
+			Common::replace(_messagesList[i], "BRILLIANTE", "BRILLANTE");
+		}
+	}
 
 	_gameStateVars[k8bitVariableShield] = 16;
 	_gameStateVars[k8bitVariableEnergy] = 1;
@@ -609,30 +785,30 @@ void CastleEngine::pressedKey(const int keycode) {
 	} else if (keycode == kActionRunMode) {
 		if (_playerHeightNumber == 0) {
 			if (_gameStateVars[k8bitVariableShield] <= 3) {
-				insertTemporaryMessage(_messagesList[12], _countdown - 2);
+				insertTemporaryMessage(_tooWeakMessage, _countdown - 2);
 				return;
 			}
 
 			if (!rise()) {
 				_playerStepIndex = 0;
-				insertTemporaryMessage(_messagesList[11], _countdown - 2);
+				insertTemporaryMessage(_notEnoughRoomMessage, _countdown - 2);
 				return;
 			}
 			_gameStateVars[k8bitVariableCrawling] = 0;
 		}
 		// TODO: raising can fail if there is no room, so the action should fail
 		_playerStepIndex = 2;
-		insertTemporaryMessage(_messagesList[15], _countdown - 2);
+		insertTemporaryMessage(_runSelectedMessage, _countdown - 2);
 	} else if (keycode == kActionWalkMode) {
 		if (_playerHeightNumber == 0) {
 			if (_gameStateVars[k8bitVariableShield] <= 3) {
-				insertTemporaryMessage(_messagesList[12], _countdown - 2);
+				insertTemporaryMessage(_tooWeakMessage, _countdown - 2);
 				return;
 			}
 
 			if (!rise()) {
 				_playerStepIndex = 0;
-				insertTemporaryMessage(_messagesList[11], _countdown - 2);
+				insertTemporaryMessage(_notEnoughRoomMessage, _countdown - 2);
 				return;
 			}
 			_gameStateVars[k8bitVariableCrawling] = 0;
@@ -640,19 +816,72 @@ void CastleEngine::pressedKey(const int keycode) {
 
 		// TODO: raising can fail if there is no room, so the action should fail
 		_playerStepIndex = 1;
-		insertTemporaryMessage(_messagesList[14], _countdown - 2);
+		insertTemporaryMessage(_walkSelectedMessage, _countdown - 2);
 	} else if (keycode == kActionCrawlMode) {
 		if (_playerHeightNumber == 1) {
 			lower();
 			_gameStateVars[k8bitVariableCrawling] = 128;
 		}
 		_playerStepIndex = 0;
-		insertTemporaryMessage(_messagesList[13], _countdown - 2);
+		insertTemporaryMessage(_crawlSelectedMessage, _countdown - 2);
+	} else if (keycode == kActionRunModifier) {
+		// Shift-to-run: save current mode, switch to run while held
+		if (_playerStepIndex == 2)
+			return; // already running
+		if (_playerHeightNumber == 0) {
+			if (_gameStateVars[k8bitVariableShield] <= 3)
+				return;
+			if (!rise()) {
+				return;
+			}
+			_gameStateVars[k8bitVariableCrawling] = 0;
+		}
+		_savedPlayerStepIndex = _playerStepIndex;
+		_playerStepIndex = 2;
 	} else if (keycode == kActionFaceForward) {
 		_pitch = 0;
 		updateCamera();
 	} else if (keycode == kActionActivate)
 		activate();
+}
+
+void CastleEngine::releasedKey(const int keycode) {
+	if (keycode == kActionRunModifier) {
+		// Shift released: restore the mode from before running
+		if (_savedPlayerStepIndex >= 0) {
+			_playerStepIndex = _savedPlayerStepIndex;
+			_savedPlayerStepIndex = -1;
+		}
+	}
+}
+
+void CastleEngine::setAmigaCursor(bool crosshair) {
+	if (!_cursorData || !_crosshairData)
+		return;
+
+	static const byte cursorPalette[16 * 3] = {
+		0x00, 0x00, 0x00,  0x44, 0x44, 0x44,  0x66, 0x66, 0x66,  0x88, 0x88, 0x88,
+		0xAA, 0xAA, 0xAA,  0xCC, 0xCC, 0xCC,  0xAA, 0xAA, 0xAA,  0xCC, 0xCC, 0xCC,
+		0x44, 0x44, 0x44,  0x66, 0x66, 0x66,  0x88, 0x88, 0x88,  0xCC, 0xCC, 0xCC,
+		0x66, 0x66, 0x66,  0xCC, 0xCC, 0xCC,  0xAA, 0xAA, 0xAA,  0xEE, 0xEE, 0xEE,
+	};
+
+	byte *srcData = crosshair ? _crosshairData : _cursorData;
+	int scale = MAX(1, g_system->getWidth() / _screenW);
+	int sw = _cursorW * scale;
+	int sh = _cursorH * scale;
+	int hotX = crosshair ? 7 * scale : 1 * scale;
+	int hotY = crosshair ? 7 * scale : 1 * scale;
+
+	byte *scaledCursor = new byte[sw * sh];
+	for (int y = 0; y < sh; y++)
+		for (int x = 0; x < sw; x++)
+			scaledCursor[y * sw + x] = srcData[(y / scale) * _cursorW + (x / scale)];
+
+	Graphics::PixelFormat cursorFormat = Graphics::PixelFormat::createFormatCLUT8();
+	CursorMan.replaceCursor(scaledCursor, sw, sh, hotX, hotY, 0, false, &cursorFormat);
+	CursorMan.replaceCursorPalette(cursorPalette, 0, 16);
+	delete[] scaledCursor;
 }
 
 void CastleEngine::drawInfoMenu() {
@@ -708,31 +937,81 @@ void CastleEngine::drawInfoMenu() {
 			}
 		}
 	} else if (isAmiga() || isAtariST()) {
+		if (_cursorData)
+			setAmigaCursor(false); // arrow for the menu
+		else
+			CursorMan.setDefaultArrowCursor();
+		CursorMan.showMouse(true);
 		if (_menu)
 			surface->copyRectToSurface(*_menu, 47, 35, Common::Rect(0, 0, MIN<int>(_menu->w, surface->w - 47), MIN<int>(_menu->h, surface->h - 35)));
 
 		_gfx->readFromPalette(15, r, g, b);
 		front = _gfx->_texturePixelFormat.ARGBToColor(0xFF, r, g, b);
-		drawStringInSurface(Common::String::format("%07d", score), 166, 71, front, black, surface);
-		drawStringInSurface(centerAndPadString(Common::String::format("%s", _messagesList[135 + shield / 6].c_str()), 10), 151, 102, front, black, surface);
 
-		Common::String keysCollected = _messagesList[141];
-		Common::replace(keysCollected, "X", Common::String::format("%d", _keysCollected.size()));
-		drawStringInSurface(keysCollected, 103, 41, front, black, surface);
+		// Positions and formulas from assembly at FUN_1AE0:
+		// Score at (167, 71): move.w #$a7,d0; move.w #$47,d1
+		drawStringInSurface(Common::String::format("%07d", score), 167, 71, front, black, surface);
 
-		Common::String spiritsDestroyedString = _messagesList[133];
-		Common::replace(spiritsDestroyedString, "X", Common::String::format("%d", spiritsDestroyed));
-		drawStringInSurface(spiritsDestroyedString, 145, 132, front, black, surface);
+		// Shield at (154, 102): move.w #$9a,d0; move.w #$66,d1
+		// Index = (shield - 1) / 4 (from: subq #1,d0; lsr #2,d0; muls #$c,d0)
+		// Amiga shield text at message indices 171-177 (skipping 174 which is empty)
+		{
+			static const int kAmigaShieldMsgIdx[] = {171, 172, 173, 175, 176, 177};
+			int shieldIdx = (shield > 0) ? (shield - 1) / 4 : 0;
+			if (shieldIdx > 5) shieldIdx = 5;
+			drawStringInSurface(centerAndPadString(_messagesList[kAmigaShieldMsgIdx[shieldIdx]], 10), 154, 102, front, black, surface);
+		}
 
-		for (int i = 0; i < int(_keysCollected.size()); i++) {
-			int y = 58 + (i / 2) * 18;
-			if (i % 2 == 0) {
-				surface->copyRectToSurfaceWithKey(*_keysBorderFrames[i], 58, y, Common::Rect(0, 0, _keysBorderFrames[i]->w, _keysBorderFrames[i]->h), black);
-				keyRects.push_back(Common::Rect(58, y, 58 + _keysBorderFrames[i]->w / 2, y + _keysBorderFrames[i]->h));
-			} else {
-				surface->copyRectToSurfaceWithKey(*_keysBorderFrames[i], 80, y, Common::Rect(0, 0, _keysBorderFrames[i]->w, _keysBorderFrames[i]->h), black);
-				keyRects.push_back(Common::Rect(80, y, 80 + _keysBorderFrames[i]->w / 2, y + _keysBorderFrames[i]->h));
+		// Keys collected at (104, 41): move.w #$68,d0; move.w #$29,d1 (from FUN_22CC)
+		// Messages: 162="NO KEYS COLLECTED", 163="XX KEYS COLLECTED", 164=" 1 KEY COLLECTED"
+		{
+			Common::String keysText;
+			int numKeys = _keysCollected.size();
+			if (numKeys == 0)
+				keysText = _messagesList[162];
+			else if (numKeys == 1)
+				keysText = _messagesList[164];
+			else {
+				keysText = _messagesList[163];
+				Common::replace(keysText, "XX", Common::String::format("%2d", numKeys));
 			}
+			drawStringInSurface(keysText, 104, 41, front, black, surface);
+		}
+
+		// Spirits destroyed at (145, 133): move.w #$91,d0; move.w #$85,d1
+		// Messages: 156="NONE DESTROYED", 157=" XX DESTROYED "
+		{
+			Common::String spiritsText;
+			if (spiritsDestroyed == 0)
+				spiritsText = _messagesList[156];
+			else {
+				spiritsText = _messagesList[157];
+				Common::replace(spiritsText, "XX", Common::String::format("%2d", spiritsDestroyed));
+			}
+			drawStringInSurface(spiritsText, 145, 133, front, black, surface);
+		}
+
+		// Movement indicator at (96, 118) from assembly at 0x1BE8-0x1BF0
+		{
+			Graphics::ManagedSurface *moveIndicator = nullptr;
+			if (_playerStepIndex == 0)
+				moveIndicator = _menuCrawlIndicator;
+			else if (_playerStepIndex == 1)
+				moveIndicator = _menuWalkIndicator;
+			else
+				moveIndicator = _menuRunIndicator;
+			if (moveIndicator)
+				surface->copyRectToSurfaceWithKey((const Graphics::Surface)*moveIndicator, 96, 118,
+					Common::Rect(0, 0, moveIndicator->w, moveIndicator->h), black);
+		}
+
+		// Sound indicator at (96, 103) from assembly at 0x1C1A-0x1C22
+		// Frame 3 = sound off, frame 4 = sound on (offset $360, optionally +$120)
+		{
+			Graphics::ManagedSurface *sndIndicator = _menuFxOnIndicator ? _menuFxOnIndicator : _menuFxOffIndicator;
+			if (sndIndicator)
+				surface->copyRectToSurfaceWithKey((const Graphics::Surface)*sndIndicator, 96, 103,
+					Common::Rect(0, 0, sndIndicator->w, sndIndicator->h), black);
 		}
 	} else if (isSpectrum() || isCPC()) {
 		Common::Array<Common::String> lines;
@@ -817,6 +1096,12 @@ void CastleEngine::drawInfoMenu() {
 				break;
 			case Common::EVENT_KEYDOWN:
 					cont = false;
+				break;
+			case Common::EVENT_MOUSEMOVE:
+				if ((isAmiga() || isAtariST()) && _cursorData && _crosshairData) {
+					Common::Point mp = getNormalizedPosition(event.mouse);
+					setAmigaCursor(_viewArea.contains(mp));
+				}
 				break;
 			case Common::EVENT_SCREEN_CHANGED:
 				_gfx->computeScreenViewport();
@@ -1093,6 +1378,9 @@ void CastleEngine::executePrint(FCLInstruction &instruction) {
 		drawFullscreenRiddleAndWait(index);
 		return;
 	}
+	if (isAmiga() || isAtariST()) {
+		index = index + 10;
+	}
 	debugC(1, kFreescapeDebugCode, "Printing message %d: \"%s\"", index, _messagesList[index].c_str());
 	insertTemporaryMessage(_messagesList[index], _countdown - 3);
 }
@@ -1252,6 +1540,9 @@ void CastleEngine::drawFullscreenRiddleAndWait(uint16 riddle) {
 		case Common::kRenderZX:
 			frontColor = 7;
 			break;
+		case Common::kRenderCPC:
+			frontColor = _gfx->_inkColor;
+			break;
 		default:
 			break;
 	}
@@ -1283,7 +1574,7 @@ void CastleEngine::drawFullscreenRiddleAndWait(uint16 riddle) {
 			case Common::EVENT_RBUTTONDOWN:
 				// fallthrough
 			case Common::EVENT_LBUTTONDOWN:
-				if (g_system->hasFeature(OSystem::kFeatureTouchscreen))
+				if (isTouchscreenActive())
 					cont = false;
 				break;
 			default:
@@ -1315,7 +1606,11 @@ void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics
 	if (isDOS()) {
 		x = 40;
 		y = 34;
-	} else if (isSpectrum() || isCPC()) {
+	} else if (isCPC()) {
+		x = 40;
+		y = 46;
+		maxWidth = 139;
+	} else if (isSpectrum()) {
 		x = 64;
 		y = 37;
 	} else if (isAmiga()) {
@@ -1323,19 +1618,46 @@ void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics
 		y = 33;
 		maxWidth = 139;
 	}
-	// Draw riddle frame borders (if available)
+	// Draw rope lines and nail above the riddle frame (CPC)
+	if (isCPC() && _riddleNailFrame) {
+		int nailX = x + (_viewArea.width() - _riddleNailFrame->w) / 2;
+		int nailY = _viewArea.top + 2;
+		int nailCenterX = nailX + _riddleNailFrame->w / 2;
+		int nailCenterY = nailY + _riddleNailFrame->h / 2;
+		// Rope lines first, then nail on top
+		surface->drawLine(nailCenterX, nailCenterY, x, y, front);
+		surface->drawLine(nailCenterX, nailCenterY, x + _viewArea.width() - 1, y, front);
+		surface->copyRectToSurfaceWithKey((const Graphics::Surface)*_riddleNailFrame, nailX, nailY, Common::Rect(0, 0, _riddleNailFrame->w, _riddleNailFrame->h), 0);
+	}
+
+	// Draw riddle frame borders (if available), clipped to viewport
 	if (_riddleTopFrame) {
-		surface->copyRectToSurface((const Graphics::Surface)*_riddleTopFrame, x, y, Common::Rect(0, 0, _riddleTopFrame->w, _riddleTopFrame->h));
+		Common::Rect srcRect(0, 0, _riddleTopFrame->w, _riddleTopFrame->h);
+		Common::Rect destRect(x, y, x + _riddleTopFrame->w, y + _riddleTopFrame->h);
+		destRect.clip(_viewArea);
+		srcRect = Common::Rect(destRect.left - x, destRect.top - y, destRect.right - x, destRect.bottom - y);
+		if (srcRect.isValidRect() && !srcRect.isEmpty())
+			surface->copyRectToSurface((const Graphics::Surface)*_riddleTopFrame, destRect.left, destRect.top, srcRect);
 		y += _riddleTopFrame->h;
 	}
 	if (_riddleBackgroundFrame) {
 		for (; y < maxWidth;) {
-			surface->copyRectToSurface((const Graphics::Surface)*_riddleBackgroundFrame, x, y, Common::Rect(0, 0, _riddleBackgroundFrame->w, _riddleBackgroundFrame->h));
+			Common::Rect srcRect(0, 0, _riddleBackgroundFrame->w, _riddleBackgroundFrame->h);
+			Common::Rect destRect(x, y, x + _riddleBackgroundFrame->w, y + _riddleBackgroundFrame->h);
+			destRect.clip(_viewArea);
+			srcRect = Common::Rect(destRect.left - x, destRect.top - y, destRect.right - x, destRect.bottom - y);
+			if (srcRect.isValidRect() && !srcRect.isEmpty())
+				surface->copyRectToSurface((const Graphics::Surface)*_riddleBackgroundFrame, destRect.left, destRect.top, srcRect);
 			y += _riddleBackgroundFrame->h;
 		}
 	}
 	if (_riddleBottomFrame) {
-		surface->copyRectToSurface((const Graphics::Surface)*_riddleBottomFrame, x, maxWidth, Common::Rect(0, 0, _riddleBottomFrame->w, _riddleBottomFrame->h - 1));
+		Common::Rect srcRect(0, 0, _riddleBottomFrame->w, _riddleBottomFrame->h - 1);
+		Common::Rect destRect(x, maxWidth, x + _riddleBottomFrame->w, maxWidth + _riddleBottomFrame->h - 1);
+		destRect.clip(_viewArea);
+		srcRect = Common::Rect(destRect.left - x, destRect.top - maxWidth, destRect.right - x, destRect.bottom - maxWidth);
+		if (srcRect.isValidRect() && !srcRect.isEmpty())
+			surface->copyRectToSurface((const Graphics::Surface)*_riddleBottomFrame, destRect.left, destRect.top, srcRect);
 	}
 
 	Common::Array<RiddleText> riddleMessages = _riddleList[riddle]._lines;
@@ -1345,7 +1667,10 @@ void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics
 	if (isDOS()) {
 		x = 38;
 		y = 33;
-	} else if (isSpectrum() || isCPC()) {
+	} else if (isCPC()) {
+		x = 40;
+		y = 33;
+	} else if (isSpectrum()) {
 		x = 64;
 		y = 36;
 	} else if (isAmiga()) {
@@ -1364,7 +1689,7 @@ void CastleEngine::drawRiddle(uint16 riddle, uint32 front, uint32 back, Graphics
 void CastleEngine::drawRiddleStringInSurface(const Common::String &str, int x, int y, uint32 fontColor, uint32 backColor, Graphics::Surface *surface) {
 	Common::String ustr = str;
 	ustr.toUppercase();
-	if (isDOS()) {
+	if (isDOS() || isAmiga() || isAtariST()) {
 		_fontRiddle.setBackground(backColor);
 		_fontRiddle.drawString(surface, ustr, x, y, _screenW, fontColor);
 	} else {
@@ -1374,17 +1699,13 @@ void CastleEngine::drawRiddleStringInSurface(const Common::String &str, int x, i
 }
 
 void CastleEngine::drawEnergyMeter(Graphics::Surface *surface, Common::Point origin) {
-	if (!_strenghtBackgroundFrame)
-		return;
-
-	surface->copyRectToSurface((const Graphics::Surface)*_strenghtBackgroundFrame, origin.x, origin.y, Common::Rect(0, 0, _strenghtBackgroundFrame->w, _strenghtBackgroundFrame->h));
-	if (!_strenghtBarFrame)
-		return;
+	if (_strenghtBackgroundFrame)
+		surface->copyRectToSurface((const Graphics::Surface)*_strenghtBackgroundFrame, origin.x, origin.y, Common::Rect(0, 0, _strenghtBackgroundFrame->w, _strenghtBackgroundFrame->h));
 
 	uint32 black = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0x00, 0x00);
 	uint32 back = 0;
 
-	if (isDOS())
+	if (isDOS() || isAmiga() || isAtariST())
 		back = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0x00, 0x00, 0x00);
 
 	int strength = _gameStateVars[k8bitVariableShield];
@@ -1394,14 +1715,16 @@ void CastleEngine::drawEnergyMeter(Graphics::Surface *surface, Common::Point ori
 
 	Common::Point barFrameOrigin = origin;
 
-	if (isDOS())
-		barFrameOrigin += Common::Point(5, 6 + extraYOffset);
-	else if (isSpectrum())
-		barFrameOrigin += Common::Point(0, 6 + extraYOffset);
-	else if (isCPC())
-		barFrameOrigin += Common::Point(0, 6 + extraYOffset);
+	if (_strenghtBarFrame) {
+		if (isDOS())
+			barFrameOrigin += Common::Point(5, 6 + extraYOffset);
+		else if (isSpectrum())
+			barFrameOrigin += Common::Point(0, 6 + extraYOffset);
+		else if (isCPC())
+			barFrameOrigin += Common::Point(0, 6 + extraYOffset);
 
-	surface->copyRectToSurfaceWithKey((const Graphics::Surface)*_strenghtBarFrame, barFrameOrigin.x, barFrameOrigin.y, Common::Rect(0, 0, _strenghtBarFrame->w, _strenghtBarFrame->h), black);
+		surface->copyRectToSurfaceWithKey((const Graphics::Surface)*_strenghtBarFrame, barFrameOrigin.x, barFrameOrigin.y, Common::Rect(0, 0, _strenghtBarFrame->w, _strenghtBarFrame->h), black);
+	}
 
 	Common::Point weightPoint;
 	int frameIdx = -1;
@@ -1425,6 +1748,10 @@ void CastleEngine::drawEnergyMeter(Graphics::Surface *surface, Common::Point ori
 		weightStep = 3;
 		weightOffset = 5;
 		rightWeightPos = 63;
+	} else if (isAmiga() || isAtariST()) {
+		weightStep = 3;
+		weightOffset = 10;
+		rightWeightPos = 62;
 	} else { // DOS
 		weightStep = 3;
 		weightOffset = 10;
@@ -1667,10 +1994,47 @@ void CastleEngine::selectCharacterScreen() {
 		drawFullscreenSurface(surface);
 	}
 
+	if (isTouchscreenActive()) {
+		CursorMan.setDefaultArrowCursor();
+		CursorMan.showMouse(true);
+	}
 	_system->lockMouse(false);
 	_system->showMouse(true);
-	Common::Rect princeSelector(82, 100, 163, 109);
-	Common::Rect princessSelector(82, 110, 181, 120);
+
+	// Calculate tap/click rectangles from actual rendered text positions.
+	// lines[5] = prince, lines[6] = princess for ZX/CPC.
+	// For DOS, use riddle text line positions.
+	Common::Rect princeSelector, princessSelector;
+	if (isSpectrum() || isCPC()) {
+		int x = _viewArea.left + 3;
+		int lineHeight = 12; // Castle Master line spacing in drawStringsInSurface
+		int princeY = _viewArea.top + 3 + 5 * lineHeight;
+		int princessY = _viewArea.top + 3 + 6 * lineHeight;
+		// Use the full padded line (what's actually rendered on screen)
+		princeSelector = _font.getBoundingBox(lines[5], x, princeY);
+		princessSelector = _font.getBoundingBox(lines[6], x, princessY);
+	} else {
+		// DOS: text comes from _riddleList[21], calculate from actual riddle line positions
+		Common::Array<RiddleText> selectMessage = _riddleList[21]._lines;
+		int x = 0, y = 0;
+		for (int i = 0; i < int(selectMessage.size()); i++) {
+			x += selectMessage[i]._dx;
+			y += selectMessage[i]._dy;
+			if (i == int(selectMessage.size()) - 2)
+				princeSelector = _font.getBoundingBox(selectMessage[i]._text, x, y);
+			else if (i == int(selectMessage.size()) - 1)
+				princessSelector = _font.getBoundingBox(selectMessage[i]._text, x, y);
+		}
+	}
+
+	// On touchscreen, highlight the tap areas with red outlines (expand 1px for readability)
+	princeSelector.grow(1);
+	princessSelector.grow(1);
+	if (isTouchscreenActive()) {
+		uint32 red = _gfx->_texturePixelFormat.ARGBToColor(0xFF, 0xFF, 0x00, 0x00);
+		surface->frameRect(princeSelector, red);
+		surface->frameRect(princessSelector, red);
+	}
 
 	bool selected = false;
 	while (!selected) {
@@ -1683,7 +2047,7 @@ void CastleEngine::selectCharacterScreen() {
 				quitGame();
 				return;
 
-			// Left mouse click
+			// Left mouse click or touchscreen tap
 			case Common::EVENT_LBUTTONDOWN:
 				// fallthrough
 			case Common::EVENT_RBUTTONDOWN:
@@ -1730,6 +2094,7 @@ void CastleEngine::selectCharacterScreen() {
 	}
 	_system->lockMouse(true);
 	_system->showMouse(false);
+	CursorMan.showMouse(false);
 	_gfx->clear(0, 0, 0, true);
 
 }

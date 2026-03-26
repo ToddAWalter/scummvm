@@ -131,6 +131,12 @@ FreescapeEngine::FreescapeEngine(OSystem *syst, const ADGameDescription *gd)
 	if (!Common::parseBool(ConfMan.get("smooth_movement"), _smoothMovement))
 		error("Failed to parse bool from smooth_movement option");
 
+	_useWASDControls = false;
+	if (ConfMan.hasKey("wasd_controls"))
+		Common::parseBool(ConfMan.get("wasd_controls"), _useWASDControls);
+
+	_debugSimulateTouchscreen = ConfMan.hasKey("debug_touchscreen") && ConfMan.getBool("debug_touchscreen");
+
 	if (isDriller() || isSpaceStationOblivion() || isDark())
 		_smoothMovement = false;
 
@@ -181,6 +187,7 @@ FreescapeEngine::FreescapeEngine(OSystem *syst, const ADGameDescription *gd)
 
 	// TODO: this is not the same for every game
 	_playerStepIndex = 6;
+	_savedPlayerStepIndex = -1;
 	_playerSteps.push_back(1);
 	_playerSteps.push_back(2);
 	_playerSteps.push_back(5);
@@ -273,6 +280,10 @@ FreescapeEngine::FreescapeEngine(OSystem *syst, const ADGameDescription *gd)
 	g_freescape = this;
 	g_debugger = new Debugger(g_freescape);
 	setDebugger(g_debugger);
+}
+
+bool FreescapeEngine::isTouchscreenActive() const {
+	return _debugSimulateTouchscreen || g_system->hasFeature(OSystem::kFeatureTouchscreen);
 }
 
 FreescapeEngine::~FreescapeEngine() {
@@ -473,6 +484,7 @@ void FreescapeEngine::drawBackground() {
 }
 
 void FreescapeEngine::drawFrame() {
+	_gfx->updateColorCycling();
 	int farClipPlane = _farClipPlane;
 	if (_currentArea->isOutside())
 		farClipPlane *= 100;
@@ -837,13 +849,8 @@ Common::Error FreescapeEngine::run() {
 	loadAssets();
 	loadColorPalette();
 
-	if (g_system->getFeatureState(OSystem::kFeatureTouchscreen)) {
-		g_system->showMouse(true);
-		g_system->lockMouse(false);
-	} else {
-		g_system->showMouse(false);
-		g_system->lockMouse(true);
-	}
+	g_system->showMouse(false);
+	g_system->lockMouse(true);
 
 	// Simple main event loop
 	int saveSlot = ConfMan.getInt("save_slot");

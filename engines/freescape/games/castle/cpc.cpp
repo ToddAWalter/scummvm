@@ -117,6 +117,31 @@ byte mountainsData[288] {
 
 
 
+// Expand a 5-byte CPC riddle frame row definition into a 240-pixel CLUT8 row.
+// Format: 2 left border bytes + 1 fill byte (repeated 54×) + 2 right border bytes,
+// padded with 1 black byte on each side.
+void expandRiddleRow(const byte *src, Graphics::ManagedSurface *surface, int y) {
+	int x = 0;
+	for (int p = 0; p < 4; p++)
+		surface->setPixel(x++, y, 0);
+	for (int b = 0; b < 2; b++) {
+		byte cpcByte = src[b];
+		for (int p = 0; p < 4; p++)
+			surface->setPixel(x++, y, getCPCPixel(cpcByte, p, true));
+	}
+	byte fillByte = src[2];
+	for (int b = 0; b < 54; b++)
+		for (int p = 0; p < 4; p++)
+			surface->setPixel(x++, y, getCPCPixel(fillByte, p, true));
+	for (int b = 0; b < 2; b++) {
+		byte cpcByte = src[3 + b];
+		for (int p = 0; p < 4; p++)
+			surface->setPixel(x++, y, getCPCPixel(cpcByte, p, true));
+	}
+	for (int p = 0; p < 4; p++)
+		surface->setPixel(x++, y, 0);
+}
+
 void CastleEngine::loadAssetsCPCFullGame() {
 	Common::File file;
 	uint8 r, g, b;
@@ -199,37 +224,119 @@ void CastleEngine::loadAssetsCPCFullGame() {
 
 	_background = loadFrame(&mountainsStream, background, backgroundWidth, backgroundHeight, front);
 
-	// CPC UI Sprites - located at different offsets than ZX Spectrum!
-	// CPC uses Mode 1 format (4 pixels per byte, 2 bits per pixel).
-	// Sprite pixel values 0-3 are CPC ink numbers that map to the border palette.
-	uint32 cpcPalette[4];
-	for (int i = 0; i < 4; i++) {
-		cpcPalette[i] = _gfx->_texturePixelFormat.ARGBToColor(0xFF,
-			kCPCPaletteCastleBorderData[i][0],
-			kCPCPaletteCastleBorderData[i][1],
-			kCPCPaletteCastleBorderData[i][2]);
+	// CPC UI Sprites stored as CLUT8 (indexed by ink 0-3).
+	// On real CPC hardware, the 4-color palette changes per area, automatically
+	// recoloring everything. We store CLUT8 sprites and setPalette + convert
+	// when the area changes, just like the border does in swapPalette.
+	_keysBorderCLUT8 = loadFrameWithHeaderCPCIndexed(&file, 0x2362);
+	_spiritsMeterBgCLUT8 = loadFrameWithHeaderCPCIndexed(&file, 0x2383);
+	_spiritsMeterIndCLUT8 = loadFrameWithHeaderCPCIndexed(&file, 0x2408);
+	_strenghtBackgroundCLUT8 = loadFrameWithHeaderCPCIndexed(&file, 0x242D);
+	_strenghtBarCLUT8 = loadFrameWithHeaderCPCIndexed(&file, 0x2531);
+	_strenghtWeightsCLUT8 = loadFramesWithHeaderCPCIndexed(&file, 0x2569, 4);
+	_flagCLUT8 = loadFramesWithHeaderCPCIndexed(&file, 0x2654, 4);
+
+	// Set initial border palette, convert to ARGB, and populate the drawing surfaces
+	{
+		byte initPalette[4 * 3];
+		for (int c = 0; c < 4; c++) {
+			initPalette[c * 3 + 0] = kCPCPaletteCastleBorderData[c][0];
+			initPalette[c * 3 + 1] = kCPCPaletteCastleBorderData[c][1];
+			initPalette[c * 3 + 2] = kCPCPaletteCastleBorderData[c][2];
+		}
+		_keysBorderCLUT8->setPalette(initPalette, 0, 4);
+		_spiritsMeterBgCLUT8->setPalette(initPalette, 0, 4);
+		_spiritsMeterIndCLUT8->setPalette(initPalette, 0, 4);
+		_strenghtBackgroundCLUT8->setPalette(initPalette, 0, 4);
+		_strenghtBarCLUT8->setPalette(initPalette, 0, 4);
+		for (auto *s : _strenghtWeightsCLUT8)
+			s->setPalette(initPalette, 0, 4);
+		for (auto *s : _flagCLUT8)
+			s->setPalette(initPalette, 0, 4);
+
+		for (int i = 0; i < 4; i++)
+			_cpcUIPalette[i] = _gfx->_texturePixelFormat.ARGBToColor(0xFF,
+				kCPCPaletteCastleBorderData[i][0],
+				kCPCPaletteCastleBorderData[i][1],
+				kCPCPaletteCastleBorderData[i][2]);
+
+		Graphics::ManagedSurface *tmp = nullptr;
+		convertCPCSprite(_keysBorderCLUT8, tmp, true);
+		_keysBorderFrames.push_back(tmp);
+		convertCPCSprite(_spiritsMeterBgCLUT8, _spiritsMeterIndicatorBackgroundFrame);
+		convertCPCSprite(_spiritsMeterIndCLUT8, _spiritsMeterIndicatorFrame, true);
+		convertCPCSprite(_strenghtBackgroundCLUT8, _strenghtBackgroundFrame);
+		convertCPCSprite(_strenghtBarCLUT8, _strenghtBarFrame);
+		for (int f = 0; f < 4; f++) {
+			tmp = nullptr;
+			convertCPCSprite(_strenghtWeightsCLUT8[f], tmp, true);
+			_strenghtWeightsFrames.push_back(tmp);
+		}
+		for (int f = 0; f < 4; f++) {
+			tmp = nullptr;
+			convertCPCSprite(_flagCLUT8[f], tmp);
+			_flagFrames.push_back(tmp);
+		}
 	}
 
-	// Keys Border: CPC offset 0x2362 (8x14 px, 1 frame - matches ZX key_sprite)
-	_keysBorderFrames.push_back(loadFrameWithHeaderCPC(&file, 0x2362, cpcPalette));
+	// Riddle frame graphics at file offset 0x26E9 (CPC addr 0x31A9).
+	// The CPC draw function expands each 5-byte row to:
+	// 1 black + 2 left border + 54×fill + 2 right border + 1 black = 60 bytes = 240 pixels.
+	// Structure: 7 top rows + 1 body row (repeated) + 7 bottom rows (top reversed).
+	{
+		static const int kRiddleFrameOffset = 0x26E9;
+		static const int kTopRows = 7;
+		static const int kRowWidth = 240; // pixels
 
-	// Spirit Meter Background: CPC offset 0x2383 (64x8 px - matches ZX spirit_meter_bg)
-	_spiritsMeterIndicatorBackgroundFrame = loadFrameWithHeaderCPC(&file, 0x2383, cpcPalette);
+		file.seek(kRiddleFrameOffset);
+		byte riddleData[40];
+		file.read(riddleData, 40);
 
-	// Spirit Meter Indicator: CPC offset 0x2408 (16x8 px - matches ZX spirit_meter_indicator)
-	_spiritsMeterIndicatorFrame = loadFrameWithHeaderCPC(&file, 0x2408, cpcPalette);
+		// Top frame: 7 rows
+		Graphics::ManagedSurface *topCLUT8 = new Graphics::ManagedSurface();
+		topCLUT8->create(kRowWidth, kTopRows, Graphics::PixelFormat::createFormatCLUT8());
+		topCLUT8->fillRect(Common::Rect(0, 0, kRowWidth, kTopRows), 0);
+		for (int row = 0; row < kTopRows; row++)
+			expandRiddleRow(&riddleData[row * 5], topCLUT8, row);
 
-	// Strength Background: CPC offset 0x242D (68x15 px - matches ZX strength_bg)
-	_strenghtBackgroundFrame = loadFrameWithHeaderCPC(&file, 0x242D, cpcPalette);
+		// Background: 1 row (the body row after the 7 top rows)
+		Graphics::ManagedSurface *bgCLUT8 = new Graphics::ManagedSurface();
+		bgCLUT8->create(kRowWidth, 1, Graphics::PixelFormat::createFormatCLUT8());
+		bgCLUT8->fillRect(Common::Rect(0, 0, kRowWidth, 1), 0);
+		expandRiddleRow(&riddleData[kTopRows * 5], bgCLUT8, 0);
 
-	// Strength Bar: CPC offset 0x2531 (68x3 px - matches ZX strength_bar)
-	_strenghtBarFrame = loadFrameWithHeaderCPC(&file, 0x2531, cpcPalette);
+		// Bottom frame: 7 rows (top data in reverse order)
+		Graphics::ManagedSurface *bottomCLUT8 = new Graphics::ManagedSurface();
+		bottomCLUT8->create(kRowWidth, kTopRows, Graphics::PixelFormat::createFormatCLUT8());
+		bottomCLUT8->fillRect(Common::Rect(0, 0, kRowWidth, kTopRows), 0);
+		for (int row = 0; row < kTopRows; row++)
+			expandRiddleRow(&riddleData[(kTopRows - 1 - row) * 5], bottomCLUT8, row);
 
-	// Strength Weights: CPC offset 0x2569 (4x15 px, 4 frames - matches ZX weight_sprite w=1,h=15)
-	_strenghtWeightsFrames = loadFramesWithHeaderCPC(&file, 0x2569, 4, cpcPalette);
+		// Set palette and convert
+		byte initPalette[4 * 3];
+		for (int c = 0; c < 4; c++) {
+			initPalette[c * 3 + 0] = kCPCPaletteCastleBorderData[c][0];
+			initPalette[c * 3 + 1] = kCPCPaletteCastleBorderData[c][1];
+			initPalette[c * 3 + 2] = kCPCPaletteCastleBorderData[c][2];
+		}
+		topCLUT8->setPalette(initPalette, 0, 4);
+		bgCLUT8->setPalette(initPalette, 0, 4);
+		bottomCLUT8->setPalette(initPalette, 0, 4);
 
-	// Flag Animation: CPC offset 0x2654 (16x9 px, 4 frames)
-	_flagFrames = loadFramesWithHeaderCPC(&file, 0x2654, 4, cpcPalette);
+		convertCPCSprite(topCLUT8, _riddleTopFrame);
+		convertCPCSprite(bgCLUT8, _riddleBackgroundFrame);
+		convertCPCSprite(bottomCLUT8, _riddleBottomFrame);
+
+		// Nail sprite at file offset 0x2711 (8×7 pixels, drawn above the frame)
+		Graphics::ManagedSurface *nailCLUT8 = loadFrameWithHeaderCPCIndexed(&file, 0x2711);
+		nailCLUT8->setPalette(initPalette, 0, 4);
+		convertCPCSprite(nailCLUT8, _riddleNailFrame);
+
+		delete topCLUT8;
+		delete bgCLUT8;
+		delete bottomCLUT8;
+		delete nailCLUT8;
+	}
 
 	// Gate image (portcullis) for game start/end animation.
 	// The CPC gate is NOT a pre-rendered bitmap; it is procedurally generated
@@ -280,13 +387,13 @@ void CastleEngine::loadAssetsCPCFullGame() {
 					for (int p = 0; p < 2; p++) {
 						int ink = getCPCPixel(kGateLastRow[0], p, true);
 						if (ink)
-							_gameOverBackgroundFrame->setPixel(bx + p, y, cpcPalette[ink]);
+							_gameOverBackgroundFrame->setPixel(bx + p, y, _cpcUIPalette[ink]);
 					}
 					// Right edge byte: pixels 2,3 from pattern
 					for (int p = 2; p < 4; p++) {
 						int ink = getCPCPixel(kGateLastRow[1], p, true);
 						if (ink)
-							_gameOverBackgroundFrame->setPixel(bx + (kBytesPerCol - 1) * 4 + p, y, cpcPalette[ink]);
+							_gameOverBackgroundFrame->setPixel(bx + (kBytesPerCol - 1) * 4 + p, y, _cpcUIPalette[ink]);
 					}
 				}
 			} else {
@@ -324,7 +431,7 @@ void CastleEngine::loadAssetsCPCFullGame() {
 							for (int p = 0; p < 4; p++) {
 								int ink = getCPCPixel(cpcByte, p, true);
 								if (ink)
-									_gameOverBackgroundFrame->setPixel(bx + bi * 4 + p, y, cpcPalette[ink]);
+									_gameOverBackgroundFrame->setPixel(bx + bi * 4 + p, y, _cpcUIPalette[ink]);
 							}
 						}
 					}
@@ -336,13 +443,13 @@ void CastleEngine::loadAssetsCPCFullGame() {
 						for (int p = 0; p < 2; p++) {
 							int ink = getCPCPixel(kGateInterBar[patIdx][0], p, true);
 							if (ink)
-								_gameOverBackgroundFrame->setPixel(bx + p, y, cpcPalette[ink]);
+								_gameOverBackgroundFrame->setPixel(bx + p, y, _cpcUIPalette[ink]);
 						}
 						// Right edge (byte 5): pixels 2,3 from pattern byte 1
 						for (int p = 2; p < 4; p++) {
 							int ink = getCPCPixel(kGateInterBar[patIdx][1], p, true);
 							if (ink)
-								_gameOverBackgroundFrame->setPixel(bx + (kBytesPerCol - 1) * 4 + p, y, cpcPalette[ink]);
+								_gameOverBackgroundFrame->setPixel(bx + (kBytesPerCol - 1) * 4 + p, y, _cpcUIPalette[ink]);
 						}
 					}
 				}

@@ -48,6 +48,11 @@ public:
 	Graphics::ManagedSurface *_menuFxOnIndicator;
 	Graphics::ManagedSurface *_menuFxOffIndicator;
 	Graphics::ManagedSurface *_menu;
+	byte *_cursorData;       // diagonal arrow (outside view area)
+	byte *_crosshairData;    // crosshair (# pointer, inside view area)
+	int _cursorW;
+	int _cursorH;
+	void setAmigaCursor(bool crosshair);
 
 	void beforeStarting() override;
 	void initKeymaps(Common::Keymap *engineKeyMap, Common::Keymap *infoScreenKeyMap, const char *target) override;
@@ -77,6 +82,7 @@ public:
 	void drawLiftingGate(Graphics::Surface *surface);
 	void drawDroppingGate(Graphics::Surface *surface);
 	void pressedKey(const int keycode) override;
+	void releasedKey(const int keycode) override;
 	void checkSensors() override;
 	void updateTimeVariables() override;
 	void drawBackground() override;
@@ -131,10 +137,33 @@ public:
 	Graphics::ManagedSurface *_riddleTopFrame;
 	Graphics::ManagedSurface *_riddleBackgroundFrame;
 	Graphics::ManagedSurface *_riddleBottomFrame;
+	Graphics::ManagedSurface *_riddleNailFrame;
 
 	Graphics::ManagedSurface *_endGameThroneFrame;
 	Graphics::ManagedSurface *_endGameBackgroundFrame;
 	Graphics::ManagedSurface *_gameOverBackgroundFrame;
+
+	// CPC: CLUT8 versions of UI sprites (indexed by ink 0-3). On area change,
+	// we setPalette + convert to ARGB, like the border does in swapPalette.
+	Graphics::ManagedSurface *_strenghtBackgroundCLUT8;
+	Graphics::ManagedSurface *_strenghtBarCLUT8;
+	Common::Array<Graphics::ManagedSurface *> _strenghtWeightsCLUT8;
+	Graphics::ManagedSurface *_spiritsMeterBgCLUT8;
+	Graphics::ManagedSurface *_spiritsMeterIndCLUT8;
+	Graphics::ManagedSurface *_keysBorderCLUT8;
+	Common::Array<Graphics::ManagedSurface *> _flagCLUT8;
+	uint32 _cpcUIPalette[4]; // used by gate rendering
+	void convertCPCSprite(Graphics::ManagedSurface *clut8, Graphics::ManagedSurface *&argb, bool transparentInk0 = false);
+	Graphics::ManagedSurface *loadFrameWithHeaderCPCIndexed(Common::SeekableReadStream *file, int pos);
+	Common::Array<Graphics::ManagedSurface *> loadFramesWithHeaderCPCIndexed(Common::SeekableReadStream *file, int pos, int numFrames);
+	void updateCPCSpritesPalette();
+
+	Common::String _notEnoughRoomMessage;
+	Common::String _tooWeakMessage;
+	Common::String _crawlSelectedMessage;
+	Common::String _walkSelectedMessage;
+	Common::String _runSelectedMessage;
+	Common::String _ghostInAreaMessage;
 
 	Common::Array<byte> _modData; // Embedded ProTracker module (Amiga demo)
 	Common::Array<int> _keysCollected;

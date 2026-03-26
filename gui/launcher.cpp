@@ -1824,10 +1824,6 @@ void LauncherGrid::updateSelectionAfterRemoval() {
 #endif // !DISABLE_LAUNCHERDISPLAY_GRID
 
 void LauncherDialog::confirmRemoveGames(const Common::Array<bool> &selectedItems) {
-	// Validate that at least one item is selected
-	if (!hasAnySelection(selectedItems))
-		return;
-
 	// Count selected items
 	int selectedCount = 0;
 	for (int i = 0; i < (int)selectedItems.size(); ++i) {
@@ -1836,9 +1832,24 @@ void LauncherDialog::confirmRemoveGames(const Common::Array<bool> &selectedItems
 		}
 	}
 
+	// Validate that at least one item is selected
+	if (selectedCount == 0) {
+		return;
+	}
+
+	// Use standard message box if only one item is selected
+	if (selectedCount == 1) {
+		for (int i = 0; i < (int)selectedItems.size(); ++i) {
+			if (selectedItems[i]) {
+				removeGame(i);
+				return;
+			}
+		}
+	}
+
 	// Build the confirmation message with count
 	Common::U32String message = Common::U32String::format(
-		_("Do you really want to remove the following %d game configuration(s)?\n\n"),
+		_("Do you really want to remove the following %d game configurations?\n\n"),
 		selectedCount);
 
 	// Build array of game titles to display
@@ -1860,9 +1871,6 @@ void LauncherDialog::confirmRemoveGames(const Common::Array<bool> &selectedItems
 }
 
 void LauncherDialog::removeGames(const Common::Array<bool> &selectedItems, bool isGrid) {
-	if (selectedItems.empty())
-		return;
-
 	// Check if any items are selected
 	if (!hasAnySelection(selectedItems))
 		return;
@@ -1910,8 +1918,8 @@ RemovalConfirmationDialog::RemovalConfirmationDialog(const Common::U32String &me
 	}
 
 	// Create Button Widgets with bogus size (will be sized in reflowLayout)
-	_buttons.push_back(new ButtonWidget(this, 0, 0, 0, 0, Common::U32String(_("Yes")), Common::U32String(), kRemovalYes, 'y'));
-	_buttons.push_back(new ButtonWidget(this, 0, 0, 0, 0, Common::U32String(_("No")), Common::U32String(), kRemovalNo, 'n'));
+	_buttons.push_back(new ButtonWidget(this, 0, 0, 0, 0, Common::U32String(_("Yes")), Common::U32String(), kRemovalYes, Common::ASCII_RETURN));
+	_buttons.push_back(new ButtonWidget(this, 0, 0, 0, 0, Common::U32String(_("No")), Common::U32String(), kRemovalNo, Common::ASCII_ESCAPE));
 
 	reflowLayout();
 }

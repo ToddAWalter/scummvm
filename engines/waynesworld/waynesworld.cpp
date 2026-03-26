@@ -709,6 +709,10 @@ Common::String WaynesWorldEngine::loadString(const char *filename, int index, in
 		if (textBuffer[i] == 0x2b)
 			break;
 	}
+
+	// Safeguard in case the string takes 60 characters, overwrite the last character instead of writing out of boundaries
+	if (i >= kMaxStringLen)
+		i = kMaxStringLen - 1;
 	textBuffer[i] = 0;
 	return Common::String(textBuffer);
 }
@@ -1255,6 +1259,13 @@ void WaynesWorldEngine::toggleActor() {
 
 void WaynesWorldEngine::openRoomLibrary(int roomNum) {
     _roomName = Common::String::format("r%02d", roomNum);
+	delete _roomGxl;
+
+	_roomGxl = new GxlArchive(_roomName);
+}
+
+void WaynesWorldEngine::openAlternateRoomLibrary(const char *name) {
+	_roomName = Common::String(name);
 	delete _roomGxl;
 
 	_roomGxl = new GxlArchive(_roomName);

@@ -533,7 +533,7 @@ void GameLogic::handleDialogReply(int index, int x, int y) {
     if (index < 537) {
         _vm->displayText("c04r", index, 0, x, y, 0);
     } else {
-        _vm->displayText("c04r2", index, 0, x, y, 0);
+        _vm->displayText("c04r2", index - 537, 0, x, y, 0);
     }
 
     switch (_vm->_currentRoomNumber) {
@@ -3939,7 +3939,7 @@ void GameLogic::r8_refreshRoomBackground() {
 	if (!(_r8_flags & 0x01)) {
 		_vm->drawRoomImageToBackground("opendoor.pcx", 259, 51);
 	}
-	if (!(_r8_flags & 0x08) && ((_r8_flags & 0x80) || (_r38_flags & 0x08))) {
+	if (!(_r8_flags & 0x08) && (!(_r8_flags & 0x80) || (_r38_flags & 0x08))) {
 		_vm->_roomEventNum = 1;
 	}
 	if (!_vm->_hasRoomAnimationCallback) {
@@ -6045,7 +6045,7 @@ void GameLogic::r20_handleRoomEvent() {
 	_vm->waitSeconds(1);
 	_vm->playAnimation("expl", 0, 36, 40, 32, 0, 150);
 	_vm->playSound("ss17.snd", 0);
-	_vm->playAnimation("expl", 37, 66, 40, 32, 0, 150);
+	_vm->playAnimation("expl", 37, 66 - 37, 40, 32, 0, 150);
 	_r19_flags &= ~0x01;
 	_r19_flags |= 0x08;
 	_vm->_wayneSpriteX = _r19_wayneSpriteX;
@@ -6854,13 +6854,13 @@ void GameLogic::r30_runLudwigCutscene() {
 	_vm->_garthSpriteX = -1;
 	_vm->_wayneSpriteY = -1;
 	_vm->_wayneSpriteX = -1;
-	_vm->_roomName = "m06"; // Change the active gxl file
+	_vm->openAlternateRoomLibrary("m06"); // Change the active gxl file
 	_vm->paletteFadeOut(0, 256, 64);
 	_vm->_screen->clear(0);
 	// TODO gxGetDisplayPalette(palette1);
-	// TODO pcxGetLibPalette(8, roomLib, "backg", palette2);
-	// TODO gxSetDisplayPalette(palette2);
-	warning("r30_runLudwigCutscene - STUB some initialization");
+
+	_vm->loadPalette(_vm->_roomGxl, "backg.pcx");
+
 	_vm->paletteFadeOut(0, 256, 64);
 	_vm->_screen->clear(0);
 	_vm->drawRoomImageToBackground("backg.pcx", 0, 0);
@@ -8498,6 +8498,121 @@ void GameLogic::r38_atrap() {
 	_vm->_garthSpriteX = -1;
 	_vm->playAnimation("atrap", 0, 12, 128, 56, 0, 100);
 	_r38_flags |= 0x02;
+}
+
+void GameLogic::handlePizzathon() {
+	_vm->openAlternateRoomLibrary("e00");
+	_vm->_screen->clear(0);
+
+	// The list is complete, let's start the pizzathon
+	_vm->drawRoomImageToScreen("text.pcx", 44, 77);
+	_vm->paletteFadeIn(0, 256, 8);
+	_vm->waitSeconds(5);
+
+	_vm->paletteFadeOut(0, 256, 8);
+	_vm->drawRoomImageToScreen("backgb.pcx", 0, 0);
+
+	_vm->_musicIndex = 1;
+	_vm->changeMusic();
+	_vm->paletteFadeIn(0, 256, 4);
+
+	WWSurface *backSprite = new WWSurface(156, 96);
+
+	// show phone center + phone animation on upper left
+	_vm->drawImageToSurface(_vm->_roomGxl, "backul.pcx", backSprite, 0, 0);
+	_vm->drawSpiralEffect(backSprite, 2, 2, 2, 2);
+	delete backSprite;
+
+	_vm->playAnimation("phone", 1, 12, 2, 14, 0, 125);
+
+	// show bike delivery + bike animation on lower right
+	backSprite = new WWSurface(156, 96);
+	_vm->drawImageToSurface(_vm->_roomGxl, "backlr.pcx", backSprite, 0, 0);
+	_vm->drawSpiralEffect(backSprite, 162, 102, 2, 2);
+	delete backSprite;
+
+	for (int i = 1; i < 3; ++i) {
+		_vm->playAnimation("bike", 1, 4, 211, 104, 0, 100);
+	}
+
+	// show board + animation on lower left
+	backSprite = new WWSurface(156, 96);
+	_vm->drawImageToSurface(_vm->_roomGxl, "backll.pcx", backSprite, 0, 0);
+	_vm->drawSpiralEffect(backSprite, 2, 102, 2, 2);
+	delete backSprite;
+
+	_vm->playAnimation("board", 1, 4, 13, 127, 0, 100);
+	_vm->waitSeconds(1);
+
+	// show band + animation on upper right
+	backSprite = new WWSurface(156, 96);
+	_vm->drawImageToSurface(_vm->_roomGxl, "backur.pcx", backSprite, 0, 0);
+	_vm->drawSpiralEffect(backSprite, 162, 2, 2, 2);
+	delete backSprite;
+
+	for (int i = 1; i < 3; ++i)
+		_vm->playAnimation("band", 1, 4, 162, 44, 0, 125);
+
+	_vm->playAnimation("board", 5, 2, 13, 127, 0, 150);
+	_vm->playAnimation("phone", 1, 12, 2, 14, 0, 125);
+	_vm->playAnimation("board", 7, 2, 13, 127, 0, 150);
+
+	for (int i = 1; i < 3; ++i)
+		_vm->playAnimation("bike", 1, 4, 211, 104, 0, 100);
+
+	for (int i = 1; i < 3; ++i)
+		_vm->playAnimation("band", 1, 4, 162, 44, 0, 125);
+
+	_vm->playAnimation("board", 9, 2, 13, 127, 0, 150);
+
+	for (int i = 1; i < 3; ++i)
+		_vm->playAnimation("bike", 1, 4, 211, 104, 0, 100);
+
+	_vm->playAnimation("board", 11, 2, 13, 127, 0, 150);
+	_vm->playSound("ss41.snd", false);
+
+	for (int i = 1; i < 10; ++i)
+		_vm->playAnimation("board", 12, 2, 13, 127, 0, 150);
+
+	_vm->playAnimation("board", 13, 1, 13, 127, 0, 150);
+	_vm->waitSeconds(2);
+
+	handleHypnosisCutscene();
+
+	_vm->paletteFadeOut(0, 256, 4);
+	_vm->_screen->clear(0);
+
+	 // set 8, reset 4
+	_pizzathonListFlags2 |= 8;
+	_pizzathonListFlags2 &= 0xFB;
+
+	_vm->setWaynePosition(113, 120);
+	_vm->setGarthPosition(131, 112);
+	_vm->_isTextVisible = false;
+
+	_vm->changeRoom(13);	
+}
+
+void GameLogic::handleHypnosisCutscene() {
+	WWSurface *sprite = new WWSurface(320, 200);
+	_vm->drawImageToSurface(_vm->_roomGxl, "spstart.pcx", sprite, 0, 0);
+	_vm->drawRandomEffect(sprite, 0, 0, 4, 4);
+	delete sprite;
+
+	for (int i = 0; i < 17; ++i) {
+		_vm->_screen->fillRect(0, 0, 319, 37, 0);
+		_vm->displayText("e00", i, 0, 156, 0, 0);
+		_vm->playAnimation("spiral", 0, 14, 77, 38, 0, 200);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		_vm->_screen->fillRect(0, 0, 319, 37, 0);
+		_vm->drawCurrentText(164, 170, nullptr);
+		_vm->playAnimation("spiral", 0, 15, 77, 38, 0, 100);
+		_vm->_screen->fillRect(0, 140, 319, 199, 0);
+		_vm->drawCurrentText(164, 0, nullptr);
+		_vm->playAnimation("spiral", 0, 15, 77, 38, 0, 100);
+	}
 }
 
 void GameLogic::r38_useCassandra() {
