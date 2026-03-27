@@ -293,18 +293,7 @@ Common::Array<Graphics::ManagedSurface *> CastleEngine::loadFramesWithHeader(Com
 	return frames;
 }
 
-Graphics::ManagedSurface *CastleEngine::loadFrame(Common::SeekableReadStream *file, Graphics::ManagedSurface *surface, int width, int height, uint32 front) {
-	for (int i = 0; i < width * height; i++) {
-		byte color = file->readByte();
-		for (int n = 0; n < 8; n++) {
-			int y = i / width;
-			int x = (i % width) * 8 + (7 - n);
-			if ((color & (1 << n)))
-				surface->setPixel(x, y, front);
-		}
-	}
-	return surface;
-}
+// loadFrame moved to FreescapeEngine (freescape.cpp)
 
 Graphics::ManagedSurface *CastleEngine::loadFrameWithHeaderCPC(Common::SeekableReadStream *file, int pos, const uint32 *cpcPalette) {
 	Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
@@ -383,13 +372,7 @@ Graphics::ManagedSurface *CastleEngine::loadFrameWithHeaderCPCIndexed(Common::Se
 	Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
 	surface->create(w * 4, h, Graphics::PixelFormat::createFormatCLUT8());
 	surface->fillRect(Common::Rect(0, 0, w * 4, h), 0);
-	for (int y = 0; y < h; y++)
-		for (int col = 0; col < w; col++) {
-			byte cpc_byte = file->readByte();
-			for (int i = 0; i < 4; i++)
-				surface->setPixel(col * 4 + i, y, getCPCPixel(cpc_byte, i, true));
-		}
-	return surface;
+	return loadFrameCPCIndexed(file, surface, w, h);
 }
 
 Common::Array<Graphics::ManagedSurface *> CastleEngine::loadFramesWithHeaderCPCIndexed(Common::SeekableReadStream *file, int pos, int numFrames) {
@@ -403,12 +386,7 @@ Common::Array<Graphics::ManagedSurface *> CastleEngine::loadFramesWithHeaderCPCI
 		Graphics::ManagedSurface *surface = new Graphics::ManagedSurface();
 		surface->create(w * 4, h, Graphics::PixelFormat::createFormatCLUT8());
 		surface->fillRect(Common::Rect(0, 0, w * 4, h), 0);
-		for (int y = 0; y < h; y++)
-			for (int col = 0; col < w; col++) {
-				byte cpc_byte = file->readByte();
-				for (int i = 0; i < 4; i++)
-					surface->setPixel(col * 4 + i, y, getCPCPixel(cpc_byte, i, true));
-			}
+		loadFrameCPCIndexed(file, surface, w, h);
 		frames.push_back(surface);
 	}
 	return frames;
@@ -1583,8 +1561,13 @@ void CastleEngine::drawFullscreenRiddleAndWait(uint16 riddle) {
 		}
 		_gfx->clear(0, 0, 0, true);
 		drawBorder();
-		if (_currentArea)
-			drawUI();
+		if (_currentArea) {
+			// Draw both UI and riddle on the same surface, since
+			// drawFullscreenSurface uses a single shared texture.
+			uint32 gray = _gfx->_texturePixelFormat.ARGBToColor(0x00, 0xA0, 0xA0, 0xA0);
+			surface->fillRect(Common::Rect(0, 0, _screenW, _screenH), gray);
+			drawPlatformUI(surface);
+		}
 		drawRiddle(riddle, front, transparent, surface);
 		_gfx->flipBuffer();
 		g_system->updateScreen();

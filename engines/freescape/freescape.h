@@ -227,6 +227,7 @@ public:
 	void drawTitle();
 	virtual void drawBackground();
 	void clearBackground();
+	void drawPlatformUI(Graphics::Surface *surface);
 	virtual void drawUI();
 	virtual void drawInfoMenu();
 	void drawBorderScreenAndWait(Graphics::Surface *surface, int maxWait = INT_MAX);
@@ -281,6 +282,8 @@ public:
 	byte *getPaletteFromNeoImage(Common::SeekableReadStream *stream, int offset);
 	Graphics::ManagedSurface *loadAndConvertNeoImage(Common::SeekableReadStream *stream, int offset, byte *palette = nullptr);
 	Graphics::ManagedSurface *loadAndConvertScrImage(Common::SeekableReadStream *stream);
+	Graphics::ManagedSurface *loadFrame(Common::SeekableReadStream *file, Graphics::ManagedSurface *surface, int width, int height, uint32 front);
+	Graphics::ManagedSurface *loadFrameCPCIndexed(Common::SeekableReadStream *file, Graphics::ManagedSurface *surface, int widthBytes, int height);
 	Graphics::ManagedSurface *loadAndConvertDoodleImage(Common::SeekableReadStream *bitmap, Common::SeekableReadStream *color1, Common::SeekableReadStream *color2, byte *palette);
 
 	void loadPalettes(Common::SeekableReadStream *file, int offset);

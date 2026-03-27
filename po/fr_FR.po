@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-03-25 20:27+0000\n"
-"PO-Revision-Date: 2026-03-23 07:22+0000\n"
+"POT-Creation-Date: 2026-03-27 01:06+0000\n"
+"PO-Revision-Date: 2026-03-26 12:16+0000\n"
 "Last-Translator: Purple T <ZEONK@hotmail.com>\n"
 "Language-Team: French <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/fr/>\n"
@@ -116,7 +116,7 @@ msgstr "Rép. préc."
 #: gui/saveload-dialog.cpp:456 gui/saveload-dialog.cpp:540
 #: gui/saveload-dialog.cpp:839 gui/saveload-dialog.cpp:1243
 #: gui/shaderbrowser-dialog.cpp:80 gui/themebrowser.cpp:54
-#: gui/unknown-game-dialog.cpp:53 base/main.cpp:597
+#: gui/unknown-game-dialog.cpp:53 base/main.cpp:604
 #: dists/android.strings.xml.cpp:46 engines/engine.cpp:808
 #: engines/engine.cpp:833 backends/dialogs/gtk/gtk-dialogs.cpp:65
 #: backends/events/default/default-events.cpp:193
@@ -330,7 +330,7 @@ msgstr ""
 #: gui/downloaddialog.cpp:152 gui/filebrowser-dialog.cpp:135
 #: gui/fluidsynth-dialog.cpp:210 gui/launcher.cpp:428 gui/launcher.cpp:457
 #: gui/launcher.cpp:530 gui/launcher.cpp:1921 gui/options.cpp:3485
-#: gui/options.cpp:3859 base/main.cpp:597
+#: gui/options.cpp:3859 base/main.cpp:604
 #: backends/events/default/default-events.cpp:193 engines/buried/buried.cpp:598
 #: engines/chamber/metaengine.cpp:91 engines/director/events.cpp:122
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:139
@@ -377,7 +377,7 @@ msgstr "Les contenus du code JSON sont malformés."
 #: gui/fluidsynth-dialog.cpp:154 gui/massadd.cpp:90 gui/message.cpp:156
 #: gui/message.cpp:160 gui/message.cpp:231 gui/message.cpp:270
 #: gui/message.cpp:274 gui/options.cpp:2418 gui/predictivedialog.cpp:69
-#: gui/saveload-dialog.cpp:1244 base/main.cpp:664 base/main.cpp:689
+#: gui/saveload-dialog.cpp:1244 base/main.cpp:671 base/main.cpp:696
 #: dists/android.strings.xml.cpp:33 backends/platform/wii/options.cpp:46
 #: engines/buried/buried.cpp:622 engines/buried/saveload.cpp:83
 #: engines/director/lingo/xlibs/j/jitdraw3.cpp:123
@@ -1717,16 +1717,13 @@ msgid "Icons per row:"
 msgstr "Icônes par ligne :"
 
 #: gui/launcher.cpp:1852
-#, fuzzy, c-format
-#| msgid ""
-#| "Do you really want to remove the following %d game configuration(s)?\n"
-#| "\n"
+#, c-format
 msgid ""
 "Do you really want to remove the following %d game configurations?\n"
 "\n"
 msgstr ""
-"Voulez-vous vraiment supprimer la(les) configuration(s) suivante(s) du jeu "
-"%d ?\n"
+"Voulez-vous vraiment supprimer les\n"
+"configurations suivantes du jeu %d ?\n"
 "\n"
 
 #: gui/massadd.cpp:77 gui/massadd.cpp:80
@@ -3091,12 +3088,12 @@ msgstr "Jouer"
 msgid "Saves"
 msgstr "Sauvegardes"
 
-#: base/main.cpp:597
+#: base/main.cpp:604
 msgid "Bad config file format. overwrite?"
 msgstr "Mauvais format de fichier de configuration. Ecraser ?"
 
 #. I18N: <Add a new folder> must match the translation done in backends/fs/android/android-saf-fs.h
-#: base/main.cpp:646
+#: base/main.cpp:653
 msgid ""
 "In this new version of ScummVM for Android, significant changes were made to "
 "the file access system to allow support for modern versions of the Android "
@@ -3142,12 +3139,12 @@ msgstr ""
 "Répétez les étapes 1 et 6 pour chaque jeu."
 
 #. I18N: A button caption to dismiss a message and read it later
-#: base/main.cpp:666 base/main.cpp:691
+#: base/main.cpp:673 base/main.cpp:698
 msgid "Read Later"
 msgstr "Lire plus tard"
 
 #. I18N: <Add a new folder> must match the translation done in backends/fs/android/android-saf-fs.h
-#: base/main.cpp:673
+#: base/main.cpp:680
 msgid ""
 "In this new version of ScummVM for Android, significant changes were made to "
 "the file access system to allow support for modern versions of the Android "
@@ -3188,7 +3185,7 @@ msgstr ""
 "puis tapez sur **Choisir**.\n"
 "Répétez les étapes 1 et 6 pour chaque jeu."
 
-#: base/main.cpp:837 base/main.cpp:886
+#: base/main.cpp:844 base/main.cpp:893
 msgid "Error running game:"
 msgstr "Erreur lors de l'exécution du jeu :"
 
@@ -6590,7 +6587,7 @@ msgid "Climb"
 msgstr "Grimper"
 
 #: engines/access/metaengine.cpp:337 engines/bbvs/metaengine.cpp:142
-#: engines/freescape/games/castle/castle.cpp:523
+#: engines/freescape/games/castle/castle.cpp:501
 #: engines/petka/metaengine.cpp:137 engines/scumm/help.cpp:225
 #: engines/tsage/metaengine.cpp:201
 msgid "Walk"
@@ -7344,7 +7341,7 @@ msgid "Whether textures should be linearly filtered"
 msgstr "Force le filtrage linéaire des textures"
 
 #: engines/alcachofa/metaengine.cpp:98 engines/cine/metaengine.cpp:347
-#: engines/freescape/games/castle/castle.cpp:540
+#: engines/freescape/games/castle/castle.cpp:518
 msgid "Activate"
 msgstr "Activer"
 
@@ -7801,7 +7798,7 @@ msgstr "Act. / Désact. indice privé"
 #: engines/cge/metaengine.cpp:221 engines/cge2/metaengine.cpp:235
 #: engines/dgds/metaengine.cpp:75 engines/dm/metaengine.cpp:174
 #: engines/drascula/metaengine.cpp:285 engines/efh/metaengine.cpp:272
-#: engines/freescape/games/castle/castle.cpp:485
+#: engines/freescape/games/castle/castle.cpp:463
 #: engines/freescape/games/dark/dark.cpp:197
 #: engines/freescape/games/driller/driller.cpp:123
 #: engines/freescape/games/eclipse/eclipse.cpp:236
@@ -7829,7 +7826,7 @@ msgstr "Sauvegarder"
 #: engines/cge/metaengine.cpp:227 engines/cge2/metaengine.cpp:241
 #: engines/dgds/metaengine.cpp:74 engines/drascula/metaengine.cpp:260
 #: engines/efh/metaengine.cpp:279 engines/efh/metaengine.cpp:613
-#: engines/freescape/games/castle/castle.cpp:490
+#: engines/freescape/games/castle/castle.cpp:468
 #: engines/freescape/games/dark/dark.cpp:202
 #: engines/freescape/games/driller/driller.cpp:128
 #: engines/freescape/games/eclipse/eclipse.cpp:241
@@ -7879,7 +7876,7 @@ msgstr "Panneau des indices"
 #: engines/bladerunner/metaengine.cpp:375 engines/cruise/metaengine.cpp:229
 #: engines/darkseed/metaengine.cpp:60 engines/dragons/metaengine.cpp:223
 #: engines/efh/metaengine.cpp:373 engines/efh/metaengine.cpp:619
-#: engines/freescape/games/castle/castle.cpp:498
+#: engines/freescape/games/castle/castle.cpp:476
 #: engines/freescape/games/dark/dark.cpp:207
 #: engines/freescape/games/driller/driller.cpp:133
 #: engines/freescape/games/eclipse/eclipse.cpp:246
@@ -8905,7 +8902,7 @@ msgstr "Défendre"
 
 #. I18N: Run is a movement type
 #. I18N: Action in In Cold Blood
-#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:518
+#: engines/efh/metaengine.cpp:530 engines/freescape/games/castle/castle.cpp:496
 #: engines/grim/grim.cpp:501 engines/grim/grim.cpp:596
 #: engines/hpl1/metaengine.cpp:82 engines/icb/icb.cpp:131
 #: engines/icb/icb.cpp:197 engines/ultima/ultima8/metaengine.cpp:56
@@ -9078,14 +9075,12 @@ msgstr "Effectue des mouvements fluides plutôt que des étapes distinctes"
 
 #. I18N: Use modern FPS-style controls: WASD for movement, Shift to run
 #: engines/freescape/metaengine.cpp:153
-#, fuzzy
-#| msgid "Volume controls"
 msgid "WASD controls"
-msgstr "Contrôles du volume"
+msgstr "Contrôles WASD"
 
 #: engines/freescape/metaengine.cpp:154
 msgid "Use WASD keys for movement and Shift to run"
-msgstr ""
+msgstr "Utiliser les touches WASD pour les déplacements et Maj pour courir"
 
 #. I18N: Combat command in Might & Magic 1
 #: engines/freescape/movement.cpp:69 engines/mm/mm1/metaengine.cpp:79
@@ -9113,15 +9108,15 @@ msgstr "Changer de mode"
 msgid "Info menu"
 msgstr "Menu d'information"
 
-#: engines/freescape/games/castle/castle.cpp:475
+#: engines/freescape/games/castle/castle.cpp:453
 msgid "Select prince"
 msgstr "Sélectionner le prince"
 
-#: engines/freescape/games/castle/castle.cpp:480
+#: engines/freescape/games/castle/castle.cpp:458
 msgid "Select princess"
 msgstr "Sélectionner la princesse"
 
-#: engines/freescape/games/castle/castle.cpp:503
+#: engines/freescape/games/castle/castle.cpp:481
 #: engines/freescape/games/dark/dark.cpp:217
 #: engines/freescape/games/driller/driller.cpp:141
 #: engines/freescape/games/eclipse/eclipse.cpp:254
@@ -9129,32 +9124,32 @@ msgstr "Sélectionner la princesse"
 msgid "Toggle sound"
 msgstr "Act. / Désact. le son"
 
-#: engines/freescape/games/castle/castle.cpp:508
+#: engines/freescape/games/castle/castle.cpp:486
 #: engines/freescape/games/dark/dark.cpp:223
 #: engines/freescape/games/driller/driller.cpp:147
 #: engines/freescape/games/eclipse/eclipse.cpp:259
 msgid "Rotate left"
 msgstr "Tourner à gauche"
 
-#: engines/freescape/games/castle/castle.cpp:513
+#: engines/freescape/games/castle/castle.cpp:491
 #: engines/freescape/games/dark/dark.cpp:228
 #: engines/freescape/games/driller/driller.cpp:152
 #: engines/freescape/games/eclipse/eclipse.cpp:264
 msgid "Rotate right"
 msgstr "Tourner à droite"
 
-#: engines/freescape/games/castle/castle.cpp:529
+#: engines/freescape/games/castle/castle.cpp:507
 msgid "Crawl"
 msgstr "Ramper"
 
-#: engines/freescape/games/castle/castle.cpp:535
+#: engines/freescape/games/castle/castle.cpp:513
 #: engines/freescape/games/eclipse/eclipse.cpp:302
 msgid "Face forward"
 msgstr "Marcher vers l'avant"
 
-#: engines/freescape/games/castle/castle.cpp:546
+#: engines/freescape/games/castle/castle.cpp:524
 msgid "Run (hold)"
-msgstr ""
+msgstr "Courir (maintenir)"
 
 #: engines/freescape/games/dark/dark.cpp:233
 #: engines/freescape/games/driller/driller.cpp:186
@@ -9227,7 +9222,7 @@ msgstr "Changer la taille des pas"
 
 #: engines/freescape/games/eclipse/eclipse.cpp:282
 msgid "Sprint (hold)"
-msgstr ""
+msgstr "Sprinter (maintenir)"
 
 #: engines/freescape/games/eclipse/eclipse.cpp:290
 msgid "Toggle height"
@@ -9993,14 +9988,14 @@ msgid "Demo plays simple animations without using Westwood's Engine."
 msgstr ""
 "La démo joue des animations simples sans utiliser le moteur de Westwood."
 
-#: engines/kyra/detection_tables.h:1434
+#: engines/kyra/detection_tables.h:1470
 msgid "You added the game incorrectly. Please add the root folder of the game."
 msgstr ""
 "Le jeu a été ajouté de façon incorrecte. Veuillez ajouter le dossier racine "
 "du jeu."
 
 #. I18N: The file in the game directory needs to be extracted
-#: engines/kyra/detection_tables.h:1450
+#: engines/kyra/detection_tables.h:1486
 msgid ""
 "You added the game incorrectly. The GAME.DAT file is an ISO image and you "
 "need to extract the game data files from it."
