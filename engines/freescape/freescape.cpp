@@ -206,6 +206,7 @@ FreescapeEngine::FreescapeEngine(OSystem *syst, const ADGameDescription *gd)
 	_fontLoaded = false;
 	_dataBundle = nullptr;
 	_extraBuffer = nullptr;
+	_inWaitLoop = false;
 
 	_lastFrame = 0;
 	// The near clip plane of 2 is useful for Driller and Dark Side as they have open spaces without too much
@@ -1249,6 +1250,32 @@ void FreescapeEngine::getLatestMessages(Common::String &message, int &deadline) 
 void FreescapeEngine::clearTemporalMessages() {
 	_temporaryMessages.clear();
 	_temporaryMessageDeadlines.clear();
+}
+
+void FreescapeEngine::decodeAmigaSprite(Common::SeekableReadStream *file, Graphics::ManagedSurface *surf,
+		int dataOffset, int widthWords, int height, byte *palette) {
+	for (int y = 0; y < height; y++) {
+		for (int col = 0; col < widthWords; col++) {
+			int off = dataOffset + (y * widthWords + col) * 8;
+			file->seek(off);
+			uint16 p0 = file->readUint16BE();
+			uint16 p1 = file->readUint16BE();
+			uint16 p2 = file->readUint16BE();
+			uint16 p3 = file->readUint16BE();
+			for (int bit = 0; bit < 16; bit++) {
+				byte colorIdx = 0;
+				if (p0 & (0x8000 >> bit)) colorIdx |= 1;
+				if (p1 & (0x8000 >> bit)) colorIdx |= 2;
+				if (p2 & (0x8000 >> bit)) colorIdx |= 4;
+				if (p3 & (0x8000 >> bit)) colorIdx |= 8;
+				if (colorIdx == 0)
+					continue;
+				uint32 color = _gfx->_texturePixelFormat.ARGBToColor(0xFF,
+					palette[colorIdx * 3], palette[colorIdx * 3 + 1], palette[colorIdx * 3 + 2]);
+				surf->setPixel(col * 16 + bit, y, color);
+			}
+		}
+	}
 }
 
 byte *FreescapeEngine::getPaletteFromNeoImage(Common::SeekableReadStream *stream, int offset) {

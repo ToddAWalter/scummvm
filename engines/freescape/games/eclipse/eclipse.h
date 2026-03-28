@@ -62,6 +62,8 @@ public:
 	bool _flashlightOn;
 	int _lastThirtySeconds;
 	int _lastFiveSeconds;
+	int _lastHeartbeatSoundTick;
+	int _lastHeartIndicatorFrame;
 
 	int _lastSecond;
 	void updateTimeVariables() override;
@@ -99,6 +101,7 @@ public:
 	soundFx *load1bPCM(Common::SeekableReadStream *file, int offset);
 	void loadHeartFramesCPC(Common::SeekableReadStream *file, int restOffset, int beatOffset);
 	void loadHeartFramesZX(Common::SeekableReadStream *file, int restOffset, int beatOffset);
+	void loadHeartFramesDOS(Common::SeekableReadStream *file, int restOffset, int beatOffset);
 	void drawHeartIndicator(Graphics::Surface *surface, int x, int y);
 
 	Common::Array<byte> _musicData; // TEMUSIC.ST TEXT segment (Atari ST)
