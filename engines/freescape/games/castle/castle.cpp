@@ -587,7 +587,7 @@ void CastleEngine::gotoArea(uint16 areaID, int entranceID) {
 		_pitch = -85;
 	} else {
 		// If escaped, play a different sound
-		if (getGameBit(31))
+		if (hasEscaped())
 			playSound(13, true, _soundFxHandle);
 		else
 			playSound(_soundIndexAreaChange, true, _soundFxHandle);
@@ -728,7 +728,7 @@ bool CastleEngine::checkIfGameEnded() {
 				insertTemporaryMessage(_fallenMessage, _countdown - 4);
 			_gameStateControl = kFreescapeGameStateEnd;
 		}
-		if ((isSpectrum() && getGameBit(31)) || (isDOS() && _currentArea->getAreaID() == 74)) { // Escaped!
+		if (hasEscaped()) {
 			_gameStateControl = kFreescapeGameStateEnd;
 			return true;
 		}
@@ -736,12 +736,24 @@ bool CastleEngine::checkIfGameEnded() {
 	return FreescapeEngine::checkIfGameEnded();
 }
 
+bool CastleEngine::triggerWinCondition() {
+	if (isDOS() || isAmiga() || isAtariST()) {
+		if (!_areaMap.contains(74))
+			return false;
+		gotoArea(74, 0);
+	} else {
+		_gameStateVars[31] = 10;
+		gotoArea(16, 136);
+	}
+	return true;
+}
+
 void CastleEngine::endGame() {
 	_shootingFrames = 0;
 	_delayedShootObject = nullptr;
 	_endGamePlayerEndArea = true;
 
-	if ((isSpectrum() && getGameBit(31)) || (isDOS() && _currentArea->getAreaID() == 74)) { // Escaped!
+	if (hasEscaped()) {
 		insertTemporaryMessage(_messagesList[5], INT_MIN);
 
 		if (isDOS()) {
@@ -754,6 +766,13 @@ void CastleEngine::endGame() {
 
 	_gameStateControl = kFreescapeGameStateRestart;
 	_endGameKeyPressed = false;
+}
+
+bool CastleEngine::hasEscaped() {
+	if (isDOS())
+		return _currentArea && _currentArea->getAreaID() == 74;
+
+	return getGameBit(31);
 }
 
 void CastleEngine::pressedKey(const int keycode) {
@@ -1270,7 +1289,7 @@ void CastleEngine::drawFullscreenGameOverAndWait() {
 		playSound(9, false, _soundFxHandle);
 	}
 
-	if (isSpectrum() && getGameBit(31)) {
+	if (!isDOS() && hasEscaped()) {
 		insertTemporaryMessage(_messagesList[5], _countdown - 1);
 	}
 
@@ -1279,7 +1298,7 @@ void CastleEngine::drawFullscreenGameOverAndWait() {
 			insertTemporaryMessage(scoreString, _countdown - 2);
 			insertTemporaryMessage(spiritsDestroyedString, _countdown - 4);
 			insertTemporaryMessage(keysCollectedString, _countdown - 6);
-			if (isSpectrum() && getGameBit(31)) {
+			if (!isDOS() && hasEscaped()) {
 				insertTemporaryMessage(_messagesList[5], _countdown - 8);
 			}
 		}
@@ -2126,7 +2145,7 @@ void CastleEngine::drawLiftingGate(Graphics::Surface *surface) {
 }
 
 void CastleEngine::drawDroppingGate(Graphics::Surface *surface) {
-	if (isSpectrum() && getGameBit(31))
+	if (!isDOS() && hasEscaped())
 		return; // No gate dropping when the player escaped
 
 	if (_droppingGateStartTicks <= 0)

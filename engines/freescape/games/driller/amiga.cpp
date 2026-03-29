@@ -406,7 +406,7 @@ void DrillerEngine::drawAmigaAtariSTUI(Graphics::Surface *surface) {
 	Common::String coords;
 
 	// It seems that some demos will not include the complete font
-	if (!isDemo() || (_variant & GF_AMIGA_MAGAZINE_DEMO) || (_variant & GF_ATARI_MAGAZINE_DEMO)) {
+	if (_currentArea->getAreaID() != _endArea && (!isDemo() || (_variant & GF_AMIGA_MAGAZINE_DEMO) || (_variant & GF_ATARI_MAGAZINE_DEMO))) {
 
 		drawString(kDrillerFontSmall, ":", 38, 18, white, white, transparent, surface); // ":" is the next character to "9" representing "x"
 		coords = Common::String::format("%04d", 2 * int(_position.x()));
@@ -438,7 +438,9 @@ void DrillerEngine::drawAmigaAtariSTUI(Graphics::Surface *surface) {
 		_temporaryMessages.push_back(message);
 		_temporaryMessageDeadlines.push_back(deadline);
 	} else {
-		if (_currentArea->_gasPocketRadius == 0)
+		if (_gameStateVars[32] == 18)
+			message = _messagesList[19];
+		else if (_currentArea->_gasPocketRadius == 0)
 			message = _messagesList[2];
 		else if (_drillStatusByArea[_currentArea->getAreaID()])
 			message = _messagesList[0];

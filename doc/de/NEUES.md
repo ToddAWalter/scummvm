@@ -1,7 +1,7 @@
 Umfangreichere Informationen über die Änderungen des aktuellen Codes findest Du unter:
         https://github.com/scummvm/scummvm/commits/
 
-#### 2026.1.1 (xx.xx.2026)
+#### 2026.2.0 (28.03.2026)
 
  Neue Spiele:
    - Unterstützung für Necronomicon: The Dawning of Darkness hinzugefügt.
@@ -34,6 +34,8 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
      Personal Nightmare und der Amiga-Demoversion von Elvira 1.
    - Unterstützung für die originalen Mauszeiger der Amiga-Version von
      Personal Nightmare hinzugefügt.
+   - "Warte"-Befehl in Personal Nightmare korrigiert - auf moderenen Systemen
+     wurde der Befehl zu schnell ausgeführt.
    - Fehlerhafte Farben der Invantar-Icons in den Amiga- und Atari ST-Versionen
      von Personal Nightmare korrigiert.
    - Fehlende Farb-Darstellung für Simons Sprite in der Acorn-Disketten-Demo
@@ -70,6 +72,8 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Anzahl der Übertragung der Bild-Daten optimiert, wodurch Gobliiins und Ween
      auf schwächeren Plattformen deutlich besser laufen. Andere Gob-Spiele sind
      ebenfalls positiv davon betroffen.
+   - Flackernder Cursor während einiger Videos in Gob3 und Lost in Time behoben.
+   - Blount ist im Gob3-Gehirnlevel nicht mehr inaktiv.
 
  M4:
    - Musik-Unterstützung in Ripley hinzugefügt.
@@ -113,8 +117,11 @@ Umfangreichere Informationen über die Änderungen des aktuellen Codes findest D
    - Absturz am Anfang von Nathan's Second Chance behoben.
 
  Sword2:
-   - Absturz im Zusammenhang mit einigen DXA-Videos behoben, hauptsächlich in Verbindung
-     mit der Datei intro.dxa.
+   - Fehlerhafte Sample-Rate der Musikwiedergabe in Broken Sword 1 unter
+     PS3, Wii und OSXPPC korrigiert.
+
+ Sword2:
+   - Absturz im Zusammenhang mit einigen DXA-Videos wie etwa im Intro behoben.
 
  Teenagent:
    - Fehler "could not locate language block" beim Start der polnischen und russischen Versionen behoben.
