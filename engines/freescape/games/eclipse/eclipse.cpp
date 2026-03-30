@@ -363,7 +363,6 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 
 	_gfx->_keyColor = 0;
 	swapPalette(areaID);
-	_currentArea->_usualBackgroundColor = isCPC() ? 1 : 0;
 	if (isAmiga() || isAtariST())
 		_currentArea->_skyColor = 15;
 
@@ -824,7 +823,7 @@ void EclipseEngine::drawHeartIndicator(Graphics::Surface *surface, int x, int y)
 	int beatStart = MAX(beatCycle - 5, 0);
 	int frame = _lastHeartIndicatorFrame;
 
-	if (_avoidRenderingFrames > 0 || _hasFallen) {
+	if (shield <= 5 || _avoidRenderingFrames > 0 || _hasFallen) {
 		frame = 1;
 		_lastHeartIndicatorFrame = frame;
 	} else if (!_inWaitLoop) {

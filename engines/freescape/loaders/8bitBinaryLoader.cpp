@@ -652,6 +652,9 @@ Area *FreescapeEngine::load8bitArea(Common::SeekableReadStream *file, uint16 nco
 	uint8 inkColor = 0;
 
 	if (!(isCastle() && (isSpectrum() || isCPC() || isC64()))) {
+		// On Driller/Dark/Eclipse 8-bit targets these are four consecutive
+		// per-area color bytes. CPC stores raw 0..31 ink values here, matching
+		// the original area descriptor layout at offsets +6..+9.
 		usualBackgroundColor = readField(file, 8);
 		underFireBackgroundColor = readField(file, 8);
 		paperColor = readField(file, 8);
@@ -667,6 +670,17 @@ Area *FreescapeEngine::load8bitArea(Common::SeekableReadStream *file, uint16 nco
 			inkColor = 0xb;
 		}
 		skyColor = 0;
+	}
+
+	if (isCPC() && isDriller()) {
+		// Driller CPC stores the four area colors at bytes +6..+9 as raw 0..31
+		// CPC ink values. The original code copies them straight into the live
+		// pens before programming the hardware, so encode them in the Area and
+		// let the generic renderer treat them as direct CPC inks.
+		usualBackgroundColor = encodeCPCDirectColor(usualBackgroundColor);
+		underFireBackgroundColor = encodeCPCDirectColor(underFireBackgroundColor);
+		paperColor = encodeCPCDirectColor(paperColor);
+		inkColor = encodeCPCDirectColor(inkColor);
 	}
 
 	debugC(1, kFreescapeDebugParser, "Colors usual background: %d", usualBackgroundColor);

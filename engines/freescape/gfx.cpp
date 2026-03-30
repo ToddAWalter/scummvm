@@ -29,7 +29,7 @@
 	#include "graphics/opengl/context.h"
 #endif
 
-#include "freescape/gfx.h"
+#include "freescape/freescape.h"
 #include "freescape/objects/object.h"
 
 namespace Freescape {
@@ -260,7 +260,9 @@ void Renderer::setColorMap(ColorMap *colorMap_) {
 		}
 	} else if (_renderMode == Common::kRenderCPC) {
 		fillColorPairArray();
-		for (int i = 4; i < 15; i++) {
+		// Castle CPC uses color-map entry 3 as a genuine checker pattern,
+		// so CPC stipples need to be generated for all 15 Freescape entries.
+		for (int i = 0; i < 15; i++) {
 			byte pair = _colorPair[i];
 			byte c1 = pair & 0xf;
 			byte c2 = (pair >> 4) & 0xf;
@@ -382,6 +384,8 @@ bool Renderer::getRGBAtC64(uint8 index, uint8 &r1, uint8 &g1, uint8 &b1, uint8 &
 			stipple = nullptr;
 			return true;
 		}
+		if (isEncodedCPCDirectColor(index))
+			index = decodeCPCDirectColor(index);
 		readFromPalette(index, r1, g1, b1);
 		r2 = r1;
 		g2 = g1;
@@ -486,6 +490,8 @@ bool Renderer::getRGBAtCPC(uint8 index, uint8 &r1, uint8 &g1, uint8 &b1, uint8 &
 			stipple = nullptr;
 			return true;
 		}
+		if (isEncodedCPCDirectColor(index))
+			index = decodeCPCDirectColor(index);
 		readFromPalette(index, r1, g1, b1);
 		r2 = r1;
 		g2 = g1;
@@ -494,10 +500,21 @@ bool Renderer::getRGBAtCPC(uint8 index, uint8 &r1, uint8 &g1, uint8 &b1, uint8 &
 		return true;
 	}
 	assert(_renderMode == Common::kRenderCPC);
+
+	if (isEncodedCPCDirectColor(index)) {
+		index = decodeCPCDirectColor(index);
+		readFromPalette(index, r1, g1, b1);
+		r2 = r1;
+		g2 = g1;
+		b2 = b1;
+		stipple = nullptr;
+		return true;
+	}
+
 	stipple = (byte *)_stipples[index - 1];
-	byte *entry = (*_colorMap)[index - 1];
-	uint8 i1 = getCPCPixel(entry[0], 0, true);
-	uint8 i2 = getCPCPixel(entry[0], 1, true);
+	byte pair = _colorPair[index - 1];
+	uint8 i1 = pair & 0xf;
+	uint8 i2 = (pair >> 4) & 0xf;
 	selectColorFromFourColorPalette(i1, r1, g1, b1);
 	selectColorFromFourColorPalette(i2, r2, g2, b2);
 	if (r1 == r2 && g1 == g2 && b1 == b2) {
@@ -1226,6 +1243,8 @@ void Renderer::drawBackground(uint8 color) {
 
 	if (_colorRemaps && _colorRemaps->contains(color)) {
 		color = (*_colorRemaps)[color];
+		if (_renderMode == Common::kRenderCPC && isEncodedCPCDirectColor(color))
+			color = decodeCPCDirectColor(color);
 		readFromPalette(color, r1, g1, b1);
 		clear(r1, g1, b1);
 		return;
