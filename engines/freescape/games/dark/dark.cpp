@@ -37,6 +37,8 @@ DarkEngine::DarkEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEn
 	_playerC64Sfx = nullptr;
 	_playerC64Music = nullptr;
 	_c64UseSFX = false;
+	_c64CompassInitialized = false;
+	_c64CompassPosition = 0;
 
 	// These sounds can be overriden by the class of each platform
 	_soundIndexShoot = 1;
@@ -117,6 +119,10 @@ DarkEngine::~DarkEngine() {
 	for (auto &indicator : _cpcActionIndicators) {
 		indicator->free();
 		delete indicator;
+	}
+	for (auto &frame : _c64ModeFrames) {
+		frame->free();
+		delete frame;
 	}
 }
 
@@ -983,6 +989,17 @@ void DarkEngine::drawCPCIndicator(Graphics::Surface *surface, int xPosition, int
 void DarkEngine::drawIndicator(Graphics::Surface *surface, int xPosition, int yPosition) {
 	if (isCPC() && !_cpcIndicators.empty()) {
 		drawCPCIndicator(surface, xPosition, yPosition);
+		return;
+	}
+
+	if (isC64() && _indicators.size() >= 4) {
+		if (_hasFallen)
+			return;
+
+		const Graphics::Surface *indicator = _indicators[1];
+		if (_flyMode)
+			indicator = _indicators[2 + ((g_system->getMillis() / 40) & 1)];
+		surface->copyRectToSurfaceWithKey(*indicator, xPosition, yPosition, Common::Rect(indicator->w, indicator->h), 0);
 		return;
 	}
 
