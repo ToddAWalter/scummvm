@@ -19,39 +19,61 @@
  *
  */
 
-#ifndef FREESCAPE_DEBUGGER_H
-#define FREESCAPE_DEBUGGER_H
+#ifndef FREESCAPE_ECLIPSE_C64_SFX_H
+#define FREESCAPE_ECLIPSE_C64_SFX_H
 
-#include "gui/debugger.h"
+#include "audio/sid.h"
+#include "freescape/sid.h"
 
 namespace Freescape {
 
-class FreescapeEngine;
-
-class Debugger : public GUI::Debugger {
+class EclipseC64SFXPlayer {
 public:
-	Debugger(FreescapeEngine *vm);
-	~Debugger();
+	EclipseC64SFXPlayer();
+	~EclipseC64SFXPlayer();
+
+	void playSfx(int sfxIndex);
+	void sfxTick();
+	void stopAllSfx();
+
+	bool isSfxActive() const;
+	void initSID();
+	void destroySID();
 
 private:
-	FreescapeEngine *_vm;
-	bool cmdShowBBox(int argc, const char **argv);
-	bool cmdWireframe(int argc, const char **argv);
-	bool cmdShowNormals(int argc, const char **argv);
-	bool cmdHighlightID(int agrc, const char **argv);
+	SID::SID *_sid;
 
-	bool cmdInfo(int argc, const char **argv);
-	bool cmdGoto(int argc, const char **argv);
-	bool cmdObjPos(int argc, const char **argv);
-	bool cmdSetObjPos(int argc, const char **argv);
-	bool cmdSortOrder(int argc, const char **argv);
-	bool cmdShowOcclusion(int argc, const char **argv);
-	bool cmdArea(int argc, const char **argv);
-	bool cmdPos(int argc, const char **argv);
-	bool cmdWin(int argc, const char **argv);
-	bool cmdAnkh(int argc, const char **argv);
+	void sidWrite(int reg, uint8 data);
+	void onTimer();
+
+	uint8 _state;
+
+	uint8 _numNotes;
+	uint8 _repeatCount;
+	uint8 _waveform;
+	uint8 _speed;
+
+	uint8 _repeatLeft;
+	uint8 _notesLeft;
+	uint8 _freqIndex;
+	uint8 _durIndex;
+	uint8 _durCounter;
+	uint8 _speedCounter;
+
+	uint8 _curFreqLo;
+	uint8 _curFreqHi;
+
+	int16 _startFreqs[16];
+	int16 _deltas[16];
+	uint8 _durCopies[9];
+
+	void silenceV1();
+	void silenceAll();
+	void setupSfx(int index);
+	void tickStart();
+	void tickSlide();
 };
 
-}
+} // namespace Freescape
 
-#endif
+#endif // FREESCAPE_ECLIPSE_C64_SFX_H

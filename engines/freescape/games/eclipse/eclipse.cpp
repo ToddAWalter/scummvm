@@ -31,6 +31,7 @@
 
 #include "freescape/freescape.h"
 #include "freescape/games/eclipse/c64.music.h"
+#include "freescape/games/eclipse/c64.sfx.h"
 #include "freescape/games/eclipse/eclipse.h"
 #include "freescape/language/8bitDetokeniser.h"
 
@@ -42,6 +43,8 @@ Audio::AudioStream *makeEclipseAtariMusicStream(const byte *data, uint32 dataSiz
 
 EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : FreescapeEngine(syst, gd) {
 	_playerC64Music = nullptr;
+	_playerC64Sfx = nullptr;
+	_c64UseSFX = false;
 
 	// These sounds can be overriden by the class of each platform
 	_soundIndexStartFalling = -1;
@@ -104,6 +107,7 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 
 EclipseEngine::~EclipseEngine() {
 	delete _playerC64Music;
+	delete _playerC64Sfx;
 }
 
 void EclipseEngine::initGameState() {
@@ -342,6 +346,22 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 	_currentAreaMessages.clear();
 	_currentAreaMessages.push_back(_currentArea->_name);
 
+	if (isEclipse2() && areaID != _startArea && _messagesList.size() > 15) {
+		// Eclipse 2 displays the sphinx parts count when entering indoor areas
+		Common::String partsMsg = _messagesList[15];
+		Common::String::size_type pos = partsMsg.find("XX");
+		if (pos != Common::String::npos) {
+			int parts = _gameStateVars[kVariableEclipse2SphinxParts];
+			Common::String replacement;
+			if (parts < 10)
+				replacement = Common::String::format("%d ", parts);
+			else
+				replacement = Common::String::format("%d", parts);
+			partsMsg.replace(pos, 2, replacement);
+		}
+		insertTemporaryMessage(partsMsg, _countdown - 2);
+	}
+
 	if (entranceID > 0)
 		traverseEntrance(entranceID);
 	else if (entranceID == -1)
@@ -372,6 +392,8 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 
 	_gfx->_keyColor = 0;
 	swapPalette(areaID);
+	if (isCPC())
+		updateHeartFramesCPC();
 	if (isAmiga() || isAtariST())
 		_currentArea->_skyColor = 15;
 
@@ -506,8 +528,13 @@ void EclipseEngine::drawInfoMenu() {
 					_eventManager->purgeKeyboardEvents();
 					saveGameDialog();
 					_gfx->setViewport(_viewArea);
-				} else if (isDOS() && event.customType == kActionToggleSound) {
-					playSound(_soundIndexMenu, false, _soundFxHandle);
+				} else if (event.customType == kActionToggleSound) {
+					if (isC64() && _playerC64Sfx) {
+						toggleC64Sound();
+						_eventManager->purgeKeyboardEvents();
+					} else {
+						playSound(_soundIndexMenu, false, _soundFxHandle);
+					}
 				} else if ((isDOS() || isCPC() || isSpectrum()) && event.customType == kActionEscape) {
 					_forceEndGame = true;
 					cont = false;
@@ -555,14 +582,12 @@ void EclipseEngine::pressedKey(const int keycode) {
 		else
 			error("Invalid player height index: %d", _playerHeightNumber);
 	} else if (keycode == kActionRest) {
-		if (_currentArea->getAreaID() == 1) {
+		if (_currentArea->getAreaID() == 1 || _currentArea->getAreaID() == 51) {
 			playSoundFx(3, false);
-			if (_temporaryMessages.empty())
-				insertTemporaryMessage(_messagesList[6], _countdown - 2);
+			insertTemporaryMessage(_messagesList[6], _countdown - 2);
 		} else {
 			_resting = true;
-			if (_temporaryMessages.empty())
-				insertTemporaryMessage(_messagesList[7], _countdown - 2);
+			insertTemporaryMessage(_messagesList[7], _countdown - 2);
 			_countdown = _countdown - 5;
 		}
 	} else if (keycode == kActionFaceForward) {
@@ -960,7 +985,8 @@ void EclipseEngine::drawScoreString(int score, int x, int y, uint32 front, uint3
 
 	for (int i = 0; i < int(scoreStr.size()); i++) {
 		Common::String digit(scoreStr[i]);
-		digit.toUppercase();
+		if (!isCPC())
+			digit.toUppercase();
 		scoreFont->drawString(surface, digit, x, y, _screenW, front);
 		x += charStep;
 		if ((i - scoreStr.size() + 1) % 3 == 1)
@@ -1017,7 +1043,22 @@ void EclipseEngine::executePrint(FCLInstruction &instruction) {
 		drawFullscreenMessageAndWait(_messagesList[index]);
 		return;
 	}
-	insertTemporaryMessage(_messagesList[index], _countdown - 2);
+	Common::String message = _messagesList[index];
+	if (isEclipse2()) {
+		// Message 16 (1-based, index 15) contains "XX" placeholder for sphinx parts count.
+		// The original Z80 code at $22FC patches these bytes with the count from variable 0.
+		Common::String::size_type pos = message.find("XX");
+		if (pos != Common::String::npos) {
+			int parts = _gameStateVars[kVariableEclipse2SphinxParts];
+			Common::String replacement;
+			if (parts < 10)
+				replacement = Common::String::format("%d ", parts);
+			else
+				replacement = Common::String::format("%d", parts);
+			message.replace(pos, 2, replacement);
+		}
+	}
+	insertTemporaryMessage(message, _countdown - 2);
 }
 
 Common::Error EclipseEngine::saveGameStreamExtended(Common::WriteStream *stream, bool isAutosave) {

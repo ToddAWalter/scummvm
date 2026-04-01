@@ -26,6 +26,7 @@
 namespace Freescape {
 
 class EclipseC64MusicPlayer;
+class EclipseC64SFXPlayer;
 
 enum EclipseReleaseFlags {
 	GF_ZX_DEMO_CRASH = (1 << 0),
@@ -33,6 +34,7 @@ enum EclipseReleaseFlags {
 };
 
 enum {
+	kVariableEclipse2SphinxParts = 1,
 	kVariableEclipseAnkhs = 32,
 };
 
@@ -107,9 +109,17 @@ public:
 	void loadHeartFramesDOS(Common::SeekableReadStream *file, int restOffset, int beatOffset);
 	void drawHeartIndicator(Graphics::Surface *surface, int x, int y);
 
+	// CPC heart frames stored as indexed (CLUT8) for per-area re-paletting
+	Common::Array<Graphics::ManagedSurface *> _heartFramesCPCIndexed;
+	void updateHeartFramesCPC();
+
 	Common::Array<byte> _musicData; // TEMUSIC.ST TEXT segment (Atari ST)
 	Common::Array<byte> _c64MusicData;
 	EclipseC64MusicPlayer *_playerC64Music;
+	EclipseC64SFXPlayer *_playerC64Sfx;
+	bool _c64UseSFX;
+	void playSoundC64(int index) override;
+	void toggleC64Sound();
 
 	// Atari ST UI sprites (extracted from binary, pre-converted to target format)
 	Font _fontScore; // Font B (10 score digit glyphs, 4-plane at $249BE)
