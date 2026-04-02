@@ -19,10 +19,12 @@
  *
  */
 
+#include "common/config-manager.h"
 #include "common/file.h"
 #include "common/memstream.h"
 
 #include "freescape/freescape.h"
+#include "freescape/games/eclipse/ay.music.h"
 #include "freescape/games/eclipse/eclipse.h"
 #include "freescape/language/8bitDetokeniser.h"
 
@@ -142,6 +144,9 @@ void EclipseEngine::loadAssetsCPCFullGame() {
 
 	for (auto &it : _indicators)
 		it->convertToInPlace(_gfx->_texturePixelFormat);
+
+	if (ConfMan.getBool("ay_music"))
+		_playerAYMusic = new EclipseAYMusicPlayer(_mixer);
 }
 
 void EclipseEngine::loadAssetsCPCDemo() {
@@ -180,6 +185,9 @@ void EclipseEngine::loadAssetsCPCDemo() {
 
 	for (auto &it : _indicators)
 		it->convertToInPlace(_gfx->_texturePixelFormat);
+
+	if (ConfMan.getBool("ay_music"))
+		_playerAYMusic = new EclipseAYMusicPlayer(_mixer);
 }
 
 void EclipseEngine::updateHeartFramesCPC() {

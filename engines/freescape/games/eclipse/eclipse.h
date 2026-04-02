@@ -25,8 +25,10 @@
 
 namespace Freescape {
 
+class EclipseAYMusicPlayer;
 class EclipseC64MusicPlayer;
 class EclipseC64SFXPlayer;
+class EclipseOPLMusicPlayer;
 
 enum EclipseReleaseFlags {
 	GF_ZX_DEMO_CRASH = (1 << 0),
@@ -120,6 +122,9 @@ public:
 	bool _c64UseSFX;
 	void playSoundC64(int index) override;
 	void toggleC64Sound();
+
+	EclipseAYMusicPlayer *_playerAYMusic;
+	EclipseOPLMusicPlayer *_playerOPLMusic;
 
 	// Atari ST UI sprites (extracted from binary, pre-converted to target format)
 	Font _fontScore; // Font B (10 score digit glyphs, 4-plane at $249BE)

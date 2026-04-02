@@ -158,6 +158,30 @@ static const ADExtraGuiOptionsMap optionsList[] = {
 			0
 		}
 	},
+	{
+		GAMEOPTION_OPL_MUSIC,
+		{
+			// I18N: Enable background music using AdLib/OPL2 FM synthesis
+			_s("Backported music from C64 releases (AdLib)"),
+			_s("Enable background music ported from the C64 version using AdLib FM synthesis"),
+			"opl_music",
+			false,
+			0,
+			0
+		}
+	},
+	{
+		GAMEOPTION_AY_MUSIC,
+		{
+			// I18N: Enable background music using AY chip emulation
+			_s("Backported music from C64 releases"),
+			_s("Enable background music ported from the C64 version"),
+			"ay_music",
+			false,
+			0,
+			0
+		}
+	},
 	AD_EXTRA_GUI_OPTIONS_TERMINATOR
 };
 
