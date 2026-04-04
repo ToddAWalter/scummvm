@@ -728,13 +728,10 @@ void WaynesWorldEngine::drawSpiralEffect(Graphics::Surface *surface, int x, int 
 }
 
 void WaynesWorldEngine::drawRandomEffect(Graphics::Surface *surface, int x, int y, int grainWidth, int grainHeight) {
-	if (surface)
-	{
+	if (surface) {
 		ScreenEffect screenEffect(this, surface, x, y, grainWidth, grainHeight);
 		screenEffect.drawRandomEffect();
-	}
-	else
-	{
+	} else {
 		warning("%s() x:%d y:%d missing surface!", __func__, x, y);
 	}
 }
@@ -751,7 +748,7 @@ Common::String WaynesWorldEngine::loadString(const char *filename, int index, in
 	// Decrypt the string
 	uint i = 0;
 	for (; i < kMaxStringLen; i++) {
-		textBuffer[i] += 0x80;
+		textBuffer[i] ^= 0x80;
 		if (textBuffer[i] == 0x2b)
 			break;
 	}
@@ -1155,7 +1152,7 @@ int WaynesWorldEngine::drawActors(int direction, int wayneKind, int garthKind, i
 	WWSurface *tempBackground = new WWSurface(320, 150);
 	tempBackground->drawSurface(_backgroundSurface, 0, 0);
 
-#if 0 // DEBUG Draw room mask to background
+#ifdef DEBUG_PATHFIND // DEBUG Draw room mask to background
 	for (int yc = 0; yc < 150; yc++) {
 		for (int xc = 0; xc < 320; xc++) {
 			 *(byte*)tempBackground->getBasePtr(xc, yc) = walkIsPixelWalkable(xc, yc) ? 15 : 0;
@@ -1634,7 +1631,7 @@ int WaynesWorldEngine::getAnimationTimerCounter(uint index) {
 }
 
 void WaynesWorldEngine::initStaticRoomObjects() {
-	for  (uint i = 0; i < kStaticRoomObjectsCount; i++)
+	for (uint i = 0; i < kStaticRoomObjectsCount; i++)
 		_staticRoomObjects[i] = kStaticRoomObjects[i];
 }
 
@@ -1687,7 +1684,7 @@ void WaynesWorldEngine::drawStaticRoomObjects(int roomNum, int x, int y, int act
 }
 
 void WaynesWorldEngine::initRoomObjects() {
-	for  (int i = 0; i < kRoomObjectsCount; i++)
+	for (int i = 0; i < kRoomObjectsCount; i++)
 		_roomObjects[i] = kRoomObjects[i];
 }
 
@@ -2040,11 +2037,11 @@ void WaynesWorldEngine::handleVerbUse() {
 }
 
 void WaynesWorldEngine::handleVerbTalkTo() {
-	int actionTextIndex;
 	_dialogChoices[0] = -1;
 
 	if (_objectNumber == -3 || _objectNumber == -2) {
 		const bool room1Special = !(_logic->_r1_flags1 & 0x10) && isActorWayne() && _currentRoomNumber == 1 && (_logic->_r1_flags2 & 0x01);
+		int actionTextIndex;
 		if (room1Special) {
 			actionTextIndex = 14;
 		} else {

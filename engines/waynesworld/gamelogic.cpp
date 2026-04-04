@@ -22,6 +22,7 @@
 #include "waynesworld/gamelogic.h"
 
 #include "common/memstream.h"
+#include "waynesworld/detection.h"
 #include "waynesworld/graphics.h"
 #include "waynesworld/gxlarchive.h"
 #include "waynesworld/objectids.h"
@@ -121,10 +122,10 @@ static const int kRoom24MazeGarthPositionsY[] = { -1, -1, 129, 123, 124, 128, 12
 static const int kRoom25MazeHolePositionsX[] = { 79, 289, 63, 183, 274, 75 };
 static const int kRoom25MazeHolePositionsY[] = { 48, 37, 52, 59, 50, 64 };
 
-static const int kRoom31StarPositionsX[]  = { 45, 65, 87, 107, 129 };
-static const int kRoom31StarPositionsY[]  = { 27, 39, 50, 61, 74, 27, 39, 50, 62, 75, 26, 38, 50, 63, 76, 26, 38, 50, 63, 76, 25, 38, 51, 64, 77 };
-static const int kRoom31NumberPositionsX[]  = { 77, 215, 224 };
-static const int kRoom31NumberPositionsY[]  = { 130, 125, 135 };
+static const int kRoom31StarPositionsX[] = { 45, 65, 87, 107, 129 };
+static const int kRoom31StarPositionsY[] = { 27, 39, 50, 61, 74, 27, 39, 50, 62, 75, 26, 38, 50, 63, 76, 26, 38, 50, 63, 76, 25, 38, 51, 64, 77 };
+static const int kRoom31NumberPositionsX[] = { 77, 215, 224 };
+static const int kRoom31NumberPositionsY[] = { 130, 125, 135 };
 
 static const int kRoom37CorrectSafeCombination[] = { 3, 5, 4, 8, 1, 8 };
 
@@ -474,6 +475,8 @@ int GameLogic::handleVerbClose() {
 }
 
 void GameLogic::handleVerbExtremeCloseupOf() {
+	debugC(5, kDebugLogic, "handleVerbExtremeCloseupOf() - %d", _vm->_objectNumber);
+
 	switch (_vm->_objectNumber) {
 	case kObjectIdInventoryPizzathonList:
 		displayExtremeCloseupOfPizzathonList();
@@ -529,6 +532,7 @@ int GameLogic::handleVerbGive() {
 }
 
 void GameLogic::handleDialogReply(int index, int x, int y) {
+	debugC(5, kDebugLogic, "handleDialogReply(%d, %d, %d)", index, x, y);
 
 	if (index < 537) {
 		_vm->displayText("c04r", index, 0, x, y, 0);
@@ -611,7 +615,7 @@ void GameLogic::handleDialogReply(int index, int x, int y) {
 		_vm->playAnimationLoops("g1talk", 0, 2, 54, 81, 0, 100, 4);
 		break;
 	default:
- //	   _vm->waitSeconds(2);
+	//	_vm->waitSeconds(2);
 		break;
 	}
 	_vm->waitSeconds(2);
@@ -1035,7 +1039,8 @@ int GameLogic::getActorScaleFromY(int actorY) {
 		scale = actorY * 2 - 100;
 		break;
 	case 17:
-		scale = actorY * 1.5 - 100;
+	case 27:
+		scale = actorY * 3 / 2 - 100;
 		break;
 	case 18:
 		scale = actorY - 15;
@@ -1045,9 +1050,6 @@ int GameLogic::getActorScaleFromY(int actorY) {
 		break;
 	case 26:
 		scale = actorY * 3 / 2 - 95;
-		break;
-	case 27:
-		scale = actorY * 3 / 2 - 100;
 		break;
 	case 28:
 		scale = actorY - 25;
@@ -1060,13 +1062,13 @@ int GameLogic::getActorScaleFromY(int actorY) {
 		break;
 	case 32:
 	case 33:
-		scale = actorY * 1.5 - 97;
+		scale = actorY * 3 / 2 - 97;
 		break;
 	case 34:
 		scale = actorY * 2 - 127;
 		break;
 	case 35:
-		scale = actorY * 1.5 - 98;
+		scale = actorY * 3 / 2 - 98;
 		break;
 	case 36:
 		scale = actorY * 1.4 - 83;
@@ -1084,6 +1086,8 @@ int GameLogic::getActorScaleFromY(int actorY) {
 }
 
 void GameLogic::setPizzathonStatus(int flagNum) {
+	debugC(5, kDebugLogic, "setPizzathonStatus(%d)", flagNum);
+
 	switch (flagNum) {
 	case 1:
 		_pizzathonListFlags1 |= 0x08;
@@ -8230,7 +8234,7 @@ void GameLogic::r37_climbLadderUp() {
 		workBackground->drawSurface(_vm->_backgroundSurface, 0, 0);
 		if (climbCtr < 10) {
 			workBackground->drawSurfaceTransparent(wclimbSprites[climbCtr % 4], 187, wayneLadderY);
-		} else  if (climbCtr > 12) {
+		} else if (climbCtr > 12) {
 			workBackground->drawSurfaceTransparent(_vm->_wayneSprites[0], 155, 26);
 		} else {
 			workBackground->drawSurfaceTransparent(wgetldlSprites[12 - climbCtr], 168, 26);
@@ -8770,7 +8774,7 @@ void GameLogic::r39_refreshRoomBackground() {
 	}
 	if (_r39_flags & 0x04) {
 		_vm->drawRoomImageToBackground("wshoot.pcx", 87, 90);
-	} else  if (_r39_flags & 0x08) {
+	} else if (_r39_flags & 0x08) {
 		_vm->drawRoomImageToBackground("gshoot.pcx", 88, 90);
 	}
 }

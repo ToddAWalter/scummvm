@@ -109,7 +109,40 @@ EclipseEngine::EclipseEngine(OSystem *syst, const ADGameDescription *gd) : Frees
 	_flashlightOn = false;
 }
 
+void EclipseEngine::stopBackgroundMusic() {
+	if (_playerOPLMusic)
+		_playerOPLMusic->stopMusic();
+	if (_playerAYMusic)
+		_playerAYMusic->stopMusic();
+	if (_playerC64Music)
+		_playerC64Music->stopMusic();
+	if (_mixer)
+		_mixer->stopHandle(_musicHandle);
+}
+
+void EclipseEngine::restartBackgroundMusic() {
+	if (isC64() && _playerC64Music) {
+		_playerC64Music->startMusic();
+	} else if ((isCPC() || isSpectrum()) && _playerAYMusic) {
+		_playerAYMusic->startMusic();
+	} else if (isDOS() && _playerOPLMusic) {
+		_playerOPLMusic->startMusic();
+	} else if (isAtariST() && !_musicData.empty()) {
+		if (_mixer)
+			_mixer->stopHandle(_musicHandle);
+		Audio::AudioStream *musicStream = makeEclipseAtariMusicStream(
+			_musicData.data(), _musicData.size(), 1);
+		if (musicStream) {
+			_mixer->playStream(Audio::Mixer::kMusicSoundType,
+				&_musicHandle, musicStream);
+		}
+	} else {
+		playMusic("Total Eclipse Theme");
+	}
+}
+
 EclipseEngine::~EclipseEngine() {
+	stopBackgroundMusic();
 	delete _playerOPLMusic;
 	delete _playerAYMusic;
 	delete _playerC64Music;
@@ -132,15 +165,7 @@ void EclipseEngine::initGameState() {
 	_lastHeartIndicatorFrame = 1;
 	_resting = false;
 	_flashlightOn = false;
-
-	if (isC64() && _playerC64Music)
-		_playerC64Music->startMusic();
-	else if ((isCPC() || isSpectrum()) && _playerAYMusic)
-		_playerAYMusic->startMusic();
-	else if (isDOS() && _playerOPLMusic)
-		_playerOPLMusic->startMusic();
-	else
-		playMusic("Total Eclipse Theme");
+	restartBackgroundMusic();
 }
 
 void EclipseEngine::loadAssets() {
@@ -237,6 +262,10 @@ bool EclipseEngine::triggerWinCondition() {
 }
 
 void EclipseEngine::endGame() {
+	bool enteringEndArea = (_gameStateControl == kFreescapeGameStateEnd && !_endGamePlayerEndArea);
+	if (enteringEndArea)
+		restartBackgroundMusic();
+
 	FreescapeEngine::endGame();
 
 	if (!_endGamePlayerEndArea)
@@ -355,22 +384,6 @@ void EclipseEngine::gotoArea(uint16 areaID, int entranceID) {
 
 	_currentAreaMessages.clear();
 	_currentAreaMessages.push_back(_currentArea->_name);
-
-	if (isEclipse2() && areaID != _startArea && _messagesList.size() > 15) {
-		// Eclipse 2 displays the sphinx parts count when entering indoor areas
-		Common::String partsMsg = _messagesList[15];
-		Common::String::size_type pos = partsMsg.find("XX");
-		if (pos != Common::String::npos) {
-			int parts = _gameStateVars[kVariableEclipse2SphinxParts];
-			Common::String replacement;
-			if (parts < 10)
-				replacement = Common::String::format("%d ", parts);
-			else
-				replacement = Common::String::format("%d", parts);
-			partsMsg.replace(pos, 2, replacement);
-		}
-		insertTemporaryMessage(partsMsg, _countdown - 2);
-	}
 
 	if (entranceID > 0)
 		traverseEntrance(entranceID);
@@ -1055,8 +1068,8 @@ void EclipseEngine::executePrint(FCLInstruction &instruction) {
 	}
 	Common::String message = _messagesList[index];
 	if (isEclipse2()) {
-		// Message 16 (1-based, index 15) contains "XX" placeholder for sphinx parts count.
-		// The original Z80 code at $22FC patches these bytes with the count from variable 0.
+		// Message 16 (1-based, index 15) contains the "NO. OF PARTS XX" placeholder.
+		// The original routine patches those two bytes immediately before drawing the string.
 		Common::String::size_type pos = message.find("XX");
 		if (pos != Common::String::npos) {
 			int parts = _gameStateVars[kVariableEclipse2SphinxParts];

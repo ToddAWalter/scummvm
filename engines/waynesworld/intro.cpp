@@ -52,10 +52,10 @@ void WaynesWorldEngine::runIntro() {
 }
 
 bool WaynesWorldEngine::introPt1() {
-	static int16 array1[] = {179, 179, 181, 183, 186, 189, 192, 198, 208, 212, 217, 223, 234, 233, 236, 240, 241, 238, 238, 238, 225, 218, 218, 192, 164, 133, 103, 87};
-	static int16 array2[] = {97, 97, 98, 98, 97, 96, 94, 91, 88, 85, 84, 82, 81, 78, 76, 76, 75, 74, 72, 72, 71, 69, 68, 68, 67, 67, 66, 68};
-	static int16 array3[] = {80, 80, 69, 37, 0, 0, 0, 0};
-	static int16 array4[] = {67, 67, 64, 54, 41, 27, 27, 27};
+	static const int16 array1[] = {179, 179, 181, 183, 186, 189, 192, 198, 208, 212, 217, 223, 234, 233, 236, 240, 241, 238, 238, 238, 225, 218, 218, 192, 164, 133, 103, 87};
+	static const int16 array2[] = {97, 97, 98, 98, 97, 96, 94, 91, 88, 85, 84, 82, 81, 78, 76, 76, 75, 74, 72, 72, 71, 69, 68, 68, 67, 67, 66, 68};
+	static const int16 array3[] = {80, 80, 69, 37, 0, 0, 0, 0};
+	static const int16 array4[] = {67, 67, 64, 54, 41, 27, 27, 27};
 
 	GxlArchive *oa2Gxl = new GxlArchive("oa2");
 	loadPalette(oa2Gxl, "paramnt.pcx");
@@ -289,9 +289,9 @@ bool WaynesWorldEngine::introPt3(bool flag) {
 	}
 
 	byte newColor[3] = {0, 0, 0};
-	static byte rArr[] = { 9,  9,  9,  9, 43, 43, 53, 63, 63, 63, 63, 63, 63, 63, 45, 28,  9,  9,  9};
-	static byte gArr[] = {33, 33, 40, 47, 47, 47, 47, 47, 35, 23,  0,  0,  0,  0,  0,  0,  0, 33, 33};
-	static byte bArr[] = {29, 20, 20, 20, 20,  0,  0,  0,  0,  0,  0, 23, 37, 50, 50, 50, 50, 50, 40};
+	static const byte rArr[] = { 9,  9,  9,  9, 43, 43, 53, 63, 63, 63, 63, 63, 63, 63, 45, 28,  9,  9,  9};
+	static const byte gArr[] = {33, 33, 40, 47, 47, 47, 47, 47, 35, 23,  0,  0,  0,  0,  0,  0,  0, 33, 33};
+	static const byte bArr[] = {29, 20, 20, 20, 20,  0,  0,  0,  0,  0,  0, 23, 37, 50, 50, 50, 50, 50, 40};
 
 	for (int i = 0; i < 32; ++i) {
 		const int index = (i % 19);
@@ -379,7 +379,7 @@ void WaynesWorldEngine::introPt6() {
 	GxlArchive *oa3Gxl = new GxlArchive("oa3");
 	for (int i = 0; i < 5; ++i) {
 		introPt6Surface[i] = new WWSurface(320, 200);
-		Common::String filename = Common::String::format("sign%d.pcx",  i);
+		Common::String filename = Common::String::format("sign%d.pcx", i);
 		drawImageToSurface(oa3Gxl, filename.c_str(), introPt6Surface[i], 0, 0);
 	}
 
@@ -411,9 +411,6 @@ void WaynesWorldEngine::introPt6() {
 			scrollSurface->copyRectToSurface((Graphics::Surface)*introPt6Surface[4], 0, 0, Common::Rect(0, 200 - i, 319, 200));
 			scrollSurface->copyRectToSurface((Graphics::Surface)*signBottomSurface, 0, i, Common::Rect(0, 0, 319, 200 - i));
 			_screen->drawSurface(scrollSurface, 0, 0);
-			if (_escPressed) {
-				break;
-			}
 		}
 	}
 
@@ -589,6 +586,7 @@ bool WaynesWorldEngine::introPt4_intro() {
 
 	return true;
 }
+
 bool WaynesWorldEngine::introPt4_displayCallInTime() {
 	WWSurface *pt4Sub3Surface1 = new WWSurface(178, 21);
 	WWSurface *pt4Sub3Surface2 = new WWSurface(178, 21);
@@ -617,6 +615,7 @@ bool WaynesWorldEngine::introPt4_displayCallInTime() {
 
 	return true;
 }
+
 bool WaynesWorldEngine::introPt4_caller1() {
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 15; ++j) {
@@ -756,6 +755,7 @@ bool WaynesWorldEngine::introPt4_caller1() {
 	}
 	return true;
 }
+
 bool WaynesWorldEngine::introPt4_caller2() {
 	for (int i = 0; i < 4; ++i) {
 		sub2FEFB(1, 0, 1, getRandom(3), getRandom(11), 2);
@@ -862,6 +862,7 @@ bool WaynesWorldEngine::introPt4_caller2() {
 	}
 	return true;
 }
+
 bool WaynesWorldEngine::introPt4_caller3() {
 	for (int i = 0; i < 5; ++i) {
 		sub2FEFB(1, 0, 1, getRandom(3), getRandom(11), 2);
