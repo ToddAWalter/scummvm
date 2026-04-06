@@ -355,7 +355,9 @@ void OSystem_3DS::setPalette(const byte *colors, uint start, uint num) {
 	assert(start + num <= 256);
 	memcpy(_palette + 3 * start, colors, 3 * num);
 	Graphics::convertPaletteToMap(_paletteMap + start, colors, num, _modeCLUT8.surfaceFormat);
-	_gameTextureDirty = true;
+
+	// Palette changes invalidate the entire surface
+	_dirtyRects.emplace_back(getWidth(), getHeight());
 }
 
 void OSystem_3DS::grabPalette(byte *colors, uint start, uint num) const {
@@ -385,6 +387,21 @@ static void copyRect555To5551(byte *dst, const byte *src, const uint dstPitch, c
 	}
 }
 
+void OSystem_3DS::fillScreen(uint32 col) {
+	fillScreen(Common::Rect(getWidth(), getHeight()), col);
+}
+
+void OSystem_3DS::fillScreen(const Common::Rect &r, uint32 col) {
+	if (_pfGame == _gameTopTexture.format) {
+		_gameTopTexture.fillRect(r, col);
+		_gameTopTexture.markDirty();
+		return;
+	}
+
+	_gameScreen.fillRect(r, col);
+	_dirtyRects.push_back(r);
+}
+
 void OSystem_3DS::copyRectToScreen(const void *buf, int pitch, int x,
 								   int y, int w, int h) {
 	if (_pfGame == _gameTopTexture.format) {
@@ -394,41 +411,29 @@ void OSystem_3DS::copyRectToScreen(const void *buf, int pitch, int x,
 	}
 
 	_gameScreen.copyRectToSurface(buf, pitch, x, y, w, h);
-
-	if (_pfGame == Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0)) {
-		byte *dst = (byte *)_gameTopTexture.getBasePtr(x, y);
-		copyRect555To5551(dst, (const byte *)buf, _gameTopTexture.pitch, pitch, w, h);
-	} else if (_gfxState.gfxMode == &_modeCLUT8) {
-		byte *dst = (byte *)_gameTopTexture.getBasePtr(x, y);
-		Graphics::crossBlitMap(dst, (const byte *)buf, _gameTopTexture.pitch, pitch,
-			w, h, _gameTopTexture.format.bytesPerPixel, _paletteMap);
-	} else {
-		byte *dst = (byte *)_gameTopTexture.getBasePtr(x, y);
-		Graphics::crossBlit(dst, (const byte *)buf, _gameTopTexture.pitch, pitch,
-			w, h, _gameTopTexture.format, _pfGame);
-	}
-
-	_gameTopTexture.markDirty();
+	_dirtyRects.emplace_back(x, y, x + w, y + h);
 }
 
 void OSystem_3DS::flushGameScreen() {
-	if (_pfGame == _gameTopTexture.format) {
+	if (_pfGame == _gameTopTexture.format)
 		return;
-	} else if (_pfGame == Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0)) {
-		const byte *src = (const byte *)_gameScreen.getPixels();
-		byte *dst = (byte *)_gameTopTexture.getPixels();
-		copyRect555To5551(dst, src, _gameTopTexture.pitch, _gameScreen.pitch,
-			_gameScreen.w, _gameScreen.h);
-	} else if (_gfxState.gfxMode == &_modeCLUT8) {
-		const byte *src = (const byte *)_gameScreen.getPixels();
-		byte *dst = (byte *)_gameTopTexture.getPixels();
-		Graphics::crossBlitMap(dst, src, _gameTopTexture.pitch, _gameScreen.pitch,
-			_gameScreen.w, _gameScreen.h, _gameTopTexture.format.bytesPerPixel, _paletteMap);
-	} else {
-		const byte *src = (const byte *)_gameScreen.getPixels();
-		byte *dst = (byte *)_gameTopTexture.getPixels();
-		Graphics::crossBlit(dst, src, _gameTopTexture.pitch, _gameScreen.pitch,
-			_gameScreen.w, _gameScreen.h, _gameTopTexture.format, _pfGame);
+
+	_dirtyRects.merge();
+
+	for (const Common::Rect &r : _dirtyRects) {
+		const byte *src = (const byte *)_gameScreen.getBasePtr(r.left, r.top);
+		byte *dst = (byte *)_gameTopTexture.getBasePtr(r.left, r.top);
+
+		if (_pfGame == Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0)) {
+			copyRect555To5551(dst, src, _gameTopTexture.pitch, _gameScreen.pitch,
+				r.width(), r.height());
+		} else if (_gfxState.gfxMode == &_modeCLUT8) {
+			Graphics::crossBlitMap(dst, src, _gameTopTexture.pitch, _gameScreen.pitch,
+				r.width(), r.height(), _gameTopTexture.format.bytesPerPixel, _paletteMap);
+		} else {
+			Graphics::crossBlit(dst, src, _gameTopTexture.pitch, _gameScreen.pitch,
+				r.width(), r.height(), _gameTopTexture.format, _pfGame);
+		}
 	}
 
 	_gameTopTexture.markDirty();
@@ -445,7 +450,7 @@ void OSystem_3DS::unlockScreen() {
 	if (_pfGame == _gameTopTexture.format)
 		_gameTopTexture.markDirty();
 	else
-		_gameTextureDirty = true;
+		_dirtyRects.emplace_back(getWidth(), getHeight());
 }
 
 void OSystem_3DS::updateScreen() {
@@ -453,9 +458,9 @@ void OSystem_3DS::updateScreen() {
 		return;
 	}
 
-	if (_gameTextureDirty) {
+	if (!_dirtyRects.empty()) {
 		flushGameScreen();
-		_gameTextureDirty = false;
+		_dirtyRects.clear();
 	}
 
 // 	updateFocus();

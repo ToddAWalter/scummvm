@@ -25,6 +25,7 @@
 #define FORBIDDEN_SYMBOL_EXCEPTION_time_h
 
 #include "backends/base-backend.h"
+#include "graphics/dirtyrects.h"
 #include "graphics/paletteman.h"
 #include "base/main.h"
 #include "audio/mixer_intern.h"
@@ -159,6 +160,8 @@ public:
 	                      int h);
 	Graphics::Surface *lockScreen();
 	void unlockScreen();
+	void fillScreen(uint32 col);
+	void fillScreen(const Common::Rect &r, uint32 col);
 	void updateScreen();
 	void setShakePos(int shakeXOffset, int shakeYOffset);
 	void setFocusRectangle(const Common::Rect &rect);
@@ -236,7 +239,7 @@ private:
 	uint32 _paletteMap[256];
 
 	Graphics::Surface _gameScreen;
-	bool _gameTextureDirty;
+	Graphics::DirtyRectList _dirtyRects;
 	Sprite _gameTopTexture;
 	Sprite _gameBottomTexture;
 	Sprite _overlay;
