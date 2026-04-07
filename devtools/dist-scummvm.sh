@@ -32,11 +32,12 @@ toolsrepo='https://github.com/scummvm/scummvm-tools.git'
 ### init
 
 if [ $# -lt 2 ]; then
-  echo "Usage: $0 <scummvm | scummvm-tools> <version-number> [<temporary-directory> [<tag>]]"
+  echo "Usage: $0 <scummvm | scummvm-tools> <version-number> [<absolute-path-to-temporary-directory>] [<tag>]"
   exit 1
 fi
 
 echo_n() {
+	# shellcheck disable=SC2059
 	printf "$@"
 }
 
@@ -91,7 +92,7 @@ cd $tmpdir/$fullname
 echo_n "Create GIT bundle for $tag..."
 git reset $tag --hard --quiet
 if git bundle create $tag.bundle --all --quiet 2>/dev/null; then
-    mv $tag.bundle $tmpdir/$fullname.bundle && echo done
+    mv $tag.bundle $tmpdir/$fullname.bundle && echo "done"
 else
     echo "creating bundle for $tag failed."
     exit 1
@@ -99,7 +100,7 @@ fi
 
 echo_n "Checking out tag $tag..."
 if git checkout $tag --quiet 2>/dev/null; then
-    echo done
+    echo "done"
 else
     echo "checking out tag $tag failed."
     exit 1
