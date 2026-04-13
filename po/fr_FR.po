@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-04-10 19:13+0000\n"
-"PO-Revision-Date: 2026-04-09 23:22+0000\n"
-"Last-Translator: Purple T <ZEONK@hotmail.com>\n"
+"POT-Creation-Date: 2026-04-12 17:14+0000\n"
+"PO-Revision-Date: 2026-04-12 18:52+0000\n"
+"Last-Translator: Le Philousophe <lephilousophe@gmail.com>\n"
 "Language-Team: French <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/fr/>\n"
 "Language: fr_FR\n"
@@ -24,39 +24,45 @@ msgstr ""
 msgid "Apple Macintosh Audio"
 msgstr "Audio Apple Macintosh"
 
+#. I18N: built with <compiler>
+#: gui/about.cpp:113
+#, c-format
+msgid "(built with %s)"
+msgstr "(compilé avec %s)"
+
 #. I18N: built on <build date> with <compiler>
-#: gui/about.cpp:112
+#: gui/about.cpp:116
 #, c-format
 msgid "(built on %s with %s)"
 msgstr "(compilé le %s avec %s)"
 
-#: gui/about.cpp:119
+#: gui/about.cpp:124
 msgid "Features compiled in:"
 msgstr "Options incluses :"
 
-#: gui/about.cpp:127
+#: gui/about.cpp:132
 msgid "not supported"
 msgstr "non pris en charge"
 
-#: gui/about.cpp:127
+#: gui/about.cpp:132
 msgid "disabled"
 msgstr "désactivé"
 
-#: gui/about.cpp:127
+#: gui/about.cpp:132
 msgid "enabled"
 msgstr "activé"
 
 #. I18N: CPU extensions are sets of extra processor instructions used to speed up operations. See Intel AVX2, ARM NEON, etc.
-#: gui/about.cpp:151
+#: gui/about.cpp:156
 msgid "CPU extensions support:"
 msgstr "Prise en charge des extensions CPU :"
 
-#: gui/about.cpp:164
+#: gui/about.cpp:169
 msgid "Available engines:"
 msgstr "Moteurs disponibles :"
 
 #. I18N: Close dialog button
-#: gui/about.cpp:506 gui/about.cpp:635 gui/downloadpacksdialog.cpp:298
+#: gui/about.cpp:511 gui/about.cpp:640 gui/downloadpacksdialog.cpp:298
 #: gui/downloadpacksdialog.cpp:389 gui/integrity-dialog.cpp:354
 #: gui/gui-manager.cpp:168 gui/helpdialog.cpp:128 gui/imagealbum-dialog.cpp:133
 #: gui/textviewer.cpp:56 gui/unknown-game-dialog.cpp:53
@@ -1976,7 +1982,7 @@ msgstr "Moteur de rendu 3D :"
 msgid "3D Anti-aliasing:"
 msgstr "Anti-crénelage 3D :"
 
-#: gui/options.cpp:1731 engines/mohawk/dialogs.cpp:364
+#: gui/options.cpp:1731
 msgid "Disabled"
 msgstr "Désactivé"
 
@@ -5032,12 +5038,12 @@ msgstr "Mode Loupe désactivé. Réactivation du Mode Déplacement..."
 msgid "Magnify Mode Off"
 msgstr "Mode Loupe désactivé"
 
-#: backends/platform/android/android.cpp:1076
-#: backends/platform/ios7/ios7_osys_misc.mm:249
+#: backends/platform/android/android.cpp:930
+#: backends/platform/ios7/ios7_osys_misc.mm:246
 msgid "Getting help"
 msgstr "Obtenir de l'aide"
 
-#: backends/platform/android/android.cpp:1079
+#: backends/platform/android/android.cpp:933
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -5080,13 +5086,13 @@ msgstr ""
 "vous êtes bloqué au cours d'une partie, pensez à consulter un guide de jeu. "
 "Bonne chance !\n"
 
-#: backends/platform/android/android.cpp:1088
-#: backends/platform/ios7/ios7_osys_misc.mm:261
-#: backends/platform/ios7/ios7_osys_misc.mm:357
+#: backends/platform/android/android.cpp:942
+#: backends/platform/ios7/ios7_osys_misc.mm:258
+#: backends/platform/ios7/ios7_osys_misc.mm:354
 msgid "Touch Controls"
 msgstr "Contrôles tactiles"
 
-#: backends/platform/android/android.cpp:1091
+#: backends/platform/android/android.cpp:945
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -5225,13 +5231,13 @@ msgstr ""
 "  ![Icône Clavier](keyboard.png \"Icône Clavier\"){w=10em}\n"
 "\n"
 
-#: backends/platform/android/android.cpp:1147
-#: backends/platform/ios7/ios7_osys_misc.mm:336
-#: backends/platform/ios7/ios7_osys_misc.mm:380
+#: backends/platform/android/android.cpp:1001
+#: backends/platform/ios7/ios7_osys_misc.mm:333
+#: backends/platform/ios7/ios7_osys_misc.mm:377
 msgid "Adding Games"
 msgstr "Ajouter des jeux"
 
-#: backends/platform/android/android.cpp:1150
+#: backends/platform/android/android.cpp:1004
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -5503,7 +5509,7 @@ msgstr "Utiliser une configuration minimale de manette"
 msgid "Show keyboard function bar"
 msgstr "Afficher la barre de fonctions du clavier"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:252
+#: backends/platform/ios7/ios7_osys_misc.mm:249
 msgid ""
 "## Help, I'm lost!\n"
 "\n"
@@ -5542,7 +5548,7 @@ msgstr ""
 "vous êtes bloqué au cours d'une partie, pensez à consulter un guide de jeu. "
 "Bonne chance !\n"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:264
+#: backends/platform/ios7/ios7_osys_misc.mm:261
 msgid ""
 "## Touch control modes\n"
 "The touch control mode can be changed by tapping or clicking on the "
@@ -5695,11 +5701,11 @@ msgstr ""
 "  ![Icône Clavier](keyboard.png \"Icône Clavier\"){w=10em}\n"
 "\n"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:314
+#: backends/platform/ios7/ios7_osys_misc.mm:311
 msgid "External keyboard"
 msgstr "Clavier externe"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:317
+#: backends/platform/ios7/ios7_osys_misc.mm:314
 msgid ""
 "## Use of keyboard\n"
 "External keyboards are supported and from iOS 13.4 most of the special keys, "
@@ -5746,7 +5752,7 @@ msgstr ""
 "| `CMD + DROITE`         | FIN               \n"
 "\n"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:339
+#: backends/platform/ios7/ios7_osys_misc.mm:336
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -5784,7 +5790,7 @@ msgstr ""
 "Consultez notre [documentation iOS](https://docs.scummvm.org/en/latest/"
 "other_platforms/ios.html) pour plus d'informations.\n"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:360
+#: backends/platform/ios7/ios7_osys_misc.mm:357
 msgid ""
 "## Touch actions \n"
 "\n"
@@ -5825,7 +5831,7 @@ msgstr ""
 "touche Retour/Menu.\n"
 "\n"
 
-#: backends/platform/ios7/ios7_osys_misc.mm:383
+#: backends/platform/ios7/ios7_osys_misc.mm:380
 msgid ""
 "## Adding Games \n"
 "\n"
@@ -9579,18 +9585,26 @@ msgstr "Guillemets typographiques :"
 msgid "Choose typographic quotes"
 msgstr "Choisit le style des guillemets"
 
-#: engines/glk/dialogs.cpp:307 engines/glk/dialogs.cpp:320
-#: engines/glk/dialogs.cpp:332
+#: engines/glk/dialogs.cpp:307
+#, fuzzy
+#| msgid "Off"
+msgctxt "quotes"
 msgid "Off"
 msgstr "Sans"
 
 #. I18N: This is a setting for using normal typographic quotes, which are like in most books, with the opening quote higher than the closing one
-#: engines/glk/dialogs.cpp:309 engines/mohawk/dialogs.cpp:366
+#: engines/glk/dialogs.cpp:309
+#, fuzzy
+#| msgid "Normal"
+msgctxt "quotes"
 msgid "Normal"
 msgstr "Normal"
 
 #. I18N: This is a setting for using "rabid" quotes, which are like normal typographic quotes but with the opening quote lower than the closing one, like in some comic books
 #: engines/glk/dialogs.cpp:311
+#, fuzzy
+#| msgid "Rabid"
+msgctxt "quotes"
 msgid "Rabid"
 msgstr "Retourné"
 
@@ -9612,6 +9626,10 @@ msgstr "Tirets :"
 #: engines/glk/dialogs.cpp:319
 msgid "Types of dashes"
 msgstr "Types de tirets"
+
+#: engines/glk/dialogs.cpp:320 engines/glk/dialogs.cpp:332
+msgid "Off"
+msgstr "Sans"
 
 #. I18N: This is a setting for using normal typographic dashes, which are like in most books, with the em dash being the longest and the en dash being half of it
 #: engines/glk/dialogs.cpp:322
@@ -11346,11 +11364,31 @@ msgstr ""
 "Règle la vitesse des transitions entre écrans. Désactiver les transitions "
 "vous permet de naviguer dans le jeu plus rapidement."
 
+#: engines/mohawk/dialogs.cpp:364
+#, fuzzy
+#| msgid "Disabled"
+msgctxt "riven-transition"
+msgid "Disabled"
+msgstr "Désactivé"
+
 #: engines/mohawk/dialogs.cpp:365
+#, fuzzy
+#| msgid "Fastest"
+msgctxt "riven-transition"
 msgid "Fastest"
 msgstr "Rapide"
 
-#: engines/mohawk/dialogs.cpp:367 engines/scumm/dialogs.cpp:1582
+#: engines/mohawk/dialogs.cpp:366
+#, fuzzy
+#| msgid "Normal"
+msgctxt "riven-transition"
+msgid "Normal"
+msgstr "Normal"
+
+#: engines/mohawk/dialogs.cpp:367
+#, fuzzy
+#| msgid "Best"
+msgctxt "riven-transition"
 msgid "Best"
 msgstr "Meilleur"
 
@@ -12854,6 +12892,10 @@ msgstr "Bonne"
 #: engines/scumm/dialogs.cpp:1582
 msgid "Better"
 msgstr "Meilleure"
+
+#: engines/scumm/dialogs.cpp:1582
+msgid "Best"
+msgstr "Meilleur"
 
 #: engines/scumm/dialogs.cpp:1583
 #, c-format
