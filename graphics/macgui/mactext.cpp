@@ -487,7 +487,8 @@ void MacText::getChunkPosFromIndex(int index, uint &lineNum, uint &chunkNum, uin
 	}
 	for (uint i = 0; i < _canvas._text.size(); i++) {
 		if (_canvas.getLineCharWidth(i) <= index) {
-			index -= _canvas.getLineCharWidth(i);
+			// include carriage return
+			index -= _canvas.getLineCharWidth(i) + 1;
 		} else {
 			lineNum = i;
 			chunkNum = _canvas._text[i].getChunkNum(&index);
@@ -1676,7 +1677,7 @@ int MacText::getMouseWord(int x, int y) {
 	y += _scrollPos;
 
 	int dx, dy, row, col;
-	getLineCharacter(x, y, &dx, &dy, &row, &col);
+	getRowCol(x, y, &dx, &dy, &row, &col);
 
 	int index = 1;
 	bool inWhitespace = true;
@@ -1748,7 +1749,7 @@ int MacText::getMouseItem(int x, int y) {
 	y += _scrollPos;
 
 	int dx, dy, row, col;
-	getLineCharacter(x, y, &dx, &dy, &row, &col);
+	getRowCol(x, y, &dx, &dy, &row, &col);
 
 	// getMouseItem
 	// - starts from index 1
