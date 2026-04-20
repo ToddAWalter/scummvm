@@ -19,24 +19,28 @@
  *
  */
 
-#ifndef PLATFORM_ATARI_DEBUG_H
-#define PLATFORM_ATARI_DEBUG_H
+/*
+ * This code is based on the original source code of Lord Avalot d'Argent version 1.3.
+ * Copyright (c) 1994-1995 Mike: Mark and Thomas Thurman.
+ */
 
-#include "common/debug.h"
-#include "common/str.h"
-#include "common/system.h"
-#include "common/textconsole.h"
+#ifndef AVALANCHE_OUTRO_H
+#define AVALANCHE_OUTRO_H
 
-#ifdef DISABLE_TEXT_CONSOLE
+namespace Avalanche {
 
-void atari_debug(const char *s, ...);
-#define atari_warning atari_debug
+    class AvalancheEngine;
 
-#else
+    class Outro {
+    public:
+        Outro(AvalancheEngine *vm);
+        virtual ~Outro() {}
+        void run();
 
-#define atari_debug debug
-#define atari_warning warning
+    private:
+        AvalancheEngine *_vm;
+    };
 
-#endif
+} // End of namespace Avalanche
 
-#endif
+#endif // AVALANCHE_OUTRO_H
