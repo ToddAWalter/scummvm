@@ -99,7 +99,7 @@ int kernel_screen_fade   = 0;
 
 Animation kernel_anim[KERNEL_MAX_ANIMATIONS];
 
-ShadowList kernel_shadow_main  = { 0 };
+ShadowList kernel_shadow_main = { 0, { 0 } };
 ShadowList kernel_shadow_inter = { 1, { 15 } };
 
 int kernel_ok_to_fail_load = false;
@@ -152,8 +152,6 @@ int random_message_color;               /* Color scheme for message   */
 int random_message_duration;            /* Duration of messages       */
 
 char kernel_interface_loaded[40] = "";
-
-static char digital_name[12] = "digital.aga";
 
 
 static void kernel_seq_image(SequencePtr sequence, ImagePtr image, int sequence_id);
@@ -871,18 +869,6 @@ int kernel_seq_forward(int series_id, int mirror, word ticks, word interval_tick
 		start_ticks, expire));
 }
 
-int kernel_seq_forward_scroll(int series_id, int mirror, word ticks, word interval_ticks,
-		word start_ticks, int expire) {
-	int depth = 0;
-	SpritePtr sprite;
-
-	sprite = &series_list[series_id]->index[0];
-
-	return (kernel_seq_add(series_id, mirror, 1, 0, 0, AA_LINEAR, 1,
-		depth, 100, true, 0, 0, ticks, interval_ticks,
-		start_ticks, expire));
-}
-
 int kernel_seq_pingpong(int series_id, int mirror,
 	word ticks, word interval_ticks,
 	word start_ticks,
@@ -899,20 +885,6 @@ int kernel_seq_pingpong(int series_id, int mirror,
 	return (kernel_seq_add(series_id, mirror, 1, 0, 0, AA_PINGPONG, 1,
 		depth, 100, true, 0, 0, ticks, interval_ticks,
 		start_ticks, expire));
-}
-
-int kernel_seq_pingpong_scroll(int series_id, int mirror,
-	word ticks, word interval_ticks,
-	word start_ticks,
-	int expire) {
-	int depth = 0;
-	SpritePtr sprite;
-
-	sprite = &series_list[series_id]->index[0];
-
-	return kernel_seq_add(series_id, mirror, 1, 0, 0, AA_PINGPONG, 1,
-		depth, 100, true, 0, 0, ticks, interval_ticks,
-		start_ticks, expire);
 }
 
 int kernel_seq_backward(int series_id, int mirror, word ticks, word interval_ticks,
@@ -1066,17 +1038,6 @@ int kernel_seq_stamp(int series_id, int mirror, int sprite) {
 	return (id);
 }
 
-int kernel_seq_stamp_scroll(int series_id, int mirror, int sprite) {
-	int id;
-
-	id = kernel_seq_forward_scroll(series_id, mirror, 32767, 0, 0, 0);
-	if (id >= 0) {
-		kernel_seq_range(id, sprite, sprite);
-		sequence_list[id].loop_direction = AA_STAMP;
-	}
-	return (id);
-}
-
 int kernel_seq_trigger(int sequence_id,
 	int trigger_type,
 	int trigger_sprite,
@@ -1188,16 +1149,22 @@ void kernel_seq_correction(long old_clock, long new_clock) {
 void kernel_draw_to_background(int series_id, int sprite_id,
 	int x, int y,
 	int depth, int scale) {
+
+	// WORKAROUND: In the ROTP mask puzzle room, the x/y are passed
+	// as KERNEL_HOME, but sprite_id == KERNEL_LAST, which is negative
+	int sprite_index = (sprite_id != KERNEL_LAST) ? sprite_id :
+		series_list[series_id]->num_sprites;
+
 	if (x == KERNEL_HOME) {
-		x = series_list[series_id]->index[sprite_id - 1].x;
+		x = series_list[series_id]->index[sprite_index - 1].x;
 	}
 
 	if (y == KERNEL_HOME) {
-		y = series_list[series_id]->index[sprite_id - 1].y;
+		y = series_list[series_id]->index[sprite_index - 1].y;
 	}
 
 	sprite_draw_3d_scaled_big(series_list[series_id],
-		sprite_id,
+		sprite_index,
 		&scr_orig, &scr_depth,
 		x - picture_map.pan_base_x,
 		y - picture_map.pan_base_y,
@@ -1441,7 +1408,6 @@ void kernel_animation_init() {
 }
 
 int kernel_run_animation(const char *name, int trigger_code) {
-	int result = -1;
 	int found = -1;
 	int error_flag = true;
 	int count;
@@ -1520,7 +1486,6 @@ int kernel_run_animation(const char *name, int trigger_code) {
 	}
 
 	error_flag = false;
-	result = found;
 
 	kernel_anim[found].last_frame = -1;
 
@@ -1815,7 +1780,7 @@ static void kernel_process_animation(int handle, int asynchronous) {
 	}
 
 	for (count = 0; count < kernel_anim[handle].anim->num_speech; count++) {
-		if ((int)(kernel_anim[handle].anim->speech[count].flags) >= 0) {
+		if ((int16)(kernel_anim[handle].anim->speech[count].flags) >= 0) {
 			if ((kernel_anim[handle].frame < kernel_anim[handle].anim->speech[count].first_frame) ||
 				(kernel_anim[handle].frame > kernel_anim[handle].anim->speech[count].last_frame)) {
 				kernel_message_delete(kernel_anim[handle].anim->speech[count].flags);
@@ -1959,7 +1924,7 @@ void kernel_abort_animation(int handle) {
 		}
 
 		for (count = 0; count < kernel_anim[handle].anim->num_speech; count++) {
-			if ((int)(kernel_anim[handle].anim->speech[count].flags) >= 0) {
+			if ((int16)(kernel_anim[handle].anim->speech[count].flags) >= 0) {
 				kernel_message_delete(kernel_anim[handle].anim->speech[count].flags);
 			}
 		}
