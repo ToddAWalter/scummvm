@@ -195,6 +195,7 @@ void GridItemWidget::handleMouseWheel(int x, int y, int direction) {
 void GridItemWidget::handleMouseEntered(int button) {
 	if (!_isHighlighted) {
 		_isHighlighted = true;
+		_grid->_highlightedItem = this;
 		markAsDirty();
 	}
 }
@@ -202,6 +203,8 @@ void GridItemWidget::handleMouseEntered(int button) {
 void GridItemWidget::handleMouseLeft(int button) {
 	if (_isHighlighted) {
 		_isHighlighted = false;
+		if (_grid->_highlightedItem == this)
+			_grid->_highlightedItem = nullptr;
 		markAsDirty();
 	}
 }
@@ -267,13 +270,14 @@ void GridWidget::loadClosedGroups(const Common::U32String &groupName) {
 	// Recalls what groups were closed from the config
 	if (ConfMan.hasKey("group_" + groupName, ConfMan.kApplicationDomain)) {
 		const Common::String &val = ConfMan.get("group_" + groupName, ConfMan.kApplicationDomain);
-		Common::StringTokenizer hiddenGroups(val);
+		Common::U32StringTokenizer hiddenGroups(val.decode());
 
-		for (Common::String tok = hiddenGroups.nextToken(); tok.size(); tok = hiddenGroups.nextToken()) {
+		for (Common::U32String tok = hiddenGroups.nextToken(); tok.size(); tok = hiddenGroups.nextToken()) {
 			// See if the hidden group is in our group headers still, if so, hide it
 			for (Common::U32StringArray::size_type i = 0; i < _groupHeaders.size(); ++i) {
-				if (_groupHeaders[i] == tok || (tok == "unnamed" && _groupHeaders[i].size() == 0)) {
-					_groupExpanded[i] = false;
+				if (_groupHeaders[i] == tok || (tok == U"unnamed" && _groupHeaders[i].size() == 0)) {
+					uint groupID = _groupValueIndex[_groupHeaders[i]];
+					_groupExpanded[groupID] = false;
 					break;
 				}
 			}
@@ -288,7 +292,8 @@ void GridWidget::saveClosedGroups(const Common::U32String &groupName) {
 	// Save the hidden groups to the config
 	Common::String hiddenGroups;
 	for (Common::U32StringArray::size_type i = 0; i < _groupHeaders.size(); ++i) {
-		if (!_groupExpanded[i]) {
+		uint groupID = _groupValueIndex[_groupHeaders[i]];
+		if (!_groupExpanded[groupID]) {
 			if (_groupHeaders[i].size()) {
 				hiddenGroups += _groupHeaders[i];
 			} else {
@@ -312,7 +317,7 @@ void GridItemWidget::handleMouseUp(int x, int y, int button, int clickCount) {
 #pragma mark -
 
 GridItemTray::GridItemTray(GuiObject *boss, int x, int y, int w, int h, int entryID, GridWidget *grid)
-	: Dialog(x, y, w, h), CommandSender(boss) {
+	: Dialog(x, y, w, h), CommandSender(boss), _mouseOutside(false) {
 
 	_entryID = entryID;
 	_boss = boss;
@@ -388,12 +393,23 @@ void GridItemTray::handleMouseWheel(int x, int y, int direction) {
 	close();
 }
 
+void GridItemTray::receivedFocus(int x, int y) {
+	// Don't call our handleMouseMoved when receiving focus
+	// to avoid spurious closing if the cursor is outside of the tray
+	if (x >= 0 && y >= 0) {
+		Dialog::handleMouseMoved(x, y, 0);
+		_mouseOutside = ((x < 0 || x > _w) || (y > _h || y < -(_grid->_gridItemHeight)));
+	}
+}
+
 void GridItemTray::handleMouseMoved(int x, int y, int button) {
 	Dialog::handleMouseMoved(x, y, button);
-	if ((x < 0 || x > _w) || (y > _h || y < -(_grid->_gridItemHeight))) {
+	bool mouseOutside = (x < 0 || x > _w) || (y > _h || y < -(_grid->_gridItemHeight));
+	if (mouseOutside && !_mouseOutside) {
 		// Close on going outside
 		close();
 	}
+	_mouseOutside = mouseOutside;
 }
 
 #pragma mark -
@@ -523,6 +539,7 @@ GridWidget::GridWidget(GuiObject *boss, const Common::String &name)
 	_dragLastY = 0;
 
 	_fluidScroller = new FluidScroller();
+	_wasAnimating = false;
 
 	_filterMatcher = GridWidgetDefaultMatcher;
 	_filterMatcherArg = nullptr;
@@ -637,7 +654,10 @@ void GridWidget::sortGroups() {
 
 	if (_filter.empty()) {
 		// No filter -> display everything with group headers
-		Common::sort(_groupHeaders.begin(), _groupHeaders.end());
+		Common::sort(_groupHeaders.begin(), _groupHeaders.end(),
+			[](const Common::U32String &first, const Common::U32String &second) {
+				return first.empty() ? 0 : second.empty() ? 1 : first < second;
+			});
 
 		// Avoid reallocation during iteration: that would invalidate our _sortedEntryList items
 		_headerEntryList.reserve(_groupHeaders.size());
@@ -737,7 +757,7 @@ bool GridWidget::calcVisibleEntries() {
 	bool needsReload = false;
 
 	int nFirstVisibleItem = 0, nLastVisibleItem = 0;
-	int temp = lastItemBeforeY(_sortedEntryList, _scrollPos);
+	int temp = lastItemBeforeY(_sortedEntryList, (int)_scrollPos);
 	nFirstVisibleItem = temp;
 	// We want the leftmost item from the topmost visible row, so we traverse backwards
 	while ((nFirstVisibleItem >= 0) &&
@@ -747,7 +767,7 @@ bool GridWidget::calcVisibleEntries() {
 	nFirstVisibleItem++;
 	nFirstVisibleItem = (nFirstVisibleItem < 0) ? 0 : nFirstVisibleItem;
 
-	nLastVisibleItem = lastItemBeforeY(_sortedEntryList, _scrollPos + _scrollWindowHeight);
+	nLastVisibleItem = lastItemBeforeY(_sortedEntryList, (int)_scrollPos + _scrollWindowHeight);
 	nLastVisibleItem = (nLastVisibleItem < 0) ? 0 : nLastVisibleItem;
 
 	if ((nFirstVisibleItem != _firstVisibleItem) || (nLastVisibleItem != _lastVisibleItem) || (_isGridInvalid)) {
@@ -886,10 +906,10 @@ void GridWidget::scrollToEntry(int id, bool forceToTop) {
 			if (forceToTop) {
 				newScrollPos = _sortedEntryList[i]->y + _scrollWindowPaddingY + _gridYSpacing;
 			} else {
-				if (_sortedEntryList[i]->y < _scrollPos) {
+				if (_sortedEntryList[i]->y < (int)_scrollPos) {
 					// Item is above the visible view
 					newScrollPos = _sortedEntryList[i]->y - _scrollWindowPaddingY - _gridYSpacing;
-				} else if (_sortedEntryList[i]->y > _scrollPos + _scrollWindowHeight - _gridItemHeight - _trayHeight) {
+				} else if (_sortedEntryList[i]->y > (int)_scrollPos + _scrollWindowHeight - _gridItemHeight - _trayHeight) {
 					// Item is below the visible view
 					newScrollPos = _sortedEntryList[i]->y - _scrollWindowHeight + _gridItemHeight + _trayHeight;
 				} else {
@@ -937,7 +957,7 @@ void GridWidget::assignEntriesToItems() {
 			item->setVisible(true);
 			GridItemInfo *entry = _visibleEntryList[k];
 			item->setActiveEntry(*entry);
-			item->setPos(entry->x, entry->y - _scrollPos);
+			item->setPos(entry->x, entry->y - (int)_scrollPos);
 			item->setSize(entry->w, entry->h);
 			item->update();
 		}
@@ -1012,6 +1032,9 @@ void GridWidget::selectVisualRange(int startPos, int endPos) {
 }
 
 void GridWidget::handleMouseWheel(int x, int y, int direction) {
+	if (!_scrollBar->isVisible())
+		return;
+
 	_fluidScroller->handleMouseWheel(direction);
 }
 
@@ -1024,6 +1047,7 @@ void GridWidget::handleMouseDown(int x, int y, int button, int clickCount) {
 		_dragLastY = y;
 	}
 	_selectionPending = true;
+	_wasAnimating = _fluidScroller->isAnimating();
 	_fluidScroller->stopAnimation();
 }
 
@@ -1035,7 +1059,7 @@ void GridWidget::handleMouseUp(int x, int y, int button, int clickCount) {
 	_isDragging = false;
 	_selectionPending = false;
 
-	if (wasPending && !wasDragging) {
+	if (wasPending && !wasDragging && !_wasAnimating) {
 		// Find which item was clicked and select it
 		Widget *w = findWidget(x, y);
 		if (w && w != this && w->getType() == kContainerWidget)
@@ -1044,10 +1068,11 @@ void GridWidget::handleMouseUp(int x, int y, int button, int clickCount) {
 
 	if (wasDragging)
 		_fluidScroller->startFling();
+	_wasAnimating = false;
 }
 
 void GridWidget::handleMouseMoved(int x, int y, int button) {
-	if (!_isMouseDown)
+	if (!_isMouseDown || !_scrollBar->isVisible())
 		return;
 
 	if (!_isDragging && ABS(y - _dragStartY) > kDragThreshold) {
@@ -1073,6 +1098,9 @@ void GridWidget::applyScrollPos() {
 
 	assignEntriesToItems();
 	scrollBarRecalc();	
+	markAsDirty();
+	if (_highlightedItem)
+		_highlightedItem->handleMouseLeft(0);
 	g_gui.scheduleTopDialogRedraw();
 }
 
@@ -1089,12 +1117,18 @@ bool GridWidget::handleKeyUp(Common::KeyState state) {
 	return false;
 }
 
+void GridWidget::lostFocusWidget() {
+	_isMouseDown = _isDragging = false;
+	_dragStartY = _dragLastY = 0;
+	_wasAnimating = false;
+}
+
 void GridWidget::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
 	// Work in progress
 	switch (cmd) {
 	case kSetPositionCmd:
-		if (_scrollPos != (float)data) {
-			_scrollPos = (float)data;
+		if ((int)_scrollPos != (int)data) {
+			_scrollPos = data;
 			_fluidScroller->stopAnimation();
 			_scrollPos = _fluidScroller->setPosition(_scrollPos, false);
 
@@ -1272,7 +1306,7 @@ void GridWidget::reflowLayout() {
 
 void GridWidget::openTrayAtSelected() {
 	if (_selectedEntry) {
-		GridItemTray *tray = new GridItemTray(this, _x + _selectedEntry->x - _gridXSpacing / 3, _y + _selectedEntry->y + _selectedEntry->h - _scrollPos,
+		GridItemTray *tray = new GridItemTray(this, _x + _selectedEntry->x - _gridXSpacing / 3, _y + _selectedEntry->y + _selectedEntry->h - (int)_scrollPos,
 								_gridItemWidth + 2 * (_gridXSpacing / 3), _trayHeight, _selectedEntry->entryID, this);
 		tray->enableLoadButton(_selectedEntry->canLoadGame);
 
@@ -1304,7 +1338,7 @@ void GridWidget::setFilter(const Common::U32String &filter) {
 	_filter = filt;
 
 	// Reset the scrollbar and deselect everything if filter has changed
-	_scrollPos = 0;
+	_scrollPos = 0.f;
 	_selectedEntry = nullptr;
 
 	sortGroups();

@@ -83,6 +83,7 @@ ListWidget::ListWidget(Dialog *boss, const Common::String &name, const Common::U
 
 	_scrollPos = 0.0f;
 	_fluidScroller = new FluidScroller();
+	_wasAnimating = false;
 	_isMouseDown = false;
 	_isDragging = false;
 	_dragStartY = _dragLastY = 0;
@@ -136,6 +137,7 @@ ListWidget::ListWidget(Dialog *boss, int x, int y, int w, int h, bool scale, con
 
 	_scrollPos = 0.0f;
 	_fluidScroller = new FluidScroller();
+	_wasAnimating = false;
 	_isMouseDown = false;
 	_isDragging = false;
 	_dragStartY = _dragLastY = 0;
@@ -290,6 +292,8 @@ void ListWidget::setList(const Common::U32StringArray &list) {
 		_currentPos = size - 1;
 	if (_currentPos < 0)
 		_currentPos = 0;
+	_scrollPos = (float)_currentPos * (kLineHeight + _itemSpacing);
+	_fluidScroller->setPosition(_scrollPos, false);
 	_selectedItem = -1;
 	// Resize and clear bool array
 	_selectedItems.clear();
@@ -347,15 +351,14 @@ void ListWidget::scrollTo(int item) {
 
 void ListWidget::scrollBarRecalc() {
 	const int lineHeight = kLineHeight + _itemSpacing;
-	_scrollBar->_numEntries = _list.size();
-	_scrollBar->_entriesPerPage = _entriesPerPage;
-	int maxIndex = MAX(0, (int)_list.size() - _entriesPerPage);
-	_scrollBar->_currentPos = CLIP<int>(_currentPos, 0, maxIndex);
+	const int visibleHeight = _h - _topPadding - _bottomPadding;
+	_scrollBar->_numEntries = _list.size() * lineHeight;
+	_scrollBar->_entriesPerPage = visibleHeight;
+	int maxScroll = MAX(0, _scrollBar->_numEntries - _scrollBar->_entriesPerPage);
+	_scrollBar->_currentPos = CLIP<int>((int)_scrollPos, 0, maxScroll);
 	_scrollBar->_singleStep = lineHeight;
 	_scrollBar->recalc();
-
-	int maxScroll = MAX(0, (int)(_scrollBar->_numEntries - _scrollBar->_entriesPerPage) * lineHeight);
-	_fluidScroller->setBounds((float)maxScroll, _h - _topPadding - _bottomPadding, (float)_scrollBar->_singleStep);
+	_fluidScroller->setBounds((float)maxScroll, (float)visibleHeight, (float)_scrollBar->_singleStep);
 }
 
 void ListWidget::handleTickle() {
@@ -382,6 +385,7 @@ void ListWidget::handleMouseDown(int x, int y, int button, int clickCount) {
 	_isMouseDown = true;
 	_isDragging = false;
 	_dragLastY = 0;
+	_wasAnimating = _fluidScroller->isAnimating();
 	_fluidScroller->stopAnimation();
 
 	if (button == 1) {
@@ -398,7 +402,7 @@ void ListWidget::handleMouseUp(int x, int y, int button, int clickCount) {
 		if (_isMouseDown && button == 1 && _isDragging)
 			_fluidScroller->startFling();
 
-		if (_isMouseDown && !_isDragging) {
+		if (_isMouseDown && !_isDragging && !_wasAnimating) {
 			// Perform selection
 			int newSelectedItem = findItem(x, y);
 			if (newSelectedItem != -1) {
@@ -452,18 +456,22 @@ void ListWidget::handleMouseUp(int x, int y, int button, int clickCount) {
 
 	// If this was a double click and the mouse is still over
 	// the selected item, send the double click command
-	if (clickCount == 2 && (_selectedItem == findItem(x, y)) &&
+	if (!_wasAnimating && clickCount == 2 && (_selectedItem == findItem(x, y)) &&
 		_selectedItem >= 0) {
 		sendCommand(kListItemDoubleClickedCmd, _selectedItem);
 	}
+	_wasAnimating = false;
 }
 
 void ListWidget::handleMouseWheel(int x, int y, int direction) {
+	if (!_scrollBar->isVisible())
+		return;
+
 	_fluidScroller->handleMouseWheel(direction);
 }
 
 void ListWidget::handleMouseMoved(int x, int y, int button) {
-	if (!isEnabled())
+	if (!isEnabled() || !_scrollBar->isVisible())
 		return;
 
 	if (_isMouseDown && _dragLastY != 0) {
@@ -827,6 +835,8 @@ void ListWidget::receivedFocusWidget() {
 
 void ListWidget::lostFocusWidget() {
 	_inversion = ThemeEngine::kTextInversion;
+	_isMouseDown = _isDragging = false;
+	_dragStartY = _dragLastY = 0;
 
 	// If we lose focus, we simply forget the user changes
 	_editMode = false;
@@ -838,8 +848,8 @@ void ListWidget::lostFocusWidget() {
 void ListWidget::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
 	switch (cmd) {
 	case kSetPositionCmd:
-		if (_currentPos != (int)data) {
-			_scrollPos = (float)data * (kLineHeight + _itemSpacing);
+		if ((int)_scrollPos != (int)data) {
+			_scrollPos = (float)data;
 			_fluidScroller->stopAnimation();
 			_scrollPos = _fluidScroller->setPosition(_scrollPos, false);
 			applyScrollPos();
@@ -992,19 +1002,16 @@ void ListWidget::scrollToCurrent() {
 
 	checkBounds();
 	_scrollPos = (float)_currentPos * (kLineHeight + _itemSpacing);
-	_scrollBar->_currentPos = _currentPos;
+	_scrollBar->_currentPos = (int)_scrollPos;
 	_scrollBar->recalc();
 	_fluidScroller->setPosition(_scrollPos, false);
 }
 
 void ListWidget::scrollToEnd() {
-	if (_currentPos + _entriesPerPage < (int)_list.size()) {
-		_currentPos = _list.size() - _entriesPerPage;
-	} else {
-		return;
-	}
-
-	_scrollBar->_currentPos = _currentPos;
+	_currentPos = MAX(0, (int)_list.size() - _entriesPerPage);
+	_scrollPos = (float)_currentPos * (kLineHeight + _itemSpacing);
+	_scrollBar->_currentPos = (int)_scrollPos;
+	_fluidScroller->setPosition(_scrollPos, false);
 	_scrollBar->recalc();
 	_scrollBar->markAsDirty();
 }
@@ -1126,7 +1133,10 @@ void ListWidget::setFilter(const Common::U32String &filter, bool redraw) {
 	}
 
 	_currentPos = 0;
+	_scrollPos = 0.0f;
+	_fluidScroller->setPosition(_scrollPos);
 	_selectedItem = -1;
+	_lastSelectionStartItem = -1;
 
 	if (redraw) {
 		scrollBarRecalc();
@@ -1161,10 +1171,10 @@ Common::U32String ListWidget::getThemeColor(ThemeEngine::FontColor color) {
 }
 
 ThemeEngine::FontColor ListWidget::getThemeColor(const Common::U32String &color) {
-	if (color == "normal")
+	if (color == U"normal")
 		return ThemeEngine::kFontColorNormal;
 
-	if (color == "alternate")
+	if (color == U"alternate")
 		return ThemeEngine::kFontColorAlternate;
 
 	warning("ListWidget::getThemeColor(): Malformed color (\"%s\")", color.encode().c_str());

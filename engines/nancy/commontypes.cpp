@@ -126,7 +126,8 @@ void SecondaryVideoDescription::readData(Common::SeekableReadStream &stream) {
 	frameID = stream.readUint16LE();
 	readRect(stream, srcRect);
 	readRect(stream, destRect);
-	stream.skip(0x20);
+	if (g_nancy->getGameType() <= kGameTypeNancy10)
+		stream.skip(0x20);
 }
 
 void SoundEffectDescription::readData(Common::SeekableReadStream &stream) {
@@ -193,6 +194,7 @@ void SoundDescription::readDIGI(Common::SeekableReadStream &stream) {
 	s.setVersion(g_nancy->getGameType());
 
 	readFilename(s, name);
+	resolveSoundNameAutoText(name);
 
 	s.syncAsUint16LE(channelID);
 
@@ -260,6 +262,7 @@ void SoundDescription::readScene(Common::SeekableReadStream &stream) {
 
 void SoundDescription::readTerse(Common::SeekableReadStream &stream) {
 	readFilename(stream, name);
+	resolveSoundNameAutoText(name);
 	channelID = stream.readUint16LE();
 	numLoops = stream.readUint32LE();
 	volume = stream.readUint16LE();

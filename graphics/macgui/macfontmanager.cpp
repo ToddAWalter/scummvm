@@ -442,6 +442,10 @@ void MacFontManager::loadFonts(Common::MacResManager *fontFile) {
 
 				FontMan.assignFontToName(fontName, font);
 				macfont->setFont(font, false);
+				if (_fontRegistry.contains(fontName)) {
+					warning("MacFontManager: Overwriting font %s", fontName.c_str());
+					delete _fontRegistry.getVal(fontName);
+				}
 				_fontRegistry.setVal(fontName, macfont);
 
 				debugC(5, kDebugLevelMacGUI, " %s", fontName.c_str());
@@ -951,6 +955,7 @@ void MacFontManager::generateTTFFont(MacFont &toFont, Common::SeekableReadStream
 
 	if (!font) {
 		warning("Failed to generate font '%s'", toPrintable(getFontName(toFont)).c_str());
+		return;
 	}
 
 	toFont.setGenerated(true);
@@ -980,6 +985,7 @@ void MacFontManager::generateFONTFont(MacFont &toFont, MacFont &fromFont) {
 
 	if (!font) {
 		warning("Failed to generate font '%s'", toPrintable(getFontName(toFont)).c_str());
+		return;
 	}
 
 	toFont.setGenerated(true);

@@ -30,6 +30,7 @@
 #include "access/access.h"
 #include "access/amazon/amazon_game.h"
 #include "access/martian/martian_game.h"
+#include "access/noctropolis/noctropolis_game.h"
 
 #include "access/detection.h"
 
@@ -40,11 +41,12 @@
 #include "common/translation.h"
 
 #define MAX_SAVES 99
+#define GAMEOPTION_OGG_MUSIC GUIO_GAMEOPTIONS1
 
 namespace Access {
 
-uint32 AccessEngine::getGameID() const {
-	return _gameDescription->gameID;
+AccessGameType AccessEngine::getGameID() const {
+	return (AccessGameType)(_gameDescription->gameID);
 }
 
 uint32 AccessEngine::getGameFeatures() const {
@@ -64,7 +66,7 @@ bool AccessEngine::isDemo() const {
 }
 
 Common::Language AccessEngine::getLanguage() const {
-	return _gameDescription->desc.language;
+	return _lang;
 }
 
 Common::Platform AccessEngine::getPlatform() const {
@@ -72,6 +74,22 @@ Common::Platform AccessEngine::getPlatform() const {
 }
 
 } // End of namespace Access
+
+static const ADExtraGuiOptionsMap optionsList[] = {
+	{
+		GAMEOPTION_OGG_MUSIC,
+		{
+			_s("Use 'high definition' OGG music"),
+			_s("Use the OGG audio from the re-release instead of original MIDI tracks"),
+			"ogg_music",
+			true,
+			0,
+			0
+		}
+	},
+	AD_EXTRA_GUI_OPTIONS_TERMINATOR
+};
+
 
 class AccessMetaEngine : public AdvancedMetaEngine<Access::AccessGameDescription> {
 public:
@@ -87,6 +105,11 @@ public:
 	SaveStateDescriptor querySaveMetaInfos(const char *target, int slot) const override;
 
 	Common::KeymapArray initKeymaps(const char *target) const override;
+
+	const ADExtraGuiOptionsMap *getAdvancedExtraGuiOptions() const override {
+		return optionsList;
+	}
+
 };
 
 bool AccessMetaEngine::hasFeature(MetaEngineFeature f) const {
@@ -108,6 +131,9 @@ Common::Error AccessMetaEngine::createInstance(OSystem *syst, Engine **engine, c
 		break;
 	case Access::kGameMartianMemorandum:
 		*engine = new Access::Martian::MartianEngine(syst, gd);
+		break;
+	case Access::kGameNoctropolis:
+		*engine = new Access::Noctropolis::NoctropolisEngine(syst, gd);
 		break;
 	default:
 		return Common::kUnsupportedGameidError;
@@ -177,7 +203,7 @@ SaveStateDescriptor AccessMetaEngine::querySaveMetaInfos(const char *target, int
 			desc.setPlayTime(eHeader.playtime);
 			return desc;
 		}
-			
+
 		Access::AccessSavegameHeader header;
 		if (Access::AccessEngine::readSavegameHeader(f, header, false)) {
 			delete f;
@@ -191,12 +217,11 @@ SaveStateDescriptor AccessMetaEngine::querySaveMetaInfos(const char *target, int
 
 		delete f;
 
-		return SaveStateDescriptor();				
+		return SaveStateDescriptor();
 	}
 
 	return SaveStateDescriptor();
 }
-
 
 Common::KeymapArray AccessMetaEngine::initKeymaps(const char *target) const {
 	using namespace Common;

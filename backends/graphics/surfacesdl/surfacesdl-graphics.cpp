@@ -2163,7 +2163,7 @@ void SurfaceSdlGraphicsManager::setMouseCursor(const void *buf, uint w, uint h, 
 		const uint numPixels = w * h;
 		const uint inBPP = format->bytesPerPixel;
 
-		Graphics::PixelFormat formatWithAlpha = Graphics::createPixelFormat<8888>();
+		Graphics::PixelFormat formatWithAlpha = Graphics::PixelFormat::createFormatRGBA32();
 
 		// Use the existing format if it already has alpha
 		if (format->aBits() > 0)
@@ -2879,7 +2879,7 @@ void SurfaceSdlGraphicsManager::handleScalerHotkeys(uint mode, int factor) {
 	if (sizeChanged) {
 		// Forcibly resizing the window here since a user switching scaler
 		// size will not normally cause the window to update
-		_window->createOrUpdateWindow(_hwScreen->w, _hwScreen->h, _lastFlags);
+		_window->createOrUpdateWindow(_hwScreen->w, _hwScreen->h, _window->getWindowFlags());
 	}
 #endif
 

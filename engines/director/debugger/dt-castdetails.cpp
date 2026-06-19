@@ -38,10 +38,12 @@
 #include "director/score.h"
 #include "director/sound.h"
 
+#include "director/movie.h"
 #include "director/types.h"
 
 namespace Director {
 namespace DT {
+
 
 template<typename... Args>
 void showProperty(const Common::String &title,
@@ -153,9 +155,183 @@ void drawBitmapCMprops(BitmapCastMember *member) {
 	}
 }
 
+void showImageViewer() {
+	if (!_state->_w.imageViewer)
+		return;
+
+	auto state = &_state->_imageViewerState;
+
+	ImGuiImage imgID = state->image;
+	const Common::String &text = state->text;
+	Common::String title = state->title;
+
+	if (!imgID.id) {
+		_state->_w.imageViewer = false;
+		return;
+	}
+
+	// Recompute cache ig required
+	if (text != state->cachedRaw) {
+		state->cachedRaw = text;
+		state->cachedNormalized = text;
+		state->cachedNormalized.replace('\r', '\n');
+
+		size_t needed = state->cachedNormalized.size() + 1;
+
+		if (needed > state->bufferSize) {
+			free(state->buffer);
+			state->buffer = (char *)malloc(needed);
+			state->bufferSize = needed;
+		}
+
+		memcpy(state->buffer, state->cachedNormalized.c_str(), needed);
+	}
+
+	static float zoom = 1.0f;
+	static bool fitToWindow = true;
+	static ImVec2 offset(0.0f, 0.0f);
+
+	const char *windowTitle = title.empty() ? "Image Viewer" : title.c_str();
+
+	if (ImGui::Begin(windowTitle, &_state->_w.imageViewer,
+		ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+
+		// Toolbar
+		if (ImGui::Button("Fit")) {
+			fitToWindow = true;
+			offset = ImVec2(0.0f, 0.0f);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("-")) {
+			zoom = MAX(0.1f, zoom - 0.1f);
+			fitToWindow = false;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("+")) {
+			zoom = MIN(10.0f, zoom + 0.1f);
+			fitToWindow = false;
+		}
+		ImGui::SameLine();
+		ImGui::Text("| %d x %d |", imgID.width, imgID.height);
+
+		if (!state->cachedNormalized.empty()) {
+			ImGui::SameLine();
+			if (ImGui::Button("Copy text"))
+				ImGui::SetClipboardText(state->cachedNormalized.c_str());
+		}
+
+		ImGui::Separator();
+
+		// Tabs
+		if (ImGui::BeginTabBar("##imageViewerTabs")) {
+
+			// view tab
+			if (ImGui::BeginTabItem("View")) {
+
+				ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+
+				ImGui::BeginChild("##imageCanvas", canvasSize, false,
+					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+				ImVec2 size = { imgID.width * zoom, imgID.height * zoom };
+
+				if (fitToWindow && imgID.width > 0 && imgID.height > 0) {
+					float scaleX = canvasSize.x / (float)imgID.width;
+					float scaleY = canvasSize.y / (float)imgID.height;
+					zoom = MIN(scaleX, scaleY);
+					size = { imgID.width * zoom, imgID.height * zoom };
+				}
+
+				ImVec2 pos = ImGui::GetCursorPos();
+				ImVec2 imgPos = pos + ImVec2(
+					offset.x + (canvasSize.x - size.x) * 0.5f,
+					offset.y + (canvasSize.y - size.y) * 0.5f
+				);
+
+				ImGui::SetCursorPos(imgPos);
+
+				ImGui::GetWindowDrawList()->AddRect(
+					ImGui::GetCursorScreenPos(),
+					ImGui::GetCursorScreenPos() + size,
+					0xFFFFFFFF
+				);
+
+				ImGui::Image(imgID.id, size);
+
+				ImGui::SetCursorPos(pos);
+				ImGui::InvisibleButton("##canvas", canvasSize);
+
+				if (ImGui::IsItemHovered()) {
+					ImGuiIO &io = ImGui::GetIO();
+					float speed = 30.0f;
+
+					// Ctrl + wheel -> zoom
+					if (io.KeyCtrl && io.MouseWheel != 0.0f) {
+						zoom = CLIP(zoom + io.MouseWheel * 0.1f, 0.1f, 10.0f);
+						fitToWindow = false;
+					} else {
+						// Vertical scroll -> vertical pan
+						if (io.MouseWheel != 0.0f && !io.KeyShift) {
+							offset.y += io.MouseWheel * speed;
+							fitToWindow = false;
+						}
+
+						// Horizontal scroll -> Shift + wheel
+						if (io.KeyShift && io.MouseWheel != 0.0f) {
+							offset.x += io.MouseWheel * speed;
+							fitToWindow = false;
+						}
+
+						// Trackpad / horizontal wheel
+						if (io.MouseWheelH != 0.0f) {
+							offset.x += io.MouseWheelH * speed;
+							fitToWindow = false;
+						}
+					}
+				}
+
+				if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+					offset.x += ImGui::GetIO().MouseDelta.x;
+					offset.y += ImGui::GetIO().MouseDelta.y;
+					fitToWindow = false;
+				}
+
+				ImGui::EndChild();
+				ImGui::EndTabItem();
+			}
+
+			// text tab
+			if (!state->cachedNormalized.empty() && state->buffer && ImGui::BeginTabItem("Text")) {
+
+				ImGui::BeginChild("##textPanel", ImGui::GetContentRegionAvail(), false,
+					ImGuiWindowFlags_HorizontalScrollbar);
+
+				ImGui::InputTextMultiline(
+					"##text",
+					state->buffer,
+					state->bufferSize,
+					ImGui::GetContentRegionAvail(),
+					ImGuiInputTextFlags_ReadOnly
+				);
+
+				ImGui::EndChild();
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
+		}
+	}
+
+	ImGui::End();
+}
+
 void drawTextCMprops(TextCastMember *member) {
 	assert(member != nullptr);
 	if (ImGui::BeginTabItem("Text")) {
+
+		if (ImGui::Button("View")) {
+			openImageViewer(getTextID(member), member->getText());
+		}
 
 		if (ImGui::CollapsingHeader("Text Properties")) {
 			if (ImGui::BeginTable("##TextProperties", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
@@ -273,9 +449,9 @@ void drawRichTextCMprops(RichTextCastMember *member) {
 				for (int i = 7; i >= 0; i--) {
 					bool bitSet = (member->_cropFlags & (1 << i)) != 0;
 					if (bitSet) {
-						ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "1");
+						ImGui::TextColored(_state->theme->var_color, "1");
 					} else {
-						ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "0");
+						ImGui::TextDisabled("0");
 					}
 					if (i > 0) {
 						ImGui::SameLine();
@@ -346,8 +522,8 @@ void drawBaseCMprops(CastMember *member) {
 				if (info) {
 					showProperty("name", "%s", info->name.c_str());
 				} else {
-					ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("name", &grayColor, "No Info");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("name", &disabledColor, "No Info");
 				}
 
 				showProperty("number", "%d", member->getID());
@@ -357,8 +533,8 @@ void drawBaseCMprops(CastMember *member) {
 				if (info && !info->fileName.empty()) {
 					showProperty("fileName", "%s", info->fileName.c_str());
 				} else {
-					ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("fileName", &grayColor, "...");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("fileName", &disabledColor, "...");
 				}
 
 				showProperty("type", "#%s", castType2str(member->_type));
@@ -369,41 +545,73 @@ void drawBaseCMprops(CastMember *member) {
 				ImGui::TableSetColumnIndex(0);
 				ImGui::Text("scriptText");
 				ImGui::TableSetColumnIndex(1);
-				if (info && !info->script.empty()) {
-					ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "...");
-					if (ImGui::IsItemHovered()) {
-						ImGui::SetTooltip("%s", info->script.c_str());
+				{
+					CastMemberID scriptCastId(member->getID(), cast->_castLibID);
+					ScriptContext *scriptCtx = getScriptContext(scriptCastId);
+					bool hasScript = scriptCtx != nullptr || (info && !info->script.empty());
+					bool hasCastScript = g_director->getCurrentMovie()->getScriptContext(kCastScript, scriptCastId) != nullptr;
+					if (hasScript) {
+						ImGui::TextColored(hasCastScript ? _state->theme->var_color : _state->theme->script_ref, "(hover)");
+						if (ImGui::IsItemHovered()) {
+							ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+							if (ImGui::BeginTooltip()) {
+								ImGui::PushTextWrapPos(400.0f);
+								if (info && !info->script.empty()) {
+									Common::String tip = info->script;
+									tip.replace('\r', '\n');
+									if (tip.size() > 500)
+										tip = tip.substr(0, 500) + "\n...";
+									ImGui::TextUnformatted(tip.c_str());
+									ImGui::Separator();
+								}
+								ImGui::TextDisabled("(click to open script)");
+								ImGui::PopTextWrapPos();
+								ImGui::EndTooltip();
+							}
+						}
+						if (ImGui::IsItemClicked(0)) {
+							if (scriptCtx) {
+								Common::String moviePath = g_director->getCurrentMovie()->getArchive()->getPathName().toString();
+								for (auto &handler : scriptCtx->_functionHandlers) {
+									ImGuiScript script = toImGuiScript(scriptCtx->_scriptType, scriptCastId, handler._key);
+									script.byteOffsets = scriptCtx->_functionByteOffsets[script.handlerId];
+									script.moviePath = moviePath;
+									script.handlerName = formatHandlerName(scriptCtx->_scriptId, scriptCastId.member, script.handlerId, scriptCtx->_scriptType, false);
+									addToOpenHandlers(script);
+								}
+							}
+						}
+					} else {
+						ImGui::TextDisabled("...");
 					}
-				} else {
-					ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "...");
 				}
 
 				if (info && info->creationTime != 0) {
 					showProperty("creationDate", "%u", info->creationTime);
 				} else {
-					ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("creationDate", &grayColor, "...");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("creationDate", &disabledColor, "N/A");
 				}
 
 				if (info && info->modifiedTime != 0) {
 					showProperty("modifiedDate", "%u", info->modifiedTime);
 				} else {
-					ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("modifiedDate", &grayColor, "...");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("modifiedDate", &disabledColor, "N/A");
 				}
 
 				if (info && !info->modifiedBy.empty()) {
 					showProperty("modifiedBy", "%s", info->modifiedBy.c_str());
 				} else {
-					ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("modifiedBy", &grayColor, "...");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("modifiedBy", &disabledColor, "N/A");
 				}
 
 				if (info && !info->comments.empty()) {
 					showProperty("comments", "%s", info->comments.c_str());
 				} else {
-					ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("comments", &grayColor, "...");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("comments", &disabledColor, "N/A");
 				}
 
 				showProperty("purgePriority", "%d", member->_purgePriority);
@@ -423,8 +631,8 @@ void drawBaseCMprops(CastMember *member) {
 
 				ImGuiImage media = getImageID(member);
 
-				ImVec4 grayColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-				showProperty("media", &grayColor, "%s", media.id == 0 ? "empty" : "...");
+				ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+				showProperty("media", &disabledColor, "%s", media.id == 0 ? "empty" : "...");
 
 				// Not using showProperty() here because we want to show a
 				// thumbnail of the media instead of text.
@@ -752,10 +960,10 @@ void drawSoundCMprops(SoundCastMember *member) {
 					showProperty("sampleSize", "%d bit", member->_audio->getSampleSize());
 					showProperty("channels", "%d", member->_audio->getChannelCount());
 				} else {
-					ImVec4 gray = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-					showProperty("sampleRate", &gray, "N/A");
-					showProperty("sampleSize", &gray, "N/A");
-					showProperty("channels", &gray, "N/A");
+					ImVec4 disabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+					showProperty("sampleRate", &disabledColor, "N/A");
+					showProperty("sampleSize", &disabledColor, "N/A");
+					showProperty("channels", &disabledColor, "N/A");
 				}
 				ImGui::EndTable();
 			}

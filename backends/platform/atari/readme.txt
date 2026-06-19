@@ -41,7 +41,7 @@ for more details (TBD).
 Atari Full package
 ~~~~~~~~~~~~~~~~~~
 
-Minimum hardware requirements: Atari Falcon with 4 + 64 MB RAM, 68040 CPU.
+Minimum hardware requirements: Atari Falcon with 4 + 32 MB RAM and 68040 CPU.
 
 - Because there is limited horsepower available on our platform, features like
   16bpp graphics, software synthesisers, scalers, real-time software
@@ -69,7 +69,9 @@ Minimum hardware requirements: Atari Falcon with 4 + 64 MB RAM, 68040 CPU.
 - Support for PC keys (page up, page down, pause, F11/F12, ...) and mouse wheel
   (Eiffel/Aranym only).
 
-- Native MIDI output (if present).
+- Native MIDI output.
+
+- Native CDDA support.
 
 - Runs also in Hatari and ARAnyM but in case of ARAnyM don't forget to disable
   fVDI to enable Videl output.
@@ -79,7 +81,7 @@ Minimum hardware requirements: Atari Falcon with 4 + 64 MB RAM, 68040 CPU.
 Atari Lite package
 ~~~~~~~~~~~~~~~~~~
 
-Minimum hardware requirements: Atari TT / Falcon with 4 + 32 MB RAM.
+Minimum hardware requirements: Atari TT / Falcon with 16 MB RAM.
 
 As a further optimisation step, a 030-only version of ScummVM is provided,
 aimed at less powerful TT and Falcon machines with the 68030 CPU. It
@@ -159,7 +161,7 @@ the hardware connected:
 The lower the value, the faster the mixing but the worse the quality. The
 default is 22050 Hz in Full and 11025 Hz in Lite (16-bit, stereo), to natively
 support most (DOS/Windows) games that use these frequencies. On TT and Falcon
-systems without an external DSP clock, these frequencies are converted to
+systems without an external DSP clock, these frequencies are adjusted to
 19668 Hz and 9834 Hz, respectively. Note that you do not need to enter
 the exact value; it will be rounded automatically to the nearest suitable
 value.
@@ -413,9 +415,36 @@ The least amount of cycles is spent when:
   11025 Hz!
 - "Subtitles" as "Text and speech": This prevents any sampled speech to be
   mixed.
-- All external audio files are deleted (typically *.wav); that way the mixer
-  won't have anything to mix. However beware, this is not allowed in every
-  game!
+- All external audio files are deleted (typically *.wav) or sourced from audio
+  cd; that way the mixer won't have anything to mix. However beware, deleting
+  files is not supported by every game!
+
+CDDA (Audio CD) support
+~~~~~~~~~~~~~~~~~~~~~~~
+
+ScummVM has supported native audio cd playback for a long time. It is even
+enabled in the FireBee (SDL) build. However native support in the Atari builds
+has been added just recently. This feature can be used to free the audio mixer
+from loading, decoding and mixing game music with sound effects, leaving more
+CPU time for the engine itself.
+
+MetaDOS API allows mixing various components:
+
+- extendos.prg / metados.prg / betados.prg
+- hs-cdrom.bos (CD Tools) / spin_sd.bos (Spin!)
+- bd_9660f.dos (BetaDOS) / hs-iso.dos (CD Tools) / iso9660f.dos (MetaDOS) /
+  unidrive.dos (ExtenDOS)
+- cd.bos from ExtenDOS strictly requires unidrive.dos
+
+There is a bug in ExtenDOS 4.10's cd.bos: under very specific circumstances
+ScummVM seemingly freezes while seeking for a file on CD (black screen). I'm
+working with the author on fixing this problem, in the meantime you can:
+
+- Copy data files from CD to hard disk (makes sense also for speed reasons),
+  and ignore the message box with advice about ripping tracks from CD.
+- Reconfigure ExtenDOS to use its own SCSI routines (disabled by default).
+- Edit extendos.cnf and replace cd.bos with e.g. spin_sd.bos.
+- Not use ExtenDOS.
 
 Sample rate
 ~~~~~~~~~~~
@@ -451,6 +480,9 @@ So how do you know which frequency to set as "output_rate" ? This is where
 converters are being used and for what input/values. So you can easily verify
 whether the given game's demands match your setting.
 
+Btw, you can use the same command line parameter for showing what MIDI mode is
+being used (Roland GS, MT-32, General MIDI), sometimes it is not very obvious.
+
 Unfortunately, currently per-game "output_rate" / "output_channels" is not
 possible but this may change in the future.
 
@@ -467,15 +499,9 @@ distributed with repackaged theme files with compression level zero.
 Changes to upstream
 -------------------
 
-There are a few features that have been disabled or changed and are not
-possible / plausible to merge into upstream:
-
-- This port contains an implementation of much faster tooltips in the overlay.
-  However, there is a minor rendering bug which sometimes corrupts the
-  background. But since its impact is huge, I left it in.
-
-- This port contains an experimental / pending optimisations to the SCUMM
-  engine and audio mixing. I'll try to get them merged in the next release.
+- This port contains experimental / pending optimisations to audio mixing
+  (https://github.com/scummvm/scummvm/pull/7385). I'll try to get them merged
+  in the next release.
 
 
 Known issues
@@ -538,17 +564,7 @@ Future plans
 
 - DSP-based sample mixer (WAV, FLAC, MP2).
 
-- Avoid loading music/speech files (and thus slowing down everything) if muted.
-
-- Cached audio/video streams (i.e. don't load only "audio_buffer_size" number
-  of samples but cache, say, 1 second so disk i/o won't be so stressed).
-
-- Using Thorsten Otto's sharedlibs: https://tho-otto.de/sharedlibs.php for game
-  engine plugins to relieve the huge binary size.
-
-- True audio CD support via MetaDOS API.
-
-- OPL2LPT and Retrowave support (if I manage to purchase it somewhere).
+- Avoid decoding music/speech files (and thus slowing down everything) if muted.
 
 
 Closing words

@@ -57,6 +57,7 @@ typedef struct ImGuiScriptCodeLine {
 
 typedef struct ImGuiScript {
 	bool score = false;
+	bool showByteCode = false;
 	CastMemberID id;
 	ScriptType type;
 	Common::String handlerId;
@@ -97,14 +98,18 @@ typedef struct ImGuiWindows {
 	bool archive = false;
 	bool watchedVars = false;
 	bool executionContext = false;
+	bool scripts = false;
 	bool search = false;
+	bool imageViewer = false;
+	bool windows = false;
 } ImGuiWindows;
 
 
 enum SearchMode {
 	kSearchAll = 0,
-	kSearchHandlerNames,
-	kSearchScriptBody,
+	kSearchHandlers,
+	kSearchVariables,
+	kSearchBody,
 };
 
 typedef struct ScriptData {
@@ -223,7 +228,7 @@ typedef struct ImGuiState {
 		Common::HashMap<Window *, ScriptData> _windowScriptData;
 	} _functions;
 	struct {
-		CastMember *_castMember;
+		CastMember *_castMember = nullptr;
 		Common::HashMap<CastMember *, int> _filmLoopCurrentFrame;
 	} _castDetails;
 
@@ -254,12 +259,26 @@ typedef struct ImGuiState {
 		uint32 _lastTimeRefreshed = 0;
 	} _vars;
 
+	struct {
+		ImGuiImage image;
+		Common::String text;      // empty = no text panel
+		Common::String title;     // optional title
+
+		// cached normalized text
+		Common::String cachedRaw;
+		Common::String cachedNormalized;
+
+		// reusable buffer
+		char *buffer = nullptr;
+		size_t bufferSize = 0;
+
+	} _imageViewerState;
+
 	ImGuiWindows _w;
 	ImGuiWindows _savedW;
 	bool _wasHidden = false;
 
-	Common::List<CastMemberID> _scriptCasts;
-	Common::HashMap<int, ImGuiScript> _openHandlers;
+	ScriptData _openScripts;
 	bool _showCompleteScript = true;
 
 	Common::HashMap<Common::String, bool, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _variables;
@@ -313,6 +332,7 @@ typedef struct ImGuiState {
 } ImGuiState;
 
 // debugtools.cpp
+const LingoDec::Handler *getHandler(const Cast *cast, CastMemberID id, const Common::String &handlerId);
 ImGuiScript toImGuiScript(ScriptType scriptType, CastMemberID id, const Common::String &handlerId);
 ScriptContext *getScriptContext(CastMemberID id);
 ScriptContext *getScriptContext(uint32 nameIndex, CastMemberID castId, Common::String handler);
@@ -335,6 +355,7 @@ ImColor brightenColor(const ImColor &color, float factor);
 Window *windowListCombo(Common::String *target);
 Common::String formatHandlerName(int scriptId, int castId, Common::String handlerName, ScriptType scriptType, bool childScript);
 void setTheme(int themeIndex);
+void openImageViewer(ImGuiImage image, const Common::String &text = "", const Common::String &title = "");
 
 // helper to draw thin rectangles for table grid
 inline void addThinRect(ImDrawList *dl, ImVec2 min, ImVec2 max, ImU32 col, float thickness = 0.1f) {
@@ -345,6 +366,7 @@ inline void addThinRect(ImDrawList *dl, ImVec2 min, ImVec2 max, ImU32 col, float
 }
 
 void showCast();		// dt-cast.cpp
+void showImageViewer();	// dt-castdetails.cpp
 void showCastDetails();	// dt-castdetails.cpp
 void showControlPanel();// dt-controlpanel.cpp
 
@@ -353,6 +375,7 @@ void showVars();
 void showWatchedVars();
 void showBreakpointList();
 void showArchive();
+void showWindows();
 
 // dt-score.cpp
 void showScore();
@@ -363,9 +386,8 @@ void renderScriptAST(ImGuiScript &script, bool showByteCode, bool scrollTo);	   
 
 // dt-scripts.cpp
 void showFuncList();
-void showScriptCasts();
 void showExecutionContext();
-void showHandlers();
+void showScriptsWindow();
 
 // dt-save-state.cpp
 void saveCurrentState();

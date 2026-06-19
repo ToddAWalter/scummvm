@@ -45,32 +45,36 @@ public:
 	void execute() override;
 	void handleInput(NancyInput &input) override;
 
+	bool isViewportRelative() const override { return true; }
+
 protected:
 	Common::String getRecordTypeName() const override { return "OneBuildPuzzle"; }
-	bool isViewportRelative() const override { return true; }
 
 	struct Piece : RenderObject {
 		Piece() : RenderObject(0) {}
 
 		// File data
-		Common::Rect srcRect;       // Source rect in source image
-		Common::Rect slotRect;      // Correct placement rect (viewport coords)
-		Common::Rect homeRect;      // Starting position (viewport coords)
-		uint8 defaultRotation = 0;  // Rotation index that fits the slot
-		bool isPreRotated = false;  // Piece starts already in place (slotRect position)
+		Common::Rect srcRect;
+		Common::Rect altSrcRect;    // At-home art, shown until first pickup
+		Common::Rect slotRect;
+		Common::Rect homeRect;
+		uint8 defaultRotation = 0;
+		bool isPreRotated = false;
 
 		// Runtime
 		Common::Rect gameRect;      // Current viewport-space rect
 		int curRotation = 0;
 		bool placed = false;
 
-		// Up to 4 rotation surfaces (rotation 1-3 only exist if canRotateAll or isPreRotated)
+		// Rotations 1-3 only built when canRotateAll or isPreRotated
 		Graphics::ManagedSurface rotateSurfaces[4];
 		bool hasSurface[4] = {};
 
+		Graphics::ManagedSurface altSurface;
+		bool useAltSurface = false;
+
 		void setZ(uint16 z) { _z = z; _needsRedraw = true; }
 
-	protected:
 		bool isViewportRelative() const override { return true; }
 	};
 
@@ -83,6 +87,22 @@ protected:
 	int16 _slotTolerance = 0;      // Proximity for snapping to slot
 	bool _orderedPlacement = false; // Pieces must be placed in a specific order
 	Common::Array<int16> _placementOrder; // 1-indexed piece IDs in required placement order
+
+	// --- Nancy 10 additions ---
+
+	// TODO: runtime role unknown; parsed for round-trip but not consumed.
+	bool _legacyOrderedFlag = false;
+	Common::Array<int16> _legacyPlacementOrder;
+
+	// Filename only (no SoundDescription metadata).
+	Common::String _extraSoundName;
+
+	// Completion sprite-sheet animation; TODO: not wired up.
+	Common::Rect _animRectA;
+	Common::Rect _animRectB;
+	int16 _animLayout[6] = {}; // cols, framesPerStep, baseX, baseY, spacing, totalRows
+	SoundDescription _animSound1;
+	SoundDescription _animSound2;
 
 	Common::Array<Piece> _pieces;
 
@@ -139,6 +159,10 @@ protected:
 
 	// Currently playing sound (scratch copy updated each time a sound is played)
 	SoundDescription _currentSound;
+
+	// Initialization flag, used to ensure that the puzzle pieces have been initialized
+	// before drawing them on screen
+	bool _isInitialized = false;
 
 	// --- Internal methods ---
 

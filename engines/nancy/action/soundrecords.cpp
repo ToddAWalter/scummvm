@@ -138,7 +138,7 @@ void PlaySoundCC::readCCText(Common::SeekableReadStream &stream, Common::String 
 		const CVTX *autotext = (const CVTX *)g_nancy->getEngineData("AUTOTEXT");
 		assert(autotext);
 
-		out = autotext->texts[key];
+		out = getTextFromCaseInsensitiveKey(autotext->texts, key);
 	}
 }
 
@@ -259,6 +259,9 @@ void StopSound::execute() {
 void PlayRandomSound::readData(Common::SeekableReadStream &stream) {
 	uint16 numSounds = stream.readUint16LE();
 	readFilenameArray(stream, _soundNames, numSounds - 1);
+	for (Common::String &n : _soundNames) {
+		resolveSoundNameAutoText(n);
+	}
 
 	PlaySound::readData(stream);
 	_soundNames.push_back(_sound.name);
@@ -275,6 +278,9 @@ void PlayRandomSound::execute() {
 void PlayRandomSoundTerse::readData(Common::SeekableReadStream &stream) {
 	uint16 numSounds = stream.readUint16LE();
 	readFilenameArray(stream, _soundNames, numSounds - 1);
+	for (Common::String &n : _soundNames) {
+		resolveSoundNameAutoText(n);
+	}
 
 	PlaySoundTerse::readData(stream);
 

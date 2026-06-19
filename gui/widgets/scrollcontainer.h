@@ -42,6 +42,7 @@ class ScrollContainerWidget: public Widget, public CommandSender {
 	int _mouseDownStartY = 0;
 	bool _isMouseDown = false;
 	bool _isDragging = false;
+	bool _wasAnimating = false;
 	float _scrollPos = 0.0f;
 	FluidScroller *_fluidScroller = nullptr;
 	Widget *_childUnderMouse = nullptr;
@@ -66,6 +67,7 @@ public:
 	void handleMouseDown(int x, int y, int button, int clickCount) override;
 	void handleMouseUp(int x, int y, int button, int clickCount) override;
 	void handleMouseMoved(int x, int y, int button) override;
+	void lostFocusWidget() override;
 	void handleTickle() override;
 
 	// We overload getChildY to make sure child widgets are positioned correctly.

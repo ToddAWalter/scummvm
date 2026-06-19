@@ -27,6 +27,7 @@
 #include "common/fs.h"
 #include "common/hash-str.h"
 #include "common/keyboard.h"
+#include "common/ptr.h"
 #include "common/random.h"
 #include "common/scummsys.h"
 #include "common/serializer.h"
@@ -46,6 +47,10 @@
 
 namespace Graphics {
 class Font;
+}
+
+namespace Video {
+class Subtitles;
 }
 
 namespace PhoenixVR {
@@ -96,6 +101,7 @@ public:
 	bool hasFeature(EngineFeature f) const override {
 		return (f == kSupportsLoadingDuringRuntime) ||
 			   (f == kSupportsSavingDuringRuntime) ||
+			   (f == kSupportsSubtitleOptions) ||
 			   (f == kSupportsReturnToLauncher);
 	};
 
@@ -125,6 +131,7 @@ public:
 	void playMovie(const Common::String &movie);
 
 	void declareVariable(const Common::String &name);
+	bool hasVariable(const Common::String &name) const;
 	void setVariable(const Common::String &name, int value);
 	int getVariable(const Common::String &name) const;
 
@@ -138,7 +145,7 @@ public:
 
 	void resetLockKey();
 	void lockKey(int idx, const Common::String &warp);
-	void startTimer(float seconds);
+	void startTimer(float seconds, bool showTimer);
 	void pauseTimer(bool pause, bool deactivate);
 	void killTimer();
 	void playAnimation(const Common::String &name, const Common::String &var, int varValue, float speed);
@@ -148,6 +155,7 @@ public:
 	}
 	void interpolateAngle(float x, float y, float speed, float zoom);
 	void fade(int start, int stop, int speed);
+	void transFade(int speed);
 
 	void setXMax(float max) {
 		_angleY.setRange(-max, max);
@@ -175,6 +183,7 @@ public:
 	Common::Error loadGameStream(Common::SeekableReadStream *stream) override;
 	Common::Error saveGameStream(Common::WriteStream *stream, bool isAutosave = false) override;
 	void drawSlot(int idx, int face, int x, int y);
+	void drawSaveCard(int idx);
 	void captureContext();
 
 	void setContextLabel(const Common::String &contextLabel) {
@@ -185,6 +194,7 @@ public:
 
 	bool wasRestarted() const { return _restarted; }
 	bool wasLoaded() const { return _loaded; }
+	uint currentAmerzoneLevel() const;
 
 	void saveVariables();
 	void loadVariables();
@@ -195,6 +205,12 @@ public:
 	bool setNextLevel();
 
 	void setGlobalVolume(int vol);
+	void showImageOverlay(const Common::String &image, int x, int y);
+	void stopImageOverlay();
+	void updateStage();
+	void startCible(const Common::String &name, int periodSeconds, const Common::Array<int> &bounds);
+	void stopCible();
+	void testCible(const Common::String &insideVar, const Common::String &outsideVar);
 
 private:
 	static Common::String removeDrive(const Common::String &path);
@@ -211,10 +227,15 @@ private:
 	void tickTimer(float dt);
 	void loadNextScript();
 	void renderVR(float dt);
+	void renderImageOverlay();
 	void renderTimer();
 	void renderFade(int color);
 	void resetState();
 	const Graphics::Font *getFont(int size, bool bold) const;
+	Common::Path getSubtitlePath(const Common::String &path) const;
+	Common::SharedPtr<Video::Subtitles> loadSubtitles(const Common::String &path) const;
+	void setupSubtitles(Video::Subtitles &subtitles) const;
+	void drawAudioSubtitles();
 
 private:
 	bool _hasFocus = true;
@@ -242,6 +263,7 @@ private:
 		float angle;
 		uint8 volume;
 		int loops;
+		Common::SharedPtr<Video::Subtitles> subtitles;
 	};
 	Common::HashMap<Common::String, Sound, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _sounds;
 	Common::ScopedPtr<Script> _script;
@@ -265,6 +287,7 @@ private:
 	static constexpr byte kPaused = 2;
 	static constexpr byte kActive = 4;
 	byte _timerFlags = 0;
+	bool _showTimer = false;
 	float _timer = 0, _initialTimer = 0;
 
 	Common::String _contextScript;
@@ -272,14 +295,20 @@ private:
 	Common::Array<byte> _capturedState;
 	Common::Array<byte> _loadedState;
 
-	Common::HashMap<int, Common::String> _textes;
+	Common::HashMap<int, Common::U32String> _textes;
 
-	Common::ScopedPtr<Graphics::Font> _font12;
-	Common::ScopedPtr<Graphics::Font> _font14;
-	Common::ScopedPtr<Graphics::Font> _font18;
+	static const int kFontSizeCount = 6;
+	Common::ScopedPtr<Graphics::Font> _regularFonts[kFontSizeCount];
+	Common::ScopedPtr<Graphics::Font> _boldFonts[kFontSizeCount];
 
 	Common::ScopedPtr<Graphics::ManagedSurface> _text;
 	Common::Rect _textRect;
+	Common::ScopedPtr<Graphics::Surface> _imageOverlay;
+	Common::Point _imageOverlayPos;
+	bool _cibleActive = false;
+	uint32 _cibleStartMillis = 0;
+	int _ciblePeriodSeconds = 0;
+	Common::Array<int> _cibleBounds;
 
 	Common::Array<Common::String> _levels;
 	uint _currentLevel = 0;

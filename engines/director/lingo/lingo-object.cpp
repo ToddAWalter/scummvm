@@ -72,11 +72,14 @@
 #include "director/lingo/xlibs/f/flushxobj.h"
 #include "director/lingo/xlibs/f/fplayxobj.h"
 #include "director/lingo/xlibs/f/fsutil.h"
+#include "director/lingo/xlibs/f/flushmousexfcn.h"
 #include "director/lingo/xlibs/g/genutils.h"
 #include "director/lingo/xlibs/g/getscreenrectsxfcn.h"
 #include "director/lingo/xlibs/g/getscreensizexfcn.h"
 #include "director/lingo/xlibs/g/getsoundinlevel.h"
 #include "director/lingo/xlibs/g/gpid.h"
+#include "director/lingo/xlibs/g/getuinfo.h"
+#include "director/lingo/xlibs/g/getsoundxfcn.h"
 #include "director/lingo/xlibs/h/henry.h"
 #include "director/lingo/xlibs/h/hitmap.h"
 #include "director/lingo/xlibs/i/inixobj.h"
@@ -103,6 +106,7 @@
 #include "director/lingo/xlibs/m/msfile.h"
 #include "director/lingo/xlibs/m/mystisle.h"
 #include "director/lingo/xlibs/m/mazexobj.h"
+#include "director/lingo/xlibs/m/myfolder.h"
 #include "director/lingo/xlibs/o/openbleedwindowxcmd.h"
 #include "director/lingo/xlibs/o/orthoplayxobj.h"
 #include "director/lingo/xlibs/p/paco.h"
@@ -130,6 +134,7 @@
 #include "director/lingo/xlibs/s/stagetc.h"
 #include "director/lingo/xlibs/s/syscolor.h"
 #include "director/lingo/xlibs/s/savenrestorexobj.h"
+#include "director/lingo/xlibs/s/stagectl.h"
 #include "director/lingo/xlibs/t/tengu.h"
 #include "director/lingo/xlibs/t/temnotaxobj.h"
 #include "director/lingo/xlibs/u/unittest.h"
@@ -140,7 +145,7 @@
 #include "director/lingo/xlibs/v/vmpresent.h"
 #include "director/lingo/xlibs/v/volumelist.h"
 #include "director/lingo/xlibs/v/voyagerxsound.h"
-#include "director/lingo/xlibs/w/widgetxobj.h"
+#include "director/lingo/xlibs/w/widget.h"
 #include "director/lingo/xlibs/w/window.h"
 #include "director/lingo/xlibs/w/wininfo.h"
 #include "director/lingo/xlibs/w/winxobj.h"
@@ -156,6 +161,7 @@
 #include "director/lingo/xtras/d/directsound.h"
 #include "director/lingo/xtras/d/displayres.h"
 #include "director/lingo/xtras/f/filextra.h"
+#include "director/lingo/xtras/g/getdir.h"
 #include "director/lingo/xtras/k/keypoll.h"
 #include "director/lingo/xtras/m/masterapp.h"
 #include "director/lingo/xtras/m/mui.h"
@@ -294,12 +300,16 @@ static const struct XLibProto {
 	XLIBDEF(FindSys,			kXObj,			400),	// D4
 	XLIBDEF(FindWin,			kXObj,			400),	// D4
 	XLIBDEF(FinderEventsXCMD,	kXObj,			400),	// D4
+	XLIBDEF(FlushMouseXFCN,			kXObj,					300),	// D3
 	XLIBDEF(FlushXObj,			kXObj,			300),	// D3
 	XLIBDEF(FPlayXObj,			kXObj,			200),	// D2
 	XLIBDEF(GenUtilsXObj,		kXObj,			400),	// D4
+	XLIBDEF(GetDirXtra,			kXtraObj,					500),	// D5
 	XLIBDEF(GetScreenRectsXFCN,	kXObj,			300),	// D3
 	XLIBDEF(GetScreenSizeXFCN,	kXObj,			300),	// D3
 	XLIBDEF(GetSoundInLevelXObj,kXObj,			400),	// D4
+	XLIBDEF(GetSoundXFCN,			kXObj,					300),	// D3
+	XLIBDEF(GetUInfoXObj,			kXObj,					400),	// D4
 	XLIBDEF(GpidXObj,			kXObj,			400),	// D4
 	XLIBDEF(HenryXObj,			kXObj,			400),	// D4
 	XLIBDEF(HitMap,				kXObj,			400),	// D4
@@ -329,6 +339,7 @@ static const struct XLibProto {
 	XLIBDEF(MovUtilsXObj,		kXObj,			400),	// D4
 	XLIBDEF(MSFile,             kXObj,          400),   // D4
 	XLIBDEF(MuiXtra,			kXtraObj,					500),	// D5
+	XLIBDEF(MyFolderXObj,			kXObj,					400),	// D4
 	XLIBDEF(MystIsleXObj,		kXObj,			400),	// D4
 	XLIBDEF(OSCheckXtra,		kXtraObj,		400),	// D4
 	XLIBDEF(OpenBleedWindowXCMD,kXObj,			300),	// D3
@@ -351,7 +362,7 @@ static const struct XLibProto {
 	XLIBDEF(QTVR,				kXObj,			400),	// D4
 	XLIBDEF(QtvrxtraXtra,		kXtraObj,		500),	// D5
 	XLIBDEF(Quicktime,			kXObj,			300),	// D3
-	XLIBDEF(RearWindowXObj,		kXObj,			400),	// D4
+	XLIBDEF(RearWindowXObj,		kXObj,			300),	// D3
 	XLIBDEF(RegisterComponent,	kXObj,			400),	// D4
 	XLIBDEF(RegistryReaderXtra,			kXtraObj,					500),	// D5
 	XLIBDEF(RemixXCMD,			kXObj,			300),	// D3
@@ -363,6 +374,7 @@ static const struct XLibProto {
 	XLIBDEF(SmallUtilXObj,		kXObj,			400),	// D4
 	XLIBDEF(SoundJam,			kXObj,			400),	// D4
 	XLIBDEF(SpaceMgr,			kXObj,			400),	// D4
+	XLIBDEF(StageControlXObj,			kXObj,					300),	// D3
 	XLIBDEF(StageTCXObj,		kXObj,			400),	// D4
 	XLIBDEF(StayToonedBallXtra,			kXtraObj,					500),	// D5
 	XLIBDEF(StayToonedGlopXtra,			kXtraObj,					500),	// D5
@@ -382,8 +394,8 @@ static const struct XLibProto {
 	XLIBDEF(VideodiscXObj,		kXObj,			200),	// D2
 	XLIBDEF(VolumeList,			kXObj,			300),	// D3
 	XLIBDEF(VoyagerXSoundXObj,	kXObj,			400),	// D4
+	XLIBDEF(WidgetXObj,			kXObj,					300),	// D3
 	XLIBDEF(WinInfoXObj,		kXObj,			400),	// D4
-	XLIBDEF(WidgetXObj, 		kXObj,			400),	// D4
 	XLIBDEF(WindowXObj,			kXObj,			200),	// D2
 	XLIBDEF(XCMDGlueXObj,		kXObj,			200),	// D2
 	XLIBDEF(XPlayPACoXFCN,		kXObj,			300),	// D3

@@ -1863,7 +1863,7 @@ void OptionsDialog::addMIDIControls(GuiObject *boss, const Common::String &prefi
 }
 
 void OptionsDialog::addMT32Controls(GuiObject *boss, const Common::String &prefix) {
-	_mt32DevicePopUpDesc = new StaticTextWidget(boss, prefix + "auPrefMt32PopupDesc", _("MT-32 Device:"), _("Specifies default sound device for Roland MT-32/LAPC1/CM32l/CM64 output"));
+	_mt32DevicePopUpDesc = new StaticTextWidget(boss, prefix + "auPrefMt32PopupDesc", _("MT-32 device:"), _("Specifies default sound device for Roland MT-32/LAPC1/CM32l/CM64 output"));
 	_mt32DevicePopUp = new PopUpWidget(boss, prefix + "auPrefMt32Popup");
 
 	// Native mt32 setting
@@ -2186,6 +2186,8 @@ GlobalOptionsDialog::GlobalOptionsDialog(LauncherDialog *launcher)
 	_guiReturnToLauncherAtExit = nullptr;
 	_guiConfirmExit = nullptr;
 	_guiDisableBDFScaling = nullptr;
+	_guiKineticScrolling = nullptr;
+
 #ifdef USE_UPDATES
 	_updatesPopUpDesc = nullptr;
 	_updatesPopUp = nullptr;
@@ -2662,10 +2664,17 @@ void GlobalOptionsDialog::addGUIControls(GuiObject *boss, const Common::String &
 
 	_guiDisableBDFScaling = new CheckboxWidget(boss, prefix + "DisableBDFScaling",
 		_("Disable fixed font scaling"),
-		_("Do not upscale fixed size fonts in the GUI. This reduces artefacts on low resolution screens")
+		_("Do not upscale fixed size fonts in the GUI. This reduces artefacts on low resolution screens.")
 	);
 
 	_guiDisableBDFScaling->setState(ConfMan.getBool("gui_disable_fixed_font_scaling", _domain));
+
+	_guiKineticScrolling = new CheckboxWidget(boss, prefix + "KineticScrolling",
+		_("Enable kinetic scrolling in lists"),
+		_("Enable smooth, momentum-based scrolling in list widgets.")
+	);
+
+	_guiKineticScrolling->setState(ConfMan.getBool("gui_kinetic_scrolling", _domain));
 
 #ifdef USE_TRANSLATION
 	_guiLanguagePopUpDesc = new StaticTextWidget(boss, prefix + "GuiLanguagePopupDesc", _("GUI language:"), _("Language of ScummVM GUI"));
@@ -3137,6 +3146,10 @@ void GlobalOptionsDialog::apply() {
 
 	if (_guiDisableBDFScaling) {
 		ConfMan.setBool("gui_disable_fixed_font_scaling", _guiDisableBDFScaling->getState(), _domain);
+	}
+
+	if (_guiKineticScrolling) {
+		ConfMan.setBool("gui_kinetic_scrolling", _guiKineticScrolling->getState(), _domain);
 	}
 
 #ifdef USE_DISCORD
@@ -3686,7 +3699,7 @@ void GlobalOptionsDialog::setupCloudTab() {
 	if (_storageLastSyncDesc) _storageLastSyncDesc->setVisible(shownConnectedInfo);
 	if (_storageLastSync) {
 		Common::U32String sync = CloudMan.getStorageLastSync(_selectedStorageIndex);
-		if (sync == "") {
+		if (sync.empty()) {
 			if (_selectedStorageIndex == CloudMan.getStorageIndex() && CloudMan.isSyncing())
 				sync = _("<right now>");
 			else

@@ -19,21 +19,26 @@
  *
  */
 
+#include "common/config-manager.h"
 #include "common/error.h"
 #include "common/system.h"
+#include "engines/advancedDetector.h"
 #include "engines/util.h"
 
 #include "chamber/chamber.h"
+#include "chamber/detection.h"
 #include "chamber/common.h"
 #include "chamber/decompr.h"
 #include "chamber/cga.h"
+#include "chamber/ega.h"
+#include "chamber/ega_resource.h"
 #include "chamber/anim.h"
 #include "chamber/cursor.h"
 #include "chamber/input.h"
 #include "chamber/timer.h"
 #include "chamber/portrait.h"
 #include "chamber/room.h"
-#include "chamber/savegame.h"
+#include "chamber/saveload.h"
 #include "chamber/resdata.h"
 #include "chamber/script.h"
 #include "chamber/print.h"
@@ -107,15 +112,13 @@ uint16 benchmarkCpu(void) {
 }
 
 void randomize(void) {
-	warning("STUB: Randomize()");
-#if 0
-	union REGS reg;
-
-	reg.h.ah = 0;
-	int86(0x1A, &reg, &reg);
-	rand_seed = reg.h.dl;
-	Rand();
-#endif
+	// Original read the low byte of the BIOS timer-tick count (int 0x1A) into
+	// rand_seed. Use the host millisecond timer as an equivalent entropy source.
+	if (ConfMan.hasKey("random_seed"))
+		rand_seed = (byte)ConfMan.getInt("random_seed");
+	else
+		rand_seed = (byte)(g_system->getMillis());
+	getRand();
 }
 
 void TRAP() {
@@ -141,11 +144,11 @@ void gameLoop(byte *target) {
 
 		the_command = 0;
 		if (isCursorInRect(&room_bounds_rect)) {
-			selectCursor(CURSOR_TARGET);
+			g_vm->_renderer->selectCursor(CURSOR_TARGET);
 			command_hint = 100;
 			selectSpotCursor();
 		} else {
-			selectCursor(CURSOR_FINGER);
+			g_vm->_renderer->selectCursor(CURSOR_FINGER);
 			object_hint = 117;
 			checkMenuCommandHover();
 		}
@@ -171,8 +174,15 @@ void gameLoop(byte *target) {
 				continue;
 
 			the_command = Swap16(script_word_vars.next_protozorqs_cmd);
-			if (the_command)
+			if (the_command) {
+				// Consume the queued command so a terminal command (e.g. the
+				// "failed the ordeals" death scene queued by checkGameTimeLimit)
+				// fires once instead of every frame. updateProtozorqs() re-queues
+				// live protozorq AI each frame, but it early-returns once
+				// bvar_26 >= 63 and would otherwise leave this set forever.
+				script_word_vars.next_protozorqs_cmd = 0;
 				goto process;
+			}
 
 			if (Swap16(next_vorts_ticks) < script_word_vars.timer_ticks2) { /*TODO: is this ok? ticks2 is BE, ticks3 is LE*/
 				the_command = next_vorts_cmd;
@@ -192,7 +202,11 @@ process:
 			;
 			updateUndrawCursor(target);
 			refreshSpritesData();
-			runCommand();
+			// Drain priority commands at this main-loop baseline too: a queued
+			// AI command (e.g. the timed "failed the ordeals" death scene) may
+			// fire a priority command, which runCommand now propagates up to a
+			// runCommandKeepSp anchor instead of running it nested.
+			runCommandKeepSp();
 			if (g_vm->_shouldRestart)
 				return;
 			blitSpritesToBackBuffer();
@@ -204,6 +218,7 @@ process:
 			updateUndrawCursor(target);
 			refreshSpritesData();
 			uint16 restart = runCommandKeepSp();
+			clearButtons();
 			if (restart == RUNCOMMAND_RESTART && g_vm->_shouldRestart)
 				return;
 			script_byte_vars.used_commands++;
@@ -233,23 +248,36 @@ Common::Error ChamberEngine::init() {
 
 	// Initialize graphics using following:
 	bool isCustomHerc = false;
-	if (_videoMode == Common::RenderMode::kRenderHercG) {
-		isCustomHerc = true;
-		_videoMode = Common::RenderMode::kRenderCGA;
-	}
-	_screenW = 320;
-	_screenH = 200;
-	_screenBits = 2;
-	_screenPPB = 8 / _screenBits;
-	_screenBPL = _screenW / _screenPPB;
-	_line_offset = 0x2000;
-	_line_offset2 = 0x2000;
-	_fontHeight = 6;
-	_fontWidth = 4;
-	if (isCustomHerc) {
-		initGraphics(720, 348);
-	} else {
+	if (_videoMode == Common::RenderMode::kRenderEGA) {
+		_screenW = 320;
+		_screenH = 200;
+		_screenBits = 8;
+		_screenPPB = 1;
+		_screenBPL = _screenW;
+		_line_offset = 0;
+		_line_offset2 = 0;
+		_fontHeight = 6;
+		_fontWidth = 4;
 		initGraphics(_screenW, _screenH);
+	} else {
+		if (_videoMode == Common::RenderMode::kRenderHercG) {
+			isCustomHerc = true;
+			_videoMode = Common::RenderMode::kRenderCGA;
+		}
+		_screenW = 320;
+		_screenH = 200;
+		_screenBits = 2;
+		_screenPPB = 8 / _screenBits;
+		_screenBPL = _screenW / _screenPPB;
+		_line_offset = 0x2000;
+		_line_offset2 = 0x2000;
+		_fontHeight = 6;
+		_fontWidth = 4;
+		if (isCustomHerc) {
+			initGraphics(720, 348);
+		} else {
+			initGraphics(_screenW, _screenH);
+		}
 	}
 
 	initSound();
@@ -258,58 +286,91 @@ Common::Error ChamberEngine::init() {
 
 	IFGM_Init();
 
-	switchToGraphicsMode();
+	g_vm->_renderer->switchToGraphicsMode();
 
 	/* Install timer callback */
 	initTimer();
 
 	Graphics::Surface *splash = nullptr;
 
-	if (g_vm->getLanguage() == Common::EN_USA) {
-		/* Load title screen */
+	if (_videoMode == Common::RenderMode::kRenderEGA) {
+		/* EGA title screen */
+		splash = ega_loadFond("PRESEGA.EGA");
+		if (!splash) {
+			_shouldQuit = true;
+			return Common::kNoError;
+		}
+		g_vm->_renderer->colorSelect(0x30);
+		g_vm->_renderer->backBufferToRealFull();
+	} else if (_gameDescription->flags & GF_SPLASH_PRESCGA) {
+		/* EN_USA CGA title screen */
 		splash = loadSplash("PRESCGA.BIN");
-		if (!splash)
-			exitGame();
+		if (!splash) {
+			_shouldQuit = true;
+			return Common::kNoError;
+		}
 
 		if (ifgm_loaded) {
 			/*TODO*/
 		}
+
+		if (!isCustomHerc) {
+			g_vm->_renderer->colorSelect(0x30);
+			g_vm->_renderer->backBufferToRealFull();
+		} else {
+			if (_renderMode == Common::kRenderHercG)
+				g_system->getPaletteManager()->setPalette(Graphics::HGC_G_PALETTE, 0, 2);
+			else
+				g_system->getPaletteManager()->setPalette(Graphics::HGC_A_PALETTE, 0, 2);
+
+			g_vm->_renderer->backBufferToRealFull();
+		}
 	} else {
-		/* Load title screen */
+		/* Multilingual CGA title screen */
 		splash = loadSplash("PRES.BIN");
-		if (!splash)
-			exitGame();
+		if (!splash) {
+			_shouldQuit = true;
+			return Common::kNoError;
+		}
+
+		if (!isCustomHerc) {
+			/* Select intense cyan-magenta palette */
+			g_vm->_renderer->colorSelect(0x30);
+			g_vm->_renderer->backBufferToRealFull();
+		} else {
+			if (_renderMode == Common::kRenderHercG)
+				g_system->getPaletteManager()->setPalette(Graphics::HGC_G_PALETTE, 0, 2);
+			else
+				g_system->getPaletteManager()->setPalette(Graphics::HGC_A_PALETTE, 0, 2);
+
+			g_vm->_renderer->backBufferToRealFull();
+		}
 	}
 
-	if (!isCustomHerc) {
-		/* Select intense cyan-mageta palette */
-		cga_ColorSelect(0x30);
-		cga_BackBufferToRealFull();
-	} else {
-		/* Set authentic Hercules Green phosphor palette */
-		g_system->getPaletteManager()->setPalette(Graphics::HGC_G_PALETTE, 0, 2);
-		cga_BackBufferToRealFull();
+	if (splash) {
+		if (g_vm->_videoMode != Common::RenderMode::kRenderEGA)
+			splash->free();
+		delete splash;
 	}
-
-    splash->free();
-    delete splash;
 
 	/* Wait for a keypress */
 	clearKeyboard();
 	readKeyboardChar();
 
 
-	if (g_vm->getLanguage() == Common::EN_USA) {
+	if (!(_gameDescription->flags & GF_SPLASH2_DRAP)) {
 		if (ifgm_loaded) {
 			/*TODO*/
 		}
 
-		/* Force English language */
+		/* Single-language variant — force English */
 		c = 'E';
 	} else {
 		/* Load language selection screen */
-		if (!loadSplash("DRAP.BIN"))
-			exitGame();
+		if (!loadSplash("DRAP.BIN")) {
+			_shouldQuit = true;
+			return Common::kNoError;
+		}
 
 		/* Wait for a keypress and show the language selection screen */
 		clearKeyboard();
@@ -318,7 +379,7 @@ Common::Error ChamberEngine::init() {
 		if (_shouldQuit)
 			return Common::kNoError;
 
-		cga_BackBufferToRealFull();
+		g_vm->_renderer->backBufferToRealFull();
 		clearKeyboard();
 
 		/* Wait for a valid language choice */
@@ -339,7 +400,7 @@ Common::Error ChamberEngine::init() {
 	res_diali[0].name[4] = c;
 
 	if (g_vm->getLanguage() != Common::EN_USA)
-		cga_BackBufferToRealFull();
+		g_vm->_renderer->backBufferToRealFull();
 
 	/* Load script and other static resources */
 	/* Those are normally embedded in the executable, but here we load extracted ones*/
@@ -354,11 +415,30 @@ Common::Error ChamberEngine::init() {
 	initInput();
 
 	/* Load graphics resources */
-	while (!loadFond() || !loadSpritesData() || !loadPersData())
-		askDisk2();
+	if (g_vm->_videoMode == Common::RenderMode::kRenderEGA) {
+		/* EGA: load decoded sprite banks from external .EGA files */
+		ega_sprit_res = new EgaSpriteResource();
+		ega_sprit_res->appendFromFile("SPRIT.EGA");
+
+		ega_puzzl_res = new EgaSpriteResource();
+		ega_puzzl_res->appendFromFile("PUZZL.EGA");
+		ega_puzzl_res->appendFromFile("PUZZ1.EGA");
+
+		ega_perso_res = new EgaSpriteResource();
+		ega_perso_res->appendFromFile("PERSO.EGA");
+
+		Graphics::Surface *fond = loadFond();
+		if (!fond)
+			exitGame();
+		/* fond wraps ega_backbuffer via init() — surface does not own pixel data, safe to delete directly */
+		delete fond;
+	} else {
+		while (!loadFond() || !loadSpritesData() || !loadPersData())
+			askDisk2();
+	}
 
 	/*TODO: is this necessary?*/
-	cga_BackBufferToRealFull();
+	g_vm->_renderer->backBufferToRealFull();
 
 	/* Create clean game state snapshot */
 	saveRestartGame();
@@ -371,8 +451,6 @@ Common::Error ChamberEngine::init() {
 			/*TODO*/
 		}
 	}
-
-	exitGame();
 
 	return Common::kNoError;
 }
@@ -399,8 +477,13 @@ Common::Error ChamberEngine::execute() {
 	//ResetInput();
 
 	/* Play introduction sequence and initialize game */
+	// Freeze the ordeal timer during the intro/setup: it is installed before this
+	// point (initTimer), so the non-interactive intro would otherwise start the
+	// player's one-hour ordeal budget early.
+	script_byte_vars.game_paused = 1;
 	the_command = 0xC001;
 	runCommand();
+	script_byte_vars.game_paused = 0;
 
 	if (_shouldQuit)
 		return Common::kNoError;
