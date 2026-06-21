@@ -19,7 +19,7 @@
  *
  */
 
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/kernel.h"
 #include "mads/madsv2/core/matte.h"
@@ -130,7 +130,7 @@ static void room_520_daemon() {
 		scratch._8c = 66;
 		break;
 	case 101:
-		global_digi_play(14);
+		global_midi_play(14);
 		break;
 	}
 

@@ -20,7 +20,7 @@
  */
 
 #include "common/textconsole.h"
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/object.h"
 #include "mads/madsv2/core/player.h"
 #include "mads/madsv2/core/text.h"
@@ -28,7 +28,7 @@
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/imath.h"
 #include "mads/madsv2/core/kernel.h"
-#include "mads/madsv2/core/midi.h"
+#include "mads/madsv2/forest/midi.h"
 #include "mads/madsv2/core/pal.h"
 #include "mads/madsv2/forest/global.h"
 #include "mads/madsv2/forest/extra.h"
@@ -985,9 +985,16 @@ void global_error_code() {
 		text_show(text_id);
 }
 
-void global_digi_play(int num) {
-	// TODO
-	warning("TODO: global_digi_play");
+void global_midi_play(int num) {
+	static const char *NAMES[14] = {
+		"adven2", "foolarnd", "homeag", "humorus1", "humorus2", "pianogtr", "raindrop",
+		"xad", "xcarey", "xuspens1", "travels1", "birdsong", "adventur", "action1"
+	};
+
+	assert(num >= 1 && num <= 14);
+	Common::String name = Common::String::format("*%s.hmi", NAMES[num - 1]);
+
+	midi_play(name.c_str());
 }
 
 void global_daemon_code() {

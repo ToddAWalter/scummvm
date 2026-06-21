@@ -19,7 +19,7 @@
  *
  */
 
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/kernel.h"
 #include "mads/madsv2/core/matte.h"
@@ -63,7 +63,7 @@ static void room_509_init() {
 	mouse_hide();
 	global[player_score] = 0;
 	global[g009] = -1;
-	global_digi_play(15);
+	global_midi_play(15);
 	global[g009] = -1;
 	viewing_at_y = 22;
 	global[player_score] = 0;

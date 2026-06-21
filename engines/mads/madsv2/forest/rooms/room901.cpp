@@ -20,7 +20,6 @@
  */
 
 #include "common/config-manager.h"
-#include "mads/madsv2/core/conv.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/kernel.h"
 #include "mads/madsv2/core/matte.h"
@@ -48,9 +47,6 @@ static void room_901_init() {
 	if (ConfMan.getBool("seen_intro")) {
 		new_room = 904;
 	} else {
-		ConfMan.setBool("seen_intro", true);
-		ConfMan.flushToDisk();
-
 		kernel_timing_trigger(300, START_INTRO);
 	}
 }
@@ -68,10 +64,11 @@ static void room_901_pre_parser() {
 }
 
 static void room_901_parser() {
+	// No implementation
 }
 
 void room_901_synchronize(Common::Serializer &s) {
-	// Room has no scratch area
+	// No implementation
 }
 
 void room_901_preload() {

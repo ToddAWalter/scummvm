@@ -19,14 +19,14 @@
  *
  */
 
-#include "mads/madsv2/core/conv.h"
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/core/config.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/imath.h"
 #include "mads/madsv2/core/inter.h"
 #include "mads/madsv2/core/kernel.h"
 #include "mads/madsv2/core/matte.h"
-#include "mads/madsv2/core/midi.h"
+#include "mads/madsv2/forest/midi.h"
 #include "mads/madsv2/core/object.h"
 #include "mads/madsv2/core/player.h"
 #include "mads/madsv2/core/sound.h"
@@ -255,7 +255,7 @@ static void room_106_anim1() {
 
 	if (kernel.trigger != 7 && kernel.trigger != 28)
 		return;
-	if (digi_val1 != 0)
+	if (config_file.forest1 != 0)
 		kernel_timing_trigger(1, 109);
 	if (scratch._ae == 114) { scratch._ae = -1; return; }
 	if (scratch._ae > 114)  return;
@@ -363,7 +363,7 @@ static void room_106_anim4() {
 		return;
 	case 105:
 		global[g009] = 0;
-		global_digi_play(4);
+		global_midi_play(4);
 		global[g154] = 0;
 		aainfo[7]._val3 = 13;
 		aainfo[7]._frame = 20;

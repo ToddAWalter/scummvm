@@ -19,29 +19,32 @@
  *
  */
 
-#ifndef MADS_DIGI_SOUND_H
-#define MADS_DIGI_SOUND_H
+#ifndef MADS_FOREST_MIDI_H
+#define MADS_FOREST_MIDI_H
 
-#include "common/scummsys.h"
+#include "audio/midiplayer.h"
 
 namespace MADS {
 namespace MADSV2 {
+namespace Forest {
 
-extern int digi_val1;
-extern int digi_val2;
-extern int digi_timing_index;
-extern bool digi_flag1, digi_flag2;
+class MidiPlayer : public Audio::MidiPlayer {
+private:
+	// MidiDriver_BASE interface implementation
+	void send(uint32 b) override;
 
-extern void digi_install();
-extern void digi_play(const char *name, int slot);
-extern void digi_play_build(int room, char thing, int num, int slot);
-extern void digi_play_build_ii(char thing, int num, int slot);
-extern void digi_stop(int which_one);
-extern void digi_uninstall();
-extern void digi_read_another_chunk();
-extern void digi_initial_volume(int vol);
-extern void digi_set_volume(int vol, int slot);
+public:
+	MidiPlayer() : Audio::MidiPlayer() {}
+	~MidiPlayer() override {}
 
+	void play(const char *name);
+};
+
+extern void midi_play(const char *name);
+extern void midi_stop();
+inline void midi_loop() {}
+
+} // namespace Forest
 } // namespace MADSV2
 } // namespace MADS
 

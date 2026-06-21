@@ -19,14 +19,13 @@
  *
  */
 
-#include "mads/madsv2/core/conv.h"
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/imath.h"
 #include "mads/madsv2/core/inter.h"
 #include "mads/madsv2/core/kernel.h"
 #include "mads/madsv2/core/matte.h"
-#include "mads/madsv2/core/midi.h"
+#include "mads/madsv2/forest/midi.h"
 #include "mads/madsv2/core/mouse.h"
 #include "mads/madsv2/core/object.h"
 #include "mads/madsv2/core/player.h"
@@ -117,7 +116,7 @@ static void room_101_init2() {
 	kernel_position_anim(scratch._a4, 194, 145, 75, 4);
 
 	global[g009] = -1;
-	global_digi_play(8);
+	global_midi_play(8);
 
 	if (previous_room != KERNEL_RESTORING_GAME) {
 		player.x = 96;
@@ -558,7 +557,7 @@ static void room_101_anim10() {
 				scratch._b4 = 35;
 			} else if (frame < 35) {
 				if (frame == 5)
-					global_digi_play(11);
+					global_midi_play(11);
 				else if (frame == 30) {
 					digi_play_build(101, '_', 3, 1);
 					scratch._b4 = 30;

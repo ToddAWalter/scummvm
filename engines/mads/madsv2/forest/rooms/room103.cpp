@@ -19,14 +19,13 @@
  *
  */
 
-#include "mads/madsv2/core/conv.h"
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/imath.h"
 #include "mads/madsv2/core/inter.h"
 #include "mads/madsv2/core/kernel.h"
 #include "mads/madsv2/core/matte.h"
-#include "mads/madsv2/core/midi.h"
+#include "mads/madsv2/forest/midi.h"
 #include "mads/madsv2/core/sound.h"
 #include "mads/madsv2/core/sprite.h"
 #include "mads/madsv2/core/text.h"
@@ -334,7 +333,7 @@ static void room_103_anim4() {
 		} else if (frame < 50) {
 			switch (frame) {
 			case 16:
-				global_digi_play(8);
+				global_midi_play(8);
 				aainfo[3]._val3 = 15;
 				digi_play_build(103, 'c', 1, 1);
 				scratch._90 = 16;

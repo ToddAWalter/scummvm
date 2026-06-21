@@ -19,7 +19,7 @@
  *
  */
 
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/inter.h"
 #include "mads/madsv2/core/kernel.h"
@@ -73,7 +73,7 @@ static Scratch scratch;
 static void room_201_init1() {
 	global[player_score] = -1;
 	global[g009] = -1;
-	global_digi_play(11);
+	global_midi_play(11);
 	global[g131] = 0;
 	global[g141] = 0;
 

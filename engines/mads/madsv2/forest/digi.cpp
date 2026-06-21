@@ -19,19 +19,20 @@
  *
  */
 
-#include "mads/madsv2/core/digi.h"
+#include "mads/madsv2/forest/digi.h"
+#include "mads/madsv2/core/config.h"
 #include "mads/madsv2/engine.h"
 
 namespace MADS {
 namespace MADSV2 {
+namespace Forest {
 
-int digi_val1;
 int digi_val2;
 int digi_timing_index;
 bool digi_flag1, digi_flag2;
 
 void digi_install() {
-	digi_val1 = 0;
+	config_file.forest1 = 0;
 	digi_val2 = 0;
 	digi_timing_index = 0;
 }
@@ -55,11 +56,17 @@ void digi_play_build(int room, char thing, int num, int slot) {
 	digi_play(name.c_str(), slot);
 }
 
-void digi_play(const char *name, int slot) {}
-void digi_stop(int which_one) {}
-void digi_read_another_chunk() {}
-void digi_initial_volume(int vol) {}
-void digi_set_volume(int vol, int slot) {}
+void digi_play(const char *name, int slot) {
+}
+void digi_stop(int which_one) {
+}
+void digi_read_another_chunk() {
+}
+void digi_initial_volume(int vol) {
+}
+void digi_set_volume(int vol, int slot) {
+}
 
+} // namespace Forest
 } // namespace MADSV2
 } // namespace MADS
