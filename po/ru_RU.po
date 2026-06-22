@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.8.0svn\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-06-20 16:13+0000\n"
+"POT-Creation-Date: 2026-06-21 22:35+0000\n"
 "PO-Revision-Date: 2026-06-20 15:03+0000\n"
 "Last-Translator: Eugene Sandulenko <sev@scummvm.org>\n"
 "Language-Team: Russian <https://translations.scummvm.org/projects/scummvm/"
@@ -591,7 +591,7 @@ msgstr "Грф"
 
 #: gui/editgamedialog.cpp:164 gui/options.cpp:2075 gui/options.cpp:2256
 #: backends/graphics/atari/atari-graphics.cpp:1056
-#: backends/graphics/sdl/sdl-graphics.cpp:487
+#: backends/graphics/sdl/sdl-graphics.cpp:491
 msgid "Graphics"
 msgstr "Графика"
 
@@ -1932,7 +1932,7 @@ msgstr "Скачать шейдеры"
 msgid "Check on the scummvm.org website for updates of shader packs"
 msgstr "Проверяет обновления пакетов шейдеров на сайте scummvm.org"
 
-#: gui/options.cpp:1700 backends/graphics/sdl/sdl-graphics.cpp:478
+#: gui/options.cpp:1700 backends/graphics/sdl/sdl-graphics.cpp:482
 msgid "Fullscreen mode"
 msgstr "Полноэкранный режим"
 
@@ -2432,7 +2432,7 @@ msgid "Debug level:"
 msgstr "Уровень отладки:"
 
 #. I18N: Debug level -1, no messages
-#: gui/options.cpp:2758 gui/options.cpp:2895 audio/fmopl.cpp:83
+#: gui/options.cpp:2758 gui/options.cpp:2895 audio/fmopl.cpp:112
 msgid "None"
 msgstr "Нет"
 
@@ -4059,33 +4059,73 @@ msgstr "OpenGL с шейдерами"
 msgid "AdLib emulator"
 msgstr "Эмулятор AdLib"
 
-#: audio/fmopl.cpp:85
+#: audio/fmopl.cpp:114
 msgid "MAME OPL emulator"
 msgstr "Эмулятор MAME OPL"
 
-#: audio/fmopl.cpp:88
+#: audio/fmopl.cpp:117
 msgid "DOSBox OPL emulator"
 msgstr "Эмулятор DOSBox OPL"
 
-#: audio/fmopl.cpp:91
+#: audio/fmopl.cpp:120
 msgid "Nuked OPL emulator"
 msgstr "Эмулятор Nuked OPL"
 
-#: audio/fmopl.cpp:94
+#: audio/fmopl.cpp:123
 msgid "ALSA Direct FM"
 msgstr "Прямой FM ALSA"
 
-#: audio/fmopl.cpp:97
+#: audio/fmopl.cpp:126
 msgid "OPL2LPT"
 msgstr "OPL2LPT"
 
-#: audio/fmopl.cpp:98
+#: audio/fmopl.cpp:127
 msgid "OPL3LPT"
 msgstr "OPL3LPT"
 
-#: audio/fmopl.cpp:101
+#: audio/fmopl.cpp:130
 msgid "RetroWave OPL3"
 msgstr "RetroWave OPL3"
+
+#: audio/fmopl.cpp:133
+msgid "[nFM] NokturnFM2 (OPL2)"
+msgstr ""
+
+#: audio/fmopl.cpp:134
+msgid "[nFM] NokturnFM3 (OPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:135
+msgid "[nFM] RetroWave USB OPL3 Express (OPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:136
+msgid "[nFM] Serdaco OPL2LPT (OPL2)"
+msgstr ""
+
+#: audio/fmopl.cpp:137
+msgid "[nFM] Serdaco OPL3LPT (OPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:138
+msgid "[nFM] Cheerful Electronics OPL2 Audio Board (OPL2)"
+msgstr ""
+
+#: audio/fmopl.cpp:139
+msgid "[nFM] Cheerful Electronics OPL3 Duo! (2xOPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:140
+msgid "[nFM] ST Bus ISA / VME SoundBlaster"
+msgstr ""
+
+#: audio/fmopl.cpp:141
+msgid "[nFM] NatFeats / NULL"
+msgstr ""
+
+#: audio/fmopl.cpp:142
+msgid "[nFM] Nuked-OPL3 softsynth (OPL3)"
+msgstr ""
 
 #: audio/mididrv.cpp:232
 #, c-format
@@ -4300,7 +4340,7 @@ msgid "Choose a new folder"
 msgstr "Выбрать новую папку"
 
 #: backends/graphics/atari/atari-graphics.cpp:1060
-#: backends/graphics/sdl/sdl-graphics.cpp:514 engines/scumm/help.cpp:103
+#: backends/graphics/sdl/sdl-graphics.cpp:518 engines/scumm/help.cpp:103
 msgid "Toggle aspect ratio correction"
 msgstr "Переключить коррекцию соотношения сторон"
 
@@ -4372,34 +4412,34 @@ msgstr "Поверхность SDL"
 msgid "SDL Surface (forced 8bpp mode)"
 msgstr "SDL Surface (8-битный режим)"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:420
+#: backends/graphics/sdl/sdl-graphics.cpp:424
 #, c-format
 msgid "Saved screenshot '%s'"
 msgstr "Сохранён скриншот '%s'"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:435
+#: backends/graphics/sdl/sdl-graphics.cpp:439
 msgid "Could not save screenshot"
 msgstr "Не удалось сохранить скриншот"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:480
+#: backends/graphics/sdl/sdl-graphics.cpp:484
 msgid "Windowed mode"
 msgstr "Оконный режим"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:491 engines/colony/metaengine.cpp:173
+#: backends/graphics/sdl/sdl-graphics.cpp:495 engines/colony/metaengine.cpp:173
 #: engines/scumm/help.cpp:88
 msgid "Toggle fullscreen"
 msgstr "Переключить полноэкранный режим"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:498 engines/scumm/help.cpp:100
+#: backends/graphics/sdl/sdl-graphics.cpp:502 engines/scumm/help.cpp:100
 #: engines/wintermute/keymapper_tables.h:960
 msgid "Toggle mouse capture"
 msgstr "Переключить перехват мыши"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:503
+#: backends/graphics/sdl/sdl-graphics.cpp:507
 msgid "Toggle resizable window"
 msgstr "Переключить изменение размеров окна"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:508 engines/stark/metaengine.cpp:240
+#: backends/graphics/sdl/sdl-graphics.cpp:512 engines/stark/metaengine.cpp:240
 #: engines/wintermute/keymapper_tables.h:646
 #: engines/wintermute/keymapper_tables.h:695
 #: engines/wintermute/keymapper_tables.h:1098
@@ -4412,27 +4452,27 @@ msgstr "Переключить изменение размеров окна"
 msgid "Save screenshot"
 msgstr "Сохранить скриншот"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:521
+#: backends/graphics/sdl/sdl-graphics.cpp:525
 msgid "Toggle linear filtered scaling"
 msgstr "Использовать линейное сглаживание при масштабировании"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:528
+#: backends/graphics/sdl/sdl-graphics.cpp:532
 msgid "Cycle through stretch modes"
 msgstr "Переключить режим растягивания"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:534
+#: backends/graphics/sdl/sdl-graphics.cpp:538
 msgid "Increase the scale factor"
 msgstr "Увеличить масштаб"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:540
+#: backends/graphics/sdl/sdl-graphics.cpp:544
 msgid "Decrease the scale factor"
 msgstr "Уменьшить масштаб"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:547
+#: backends/graphics/sdl/sdl-graphics.cpp:551
 msgid "Switch to the next scaler"
 msgstr "Переключить на предыдущий фильтр масштабирования"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:552
+#: backends/graphics/sdl/sdl-graphics.cpp:556
 msgid "Switch to the previous scaler"
 msgstr "Переключить на следующий фильтр масштабирования"
 
@@ -8692,6 +8732,46 @@ msgstr "Рисует графику с использованием яркой �
 msgid "Enable Text to Speech for Objects, Options, and the Bible Quote"
 msgstr "Включить озвучку текста для объектов, опций и цитаты из Библии"
 
+#: engines/eem/metaengine.cpp:38
+#, fuzzy
+#| msgid "Highlight items"
+msgid "Hide the highlight boxes"
+msgstr "Подсветить элеиенты"
+
+#: engines/eem/metaengine.cpp:39
+msgid "Hide the boxes that highlight searchable clue locations."
+msgstr ""
+
+#: engines/eem/metaengine.cpp:49
+msgid "Better fit for dialog balloons"
+msgstr ""
+
+#: engines/eem/metaengine.cpp:50
+msgid ""
+"Pick a smaller speech-bubble graphic when the wrapped text doesn't need the "
+"original size."
+msgstr ""
+
+#: engines/eem/metaengine.cpp:61
+#, fuzzy
+#| msgid "Skip speech"
+msgid "Skip repeated cases"
+msgstr "Пропустить речь"
+
+#: engines/eem/metaengine.cpp:62
+msgid "Skip all Book 2 cases and jump to Book 3 once Book 1 is complete."
+msgstr ""
+
+#: engines/eem/metaengine.cpp:72 engines/hypno/metaengine.cpp:81
+msgid "Enable restored content"
+msgstr "Включить восстановленный контент"
+
+#: engines/eem/metaengine.cpp:73
+msgid ""
+"Restore floppy release extras in the CD version, including pre-scrapbook "
+"conversations and first-try badges."
+msgstr ""
+
 #: engines/efh/metaengine.cpp:235
 msgid "Select option 1"
 msgstr "Выбрать вариант 1"
@@ -10239,10 +10319,6 @@ msgstr "Разблокировать все уровни"
 #: engines/hypno/metaengine.cpp:71
 msgid "All levels will be available to play."
 msgstr "Все уровни будут доступны для игры."
-
-#: engines/hypno/metaengine.cpp:81
-msgid "Enable restored content"
-msgstr "Включить восстановленный контент"
 
 #: engines/hypno/metaengine.cpp:82
 msgid "Add additional content that is not enabled the original implementation."
@@ -13737,8 +13813,8 @@ msgid "Rebel Assault II controls"
 msgstr "Управление Rebel Assault II"
 
 #: engines/scumm/metaengine.cpp:1298
-msgid "Cover / back"
-msgstr "Прикрыть / назад"
+msgid "Cover"
+msgstr ""
 
 #: engines/scumm/metaengine.cpp:1304
 msgid "Skip / back"
@@ -15154,7 +15230,7 @@ msgstr "Переключить стиль панели"
 msgid "Toggle text speech"
 msgstr "Переключить текст речи"
 
-#: engines/twine/detection.cpp:188
+#: engines/twine/detection.cpp:187
 msgid "This version requires Giflib which was not compiled into ScummVM"
 msgstr "Эта игра требует библиотеку Giflib которая не была скомпилирована"
 
@@ -17284,6 +17360,9 @@ msgstr ""
 "содержит несколько музыкальных головоломок, для решения которых требуется "
 "MIDI-аудио. Эти головоломки также можно решить с помощью субтитров, если они "
 "поддерживаются. Продолжить запуск игры?"
+
+#~ msgid "Cover / back"
+#~ msgstr "Прикрыть / назад"
 
 #, fuzzy
 #~| msgid "Move back"

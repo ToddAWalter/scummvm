@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2.8.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-06-20 16:13+0000\n"
+"POT-Creation-Date: 2026-06-21 22:35+0000\n"
 "PO-Revision-Date: 2026-06-05 10:22+0000\n"
 "Last-Translator: NorwayFun <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://translations.scummvm.org/projects/scummvm/"
@@ -578,7 +578,7 @@ msgstr "GFX"
 
 #: gui/editgamedialog.cpp:164 gui/options.cpp:2075 gui/options.cpp:2256
 #: backends/graphics/atari/atari-graphics.cpp:1056
-#: backends/graphics/sdl/sdl-graphics.cpp:487
+#: backends/graphics/sdl/sdl-graphics.cpp:491
 msgid "Graphics"
 msgstr "გრაფიკა"
 
@@ -1806,7 +1806,7 @@ msgstr "შეიდერების გადმოწერა"
 msgid "Check on the scummvm.org website for updates of shader packs"
 msgstr ""
 
-#: gui/options.cpp:1700 backends/graphics/sdl/sdl-graphics.cpp:478
+#: gui/options.cpp:1700 backends/graphics/sdl/sdl-graphics.cpp:482
 msgid "Fullscreen mode"
 msgstr "სრული ეკრანის რეჟიმი"
 
@@ -2281,7 +2281,7 @@ msgid "Debug level:"
 msgstr "გამართვის დონე:"
 
 #. I18N: Debug level -1, no messages
-#: gui/options.cpp:2758 gui/options.cpp:2895 audio/fmopl.cpp:83
+#: gui/options.cpp:2758 gui/options.cpp:2895 audio/fmopl.cpp:112
 msgid "None"
 msgstr "არაფერი"
 
@@ -3766,33 +3766,73 @@ msgstr "OpenGL შეიდერებით"
 msgid "AdLib emulator"
 msgstr "AdLib-ის ემულატორი"
 
-#: audio/fmopl.cpp:85
+#: audio/fmopl.cpp:114
 msgid "MAME OPL emulator"
 msgstr "MAME OPL-ის ემულატორი"
 
-#: audio/fmopl.cpp:88
+#: audio/fmopl.cpp:117
 msgid "DOSBox OPL emulator"
 msgstr "DOSBox OPL-ის ემულატორი"
 
-#: audio/fmopl.cpp:91
+#: audio/fmopl.cpp:120
 msgid "Nuked OPL emulator"
 msgstr "Nuked OPL-ის ემულატორი"
 
-#: audio/fmopl.cpp:94
+#: audio/fmopl.cpp:123
 msgid "ALSA Direct FM"
 msgstr "ALSA Direct FM"
 
-#: audio/fmopl.cpp:97
+#: audio/fmopl.cpp:126
 msgid "OPL2LPT"
 msgstr "OPL2LPT"
 
-#: audio/fmopl.cpp:98
+#: audio/fmopl.cpp:127
 msgid "OPL3LPT"
 msgstr "OPL3LPT"
 
-#: audio/fmopl.cpp:101
+#: audio/fmopl.cpp:130
 msgid "RetroWave OPL3"
 msgstr "RetroWave OPL3"
+
+#: audio/fmopl.cpp:133
+msgid "[nFM] NokturnFM2 (OPL2)"
+msgstr ""
+
+#: audio/fmopl.cpp:134
+msgid "[nFM] NokturnFM3 (OPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:135
+msgid "[nFM] RetroWave USB OPL3 Express (OPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:136
+msgid "[nFM] Serdaco OPL2LPT (OPL2)"
+msgstr ""
+
+#: audio/fmopl.cpp:137
+msgid "[nFM] Serdaco OPL3LPT (OPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:138
+msgid "[nFM] Cheerful Electronics OPL2 Audio Board (OPL2)"
+msgstr ""
+
+#: audio/fmopl.cpp:139
+msgid "[nFM] Cheerful Electronics OPL3 Duo! (2xOPL3)"
+msgstr ""
+
+#: audio/fmopl.cpp:140
+msgid "[nFM] ST Bus ISA / VME SoundBlaster"
+msgstr ""
+
+#: audio/fmopl.cpp:141
+msgid "[nFM] NatFeats / NULL"
+msgstr ""
+
+#: audio/fmopl.cpp:142
+msgid "[nFM] Nuked-OPL3 softsynth (OPL3)"
+msgstr ""
 
 #: audio/mididrv.cpp:232
 #, c-format
@@ -3997,7 +4037,7 @@ msgid "Choose a new folder"
 msgstr "აირჩიეთ ახალი საქაღალდე"
 
 #: backends/graphics/atari/atari-graphics.cpp:1060
-#: backends/graphics/sdl/sdl-graphics.cpp:514 engines/scumm/help.cpp:103
+#: backends/graphics/sdl/sdl-graphics.cpp:518 engines/scumm/help.cpp:103
 msgid "Toggle aspect ratio correction"
 msgstr "ზომის ფარდობის შესწორების გადართვა"
 
@@ -4069,34 +4109,34 @@ msgstr "SDL ზედაპირი"
 msgid "SDL Surface (forced 8bpp mode)"
 msgstr ""
 
-#: backends/graphics/sdl/sdl-graphics.cpp:420
+#: backends/graphics/sdl/sdl-graphics.cpp:424
 #, c-format
 msgid "Saved screenshot '%s'"
 msgstr "შენახულია ეკრანის ანაბეჭდი '%s'"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:435
+#: backends/graphics/sdl/sdl-graphics.cpp:439
 msgid "Could not save screenshot"
 msgstr "ეკრანის ანაბეჭდის შენახვა შეუძლებელია"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:480
+#: backends/graphics/sdl/sdl-graphics.cpp:484
 msgid "Windowed mode"
 msgstr "ფანჯრის რეჟიმი"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:491 engines/colony/metaengine.cpp:173
+#: backends/graphics/sdl/sdl-graphics.cpp:495 engines/colony/metaengine.cpp:173
 #: engines/scumm/help.cpp:88
 msgid "Toggle fullscreen"
 msgstr "მთელ ეკრანზე გატანის ჩართ/გამორთ"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:498 engines/scumm/help.cpp:100
+#: backends/graphics/sdl/sdl-graphics.cpp:502 engines/scumm/help.cpp:100
 #: engines/wintermute/keymapper_tables.h:960
 msgid "Toggle mouse capture"
 msgstr "თაგუნას ჩაჭერის გადართვა"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:503
+#: backends/graphics/sdl/sdl-graphics.cpp:507
 msgid "Toggle resizable window"
 msgstr "ზომაშეცვლადი ფანჯრის გადართვა"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:508 engines/stark/metaengine.cpp:240
+#: backends/graphics/sdl/sdl-graphics.cpp:512 engines/stark/metaengine.cpp:240
 #: engines/wintermute/keymapper_tables.h:646
 #: engines/wintermute/keymapper_tables.h:695
 #: engines/wintermute/keymapper_tables.h:1098
@@ -4109,27 +4149,27 @@ msgstr "ზომაშეცვლადი ფანჯრის გადა�
 msgid "Save screenshot"
 msgstr "ეკრანის ანაბეჭდის შენახვა"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:521
+#: backends/graphics/sdl/sdl-graphics.cpp:525
 msgid "Toggle linear filtered scaling"
 msgstr "გადიდებისას წრფივი მოგლუვების გადართვა"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:528
+#: backends/graphics/sdl/sdl-graphics.cpp:532
 msgid "Cycle through stretch modes"
 msgstr "გადართვა გაწელვის რეჟიმებს შორის"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:534
+#: backends/graphics/sdl/sdl-graphics.cpp:538
 msgid "Increase the scale factor"
 msgstr "მასშტაბის ფაქტორის გაზრდა"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:540
+#: backends/graphics/sdl/sdl-graphics.cpp:544
 msgid "Decrease the scale factor"
 msgstr "მასშტაბის ფაქტორის შემცირება"
 
-#: backends/graphics/sdl/sdl-graphics.cpp:547
+#: backends/graphics/sdl/sdl-graphics.cpp:551
 msgid "Switch to the next scaler"
 msgstr ""
 
-#: backends/graphics/sdl/sdl-graphics.cpp:552
+#: backends/graphics/sdl/sdl-graphics.cpp:556
 msgid "Switch to the previous scaler"
 msgstr ""
 
@@ -7909,6 +7949,46 @@ msgstr ""
 msgid "Enable Text to Speech for Objects, Options, and the Bible Quote"
 msgstr ""
 
+#: engines/eem/metaengine.cpp:38
+#, fuzzy
+#| msgid "Highlight items"
+msgid "Hide the highlight boxes"
+msgstr "ელემენტების გამოკვეთა"
+
+#: engines/eem/metaengine.cpp:39
+msgid "Hide the boxes that highlight searchable clue locations."
+msgstr ""
+
+#: engines/eem/metaengine.cpp:49
+msgid "Better fit for dialog balloons"
+msgstr ""
+
+#: engines/eem/metaengine.cpp:50
+msgid ""
+"Pick a smaller speech-bubble graphic when the wrapped text doesn't need the "
+"original size."
+msgstr ""
+
+#: engines/eem/metaengine.cpp:61
+#, fuzzy
+#| msgid "Skip speech"
+msgid "Skip repeated cases"
+msgstr "საუბრის გამოტოვება"
+
+#: engines/eem/metaengine.cpp:62
+msgid "Skip all Book 2 cases and jump to Book 3 once Book 1 is complete."
+msgstr ""
+
+#: engines/eem/metaengine.cpp:72 engines/hypno/metaengine.cpp:81
+msgid "Enable restored content"
+msgstr "აღდგენილი შემცველობის ჩართვა"
+
+#: engines/eem/metaengine.cpp:73
+msgid ""
+"Restore floppy release extras in the CD version, including pre-scrapbook "
+"conversations and first-try badges."
+msgstr ""
+
 #: engines/efh/metaengine.cpp:235
 msgid "Select option 1"
 msgstr "1 პარამეტრის არჩევა"
@@ -9405,10 +9485,6 @@ msgstr "ყველა დონის განბლოკვა"
 #: engines/hypno/metaengine.cpp:71
 msgid "All levels will be available to play."
 msgstr "სათამაშოდ ხელმისაწვდომი იქნება ყველა დონე."
-
-#: engines/hypno/metaengine.cpp:81
-msgid "Enable restored content"
-msgstr "აღდგენილი შემცველობის ჩართვა"
 
 #: engines/hypno/metaengine.cpp:82
 msgid "Add additional content that is not enabled the original implementation."
@@ -12630,10 +12706,8 @@ msgid "Rebel Assault II controls"
 msgstr ""
 
 #: engines/scumm/metaengine.cpp:1298
-#, fuzzy
-#| msgid "Move back"
-msgid "Cover / back"
-msgstr "უკან გადასვლა"
+msgid "Cover"
+msgstr ""
 
 #: engines/scumm/metaengine.cpp:1304
 #, fuzzy
@@ -13968,7 +14042,7 @@ msgstr "პანელის სტილის გადართვა"
 msgid "Toggle text speech"
 msgstr "ტექსტის-ხმამაღლა-წაკითხვის გადართვა"
 
-#: engines/twine/detection.cpp:188
+#: engines/twine/detection.cpp:187
 msgid "This version requires Giflib which was not compiled into ScummVM"
 msgstr ""
 
@@ -16039,6 +16113,11 @@ msgid ""
 "solved.  These puzzles may alternatively be solved using subtitles, if "
 "supported. Continue launching game?"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Move back"
+#~ msgid "Cover / back"
+#~ msgstr "უკან გადასვლა"
 
 #~ msgid "Menu back"
 #~ msgstr "მენიუ უკან"

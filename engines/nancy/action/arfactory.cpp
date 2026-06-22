@@ -74,6 +74,7 @@
 #include "engines/nancy/action/puzzle/towerpuzzle.h"
 #include "engines/nancy/action/puzzle/turningpuzzle.h"
 #include "engines/nancy/action/puzzle/twodialpuzzle.h"
+#include "engines/nancy/action/puzzle/typingquizpuzzle.h"
 #include "engines/nancy/action/puzzle/whalesurvivorpuzzle.h"
 
 #include "engines/nancy/state/scene.h"
@@ -372,8 +373,7 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 	case 140:
 		return new SetVolume();
 	case 147:	// Nancy11
-		warning("FadeSoundToSilence");	// TODO
-		return nullptr;
+		return new FadeSoundToSilence();
 	case 148:
 		// MakeScreenFile - seems to save a cropped image of the screen in a bitmap file?
 		// TODO: Used in Nancy 9, sand castle puzzle
@@ -502,11 +502,10 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 	case 244:
 		return new GridMapPuzzle();
 	// -- Nancy 11 and up --
-	case 245:	// Nancy11
-		warning("TypingQuizPuzzle");	// TODO
-		return nullptr;
-	case 246:	// Nancy11
-		warning("MatchPuzzle246");	// TODO
+	case 245:
+		return new TypingQuizPuzzle();
+	case 246:
+		warning("CardGamePuzzle");	// TODO
 		return nullptr;
 	default:
 		warning("Unknown action record type %d", type);
