@@ -419,7 +419,10 @@ void CellPhonePopup::drawChrome() {
 void CellPhonePopup::drawScreenContent() {
 	drawChrome();
 
-	if (_screenState != kConnected && !isSubScreenState()) {
+	// Original only draws the signal/battery indicators on the welcome
+	// screen — every other state (dialing, ringing, connected, lists,
+	// browser, etc.) hides them.
+	if (_screenState == kWelcome) {
 		drawStatusIcons();
 	}
 
@@ -438,9 +441,19 @@ void CellPhonePopup::drawScreenContent() {
 	case kWaitOutgoingRing:
 	case kLookupContact:
 		drawWebDirLabels();
-		drawDialLabel();
-		drawTypeMessage();
-		drawDialedNumber();
+		if (!_dialedNumber.empty()) {
+			// User is manually dialing — show the dial header,
+			// "please dial a number" hint, the typed digits and
+			// the Talk highlight.
+			drawDialLabel();
+			drawTypeMessage();
+			drawDialedNumber();
+			drawHeading(_uiclData->dialHilite);
+		} else {
+			// Call placed from the directory / incoming call —
+			// no digits to display, just the connecting animation.
+			drawConnectingSprite();
+		}
 		break;
 
 	case kWaitPickup:
@@ -458,6 +471,7 @@ void CellPhonePopup::drawScreenContent() {
 		drawHeading(_uiclData->dirHeading);
 		drawDirectoryList();
 		drawDirectoryArrows();
+		drawHeading(_uiclData->dialHilite);
 		break;
 
 	case kOnlineHub: {
