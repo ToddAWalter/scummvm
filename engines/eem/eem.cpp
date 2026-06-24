@@ -24,7 +24,9 @@
 #include "common/engine_data.h"
 #include "common/error.h"
 #include "common/events.h"
+#include "common/archive.h"
 #include "common/file.h"
+#include "common/fs.h"
 #include "common/path.h"
 #include "common/system.h"
 #include "common/textconsole.h"
@@ -55,7 +57,24 @@ const uint kPicStormLogo       = 0x20b; // Floppy storm-logo still
 const uint kPalEAKids          = 0x25;
 const uint kPalHighScore       = 0x27;
 const uint kPalStormLogo       = 0x26;  // Floppy FUN_23d2_0605
+const uint kMacPicEAKidsLogo   = 0x213; // FUN_000092be
+const uint kMacPicTitleRoom    = 0x20d; // FUN_000096fa title room
+const uint kMacPicTitleDark    = 0x20e;
+const uint kMacPicTitleFinal   = 0x20f;
+const uint kMacPicTitleIn0     = 0x210;
+const uint kMacPicTitleIn1     = 0x211;
+const uint kMacPicTitleIn2     = 0x212;
+const uint kMacPicTitleLeft0   = 0x214;
+const uint kMacPicTitleLeft1   = 0x215;
+const uint kMacPicTitleLeft2   = 0x216;
+const uint kMacPicTitleRight0  = 0x217;
+const uint kMacPicTitleRight1  = 0x218;
+const uint kMacPicTitleRight2  = 0x219;
+const uint kMacPalEAKids       = 0x28;
+const uint kMacPalTitle        = 0x29;
 const uint kPicMousePointer    = 0x50;  // 0x51 is the wait cursor
+const uint16 kMacFontResource  = 3214;  // 'Eagle Eye 14' FONT resource
+const uint16 kMacSmallFontResource = 3209; // Smaller speech/dialog FONT.
 
 // EEM2 cursor table — `_main @ 1abf:0faf` loads seven cursor PICs into
 // `_AnimationObjects`-adjacent slots and `_SwitchMouse @ 17ee:2c83` activates
@@ -213,9 +232,12 @@ EEMEngine::EEMEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	ConfMan.registerDefault("skip_repeated_cases", false);
 	ConfMan.registerDefault("restored_content", false);
 
-	_variant = (gameDesc && gameDesc->extra &&
-				Common::String(gameDesc->extra).contains("Floppy"))
-				 ? kVariantFloppy : kVariantCD;
+	_variant = kVariantCD;
+	if (gameDesc && gameDesc->extra &&
+		Common::String(gameDesc->extra).contains("Floppy"))
+		_variant = kVariantFloppy;
+	if (gameDesc && gameDesc->platform == Common::kPlatformMacintosh)
+		_variant = kVariantMac;
 	if (gameDesc && gameDesc->gameId &&
 		Common::String(gameDesc->gameId) == "eem2")
 		_variant = kVariantLondonCD;
@@ -306,7 +328,7 @@ void EEMEngine::advanceChainStageAfterSolve(uint mysteryNum) {
 }
 
 void EEMEngine::applySkipRepeatedCasesOption() {
-	if (isLondon() || !ConfMan.getBool("skip_repeated_cases"))
+	if (isLondon() || isDemo() || !ConfMan.getBool("skip_repeated_cases"))
 		return;
 	if (_mystery.isLoaded())
 		return;
@@ -319,8 +341,49 @@ void EEMEngine::applySkipRepeatedCasesOption() {
 	}
 }
 
+static void addMacResourceSearchPaths() {
+	const Common::FSNode gameDataDir(ConfMan.getPath("path"));
+	if (!gameDataDir.exists() || !gameDataDir.isDirectory())
+		return;
+
+	const Common::FSNode childRsrcDir = gameDataDir.getChild("rsrc");
+	if (childRsrcDir.exists() && childRsrcDir.isDirectory() &&
+		!SearchMan.hasArchive("eem-mac-rsrc-child"))
+		SearchMan.addDirectory("eem-mac-rsrc-child", childRsrcDir);
+
+	const Common::FSNode siblingRsrcDir =
+		gameDataDir.getParent().getChild("rsrc");
+	if (siblingRsrcDir.exists() && siblingRsrcDir.isDirectory() &&
+		!SearchMan.hasArchive("eem-mac-rsrc-sibling"))
+		SearchMan.addDirectory("eem-mac-rsrc-sibling", siblingRsrcDir);
+}
+
+static bool loadMacFontResource(EEMFont &font, uint16 resourceId, int size) {
+	addMacResourceSearchPaths();
+
+	const Common::Path appResourceFork("Eagle Eye Mysteries");
+	if (font.loadMacResource(appResourceFork, resourceId, size))
+		return true;
+
+	const Common::Path nestedAppResourceFork("rsrc/Eagle Eye Mysteries");
+	if (font.loadMacResource(nestedAppResourceFork, resourceId, size))
+		return true;
+
+	return false;
+}
+
+static bool loadMacFont(EEMFont &font) {
+	return loadMacFontResource(font, kMacFontResource, 14) ||
+		   loadMacFontResource(font, kMacSmallFontResource, 9);
+}
+
+static bool loadMacDialogFont(EEMFont &font) {
+	return loadMacFontResource(font, kMacSmallFontResource, 9) ||
+		   loadMacFontResource(font, kMacFontResource, 14);
+}
+
 Common::Error EEMEngine::run() {
-	initGraphics(kScreenWidth, kScreenHeight);
+	initGraphics(screenWidth(), screenHeight());
 
 	if (!isFloppy() && ConfMan.getBool("restored_content")) {
 		Common::U32String engineDataError;
@@ -339,12 +402,21 @@ Common::Error EEMEngine::run() {
 	if (!loadSitePalettes())
 		return Common::Error(Common::kReadingFailed, "SITEPALS load failed");
 
-	// _LoadFont @ 1b66:023c.
-	if (!_font.load(Common::Path("FONT.FNT")))
+	// _LoadFont @ 1b66:023c. The Mac release stores its Eagle Eye fonts in
+	// the application resource fork instead of a DOS FONT.FNT file.
+	if (isMacintosh()) {
+		if (!loadMacFont(_font))
+			warning("Mac FONT resource failed to load; text will not render");
+		if (!loadMacDialogFont(_dialogFont))
+			warning("Mac dialog FONT resource failed to load");
+	} else if (!_font.load(Common::Path("FONT.FNT"))) {
 		warning("FONT.FNT failed to load; text will not render");
+	}
 
-	// _InitMIDI @ 20a2:013a.
-	_music = new MusicPlayer(isFloppy());
+	// _InitMIDI @ 20a2:013a. The demo ships no music. The Mac release stores
+	// SMF MIDI resources in EEM Sound&Music instead of loose DOS XMIDI files.
+	if (!isDemo())
+		_music = new MusicPlayer(isFloppy(), isMacintosh());
 
 	// _InitDrivers @ 1ff1:0368 (SBDIG.ADV / PASDIG.ADV).
 	_audio = new AudioPlayer(this);
@@ -412,6 +484,22 @@ Common::Error EEMEngine::run() {
 		goto screenLoop;
 	}
 
+	if (isMacintosh()) {
+		runMacStartup();
+		CursorMan.showMouse(true);
+		if (_music)
+			_music->stop();
+		if (!shouldQuit())
+			doProfilePicker();
+		if (!shouldQuit())
+			applyStartupTestOverrides();
+		if (!shouldQuit())
+			doChoosePartner();
+		if (!shouldQuit())
+			_nextScreen = _mystery.isLoaded() ? kScreenMap : kScreenAction;
+		goto screenLoop;
+	}
+
 	_skipIntro = false;
 	if (isFloppy()) {
 		if (!shouldQuit() && !_skipIntro)
@@ -420,12 +508,12 @@ Common::Error EEMEngine::run() {
 			showHighScoreLogo();
 		if (!shouldQuit() && !_skipIntro)
 			showFloppyStormLogo();
-		if (!shouldQuit() && !_skipIntro && _music)
+		if (!shouldQuit() && !_skipIntro && !isDemo() && _music)
 			_music->playFile(Common::Path("THEME.XMI"), /* loop= */ true);
-		if (!shouldQuit() && !_skipIntro)
+		if (!shouldQuit() && !_skipIntro && !isDemo())
 			playAnm(Common::Path("CHAT.ANM"), 120,
 					/* holdLastFrame= */ false);
-		if (!shouldQuit() && !_skipIntro)
+		if (!shouldQuit() && !_skipIntro && !isDemo())
 			playAnm(Common::Path("MOVIE.ANM"), 120,
 					/* holdLastFrame= */ false);
 	} else {
@@ -499,7 +587,20 @@ screenLoop:
 		switch (current) {
 		case kScreenTitle:
 			_nextScreen = kScreenProfile;
-			if (isFloppy()) {
+			if (isDemo()) {
+				Picture title;
+				CursorMan.showMouse(false);
+				setSitePalette(0);
+				if (_picsArchive.getPicture(1, title) && !title.surface.empty()) {
+					blitAt(title, 0, 0);
+					g_system->updateScreen();
+					waitForInput(0xFFFFFFFFu);
+				} else {
+					warning("EEM demo title PIC 1 failed to load");
+				}
+				_skipIntro = false;
+				CursorMan.showMouse(true);
+			} else if (isFloppy()) {
 				CursorMan.showMouse(false);
 				playAnm(Common::Path("TITLE.ANM"), 120,
 						/* holdLastFrame= */ true, /* fadeIn= */ true);
@@ -668,19 +769,21 @@ void EEMEngine::setSiteHotspotCursorId(int cursorId) {
 }
 
 bool EEMEngine::openArchives() {
-	if (!_picsArchive.open(Common::Path("PICS.DBD"), Common::Path("PICS.DBX"))) {
+	const bool mac = isMacintosh();
+
+	if (!_picsArchive.open(Common::Path("PICS.DBD"), Common::Path("PICS.DBX"), mac)) {
 		warning("PICS archive missing");
 		return false;
 	}
-	if (!_aniArchive.open(Common::Path("ANI.DBD"), Common::Path("ANI.DBX"))) {
+	if (!_aniArchive.open(Common::Path("ANI.DBD"), Common::Path("ANI.DBX"), mac)) {
 		warning("ANI archive missing");
 		return false;
 	}
-	if (!_sitesArchive.open(Common::Path("SITES.DBD"), Common::Path("SITES.DBX")))
+	if (!_sitesArchive.open(Common::Path("SITES.DBD"), Common::Path("SITES.DBX"), mac))
 		warning("SITES archive missing — site backgrounds disabled");
-	if (!_balloonArchive.open(Common::Path("BALLOON.DBD"), Common::Path("BALLOON.DBX")))
+	if (!_balloonArchive.open(Common::Path("BALLOON.DBD"), Common::Path("BALLOON.DBX"), mac))
 		warning("BALLOON archive missing — clue text will lack balloons");
-	if (!_buttonArchive.open(Common::Path("BUTTON.DBD"), Common::Path("BUTTON.DBX")))
+	if (!_buttonArchive.open(Common::Path("BUTTON.DBD"), Common::Path("BUTTON.DBX"), mac))
 		warning("BUTTON archive missing — map markers will be unlabelled");
 	return true;
 }
@@ -697,12 +800,31 @@ bool EEMEngine::loadSitePalettes() {
 		warning("SITEPALS short read");
 		return false;
 	}
+	if (isMacintosh()) {
+		debugC(1, kDebugGfx, "Loaded %u Mac SITEPALS ColorTables",
+			   (uint)(_sitePals.size() / (8 + 256 * 8)));
+		return true;
+	}
 	debugC(1, kDebugGfx, "Loaded %u SITEPALS palettes",
 		   (uint)(_sitePals.size() / kPalSize));
 	return true;
 }
 
 bool EEMEngine::getSitePalette(uint num, byte *out) const {
+	if (isMacintosh()) {
+		const uint kMacColorTableSize = 8 + 256 * 8;
+		if (_sitePals.size() < (num + 1) * kMacColorTableSize)
+			return false;
+		const byte *src = _sitePals.data() + num * kMacColorTableSize + 8;
+		for (uint i = 0; i < 256; i++) {
+			const byte *entry = src + i * 8;
+			out[i * 3 + 0] = entry[2];
+			out[i * 3 + 1] = entry[4];
+			out[i * 3 + 2] = entry[6];
+		}
+		return true;
+	}
+
 	if (_sitePals.size() < (num + 1) * kPalSize)
 		return false;
 	const byte *src = _sitePals.data() + num * kPalSize;
@@ -848,8 +970,10 @@ void EEMEngine::playAnm(const Common::Path &path, uint frameDelayMs,
 }
 
 void EEMEngine::blitAt(const Picture &pic, int x, int y) {
-	const int w = MIN<int>(pic.surface.w, kScreenWidth - x);
-	const int h = MIN<int>(pic.surface.h, kScreenHeight - y);
+	x = scaleX(x);
+	y = scaleY(y);
+	const int w = MIN<int>(pic.surface.w, screenWidth() - x);
+	const int h = MIN<int>(pic.surface.h, screenHeight() - y);
 	if (w <= 0 || h <= 0)
 		return;
 	g_system->copyRectToScreen(pic.surface.getPixels(), pic.surface.pitch,
@@ -1005,6 +1129,268 @@ void EEMEngine::showHighScoreLogo() {
 	fadeCurrentPaletteToBlack();
 }
 
+static void copyNativePictureToScreen(const Picture &pic) {
+	const int w = MIN<int>(pic.surface.w, kMacScreenWidth);
+	const int h = MIN<int>(pic.surface.h, kMacScreenHeight);
+	if (w <= 0 || h <= 0)
+		return;
+	g_system->copyRectToScreen(pic.surface.getPixels(), pic.surface.pitch,
+							   0, 0, w, h);
+}
+
+static void copyNativeSurfaceToScreen(const Graphics::ManagedSurface &surface) {
+	const int w = MIN<int>(surface.w, kMacScreenWidth);
+	const int h = MIN<int>(surface.h, kMacScreenHeight);
+	if (w <= 0 || h <= 0)
+		return;
+	g_system->copyRectToScreen(surface.getPixels(), surface.pitch,
+							   0, 0, w, h);
+}
+
+static void blitNativeTransparent(Graphics::ManagedSurface &dst,
+								  const Picture &pic, int x, int y) {
+	if (pic.surface.empty())
+		return;
+	const byte transparent = (byte)(pic.flags >> 8);
+	dst.transBlitFrom(pic.surface, Common::Point(x, y), transparent);
+}
+
+bool EEMEngine::waitIntroDelay(uint32 maxMs) {
+	const uint32 startMs = g_system->getMillis();
+	while (!shouldQuit() && (g_system->getMillis() - startMs < maxMs)) {
+		Common::Event event;
+		while (g_system->getEventManager()->pollEvent(event)) {
+			if (event.type == Common::EVENT_QUIT ||
+				event.type == Common::EVENT_RETURN_TO_LAUNCHER)
+				return true;
+			if (event.type == Common::EVENT_LBUTTONDOWN)
+				return true;
+			if (event.type == Common::EVENT_KEYDOWN) {
+				if (event.kbd.keycode == Common::KEYCODE_ESCAPE) {
+					_skipIntro = true;
+					interruptAudio();
+				}
+				return true;
+			}
+		}
+		g_system->updateScreen();
+		g_system->delayMillis(5);
+	}
+	return false;
+}
+
+void EEMEngine::showMacEAKidsLogo() {
+	Picture pic;
+	if (!_picsArchive.getPicture(kMacPicEAKidsLogo, pic)) {
+		warning("Mac EA Kids logo (%u) load failed", kMacPicEAKidsLogo);
+		return;
+	}
+	copyNativePictureToScreen(pic);
+
+	byte fpal[kPalSize];
+	if (!getSitePalette(kMacPalEAKids, fpal)) {
+		warning("Mac EA Kids palette (%u) load failed", kMacPalEAKids);
+		return;
+	}
+
+	bool aborted = false;
+	for (uint pass = 0; pass < 2 && !aborted && !shouldQuit(); pass++) {
+		const bool show = (pass != 0);
+		int delayCount = 9;
+
+		for (uint frame = 0; frame < 0x37 && !aborted && !shouldQuit(); frame++) {
+			if (show && waitIntroDelay(40)) {
+				aborted = true;
+				break;
+			}
+
+			openColorCycle(fpal, 0x01, 0x6e, show);
+			openColorCycle(fpal, 0x81, 0xee, show);
+			if (--delayCount == 0) {
+				delayCount = 9;
+				openColorCycle(fpal, 0x70, 0x80, show);
+			}
+			if (show)
+				g_system->updateScreen();
+		}
+	}
+
+	if (!aborted && !shouldQuit()) {
+		for (uint i = 0; i < 5; i++)
+			openColorCycle(fpal, 0x70, 0x80, true);
+		g_system->updateScreen();
+		waitIntroDelay(0x23 * 40);
+	}
+
+	fadeCurrentPaletteToBlack();
+}
+
+void EEMEngine::showMacStillLogo(uint picId, uint palId, uint holdMs,
+								 bool playThunder) {
+	Picture pic;
+	if (!_picsArchive.getPicture(picId, pic)) {
+		warning("Mac logo PIC 0x%x load failed", picId);
+		return;
+	}
+	copyNativePictureToScreen(pic);
+
+	byte target[kPalSize];
+	if (!getSitePalette(palId, target)) {
+		warning("Mac logo palette 0x%x load failed", palId);
+		return;
+	}
+
+	byte black[kPalSize] = {};
+	g_system->getPaletteManager()->setPalette(black, 0, 256);
+	g_system->updateScreen();
+	fadePaletteFromBlack(target);
+
+	if (playThunder && _audio)
+		_audio->playVoc(Common::Path("THUNDER.VOC"));
+
+	waitIntroDelay(holdMs);
+	if (_audio)
+		_audio->stopVoice();
+	fadeCurrentPaletteToBlack();
+}
+
+void EEMEngine::showMacTitleIntro() {
+	byte target[kPalSize];
+	if (!getSitePalette(kMacPalTitle, target)) {
+		warning("Mac title palette (%u) load failed", kMacPalTitle);
+		return;
+	}
+
+	Picture room, titleDark, titleFinal;
+	if (!_picsArchive.getPicture(kMacPicTitleRoom, room) ||
+		!_picsArchive.getPicture(kMacPicTitleDark, titleDark) ||
+		!_picsArchive.getPicture(kMacPicTitleFinal, titleFinal)) {
+		warning("Mac title base pictures failed to load");
+		return;
+	}
+
+	Picture in[3], left[3], right[3];
+	const uint inIds[3] = {
+		kMacPicTitleIn0, kMacPicTitleIn1, kMacPicTitleIn2
+	};
+	const uint leftIds[3] = {
+		kMacPicTitleLeft0, kMacPicTitleLeft1, kMacPicTitleLeft2
+	};
+	const uint rightIds[3] = {
+		kMacPicTitleRight0, kMacPicTitleRight1, kMacPicTitleRight2
+	};
+	for (uint i = 0; i < 3; i++) {
+		if (!_picsArchive.getPicture(inIds[i], in[i]) ||
+			!_picsArchive.getPicture(leftIds[i], left[i]) ||
+			!_picsArchive.getPicture(rightIds[i], right[i])) {
+			warning("Mac title overlay PIC load failed");
+			return;
+		}
+	}
+
+	Graphics::ManagedSurface frame(kMacScreenWidth, kMacScreenHeight,
+								   Graphics::PixelFormat::createFormatCLUT8());
+	frame.blitFrom(room.surface, Common::Point(0, 0));
+	copyNativeSurfaceToScreen(frame);
+
+	byte black[kPalSize] = {};
+	g_system->getPaletteManager()->setPalette(black, 0, 256);
+	g_system->updateScreen();
+	fadePaletteFromBlack(target);
+
+	for (int i = 0; i < 0x2c && !shouldQuit() && !_skipIntro; i++) {
+		frame.blitFrom(room.surface, Common::Point(0, 0));
+		const int revealW = (i + 1) * kMacScreenWidth / 0x2c;
+		if (revealW > 0) {
+			const Common::Rect src(0, 0, revealW, kMacScreenHeight);
+			frame.blitFrom(titleDark.surface, src, Common::Point(0, 0));
+		}
+
+		switch (i) {
+		case 15:
+		case 19:
+			blitNativeTransparent(frame, in[0], 0xb9, 0x29);
+			break;
+		case 16:
+		case 18:
+			blitNativeTransparent(frame, in[1], 0xb9, 0x29);
+			break;
+		case 17:
+			blitNativeTransparent(frame, in[2], 0xb9, 0x29);
+			break;
+		default:
+			break;
+		}
+
+		copyNativeSurfaceToScreen(frame);
+		if (waitIntroDelay(40))
+			return;
+	}
+
+	for (int i = 0x2a; i >= 0 && !shouldQuit() && !_skipIntro; i--) {
+		frame.blitFrom(titleFinal.surface, Common::Point(0, 0));
+
+		switch (i) {
+		case 7:
+		case 11:
+			blitNativeTransparent(frame, left[0], 0x39, 0xb1);
+			break;
+		case 8:
+		case 10:
+			blitNativeTransparent(frame, left[1], 0x39, 0xb1);
+			break;
+		case 9:
+			blitNativeTransparent(frame, left[2], 0x39, 0xb1);
+			break;
+		case 24:
+		case 28:
+			blitNativeTransparent(frame, right[0], 0x131, 0xb1);
+			break;
+		case 25:
+		case 27:
+			blitNativeTransparent(frame, right[1], 0x131, 0xb1);
+			break;
+		case 26:
+			blitNativeTransparent(frame, right[2], 0x131, 0xb1);
+			break;
+		default:
+			break;
+		}
+
+		copyNativeSurfaceToScreen(frame);
+		if (waitIntroDelay(40))
+			return;
+	}
+
+	frame.blitFrom(titleFinal.surface, Common::Point(0, 0));
+	copyNativeSurfaceToScreen(frame);
+	waitIntroDelay(0xFFFFFFFFu);
+}
+
+void EEMEngine::runMacStartup() {
+	CursorMan.showMouse(false);
+	_skipIntro = false;
+	debugC(1, kDebugGeneral, "EEM1 Mac: opening sequence");
+
+	if (!shouldQuit() && !_skipIntro)
+		showMacEAKidsLogo();
+	if (!shouldQuit() && !_skipIntro)
+		showMacStillLogo(kPicHighScoreLogo, kPalHighScore, 3000,
+						 /* playThunder= */ false);
+	if (!shouldQuit() && !_skipIntro)
+		showMacStillLogo(kPicStormLogo, kPalStormLogo, 3000,
+						 /* playThunder= */ true);
+
+	if (!shouldQuit() && !_skipIntro && _music)
+		_music->playFile(Common::Path("THEME.XMI"), /* loop= */ true);
+	if (!shouldQuit() && !_skipIntro)
+		showMacTitleIntro();
+
+	if (_music)
+		_music->stop();
+	_skipIntro = false;
+}
+
 void EEMEngine::showLondonLogo(uint picId, uint palId, uint holdMs) {
 	Picture pic;
 	if (!_picsArchive.getPicture(picId, pic) || pic.surface.empty()) {
@@ -1028,7 +1414,7 @@ void EEMEngine::showLondonLogo(uint picId, uint palId, uint holdMs) {
 }
 
 bool EEMEngine::startLondonTrainingMystery() {
-	if (_mystery.load(0, &_rng)) {
+	if (_mystery.load(0, &_rng, isMacintosh())) {
 		resetSiteArrivalState();
 		if (_audio)
 			_audio->initMysterySounds(0);
@@ -1343,14 +1729,14 @@ void EEMEngine::showFloppyStormLogo() {
 	g_system->getPaletteManager()->setPalette(black, 0, 256);
 	g_system->updateScreen();
 
-	if (_audio)
+	if (_audio && !isDemo())
 		_audio->playVoc(Common::Path("THUNDER.VOC"));
 
 	fadePaletteFromBlack(target);
 	waitForInput(2000);
 	fadeCurrentPaletteToBlack();
 
-	if (_audio)
+	if (_audio && !isDemo())
 		_audio->stopVoice();
 }
 
@@ -1518,7 +1904,7 @@ Common::Error EEMEngine::loadGameStream(Common::SeekableReadStream *stream) {
 	if (hasMystery) {
 		uint16 mysteryNum = 0;
 		s.syncAsUint16LE(mysteryNum);
-		if (!_mystery.load(mysteryNum, &_rng)) {
+		if (!_mystery.load(mysteryNum, &_rng, isMacintosh())) {
 			_mystery.clear();
 			resetSiteArrivalState();
 			return Common::kReadingFailed;

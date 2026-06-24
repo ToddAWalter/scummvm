@@ -181,11 +181,9 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 		// Nancy 10+
 		return new ControlUIItems();
 	case 30:	// Nancy11
-		warning("StopPlayerScrolling");	// TODO
-		return nullptr;
+		return new StopPlayerScrolling();
 	case 31:	// Nancy11
-		warning("StartPlayerScrolling");	// TODO
-		return nullptr;
+		return new StartPlayerScrolling();
 	case 32:
 		// Nancy 10+
 		return new UIPopupPrepScene();
@@ -261,8 +259,7 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 	case 68:
 		return new TextScroll(false);
 	case 69:	// Nancy11
-		warning("TimerControl");	// TODO
-		return nullptr;
+		return new TimerControl();
 	case 70:
 		return new TextScroll(true); // AutotextEntryList
 	case 71:
@@ -287,11 +284,9 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 	case 79:
 		return new ValueTest();
 	case 81:	// Nancy11
-		//warning("AutotextTextBoxWrite");	// TODO
-		return nullptr;
+		return new TextBoxWrite(true);
 	case 96:	// Nancy11
-		warning("UnknownAR96");	// TODO
-		return nullptr;
+		return new RandomizeEventFlags();
 	case 97:
 		return new EventFlags(true);
 	case 98:
@@ -401,8 +396,7 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 	case 155:
 		return new StopSound(); // StopAndUnloadSound, but we always unload
 	case 156:	// Nancy11
-		warning("Update3DSound");	// TODO
-		return nullptr;
+		return new Update3DSound();
 	case 157:
 		return new PlaySoundCC();
 	case 158:

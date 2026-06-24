@@ -59,8 +59,10 @@ public:
 	Mystery() = default;
 	~Mystery() = default;
 
-	/// Load M<num>.BIN and reset per-mystery state. Returns false on error.
-	bool load(uint num, class Common::RandomSource *rng = nullptr);
+	/// Load M<num>.BIN and reset per-mystery state. The Mac release stores
+	/// cases in the indexed MysteryData container instead of loose files.
+	bool load(uint num, class Common::RandomSource *rng = nullptr,
+			  bool macintosh = false);
 
 	void clear();
 
@@ -75,12 +77,13 @@ public:
 	/// InitBlock (case briefing) at mystery + word[0].
 	const byte *initBlock() const;
 
-	/// GalleryData: 0x46-byte entry per suspect; first u16 = PIC picture ID.
+	/// GalleryData. DOS CD uses 0x46-byte entries; floppy/Mac use compact
+	/// variable-stride entries accessed through floppySuspectEntry().
 	const byte *galleryData() const;
 
-	/// Floppy variable-stride suspect record. Returns nullptr on CD or
-	/// out-of-range. Layout: u16 picID, u16 alibiMarker (0xFFFF=guilty),
-	/// u8 nameLen, nameLen bytes of name.
+	/// Compact variable-stride suspect record for floppy/Mac. Returns nullptr
+	/// on CD or out-of-range. Layout: u16 picID, u16 alibiMarker
+	/// (0xFFFF=guilty), u8 count, count bytes of name/clue data.
 	const byte *floppySuspectEntry(uint suspectIdx) const;
 
 	/// NoteIndex array. EEM1 CD: 4 bytes/entry (u16 textOff + u16 pts).
@@ -238,6 +241,7 @@ private:
 	uint16 _cChain[kChainLen] = {};
 
 	bool   _isFloppy = false;
+	bool   _isMacintosh = false;
 	uint16 _floppySuspectsOff = 0;   ///< header[+4]    suspects
 	uint16 _floppyHintBlockOff = 0;  ///< header[+6]    hint -> clue table
 	uint16 _floppyNoteIndexOff = 0;  ///< header[+8]    notes (7B/clue)

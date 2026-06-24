@@ -122,6 +122,7 @@ bool EEMEngine::floppyHotspotSearched(uint siteIdx, uint hotspotIdx) const {
 	const byte *site = _mystery.siteData(siteIdx);
 	if (!site)
 		return false;
+	const bool mac = isMacintosh();
 	const uint16 dlgListOff = READ_LE_UINT16(site + 6);
 	const byte *bufBase = _mystery.blobAt(0);
 	const uint32 dsz = _mystery.dataSize();
@@ -129,34 +130,44 @@ bool EEMEngine::floppyHotspotSearched(uint siteIdx, uint hotspotIdx) const {
 		return false;
 	uint32 off = dlgListOff;
 	for (uint h = 0; h < hotspotIdx; h++) {
-		if (off + 10 >= dsz)
+		const uint textCountOff = mac ? off + 13 : off + 10;
+		if (textCountOff >= dsz)
 			return false;
-		const uint32 mainLen = 11u + (uint)bufBase[off + 10];
+		const uint32 mainLen = (mac ? 14u : 11u) +
+			(uint)bufBase[textCountOff];
 		off += mainLen;
 		if (off >= dsz)
 			return false;
 		const uint contCount = (uint)(bufBase[off] & 0x7F);
 		off += 1;
 		for (uint c = 0; c < contCount; c++) {
-			if (off + 10 >= dsz)
+			const uint contTextCountOff = mac ? off + 13 : off + 10;
+			if (contTextCountOff >= dsz)
 				return false;
-			off += 11u + (uint)bufBase[off + 10];
+			off += (mac ? 14u : 11u) +
+				(uint)bufBase[contTextCountOff];
 			if (off >= dsz)
 				return false;
 		}
 	}
-	if (off + 10 >= dsz)
+	const uint textCountOff = mac ? off + 13 : off + 10;
+	if (textCountOff >= dsz)
 		return false;
-	const uint32 mainLen = 11u + (uint)bufBase[off + 10];
+	const uint32 mainLen = (mac ? 14u : 11u) + (uint)bufBase[textCountOff];
 	const uint32 contFlagsOff = off + mainLen;
 	if (contFlagsOff >= dsz)
 		return false;
 	uint32 searchedRecOff = off;
 	if ((bufBase[contFlagsOff] & 0x7F) != 0)
 		searchedRecOff = contFlagsOff + 1;
-	if (searchedRecOff + 11 >= dsz || bufBase[searchedRecOff + 10] == 0)
+	const uint searchedTextCountOff = mac ? searchedRecOff + 13
+										  : searchedRecOff + 10;
+	const uint searchedTextIdxOff = mac ? searchedRecOff + 14
+										: searchedRecOff + 11;
+	if (searchedTextIdxOff >= dsz || searchedTextCountOff >= dsz ||
+		bufBase[searchedTextCountOff] == 0)
 		return false;
-	const uint8 textIdx = bufBase[searchedRecOff + 11] & 0x7F;
+	const uint8 textIdx = bufBase[searchedTextIdxOff] & 0x7F;
 	return textIdx < EEM::Mystery::kCluesFoundCap &&
 		   _mystery._cluesFound[textIdx] != 0;
 }
@@ -627,48 +638,7 @@ void EEMEngine::doHelp() {
 
 	const Common::String raw  = _mystery.textAt(chosenText);
 	Common::String text = parseString(raw, _playerName, _partner);
-	Graphics::ManagedSurface ms(kScreenWidth, kScreenHeight,
-		Graphics::PixelFormat::createFormatCLUT8());
-	ms.clear();
-	{
-		Graphics::Surface *cur = g_system->lockScreen();
-		if (cur) {
-			ms.simpleBlitFrom(*cur);
-			g_system->unlockScreen();
-		}
-	}
-
-	const byte firstChar =
-		text.empty() ? (byte)0 : (byte)text[0];
-	uint16 bubNum = getKDTextBalloon(firstChar);
-	if (firstChar >= '0' && firstChar <= '9')
-		text.deleteChar(0);
-	bubNum = fitBalloonToText(bubNum, text);
-	Picture balloon;
-	const bool haveBalloon =
-		_balloonArchive.size() > (bubNum & 0x7F) &&
-		_balloonArchive.loadEntry(bubNum & 0x7F, balloon);
-
-	const int balloonX = 0x21;
-	int balloonY = 1;
-	if (haveBalloon && balloon.surface.h < 0x4e)
-		balloonY = (0x50 - balloon.surface.h) / 2;
-
-	if (haveBalloon) {
-		const byte transp = (byte)(balloon.flags >> 8);
-		ms.transBlitFrom(balloon.surface,
-						 Common::Point(balloonX, balloonY),
-						 (uint32)transp);
-	}
-
-	uint16 tx = 5, ty = 4, tw = 155;
-	getBalloonInsets(bubNum, tx, ty, tw);
-	_font.drawWordWrapped(&ms, balloonX + tx, balloonY + ty, tw, text,
-						  haveBalloon ? 0 : 0xF);
-
-	g_system->copyRectToScreen(ms.getPixels(), ms.pitch,
-							   0, 0, kScreenWidth, kScreenHeight);
-	g_system->updateScreen();
+	drawKDBalloonOverCurrentScreen(text);
 
 	if (_audio && _mystery.kdTextIndex()) {
 		if (hintVoiceSlot >= 0)
@@ -772,7 +742,7 @@ void EEMEngine::setPartnerEraseBg(const Graphics::ManagedSurface *bg) {
 uint16 EEMEngine::fitBalloonToText(uint16 bubNum,
 								   const Common::String &text) {
 	// Opt-in via "fit_dialog_balloons", CD only
-	if (isFloppy() || !ConfMan.getBool("fit_dialog_balloons"))
+	if (isFloppy() || isMacintosh() || !ConfMan.getBool("fit_dialog_balloons"))
 		return bubNum;
 
 	const uint16 originalId = bubNum & 0x7F;
@@ -837,9 +807,15 @@ bool EEMEngine::getBalloonInsets(uint16 bubNum, uint16 &xInset,
 	const uint idx = bubNum & 0x7F;
 	if (idx >= ARRAYSIZE(kBalloonInsetTable))
 		return false;
-	xInset = kBalloonInsetTable[idx].x;
-	yInset = kBalloonInsetTable[idx].y;
-	textW  = kBalloonInsetTable[idx].w;
+	if (isMacintosh()) {
+		xInset = (uint16)scaleX(kBalloonInsetTable[idx].x);
+		yInset = (uint16)scaleY(kBalloonInsetTable[idx].y);
+		textW  = (uint16)scaleX(kBalloonInsetTable[idx].w);
+	} else {
+		xInset = kBalloonInsetTable[idx].x;
+		yInset = kBalloonInsetTable[idx].y;
+		textW  = kBalloonInsetTable[idx].w;
+	}
 	return true;
 }
 
@@ -848,8 +824,13 @@ bool EEMEngine::getBalloonIndicatorPos(uint16 bubNum, uint16 &dx,
 	const uint idx = bubNum & 0x7F;
 	if (idx >= ARRAYSIZE(kBalloonInsetTable))
 		return false;
-	dx = kBalloonInsetTable[idx].indDX;
-	dy = kBalloonInsetTable[idx].indDY;
+	if (isMacintosh()) {
+		dx = (uint16)scaleX(kBalloonInsetTable[idx].indDX);
+		dy = (uint16)scaleY(kBalloonInsetTable[idx].indDY);
+	} else {
+		dx = kBalloonInsetTable[idx].indDX;
+		dy = kBalloonInsetTable[idx].indDY;
+	}
 	return true;
 }
 
@@ -866,8 +847,11 @@ void EEMEngine::drawFloppyBubbleIndicator(Graphics::ManagedSurface &dst,
 		return;
 	const int x = ballX + (int)dx;
 	const int y = ballY + (int)dy;
-	dst.transBlitFrom(pic.surface, Common::Point(x, y),
-					  (uint32)(byte)(pic.flags >> 8));
+	if (isMacintosh())
+		blitMacMaskedSurface(dst.surfacePtr(), pic, x, y);
+	else
+		dst.transBlitFrom(pic.surface, Common::Point(x, y),
+						  (uint32)(byte)(pic.flags >> 8));
 }
 
 } // End of namespace EEM

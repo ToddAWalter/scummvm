@@ -20,13 +20,16 @@
  */
 
 #include "common/debug.h"
+#include "common/endian.h"
 #include "common/file.h"
 #include "common/textconsole.h"
 
+#include "graphics/fonts/macfont.h"
 #include "graphics/surface.h"
 
 #include "eem/detection.h"
 #include "eem/font.h"
+#include "eem/resource.h"
 
 namespace EEM {
 
@@ -60,7 +63,20 @@ inline byte mapChar(uint32 c) {
 	return c < 128 ? kCharToGlyph[c] : 0;
 }
 
+EEMFont::~EEMFont() {
+	clear();
+}
+
+void EEMFont::clear() {
+	_glyphs.clear();
+	delete _macFont;
+	_macFont = nullptr;
+	_maxHeight = _maxWidth = _lineHeight = 0;
+}
+
 bool EEMFont::load(const Common::Path &path) {
+	clear();
+
 	Common::File f;
 	if (!f.open(path)) {
 		warning("EEMFont::load: cannot open %s", path.toString().c_str());
@@ -107,7 +123,46 @@ bool EEMFont::load(const Common::Path &path) {
 	return true;
 }
 
+bool EEMFont::loadMacResource(const Common::Path &path, uint16 resourceId,
+							  int size) {
+	clear();
+
+	Common::SeekableReadStream *stream =
+		openMacResource(path, MKTAG('F', 'O', 'N', 'T'), resourceId);
+	if (!stream)
+		return false;
+
+	Graphics::MacFONTFont *font = new Graphics::MacFONTFont();
+	if (!font->loadFont(*stream, nullptr, size, 0)) {
+		delete stream;
+		delete font;
+		return false;
+	}
+	delete stream;
+
+	_macFont = font;
+	debugC(1, kDebugGfx, "Mac FONT %u loaded from %s: %dx%d",
+		   resourceId, path.toString().c_str(), _macFont->getMaxCharWidth(),
+		   _macFont->getFontHeight());
+	return true;
+}
+
+int EEMFont::getFontHeight() const {
+	if (_macFont)
+		return _macFont->getFontHeight();
+	return _lineHeight ? _lineHeight : _maxHeight;
+}
+
+int EEMFont::getMaxCharWidth() const {
+	if (_macFont)
+		return _macFont->getMaxCharWidth();
+	return _maxWidth;
+}
+
 int EEMFont::getCharWidth(uint32 chr) const {
+	if (_macFont)
+		return _macFont->getCharWidth(chr);
+
 	const byte gi = mapChar(chr);
 	if (gi >= _glyphs.size())
 		return 0;
@@ -129,6 +184,12 @@ void EEMFont::drawChar(Graphics::Surface *dst, uint32 chr, int x, int y,
 					   uint32 color) const {
 	if (!dst)
 		return;
+
+	if (_macFont) {
+		_macFont->drawChar(dst, chr, x, y, color);
+		return;
+	}
+
 	const byte gi = mapChar(chr);
 	if (gi >= _glyphs.size())
 		return;

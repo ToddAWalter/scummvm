@@ -19,38 +19,20 @@
  *
  */
 
-#ifndef FREESCAPE_SOUND_H
-#define FREESCAPE_SOUND_H
+#ifndef MADS_FOREST_INVENTORY_H
+#define MADS_FOREST_INVENTORY_H
 
-#include "audio/softsynth/pcspk.h"
+#include "mads/madsv2/core/general.h"
 
-namespace Freescape {
+namespace MADS {
+namespace MADSV2 {
+namespace Forest {
 
-// TODO: Migrate to Audio::PCSpeaker
-class SizedPCSpeaker : public Audio::PCSpeakerStream {
-public:
-	bool endOfStream() const override { return !isPlaying(); }
-};
+extern void init_inventory();
+extern void display_inventory();
 
-class Sound {
-public:
-	enum Type {
-		kTypeNormal,
-		kTypeMovement
-	};
+} // namespace Forest
+} // namespace MADSV2
+} // namespace MADS
 
-	virtual ~Sound() {}
-
-	virtual void playSound(int index, Type type) = 0;
-	virtual void stopSound(Type type) = 0;
-	virtual bool isPlayingSound(Type type) const = 0;
-
-	// Whether the given sound index actually exists. Used to skip undefined
-	// sounds without disturbing the sound currently playing, matching the
-	// original engines where an unknown index leaves the active sound untouched.
-	virtual bool isSoundAvailable(int index) const { return true; }
-};
-
-} // End of namespace Freescape
-
-#endif // FREESCAPE_SOUND_H
+#endif

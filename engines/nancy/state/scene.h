@@ -170,6 +170,12 @@ public:
 
 	Time getMovementTimeDelta(bool fast) const { return fast ? _sceneState.summary.fastMoveTimeDelta : _sceneState.summary.slowMoveTimeDelta; }
 
+	// Nancy 11+ AR 30/31. Toggles whether the player may scroll/pan the viewport.
+	// Backed by a reserved event flag (so it persists across scene changes and
+	// is saved/restored with the rest of the event flags).
+	void setPlayerScrolling(bool enabled);
+	bool getPlayerScrolling() const;
+
 	void registerGraphics();
 
 	void synchronize(Common::Serializer &serializer);
@@ -240,6 +246,11 @@ private:
 	void load(bool fromSaveFile = false);
 	void run();
 	void handleInput();
+
+	// Nancy 11+ AR 69. Advances all running software timers (stored as TimerData
+	// puzzle data) and fires any whose configured duration has just elapsed.
+	void tickSoftwareTimers(uint32 deltaMs);
+	void fireSoftwareTimer(TimerData::Timer &timer);
 
 	// Rect of the open Nancy 10+ taskbar popup, or empty if none.
 	Common::Rect activePopupConfinement() const;

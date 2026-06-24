@@ -50,7 +50,7 @@ namespace EEM {
  */
 class MusicPlayer : public Audio::MidiPlayer {
 public:
-	explicit MusicPlayer(bool isFloppy = false);
+	explicit MusicPlayer(bool isFloppy = false, bool isMacintosh = false);
 
 	/// _MIDIPlayFile @ 20a2:024c. loop=true mirrors
 	void playFile(const Common::Path &xmiPath, bool loop = false);
@@ -64,9 +64,18 @@ public:
 	void send(uint32 b) override;
 
 private:
+	void playMacMidiResource(uint16 resourceId, bool loop);
+	void playMacSongResource(uint16 resourceId, bool loop);
+	void startLoadedMusic(const Common::String &name, bool loop, bool smf);
+	bool loadMacSong(uint16 resourceId, uint16 &midiId);
+	void clearMacInstrumentMap();
+	byte mapMacInstrumentToGM(byte inst, byte channel) const;
+
 	bool _milesAudioMode = false;
 	const bool _isFloppy;
+	const bool _isMacintosh;
 	Common::Array<byte> _xmiData;
+	byte _macChannelInstrument[16] = {};
 };
 
 } // End of namespace EEM

@@ -289,7 +289,7 @@ void EEMEngine::doChoosePartner() {
 				break;
 			}
 			if (ev.type == Common::EVENT_MOUSEMOVE) {
-				curMouseX = ev.mouse.x;
+				curMouseX = unscaleX(ev.mouse.x);
 				const uint newLevel = happinessLevel(curMouseX, isLondon());
 				if (newLevel != level) {
 					level = newLevel;
@@ -303,7 +303,7 @@ void EEMEngine::doChoosePartner() {
 				}
 			}
 			if (ev.type == Common::EVENT_LBUTTONDOWN) {
-				const bool leftHalf = ev.mouse.x < 160;
+				const bool leftHalf = unscaleX(ev.mouse.x) < 160;
 				_partner = isLondon()
 					? (leftHalf ? kPartnerJake : kPartnerJenny)
 					: (leftHalf ? kPartnerJenny : kPartnerJake);
@@ -333,8 +333,8 @@ void EEMEngine::doChoosePartner() {
 		g_system->delayMillis(20);
 	}
 
-	if (_audio) {
-		if (isFloppy()) {
+	if (_audio && !isDemo()) {
+		if (isFloppy() || isMacintosh()) {
 			// Floppy _DoChoosePartner_Floppy @ 19bb:0a8e 
 			_audio->playFloppyVoiceSlot(0x14, _partner);
 		} else {
@@ -432,8 +432,18 @@ void EEMEngine::playLondonInitCluesAnim(uint16 caseType, const Picture &bg,
 // EEM1 CD/floppy case-intro animation — `_DoInitClues @ 1a35:0411`
 void EEMEngine::playCdFloppyInitCluesAnim(uint16 caseType, bool floppy,
 										  const Picture &bg, bool haveBriefingBg) {
+	const bool mac = isMacintosh();
 	const uint gameAni = _partner == kPartnerJake ? 0x17 : 0x3b;
 	const uint bookAni = _partner == kPartnerJake ? 0x18 : 0x3c;
+	const int gameX = mac
+		? (_partner == kPartnerJake ? 0x144 : 0x146) : 0xcd;
+	const int gameY = mac
+		? (_partner == kPartnerJake ? 0x0d8 : 0x0d6) : 0x6c;
+	const int bookX = 0;
+	const int bookY = mac
+		? (_partner == kPartnerJake ? 0x0ca : 0x0c2) : 99;
+	const int nancyX = mac ? 0x0aa : 0x68;
+	const int nancyY = mac ? 0x114 : 0x8b;
 	Animation game, book, nancy;
 	const bool haveGame  = _aniArchive.loadAnimation(gameAni, game) && !game.empty();
 	const bool haveBook  = _aniArchive.loadAnimation(bookAni, book) && !book.empty();
@@ -459,15 +469,15 @@ void EEMEngine::playCdFloppyInitCluesAnim(uint16 caseType, bool floppy,
 			}
 			if (haveGame) {
 				const uint f = partnerFrameAtTick(0x17, (uint)game.size(), t);
-				blitAnimFrameAnchored(scr, game[f], 0xcd, 0x6c);
+				blitAnimFrameAnchored(scr, game[f], gameX, gameY);
 			}
 			if (haveBook) {
 				const uint f = partnerFrameAtTick(0x18, (uint)book.size(), t);
-				blitAnimFrameAnchored(scr, book[f], 0, 99);
+				blitAnimFrameAnchored(scr, book[f], bookX, bookY);
 			}
 			if (haveNancy) {
 				const uint f = partnerFrameAtTick(0x19, (uint)nancy.size(), t);
-				blitAnimFrameAnchored(scr, nancy[f], 0x68, 0x8b);
+				blitAnimFrameAnchored(scr, nancy[f], nancyX, nancyY);
 			}
 			g_system->unlockScreen();
 			g_system->updateScreen();
@@ -498,7 +508,9 @@ void EEMEngine::playCdFloppyInitCluesAnim(uint16 caseType, bool floppy,
 	// _VidramRectCopy(0, 0x5a, 0x28, 0x6d, 16000, 48000/32000): freeze the
 	// lower-left book/Nancy band the original bakes into BG buffers before
 	// clearing registered animations.
-	Graphics::ManagedSurface briefingBase(kScreenWidth, kScreenHeight,
+	const int sw = screenWidth();
+	const int sh = screenHeight();
+	Graphics::ManagedSurface briefingBase(sw, sh,
 		Graphics::PixelFormat::createFormatCLUT8());
 	briefingBase.clear();
 	if (haveBriefingBg) {
@@ -512,9 +524,9 @@ void EEMEngine::playCdFloppyInitCluesAnim(uint16 caseType, bool floppy,
 	}
 	{
 		const int preserveX = 0;
-		const int preserveY = 0x5a;
-		const int preserveW = 0x28 * 4;
-		const int preserveH = 0x6d;
+		const int preserveY = mac ? scaleY(0x5a) : 0x5a;
+		const int preserveW = mac ? scaleX(0x28 * 4) : 0x28 * 4;
+		const int preserveH = mac ? scaleY(0x6d) : 0x6d;
 		const Common::Rect preserveRect(preserveX, preserveY,
 										preserveX + preserveW,
 										preserveY + preserveH);
@@ -541,23 +553,27 @@ void EEMEngine::playCdFloppyInitCluesAnim(uint16 caseType, bool floppy,
 
 	// _PlayInSequence @ 172b:2d03.
 	uint16 seqAni = 0xFFFF;
-	uint16 seqY   = 0x6c;
-	if (_partner == kPartnerJake) {
+	int seqX = 0xcd;
+	int seqY = 0x6c;
+	if (mac && _partner == kPartnerJake) {
 		switch (caseType) {
-		case 1:
-			seqAni = 0x38;
-			seqY = 0x6d;
-			break;
-		case 2:
-			seqAni = 0x37;
-			seqY = 0x6c;
-			break;
-		case 3:
-			seqAni = 0x39;
-			seqY = 0x6c;
-			break;
-		default:
-			break;
+		case 1: seqAni = 0x38; seqX = 0x175; seqY = 0x0ce; break;
+		case 2: seqAni = 0x37; seqX = 0x156; seqY = 0x0d8; break;
+		case 3: seqAni = 0x39; seqX = 0x155; seqY = 0x0da; break;
+		default: break;
+		}
+	} else if (mac) {
+		switch (caseType) {
+		case 2: seqAni = 0x3a; seqX = 0x157; seqY = 0x0dd; break;
+		case 3: seqAni = 0x3d; seqX = 0x168; seqY = 0x0d4; break;
+		default: break;
+		}
+	} else if (_partner == kPartnerJake) {
+		switch (caseType) {
+		case 1: seqAni = 0x38; seqY = 0x6d; break;
+		case 2: seqAni = 0x37; seqY = 0x6c; break;
+		case 3: seqAni = 0x39; seqY = 0x6c; break;
+		default: break;
 		}
 	} else {
 		switch (caseType) {
@@ -582,10 +598,10 @@ void EEMEngine::playCdFloppyInitCluesAnim(uint16 caseType, bool floppy,
 				const Picture &fr = seq[frame];
 				g_system->copyRectToScreen(briefingBase.getPixels(),
 										   briefingBase.pitch, 0, 0,
-										   kScreenWidth, kScreenHeight);
+										   sw, sh);
 				// _PlayInSequence @ 172b:2d35-2d50
-				const int dstX = (int)0xcd - (int)(int16)fr.miscflags;
-				const int dstY = (int)seqY - (int)(int16)fr.rowoff;
+				const int dstX = seqX - (int)(int16)fr.miscflags;
+				const int dstY = seqY - (int)(int16)fr.rowoff;
 				blitMaskedToScreen(fr, dstX, dstY);
 				g_system->updateScreen();
 				const uint32 wakeup = g_system->getMillis() + 100;
@@ -623,10 +639,17 @@ void EEMEngine::doInitClues() {
 		return;
 
 	const bool floppy = isFloppy();
-	const uint16 caseType = floppy ? (uint16)ib[0] : READ_LE_UINT16(ib);
+	const bool compactInit = floppy || isMacintosh();
+	const uint16 caseType = compactInit ? (uint16)ib[0] : READ_LE_UINT16(ib);
 
 	if (!floppy) {
-		const uint16 startSite = READ_LE_UINT16(ib + 2);
+		const uint16 startSite = isMacintosh() ? (uint16)ib[1]
+											   : READ_LE_UINT16(ib + 2);
+		if (isMacintosh()) {
+			const uint sites = _mystery.numSites();
+			for (uint s = 0; s < sites && s < Mystery::kVisitedSiteCap; s++)
+				_mystery._onSites[s] = 1;
+		}
 		if (startSite < Mystery::kVisitedSiteCap)
 			_mystery._onSites[startSite] = 1;
 		_mystery._siteNumber = startSite;
@@ -639,21 +662,34 @@ void EEMEngine::doInitClues() {
 		_mystery._lastSite = 0;
 	}
 
-	setSitePalette(isLondon() ? 0x39 : 0x22);
+	const bool demo = isDemo();
+	byte demoPalette[kPalSize];
+	const bool haveDemoPalette = demo && getSitePalette(0x22, demoPalette);
+	if (demo && haveDemoPalette) {
+		byte black[kPalSize] = {};
+		g_system->getPaletteManager()->setPalette(black, 0, 256);
+	} else {
+		setSitePalette(isLondon() ? 0x39 : 0x22);
+	}
+
 	Picture bg;
-	const bool haveBriefingBg = _picsArchive.getPicture(0x52, bg);
+	const uint16 bgPic = demo ? (_partner == kPartnerJake ? 3 : 2) : 0x52;
+	const bool haveBriefingBg = _picsArchive.getPicture(bgPic, bg);
 	if (haveBriefingBg)
 		blitAt(bg, 0, 0);
 
+	if (demo && haveDemoPalette)
+		fadePaletteFromBlack(demoPalette);
+
 	if (isLondon())
 		playLondonInitCluesAnim(caseType, bg, haveBriefingBg);
-	else
+	else if (!demo)
 		playCdFloppyInitCluesAnim(caseType, floppy, bg, haveBriefingBg);
 
 	// Briefing dialogue. CD: clue block @ ib+4 (after caseType,startSite).
 	// Floppy: dialog records dispatched via FUN_22dc_05c8 @ 22dc:05c8
 	// (record size = 11 + textCount bytes).
-	if (floppy) {
+	if (floppy || isMacintosh()) {
 		displayFloppyBriefing(ib);
 	} else {
 		const byte *briefingClues = ib + 4;
@@ -1164,7 +1200,13 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 	//   u8  sound    @ +9     (high bit = play voice, low 7 bits = slot)
 	//   u8  textCount@ +10
 	//   u8  textIdx[]@ +11    (1 byte per — low 7 bits = NOTES idx)
-	if (!rec || !isFloppy() || !_font.isLoaded() || count == 0)
+	// Mac uses the same logical fields, but widens picY/balloon/ballY to
+	// big-endian u16: 6 words, then u8 sound, u8 textCount, textIdx[].
+	const bool mac = isMacintosh();
+	const EEMFont &dialogFont =
+		(mac && _dialogFont.isLoaded()) ? _dialogFont : _font;
+	if (!rec || (!isFloppy() && !mac) || !dialogFont.isLoaded() ||
+		count == 0)
 		return;
 
 	const byte *notes   = _mystery.noteIndex();
@@ -1172,8 +1214,11 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 	if (!notes || !bufBase)
 		return;
 
+	const int sw = screenWidth();
+	const int sh = screenHeight();
+
 	// Snapshot BG for between-bubble restores.
-	Graphics::ManagedSurface bg(kScreenWidth, kScreenHeight,
+	Graphics::ManagedSurface bg(sw, sh,
 		Graphics::PixelFormat::createFormatCLUT8());
 	{
 		Graphics::Surface *screen = g_system->lockScreen();
@@ -1185,37 +1230,44 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 
 	const uint32 dsz       = _mystery.dataSize();
 	const uint32 notesBase = (uint32)(notes - bufBase);
+	const uint noteStride  = isMacintosh() ? 8 : 7;
 
 	{
 		const byte *r = rec;
 		for (uint i = 0; i < count; i++) {
-			const uint8 tc = r[10];
+			const uint8 tc = mac ? r[13] : r[10];
+			const byte *textIdx = mac ? r + 14 : r + 11;
 			for (uint t = 0; t < tc; t++) {
-				const uint8 idx = r[11 + t] & 0x7f;
+				const uint8 idx = textIdx[t] & 0x7f;
 				if (idx < Mystery::kCluesFoundCap)
 					_mystery._cluesFound[idx] = 1;
 			}
-			r += 11 + tc;
+			r += (mac ? 14 : 11) + tc;
 		}
 	}
 
 	for (uint i = 0; i < count && !shouldQuit(); i++) {
-		const uint16 picID    = READ_LE_UINT16(rec + 0);
-		const uint16 picX     = READ_LE_UINT16(rec + 2);
-		const uint8  picY     = rec[4];
-		const uint8  balByte  = rec[5];
-		const uint16 ballX    = READ_LE_UINT16(rec + 6);
-		const uint8  ballY    = rec[8];
-		const uint8  textCount= rec[10];
+		const uint16 picID = mac ? READ_BE_UINT16(rec + 0)
+								 : READ_LE_UINT16(rec + 0);
+		const uint16 picX = mac ? READ_BE_UINT16(rec + 2)
+								: READ_LE_UINT16(rec + 2);
+		const uint16 picY = mac ? READ_BE_UINT16(rec + 4) : rec[4];
+		const uint16 balByte = mac ? READ_BE_UINT16(rec + 6) : rec[5];
+		const uint16 ballX = mac ? READ_BE_UINT16(rec + 8)
+								 : READ_LE_UINT16(rec + 6);
+		const uint16 ballY = mac ? READ_BE_UINT16(rec + 10) : rec[8];
+		const uint8 soundByte = mac ? rec[12] : rec[9];
+		const uint8 textCount = mac ? rec[13] : rec[10];
+		const byte *textIdx = mac ? rec + 14 : rec + 11;
 
 		// byte 9: high bit = play voice slot.
-		const bool playedRecordVoice = (rec[9] & 0x80) != 0 && _audio;
+		const bool playedRecordVoice = (soundByte & 0x80) != 0 && _audio;
 		if (playedRecordVoice) {
-			const uint slot = rec[9] & 0x7f;
+			const uint slot = soundByte & 0x7f;
 			_audio->playFloppyVoiceSlot(slot, _partner);
 		}
 
-		const uint8 b9 = rec[9];
+		const uint8 b9 = soundByte;
 		if ((b9 & 0x80) == 0 && b9 != 0) {
 			const uint logicalIdx = (uint)b9 - 1;
 			if (logicalIdx < Mystery::kGalleryCap) {
@@ -1229,18 +1281,18 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 		Common::String fitPage;
 		uint16 fitXIns = 0;
 		uint16 fitYIns = 0;
-		uint16 fitWidth = 142;
+		uint16 fitWidth = mac ? (uint16)scaleX(142) : 142;
 		getBalloonInsets(balByte, fitXIns, fitYIns, fitWidth);
 		uint fitTextLines = 0;
 		for (uint t = 0; t < textCount; t++) {
-			const uint8 idxByte = rec[11 + t];
+			const uint8 idxByte = textIdx[t];
 			const uint8 idx = idxByte & 0x7f;
-			const uint32 noteAbs = notesBase + (uint32)idx * 7;
+			const uint32 noteAbs = notesBase + (uint32)idx * noteStride;
 			if (noteAbs + 6 > dsz)
 				continue;
 			const uint16 textOff = (_partner == kPartnerJake)
-				? READ_LE_UINT16(notes + idx * 7 + 2)
-				: READ_LE_UINT16(notes + idx * 7 + 4);
+				? READ_LE_UINT16(notes + idx * noteStride + 2)
+				: READ_LE_UINT16(notes + idx * noteStride + 4);
 			if (textOff >= dsz)
 				continue;
 			const char *linePtr = (const char *)(bufBase + textOff);
@@ -1258,8 +1310,8 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 				(idxByte & 0x80) != 0 && t + 1 < textCount;
 			if (!continuePage) {
 				Common::Array<Common::String> wrapped;
-				_font.wordWrapText(fitPage, MAX<int>(8, (int)fitWidth),
-					wrapped);
+				dialogFont.wordWrapText(fitPage, MAX<int>(8, (int)fitWidth),
+										wrapped);
 				if (wrapped.size() > fitTextLines ||
 					(wrapped.size() == fitTextLines &&
 					 fitPage.size() > fitText.size())) {
@@ -1279,29 +1331,33 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 		const bool   haveBalloon = balByte != 0xFF &&
 			_balloonArchive.size() > balloonId &&
 			_balloonArchive.loadEntry(balloonId, balloon);
-		uint16 textWidth = 142;
-		uint16 textXIns  = 6;
-		uint16 textYIns  = 4;
+		uint16 textWidth = mac ? (uint16)scaleX(142) : 142;
+		uint16 textXIns  = mac ? (uint16)scaleX(6) : 6;
+		uint16 textYIns  = mac ? (uint16)scaleY(4) : 4;
 		if (haveBalloon)
 			getBalloonInsets(balloonId, textXIns, textYIns, textWidth);
 		const int textX = ballX + textXIns;
-		const int lineH    = _font.getFontHeight();
+		const int lineH = dialogFont.getFontHeight();
+		MacSpritePaletteMap macPaletteMap = {0x00, 0xFF};
+		if (mac)
+			macPaletteMap = getMacSpritePaletteMap();
+		const byte textColor = mac ? macPaletteMap.black : 0;
 
 		bool firstPage  = true;
 		int  cursorY    = ballY + textYIns;
 		bool skipAll    = false;
 
 		for (uint t = 0; t < textCount && !shouldQuit() && !skipAll; t++) {
-			const uint8 idxByte = rec[11 + t];
+			const uint8 idxByte = textIdx[t];
 			const uint8 idx     = idxByte & 0x7f;
 			if (idx < Mystery::kCluesFoundCap)
 				_mystery._cluesFound[idx] = 1;
-			const uint32 noteAbs = notesBase + (uint32)idx * 7;
+			const uint32 noteAbs = notesBase + (uint32)idx * noteStride;
 			if (noteAbs + 6 > dsz)
 				break;
 			const uint16 textOff = (_partner == kPartnerJake)
-				? READ_LE_UINT16(notes + idx * 7 + 2)
-				: READ_LE_UINT16(notes + idx * 7 + 4);
+				? READ_LE_UINT16(notes + idx * noteStride + 2)
+				: READ_LE_UINT16(notes + idx * noteStride + 4);
 			if (textOff >= dsz)
 				break;
 			const char *linePtr = (const char *)(bufBase + textOff);
@@ -1313,7 +1369,7 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 				parseString(raw, _playerName, _partner);
 
 			// Render this text page.
-			Graphics::ManagedSurface scratch(kScreenWidth, kScreenHeight,
+			Graphics::ManagedSurface scratch(sw, sh,
 				Graphics::PixelFormat::createFormatCLUT8());
 			scratch.simpleBlitFrom(*bg.surfacePtr());
 
@@ -1321,26 +1377,36 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 				if (picID != 0 && picID != 0xFFFF) {
 					Picture pic;
 					if (_picsArchive.getPicture(picID, pic)) {
-						scratch.transBlitFrom(pic.surface,
-											  Common::Point(picX, picY),
-											  (uint32)(byte)(pic.flags >> 8));
+						if (mac)
+							blitMacMaskedSurface(scratch.surfacePtr(), pic,
+												 picX, picY, false,
+												 macPaletteMap);
+						else
+							scratch.transBlitFrom(pic.surface,
+												  Common::Point(picX, picY),
+												  (uint32)(byte)(pic.flags >> 8));
 					}
 				}
 				if (haveBalloon) {
 					const byte transp = (byte)(balloon.flags >> 8);
-					scratch.transBlitFrom(balloon.surface,
-										  Common::Point(ballX, ballY),
-										  transp, flipBall);
+					if (mac)
+						blitMacMaskedSurface(scratch.surfacePtr(), balloon,
+											 ballX, ballY, flipBall,
+											 macPaletteMap);
+					else
+						scratch.transBlitFrom(balloon.surface,
+											  Common::Point(ballX, ballY),
+											  transp, flipBall);
 				}
 				cursorY = ballY + textYIns;
 			}
 
 			Common::Array<Common::String> lines;
-			_font.wordWrapText(text, MAX<int>(8, (int)textWidth), lines);
+			dialogFont.wordWrapText(text, MAX<int>(8, (int)textWidth), lines);
 			for (uint l = 0; l < lines.size(); l++) {
-				_font.drawString(&scratch, lines[l], textX,
-								  cursorY + (int)l * lineH,
-								  MAX<int>(8, (int)textWidth), 0);
+				dialogFont.drawString(&scratch, lines[l], textX,
+									  cursorY + (int)l * lineH,
+									  MAX<int>(8, (int)textWidth), textColor);
 			}
 			cursorY += (int)lines.size() * lineH;
 
@@ -1382,7 +1448,7 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 			}
 
 			g_system->copyRectToScreen(scratch.getPixels(), scratch.pitch,
-									   0, 0, kScreenWidth, kScreenHeight);
+									   0, 0, sw, sh);
 			g_system->updateScreen();
 
 			if (waitNeeded) {
@@ -1403,13 +1469,19 @@ void EEMEngine::displayFloppyDialogRecords(const byte *rec, uint count,
 		if (playedRecordVoice)
 			_audio->stopVoice();
 
-		rec += 11 + textCount;
+		rec += (mac ? 14 : 11) + textCount;
 	}
 }
 
 void EEMEngine::displayFloppyBriefing(const byte *initBlock) {
-	if (!initBlock || !isFloppy())
+	if (!initBlock || (!isFloppy() && !isMacintosh()))
 		return;
+	if (isMacintosh()) {
+		const uint16 nDialog = READ_LE_UINT16(initBlock + 2);
+		const byte *rec = initBlock + 4;
+		displayFloppyDialogRecords(rec, nDialog);
+		return;
+	}
 	const uint8 nSubjects = initBlock[1];
 	const uint8 nDialog   = initBlock[2 + nSubjects];
 	const byte *rec       = initBlock + 3 + nSubjects;
@@ -1417,7 +1489,8 @@ void EEMEngine::displayFloppyBriefing(const byte *initBlock) {
 }
 
 void EEMEngine::displayFloppyHotspotDialog(uint siteNum, uint hotIdx) {
-	if (!_mystery.isLoaded() || !isFloppy())
+	const bool mac = isMacintosh();
+	if (!_mystery.isLoaded() || (!isFloppy() && !mac))
 		return;
 	const byte *site = _mystery.siteData(siteNum);
 	if (!site)
@@ -1429,18 +1502,20 @@ void EEMEngine::displayFloppyHotspotDialog(uint siteNum, uint hotIdx) {
 	uint32 off = dlgListOff;
 	for (uint h = 0; h < hotIdx; h++) {
 		const byte *rec = bufBase + off;
-		off += 11 + rec[10];
+		off += (mac ? 14 : 11) + rec[mac ? 13 : 10];
 		const uint contCount = bufBase[off] & 0x7F;
 		off += 1;
 		for (uint c = 0; c < contCount; c++) {
 			const byte *cr = bufBase + off;
-			off += 11 + cr[10];
+			off += (mac ? 14 : 11) + cr[mac ? 13 : 10];
 		}
 	}
 	if (off >= _mystery.dataSize())
 		return;
 
-	Graphics::ManagedSurface siteBG(kScreenWidth, kScreenHeight,
+	const int sw = screenWidth();
+	const int sh = screenHeight();
+	Graphics::ManagedSurface siteBG(sw, sh,
 		Graphics::PixelFormat::createFormatCLUT8());
 	{
 		Graphics::Surface *screen = g_system->lockScreen();
@@ -1450,7 +1525,7 @@ void EEMEngine::displayFloppyHotspotDialog(uint siteNum, uint hotIdx) {
 		}
 	}
 	const byte *mainRec = bufBase + off;
-	const uint mainLen = 11u + (uint)mainRec[10];
+	const uint mainLen = (mac ? 14u : 11u) + (uint)mainRec[mac ? 13 : 10];
 	uint contCount = 0;
 	uint contFlagsByte = 0;
 	if (off + mainLen < _mystery.dataSize()) {
@@ -1470,7 +1545,7 @@ void EEMEngine::displayFloppyHotspotDialog(uint siteNum, uint hotIdx) {
 		return;
 
 	g_system->copyRectToScreen(siteBG.getPixels(), siteBG.pitch,
-							   0, 0, kScreenWidth, kScreenHeight);
+							   0, 0, sw, sh);
 	g_system->updateScreen();
 	displayFloppyDialogRecords(bufBase + contOff, contCount, 0);
 }

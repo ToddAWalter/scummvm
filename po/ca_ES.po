@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 1.6.0git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-06-21 22:35+0000\n"
-"PO-Revision-Date: 2026-05-26 04:22+0000\n"
+"POT-Creation-Date: 2026-06-23 18:29+0000\n"
+"PO-Revision-Date: 2026-06-23 23:22+0000\n"
 "Last-Translator: Xaviu <xaviu@xaviu.com>\n"
 "Language-Team: Catalan <https://translations.scummvm.org/projects/scummvm/"
 "scummvm/ca/>\n"
@@ -2270,28 +2270,20 @@ msgid "Disable fixed font scaling"
 msgstr "Desactiva l'escalat de tipus de lletra fixa"
 
 #: gui/options.cpp:2667
-#, fuzzy
-#| msgid ""
-#| "Do not upscale fixed size fonts in the GUI. This reduces artefacts on low "
-#| "resolution screens"
 msgid ""
 "Do not upscale fixed size fonts in the GUI. This reduces artefacts on low "
 "resolution screens."
 msgstr ""
-"No escalar tipus de lletra de mida fixa a la IGU. Això redueix els "
-"artefactes en pantalles de baixa resolució"
+"No s'escala els tipus de lletra de mida fixa a la IGU. Això redueix els "
+"artefactes en pantalles de baixa resolució."
 
 #: gui/options.cpp:2673
-#, fuzzy
-#| msgid "Enable smooth scrolling when walking"
 msgid "Enable kinetic scrolling in lists"
-msgstr "Activa el desplaçament suau al caminar"
+msgstr "Habilita el desplaçament cinètic a les llistes"
 
 #: gui/options.cpp:2674
-#, fuzzy
-#| msgid "Enable smooth scrolling when walking"
 msgid "Enable smooth, momentum-based scrolling in list widgets."
-msgstr "Activa el desplaçament suau al caminar"
+msgstr "Habilita el desplaçament suau i basat en moments als ginys de llistes."
 
 #: gui/options.cpp:2680
 msgid "GUI language:"
@@ -7051,15 +7043,15 @@ msgstr "Assignació de tecles d'escapament"
 msgid "Open inventory"
 msgstr "Obre l'inventari"
 
-#: engines/bladerunner/bladerunner.cpp:396
+#: engines/bladerunner/bladerunner.cpp:406
 msgid "Failed to initialize resources"
 msgstr "No s'han pogut inicialitzar els recursos"
 
-#: engines/bladerunner/bladerunner.cpp:1167
+#: engines/bladerunner/bladerunner.cpp:1177
 msgid "A required game resource was not found"
 msgstr "No s'ha trobat el recurs del joc requerit"
 
-#: engines/bladerunner/bladerunner.cpp:2754
+#: engines/bladerunner/bladerunner.cpp:2763
 msgid ""
 "WARNING: This game was saved in Restored Cut Content mode, but you are "
 "playing in Original Content mode. The mode will be adjusted to Restored Cut "
@@ -7069,7 +7061,7 @@ msgstr ""
 "jugant en el mode Contingut original. El mode s'ajustarà a Contingut "
 "restaurat per a aquesta sessió fins que sortiu del joc."
 
-#: engines/bladerunner/bladerunner.cpp:2756
+#: engines/bladerunner/bladerunner.cpp:2765
 msgid ""
 "WARNING: This game was saved in Original Content mode, but you are playing "
 "in Restored Cut Content mode. The mode will be adjusted to Original Content "
@@ -7079,7 +7071,7 @@ msgstr ""
 "jugant en el mode Contingut restaurat. El mode s'ajustarà al Contingut "
 "original per a aquesta sessió fins que sortiu del joc."
 
-#: engines/bladerunner/bladerunner.cpp:2758
+#: engines/bladerunner/bladerunner.cpp:2767
 msgid "Continue"
 msgstr "Continua"
 
@@ -7308,9 +7300,9 @@ msgstr "Activa / desactiva la privadesa de la pista"
 #: engines/dgds/metaengine.cpp:75 engines/dm/metaengine.cpp:174
 #: engines/drascula/metaengine.cpp:285 engines/efh/metaengine.cpp:272
 #: engines/freescape/games/castle/castle.cpp:473
-#: engines/freescape/games/dark/dark.cpp:226
-#: engines/freescape/games/driller/driller.cpp:119
-#: engines/freescape/games/eclipse/eclipse.cpp:330
+#: engines/freescape/games/dark/dark.cpp:227
+#: engines/freescape/games/driller/driller.cpp:120
+#: engines/freescape/games/eclipse/eclipse.cpp:335
 #: engines/hopkins/metaengine.cpp:236 engines/hugo/metaengine.cpp:165
 #: engines/lure/metaengine.cpp:191 engines/made/metaengine.cpp:192
 #: engines/mads/metaengine.cpp:347 engines/mohawk/myst.cpp:583
@@ -7336,9 +7328,9 @@ msgstr "Desa la partida"
 #: engines/dgds/metaengine.cpp:74 engines/drascula/metaengine.cpp:260
 #: engines/efh/metaengine.cpp:279 engines/efh/metaengine.cpp:613
 #: engines/freescape/games/castle/castle.cpp:478
-#: engines/freescape/games/dark/dark.cpp:231
-#: engines/freescape/games/driller/driller.cpp:124
-#: engines/freescape/games/eclipse/eclipse.cpp:335
+#: engines/freescape/games/dark/dark.cpp:232
+#: engines/freescape/games/driller/driller.cpp:125
+#: engines/freescape/games/eclipse/eclipse.cpp:340
 #: engines/hopkins/metaengine.cpp:242 engines/made/metaengine.cpp:198
 #: engines/mohawk/myst_stacks/menu.cpp:283
 #: engines/mohawk/riven_stacks/aspit.cpp:349 engines/pegasus/pegasus.cpp:2831
@@ -7386,9 +7378,9 @@ msgstr "Base de dades de pistes"
 #: engines/darkseed/metaengine.cpp:60 engines/dragons/metaengine.cpp:223
 #: engines/efh/metaengine.cpp:373 engines/efh/metaengine.cpp:619
 #: engines/freescape/games/castle/castle.cpp:486
-#: engines/freescape/games/dark/dark.cpp:236
-#: engines/freescape/games/driller/driller.cpp:129
-#: engines/freescape/games/eclipse/eclipse.cpp:340
+#: engines/freescape/games/dark/dark.cpp:237
+#: engines/freescape/games/driller/driller.cpp:130
+#: engines/freescape/games/eclipse/eclipse.cpp:345
 #: engines/mads/metaengine.cpp:403 engines/phoenixvr/metaengine.cpp:89
 #: engines/saga/metaengine.cpp:437 engines/sherlock/metaengine.cpp:359
 #: engines/sherlock/metaengine.cpp:618 engines/sherlock/metaengine.cpp:852
@@ -7791,20 +7783,16 @@ msgstr ""
 "l'Operation Stealth des del començament utilitzant noves partides desades."
 
 #: engines/colony/intro.cpp:154 engines/colony/intro.cpp:1244
-#, fuzzy
-#| msgid "New game"
 msgid "New Game"
-msgstr "Nova partida"
+msgstr "Nova Partida"
 
 #: engines/colony/intro.cpp:155 engines/colony/intro.cpp:1242
 msgid "Load Game"
 msgstr "Carrega la partida"
 
 #: engines/colony/intro.cpp:1219 engines/colony/intro.cpp:1244
-#, fuzzy
-#| msgid "You have stored "
 msgid "You have been terminated."
-msgstr "Heu emmagatzemat "
+msgstr "T'han mort."
 
 #: engines/colony/metaengine.cpp:45 engines/myst3/metaengine.cpp:40
 msgid "Widescreen mod"
@@ -7834,17 +7822,17 @@ msgstr "Desplaça't a la dreta"
 
 #: engines/colony/metaengine.cpp:127
 #: engines/freescape/games/castle/castle.cpp:496
-#: engines/freescape/games/dark/dark.cpp:252
-#: engines/freescape/games/driller/driller.cpp:143
-#: engines/freescape/games/eclipse/eclipse.cpp:353
+#: engines/freescape/games/dark/dark.cpp:253
+#: engines/freescape/games/driller/driller.cpp:144
+#: engines/freescape/games/eclipse/eclipse.cpp:358
 msgid "Rotate left"
 msgstr "Gira cap a l'esquerra"
 
 #: engines/colony/metaengine.cpp:132
 #: engines/freescape/games/castle/castle.cpp:501
-#: engines/freescape/games/dark/dark.cpp:257
-#: engines/freescape/games/driller/driller.cpp:148
-#: engines/freescape/games/eclipse/eclipse.cpp:358
+#: engines/freescape/games/dark/dark.cpp:258
+#: engines/freescape/games/driller/driller.cpp:149
+#: engines/freescape/games/eclipse/eclipse.cpp:363
 msgid "Rotate right"
 msgstr "Gira cap a la dreta"
 
@@ -7854,7 +7842,7 @@ msgstr "Mira enrere"
 
 #: engines/colony/metaengine.cpp:152
 #: engines/freescape/games/castle/castle.cpp:523
-#: engines/freescape/games/eclipse/eclipse.cpp:396
+#: engines/freescape/games/eclipse/eclipse.cpp:401
 msgid "Face forward"
 msgstr "Mira endavant"
 
@@ -8322,10 +8310,8 @@ msgid "Enable Text to Speech for Objects, Options, and the Bible Quote"
 msgstr "Activa el text a veu per a objectes, opcions i la cita de la Bíblia"
 
 #: engines/eem/metaengine.cpp:38
-#, fuzzy
-#| msgid "Highlight items"
 msgid "Hide the highlight boxes"
-msgstr "Ressalta els objectes"
+msgstr "Amaga els quadres de ressaltat"
 
 #: engines/eem/metaengine.cpp:39
 msgid "Hide the boxes that highlight searchable clue locations."
@@ -8342,10 +8328,8 @@ msgid ""
 msgstr ""
 
 #: engines/eem/metaengine.cpp:61
-#, fuzzy
-#| msgid "Skip speech"
 msgid "Skip repeated cases"
-msgstr "Omet les veus"
+msgstr "Omet els casos repetits"
 
 #: engines/eem/metaengine.cpp:62
 msgid "Skip all Book 2 cases and jump to Book 3 once Book 1 is complete."
@@ -8786,9 +8770,9 @@ msgid "Select princess"
 msgstr "Selecciona la princesa"
 
 #: engines/freescape/games/castle/castle.cpp:491
-#: engines/freescape/games/dark/dark.cpp:246
-#: engines/freescape/games/driller/driller.cpp:137
-#: engines/freescape/games/eclipse/eclipse.cpp:348
+#: engines/freescape/games/dark/dark.cpp:247
+#: engines/freescape/games/driller/driller.cpp:138
+#: engines/freescape/games/eclipse/eclipse.cpp:353
 #: engines/hugo/metaengine.cpp:154
 msgid "Toggle sound"
 msgstr "Commuta el so"
@@ -8801,92 +8785,92 @@ msgstr "Arrossegar-se"
 msgid "Run (hold)"
 msgstr "Córrer (manté)"
 
-#: engines/freescape/games/dark/dark.cpp:262
-#: engines/freescape/games/driller/driller.cpp:182
+#: engines/freescape/games/dark/dark.cpp:263
+#: engines/freescape/games/driller/driller.cpp:183
 #: engines/ultima/ultima8/metaengine.cpp:97
 msgid "Roll left"
 msgstr "Roda cap a l'esquerra"
 
-#: engines/freescape/games/dark/dark.cpp:267
-#: engines/freescape/games/driller/driller.cpp:187
+#: engines/freescape/games/dark/dark.cpp:268
+#: engines/freescape/games/driller/driller.cpp:188
 #: engines/ultima/ultima8/metaengine.cpp:98
 msgid "Roll right"
 msgstr "Roda cap a la dreta"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/dark/dark.cpp:273
-#: engines/freescape/games/driller/driller.cpp:154
+#: engines/freescape/games/dark/dark.cpp:274
+#: engines/freescape/games/driller/driller.cpp:155
 msgid "Increase turn angle"
 msgstr "Augmenta l'angle de gir"
 
-#: engines/freescape/games/dark/dark.cpp:278
-#: engines/freescape/games/driller/driller.cpp:159
+#: engines/freescape/games/dark/dark.cpp:279
+#: engines/freescape/games/driller/driller.cpp:160
 msgid "Decrease turn angle"
 msgstr "Disminueix l'angle de gir"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:284
-#: engines/freescape/games/driller/driller.cpp:165
+#: engines/freescape/games/dark/dark.cpp:285
+#: engines/freescape/games/driller/driller.cpp:166
 msgid "Increase step size"
 msgstr "Augmenta la mida dels passos"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/dark/dark.cpp:290
-#: engines/freescape/games/driller/driller.cpp:171
+#: engines/freescape/games/dark/dark.cpp:291
+#: engines/freescape/games/driller/driller.cpp:172
 msgid "Decrease step size"
 msgstr "Disminueix la mida dels passos"
 
-#: engines/freescape/games/dark/dark.cpp:295
-#: engines/freescape/games/driller/driller.cpp:176
+#: engines/freescape/games/dark/dark.cpp:296
+#: engines/freescape/games/driller/driller.cpp:177
 msgid "Rise / Fly up"
 msgstr "Ascendeix / Vola amunt"
 
-#: engines/freescape/games/dark/dark.cpp:301
-#: engines/freescape/games/driller/driller.cpp:192
+#: engines/freescape/games/dark/dark.cpp:302
+#: engines/freescape/games/driller/driller.cpp:193
 msgid "Lower / Fly down"
 msgstr "Descendeix / Vola avall"
 
-#: engines/freescape/games/dark/dark.cpp:307
+#: engines/freescape/games/dark/dark.cpp:308
 msgid "Enable / Disable jetpack"
 msgstr "Activa / Desactiva Jetpack"
 
 #. I18N: drilling rig is an in game item
-#: engines/freescape/games/driller/driller.cpp:199
+#: engines/freescape/games/driller/driller.cpp:200
 msgid "Deploy drilling rig"
 msgstr "Desplega l'equip de perforació"
 
 #. I18N: drilling rig is an in game item
-#: engines/freescape/games/driller/driller.cpp:206
+#: engines/freescape/games/driller/driller.cpp:207
 msgid "Collect drilling rig"
 msgstr "Recull l'equip de perforació"
 
 #. I18N: Illustrates the angle at which you turn left or right.
-#: engines/freescape/games/eclipse/eclipse.cpp:364
+#: engines/freescape/games/eclipse/eclipse.cpp:369
 msgid "Change angle"
 msgstr "Canvia l'angle"
 
 #. I18N: STEP SIZE: Measures the size of one movement in the direction you are facing (1-250 standard distance units (SDUs))
-#: engines/freescape/games/eclipse/eclipse.cpp:370
+#: engines/freescape/games/eclipse/eclipse.cpp:375
 msgid "Change step size"
 msgstr "Canvia la mida dels passos"
 
-#: engines/freescape/games/eclipse/eclipse.cpp:376
+#: engines/freescape/games/eclipse/eclipse.cpp:381
 msgid "Sprint (hold)"
 msgstr "Esprinta (manté)"
 
-#: engines/freescape/games/eclipse/eclipse.cpp:384
+#: engines/freescape/games/eclipse/eclipse.cpp:389
 msgid "Toggle height"
 msgstr "Commuta l'alçada"
 
 #. I18N: Action of hero party in Might & Magic 1
-#: engines/freescape/games/eclipse/eclipse.cpp:390
+#: engines/freescape/games/eclipse/eclipse.cpp:395
 #: engines/kyra/engine/lol.cpp:519 engines/mm/mm1/metaengine.cpp:114
 #: engines/ultima/nuvie/metaengine.cpp:195
 #: engines/ultima/nuvie/metaengine.cpp:200
 msgid "Rest"
 msgstr "Descansa"
 
-#: engines/freescape/games/eclipse/eclipse.cpp:401
+#: engines/freescape/games/eclipse/eclipse.cpp:406
 msgid "Toggle flashlight"
 msgstr "Commuta la llanterna"
 
@@ -13192,10 +13176,8 @@ msgid "Run the game in 640x400 high resolution mode instead of 320x200"
 msgstr ""
 
 #: engines/scumm/metaengine.cpp:892 engines/scumm/metaengine.cpp:919
-#, fuzzy
-#| msgid "All levels will be available to play."
 msgid "All levels will be available without requiring passwords"
-msgstr "Tots els nivells estaran disponibles per jugar."
+msgstr "Tots els nivells estaran disponibles sense necessitat de contrasenyes"
 
 #: engines/scumm/metaengine.cpp:900 engines/scumm/metaengine.cpp:927
 #, fuzzy

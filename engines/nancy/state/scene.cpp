@@ -573,6 +573,26 @@ bool Scene::getEventFlag(FlagDescription eventFlag) const {
 	return getEventFlag(eventFlag.label, eventFlag.flag);
 }
 
+// Nancy 11+ AR 30/31 store the "player scrolling disabled" state in event flag
+// 1033 (eventData[0x21] in the original; nancy3+ event-flag labels start at
+// 1000, so this is index 33). It persists across scenes and is saved/restored
+// together with the rest of the event flags.
+static const int16 kPlayerScrollingDisabledFlag = 1033;
+
+void Scene::setPlayerScrolling(bool enabled) {
+	setEventFlag(kPlayerScrollingDisabledFlag, enabled ? g_nancy->_false : g_nancy->_true);
+}
+
+bool Scene::getPlayerScrolling() const {
+	// Player-scrolling control only exists from Nancy 11; older games must not
+	// consult this flag, since they may use that event-flag index for something else
+	if (g_nancy->getGameType() < kGameTypeNancy11) {
+		return true;
+	}
+
+	return !getEventFlag(kPlayerScrollingDisabledFlag, g_nancy->_true);
+}
+
 void Scene::setLogicCondition(int16 label, byte flag) {
 	if (label > kEvNoEvent) {
 		if (label >= 2000) {
@@ -785,6 +805,9 @@ void Scene::synchronize(Common::Serializer &ser) {
 	ser.syncAsUint16LE(_difficulty);
 	ser.syncArray<uint16>(_hintsRemaining.data(), _hintsRemaining.size(), Common::Serializer::Uint16LE);
 
+	// NOTE: These two variables are only used by the hint system in
+	// Nancy 1, so they can be freely repurposed by newer games to
+	// store new data, if needed, to avoid bumping the save version.
 	ser.syncAsSint16LE(_lastHintCharacter);
 	ser.syncAsSint16LE(_lastHintID);
 
@@ -1096,6 +1119,10 @@ void Scene::run() {
 
 	_timers.sceneTime += deltaTime;
 
+	// Advance the Nancy 11+ software timers before processing action records,
+	// so any flags they fire this frame are visible to record dependencies
+	tickSoftwareTimers((uint32)deltaTime);
+
 	// Calculate the in-game time (playerTime)
 	if (currentPlayTime > _timers.playerTimeNextMinute) {
 		auto *bootSummary = GetEngineData(BSUM);
@@ -1134,6 +1161,76 @@ void Scene::run() {
 
 	if (_state == kLoad) {
 		g_nancy->_graphics->suppressNextDraw();
+	}
+}
+
+void Scene::tickSoftwareTimers(uint32 deltaMs) {
+	if (g_nancy->getGameType() < kGameTypeNancy11 || deltaMs == 0) {
+		return;
+	}
+
+	// getPuzzleData() below lazily creates (and thereafter persists) the TimerData
+	// chunk. This runs every frame, so without this guard every Nancy 11 save
+	// would carry an empty TimerData chunk even if no timer is ever used. The
+	// chunk only exists once a timer AR has configured a slot.
+	if (!_puzzleData.contains(TimerData::getTag())) {
+		return;
+	}
+
+	TimerData *timerData = (TimerData *)getPuzzleData(TimerData::getTag());
+
+	for (uint i = 0; i < TimerData::kNumTimers; ++i) {
+		TimerData::Timer &timer = timerData->timers[i];
+
+		if (timer.state != TimerData::Timer::kRunning &&
+			timer.state != TimerData::Timer::kOneShot &&
+			timer.state != TimerData::Timer::kRepeating) {
+			continue;
+		}
+
+		timer.currentTimeMs += deltaMs;
+
+		if ((timer.state == TimerData::Timer::kOneShot || timer.state == TimerData::Timer::kRepeating) &&
+			timer.durationMs > 0 && !timer.hasFired && timer.currentTimeMs >= timer.durationMs) {
+			fireSoftwareTimer(timer);
+
+			if (timer.state == TimerData::Timer::kOneShot) {
+				// One-shot timers clear themselves once they fire
+				timer.reset();
+			} else {
+				// Repeating timers keep counting up but will not fire again
+				timer.state = TimerData::Timer::kRunning;
+			}
+		}
+	}
+}
+
+void Scene::fireSoftwareTimer(TimerData::Timer &timer) {
+	timer.hasFired = true;
+
+	// Set the configured event flags
+	for (uint i = 0; i < ARRAYSIZE(timer.flags); ++i) {
+		if (timer.flags[i].label != kFlagNoLabel) {
+			setEventFlag(timer.flags[i]);
+		}
+	}
+
+	// Play the optional expiry sound
+	if (timer.sound.name != "NO SOUND") {
+		g_nancy->_sound->loadSound(timer.sound);
+		g_nancy->_sound->playSound(timer.sound);
+	}
+
+	// Show the optional caption, if captions are enabled
+	if (ConfMan.getBool("subtitles", ConfMan.getActiveDomainName())) {
+		if (!timer.autotextKey.empty()) {
+			const CVTX *autotext = (const CVTX *)g_nancy->getEngineData("AUTOTEXT");
+			if (autotext && autotext->texts.contains(timer.autotextKey)) {
+				_textbox.addTextLine(autotext->texts[timer.autotextKey]);
+			}
+		} else if (!timer.caption.empty()) {
+			_textbox.addTextLine(timer.caption);
+		}
 	}
 }
 
