@@ -1114,4 +1114,34 @@ UINB::UINB(Common::SeekableReadStream *chunkStream) : EngineData(chunkStream) {
 	readRect(*chunkStream, tabCaptionDestRect);
 }
 
+EVNT::EVNT(Common::SeekableReadStream *chunkStream) : EngineData(chunkStream) {
+	Common::String name;
+	const uint16 count = (uint16)(chunkStream->size() / (int64)kEventRecordSize);
+
+	eventFlagNames.resize(count);
+
+	for (uint16 i = 0; i < count; ++i) {
+		readFilename(*chunkStream, name);
+		chunkStream->skip(2);	// flag ID (starting from 2000)
+		eventFlagNames[i] = name;
+	}
+}
+
+UIRC::UIRC(Common::SeekableReadStream *chunkStream) : EngineData(chunkStream) {
+	while (chunkStream->size() - chunkStream->pos() >= (int64)kItemRecordSize) {
+		ItemRecord rec;
+		rec.id = chunkStream->readUint16LE();
+		readFilename(*chunkStream, rec.overlayName);
+		readRect(*chunkStream, rec.rect);
+		rec.unknown1 = chunkStream->readSint16LE();
+		rec.unknown2 = chunkStream->readSint16LE();
+		rec.soundChannel = chunkStream->readSint16LE();
+		rec.soundVolume = chunkStream->readSint16LE();
+		for (uint i = 0; i < kNumSounds; ++i) {
+			readFilename(*chunkStream, rec.soundNames[i]);
+		}
+		items.push_back(rec);
+	}
+}
+
 } // End of namespace Nancy

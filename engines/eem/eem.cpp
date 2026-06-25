@@ -39,6 +39,7 @@
 #include "eem/audio.h"
 #include "eem/detection.h"
 #include "eem/eem.h"
+#include "eem/installer.h"
 #include "eem/music.h"
 #include "eem/site.h"
 
@@ -58,7 +59,7 @@ const uint kPalEAKids          = 0x25;
 const uint kPalHighScore       = 0x27;
 const uint kPalStormLogo       = 0x26;  // Floppy FUN_23d2_0605
 const uint kMacPicEAKidsLogo   = 0x213; // FUN_000092be
-const uint kMacPicTitleRoom    = 0x20d; // FUN_000096fa title room
+// PIC 0x20d is the clubhouse scene; the title sequence (FUN_000096fa) omits it.
 const uint kMacPicTitleDark    = 0x20e;
 const uint kMacPicTitleFinal   = 0x20f;
 const uint kMacPicTitleIn0     = 0x210;
@@ -210,17 +211,29 @@ void setInteractiveCursorPalette(const Picture &cursor, byte transparent) {
 	CursorMan.replaceCursorPalette(palette, 0, 256);
 }
 
-void installMouseCursor(DBDArchive &pics, bool interactive) {
+void installMouseCursor(DBDArchive &pics, bool interactive, bool mac) {
 	Picture cursor;
 	if (!pics.getPicture(kPicMousePointer, cursor) || cursor.surface.empty())
 		error("EEM: mouse cursor PIC 0x%x missing", kPicMousePointer);
 
 	const byte transparent = (byte)(cursor.flags >> 8);
 	CursorMan.replaceCursor(cursor.surface.rawSurface(), 0, 0, transparent);
-	if (interactive)
+	if (interactive) {
 		setInteractiveCursorPalette(cursor, transparent);
-	else
+	} else if (mac) {
+		// Mac sprite art is authored with palette index 0 = white and
+		// 0xFF = black, but ~2/3 of the site ColorTables store those endpoints
+		// swapped (the original relied on QuickDraw CopyBits colour-matching to
+		// reconcile that). Pin white/black in a dedicated cursor palette so the
+		// pointer's body stays white instead of turning black on those sites.
+		byte pal[kPalSize];
+		g_system->getPaletteManager()->grabPalette(pal, 0, 256);
+		pal[0] = pal[1] = pal[2] = 0xFF;
+		pal[0xFF * 3 + 0] = pal[0xFF * 3 + 1] = pal[0xFF * 3 + 2] = 0x00;
+		CursorMan.replaceCursorPalette(pal, 0, 256);
+	} else {
 		CursorMan.replaceCursorPalette(nullptr, 0, 0);
+	}
 }
 
 EEMEngine::EEMEngine(OSystem *syst, const ADGameDescription *gameDesc)
@@ -377,9 +390,12 @@ static bool loadMacFont(EEMFont &font) {
 		   loadMacFontResource(font, kMacSmallFontResource, 9);
 }
 
+// Speech balloons use the 14pt Eagle Eye font: the bubble art and the
+// fit-to-text metrics are both sized for it, so it is most likely the size the
+// original shipped (the 9pt FONT left the text undersized with blank space).
 static bool loadMacDialogFont(EEMFont &font) {
-	return loadMacFontResource(font, kMacSmallFontResource, 9) ||
-		   loadMacFontResource(font, kMacFontResource, 14);
+	return loadMacFontResource(font, kMacFontResource, 14) ||
+		   loadMacFontResource(font, kMacSmallFontResource, 9);
 }
 
 Common::Error EEMEngine::run() {
@@ -423,7 +439,7 @@ Common::Error EEMEngine::run() {
 	_audio->setVoiceEnabled(_voiceOn);
 	syncSoundSettings();
 
-	installMouseCursor(_picsArchive, false);
+	installMouseCursor(_picsArchive, false, isMacintosh());
 	CursorMan.showMouse(false);
 
 	// _AllBlack @ 172b:0d4b.
@@ -725,7 +741,7 @@ void EEMEngine::setInteractiveMouseCursor(bool active) {
 		return;
 
 	_interactiveMouseCursor = active;
-	installMouseCursor(_picsArchive, active);
+	installMouseCursor(_picsArchive, active, isMacintosh());
 	// The red-outline highlight replaced any London cursor shape; force the
 	// next setSiteHotspotCursorId to reinstall.
 	_siteCursorId = -1;
@@ -770,6 +786,20 @@ void EEMEngine::setSiteHotspotCursorId(int cursorId) {
 
 bool EEMEngine::openArchives() {
 	const bool mac = isMacintosh();
+
+	// The Mac release can be played straight from its floppy installer. When
+	// those files are present, mount a virtual archive that decompresses the
+	// game data (PICS.DBD, MysteryData, fonts, ...) on demand, so the opens
+	// below and the Mac resource-fork lookups resolve transparently.
+	if (mac && !SearchMan.hasArchive("eem-installer")) {
+		const Common::FSNode gameDir(ConfMan.getPath("path"));
+		if (Common::Archive *installer = createInstallerArchive(gameDir)) {
+			SearchMan.add("eem-installer", installer);
+			debugC(1, kDebugGeneral, "Mounted Eagle Eye Mysteries Mac installer archive");
+		} else {
+			warning("EEMTEST: createInstallerArchive returned null");
+		}
+	}
 
 	if (!_picsArchive.open(Common::Path("PICS.DBD"), Common::Path("PICS.DBX"), mac)) {
 		warning("PICS archive missing");
@@ -1261,9 +1291,10 @@ void EEMEngine::showMacTitleIntro() {
 		return;
 	}
 
-	Picture room, titleDark, titleFinal;
-	if (!_picsArchive.getPicture(kMacPicTitleRoom, room) ||
-		!_picsArchive.getPicture(kMacPicTitleDark, titleDark) ||
+	// FUN_000096fa uses only the dark-eye (0x20e) and lit-eye (0x20f) frames; the
+	// eye "powers up" from one to the other (PIC 0x20d, the clubhouse, isn't used).
+	Picture titleDark, titleFinal;
+	if (!_picsArchive.getPicture(kMacPicTitleDark, titleDark) ||
 		!_picsArchive.getPicture(kMacPicTitleFinal, titleFinal)) {
 		warning("Mac title base pictures failed to load");
 		return;
@@ -1290,7 +1321,7 @@ void EEMEngine::showMacTitleIntro() {
 
 	Graphics::ManagedSurface frame(kMacScreenWidth, kMacScreenHeight,
 								   Graphics::PixelFormat::createFormatCLUT8());
-	frame.blitFrom(room.surface, Common::Point(0, 0));
+	frame.blitFrom(titleDark.surface, Common::Point(0, 0));
 	copyNativeSurfaceToScreen(frame);
 
 	byte black[kPalSize] = {};
@@ -1299,11 +1330,11 @@ void EEMEngine::showMacTitleIntro() {
 	fadePaletteFromBlack(target);
 
 	for (int i = 0; i < 0x2c && !shouldQuit() && !_skipIntro; i++) {
-		frame.blitFrom(room.surface, Common::Point(0, 0));
+		frame.blitFrom(titleDark.surface, Common::Point(0, 0));
 		const int revealW = (i + 1) * kMacScreenWidth / 0x2c;
 		if (revealW > 0) {
 			const Common::Rect src(0, 0, revealW, kMacScreenHeight);
-			frame.blitFrom(titleDark.surface, src, Common::Point(0, 0));
+			frame.blitFrom(titleFinal.surface, src, Common::Point(0, 0));
 		}
 
 		switch (i) {

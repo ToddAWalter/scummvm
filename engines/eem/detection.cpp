@@ -35,7 +35,7 @@ const PlainGameDescriptor eemGames[] = {
 #define GUI_OPTIONS_EEM_FLOPPY GUIO4(GAMEOPTION_HIDE_HIGHLIGHT_BOXES, GAMEOPTION_SKIP_REPEATED_CASES, GUIO_MIDIADLIB, GUIO_MIDIMT32)
 #define GUI_OPTIONS_EEM_CD     GUIO6(GAMEOPTION_HIDE_HIGHLIGHT_BOXES, GAMEOPTION_FIT_DIALOG_BALLOONS, GAMEOPTION_SKIP_REPEATED_CASES, GAMEOPTION_RESTORED_CONTENT, GUIO_MIDIADLIB, GUIO_MIDIMT32)
 #define GUI_OPTIONS_EEM_DEMO   GUIO2(GAMEOPTION_HIDE_HIGHLIGHT_BOXES, GUIO_NOMIDI)
-#define GUI_OPTIONS_EEM_MAC    GUIO2(GAMEOPTION_HIDE_HIGHLIGHT_BOXES, GUIO_NOMIDI)
+#define GUI_OPTIONS_EEM_MAC    GUIO3(GAMEOPTION_HIDE_HIGHLIGHT_BOXES, GAMEOPTION_FIT_DIALOG_BALLOONS, GUIO_NOMIDI)
 
 const ADGameDescription gameDescriptions[] = {
 	{
@@ -81,9 +81,23 @@ const ADGameDescription gameDescriptions[] = {
 	},
 	{
 		"eem",
-		"Mac",
+		"",
 		AD_ENTRY2s("MysteryData", "d94c087c27e68cc299d7c5e737e458f9", 941029,
 				   "PICS.DBD",    "8905041070ff1352666d98cd78d5501c", 3800445),
+		Common::EN_ANY,
+		Common::kPlatformMacintosh,
+		ADGF_UNSTABLE,
+		GUI_OPTIONS_EEM_MAC
+	},
+	{
+		// Macintosh release played straight from its installer files
+		// ("Eagle Eye Installer" + "EEM Install Data 2".."6"); decompressed on
+		// the fly (see installer.cpp). "d:" hashes the data fork so this matches
+		// both the raw-fork (CD/floppy) and MacBinary-wrapped captures.
+		"eem",
+		"",
+		AD_ENTRY2s("Eagle Eye Installer", "d:08440dbf0cb47fb57e522f050159ffaa", 1391577,
+				   "EEM Install Data 2",  "aebccc677e149b37285f291f6ac72f57", 1446428),
 		Common::EN_ANY,
 		Common::kPlatformMacintosh,
 		ADGF_UNSTABLE,
