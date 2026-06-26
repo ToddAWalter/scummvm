@@ -20,6 +20,7 @@
  */
 
 #include "mads/madsv2/forest/rooms/section2.h"
+#include "mads/madsv2/forest/mads/words.h"
 #include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/forest/global.h"
 #include "mads/madsv2/forest/journal.h"
@@ -121,7 +122,7 @@ static void room_204_init1() {
 		global[g143] = 0;
 	}
 
-	player.commands_allowed = -1;
+	player.commands_allowed = true;
 	player.walker_visible = true;
 }
 
@@ -138,13 +139,13 @@ static void room_204_init() {
 		kernel_seq_loc(seq[0], 293, 87);
 		kernel_seq_scale(seq[0], 54);
 	} else {
-		kernel_flip_hotspot(158, -1);
+		kernel_flip_hotspot(words_vine_weed, true);
 	}
 
 	if (previous_room != KERNEL_RESTORING_GAME) {
 		if (previous_room != 199) {
 			player.walker_visible = false;
-			player.commands_allowed = 0;
+			player.commands_allowed = false;
 		}
 
 		for (int count = 0; count < 10; count++) {
@@ -198,7 +199,7 @@ static void room_204_anim2() {
 		scratch._a4 = 4;
 		kernel_abort_animation(scratch._a2);
 		kernel_abort_animation(scratch._a0);
-		player.commands_allowed = -1;
+		player.commands_allowed = true;
 		player.walker_visible = true;
 		global[g017] = -1;
 		aainfo[1]._active = 0;
@@ -368,7 +369,7 @@ static void room_204_daemon() {
 			kernel_reset_animation(scratch._9c, 1);
 			kernel_synch(3, scratch._9c, 4, 0);
 			global[g143] = 0;
-			player.commands_allowed = -1;
+			player.commands_allowed = true;
 			goto bottom;
 		} else if (trigger == 102) {
 			// abort _96 slot anim, re-enable
@@ -377,7 +378,7 @@ static void room_204_daemon() {
 			kernel_reset_animation(scratch._9a, 1);
 			kernel_synch(3, scratch._9a, 4, 0);
 			global[g133] = 0;
-			player.commands_allowed = -1;
+			player.commands_allowed = true;
 			goto bottom;
 		} else {
 			goto bottom;
@@ -396,7 +397,7 @@ trigger_7:
 	if (global[walker_converse_state] != 0) {
 		global[walker_converse_state] = 0;
 		close_journal(3);
-		player.commands_allowed = -1;
+		player.commands_allowed = true;
 		goto bottom;
 	}
 	if (scratch._a4 != 400)
@@ -503,7 +504,7 @@ trigger_100:
 		kernel_synch(3, scratch._9c, 4, 0);
 		player.walker_visible = true;
 		kernel_synch(2, 0, 4, 0);
-		player.commands_allowed = -1;
+		player.commands_allowed = true;
 	}
 	goto bottom;
 
@@ -518,10 +519,10 @@ trigger_103:
 	kernel_reset_animation(scratch._9a, 1);
 	kernel_synch(3, scratch._9a, 4, 0);
 	global[g133] = 0;
-	kernel_flip_hotspot(158, -1);
-	inter_move_object(9, 2);
+	kernel_flip_hotspot(words_vine_weed, true);
+	inter_move_object(9, PLAYER);
 	global[player_score] = -1;
-	player.commands_allowed = -1;
+	player.commands_allowed = true;
 
 bottom:
 	global_anim1(3, scratch._9a, global[g131], &global[g132]);
@@ -539,10 +540,10 @@ bottom:
 }
 
 static void room_204_pre_parser() {
-	if (player_parse(13, 23, 0))
+	if (player_parse(words_walk_to, words_room_203, 0))
 		player.walk_off_edge_to_room = 203;
 
-	if (player_parse(13, 25, 0))
+	if (player_parse(words_walk_to, words_room_205, 0))
 		player.walk_off_edge_to_room = flags[13] ? 205 : 220;
 }
 
@@ -557,7 +558,7 @@ static void room_204_parser() {
 		goto handled;
 	}
 
-	if (player_parse(114, 103, 0)) {
+	if (player_parse(words_look_at, words_foxglove, 0)) {
 		player.commands_allowed = false;
 		global[g135] = -1;
 		local->_8c = 5;
@@ -565,7 +566,7 @@ static void room_204_parser() {
 		goto handled;
 	}
 
-	if (player_parse(114, 82, 0)) {
+	if (player_parse(words_look_at, words_comfrey, 0)) {
 		player.commands_allowed = false;
 		global[g135] = -1;
 		local->_8c = 5;
@@ -573,7 +574,7 @@ static void room_204_parser() {
 		goto handled;
 	}
 
-	if (player_parse(126, 158, 0)) {
+	if (player_parse(words_pick_up, words_vine_weed, 0)) {
 		global[g154] = 2;
 		player.commands_allowed = false;
 		kernel_run_animation_talk('b', 9, 0);
@@ -581,7 +582,7 @@ static void room_204_parser() {
 		goto handled;
 	}
 
-	if (player_parse(78, 119, 0)) {
+	if (player_parse(words_click_on, words_moss, 0)) {
 		player.commands_allowed = false;
 		global[g135] = -1;
 		local->_8c = 3;

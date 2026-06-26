@@ -20,6 +20,7 @@
  */
 
 #include "mads/madsv2/forest/rooms/section1.h"
+#include "mads/madsv2/forest/mads/words.h"
 #include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/forest/global.h"
 #include "mads/madsv2/forest/midi.h"
@@ -65,7 +66,7 @@ static void room_220_init() {
 	global_midi_play(10);
 	viewing_at_y = 22;
 	player.walker_visible = false;
-	player.commands_allowed = 0;
+	player.commands_allowed = false;
 
 	for (int i = 0; i < 10; i++) {
 		aainfo[i]._active = 0;

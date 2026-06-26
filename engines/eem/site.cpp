@@ -345,6 +345,19 @@ const uint16 kWaitAnimsLondon[7][6] = {
 	{ 0x06, 0x2d, 2, 2, 78, 78 }, // 6
 };
 
+// EEM2 Mac site loop uses its own `_WaitAnims` A5 table
+// (`lea (-0x2040,A5)` in FUN_0000d042; data @ 0x153e). These are native
+// Mac 512x384 anchors, not a scale transform of the DOS table.
+const uint16 kMacWaitAnimsLondon[7][6] = {
+	{ 0x00, 0x0a,  0, 3, 150, 150 }, // 0
+	{ 0x03, 0x0c,  1, 3, 120, 128 }, // 1
+	{ 0x01, 0x0b, 13, 5, 151, 151 }, // 2
+	{ 0x04, 0x0d,  2, 5, 148, 152 }, // 3
+	{ 0x02, 0x10, 20, 7, 146, 152 }, // 4
+	{ 0x05, 0x1b, (uint16)-3, 4, 151, 154 }, // 5
+	{ 0x06, 0x1a,  5, 5, 149, 152 }, // 6
+};
+
 // Animation script table (`_AnimationSequences @ 29be:22d4`)
 // Script byte format:
 //   0x80         = restart (loop back to index 0; terminator for one-shots)
@@ -974,7 +987,8 @@ void SiteScreen::enter(uint siteNum, bool resetPartnerMood) {
 		}
 	}
 
-	const bool compactSite = _vm->isFloppy() || _vm->isMacintosh();
+	const bool compactSite = _vm->isFloppy() ||
+							 (_mystery && _mystery->usesCompactMacData());
 	uint16 sitepic = 0;
 	if (sd) {
 		if (compactSite) {
@@ -1032,7 +1046,7 @@ void SiteScreen::enter(uint siteNum, bool resetPartnerMood) {
 	//       _VisitedSite[_SiteNumber] = 1;
 	//   }
 	// SiteIndex[+2..+3] = byte offset of entry-clue ClueBlock.
-	if (firstVisit && !_vm->isMacintosh()) {
+	if (firstVisit && !(_mystery && _mystery->usesCompactMacData())) {
 		const byte *idx = _mystery->siteIndexEntry(siteNum);
 		if (idx) {
 			const uint16 clueOff = READ_LE_UINT16(idx + 2);
@@ -1288,18 +1302,51 @@ bool SiteScreen::enterSiteAnim() {
 
 	if (_vm->isLondon()) {
 		const uint animId = (partner == 0) ? 7 : 0xf;
-		const int anchorY = (partner == 0) ? 0x50 : 0x4e;
+		int anchorX = mac ? (int)(int16)kMacWaitAnimsLondon[0][2 + partner] : 0;
+		int anchorY = mac ? (int)(int16)kMacWaitAnimsLondon[0][4 + partner]
+						  : ((partner == 0) ? 0x50 : 0x4e);
+		bool alignToIdleBottom = false;
+		int idleBottom = 0;
 		Animation anim;
 		if (!_vm->getAni().loadAnimation(animId, anim) || anim.empty())
 			return false;
+		if (mac) {
+			uint16 idleAnimId = 0;
+			int idleX = 0;
+			int idleY = 0;
+			Animation idleAnim;
+			if (partnerIdleAnimParams(_mystery->_siteNumber, idleAnimId,
+									  idleX, idleY) &&
+				_vm->getAni().loadAnimation(idleAnimId, idleAnim) &&
+				!idleAnim.empty()) {
+				const uint idleFrame =
+					partnerFrameAtTick(idleAnimId, (uint)idleAnim.size(), 0);
+				if (idleFrame < idleAnim.size()) {
+					const Picture &idle = idleAnim[idleFrame];
+					anchorX = idleX;
+					anchorY = idleY;
+					idleBottom = idleY - (int)(int16)idle.rowoff +
+								 idle.surface.h;
+					alignToIdleBottom = true;
+				}
+			}
+		}
 		for (uint frameIdx = 0;
 			 frameIdx < anim.size() && !_vm->shouldQuit();
 			 frameIdx++) {
+			const Picture &frame = anim[frameIdx];
+			const int frameY = alignToIdleBottom
+				? idleBottom - frame.surface.h + (int)(int16)frame.rowoff
+				: anchorY;
 			Graphics::ManagedSurface scratch(sw, sh,
 				Graphics::PixelFormat::createFormatCLUT8());
 			scratch.simpleBlitFrom(bg);
-			blitAnimFrameAnchored(scratch.surfacePtr(), anim[frameIdx],
-								  0, anchorY);
+			if (mac)
+				blitMacAnimFrameAnchored(scratch.surfacePtr(), frame,
+										 anchorX, frameY, macPaletteMap);
+			else
+				blitAnimFrameAnchored(scratch.surfacePtr(), frame,
+									  anchorX, frameY);
 			g_system->copyRectToScreen(scratch.getPixels(), scratch.pitch,
 									   0, 0, sw, sh);
 			g_system->updateScreen();
@@ -1628,7 +1675,7 @@ bool SiteScreen::partnerIdleAnimParams(uint siteNum, uint16 &animId,
 	if (!site)
 		return false;
 	const uint8 partner = _vm->getPartnerIndex();
-	if (_vm->isMacintosh()) {
+	if (_mystery->usesCompactMacData()) {
 		const uint16 spkOff = READ_LE_UINT16(site + 8);
 		const byte *spk = _mystery->blobAt(spkOff);
 		if (!spk)
@@ -1653,8 +1700,10 @@ bool SiteScreen::partnerIdleAnimParams(uint siteNum, uint16 &animId,
 		}
 	} else {
 		const uint16 speaker = READ_LE_UINT16(site + 8);
-		const uint16 (*waitTable)[6] = _vm->isLondon()
-			? kWaitAnimsLondon : kWaitAnims;
+		const uint16 (*waitTable)[6] = kWaitAnims;
+		if (_vm->isLondon())
+			waitTable = _vm->isMacintosh()
+				? kMacWaitAnimsLondon : kWaitAnimsLondon;
 		if (speaker >= ARRAYSIZE(kWaitAnims))
 			return false;
 		animId = waitTable[speaker][0 + partner];
@@ -1702,7 +1751,8 @@ void SiteScreen::renderPartner(uint siteNum, uint32 tickMs) {
 }
 
 bool SiteScreen::renderFloppyHotspotPartnerPose(uint siteNum) {
-	if (!_vm || (!_vm->isFloppy() && !_vm->isMacintosh()) || !_mystery)
+	if (!_vm || !_mystery ||
+		(!_vm->isFloppy() && !_mystery->usesCompactMacData()))
 		return false;
 
 	const byte *site = _mystery->siteData(siteNum);
@@ -1763,7 +1813,7 @@ void SiteScreen::renderBackground(uint siteNum) {
 	const byte *site = _mystery->siteData(siteNum);
 	uint16 sitepic = 0;
 	if (site) {
-		if (_vm->isFloppy() || _vm->isMacintosh()) {
+		if (_vm->isFloppy() || _mystery->usesCompactMacData()) {
 			const uint16 dropsOff = READ_LE_UINT16(site);
 			const byte *drops = _mystery->blobAt(dropsOff);
 			if (drops)
@@ -1833,7 +1883,8 @@ void SiteScreen::renderHotspots(uint siteNum) {
 	// don't inherit the first site's seen state after travel/reload).
 	// Floppy = 8-byte plain rect only; searched state is derived by
 	// walking the dialog record list, like `_HotspotSearched_Floppy`.
-	const bool compact = _vm && (_vm->isFloppy() || _vm->isMacintosh());
+	const bool compact = _vm &&
+		(_vm->isFloppy() || (_mystery && _mystery->usesCompactMacData()));
 	const bool floppy = _vm && _vm->isFloppy();
 	const bool mac = _vm && _vm->isMacintosh();
 	const uint stride = compact ? 8 : 14;
@@ -1897,7 +1948,9 @@ int SiteScreen::hotspotAtPoint(uint siteNum, int x, int y) const {
 	if (!spots)
 		return -1;
 
-	const uint stride = _vm && (_vm->isFloppy() || _vm->isMacintosh()) ? 8 : 14;
+	const bool compact = _vm &&
+		(_vm->isFloppy() || (_mystery && _mystery->usesCompactMacData()));
+	const uint stride = compact ? 8 : 14;
 	const bool mac = _vm && _vm->isMacintosh();
 	for (uint i = 0; i < count; i++) {
 		const byte *r = spots + i * stride;
@@ -1911,7 +1964,8 @@ int SiteScreen::hotspotAtPoint(uint siteNum, int x, int y) const {
 // CD hotspot row +0xc..d: cursor id for `_SwitchMouse` (EEM1 ships 0; EEM2
 // uses 2/3 examine, etc.). Floppy rows are 8-byte rects with no cursor field.
 int SiteScreen::hotspotCursorId(uint siteNum, int idx) const {
-	if (idx < 0 || (_vm && (_vm->isFloppy() || _vm->isMacintosh())))
+	if (idx < 0 || (_vm && (_vm->isFloppy() ||
+		(_mystery && _mystery->usesCompactMacData()))))
 		return 0;
 	const byte *spots = _mystery->hotspots(siteNum);
 	if (!spots || (uint)idx >= _mystery->hotspotCount(siteNum))
@@ -1975,7 +2029,7 @@ void SiteScreen::onHotspotClicked(uint siteNum, uint hotIdx) {
 
 	// Floppy: 8-byte rects only (no clue metadata @ +0xa/+8). Dialog
 	// records live in a separate list @ `site_data[+6]`.
-	if (_vm->isFloppy() || _vm->isMacintosh()) {
+	if (_vm->isFloppy() || _mystery->usesCompactMacData()) {
 		if (hotIdx < Mystery::kHotSpotsCap)
 			_mystery->_hotSpotsSeen[hotIdx] = 1;
 		_mystery->_searchLocationNumber = (uint16)hotIdx;
@@ -2055,7 +2109,14 @@ bool EEMEngine::loadKdAnim(uint16 num, Animation &anim, int &px, int &py,
 	if (num >= ARRAYSIZE(kKdAnimTable))
 		return false;
 
-	const uint16 (*kdTable)[6] = isLondon() ? kKdAnimTableLondon : kKdAnimTable;
+	const uint16 (*kdTable)[6] = kKdAnimTable;
+	if (isLondon()) {
+		// EEM2 Mac FUN_0000ce6e indexes `_WaitAnims + 1`
+		// (`lea (-0x2034,A5)`), so KD gestures share the Mac idle anchors
+		// for speaker rows 1..6.
+		kdTable = isMacintosh()
+			? kMacWaitAnimsLondon + 1 : kKdAnimTableLondon;
+	}
 	const uint partner = (_partner == kPartnerJake) ? 0 : 1;
 	animId = kdTable[num][partner];
 	px     = (int)kdTable[num][2 + partner];

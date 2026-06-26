@@ -34,7 +34,10 @@
 #include "engines/util.h"
 
 #include "graphics/cursorman.h"
+#include "graphics/maccursor.h"
 #include "graphics/paletteman.h"
+
+#include "video/flic_decoder.h"
 
 #include "eem/audio.h"
 #include "eem/detection.h"
@@ -84,6 +87,13 @@ const uint16 kMacSmallFontResource = 3209; // Smaller speech/dialog FONT.
 // cursor id (row +0xc).
 const uint16 kLondonCursorPics[7] = {
 	0x50, 0x51, 0x206, 0xa1, 0x207, 0x20b, 0x35e
+};
+
+// Mac EEM2 CODE resource 6 loads five Color QuickDraw cursors with
+// GetCCursor: 128, 138, 139, 129 and 132. Its SwitchMouse branch table maps
+// index 0/1/default to 132, 2 to 128, 3 to 129, and 4 to the active partner.
+const uint16 kLondonMacCursorCrsrs[7] = {
+	132, 132, 128, 129, 138, 139, 132
 };
 
 const byte kSaveBodyVer = 1;
@@ -211,7 +221,39 @@ void setInteractiveCursorPalette(const Picture &cursor, byte transparent) {
 	CursorMan.replaceCursorPalette(palette, 0, 256);
 }
 
-void installMouseCursor(DBDArchive &pics, bool interactive, bool mac) {
+bool installMacLondonCursor(uint16 resourceId) {
+	static const char *const kAppForks[] = {
+		"EEM London CD",
+		"rsrc/EEM London CD"
+	};
+
+	for (uint i = 0; i < ARRAYSIZE(kAppForks); i++) {
+		Common::ScopedPtr<Common::SeekableReadStream> crsrStream(
+			openMacResource(Common::Path(kAppForks[i]),
+							MKTAG('c', 'r', 's', 'r'), resourceId));
+		if (crsrStream) {
+			Graphics::MacCursor macCursor;
+			if (macCursor.readFromStream(*crsrStream)) {
+				CursorMan.replaceCursor(&macCursor);
+				CursorMan.replaceCursorPalette(macCursor.getPalette(), 0, 256);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void installMouseCursor(DBDArchive &pics, bool interactive, bool mac,
+						bool london) {
+	if (mac && london) {
+		// EEM2 (London) Mac keeps pointers as 'crsr' colour cursors in the
+		// application resource fork; the DOS cursor PIC ids are mostly 1x1
+		// stubs or unrelated full-screen pictures in this release.
+		if (installMacLondonCursor(kLondonMacCursorCrsrs[0]))
+			return;
+	}
+
 	Picture cursor;
 	if (!pics.getPicture(kPicMousePointer, cursor) || cursor.surface.empty())
 		error("EEM: mouse cursor PIC 0x%x missing", kPicMousePointer);
@@ -374,13 +416,18 @@ static void addMacResourceSearchPaths() {
 static bool loadMacFontResource(EEMFont &font, uint16 resourceId, int size) {
 	addMacResourceSearchPaths();
 
-	const Common::Path appResourceFork("Eagle Eye Mysteries");
-	if (font.loadMacResource(appResourceFork, resourceId, size))
-		return true;
-
-	const Common::Path nestedAppResourceFork("rsrc/Eagle Eye Mysteries");
-	if (font.loadMacResource(nestedAppResourceFork, resourceId, size))
-		return true;
+	// The Eagle Eye fonts live in the game application's resource fork. EEM1 Mac
+	// ships it as "Eagle Eye Mysteries"; EEM2 (London) Mac ships it as
+	// "EEM London CD" but reuses the same FONT resource ids (3214/3209).
+	static const char *const kAppForks[] = {
+		"Eagle Eye Mysteries",
+		"rsrc/Eagle Eye Mysteries",
+		"EEM London CD",
+	};
+	for (uint i = 0; i < ARRAYSIZE(kAppForks); i++) {
+		if (font.loadMacResource(Common::Path(kAppForks[i]), resourceId, size))
+			return true;
+	}
 
 	return false;
 }
@@ -439,7 +486,7 @@ Common::Error EEMEngine::run() {
 	_audio->setVoiceEnabled(_voiceOn);
 	syncSoundSettings();
 
-	installMouseCursor(_picsArchive, false, isMacintosh());
+	installMouseCursor(_picsArchive, false, isMacintosh(), isLondon());
 	CursorMan.showMouse(false);
 
 	// _AllBlack @ 172b:0d4b.
@@ -741,7 +788,7 @@ void EEMEngine::setInteractiveMouseCursor(bool active) {
 		return;
 
 	_interactiveMouseCursor = active;
-	installMouseCursor(_picsArchive, active, isMacintosh());
+	installMouseCursor(_picsArchive, active, isMacintosh(), isLondon());
 	// The red-outline highlight replaced any London cursor shape; force the
 	// next setSiteHotspotCursorId to reinstall.
 	_siteCursorId = -1;
@@ -759,13 +806,27 @@ void EEMEngine::setHotspotMouseCursor(bool active) {
 void EEMEngine::setSiteHotspotCursorId(int cursorId) {
 	if (!isLondon())
 		return;
-	if (cursorId == 4 && _partner == kPartnerJenny)
-		cursorId = 5;
 	if (cursorId < 0 || cursorId >= (int)ARRAYSIZE(kLondonCursorPics))
 		cursorId = 0;
 	if (cursorId == _siteCursorId)
 		return;
 
+	if (isMacintosh()) {
+		uint16 resourceId = kLondonMacCursorCrsrs[cursorId];
+		if (cursorId == 4 || cursorId == 5)
+			resourceId = (_partner == kPartnerJenny) ? 139 : 138;
+		if (!installMacLondonCursor(resourceId)) {
+			warning("EEM2 Mac: cursor %d ('crsr' %u) missing",
+					cursorId, resourceId);
+			return;
+		}
+		_siteCursorId = cursorId;
+		_interactiveMouseCursor = false;
+		return;
+	}
+
+	if (cursorId == 4 && _partner == kPartnerJenny)
+		cursorId = 5;
 	Picture cursor;
 	if (!_picsArchive.getPicture(kLondonCursorPics[cursorId], cursor) ||
 		cursor.surface.empty()) {
@@ -787,11 +848,32 @@ void EEMEngine::setSiteHotspotCursorId(int cursorId) {
 bool EEMEngine::openArchives() {
 	const bool mac = isMacintosh();
 
-	// The Mac release can be played straight from its floppy installer. When
-	// those files are present, mount a virtual archive that decompresses the
-	// game data (PICS.DBD, MysteryData, fonts, ...) on demand, so the opens
-	// below and the Mac resource-fork lookups resolve transparently.
-	if (mac && !SearchMan.hasArchive("eem-installer")) {
+	// EEM2 (London) Mac is played straight from the CD, whose data lives in
+	// subfolders ("Data Files", "Mac Scripts") with the Mac app in "EEM London
+	// CD". Register them so the bare-name opens below -- and the later script,
+	// mystery and palette loaders -- resolve whether the user points ScummVM at
+	// the disc root or at the "EEM2 CD" folder.
+	if (mac && isLondon()) {
+		const Common::FSNode gameDir(ConfMan.getPath("path"));
+		// Disc-root layout (recommended -- this also reaches the "EEM London
+		// CD" app that holds the Mac fonts/sound). The "/"-separated names
+		// descend two levels (see Common::addSubDirectoryMatching).
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Data Files");
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Mac Scripts");
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Anim Files");
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM London CD");
+		// ...or the user pointed ScummVM straight at the "EEM2 CD" folder.
+		SearchMan.addSubDirectoryMatching(gameDir, "Data Files");
+		SearchMan.addSubDirectoryMatching(gameDir, "Mac Scripts");
+		SearchMan.addSubDirectoryMatching(gameDir, "Anim Files");
+	}
+
+	// The EEM1 Mac release can be played straight from its floppy installer.
+	// When those files are present, mount a virtual archive that decompresses
+	// the game data (PICS.DBD, MysteryData, fonts, ...) on demand, so the opens
+	// below and the Mac resource-fork lookups resolve transparently. (EEM2 Mac
+	// ships loose on the CD and has no such installer.)
+	if (mac && !isLondon() && !SearchMan.hasArchive("eem-installer")) {
 		const Common::FSNode gameDir(ConfMan.getPath("path"));
 		if (Common::Archive *installer = createInstallerArchive(gameDir)) {
 			SearchMan.add("eem-installer", installer);
@@ -820,7 +902,8 @@ bool EEMEngine::openArchives() {
 
 bool EEMEngine::loadSitePalettes() {
 	Common::File f;
-	const char *palFile = isLondon() ? "SITEPALS." : "SITEPALS";
+	// EEM2 DOS uses "SITEPALS." (8.3); EEM1 and both Mac releases use "SITEPALS".
+	const char *palFile = (isLondon() && !isMacintosh()) ? "SITEPALS." : "SITEPALS";
 	if (!f.open(Common::Path(palFile))) {
 		warning("%s missing", palFile);
 		return false;
@@ -897,6 +980,72 @@ void EEMEngine::interruptAudio(bool stopMusicToo) {
 	}
 	if (stopMusicToo && _music)
 		_music->stop();
+}
+
+void EEMEngine::playFlc(const Common::Path &path, bool fadeIn,
+						bool holdLastFrame) {
+	Video::FlicDecoder flic;
+	if (!flic.loadFile(path)) {
+		warning("playFlc: %s missing", path.toString().c_str());
+		return;
+	}
+
+	const int fw = flic.getWidth();
+	const int fh = flic.getHeight();
+	// Centre the movie on the (larger) Mac screen with a black letterbox.
+	const int ox = MAX(0, (screenWidth() - fw) / 2);
+	const int oy = MAX(0, (screenHeight() - fh) / 2);
+	const int w = MIN(fw, screenWidth() - ox);
+	const int h = MIN(fh, screenHeight() - oy);
+
+	byte black[3 * 256] = { 0 };
+	g_system->getPaletteManager()->setPalette(black, 0, 256);
+	if (Graphics::Surface *screen = g_system->lockScreen()) {
+		screen->fillRect(Common::Rect(screen->w, screen->h), 0);
+		g_system->unlockScreen();
+	}
+
+	flic.start();
+	bool paletteApplied = false;
+	bool aborted = false;
+	while (!flic.endOfVideo() && !shouldQuit() && !_skipIntro) {
+		if (flic.needsUpdate()) {
+			const Graphics::Surface *frame = flic.decodeNextFrame();
+			if (frame) {
+				g_system->copyRectToScreen(frame->getPixels(), frame->pitch,
+										   ox, oy, w, h);
+				if (flic.hasDirtyPalette()) {
+					if (fadeIn && !paletteApplied)
+						fadePaletteFromBlack(flic.getPalette());
+					else
+						g_system->getPaletteManager()->setPalette(
+							flic.getPalette(), 0, 256);
+					paletteApplied = true;
+				}
+			}
+			g_system->updateScreen();
+		}
+
+		Common::Event event;
+		while (g_system->getEventManager()->pollEvent(event)) {
+			if (event.type == Common::EVENT_QUIT ||
+				event.type == Common::EVENT_RETURN_TO_LAUNCHER ||
+				event.type == Common::EVENT_LBUTTONDOWN) {
+				aborted = true;
+				return;
+			}
+			if (event.type == Common::EVENT_KEYDOWN) {
+				if (event.kbd.keycode == Common::KEYCODE_ESCAPE)
+					_skipIntro = true;
+				aborted = true;
+				return;
+			}
+		}
+		g_system->delayMillis(10);
+	}
+
+	if (holdLastFrame && !aborted && !shouldQuit() && !_skipIntro)
+		waitForInput(0xFFFFFFFFu);
 }
 
 void EEMEngine::playAnm(const Common::Path &path, uint frameDelayMs,
@@ -1008,6 +1157,35 @@ void EEMEngine::blitAt(const Picture &pic, int x, int y) {
 		return;
 	g_system->copyRectToScreen(pic.surface.getPixels(), pic.surface.pitch,
 							   x, y, w, h);
+}
+
+void EEMEngine::blitAtScaled(const Picture &pic, int x, int y, int scale) {
+	x = scaleX(x);
+	y = scaleY(y);
+	const int dstW = pic.surface.w * scale;
+	const int dstH = pic.surface.h * scale;
+	const int w = MIN<int>(dstW, screenWidth() - x);
+	const int h = MIN<int>(dstH, screenHeight() - y);
+	if (w <= 0 || h <= 0)
+		return;
+	if (scale <= 1) {
+		g_system->copyRectToScreen(pic.surface.getPixels(), pic.surface.pitch,
+								   x, y, w, h);
+		return;
+	}
+	// Nearest-neighbour pixel-double into a scratch, then present (opaque, to
+	// match blitAt: the sprite's surround index already matches the backdrop).
+	Graphics::ManagedSurface scaled(dstW, dstH,
+		Graphics::PixelFormat::createFormatCLUT8());
+	const byte *src = (const byte *)pic.surface.getPixels();
+	const int srcPitch = pic.surface.pitch;
+	for (int yy = 0; yy < dstH; yy++) {
+		byte *dst = (byte *)scaled.getBasePtr(0, yy);
+		const byte *srow = src + (yy / scale) * srcPitch;
+		for (int xx = 0; xx < dstW; xx++)
+			dst[xx] = srow[xx / scale];
+	}
+	g_system->copyRectToScreen(scaled.getPixels(), scaled.pitch, x, y, w, h);
 }
 
 void EEMEngine::waitForInput(uint32 maxMs) {
@@ -1422,7 +1600,55 @@ void EEMEngine::runMacStartup() {
 	_skipIntro = false;
 }
 
-void EEMEngine::showLondonLogo(uint picId, uint palId, uint holdMs) {
+void EEMEngine::showLondonEAKidsLogo() {
+	Picture pic;
+	if (!_picsArchive.getPicture(0x54, pic)) {
+		warning("London EA Kids logo PIC 0x54 load failed");
+		return;
+	}
+	blitAt(pic, 0, 0);
+
+	byte fpal[kPalSize];
+	if (!getSitePalette(0x3c, fpal)) {
+		warning("London EA Kids palette 0x3c load failed");
+		return;
+	}
+
+	bool aborted = false;
+	int delayCount = 9;
+
+	for (uint pass = 0; pass < 2 && !aborted && !shouldQuit(); pass++) {
+		const bool show = (pass != 0);
+		for (uint frame = 0; frame < 0x37 && !aborted && !shouldQuit();
+			 frame++) {
+			if (show && waitIntroDelay(40)) {
+				aborted = true;
+				break;
+			}
+
+			openColorCycle(fpal, 0x01, 0x6e, show);
+			openColorCycle(fpal, 0x81, 0xee, show);
+			if (--delayCount == 0) {
+				delayCount = 9;
+				openColorCycle(fpal, 0x70, 0x80, show);
+			}
+			if (show)
+				g_system->updateScreen();
+		}
+	}
+
+	if (!aborted && !shouldQuit()) {
+		for (uint i = 0; i < 5; i++)
+			openColorCycle(fpal, 0x70, 0x80, true);
+		g_system->updateScreen();
+		waitIntroDelay(0x5a * 40);
+	}
+
+	fadeCurrentPaletteToBlack();
+}
+
+void EEMEngine::showLondonLogo(uint picId, uint palId, uint holdMs,
+							   bool playThunder) {
 	Picture pic;
 	if (!_picsArchive.getPicture(picId, pic) || pic.surface.empty()) {
 		warning("London logo PIC 0x%x load failed", picId);
@@ -1440,7 +1666,12 @@ void EEMEngine::showLondonLogo(uint picId, uint palId, uint holdMs) {
 	g_system->updateScreen();
 	fadePaletteFromBlack(target);
 
+	if (playThunder && _audio && !isMacintosh())
+		_audio->playVoc(Common::Path("THUNDER.VOC"));
+
 	waitForInput(holdMs);
+	if (_audio)
+		_audio->stopVoice();
 	fadeCurrentPaletteToBlack();
 }
 
@@ -1465,40 +1696,56 @@ void EEMEngine::runLondonStartup() {
 	_skipIntro = false;
 	debugC(1, kDebugGeneral, "EEM2 (London): opening sequence");
 
-	// Two still logos.
+	// Opening logos. Mac London mirrors FUN_00009256: EA Kids colour-cycle,
+	// publisher still, Storm still, then the FLC intro/title pair.
 	if (!shouldQuit() && !_skipIntro)
-		showLondonLogo(0x54, 0x3c, 2500);   // EA Kids
+		showLondonEAKidsLogo();
 	if (!shouldQuit() && !_skipIntro)
-		showLondonLogo(0x20c, 0x3e, 2500);  // publisher logo (FUN_2721_07be)
+		showLondonLogo(0x20c, 0x3e, 3000);  // publisher logo (FUN_00009074)
+	if (!shouldQuit() && !_skipIntro)
+		showLondonLogo(0x20b, 0x3d, 3000, /* playThunder= */ true);
 
-	// Storm Software — bolt.anm with the thunder roar.
-	if (!shouldQuit() && !_skipIntro) {
-		if (_audio)
-			_audio->playVoc(Common::Path("THUNDER.VOC"));
-		playAnm(Common::Path("BOLT.ANM"), 120, /* holdLastFrame= */ false,
-				/* fadeIn= */ true);
-		if (_audio)
-			_audio->stopVoice();
-		fadeCurrentPaletteToBlack();
+	if (isMacintosh()) {
+		// The Mac CD ships the post-logo intro as Flic movies where DOS uses
+		// bolt/movie/wave .ANM. KDCDINTR is the centered intro; BOOK54 is the
+		// full-screen animated title, held for the profile click/key.
+		if (!shouldQuit() && !_skipIntro)
+			playFlc(Common::Path("KDCDINTR.FLC"), /* fadeIn= */ true);
+		if (!shouldQuit() && !_skipIntro && _music)
+			_music->playFile(Common::Path("MUS00102.XMI"), /* loop= */ true);
+		if (!shouldQuit() && !_skipIntro)
+			playFlc(Common::Path("BOOK54.FLC"), /* fadeIn= */ true,
+					/* holdLastFrame= */ true);
+	} else {
+		// Storm Software — bolt.anm with the thunder roar.
+		if (!shouldQuit() && !_skipIntro) {
+			if (_audio)
+				_audio->playVoc(Common::Path("THUNDER.VOC"));
+			playAnm(Common::Path("BOLT.ANM"), 120, /* holdLastFrame= */ false,
+					/* fadeIn= */ true);
+			if (_audio)
+				_audio->stopVoice();
+			fadeCurrentPaletteToBlack();
+		}
+
+		// Intro movie with its theme (MUS00101.XMI).
+		if (!shouldQuit() && !_skipIntro && _music)
+			_music->playFile(Common::Path("MUS00101.XMI"), /* loop= */ false);
+		if (!shouldQuit() && !_skipIntro)
+			playAnm(Common::Path("MOVIE.ANM"), 120, /* holdLastFrame= */ false,
+					/* fadeIn= */ true);
+
+		// Animated title (wave.anm) over the looping theme (MUS00102.XMI);
+		// a click / key advances to character creation. The original loops
+		// wave.anm; we play it once, hold the last frame and wait.
+		if (!shouldQuit() && !_skipIntro && _music)
+			_music->playFile(Common::Path("MUS00102.XMI"), /* loop= */ true);
+		if (!shouldQuit() && !_skipIntro)
+			playAnm(Common::Path("WAVE.ANM"), 120, /* holdLastFrame= */ true,
+					/* fadeIn= */ true);
+		if (!shouldQuit() && !_skipIntro)
+			waitForInput(kHoldForever);
 	}
-
-	// Intro movie with its theme (MUS00101.XMI).
-	if (!shouldQuit() && !_skipIntro && _music)
-		_music->playFile(Common::Path("MUS00101.XMI"), /* loop= */ false);
-	if (!shouldQuit() && !_skipIntro)
-		playAnm(Common::Path("MOVIE.ANM"), 120, /* holdLastFrame= */ false,
-				/* fadeIn= */ true);
-
-	// Animated title (wave.anm) over the looping theme (MUS00102.XMI);
-	// a click / key advances to character creation. The original loops
-	// wave.anm; we play it once, hold the last frame and wait.
-	if (!shouldQuit() && !_skipIntro && _music)
-		_music->playFile(Common::Path("MUS00102.XMI"), /* loop= */ true);
-	if (!shouldQuit() && !_skipIntro)
-		playAnm(Common::Path("WAVE.ANM"), 120, /* holdLastFrame= */ true,
-				/* fadeIn= */ true);
-	if (!shouldQuit() && !_skipIntro)
-		waitForInput(kHoldForever);
 	if (_music)
 		_music->stop();
 	_skipIntro = false;
@@ -1517,6 +1764,10 @@ void EEMEngine::runLondonStartup() {
 void EEMEngine::showLondonCharSelect() {
 	debugC(1, kDebugGeneral, "EEM2 (London): character creation");
 
+	// Coordinates are DOS-logical (320x200); on the Mac the screen is 512x384,
+	// so the rects scale up (scaleRect/scaleX/scaleY are identity on DOS). The
+	// passport background (PIC 0xc) is authored at each platform's resolution
+	// -- 512x384 on the Mac -- so the scaled field/box coords line up with it.
 	const Common::Rect kFirstRect(54, 75, 151, 85);
 	const Common::Rect kLastRect(167, 75, 266, 85);
 	const Common::Rect kMaleBox(110, 116, 120, 122);
@@ -1524,15 +1775,21 @@ void EEMEngine::showLondonCharSelect() {
 	const uint kMaxFirst = 12, kMaxLast = 20;
 	const uint8 kInkColor = 0x22;
 
+	const Common::Rect firstRect = scaleRect(kFirstRect);
+	const Common::Rect lastRect  = scaleRect(kLastRect);
+	const Common::Rect maleBox   = scaleRect(kMaleBox);
+	const Common::Rect femaleBox = scaleRect(kFemaleBox);
+	const int sw = screenWidth(), sh = screenHeight();
+
 	Picture bg;
 	const bool haveBg = _picsArchive.getPicture(0xc, bg) && !bg.surface.empty();
 	if (!haveBg)
 		warning("London: passport background PIC 0xc failed to load");
 	const uint8 boxBlankColor = haveBg
-		? (uint8)bg.surface.getPixel(kFirstRect.left, kFirstRect.top)
+		? (uint8)bg.surface.getPixel(firstRect.left, firstRect.top)
 		: 0x38;
 	const uint8 boxMarkColor = haveBg
-		? (uint8)bg.surface.getPixel(109, 115)
+		? (uint8)bg.surface.getPixel(scaleX(109), scaleY(115))
 		: 0x22;
 
 	byte pal[kPalSize];
@@ -1565,41 +1822,41 @@ void EEMEngine::showLondonCharSelect() {
 
 	while (!done && !shouldQuit()) {
 		if (needRedraw) {
-			Graphics::ManagedSurface scratch(kScreenWidth, kScreenHeight,
+			Graphics::ManagedSurface scratch(sw, sh,
 				Graphics::PixelFormat::createFormatCLUT8());
 			scratch.clear();
 			if (haveBg)
 				scratch.simpleBlitFrom(bg.surface);
 			if (getFont().isLoaded()) {
-				getFont().drawString(&scratch, first, kFirstRect.left + 2,
-									 kFirstRect.top + 1, kFirstRect.width(),
+				getFont().drawString(&scratch, first, firstRect.left + 2,
+									 firstRect.top + 1, firstRect.width(),
 									 kInkColor);
-				getFont().drawString(&scratch, last, kLastRect.left + 2,
-									 kLastRect.top + 1, kLastRect.width(),
+				getFont().drawString(&scratch, last, lastRect.left + 2,
+									 lastRect.top + 1, lastRect.width(),
 									 kInkColor);
 				if (blink && (field == kFieldFirst || field == kFieldLast)) {
 					const Common::Rect &fr =
-						(field == kFieldFirst) ? kFirstRect : kLastRect;
+						(field == kFieldFirst) ? firstRect : lastRect;
 					const Common::String &buf =
 						(field == kFieldFirst) ? first : last;
 					const int caretX =
 						fr.left + 2 + getFont().getStringWidth(buf);
-					Common::Rect caret(caretX, fr.top, caretX + 6,
-									   fr.top + 0xb);
-					caret.clip(Common::Rect(kScreenWidth, kScreenHeight));
+					Common::Rect caret(caretX, fr.top, caretX + scaleX(6),
+									   fr.bottom);
+					caret.clip(Common::Rect(sw, sh));
 					if (!caret.isEmpty())
 						scratch.fillRect(caret, kInkColor);
 				}
 			}
 			if (field == kFieldGender) {
-				scratch.fillRect(kMaleBox, boxBlankColor);
-				scratch.fillRect(kFemaleBox, boxBlankColor);
-				scratch.fillRect(female ? kFemaleBox : kMaleBox,
+				scratch.fillRect(maleBox, boxBlankColor);
+				scratch.fillRect(femaleBox, boxBlankColor);
+				scratch.fillRect(female ? femaleBox : maleBox,
 								 boxMarkColor);
 			}
 			CursorMan.showMouse(true);
 			g_system->copyRectToScreen(scratch.getPixels(), scratch.pitch,
-									   0, 0, kScreenWidth, kScreenHeight);
+									   0, 0, sw, sh);
 			if (!fadedIn) {
 				if (havePal)
 					fadePaletteFromBlack(pal);
@@ -1622,7 +1879,7 @@ void EEMEngine::showLondonCharSelect() {
 			if (field == kFieldGender && ev.type == Common::EVENT_LBUTTONDOWN) {
 				if (!genderReady)
 					continue;
-				female = ev.mouse.x >= 160;
+				female = ev.mouse.x >= sw / 2;
 				done = true;
 				needRedraw = true;
 				break;

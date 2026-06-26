@@ -131,7 +131,11 @@ public:
 	Variant getVariant() const { return _variant; }
 	bool isFloppy() const { return _variant == kVariantFloppy || isDemo(); }
 	bool isLondon() const { return _variant == kVariantLondonCD; }
-	bool isMacintosh() const { return _variant == kVariantMac; }
+	// London (game) and Macintosh (platform) are orthogonal -- the London CD
+	// shipped for both DOS and Mac -- so derive Mac-ness from the platform
+	// rather than the single-valued `_variant` (which can only hold one of
+	// them at a time). This lets EEM2 Mac be both London and Macintosh.
+	bool isMacintosh() const { return getPlatform() == Common::kPlatformMacintosh; }
 	bool isDemo() const {
 		return _gameDescription && (_gameDescription->flags & ADGF_DEMO);
 	}
@@ -189,16 +193,16 @@ public:
 	const EEMFont &getFont() const { return _font; }
 	uint8       getPartnerIndex() const { return _partner; }
 
-	/// Red-outline cursor for interactive regions without original highlight art.
+	/// Interactive-region cursor. DOS/EEM1 uses a red-outline pointer; Mac
+	/// London uses the original Color QuickDraw arrow.
 	void setInteractiveMouseCursor(bool active);
 
 	/// Interactive cursor over searchable hotspots.
 	void setHotspotMouseCursor(bool active);
 
-	/// EEM2 `_SwitchMouse @ 17ee:2c83`: swap the cursor SHAPE to one of the
-	/// seven loaded cursors by ID (0 arrow, 1 wait, 2/3 examine, 4/5 partner
-	/// hand, 6 approach). London site hotspots carry a cursor ID at row +0xc;
-	/// EEM1 cursors are all 0 so this is a no-op there.
+	/// EEM2 `_SwitchMouse`: swap the cursor shape by ID. DOS uses the seven
+	/// PIC-backed cursor slots; Mac London maps the same IDs through the
+	/// original `crsr` resources loaded by the application.
 	void setSiteHotspotCursorId(int cursorId);
 
 	/// `_DisplayClue @ 2404:05e6`. 
@@ -397,6 +401,12 @@ private:
 
 	void blitAt(const Picture &pic, int x, int y);
 
+	/// Like blitAt, but pixel-doubles the sprite by an integer @p scale. The
+	/// Mac CD authors some sprites (e.g. the choose-partner heads) at half
+	/// resolution and draws them scaled to fill the hi-res art. @p scale == 1
+	/// is identical to blitAt.
+	void blitAtScaled(const Picture &pic, int x, int y, int scale);
+
 public:
 	void waitForInput(uint32 maxMs);
 
@@ -409,6 +419,13 @@ public:
 	void playAnm(const Common::Path &path, uint frameDelayMs = 120,
 				 bool holdLastFrame = false, bool fadeIn = false,
 				 bool setSkipIntroOnEsc = true);
+
+	/// Play a Flic (.FLC) movie, centred on the screen with a black
+	/// letterbox. The Mac CD ships its intro as a Flic (KDCDINTR.FLC) where
+	/// the DOS release uses .ANM movies. A click/key/Esc ends it (Esc also
+	/// sets `_skipIntro`).
+	void playFlc(const Common::Path &path, bool fadeIn = false,
+				 bool holdLastFrame = false);
 
 private:
 	void interruptAudio(bool stopMusicToo = true);
@@ -427,7 +444,9 @@ private:
 	void runLondonStartup();
 	/// Start London mystery 0 after a freshly-created detective chooses a partner.
 	bool startLondonTrainingMystery();
-	void showLondonLogo(uint picId, uint palId, uint holdMs);
+	void showLondonEAKidsLogo();
+	void showLondonLogo(uint picId, uint palId, uint holdMs,
+						bool playThunder = false);
 	void showLondonCharSelect();
 	void playLondonInitCluesAnim(uint16 caseType, const Picture &bg,
 								 bool haveBriefingBg);
