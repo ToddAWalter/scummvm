@@ -38,10 +38,12 @@ enum {
 	fx_int_candle_on        = 5
 };
 
-#define JOURNAL_FLY            1 
-#define BP_FLY                 2
-#define CANDLE_FLY             3
-#define DOOR_FLY               4
+enum InterfaceButton {
+	JOURNAL_FLY            = 1, 
+	BP_FLY                 = 2,
+	CANDLE_FLY             = 3,
+	DOOR_FLY               = 4
+};
 
 /**************               NOTE:                 *********************/
 /** IF following values are changed, then recompile EXTRA.C & GAME_3.C **/
@@ -65,7 +67,7 @@ inline void extra_blank_knothole() {
 	knuthole_flag = 0;
 }
 
-extern void display_interface();
+extern void clear_selected_item();
 extern void display_inventory();
 extern void solve_me_selected();
 extern void door_selected();
@@ -81,6 +83,8 @@ extern void extra_change_animation(int handle, int x, int y, byte scale, byte de
 extern void extra_shift_animation(int handle, int x, int y, byte scale);
 extern void extra_blank_knothole();
 extern void inter_update_series(int series_id);
+extern void open_interface(InterfaceButton button);
+extern void close_interface(InterfaceButton button);
 
 } // namespace Forest
 } // namespace MADSV2

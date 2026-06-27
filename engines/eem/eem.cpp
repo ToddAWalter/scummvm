@@ -74,6 +74,8 @@ const uint kMacPicTitleLeft2   = 0x216;
 const uint kMacPicTitleRight0  = 0x217;
 const uint kMacPicTitleRight1  = 0x218;
 const uint kMacPicTitleRight2  = 0x219;
+const uint kDosLondonPicHighScoreLogo = 0x356; // FUN_2721_084d
+const uint kDosLondonPalHighScoreLogo = 0x3d;
 const uint kMacPalEAKids       = 0x28;
 const uint kMacPalTitle        = 0x29;
 const uint kPicMousePointer    = 0x50;  // 0x51 is the wait cursor
@@ -411,6 +413,83 @@ static void addMacResourceSearchPaths() {
 	if (siblingRsrcDir.exists() && siblingRsrcDir.isDirectory() &&
 		!SearchMan.hasArchive("eem-mac-rsrc-sibling"))
 		SearchMan.addDirectory("eem-mac-rsrc-sibling", siblingRsrcDir);
+}
+
+Common::FSNode findChildDirectoryIgnoreCase(const Common::FSNode &dir,
+											const char *name) {
+	Common::FSList children;
+	if (!dir.exists() || !dir.isDirectory() ||
+		!dir.getChildren(children, Common::FSNode::kListDirectoriesOnly))
+		return Common::FSNode();
+
+	for (Common::FSList::const_iterator it = children.begin();
+		 it != children.end(); ++it) {
+		if (it->getName().equalsIgnoreCase(name))
+			return *it;
+	}
+
+	return Common::FSNode();
+}
+
+void addMacLondonDirectoryIfPresent(const Common::FSNode &dir,
+									const char *archiveName,
+									int depth = 1) {
+	if (dir.exists() && dir.isDirectory() &&
+		!SearchMan.hasArchive(archiveName))
+		SearchMan.addDirectory(archiveName, dir, 0, depth);
+}
+
+void addMacLondonSearchPathsFrom(const Common::FSNode &base,
+								 const char *archivePrefix) {
+	if (!base.exists() || !base.isDirectory())
+		return;
+
+	Common::FSNode cd = findChildDirectoryIgnoreCase(base, "EEM2 CD");
+	if (!cd.exists()) {
+		Common::FSNode wrapper = findChildDirectoryIgnoreCase(base, "EEM_London");
+		if (wrapper.exists())
+			cd = findChildDirectoryIgnoreCase(wrapper, "EEM2 CD");
+	}
+	if (!cd.exists() && base.getName().equalsIgnoreCase("EEM2 CD"))
+		cd = base;
+	if (!cd.exists()) {
+		const Common::String baseName = base.getName();
+		if (baseName.equalsIgnoreCase("Data Files") ||
+			baseName.equalsIgnoreCase("Mac Scripts") ||
+			baseName.equalsIgnoreCase("Anim Files"))
+			cd = base.getParent();
+	}
+	if (!cd.exists())
+		return;
+
+	Common::String dataArchive = Common::String::format(
+		"%s-data-files", archivePrefix);
+	Common::String scriptsArchive = Common::String::format(
+		"%s-mac-scripts", archivePrefix);
+	Common::String animArchive = Common::String::format(
+		"%s-anim-files", archivePrefix);
+	Common::String appArchive = Common::String::format(
+		"%s-app", archivePrefix);
+
+	const Common::FSNode dataDir = findChildDirectoryIgnoreCase(cd, "Data Files");
+	const Common::FSNode scriptsDir = findChildDirectoryIgnoreCase(cd, "Mac Scripts");
+	const Common::FSNode animDir = findChildDirectoryIgnoreCase(cd, "Anim Files");
+
+	addMacLondonDirectoryIfPresent(dataDir, dataArchive.c_str(), 2);
+	addMacLondonDirectoryIfPresent(scriptsDir, scriptsArchive.c_str(), 3);
+	addMacLondonDirectoryIfPresent(animDir, animArchive.c_str(), 2);
+
+	if (scriptsDir.exists()) {
+		Common::String approachesArchive = Common::String::format(
+			"%s-approaches", archivePrefix);
+		addMacLondonDirectoryIfPresent(
+			findChildDirectoryIgnoreCase(scriptsDir, "Approaches"),
+			approachesArchive.c_str());
+	}
+
+	const Common::FSNode app =
+		findChildDirectoryIgnoreCase(cd.getParent(), "EEM London CD");
+	addMacLondonDirectoryIfPresent(app, appArchive.c_str(), 2);
 }
 
 static bool loadMacFontResource(EEMFont &font, uint16 resourceId, int size) {
@@ -855,17 +934,19 @@ bool EEMEngine::openArchives() {
 	// the disc root or at the "EEM2 CD" folder.
 	if (mac && isLondon()) {
 		const Common::FSNode gameDir(ConfMan.getPath("path"));
+		addMacLondonSearchPathsFrom(gameDir, "eem-london-game");
+		addMacLondonSearchPathsFrom(gameDir.getParent(), "eem-london-parent");
 		// Disc-root layout (recommended -- this also reaches the "EEM London
 		// CD" app that holds the Mac fonts/sound). The "/"-separated names
 		// descend two levels (see Common::addSubDirectoryMatching).
-		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Data Files");
-		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Mac Scripts");
-		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Anim Files");
-		SearchMan.addSubDirectoryMatching(gameDir, "EEM London CD");
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Data Files", 0, 2);
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Mac Scripts", 0, 3);
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM2 CD/Anim Files", 0, 2);
+		SearchMan.addSubDirectoryMatching(gameDir, "EEM London CD", 0, 2);
 		// ...or the user pointed ScummVM straight at the "EEM2 CD" folder.
-		SearchMan.addSubDirectoryMatching(gameDir, "Data Files");
-		SearchMan.addSubDirectoryMatching(gameDir, "Mac Scripts");
-		SearchMan.addSubDirectoryMatching(gameDir, "Anim Files");
+		SearchMan.addSubDirectoryMatching(gameDir, "Data Files", 0, 2);
+		SearchMan.addSubDirectoryMatching(gameDir, "Mac Scripts", 0, 3);
+		SearchMan.addSubDirectoryMatching(gameDir, "Anim Files", 0, 2);
 	}
 
 	// The EEM1 Mac release can be played straight from its floppy installer.
@@ -1697,15 +1778,17 @@ void EEMEngine::runLondonStartup() {
 	debugC(1, kDebugGeneral, "EEM2 (London): opening sequence");
 
 	// Opening logos. Mac London mirrors FUN_00009256: EA Kids colour-cycle,
-	// publisher still, Storm still, then the FLC intro/title pair.
+	// publisher still, Storm still, then the FLC intro/title pair. DOS London
+	// uses the original ANM sequence after EA Kids instead.
 	if (!shouldQuit() && !_skipIntro)
 		showLondonEAKidsLogo();
-	if (!shouldQuit() && !_skipIntro)
-		showLondonLogo(0x20c, 0x3e, 3000);  // publisher logo (FUN_00009074)
-	if (!shouldQuit() && !_skipIntro)
-		showLondonLogo(0x20b, 0x3d, 3000, /* playThunder= */ true);
 
 	if (isMacintosh()) {
+		if (!shouldQuit() && !_skipIntro)
+			showLondonLogo(0x20c, 0x3e, 3000);  // publisher logo (FUN_00009074)
+		if (!shouldQuit() && !_skipIntro)
+			showLondonLogo(0x20b, 0x3d, 3000, /* playThunder= */ true);
+
 		// The Mac CD ships the post-logo intro as Flic movies where DOS uses
 		// bolt/movie/wave .ANM. KDCDINTR is the centered intro; BOOK54 is the
 		// full-screen animated title, held for the profile click/key.
@@ -1727,6 +1810,9 @@ void EEMEngine::runLondonStartup() {
 				_audio->stopVoice();
 			fadeCurrentPaletteToBlack();
 		}
+		if (!shouldQuit() && !_skipIntro)
+			showLondonLogo(kDosLondonPicHighScoreLogo,
+						   kDosLondonPalHighScoreLogo, 3000);
 
 		// Intro movie with its theme (MUS00101.XMI).
 		if (!shouldQuit() && !_skipIntro && _music)

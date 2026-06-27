@@ -855,7 +855,7 @@ static void room_203_anim4() {
 		} else if (frame < 63) {
 			if (frame == 34) {
 				digi_play_build(101, '_', 1, 2);
-				display_interface();
+				clear_selected_item();
 			} else if (frame < 34) {
 				if (frame == 1) {
 					result = 0;
@@ -1150,7 +1150,7 @@ static void room_203_daemon() {
 
 		case 52:
 			global[walker_converse_state] = 0;
-			close_journal(3);
+			close_interface(CANDLE_FLY);
 			player.commands_allowed = true;
 			local->_a4 = 0;
 			break;
@@ -1354,8 +1354,8 @@ static void room_203_daemon() {
 			kernel_position_anim(local->_a0, 132, 133, 88, 6);
 			local->_9e = kernel_run_animation_disp('e', 3, 0);
 			kernel_position_anim(local->_9e, 105, 137, 90, 5);
-			close_journal(3);
-			display_interface();
+			close_interface(CANDLE_FLY);
+			clear_selected_item();
 			global[g046] = -1;
 
 			if (local->_ac)
@@ -1429,7 +1429,7 @@ static void room_203_daemon() {
 			kernel_reset_animation(local->_a0, 1);
 			kernel_synch(KERNEL_ANIM, local->_a0, KERNEL_NOW, 0);
 			global[g143] = 0;
-			display_interface();
+			clear_selected_item();
 			break;
 
 		case 42:

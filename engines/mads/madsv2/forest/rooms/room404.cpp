@@ -515,7 +515,7 @@ static void room_404_daemon() {
 	case 7:
 		if (global[walker_converse_state] && global[g081]) {
 			global[walker_converse_state] = 0;
-			close_journal(3);
+			close_interface(CANDLE_FLY);
 			player.commands_allowed = true;
 			if (config_file.forest1)
 				kernel_timing_trigger(1, 110);
@@ -711,10 +711,10 @@ static void room_404_daemon() {
 			kernel_flip_hotspot(words_hole, false);
 			object_set_quality(13, 0, 0L);
 			inter_move_object(13, NOWHERE);
-			display_interface();
+			clear_selected_item();
 			if (global[walker_converse_state]) {
 				global[walker_converse_state] = 0;
-				close_journal(3);
+				close_interface(CANDLE_FLY);
 			}
 			player.commands_allowed = true;
 			if (config_file.forest1)
@@ -849,7 +849,7 @@ static void room_404_parser() {
 				kernel.trigger_setup_mode = 1;
 				kernel_timing_trigger(2, 109);
 			} else {
-				display_interface();
+				clear_selected_item();
 			}
 		} else {
 			player.commands_allowed = false;

@@ -19,42 +19,31 @@
  *
  */
 
-#include "mads/madsv2/forest/journal.h"
-#include "mads/madsv2/forest/extra.h"
-#include "mads/madsv2/forest/global.h"
-#include "mads/madsv2/forest/midi.h"
-#include "mads/madsv2/core/global.h"
-#include "mads/madsv2/core/kernel.h"
-#include "mads/madsv2/core/player.h"
+#ifndef EEM_COORDS_H
+#define EEM_COORDS_H
 
-namespace MADS {
-namespace MADSV2 {
-namespace Forest {
+#include "common/rect.h"
+#include "common/scummsys.h"
 
-static int prior_room;
+namespace EEM {
 
-static void change_to_journal() {
-	save_player();
-	prior_room = room_id;
-	new_room = 199;
-}
+class EEMEngine;
 
-static int get_prior_room() {
-	return prior_room;
-}
+uint16 readScriptU16(const byte *p, bool bigEndian);
+int16 readScriptS16(const byte *p, bool bigEndian);
 
-void display_journal() {
-	open_interface(JOURNAL_FLY);
-	change_to_journal();
-}
+/// x1, y1, x2, y2, with the requested word endian.
+Common::Rect readRectXYXY(const byte *p, bool bigEndian);
 
-void leave_journal() {
-	close_interface(JOURNAL_FLY);
-	global[g009] = 0;
-	midi_stop();
-	new_room = get_prior_room();
-}
+/// DOS script/site rectangle: x1, y1, x2, y2, little-endian.
+Common::Rect readDosRectLE(const byte *p);
 
-} // namespace Forest
-} // namespace MADSV2
-} // namespace MADS
+/// Mac QuickDraw rectangle: top, left, bottom, right.
+Common::Rect readMacQuickDrawRectBE(const byte *p);
+Common::Rect readMacQuickDrawRectLE(const byte *p);
+
+Common::Rect scaleDosRectIfMac(const EEMEngine &vm, const Common::Rect &rect);
+
+} // End of namespace EEM
+
+#endif

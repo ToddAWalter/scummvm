@@ -862,7 +862,7 @@ static void room_308_anim22() {
 	if (cur == 70) {
 		if (global[walker_converse_state] != 0) {
 			global[walker_converse_state] = 0;
-			close_journal(3);
+			close_interface(CANDLE_FLY);
 		}
 		object_set_quality(5, -1, -1);
 		object_set_quality(1, -1, -1);
@@ -1133,14 +1133,14 @@ static void room_308_daemon() {
 	case 7:
 		switch (scratch._b4) {
 		case 1:
-			display_interface();
+			clear_selected_item();
 			aainfo[5]._val3 = 0;
 			scratch._b4 = -1;
 			player.commands_allowed = true;
 			scratch._c2 = 0;
 			break;
 		case 2:
-			display_interface();
+			clear_selected_item();
 			aainfo[5]._val3 = 0;
 			aainfo[8]._frame = 0;
 			scratch._b4 = -1;

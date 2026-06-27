@@ -4,10 +4,12 @@ MODULE_OBJS = \
 	animation.o \
 	audio.o \
 	clues.o \
+	coords.o \
 	eem.o \
 	font.o \
 	graphics.o \
 	installer.o \
+	map_ui.o \
 	metaengine.o \
 	music.o \
 	mystery.o \

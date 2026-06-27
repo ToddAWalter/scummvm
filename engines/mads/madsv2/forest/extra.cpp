@@ -20,6 +20,7 @@
  */
 
 #include "common/textconsole.h"
+#include "mads/madsv2/core/buffer.h"
 #include "mads/madsv2/core/game.h"
 #include "mads/madsv2/core/global.h"
 #include "mads/madsv2/core/inter.h"
@@ -27,9 +28,13 @@
 #include "mads/madsv2/core/matte.h"
 #include "mads/madsv2/core/mouse.h"
 #include "mads/madsv2/core/player.h"
+#include "mads/madsv2/core/screen.h"
+#include "mads/madsv2/core/timer.h"
+#include "mads/madsv2/forest/digi.h"
 #include "mads/madsv2/forest/extra.h"
 #include "mads/madsv2/forest/global.h"
 #include "mads/madsv2/forest/journal.h"
+#include "mads/madsv2/forest/midi.h"
 
 namespace MADS {
 namespace MADSV2 {
@@ -45,19 +50,19 @@ void init_extra() {
 	paul_object_showing = -1;
 }
 
-void display_interface() {
-	error("TODO: display_interface");
+void clear_selected_item() {
+	inter_turn_off_object();
+	buffer_rect_copy_2(scr_inter_orig, scr_live, 138, 0, 138, 156, 55, 42);
 }
-
 
 void solve_me_selected(void) {
 	global[walker_converse_state] = -1;
-	open_journal(3);
+	open_interface(CANDLE_FLY);
 	game_exec_function(room_parser_code_pointer);
 }
 
 void door_selected(void) {
-	open_journal(4);
+	open_interface(DOOR_FLY);
 	kernel.activate_menu = GAME_MAIN_MENU;
 }
 
@@ -74,6 +79,17 @@ void stamp_sprite_to_interface(int x, int y, int sprite, int series) {
 
 void delete_sprite_in_interface(int series) {
 	matte_deallocate_series(series, false);
+
+	// WORKAROUND: Remove any pending interface entries referencing the now-freed series.
+	// This fixes a game crash when opening the inventory, since there were pending items
+	// in image_inter_list for the series_id that had been deallocated
+	for (int i = (int)image_inter_marker - 1; i >= 0; --i) {
+		if (image_inter_list[i].series_id == series) {
+			for (int j = i; j < (int)image_inter_marker - 1; ++j)
+				image_inter_list[j] = image_inter_list[j + 1];
+			--image_inter_marker;
+		}
+	}
 }
 
 void extra_change_animation(int handle, int x, int y, byte scale, byte depth) {
@@ -161,6 +177,130 @@ void inter_update_series(int series_id) {
 		else if (ii.series_id != IMAGE_ERASE)
 			ii.flags = IMAGE_UPDATE;
 	}
+}
+
+
+void open_interface(InterfaceButton button) {
+	mouse_hide();
+
+	int count = 0;
+	do {
+		digi_read_another_chunk();
+		if (global[g009])
+			midi_loop();
+
+		long current_time = timer_read();
+
+		buffer_rect_copy(scr_inter_orig, scr_inter, 0, 0, 165, 44);
+
+		if (button == JOURNAL_FLY) {
+			if (count != 23) {
+				int x = count * 2 + 46;
+				int clip_x = 100 - count * 9;
+				sprite_draw_clipped(series_list[0], 1, clip_x, &scr_inter, x, 30);
+			}
+		} else {
+			sprite_draw(series_list[0], 1, &scr_inter, JOURNAL_X, JOURNAL_Y);
+		}
+
+		if (button == BP_FLY) {
+			if (count != 23) {
+				int x = count * 2 + 40;
+				int clip_x = 100 - count * 9;
+				sprite_draw_clipped(series_list[1], 1, clip_x, &scr_inter, x, 96);
+			}
+		} else {
+			sprite_draw(series_list[1], 1, &scr_inter, BP_X, BP_Y);
+		}
+
+		buffer_rect_copy_2(scr_inter, scr_main, 0, 0, 0, 156, 165, 44);
+		buffer_rect_copy(scr_inter_orig, scr_inter, 168, 0, 152, 44);
+
+		if (button == CANDLE_FLY)
+			count = 24;
+
+		if (global[walker_converse_state])
+			sprite_draw(series_list[5], 1, &scr_inter, CANDLE_X, CANDLE_Y);
+		else
+			sprite_draw(series_list[2], 1, &scr_inter, CANDLE_X, CANDLE_Y);
+
+		if (button == DOOR_FLY) {
+			sprite_draw(series_list[4], 1, &scr_inter, DOOR_X, DOOR_Y);
+			count = 24;
+		} else {
+			sprite_draw(series_list[3], 1, &scr_inter, DOOR_X, DOOR_Y);
+		}
+
+		buffer_rect_copy_2(scr_inter, scr_main, 168, 0, 168, 156, 152, 44);
+
+		while (timer_read() - current_time < 2) {
+		}
+
+		count++;
+	} while (count < 24);
+
+	mouse_show();
+}
+
+void close_interface(InterfaceButton button) {
+	mouse_hide();
+
+	int count = 24;
+	do {
+		digi_read_another_chunk();
+		if (global[g009])
+			midi_loop();
+
+		long current_time = timer_read();
+
+		buffer_rect_copy(scr_inter_orig, scr_inter, 0, 0, 165, 44);
+
+		if (button == JOURNAL_FLY) {
+			if (count != 0) {
+				int x = count * 2 + 43;
+				int clip_x = 100 - count * 9;
+				sprite_draw_clipped(series_list[0], 1, clip_x, &scr_inter, x, 30);
+			} else {
+				sprite_draw(series_list[0], 1, &scr_inter, JOURNAL_X, JOURNAL_Y);
+			}
+		} else {
+			sprite_draw(series_list[0], 1, &scr_inter, JOURNAL_X, JOURNAL_Y);
+		}
+
+		if (button == BP_FLY) {
+			if (count != 0) {
+				int x = count * 2 + 37;
+				int clip_x = 100 - count * 9;
+				sprite_draw_clipped(series_list[1], 1, clip_x, &scr_inter, x, 96);
+			} else {
+				sprite_draw(series_list[1], 1, &scr_inter, BP_X, BP_Y);
+			}
+		} else {
+			sprite_draw(series_list[1], 1, &scr_inter, BP_X, BP_Y);
+		}
+
+		buffer_rect_copy_2(scr_inter, scr_main, 0, 0, 0, 156, 165, 44);
+		buffer_rect_copy(scr_inter_orig, scr_inter, 168, 0, 152, 44);
+
+		if (button == CANDLE_FLY)
+			count = 0;
+
+		if (global[walker_converse_state])
+			sprite_draw(series_list[5], 1, &scr_inter, CANDLE_X, CANDLE_Y);
+		else
+			sprite_draw(series_list[2], 1, &scr_inter, CANDLE_X, CANDLE_Y);
+
+		sprite_draw(series_list[3], 1, &scr_inter, DOOR_X, DOOR_Y);
+
+		buffer_rect_copy_2(scr_inter, scr_main, 168, 0, 168, 156, 152, 44);
+
+		while (timer_read() - current_time < 2) {
+		}
+
+		count--;
+	} while (count >= 0);
+
+	mouse_show();
 }
 
 } // namespace Forest
