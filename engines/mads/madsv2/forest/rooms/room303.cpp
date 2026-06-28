@@ -433,7 +433,7 @@ static void room_303_init() {
 		kernel_flip_hotspot(words_pebbles, false);
 	}
 
-	if (previous_room != KERNEL_LAST) {
+	if (previous_room != KERNEL_RESTORING_GAME) {
 		if (previous_room != 199) {
 			player.walker_visible = false;
 			player.commands_allowed = false;
@@ -470,13 +470,13 @@ static void room_303_init1() {
 	scratch._9a = kernel_run_animation_disp('e', 6, 0);
 	kernel_position_anim(scratch._9a, 109, 139, 94, 5);
 
-	if (previous_room != KERNEL_LAST) {
+	if (previous_room != KERNEL_RESTORING_GAME) {
 		player.x = 138;
 		player.y = 130;
 		player.facing = 6;
 	}
 
-	if (previous_room == KERNEL_LAST) {
+	if (previous_room == KERNEL_RESTORING_GAME) {
 		global[g131] = -1;
 		global[g141] = -1;
 		kernel_reset_animation(scratch._9a, 2);
@@ -526,13 +526,13 @@ static void room_303_init2() {
 	scratch._9a = kernel_run_animation_disp('e', 6, 0);
 	kernel_position_anim(scratch._9a, 109, 139, 94, 5);
 
-	if (previous_room != KERNEL_LAST) {
+	if (previous_room != KERNEL_RESTORING_GAME) {
 		player.x = 138;
 		player.y = 130;
 		player.facing = 6;
 	}
 
-	if (previous_room == KERNEL_LAST) {
+	if (previous_room == KERNEL_RESTORING_GAME) {
 		global[g131] = -1;
 		global[g141] = -1;
 		kernel_reset_animation(scratch._9a, 2);
@@ -631,7 +631,7 @@ static void room_303_daemon() {
 			kernel_synch(KERNEL_ANIM, scratch._9a, KERNEL_NOW, 0);
 			global[g133] = 0;
 			kernel_flip_hotspot(words_reeds, false);
-			inter_move_object(6, PLAYER);
+			inter_move_object(reeds, PLAYER);
 			player.commands_allowed = true;
 		} else if (scratch._a6 == 2) {
 			dont_frag_the_palette();
