@@ -25,6 +25,7 @@
 #define FORBIDDEN_SYMBOL_EXCEPTION_time_h
 
 #include "backends/base-backend.h"
+#include "common/frac.h"
 #include "graphics/blit.h"
 #include "graphics/dirtyrects.h"
 #include "graphics/paletteman.h"
@@ -34,7 +35,6 @@
 #include "backends/log/log.h"
 #include "backends/platform/3ds/sprite.h"
 #include "common/events.h"
-#include "common/frac.h"
 #include "common/rect.h"
 #include "common/queue.h"
 #include "common/ustr.h"
@@ -186,7 +186,7 @@ public:
 	void warpMouse(int x, int y);
 	void setMouseCursor(const void *buf, uint w, uint h, int hotspotX,
 	                    int hotspotY, uint32 keycolor,
-	                    const Graphics::PixelFormat *format, const byte *mask
+	                    const Graphics::PixelFormat *format, const byte *mask,
 	                    frac_t scaleX, frac_t scaleY);
 	void setCursorPalette(const byte *colors, uint start, uint num);
 

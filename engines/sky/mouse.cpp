@@ -314,8 +314,9 @@ void Mouse::mouseEngineIBASS() {
 	case INVENTORY_USE_ON:
 		invUseOn(_mouseX + TOP_LEFT_X, _mouseY + TOP_LEFT_Y);
 		break;
-
 	case TEXT_CHOOSER:
+		break;
+	case INV_TEMP_EXAMINE:
 		break;
 	}
 	_mouseB = 0;
@@ -911,7 +912,7 @@ void Mouse::pointerEngine(uint16 xPos, uint16 yPos) {
 }
 
 void Mouse::pointerEngineIBASS(uint16 xPos, uint16 yPos) {
-	int midx, midy; // open hotspot dimensions
+	int midx = 0, midy = 0; // open hotspot dimensions
 	Compact *itemData;
 	int itemProx;
 	int d = 0;
@@ -1425,14 +1426,11 @@ bool Mouse::wasClicked() {
 void Mouse::lincInvMouse(uint16 xPos, uint16 yPos) {
 	uint32 *objList;
 	int j, num;
-	Compact *itemData;
+	Compact *itemData = nullptr;
 	bool touched = false;
 	bool buttonHeld = (_system->getEventManager()->getButtonState() != 0); // mouseEngine() consumes the click at the end so using _mouseB would increment the timer at each click not on hold
 
-	if (buttonHeld)
-		_logicClick++;
-	else
-		_logicClick = 0;
+	_logicClick = buttonHeld;
 
 	// get list of compacts in inventory
 	objList = _skyLogic->giveInvList();
@@ -1652,7 +1650,7 @@ void Mouse::lincInvMouse(uint16 xPos, uint16 yPos) {
 
 void Mouse::invMouse(uint16 xPos, uint16 yPos) {
 	uint32 *objList;
-	Compact *itemData;
+	Compact *itemData = nullptr;
 	int j, num;
 	bool touched = false;
 
@@ -1866,10 +1864,7 @@ void Mouse::invUseOn(uint16 xPos, uint16 yPos) {
 	uint16 midX, midY;
 	bool buttonHeld = (_system->getEventManager()->getButtonState() != 0);
 
-	if (buttonHeld)
-		_logicClick++;
-	else
-		_logicClick = 0;
+	_logicClick = buttonHeld;
 
 	if (buttonHeld) {
 		itemNum = doProximityHighlights(xPos, yPos);
