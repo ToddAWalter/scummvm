@@ -498,54 +498,6 @@ void filter_matte_list(MattePtr matte, int size, int base_index) {
 	}
 }
 
-static void matte_quick_to_black(byte *special_pal, int ticks) {
-	int going;
-	byte *source;
-	byte *dest;
-	long fade_clock;
-	long now_clock;
-	byte increments[768];
-
-	source = special_pal;
-	dest = increments;
-
-	// Build increment table: each entry is ceil(source[i] / 4), minimum 1
-	for (int i = 0; i < 768; i++)
-	{
-		byte inc = (source[i] >> 2) + ((source[i] & 3) ? 1 : 0);
-		if (inc == 0)
-			inc = 1;
-		dest[i] = inc;
-	}
-
-	do {
-		going = false;
-		fade_clock = timer_read_600() + ticks;
-
-		for (int i = 0; i < 768; i++) {
-			byte val = source[i];
-			byte decr = dest[i];
-
-			if (val >= decr)
-				val -= decr;
-			else
-				val = 0;
-
-			source[i] = val;
-
-			if (val != 0)
-				going = true;
-		}
-
-		mcga_setpal((Palette *)special_pal);
-
-		do {
-			now_clock = timer_read_600();
-		} while (now_clock < fade_clock);
-
-	} while (going);
-}
-
 static void matte_quick_from_black(byte *special_pal, int ticks) {
 	int going;
 	byte *source;
@@ -631,7 +583,6 @@ static void matte_special_effect(int special_effect, int full_screen) {
 
 		if (special_effect == MATTE_FX_FADE_THRU_BLACK) {
 			mcga_getpal(&special_pal);
-			//matte_quick_to_black(&special_pal[0].r, 1);
 			magic_fade_to_grey(special_pal, NULL, 0, 256, 0, 1, 1, 16);
 			buffer_fill(scr_live, 0);
 		}
@@ -1064,7 +1015,7 @@ void matte_frame(int special_effect, int full_screen) {
 }
 
 
-int matte_allocate_inter_image(void) {
+int matte_allocate_inter_image() {
 	int result;
 
 	if (image_inter_marker >= IMAGE_INTER_LIST_SIZE) {
@@ -1080,7 +1031,7 @@ int matte_allocate_inter_image(void) {
 }
 
 
-void matte_refresh_inter(void) {
+void matte_refresh_inter() {
 	int id;
 
 	id = matte_allocate_inter_image();

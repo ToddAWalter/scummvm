@@ -19,54 +19,43 @@
  *
  */
 
-#ifndef MADS_FOREST_MIDI_H
-#define MADS_FOREST_MIDI_H
+#ifndef DIRECTOR_LINGO_XTRAS_G_GLU32_H
+#define DIRECTOR_LINGO_XTRAS_G_GLU32_H
 
-#include "audio/mididrv_ms.h"
-#include "audio/midiparser.h"
+namespace Director {
 
-namespace MADS {
-namespace MADSV2 {
-namespace Forest {
-
-extern bool midi_playing;
-
-class MidiPlayer {
+class GLU32XtraObject : public Object<GLU32XtraObject> {
 public:
-	MidiPlayer();
-	~MidiPlayer();
+	GLU32XtraObject(ObjectType objType);
 
-	int open();
-	void load(Common::SeekableReadStream *in, int64 size = -1);
-	void play();
-	void pause(bool pause);
-	void stop();
+	bool hasProp(const Common::String &propName) override;
+	Datum getProp(const Common::String &propName) override;
 
-	void setLoop(bool loop);
-	bool isPlaying();
-
-	void syncSoundSettings();
-
-private:
-	Common::Mutex _mutex;
-	MidiDriver_Multisource *_driver;
-	MusicType _deviceType;
-
-	MidiParser *_parser;
-	byte *_data;
-
-	bool _paused;
-
-protected:
-	static void onTimer(void *data);
+	Common::String _dll;
+	Common::String _func;
 };
 
-extern void midi_play(const char *name);
-extern void midi_stop();
-extern void midi_loop();
+namespace GLU32Xtra {
 
-} // namespace Forest
-} // namespace MADSV2
-} // namespace MADS
+extern const char *xlibName;
+extern const XlibFileDesc fileNames[];
+
+void open(ObjectType type, const Common::Path &path);
+void close(ObjectType type);
+
+void m_new(int nargs);
+void m_GLUNew(int nargs);
+void m_GLUCall(int nargs);
+void m_GLUGetResults(int nargs);
+void m_GLUDispose(int nargs);
+void m_GLUGetErrorString(int nargs);
+void m_GLUGetLastError(int nargs);
+void m_GLURegister(int nargs);
+void m_GLUGetProp(int nargs);
+void m_GLUSetProp(int nargs);
+
+} // End of namespace GLU32Xtra
+
+} // End of namespace Director
 
 #endif

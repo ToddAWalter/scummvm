@@ -43,7 +43,6 @@
 #include "mads/madsv2/core/keys.h"
 #include "mads/madsv2/core/pack.h"
 #include "mads/madsv2/core/room.h"
-#include "mads/madsv2/core/demo.h"
 #include "mads/madsv2/core/xms.h"
 #include "mads/madsv2/core/lock.h"
 #include "mads/madsv2/core/tile.h"
@@ -881,9 +880,6 @@ int kernel_seq_forward(int series_id, int mirror, word ticks, word interval_tick
 int kernel_seq_forward_scroll(int series_id, int mirror,
 		word ticks, word interval_ticks, word start_ticks, int expire) {
 	int depth = 0;
-	SpritePtr sprite;
-
-	sprite = &series_list[series_id]->index[0];
 
 	return kernel_seq_add(series_id, mirror, 1, 0, 0, AA_LINEAR, 1,
 		depth, 100, true, 0, 0, ticks, interval_ticks,
