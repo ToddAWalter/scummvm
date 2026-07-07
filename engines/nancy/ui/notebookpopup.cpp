@@ -118,6 +118,10 @@ void NotebookPopup::updateGraphics() {
 	}
 }
 
+int16 NotebookPopup::getPrepSceneID() const {
+	return _uinbData ? (int16)_uinbData->header.linkbackScene : (int16)kNoScene;
+}
+
 void NotebookPopup::open() {
 	if (_isVisible)
 		return;
@@ -141,11 +145,6 @@ void NotebookPopup::close() {
 		return;
 
 	setVisible(false);
-
-	if (!_uinbData->header.sounds[1].name.empty()) {
-		g_nancy->_sound->loadSound(_uinbData->header.sounds[1]);
-		g_nancy->_sound->playSound(_uinbData->header.sounds[1]);
-	}
 }
 
 void NotebookPopup::drawBackground() {
@@ -355,8 +354,11 @@ void NotebookPopup::handleInput(NancyInput &input) {
 		g_nancy->_cursor->setCursorType(CursorManager::kHotspotArrow);
 		if (input.input & NancyInput::kLeftMouseButtonUp) {
 			toggleCheckbox(_checkboxEntryIndices[k]);
-			input.eatMouseInput();
 		}
+		// Swallow the input (as the popup does for its other widgets) so the
+		// viewport / action manager behind the popup don't override the hotspot
+		// cursor we just set.
+		input.eatMouseInput();
 		return;
 	}
 
@@ -469,7 +471,7 @@ void NotebookPopup::buildTextLines() {
 	Common::String combined;
 	for (int i = (int)entries.size() - 1; i >= 0; --i) {
 		Common::String stringID = entries[i].stringID;
-		Common::String body = getTextFromCaseInsensitiveKey(autotext->texts, stringID);
+		Common::String body = autotext->texts.getValOrDefault(stringID, "");
 
 		if (surfaceID == kNotebookTabTasks && entries[i].mark != 0) {
 			uint16 markValue = entries[i].mark;
@@ -614,13 +616,9 @@ void NotebookPopup::toggleCheckbox(uint entryIndex) {
 
 void NotebookPopup::playButtonClickSound(const UIButtonRecord &button) {
 	SoundDescription sound = button.clickSound;
-	if (sound.name.empty() || sound.name.equalsIgnoreCase("NO SOUND")) {
-		// Fall back to the header's shared button-click slot (2; 0/1 = open/close).
-		sound = _uinbData->header.sounds[2];
-	}
-	if (sound.name.empty() || sound.name.equalsIgnoreCase("NO SOUND")) {
+	if (sound.name.empty() || sound.name.equalsIgnoreCase("NO SOUND"))
 		return;
-	}
+
 	g_nancy->_sound->loadSound(sound);
 	g_nancy->_sound->playSound(sound);
 }

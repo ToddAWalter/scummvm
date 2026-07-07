@@ -248,6 +248,8 @@ void CellPhonePopup::open() {
 	_closeButtonHovered = false;
 	_scrollUpHovered = false;
 	_scrollDownHovered = false;
+	_autoDialPending = false;
+	_pressedSlot = -1;
 
 	drawChrome();
 	drawScreenContent();
@@ -277,9 +279,8 @@ void CellPhonePopup::startIncomingCall(const SceneChangeDescription &scene) {
 }
 
 void CellPhonePopup::close() {
-	if (!_isVisible) {
+	if (!_isVisible)
 		return;
-	}
 
 	if (!_callSound.name.empty()) {
 		g_nancy->_sound->stopSound(_callSound);
@@ -287,17 +288,25 @@ void CellPhonePopup::close() {
 
 	// Closing the phone while ringing declines the call.
 	_hasPendingCallScene = false;
+	_autoDialPending = false;
+	_pressedSlot = -1;
 
 	setVisible(false);
-
-	if (!_uiclData->header.sounds[1].name.empty()) {
-		g_nancy->_sound->loadSound(_uiclData->header.sounds[1]);
-		g_nancy->_sound->playSound(_uiclData->header.sounds[1]);
-	}
 }
 
 void CellPhonePopup::updateGraphics() {
 	if (!_isVisible) {
+		return;
+	}
+
+	// A queued auto-dial / Talk waits for the key's DTMF tone to finish so the
+	// last digit stays audible before the outgoing-ring sound takes over the
+	// shared call-sound channel.
+	if (_autoDialPending) {
+		if (!callSoundIsStillPlaying()) {
+			_autoDialPending = false;
+			enterScreenState(kPlaceCall);
+		}
 		return;
 	}
 
@@ -475,10 +484,12 @@ void CellPhonePopup::drawScreenContent() {
 		drawDirectoryList();
 		drawDirectoryArrows();
 		drawHeading(_uiclData->dialHilite);
+		drawBackButton(0);
 		break;
 
 	case kOnlineHub: {
 		drawHeading(_uiclData->onlineHeading);
+		drawBackButton(0);
 		// Email / Web option buttons (subButtons 3 and 4) sit inside the LCD.
 		const UICL::ThreeRectWidget &emailBtn = _uiclData->subButtons[3];
 		const UICL::ThreeRectWidget &webBtn   = _uiclData->subButtons[4];
@@ -521,6 +532,9 @@ void CellPhonePopup::drawScreenContent() {
 		drawBackButton(isHelpContentView() ? 0 : 7);
 		break;
 	}
+
+	// Keypad depress feedback sits on top of everything else.
+	drawPressedDialKey();
 
 	_needsRedraw = true;
 }
@@ -777,7 +791,7 @@ void CellPhonePopup::drawLinkList() {
 		}
 
 		Common::String lookupKey = list[absolute].key;
-		Common::String rowText = getTextFromCaseInsensitiveKey(autotext->texts, lookupKey);
+		Common::String rowText = autotext->texts.getValOrDefault(lookupKey, "");
 
 		// Single-line draw — drop every <n> markup so they don't render as
 		// literal "<n>" glyphs and crowd the row.
@@ -845,7 +859,7 @@ void CellPhonePopup::drawContentView() {
 
 	// Render the engine's hypertext markup into a tall scratch surface,
 	// then blit a vertically-scrolled window of it into the LCD.
-	const Common::String renderText = getTextFromCaseInsensitiveKey(autotext->texts, _contentKey);
+	const Common::String renderText = autotext->texts.getValOrDefault(_contentKey, "");
 
 	// Find this page in the UIBW chunk (browser pages only); its hotspot
 	// records are the per-page image table the article references.
@@ -1017,6 +1031,23 @@ void CellPhonePopup::drawBackButton(uint subButtonIndex) {
 											back.destRect.top - chunkOrigin.y));
 }
 
+void CellPhonePopup::drawPressedDialKey() {
+	if (_pressedSlot < 0 || _pressedSlot >= (int)UICL::kNumDialPadSlots) {
+		return;
+	}
+	// A dial-pad slot's single srcRect is the lit / depressed key sprite; the
+	// idle keypad is baked into the chrome image. Blit it over the key's dest
+	// rect so the key visibly depresses while held.
+	const UICL::DialPadSlot &slot = _uiclData->dialPadSlots[_pressedSlot];
+	if (slot.srcRect.isEmpty() || slot.destRect.isEmpty()) {
+		return;
+	}
+	const Common::Point chunkOrigin(_screenPosition.left, _screenPosition.top);
+	_drawSurface.blitFrom(_spritesImage, slot.srcRect,
+							Common::Point(slot.destRect.left - chunkOrigin.x,
+											slot.destRect.top - chunkOrigin.y));
+}
+
 Common::Rect CellPhonePopup::backButtonHitRect(uint subButtonIndex) const {
 	// Popup-local hit rect for a Back sub-button.
 	Common::Rect r = _uiclData->subButtons[subButtonIndex].destRect;
@@ -1114,19 +1145,15 @@ void CellPhonePopup::appendDigit(byte slotIndex) {
 	_dialedNumber += (char)('0' + slotIndex);
 	enterScreenState(kDialing);
 
-	// Auto-dial without a Talk press: a leading '1' is a full 11-digit number;
-	// anything else is a 7-digit local number that dials as soon as it matches
-	// a contact (or reaches 7 digits, ringing through to "We're sorry").
+	// Auto-dial without a Talk press only once the full 11-digit number has
+	// been entered. The call is queued rather than placed immediately so
+	// updateGraphics can wait for the last key's DTMF tone to finish (which
+	// shares the call-sound channel with the outgoing ring).
 	if (_noSignal) {
 		return;
 	}
-	const bool longDistance = (_dialedNumber[0] == '1');
-	if (longDistance) {
-		if (_dialedNumber.size() >= 11) {
-			enterScreenState(kPlaceCall);
-		}
-	} else if (findContactByDialBuffer() != -1 || _dialedNumber.size() >= 7) {
-		enterScreenState(kPlaceCall);
+	if (_dialedNumber.size() >= 11) {
+		_autoDialPending = true;
 	}
 }
 
@@ -1142,6 +1169,9 @@ void CellPhonePopup::playDialPadSound(const Common::String &name) {
 	sound.numLoops = 1;
 	g_nancy->_sound->loadSound(sound);
 	g_nancy->_sound->playSound(sound);
+	// Track the tone on the call-sound channel so a queued auto-dial / Talk can
+	// wait for it to finish before ringing (see updateGraphics).
+	_callSound = sound;
 }
 
 void CellPhonePopup::playButtonClickSound(const UIButtonRecord &button) {
@@ -1149,7 +1179,6 @@ void CellPhonePopup::playButtonClickSound(const UIButtonRecord &button) {
 	if (sound.name.empty() || sound.name.equalsIgnoreCase("NO SOUND"))
 		return;
 
-	sound.numLoops = 1;
 	g_nancy->_sound->loadSound(sound);
 	g_nancy->_sound->playSound(sound);
 }
@@ -1600,6 +1629,35 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 		drawScreenContent();
 	}
 
+	// The keypad is only on screen in the non-zoomed chrome (welcome / dialing /
+	// directory / help), so its slots are only interactive there. The zoomed
+	// web / email / browser views hide the keypad but keep the slots' dest rects
+	// covering that now-blank area, so without this guard hovering or clicking
+	// there would light the underlying key sprites and even switch to dialing.
+	const bool keypadVisible = !isZoomedChromeState() || isHelpContentView();
+
+	// Depress the dial-pad key under the cursor while the mouse button is held;
+	// clear it on release (this runs before the click handlers so the depressed
+	// sprite isn't left behind once the key's action redraws the screen).
+	// Skip when the cursor is over a scroll arrow: the arrows overlap the dial
+	// pad geometrically (e.g. the down arrow sits over the "#" key), so pressing
+	// one would otherwise light the underlying key sprite.
+	int newPressed = -1;
+	if (keypadVisible && !overUp && !overDown &&
+			(input.input & (NancyInput::kLeftMouseButtonDown | NancyInput::kLeftMouseButtonHeld)) &&
+			!(input.input & NancyInput::kLeftMouseButtonUp)) {
+		for (uint i = 0; i < UICL::kNumDialPadSlots; ++i) {
+			if (_uiclData->dialPadSlots[i].destRect.contains(chunkMouse)) {
+				newPressed = (int)i;
+				break;
+			}
+		}
+	}
+	if (newPressed != _pressedSlot) {
+		_pressedSlot = newPressed;
+		drawScreenContent();
+	}
+
 	// Help "?" button: opens the help page in the content view. Hidden
 	// (and unclickable) on sub-screens that already show their own heading.
 	if (!isSubScreenState() &&
@@ -1635,8 +1693,9 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 			}
 		}
 
-		// Invisible Back hotspot. Gated so it can't intercept up/down clicks.
-		const Common::Rect backHit = backLabelHitRect();
+		// Visible Back button at the bottom of the display. Gated so it can't
+		// intercept up/down clicks.
+		const Common::Rect backHit = backButtonHitRect(0);
 		const Common::Point popupMouse(chunkMouse.x - _screenPosition.left,
 										chunkMouse.y - _screenPosition.top);
 		const bool overUpDown =
@@ -1677,7 +1736,7 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 										chunkMouse.y - _screenPosition.top);
 		const Common::Rect emailR = hubEmailRect();
 		const Common::Rect webR   = hubWebRect();
-		const Common::Rect backHit = backLabelHitRect();
+		const Common::Rect backHit = backButtonHitRect(0);
 
 		if (emailR.contains(popupMouse)) {
 			g_nancy->_cursor->setCursorType(CursorManager::kHotspotArrow);
@@ -1875,8 +1934,9 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 	}
 
 	// Call/talk button. Checked before the dial-pad loop so an overlapping
-	// slot can't eat it. The Talk key is dial-pad slot 12.
-	if (_uiclData->dialPadSlots[12].destRect.contains(chunkMouse)) {
+	// slot can't eat it. The Talk key is dial-pad slot 12. Only live while the
+	// keypad is on screen (skipped in the zoomed web / email / browser views).
+	if (keypadVisible && _uiclData->dialPadSlots[12].destRect.contains(chunkMouse)) {
 		g_nancy->_cursor->setCursorType(CursorManager::kHotspotArrow);
 
 		if (input.input & NancyInput::kLeftMouseButtonUp) {
@@ -1889,10 +1949,12 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 						// Pre-resolve so kLookupContact skips the dial-buffer
 						// match and the ring/pickup animation still plays.
 						_resolvedContact = contactIdx;
-						enterScreenState(kPlaceCall);
+						// Defer until the Talk key's tone finishes (see
+						// updateGraphics).
+						_autoDialPending = true;
 					}
 				} else if (!_dialedNumber.empty()) {
-					enterScreenState(kPlaceCall);
+					_autoDialPending = true;
 				}
 			}
 			input.eatMouseInput();
@@ -1907,11 +1969,13 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 	//   13     - web mode (TODO)
 	//   14     - directory toggle
 	int newHovered = -1;
-	for (uint i = 0; i < UICL::kNumDialPadSlots; ++i) {
-		const UICL::DialPadSlot &slot = _uiclData->dialPadSlots[i];
-		if (slot.destRect.contains(chunkMouse)) {
-			newHovered = (int)i;
-			break;
+	if (keypadVisible) {
+		for (uint i = 0; i < UICL::kNumDialPadSlots; ++i) {
+			const UICL::DialPadSlot &slot = _uiclData->dialPadSlots[i];
+			if (slot.destRect.contains(chunkMouse)) {
+				newHovered = (int)i;
+				break;
+			}
 		}
 	}
 	_hoveredSlot = newHovered;
@@ -1930,28 +1994,17 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 				}
 				appendDigit((byte)newHovered);
 			} else if (newHovered == 13) {
-				// Online toggle: opens the Email/Web hub.
-				if (isOnlineMode()) {
-					_directoryScroll = 0;
-					_directorySelection = 0;
-					enterScreenState(kWelcome);
-				} else {
-					_dialedNumber.clear();
-					_directoryScroll = 0;
-					_directorySelection = 0;
-					enterScreenState(kOnlineHub);
-				}
+				// Opens the Email/Web hub. Re-pressing does not toggle back to
+				// the welcome screen — the on-screen Back button does that.
+				_dialedNumber.clear();
+				_directoryScroll = 0;
+				_directorySelection = 0;
+				enterScreenState(kOnlineHub);
 			} else if (newHovered == 14) {
-				if (_screenState == kDirectory) {
-					_directoryScroll = 0;
-					_directorySelection = 0;
-					enterScreenState(kWelcome);
-				} else {
-					_dialedNumber.clear();
-					_directoryScroll = 0;
-					_directorySelection = 0;
-					enterScreenState(kDirectory);
-				}
+				_dialedNumber.clear();
+				_directoryScroll = 0;
+				_directorySelection = 0;
+				enterScreenState(kDirectory);
 			}
 			input.eatMouseInput();
 			return;
