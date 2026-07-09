@@ -278,11 +278,11 @@ void Scene::pushScene(int16 itemID) {
 
 void Scene::popScene(bool inventory) {
 	if (!inventory || _sceneState.pushedInvItemID == -1) {
-		_sceneState.pushedScene.continueSceneSound = true;
+		_sceneState.pushedScene.continueSceneSound = kContinueSceneSound;
 		changeScene(_sceneState.pushedScene);
 		_sceneState.isScenePushed = false;
 	} else {
-		_sceneState.pushedInvScene.continueSceneSound = true;
+		_sceneState.pushedInvScene.continueSceneSound = kContinueSceneSound;
 		changeScene(_sceneState.pushedInvScene);
 		_sceneState.isInvScenePushed = false;
 		addItemToInventory(_sceneState.pushedInvItemID);
@@ -1364,7 +1364,11 @@ Common::Rect Scene::activePopupConfinement() const {
 	if (_conversationPopup.isVisible()) return _conversationPopup.getScreenPosition();
 	if (_inventoryPopup.isVisible())    return _inventoryPopup.getScreenPosition();
 	if (_notebookPopup.isVisible())     return _notebookPopup.getScreenPosition();
-	if (_cellPhonePopup.isVisible())    return _cellPhonePopup.getScreenPosition();
+	// The cellphone stays up during a call it placed, but the conversation
+	// (textbox) is the active UI then — don't confine the cursor to the phone,
+	// or it fights the textbox as each new line starts.
+	if (_cellPhonePopup.isVisible() && _activeConversation == nullptr)
+		return _cellPhonePopup.getScreenPosition();
 	return Common::Rect();
 }
 
