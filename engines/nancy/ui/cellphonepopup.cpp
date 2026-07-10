@@ -868,6 +868,12 @@ void CellPhonePopup::openBrowserHome() {
 	const UIBW *browserData = GetEngineData(UIBW);
 	if (browserData && !browserData->pages.empty()) {
 		openContentView(browserData->pages[0].imageName.toString(), _uiclData->browserHeading);
+		// The homepage's Back button always returns to the main phone (welcome)
+		// screen, regardless of whether the browser was opened from the online
+		// hub or reached via the search list's HOME button. openContentView
+		// otherwise records whichever screen we came from, which could send Back
+		// to the search list.
+		_contentReturnState = kWelcome;
 	} else {
 		enterScreenState(kWebList);
 	}
@@ -1679,9 +1685,12 @@ void CellPhonePopup::handleInput(NancyInput &input) {
 		if (overClose) {
 			g_nancy->_cursor->setCursorType(CursorManager::kHotspotArrow);
 			if (input.input & NancyInput::kLeftMouseButtonUp) {
-				playButtonClickSound(closeBtn);
 				input.eatMouseInput();
+				// close() stops the call-sound channel, which the X's click
+				// sound may share; close first so the click sound isn't cut off
+				// once a call / dial / web tone has occupied that channel.
 				close();
+				playButtonClickSound(closeBtn);
 				return;
 			}
 		}
