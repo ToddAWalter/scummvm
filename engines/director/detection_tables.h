@@ -5819,8 +5819,13 @@ static const DirectorGameDescription gameDescriptions[] = {
 
 	MACGAME1("popapenguin", "", "pwrmacp", "ccf864a8dc6e9d0d26eb73b4683e634b", 61012, 404),
 
-	MACGAME1_l("popup", "", "POP UP COMPUTER", "c1c73a286e7fdb439c8d49c79a2d9997", 318305, Common::JA_JPN, 400),
-	WINGAME1_l("popup", "", "POPUP/POPUP.EXE", "f47f7663a75120eca6c9e91025d51786", 65216494, Common::JA_JPN, 400),
+	// 1994 Macintosh release
+	MACGAME1_l("popup", "v1.0", "POP UP COMPUTER", "r:5170dd7b3e88a6adabace4b03fe38dc1", 310777, Common::JA_JPN, 400),
+	// 1995 Windows 3.1 release
+	WINGAME1_l("popup", "v1.0", "POPUP/POPUP.EXE", "t:a180affc42b02fc310d1bd5f8a53967c", 65216494, Common::JA_JPN, 404),
+	// 1996 hybrid Macintosh/Windows 3.1/Windows 95 release
+	MACGAME1_l("popup", "v1.1", "PopupComputer PPC", "r:9d10bbbf1b8d527e203c6be2eac3518c", 58379, Common::JA_JPN, 404),
+	WINGAME1_l("popup", "v1.1", "POPUP/POP.EXE", "t:3564441dfc497340bc917e325887c9ba", 745589, Common::JA_JPN, 404),
 	MACDEMO1_l("popup", "Demo",		 "POP UP COMPUTER DEMO", "r:8272aef35bd90e06bac5d622707d9459", 304941, Common::JA_JPN, 400),
 	MACDEMO1_l("popup", "Auto Demo", "Pop up auto demo",	 "r:bcd3c718db258701496b3c5bcb827ef2", 484067, Common::JA_JPN, 404),
 
@@ -7225,11 +7230,11 @@ static const DirectorGameDescription gameDescriptions[] = {
 	WINGAME1_l("guignols2", "", "CPPD.EXE", "1a7acbba10a7246ba58c1d53fc7203f5", 1465338, Common::FR_FRA, 501),
 	WINDEMO1_l("guignols2", "Demo", "GUIGNOLS.EXE", "2e62abdad839e42068afdcd0644d7dcf", 971988, Common::FR_FRA, 501),
 
-	MACGAME2("gundam0079", "",   "Gundam0079",	   "4c38a51a21a1ad231f218c4786ff771d", 106955,
-								 "MENU.CST",	   "d4de2296fc46f76cc249b0a1d01e7003", 3580645, 501),
-	MACGAME2_l("gundam0079", "", "GUNDAM0079",	   "4c38a51a21a1ad231f218c4786ff771d", 106955,
-								 "MENU.Cxt",	   "730d60b0f5fbc925a01b04319c50e59d", 2862062, Common::JA_JPN, 501),
-	WINGAME1t("gundam0079", "",  "Gundam0079.exe", "ad9789b126467a250480581b671a4385", 1411761, 501),
+	MACGAME2f("gundam0079", "",   "Gundam0079",	   "4c38a51a21a1ad231f218c4786ff771d", 106955,
+								 "MENU.CST",	   "d4de2296fc46f76cc249b0a1d01e7003", 3580645, 501, GF_TRUECOLOR),
+	MACGAME2f_l("gundam0079", "", "GUNDAM0079",	   "4c38a51a21a1ad231f218c4786ff771d", 106955,
+								 "MENU.Cxt",	   "730d60b0f5fbc925a01b04319c50e59d", 2862062, Common::JA_JPN, 501, GF_TRUECOLOR),
+	WINGAME1tf("gundam0079", "",  "Gundam0079.exe", "t:ad9789b126467a250480581b671a4385", 1411761, 501, GF_TRUECOLOR),
 
 	MACGAME1("gussshc", "", "Write On", 	"r:9e9309ff1b58f6b56a440893e9723bd6",  705329, 500),
 	WINGAME2("gussshc", "", "SCHOOL.EXE", 	"t:d5c04c463f3d329e56722f9f3ef95a4f",  917645,
@@ -9752,6 +9757,8 @@ static const DirectorGameDescription gameDescriptions[] = {
 	MACGAME1_l("physicus", "", "Physikus", "5d3f89e052320f8ce140451c730e232b", 114645, Common::FR_FRA, 702),
 	WINGAME1("physicus", "",   "Physicus.exe", "t:d2a772b412a278bda68bd64a00af9b04", 2298279, 702),
 	WINGAME1_l("physicus", "", "Physikus.exe", "t:89be052460986358d7e4724ebc940af6", 1816828, Common::DE_DEU, 702),
+	// Italian edition "Físicus", published by l'Espresso
+	WINGAME1_l("physicus", "", "Physikus.exe", "t:026868d136e559a3eca5445221d123f1", 1816876, Common::IT_ITA, 702),
 
 	WINDEMO2("planetstrass", "Demo", "Planet.exe", "t:a053c117847a545ef72aecb425fed9e7", 15434606,
 									 "strass.jpg", "d:d76c7387399626e7a3daef54cbcd6451",	39135, 702),
