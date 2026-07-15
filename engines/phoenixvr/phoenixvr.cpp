@@ -353,7 +353,7 @@ uint PhoenixVREngine::currentAmerzoneLevel() const {
 			return index;
 	}
 
-	return _currentLevel;
+	error("currentAmerzoneLevel: can't find current script");
 }
 
 Common::String PhoenixVREngine::removeDrive(const Common::String &path) {
@@ -399,14 +399,14 @@ Common::SeekableReadStream *PhoenixVREngine::open(const Common::String &filename
 }
 
 bool PhoenixVREngine::setNextLevel() {
-	if (_currentLevel < _levels.size()) {
-		auto &level = _levels[_currentLevel++];
+	if (_nextLevel < _levels.size()) {
+		auto &level = _levels[_nextLevel++];
 		debug("next level is %s", level.c_str());
 		setNextScript(Common::String::format("%s\\%s.lst", level.c_str(), _gameDescription->gameId));
 		_loaded = true;
 
 		// reset flag or interface.vr will skip menu
-		if (_currentLevel == 1)
+		if (_nextLevel == 1)
 			_loaded = false;
 		return true;
 	} else
@@ -687,7 +687,7 @@ void PhoenixVREngine::restart() {
 	debug("restart");
 	resetState();
 	_restarted = true;
-	_currentLevel = 0;
+	_nextLevel = 0;
 	setNextLevel();
 	_prevWarp = -1;
 	_loaded = false;
@@ -1693,6 +1693,7 @@ void PhoenixVREngine::captureContext() {
 	ms.writeSint32LE(fromAngle(_angleX.rangeMin()));
 	ms.writeSint32LE(fromAngle(_angleX.rangeMax()));
 	ms.writeSint32LE(_warpIdx);
+	debug("captureContext: warpIdx: %d, prev: %d", _warpIdx, _prevWarp);
 	ms.writeUint32LE(_warp->tests.size());
 	writeString({});
 	writeString({});
@@ -1787,7 +1788,6 @@ bool PhoenixVREngine::enterScript() {
 	for (auto &warpCursors : _cursors) {
 		for (auto &warpCursor : warpCursors) {
 			auto cursor = ms.readString(0, 257);
-			debug("cursor %s", cursor.c_str());
 			if (cursor.hasSuffix(".VR") || cursor.hasSuffix(".vr")) {
 				debug("ignoring VR cursor, original engine saves `LOAD.VR` as a cursor name at loading screen");
 				cursor.clear();
@@ -1857,8 +1857,8 @@ Common::Error PhoenixVREngine::loadGameStream(Common::SeekableReadStream *slot) 
 		for (; i != n; ++i) {
 			auto &level = _levels[i];
 			if (state.script.hasPrefixIgnoreCase(level)) {
-				debug("current level is %u", i);
-				_currentLevel = i;
+				_nextLevel = i + 1;
+				debug("current level is %u", _nextLevel);
 				break;
 			}
 		}

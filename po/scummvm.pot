@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2026.3.1git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-07-13 11:35+0000\n"
+"POT-Creation-Date: 2026-07-14 23:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3934,11 +3934,11 @@ msgstr ""
 msgid "MT-32 emulator"
 msgstr ""
 
-#: audio/softsynth/pcspk.cpp:224
+#: audio/softsynth/pcspk.cpp:226
 msgid "PC Speaker emulator"
 msgstr ""
 
-#: audio/softsynth/pcspk.cpp:243
+#: audio/softsynth/pcspk.cpp:245
 msgid "IBM PCjr emulator"
 msgstr ""
 
@@ -5352,11 +5352,11 @@ msgstr ""
 msgid "Click Mode"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1166
+#: backends/platform/sdl/sdl.cpp:1176
 msgid "Keyboard"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1169
+#: backends/platform/sdl/sdl.cpp:1179
 msgid ""
 "## Keyboard shortcuts\n"
 "\n"
@@ -5374,23 +5374,23 @@ msgid ""
 "| `Ctrl+F5` | Displays the Global Main Menu\n"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1181
+#: backends/platform/sdl/sdl.cpp:1191
 msgid "| `Cmd+q`    | Quit (macOS)\n"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1183
+#: backends/platform/sdl/sdl.cpp:1193
 msgid "| `Alt+F4`  | Quit (Windows)\n"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1185
+#: backends/platform/sdl/sdl.cpp:1195
 msgid "| `Ctrl+q`  | Quit (Linux/Unix)\n"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1186
+#: backends/platform/sdl/sdl.cpp:1196
 msgid "| `Ctrl+z`  | Quit (other platforms)\n"
 msgstr ""
 
-#: backends/platform/sdl/sdl.cpp:1189
+#: backends/platform/sdl/sdl.cpp:1199
 msgid ""
 "| `Ctrl+u`  | Mutes all sounds\n"
 "| `Ctrl+m`  | Toggles mouse capture\n"
@@ -6035,14 +6035,14 @@ msgstr ""
 #: engines/chewy/metaengine.cpp:36 engines/cine/metaengine.cpp:46
 #: engines/crab/metaengine.cpp:34 engines/darkseed/dialogs.cpp:95
 #: engines/drascula/metaengine.cpp:42 engines/dreamweb/metaengine.cpp:48
-#: engines/got/metaengine.cpp:35 engines/groovie/metaengine.cpp:53
-#: engines/m4/metaengine.cpp:37 engines/mads/metaengine.cpp:116
-#: engines/nancy/metaengine.cpp:104 engines/neverhood/dialogs.cpp:47
-#: engines/pelrock/metaengine.cpp:35 engines/phoenixvr/metaengine.cpp:47
-#: engines/sci/detection_options.h:105 engines/sherlock/metaengine.cpp:47
-#: engines/toltecs/metaengine.cpp:44 engines/trecision/metaengine.cpp:41
-#: engines/ultima/metaengine.cpp:56 engines/waynesworld/metaengine.cpp:37
-#: engines/zvision/metaengine.cpp:42
+#: engines/fool/metaengine.cpp:35 engines/got/metaengine.cpp:35
+#: engines/groovie/metaengine.cpp:53 engines/m4/metaengine.cpp:37
+#: engines/mads/metaengine.cpp:116 engines/nancy/metaengine.cpp:104
+#: engines/neverhood/dialogs.cpp:47 engines/pelrock/metaengine.cpp:35
+#: engines/phoenixvr/metaengine.cpp:47 engines/sci/detection_options.h:105
+#: engines/sherlock/metaengine.cpp:47 engines/toltecs/metaengine.cpp:44
+#: engines/trecision/metaengine.cpp:41 engines/ultima/metaengine.cpp:56
+#: engines/waynesworld/metaengine.cpp:37 engines/zvision/metaengine.cpp:42
 msgid "Use original save/load screens"
 msgstr ""
 
@@ -6050,14 +6050,14 @@ msgstr ""
 #: engines/chewy/metaengine.cpp:37 engines/cine/metaengine.cpp:47
 #: engines/crab/metaengine.cpp:35 engines/darkseed/dialogs.cpp:96
 #: engines/drascula/metaengine.cpp:43 engines/dreamweb/metaengine.cpp:49
-#: engines/got/metaengine.cpp:36 engines/groovie/metaengine.cpp:54
-#: engines/m4/metaengine.cpp:38 engines/mads/metaengine.cpp:117
-#: engines/nancy/metaengine.cpp:105 engines/neverhood/dialogs.cpp:48
-#: engines/pelrock/metaengine.cpp:36 engines/phoenixvr/metaengine.cpp:48
-#: engines/sci/detection_options.h:106 engines/sherlock/metaengine.cpp:48
-#: engines/toltecs/metaengine.cpp:45 engines/trecision/metaengine.cpp:42
-#: engines/ultima/metaengine.cpp:57 engines/waynesworld/metaengine.cpp:38
-#: engines/zvision/metaengine.cpp:43
+#: engines/fool/metaengine.cpp:36 engines/got/metaengine.cpp:36
+#: engines/groovie/metaengine.cpp:54 engines/m4/metaengine.cpp:38
+#: engines/mads/metaengine.cpp:117 engines/nancy/metaengine.cpp:105
+#: engines/neverhood/dialogs.cpp:48 engines/pelrock/metaengine.cpp:36
+#: engines/phoenixvr/metaengine.cpp:48 engines/sci/detection_options.h:106
+#: engines/sherlock/metaengine.cpp:48 engines/toltecs/metaengine.cpp:45
+#: engines/trecision/metaengine.cpp:42 engines/ultima/metaengine.cpp:57
+#: engines/waynesworld/metaengine.cpp:38 engines/zvision/metaengine.cpp:43
 msgid "Use the original save/load screens instead of the ScummVM ones"
 msgstr ""
 
@@ -7744,20 +7744,20 @@ msgid ""
 "anyway?"
 msgstr ""
 
-#: engines/director/metaengine.cpp:70 engines/scumm/dialogs.cpp:1212
+#: engines/director/metaengine.cpp:74 engines/scumm/dialogs.cpp:1212
 #: engines/scumm/metaengine.cpp:792
 msgid "Enable gamma correction"
 msgstr ""
 
-#: engines/director/metaengine.cpp:71
+#: engines/director/metaengine.cpp:75
 msgid "Brighten the graphics to simulate a Macintosh monitor"
 msgstr ""
 
-#: engines/director/metaengine.cpp:81
+#: engines/director/metaengine.cpp:85
 msgid "Force true color (32bpp) mode"
 msgstr ""
 
-#: engines/director/metaengine.cpp:82
+#: engines/director/metaengine.cpp:86
 msgid ""
 "Use true color graphics mode (32 bits per pixel), even if the game is not "
 "designed for it"
