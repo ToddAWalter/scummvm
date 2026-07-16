@@ -416,13 +416,14 @@ bool PhoenixVREngine::setNextLevel() {
 void PhoenixVREngine::setNextScript(const Common::String &nextScript) {
 	debug("setNextScript %s", nextScript.c_str());
 	_contextScript = nextScript;
-	if (nextScript.find('\\') == nextScript.npos) {
+	const Common::String scriptPath = removeDrive(nextScript);
+	if (scriptPath.find('\\') == scriptPath.npos) {
 		// simple filename, e.g. "script.lst"
-		_nextScript = nextScript;
+		_nextScript = scriptPath;
 		return;
 	}
 
-	auto nextPath = Common::Path(removeDrive(nextScript), '\\');
+	auto nextPath = Common::Path(scriptPath, '\\');
 	_currentScriptPath = nextPath.getParent();
 	debug("changed script directory to %s", _currentScriptPath.toString().c_str());
 	_nextScript = nextPath.getLastComponent().toString();
@@ -508,6 +509,7 @@ void PhoenixVREngine::interpolateAngle(float x, float y, float speed, float zoom
 				break;
 			}
 			default:
+				processGenericEvents(event);
 				break;
 			}
 		}
@@ -564,6 +566,7 @@ void PhoenixVREngine::fade(int start, int stop, int speed) {
 			}
 
 			default:
+				processGenericEvents(event);
 				break;
 			}
 		}
@@ -617,8 +620,15 @@ void PhoenixVREngine::transFade(int speed) {
 		while (!shouldQuit() && waiting && (direction > 0 ? pos < 0 : pos > -256)) {
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
-				if (event.type == Common::EVENT_KEYDOWN && event.kbd.ascii == ' ')
-					waiting = false;
+				switch (event.type) {
+				case Common::EVENT_KEYDOWN:
+					if (event.kbd.ascii == ' ')
+						waiting = false;
+					break;
+				default:
+					processGenericEvents(event);
+					break;
+				}
 			}
 
 			renderTransition(direction > 0 ? 0 : pos, direction > 0 ? pos : 0);
@@ -645,6 +655,7 @@ void PhoenixVREngine::until(const Common::String &var, int value) {
 		while (g_system->getEventManager()->pollEvent(event)) {
 			switch (event.type) {
 			default:
+				processGenericEvents(event);
 				break;
 			}
 		}
@@ -670,6 +681,7 @@ void PhoenixVREngine::wait(float seconds) {
 		while (g_system->getEventManager()->pollEvent(event)) {
 			switch (event.type) {
 			default:
+				processGenericEvents(event);
 				break;
 			}
 		}
@@ -943,6 +955,7 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 			}
 
 			default:
+				processGenericEvents(event);
 				break;
 			}
 		}
@@ -1599,7 +1612,7 @@ Common::Error PhoenixVREngine::run() {
 				}
 			} break;
 			case Common::EVENT_RBUTTONUP: {
-				if (_prevWarp != -1)
+				if (!_hasFocus || _prevWarp != -1)
 					break;
 				debug("right click");
 				auto &rclick = _lockKey[12];
@@ -1644,13 +1657,8 @@ Common::Error PhoenixVREngine::run() {
 					}
 				}
 			} break;
-			case Common::EVENT_FOCUS_GAINED:
-				_hasFocus = true;
-				break;
-			case Common::EVENT_FOCUS_LOST:
-				_hasFocus = false;
-				break;
 			default:
+				processGenericEvents(event);
 				break;
 			}
 		}
@@ -1668,6 +1676,30 @@ Common::Error PhoenixVREngine::run() {
 	}
 
 	return Common::kNoError;
+}
+
+void PhoenixVREngine::processGenericEvents(const Common::Event &event) {
+	switch (event.type) {
+	case Common::EVENT_FOCUS_GAINED:
+		_hasFocus = true;
+		_mouseRel = {};
+		break;
+	case Common::EVENT_FOCUS_LOST:
+		_hasFocus = false;
+		break;
+	default:
+		break;
+	}
+}
+
+void PhoenixVREngine::pauseEngineIntern(bool pause) {
+	// this is called when main menu appears on the screen
+	Engine::pauseEngineIntern(pause);
+	if (pause) {
+		_system->lockMouse(false);
+	} else {
+		_system->lockMouse(_vr.isVR());
+	}
 }
 
 bool PhoenixVREngine::testSaveSlot(int idx) const {

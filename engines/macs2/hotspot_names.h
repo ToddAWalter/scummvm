@@ -19,22 +19,17 @@
  *
  */
 
-#include "base/plugins.h"
-#include "common/config-manager.h"
-#include "common/file.h"
-#include "common/md5.h"
-#include "common/str-array.h"
-#include "common/util.h"
-#include "fool/detection.h"
-#include "fool/detection_tables.h"
+#ifndef MACS2_HOTSPOT_NAMES_H
+#define MACS2_HOTSPOT_NAMES_H
 
-const DebugChannelDef FoolMetaEngineDetection::debugFlagList[] = {
-	{ Fool::kDebugGraphics, "Graphics", "Graphics debug level" },
-	{ Fool::kDebugLoading, "Loading", "Loading debug level" },
-	DEBUG_CHANNEL_END
-};
+#include "common/str.h"
+#include "graphics/hotspot_renderer.h"
 
-FoolMetaEngineDetection::FoolMetaEngineDetection() : AdvancedMetaEngineDetection(Fool::gameDescriptions, Fool::foolGames) {
-}
+namespace Macs2 {
 
-REGISTER_PLUGIN_STATIC(FOOL_DETECTION, PLUGIN_TYPE_ENGINE_DETECTION, FoolMetaEngineDetection);
+Common::String lookupSceneHotspotName(uint16 sceneIndex, uint16 hotspotIndex);
+Graphics::HotspotType lookupSceneHotspotType(uint16 sceneIndex, uint16 hotspotIndex);
+
+} // namespace Macs2
+
+#endif

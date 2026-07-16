@@ -36,7 +36,7 @@ const PlainGameDescriptor phoenixvrGames[] = {
 
 const ADGameDescription gameDescriptions[] = {
 	{"necrono",
-		nullptr,
+		"GOG/Steam release",
 		AD_ENTRY2s("script.pak", "86294b9c445c3e06e24269c84036a207", 223,
 				   "textes.txt", "f795f35b079cb8ef599724a2a7336c7e", 5319),
 		Common::EN_USA,
@@ -57,8 +57,20 @@ const ADGameDescription gameDescriptions[] = {
 		GUIO1(GUIO_NONE)
 	},
 
-	{"necrono",
+    {"necrono",
 		nullptr,
+		AD_ENTRY4s("script.pak", "da42a18dd02fc01f116228d5c219b2fd", 215,
+				   "textes.txt", "c3af2d55b4fa55d200b047b6ec0d9f73", 5507,
+				   "cd1/Data/Script1.pak", "626cac1db5160142313fdcf483fda2bf", 57410,
+				   "cd2/Data/Script3.pak", "4252ea1b2458264e8d2a3afb67242820", 64012),
+		Common::DE_DEU,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_CD,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"necrono",
+		"GOG/Steam release",
 		AD_ENTRY2s("script.pak", "86294b9c445c3e06e24269c84036a207", 223,
 				   "textes.txt", "542b626e7d56e4b3b5a73616e772a246", 5503),
 		Common::FR_FRA,
@@ -68,7 +80,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"necrono",
-		nullptr,
+		"GOG/Steam release",
 		AD_ENTRY2s("script.pak", "86294b9c445c3e06e24269c84036a207", 223,
 				   "textes.txt", "8a6fde4fbe90262cad639903a0469863", 5394),
 		Common::IT_ITA,
@@ -88,7 +100,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"necrono",
-		nullptr,
+		"GOG/Steam release",
 		AD_ENTRY2s("script.pak", "86294b9c445c3e06e24269c84036a207", 223,
 				   "textes.txt", "c3af2d55b4fa55d200b047b6ec0d9f73", 5507),
 		Common::DE_DEU,
@@ -98,7 +110,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"necrono",
-		nullptr,
+		"GOG/Steam release",
 		AD_ENTRY2s("script.pak", "86294b9c445c3e06e24269c84036a207", 223,
 				   "textes.txt", "e54b9e37d3b96b52f78e7ca266116c4b", 5423),
 		Common::ES_ESP,
@@ -108,7 +120,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"necrono",
-		nullptr,
+		"GOG/Steam release",
 		AD_ENTRY2s("script.pak", "86294b9c445c3e06e24269c84036a207", 223,
 				   "textes.txt", "4a0055fb933c8f044a7fa1a321eac7db", 5265),
 		Common::PT_PRT,
@@ -118,7 +130,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"lochness",
-		nullptr,
+		"Steam release",
 		AD_ENTRY2s("script.pak", "a7ee3aae653658f93bba7f237bcf06f3", 1904,
 				   "textes.txt", "294efb30581661615359ce234e2e85fb", 1596),
 		Common::EN_USA,
@@ -148,7 +160,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"lochness",
-		nullptr,
+		"Steam release",
 		AD_ENTRY2s("script.pak", "a7ee3aae653658f93bba7f237bcf06f3", 1904,
 				   "textes.txt", "f1d44e0b71736e5b0e2516dbfe9bf7e3", 1770),
 		Common::FR_FRA,
@@ -158,7 +170,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"lochness",
-		nullptr,
+		"Steam release",
 		AD_ENTRY2s("script.pak", "a7ee3aae653658f93bba7f237bcf06f3", 1904,
 				   "textes.txt", "b38570cda689d7994806635e0e34ed7f", 1825),
 		Common::IT_ITA,
@@ -168,7 +180,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"lochness",
-		nullptr,
+		"Steam release",
 		AD_ENTRY2s("script.pak", "a7ee3aae653658f93bba7f237bcf06f3", 1904,
 				   "textes.txt", "640d6d3f53986b73f97e1eaad700093a", 1732),
 		Common::DE_DEU,
@@ -178,7 +190,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"lochness",
-		nullptr,
+		"Steam release",
 		AD_ENTRY2s("script.pak", "a7ee3aae653658f93bba7f237bcf06f3", 1904,
 				   "textes.txt", "4474a0c84b6e7363e1d65cc67278b923", 1769),
 		Common::ES_ESP,
@@ -188,7 +200,7 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"lochness",
-		nullptr,
+		"Steam release",
 		AD_ENTRY2s("script.pak", "a7ee3aae653658f93bba7f237bcf06f3", 1904,
 				   "textes.txt", "5ea7264941b31b5961860c7016537641", 1776),
 		Common::PT_PRT,
@@ -255,7 +267,7 @@ const ADGameDescription gameDescriptions[] = {
 				   "Interface.vr", "70362765ee83bb822d5bb08948317f23", 98844),
 		Common::DE_DEU,
 		Common::kPlatformWindows,
-		ADGF_DROPPLATFORM | ADGF_UNSTABLE,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
 		GUIO1(GUIO_NONE)
 	},
 
@@ -301,8 +313,8 @@ const ADGameDescription gameDescriptions[] = {
 	},
 
 	{"dracula1",
-		nullptr,
-		AD_ENTRY2s("script.pak", "6998262fcce9cb5d3cc8a555f8ee024a", 265,
+		"Retail version",
+		AD_ENTRY2s("Install/script.pak", "6998262fcce9cb5d3cc8a555f8ee024a", 265,
 				   "Interface.vr", "47099471f31f794be8a7e5a3c382bf62", 104304),
 		Common::IT_ITA,
 		Common::kPlatformWindows,
@@ -320,11 +332,89 @@ const ADGameDescription gameDescriptions[] = {
 		GUIO1(GUIO_NONE)
 	},
 
+	{"dracula1",
+		"7 Wolf",
+		AD_ENTRY2s("Install/script.pak", "6998262fcce9cb5d3cc8a555f8ee024a", 265,
+				   "Interface.vr", "61c68db8bb7a9e22387d3f27fb24bad4", 107904),
+		Common::RU_RUS,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
 	{"dracula2",
-		nullptr,
-		AD_ENTRY2s("script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
-				   "Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650),
+		"GOG release",
+		AD_ENTRY3s("script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "InsertCD.vr", "54d1ea71f27a849a4a088cf21ca64aff", 53817),
 		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"dracula2",
+		"Retail version",
+		AD_ENTRY4s("Install/script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Install/Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "Install/InsertCD.vr", "54d1ea71f27a849a4a088cf21ca64aff", 53817,
+				   "First.exe", "403417a28a11a08deb8443dc08a2213c", 31770),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"dracula2",
+		"GOG release",
+		AD_ENTRY3s("script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "InsertCD.vr", "0bc196a016845e99d99a0bc634f51e9d", 53670),
+		Common::DE_DEU,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"dracula2",
+		"GOG release",
+		AD_ENTRY3s("script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "InsertCD.vr", "699f7519cc1caa740fe27434f6ca9766", 54394),
+		Common::ES_ESP,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"dracula2",
+		"GOG release",
+		AD_ENTRY3s("script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "InsertCD.vr", "21b1cb64d71010799368a8e7097c133b", 54210),
+		Common::FR_FRA,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"dracula2",
+		"GOG release",
+		AD_ENTRY3s("script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "InsertCD.vr", "2d5d17124caeebad668661abaff0c8fc", 54442),
+		Common::IT_ITA,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_TESTING,
+		GUIO1(GUIO_NONE)
+	},
+
+	{"dracula2",
+		"Russobit-M",
+		AD_ENTRY3s("Install/script.pak", "ff52d2000eddc5c438f3c8ef50fea858", 277,
+				   "Install/Compiler.dat", "ff30c7ea065af1e86182b428e1f2cc7b", 42650,
+				   "Install/InsertCD.vr", "bd73f26480428507118d9a9b7a047f4a", 53851),
+		Common::RU_RUS,
 		Common::kPlatformWindows,
 		ADGF_DROPPLATFORM | ADGF_TESTING,
 		GUIO1(GUIO_NONE)
@@ -332,11 +422,25 @@ const ADGameDescription gameDescriptions[] = {
 
 	// GOG release
 	{"amerzone",
-		nullptr,
-		AD_ENTRY1s("amerzone.pak", "bd580dcfe91be9923da608fba72bf128", 314),
+		"GOG release",
+		AD_ENTRY3s("insertCD.vr", "715f238ae8265eebac84993715c93cf4", 75463,
+				   "01VR_PHARE/INTERFACE.VR", "7852b9cb6edb918fd2dfcddd859ef09a", 73495,
+				   "01VR_PHARE/AMERZONE.LST", "85da49d770959e6db34a7e2216f8b525", 163076
+		),
 		Common::EN_USA,
 		Common::kPlatformWindows,
 		ADGF_DROPPLATFORM | ADGF_UNSTABLE,
+		GUIO1(GUIO_NONE)
+	},
+	{"amerzone",
+		"USA 4 CDs release",
+		AD_ENTRY3s("insertCD.vr", "924dcfe4417514d31e11225df2b5220d", 327976,
+				   "01VR_PHARE/INTERFACE.VR", "7852b9cb6edb918fd2dfcddd859ef09a", 73495,
+				   "01VR_PHARE/AMERZONE.PAK", "2f538af7bdb1492c883a7333a6fb4141", 26404
+		),
+		Common::EN_USA,
+		Common::kPlatformWindows,
+		ADGF_DROPPLATFORM | ADGF_UNSTABLE | ADGF_CD,
 		GUIO1(GUIO_NONE)
 	},
 
