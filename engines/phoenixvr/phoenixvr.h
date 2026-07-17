@@ -46,7 +46,7 @@
 #include "phoenixvr/vr.h"
 
 namespace Common {
-class Event;
+struct Event;
 }
 
 namespace Graphics {
@@ -130,6 +130,7 @@ public:
 	void hideCursor(const Common::String &warp, int idx);
 
 	void playSound(const Common::String &sound, Audio::Mixer::SoundType type, uint8 volume, int loops, bool spatial = false, float angle = 0);
+	void playRandomSound(const Common::String &sound, Audio::Mixer::SoundType type, uint8 volume, int probability, int loops);
 	void stopSound(const Common::String &sound);
 	void stopAllSounds();
 	void playMovie(const Common::String &movie);
@@ -204,11 +205,16 @@ public:
 	void loadVariables();
 
 	void rollover(int textId, RolloverType type);
+	void clearText();
 	void showWaves();
 	void restart();
 	bool setNextLevel();
 
 	void setGlobalVolume(int vol);
+	void setGlobalPan(int pan);
+	void drawArchiveImage(const Common::String &image, int x, int y);
+	void drawArchiveText(int textId, const Common::Rect &dstRect, int size, bool bold, uint16 color);
+	void clearArchiveText(const Common::Rect &dstRect);
 	void showImageOverlay(const Common::String &image, int x, int y);
 	void stopImageOverlay();
 	void updateStage();
@@ -217,6 +223,22 @@ public:
 	void testCible(const Common::String &insideVar, const Common::String &outsideVar);
 
 private:
+	struct ArchiveImage {
+		Common::String image;
+		Common::Point pos;
+	};
+
+	struct TextState {
+		TextState() : textId(-1), size(0), bold(false), color(0) {}
+		TextState(int textId_, const Common::Rect &rect_, int size_, bool bold_, uint16 color_) : textId(textId_), rect(rect_), size(size_), bold(bold_), color(color_) {}
+
+		int textId;
+		Common::Rect rect;
+		int size;
+		bool bold;
+		uint16 color;
+	};
+
 	static Common::String removeDrive(const Common::String &path);
 	Common::SeekableReadStream *open(const Common::String &name, Common::String *origName = nullptr);
 	Common::SeekableReadStream *tryOpen(const Common::Path &name, Common::String *origName);
@@ -229,7 +251,11 @@ private:
 	void tick(float dt);
 	void tickTimer(float dt);
 	void loadNextScript();
+	const Graphics::Surface *findArchiveImage(const Common::String &image) const;
 	void renderVR(float dt);
+	void renderArchiveImages();
+	void renderArchiveTexts();
+	void paintText(const TextState &textState);
 	void renderImageOverlay();
 	void renderTimer();
 	void renderFade(int color);
@@ -253,6 +279,7 @@ private:
 	int _nextWarp = -1;
 	int _prevWarp = -1;
 	int _hoverIndex = -1;
+	int _messengerInventoryHover = -1;
 	int _nextTest = -1;
 
 	struct KeyCodeHash : public Common::UnaryFunction<Common::KeyCode, uint> {
@@ -272,6 +299,15 @@ private:
 		Common::SharedPtr<Video::Subtitles> subtitles;
 	};
 	Common::HashMap<Common::String, Sound, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _sounds;
+	struct RandomSound {
+		Common::String sound;
+		Audio::Mixer::SoundType type;
+		int volume;
+		int probability;
+		int loops;
+	};
+	Common::Array<RandomSound> _randomSounds;
+
 	Common::ScopedPtr<Script> _script;
 
 	Common::ScopedPtr<RegionSet> _regSet;
@@ -282,6 +318,7 @@ private:
 	Common::String _defaultCursor[2];
 	Common::String _currentMusic;
 	int _currentMusicVolume = 0;
+	int _globalPan = 128;
 
 	VR _vr;
 	float _fov;
@@ -307,13 +344,11 @@ private:
 	Common::ScopedPtr<Graphics::Font> _regularFonts[kFontSizeCount];
 	Common::ScopedPtr<Graphics::Font> _boldFonts[kFontSizeCount];
 
-	int _textId = -1;
-	Common::Rect _textRect;
-	int _textSize = 0;
-	bool _textBold = false;
-	uint16 _textColor = 0;
+	TextState _rolloverText;
 	Common::ScopedPtr<Graphics::ManagedSurface> _imageOverlay;
 	Common::Point _imageOverlayPos;
+	Common::Array<ArchiveImage> _archiveImages;
+	Common::Array<TextState> _archiveTexts;
 	bool _cibleActive = false;
 	uint32 _cibleStartMillis = 0;
 	int _ciblePeriodSeconds = 0;

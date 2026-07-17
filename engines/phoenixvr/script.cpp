@@ -93,9 +93,11 @@ public:
 	Common::String nextArg() {
 		skip();
 		auto begin = _pos;
-		while (_pos < _line.size() && !Common::isSpace(_line[_pos]) && _line[_pos] != ',' && _line[_pos] != ')')
+		while (_pos < _line.size() && _line[_pos] != ',' && _line[_pos] != ')')
 			++_pos;
 		auto end = _pos;
+		while (end > begin && Common::isSpace(_line[end - 1]))
+			--end;
 		skip();
 		return _line.substr(begin, end - begin);
 	}
@@ -146,8 +148,8 @@ public:
 			else {
 				list.push_back(nextArg());
 			}
-			if (peek() == ',')
-				next();
+			if (!atEnd() && peek() != ')')
+				expect(',');
 		}
 		return list;
 	}
@@ -244,7 +246,7 @@ public:
 			int arg2 = 0;
 			if (maybe(','))
 				arg2 = nextInt();
-			return CommandPtr(new PlayRandomSound(Common::move(sound), arg0, arg1, arg2));
+			return CommandPtr(new PlayRndSound(Common::move(sound), arg0, arg1, arg2));
 		} else if (keyword("stopsound3d")) {
 			return CommandPtr(new StopSound3D(nextWord()));
 		} else if (keyword("stopsound") || keyword("stopmusique")) {
@@ -273,8 +275,11 @@ public:
 				return CommandPtr(new SetCursor(Common::move(var), Common::move(warp), idx));
 			}
 			int value = 0;
-			if (maybe('='))
-				value = nextInt();
+			if (maybe('=')) {
+				skip();
+				if (!atEnd() && peek() != '!')
+					value = nextInt();
+			}
 			return CommandPtr(new SetVar(Common::move(var), value));
 		} else if (keyword("not")) {
 			auto var = nextWord();
@@ -298,6 +303,8 @@ void Script::Scope::exec(ExecutionContext &ctx) const {
 
 void Script::Scope::exec(ExecutionContext &ctx, uint offset) const {
 	auto oldScope = ctx.scope;
+	if (!ctx.rootScope)
+		ctx.rootScope = this;
 	ctx.scope = this;
 	for (uint i = offset, n = commands.size(); i < n; ++i) {
 		if (!ctx.running)
@@ -448,7 +455,15 @@ Script::~Script() {
 
 int Script::getWarp(const Common::String &name) const {
 	auto it = _warpsIndex.find(name);
-	return it != _warpsIndex.end() ? it->_value : -1;
+	if (it != _warpsIndex.end())
+		return it->_value;
+
+	for (uint i = 0; i < _warps.size(); ++i) {
+		if (_warps[i]->vrFile.equalsIgnoreCase(name))
+			return i;
+	}
+
+	return -1;
 }
 
 Script::ConstWarpPtr Script::getWarp(int idx) const {

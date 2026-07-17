@@ -845,7 +845,6 @@ void Macs2Engine::snapToWalkablePosition(int16 *pTargetY, int16 *pTargetX, int16
 	// Phase 4: If still non-walkable, scan X toward character
 	uint16 w = getWalkabilityAt(*pTargetY, *pTargetX);
 	if (isWalkabilityBlocking(w)) {
-		*pTargetX = savedX;
 		*pTargetY = savedY;
 		if (charX < *pTargetX) {
 			while (true) {
@@ -1767,11 +1766,6 @@ bool Macs2Engine::loadAnimationFromSceneData(uint16 objectIndex, uint16 slotInde
 		// Binary scriptLoadObjectAnim (1008:cb45) does NOT modify slot+0x0C (wAnimSpeed).
 		go->_blobSourceKeys[slotIndex - 1] = static_cast<uint16>(address >> 16);
 		go->_blobMirrorFlags[slotIndex - 1] = shouldMirror;
-	}
-
-	if (targetBlob == nullptr) {
-		_scriptExecutor->setScriptError(1);
-		return false;
 	}
 
 	// Binary: memFree old blob if bSlotLoaded, then alloc + read; sets slot+0x33 = 1.

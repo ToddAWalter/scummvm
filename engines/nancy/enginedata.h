@@ -733,6 +733,8 @@ struct UINB : public EngineData {
 	UIPopupHeader header;
 	UIButtonSlot tabs[kNumTabs];
 	Common::Rect textRect;
+	byte primaryTextColor[3] = {};    // RGB, Nancy 13+
+	byte secondaryTextColor[3] = {};  // RGB, Nancy 13+
 	uint16 primaryFontID = 0;
 	uint16 secondaryFontAttr = 0;
 	uint16 useFilenameTextFlag = 0;
@@ -743,9 +745,8 @@ struct UINB : public EngineData {
 	Common::Rect tabCaptionDestRect;                            // on-screen target
 };
 
-// Named-event table. Introduced in Nancy 12. Empty in Secret of the Old Clock
-// (the engine registers several built-in event categories at runtime on top of
-// whatever this chunk provides). Each record is a name followed by an id.
+// Event flags table. Introduced in Nancy 12, and replaces the event flag names
+// that were hardcoded in the executable. Each record is a name followed by an id.
 struct EVNT : public EngineData {
 	EVNT(Common::SeekableReadStream *chunkStream);
 
