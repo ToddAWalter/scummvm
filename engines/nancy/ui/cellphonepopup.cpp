@@ -107,7 +107,7 @@ void CellPhonePopup::init() {
 
 	Common::Rect bounds = _screenPosition;
 	bounds.moveTo(0, 0);
-	_drawSurface.create(bounds.width(), bounds.height(), g_nancy->_graphics->getInputPixelFormat());
+	_drawSurface.create(bounds.width(), bounds.height(), g_nancy->_graphics->getScreenPixelFormat());
 
 	// Persistent state lives in CellPhoneData (saved across the game).
 	// First-time init seeds the runtime contact list from the chunk;
