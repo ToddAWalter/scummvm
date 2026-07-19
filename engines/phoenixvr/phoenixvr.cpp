@@ -23,6 +23,7 @@
 #include "audio/audiostream.h"
 #include "audio/decoders/wave.h"
 #include "audio/mixer.h"
+#include "common/archive.h"
 #include "common/config-manager.h"
 #include "common/events.h"
 #include "common/file.h"
@@ -59,8 +60,12 @@ PhoenixVREngine *g_engine;
 
 static Common::CodePage getTextCodePage(Common::Language language) {
 	switch (language) {
+	case Common::JA_JPN:
+		return Common::kWindows932;
 	case Common::RU_RUS:
 		return Common::kWindows1251;
+	case Common::ZH_TWN:
+		return Common::kBig5;
 	default:
 		return Common::kWindows1252;
 	}
@@ -363,6 +368,10 @@ Common::String PhoenixVREngine::removeDrive(const Common::String &path) {
 		return path.substr(2);
 }
 
+static bool isSimpleFilename(const Common::String &filename) {
+	return !filename.contains('/') && !filename.contains('\\');
+}
+
 Common::SeekableReadStream *PhoenixVREngine::tryOpen(const Common::Path &name, Common::String *origName) {
 	Common::ScopedPtr<Common::File> s(new Common::File());
 	if (s->open(name)) {
@@ -387,9 +396,23 @@ Common::SeekableReadStream *PhoenixVREngine::tryOpen(const Common::Path &name, C
 
 Common::SeekableReadStream *PhoenixVREngine::open(const Common::String &filename, Common::String *origName) {
 	debug("open %s", filename.c_str());
-	auto *stream = tryOpen(_currentScriptPath.append(filename, '\\').normalize(), origName);
-	if (stream)
-		return stream;
+	Common::SeekableReadStream *stream = nullptr;
+
+	if (!_currentScriptPath.empty()) {
+		stream = tryOpen(_currentScriptPath.append(filename, '\\').normalize(), origName);
+		if (stream)
+			return stream;
+	}
+
+	if (isSimpleFilename(filename)) {
+		stream = tryOpen(Common::Path(Common::String::format("cd1/Install/%s", filename.c_str()), '/'), origName);
+		if (stream)
+			return stream;
+
+		stream = tryOpen(Common::Path(Common::String::format("Install/%s", filename.c_str()), '/'), origName);
+		if (stream)
+			return stream;
+	}
 
 	stream = tryOpen(Common::Path{filename}, origName);
 	if (stream)
@@ -441,8 +464,6 @@ void PhoenixVREngine::loadNextScript() {
 	_script.reset(new Script(*s));
 	for (auto &var : _script->getVarNames())
 		declareVariable(var);
-	if (gameIdMatches("amerzone"))
-		declareVariable("oeuf_pose"); // crash in chapter 7
 	if (gameIdMatches("dracula1")) {
 		declareVariable("P_Alliance"); // Referenced by 0M1Script.lst, declared by 0M2Script.lst
 		declareVariable("reloaddone"); // Referenced by InsertCD.lst, declared by chapter scripts
@@ -782,27 +803,19 @@ void PhoenixVREngine::hideCursor(const Common::String &wname, int idx) {
 }
 
 void PhoenixVREngine::declareVariable(const Common::String &name) {
-	if (!_variables.contains(name))
-		_variables.setVal(name, 0);
+	_variables.declare(name);
 }
 
 bool PhoenixVREngine::hasVariable(const Common::String &name) const {
-	return _variables.contains(name);
+	return _variables.declared(name);
 }
 
 void PhoenixVREngine::setVariable(const Common::String &name, int value) {
-	if (!hasVariable(name)) {
-		debug("set %s %d - ignored, variable was not declared", name.c_str(), value);
-		return;
-	}
-	debug("set %s %d", name.c_str(), value);
-	_variables.setVal(name, value);
+	_variables.set(name, value);
 }
 
 int PhoenixVREngine::getVariable(const Common::String &name) const {
-	if (!hasVariable(name))
-		warning("get %s - variable was not declared", name.c_str());
-	return _variables.getValOrDefault(name, 0);
+	return _variables.get(name);
 }
 
 static int8 panToBalance(int pan) {
@@ -1315,23 +1328,12 @@ void PhoenixVREngine::renderImageOverlay() {
 
 void PhoenixVREngine::saveVariables() {
 	debug("SaveVariable() - saving variable state");
-	_variableSnapshot.resize(_variableOrder.size());
-	for (uint i = 0, n = _variableOrder.size(); i != n; ++i) {
-		_variableSnapshot[i] = _variables.getVal(_variableOrder[i]);
-	}
+	_variables.save();
 }
 
 void PhoenixVREngine::loadVariables() {
 	debug("LoadVariable() - loading variable state");
-	if (_variableSnapshot.empty()) {
-		debug("skipping, no snapshot");
-		return;
-	}
-	assert(_variableSnapshot.size() == _variableOrder.size());
-	for (uint i = 0, n = _variableOrder.size(); i != n; ++i) {
-		_variables.setVal(_variableOrder[i], _variableSnapshot[i]);
-	}
-	_variableSnapshot.clear();
+	_variables.load();
 }
 
 const Graphics::Font *PhoenixVREngine::getFont(int size, bool bold) const {
@@ -1608,14 +1610,39 @@ Common::Error PhoenixVREngine::run() {
 	if (_pixelFormat.isCLUT8())
 		return Common::kUnsupportedColorMode;
 
+	const Common::FSNode gameDataDir(ConfMan.getPath("path"));
+	SearchMan.addDirectory(gameDataDir, 0, 4);
+
 	_arn.reset(ARN::create());
 #ifdef USE_FREETYPE2
-	static const Common::String regular("NotoSans-Regular.ttf");
-	static const Common::String bold("NotoSans-Bold.ttf");
+	const Common::Language language = _gameDescription->language;
+	const bool isJapanese = language == Common::JA_JPN;
+	const bool isTraditionalChinese = language == Common::ZH_TWN;
+	static const Common::String defaultRegular("NotoSans-Regular.ttf");
+	static const Common::String defaultBold("NotoSans-Bold.ttf");
+	static const Common::String japaneseRegular("NotoSansJP-Regular.otf");
+	static const Common::String japaneseBold("NotoSansJP-Regular.otf");
+	static const Common::String traditionalChineseRegular("NotoSansTC-Regular.otf");
+	static const Common::String traditionalChineseBold("NotoSansTC-Bold.otf");
+	const Common::String *regular = &defaultRegular;
+	const Common::String *bold = &defaultBold;
+
+	if (isJapanese) {
+		regular = &japaneseRegular;
+		bold = &japaneseBold;
+	} else if (isTraditionalChinese) {
+		regular = &traditionalChineseRegular;
+		bold = &traditionalChineseBold;
+	}
+
 	const int fontSizes[] = {8, 10, 12, 14, 16, 18};
 	for (uint i = 0; i < ARRAYSIZE(fontSizes); ++i) {
-		_regularFonts[i].reset(Graphics::loadTTFFontFromArchive(regular, fontSizes[i]));
-		_boldFonts[i].reset(Graphics::loadTTFFontFromArchive(bold, fontSizes[i]));
+		_regularFonts[i].reset(Graphics::loadTTFFontFromArchive(*regular, fontSizes[i]));
+		_boldFonts[i].reset(Graphics::loadTTFFontFromArchive(*bold, fontSizes[i]));
+		if (isJapanese && !_regularFonts[i])
+			_regularFonts[i].reset(Graphics::loadTTFFontFromArchive("VL-Gothic-Regular.ttf", fontSizes[i], Graphics::kTTFSizeModeCell));
+		if (isJapanese && !_boldFonts[i])
+			_boldFonts[i].reset(Graphics::loadTTFFontFromArchive("VL-Gothic-Regular.ttf", fontSizes[i], Graphics::kTTFSizeModeCell));
 	}
 #endif
 
@@ -1624,25 +1651,17 @@ Common::Error PhoenixVREngine::run() {
 
 	_screen = new Graphics::Screen();
 	_screenCenter = _screen->getBounds().center();
+
+	// Set the engine's debugger console before declaring script variables.
+	setDebugger(new Console());
+
+	_variables.loadVariableTxt();
 	{
-		Common::File vars;
-		if (vars.open(Common::Path("variable.txt"))) {
-			while (!vars.eos()) {
-				auto var = vars.readLine();
-				if (var == "*")
-					break;
-				declareVariable(var);
-				_variableOrder.push_back(Common::move(var));
-			}
-		} else
-			debug("no variables.txt");
-	}
-	{
-		Common::File textes;
-		if (textes.open(Common::Path("textes.txt"))) {
+		Common::ScopedPtr<Common::SeekableReadStream> textes(open("textes.txt"));
+		if (textes) {
 			Common::CodePage textCodePage = getTextCodePage(_gameDescription->language);
-			while (!textes.eos()) {
-				auto text = textes.readLine();
+			while (!textes->eos()) {
+				auto text = textes->readLine();
 				if (text.empty() || text[0] != '*')
 					continue;
 				uint pos = 1;
@@ -1666,9 +1685,6 @@ Common::Error PhoenixVREngine::run() {
 		setNextScript("first.lst");
 	else
 		setNextScript("script.lst");
-
-	// Set the engine's debugger console
-	setDebugger(new Console());
 
 	// If a savegame was selected from the launcher, load it
 	int saveSlot = ConfMan.getInt("save_slot");

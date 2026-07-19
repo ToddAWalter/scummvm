@@ -49,6 +49,7 @@ inline int fromAngle(float a) {
 	return static_cast<int>(floatToAngle * a);
 }
 } // namespace
+class Parser;
 class Script {
 public:
 	struct Scope;
@@ -126,7 +127,7 @@ private:
 	ConditionalPtr _conditional;
 
 private:
-	static Common::String strip(const Common::String &str);
+	Script::CommandPtr parseCommand(Parser &parser);
 	void parseLine(const Common::String &line, uint lineno);
 
 public:

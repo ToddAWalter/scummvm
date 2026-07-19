@@ -43,6 +43,7 @@
 #include "phoenixvr/detection.h"
 #include "phoenixvr/region_set.h"
 #include "phoenixvr/script.h"
+#include "phoenixvr/variables.h"
 #include "phoenixvr/vr.h"
 
 namespace Common {
@@ -70,6 +71,8 @@ enum struct RolloverType : uint8 {
 };
 
 class PhoenixVREngine : public Engine {
+	friend class ARN;
+
 private:
 	static constexpr uint kFPSLimit = 60;
 	static constexpr float kMaxTick = 4.0f / kFPSLimit;
@@ -287,9 +290,9 @@ private:
 	};
 
 	Common::Array<Common::String> _lockKey;
-	Common::Array<Common::String> _variableOrder;
-	Common::Array<int> _variableSnapshot;
-	Common::HashMap<Common::String, int, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _variables;
+
+	Variables _variables;
+
 	struct Sound {
 		Audio::SoundHandle handle;
 		bool spatial;
@@ -299,6 +302,7 @@ private:
 		Common::SharedPtr<Video::Subtitles> subtitles;
 	};
 	Common::HashMap<Common::String, Sound, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _sounds;
+
 	struct RandomSound {
 		Common::String sound;
 		Audio::Mixer::SoundType type;

@@ -31,13 +31,17 @@ class Console : public GUI::Debugger {
 private:
 	bool cmdWarp(int argc, const char **argv);
 	bool cmdScript(int argc, const char **argv);
-	bool cmdVar(int argc, const char **argv);
 	bool cmdStopAllSounds(int argc, const char **argv);
 	bool cmdNextLevel(int argc, const char **argv);
 
 public:
 	Console();
 	~Console() override;
+
+	void registerVar(const Common::String &name, int *ptr) {
+		GUI::Debugger::registerVar(name, ptr);
+	}
+	using GUI::Debugger::clearVars;
 };
 
 } // End of namespace PhoenixVR
