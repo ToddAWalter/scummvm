@@ -96,6 +96,8 @@ public:
 
 	uint32 getFeatures() const;
 
+	int version() const;
+
 	bool gameIdMatches(const char *gameId) const;
 
 	/**
@@ -127,8 +129,11 @@ public:
 	// Script API
 	void setNextScript(const Common::String &path);
 	bool goToWarp(const Common::String &warp, bool savePrev = false);
+	void goToLevel(const Common::String &name);
 	void returnToWarp();
+	void loadCursor(int idx, const Common::String &path, int w, int h);
 	void setCursorDefault(int idx, const Common::String &path);
+	void setCursorDefault(int idx, int cursorIdx);
 	void setCursor(const Common::String &path, const Common::String &warp, int idx);
 	void hideCursor(const Common::String &warp, int idx);
 
@@ -202,7 +207,7 @@ public:
 
 	bool wasRestarted() const { return _restarted; }
 	bool wasLoaded() const { return _loaded; }
-	uint currentAmerzoneLevel() const;
+	uint currentLevel() const;
 
 	void saveVariables();
 	void loadVariables();
@@ -242,12 +247,17 @@ private:
 		uint16 color;
 	};
 
+	struct Level {
+		Common::String path;
+		Common::String name;
+	};
+
 	static Common::String removeDrive(const Common::String &path);
 	Common::SeekableReadStream *open(const Common::String &name, Common::String *origName = nullptr);
 	Common::SeekableReadStream *tryOpen(const Common::Path &name, Common::String *origName);
 
 	Graphics::ManagedSurface *loadSurface(const Common::String &path);
-	Graphics::ManagedSurface *loadCursor(const Common::String &path);
+	Graphics::ManagedSurface *loadCursor(const Common::String &path, int w = 0, int h = 0);
 	PointF currentVRPos() const {
 		return RectF::transform(_angleX.angle(), _angleY.angle(), _fov);
 	}
@@ -271,6 +281,8 @@ private:
 
 	void processGenericEvents(const Common::Event &event);
 	void pauseEngineIntern(bool pause) override;
+	Common::String getLevelLabel(const Common::String &script) const;
+	Common::String getLevelScript(const Level &level) const;
 
 private:
 	bool _hasFocus = true;
@@ -316,6 +328,11 @@ private:
 
 	Common::ScopedPtr<RegionSet> _regSet;
 
+	struct PreloadedCursor {
+		Common::String path;
+	};
+	Common::Array<PreloadedCursor> _loadedCursors;
+
 	Common::HashMap<Common::String, Graphics::ManagedSurface *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _cursorCache;
 
 	Common::Array<Common::Array<Common::String>> _cursors;
@@ -358,7 +375,7 @@ private:
 	int _ciblePeriodSeconds = 0;
 	Common::Array<int> _cibleBounds;
 
-	Common::Array<Common::String> _levels;
+	Common::Array<Level> _levels;
 	uint _nextLevel = 0;
 
 	bool _restarted = false;

@@ -27,6 +27,7 @@
 #include "common/config-manager.h"
 #include "common/events.h"
 #include "common/file.h"
+#include "common/formats/ini-file.h"
 #include "common/language.h"
 #include "common/memstream.h"
 #include "common/savefile.h"
@@ -42,6 +43,7 @@
 #include "graphics/palette.h"
 #include "image/gif.h"
 #include "image/pcx.h"
+#include "image/tga.h"
 #include "phoenixvr/arn.h"
 #include "phoenixvr/console.h"
 #include "phoenixvr/game_state.h"
@@ -75,21 +77,10 @@ static bool isAmerzoneGame(const ADGameDescription *gameDesc) {
 	return !strcmp(gameDesc->gameId, "amerzone");
 }
 
-static Common::String getAmerzoneLevelLabel(const Common::String &script) {
-	static const struct {
-		const char *prefix;
-		const char *label;
-	} levels[] = {
-		{"01VR_PHARE", "Le Phare"},
-		{"02VR_ILE", "L'Ile"},
-		{"03VR_PUEBLO", "Le Pueblo"},
-		{"04VR_FLEUVE", "Le Fleuve"},
-		{"05VR_VILLAGEMARAIS", "Le Village"},
-		{"07VRTEMPLE_VOLCAN", "Le Temple"}};
-
-	for (const auto &level : levels) {
-		if (script.hasPrefixIgnoreCase(level.prefix))
-			return level.label;
+Common::String PhoenixVREngine::getLevelLabel(const Common::String &script) const {
+	for (const auto &level : _levels) {
+		if (script.hasPrefixIgnoreCase(level.path))
+			return level.name;
 	}
 
 	return "Amerzone";
@@ -299,6 +290,7 @@ PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDes
 																					 _rgb565(2, 5, 6, 5, 0, 11, 5, 0, 0),
 																					 _thumbnail(isAmerzoneGame(gameDesc) ? 232 : 139, isAmerzoneGame(gameDesc) ? 174 : 103, _rgb565),
 																					 _lockKey(13),
+																					 _loadedCursors(16),
 																					 _fov(kPi2),
 																					 _angleX(0),
 																					 _angleY(-kPi2),
@@ -306,13 +298,47 @@ PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDes
 	g_engine = this;
 
 	if (gameIdMatches("amerzone")) {
-		_levels.push_back("01VR_PHARE");
-		_levels.push_back("02VR_ILE");
-		_levels.push_back("03VR_PUEBLO");
-		_levels.push_back("04VR_FLEUVE");
-		_levels.push_back("05VR_VILLAGEMARAIS");
-		_levels.push_back("07VRTEMPLE_VOLCAN");
+		_levels.push_back({"01VR_PHARE", "Le Phare"});
+		_levels.push_back({"02VR_ILE", "L'Ile"});
+		_levels.push_back({"03VR_PUEBLO", "Le Pueblo"});
+		_levels.push_back({"04VR_FLEUVE", "Le Fleuve"});
+		_levels.push_back({"05VR_VILLAGEMARAIS", "Le Village"});
+		_levels.push_back({"07VRTEMPLE_VOLCAN", "Le Temple"});
+	} else if (gameIdMatches("mysteryofmummy")) {
+		_levels.push_back({"level1", "Level 1"});
+		_levels.push_back({"level2", "Level 2"});
+		_levels.push_back({"level3", "Level 3"});
+		_levels.push_back({"level4", "Level 4"});
+		_levels.push_back({"level5", "Level 5"});
+		setNextLevel();
+	} else if (gameIdMatches("pharaoncurse")) {
+		Common::INIFile file;
+		if (!file.loadFromFile("pharaohs.wbm"))
+			error("can't open install/pharaohs.wbm");
+		Common::String strNumLevels;
+		if (!file.getKey("LEVELS", "GAME", strNumLevels))
+			error("can't find levels number");
+		auto numLevels = atoi(strNumLevels.c_str());
+		for (int i = 0; i < numLevels; ++i) {
+			Common::String media;
+			Common::String path;
+			Common::String name;
+			if (!file.getKey("MEDIA", Common::String::format("LEVEL_%d", i), media))
+				error("no media in level section");
+			if (!file.getKey("PATH", Common::String::format("LEVEL_%d", i), path))
+				error("no path in level section");
+			if (!file.getKey("NAME", Common::String::format("LEVEL_%d", i), name))
+				error("no name in level section");
+			if (media == "HD")
+				path = "install\\" + path;
+			debug("adding level %s %s", path.c_str(), name.c_str());
+			_levels.push_back(Level{path, name});
+		}
 	}
+}
+
+int PhoenixVREngine::version() const {
+	return (_gameDescription->flags & PHOENIXVR_V2) ? 2 : 1;
 }
 
 void PhoenixVREngine::resetState() {
@@ -347,18 +373,15 @@ bool PhoenixVREngine::gameIdMatches(const char *gameId) const {
 	return strcmp(_gameDescription->gameId, gameId) == 0;
 }
 
-uint PhoenixVREngine::currentAmerzoneLevel() const {
-	if (!gameIdMatches("amerzone"))
-		return 0;
-
+uint PhoenixVREngine::currentLevel() const {
 	uint index = 0;
-	for (const Common::String &level : _levels) {
+	for (const auto &level : _levels) {
 		++index;
-		if (_contextScript.hasPrefixIgnoreCase(level))
+		if (_contextScript.hasPrefixIgnoreCase(level.path))
 			return index;
 	}
 
-	error("currentAmerzoneLevel: can't find current script");
+	error("currentLevel: can't find current script");
 }
 
 Common::String PhoenixVREngine::removeDrive(const Common::String &path) {
@@ -421,11 +444,16 @@ Common::SeekableReadStream *PhoenixVREngine::open(const Common::String &filename
 	return nullptr;
 }
 
+Common::String PhoenixVREngine::getLevelScript(const Level &level) const {
+	auto mainScript = gameIdMatches("amerzone") ? "amerzone" : "script";
+	return Common::String::format("%s\\%s.lst", level.path.c_str(), mainScript);
+}
+
 bool PhoenixVREngine::setNextLevel() {
 	if (_nextLevel < _levels.size()) {
 		auto &level = _levels[_nextLevel++];
-		debug("next level is %s", level.c_str());
-		setNextScript(Common::String::format("%s\\%s.lst", level.c_str(), _gameDescription->gameId));
+		debug("next level is %s", level.path.c_str());
+		setNextScript(getLevelScript(level));
 		_loaded = true;
 
 		// reset flag or interface.vr will skip menu
@@ -461,7 +489,7 @@ void PhoenixVREngine::loadNextScript() {
 	if (!s)
 		error("can't open script file %s", nextScript.c_str());
 
-	_script.reset(new Script(*s));
+	_script.reset(Script::load(*s, version()));
 	for (auto &var : _script->getVarNames())
 		declareVariable(var);
 	if (gameIdMatches("dracula1")) {
@@ -751,6 +779,20 @@ bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 	return true;
 }
 
+void PhoenixVREngine::goToLevel(const Common::String &name) {
+	debug("goto level %s", name.c_str());
+	_nextLevel = 0;
+	for (auto &level : _levels) {
+		++_nextLevel;
+		if (level.name.equalsIgnoreCase(name)) {
+			debug("found level %s: %s", level.name.c_str(), level.path.c_str());
+			setNextScript(getLevelScript(level));
+			return;
+		}
+	}
+	error("level %s not found", name.c_str());
+}
+
 void PhoenixVREngine::returnToWarp() {
 	if (_prevWarp < 0) {
 		warning("return: no previous warp");
@@ -772,6 +814,11 @@ void PhoenixVREngine::setCursorDefault(int idx, const Common::String &path) {
 		_defaultCursor[idx] = path;
 	} else
 		warning("only 2 default cursors supported, got %d", idx);
+}
+
+void PhoenixVREngine::setCursorDefault(int idx, int cursorIdx) {
+	auto &desc = _loadedCursors[cursorIdx];
+	setCursorDefault(idx, desc.path);
 }
 
 void PhoenixVREngine::setCursor(const Common::String &path, const Common::String &wname, int idx) {
@@ -878,6 +925,7 @@ void PhoenixVREngine::stopSound(const Common::String &sound) {
 }
 
 void PhoenixVREngine::stopAllSounds() {
+	debug("stop all sounds");
 	_mixer->stopAll();
 	_currentMusic.clear();
 	for (auto &kv : _sounds) {
@@ -1151,6 +1199,8 @@ Graphics::ManagedSurface *PhoenixVREngine::loadSurface(const Common::String &pat
 		dec.reset(new Image::PCXDecoder);
 	} else if (filename.hasSuffixIgnoreCase(".gif")) {
 		dec.reset(new Image::GIFDecoder);
+	} else if (filename.hasSuffixIgnoreCase(".cur")) {
+		dec.reset(new Image::TGADecoder);
 	} else {
 		warning("can't find decoder for %s", filename.c_str());
 		return nullptr;
@@ -1169,19 +1219,30 @@ Graphics::ManagedSurface *PhoenixVREngine::loadSurface(const Common::String &pat
 	return s;
 }
 
-Graphics::ManagedSurface *PhoenixVREngine::loadCursor(const Common::String &path) {
+Graphics::ManagedSurface *PhoenixVREngine::loadCursor(const Common::String &path, int w, int h) {
 	if (path.empty())
 		return nullptr;
 	auto it = _cursorCache.find(path);
 	if (it != _cursorCache.end())
 		return it->_value;
-	auto s = loadSurface(path);
+	Common::ScopedPtr<Graphics::ManagedSurface> s(loadSurface(path));
 	if (!s) {
 		warning("can't load cursor from %s", path.c_str());
 		return nullptr;
 	}
-	_cursorCache[path] = s;
-	return s;
+	if (w > 0 && h > 0) {
+		s.reset(s->scale(w, h, true));
+	}
+	_cursorCache[path] = s.get();
+	return s.release();
+}
+
+void PhoenixVREngine::loadCursor(int idx, const Common::String &path, int w, int h) {
+	debug("load cursor %d %s %d %d", idx, path.c_str(), w, h);
+	auto &desc = _loadedCursors[idx];
+	desc.path = path;
+	_cursorCache.erase(path);
+	loadCursor(desc.path, w, h);
 }
 
 void PhoenixVREngine::scheduleTest(int idx) {
@@ -1193,7 +1254,7 @@ void PhoenixVREngine::executeTest(int idx) {
 	debug("execute test %d", idx);
 	auto test = _warp->getTest(idx);
 	if (test) {
-		Script::ExecutionContext ctx;
+		ExecutionContext ctx;
 		test->scope.exec(ctx);
 	} else
 		warning("invalid test id %d", idx);
@@ -1497,12 +1558,12 @@ void PhoenixVREngine::tick(float dt) {
 		{
 			Common::ScopedPtr<Common::SeekableReadStream> stream(!_warp->testFile.empty() ? open(_warp->testFile) : nullptr);
 			if (stream)
-				_regSet.reset(new RegionSet(*stream));
+				_regSet.reset(new RegionSet(*stream, _vr.isVR()));
 			else
 				debug("no region %s", _warp->testFile.c_str());
 		}
 
-		Script::ExecutionContext ctx;
+		ExecutionContext ctx;
 		debug("execute warp script %s", _warp->vrFile.c_str());
 		auto test = _warp->getDefaultTest();
 		if (test)
@@ -1679,10 +1740,12 @@ Common::Error PhoenixVREngine::run() {
 	}
 
 	// try load level-specific script first (amerzone)
-	if (gameIdMatches("amerzone")) {
+	if (gameIdMatches("amerzone"))
 		setNextScript("intro.lst");
-	} else if (gameIdMatches("lochness"))
+	else if (gameIdMatches("lochness"))
 		setNextScript("first.lst");
+	else if (version() == 2)
+		setNextLevel();
 	else
 		setNextScript("script.lst");
 
@@ -1799,7 +1862,7 @@ Common::Error PhoenixVREngine::run() {
 					if (_vr.isVR() ? region->contains3D(vrPos) : region->contains2D(event.mouse.x, event.mouse.y)) {
 						debug("click region %u", i);
 						if (auto clickTest = _warp->getLastTest(i)) {
-							Script::ExecutionContext ctx;
+							ExecutionContext ctx;
 							clickTest->scope.exec(ctx);
 						} else
 							warning("invalid test id %u", i);
@@ -2038,7 +2101,7 @@ Common::Error PhoenixVREngine::loadGameStream(Common::SeekableReadStream *slot) 
 		uint i = 0, n = _levels.size();
 		for (; i != n; ++i) {
 			auto &level = _levels[i];
-			if (state.script.hasPrefixIgnoreCase(level)) {
+			if (state.script.hasPrefixIgnoreCase(level.path)) {
 				_nextLevel = i + 1;
 				debug("current level is %u", _nextLevel);
 				break;
@@ -2055,7 +2118,7 @@ Common::Error PhoenixVREngine::loadGameStream(Common::SeekableReadStream *slot) 
 	_loadedState = state.state;
 	{
 		auto test = _script->getWarp(0)->getDefaultTest();
-		Script::ExecutionContext ctx;
+		ExecutionContext ctx;
 		test->scope.exec(ctx);
 	}
 	_loaded = false;
@@ -2069,8 +2132,8 @@ Common::Error PhoenixVREngine::saveGameStream(Common::WriteStream *slot, bool is
 	state.game = _contextLabel;
 	const bool isAmerzone = gameIdMatches("amerzone");
 	Common::String amerzoneLevelLabel;
-	if (isAmerzone) {
-		amerzoneLevelLabel = getAmerzoneLevelLabel(state.script);
+	if (!_levels.empty()) {
+		amerzoneLevelLabel = getLevelLabel(state.script);
 		state.game.clear();
 	}
 

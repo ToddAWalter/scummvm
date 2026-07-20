@@ -19,21 +19,16 @@
  *
  */
 
-#ifndef DETECTION_H
-#define DETECTION_H
+#ifndef PHOENIXVR_COMMANDS_V1_H
+#define PHOENIXVR_COMMANDS_V1_H
 
-namespace AGDS {
+#include "phoenixvr/commands.h"
 
-enum AGDSGameFlag {
-	AGDS_2511 = (1 << 0),
-	AGDS_2299 = (1 << 1),
-};
+namespace PhoenixVR {
+class Parser;
 
-static constexpr int kAGDSVersionDemo2283 = 2283;
-static constexpr int kAGDSVersionBlackMirror2296 = 2296;
-static constexpr int kAGDSVersionBlackMirror2299 = 2299;
-static constexpr int kAGDSVersionNibiru2511 = 2511;
+CommandPtr createV2Command(const Common::String &cmd, const Common::Array<Common::String> &args, int lineno);
 
-} // End of namespace AGDS
+} // namespace PhoenixVR
 
-#endif // DETECTION_H
+#endif

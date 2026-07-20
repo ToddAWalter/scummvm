@@ -48,6 +48,11 @@ public:
 	void close();
 	void toggle() { if (_isVisible) close(); else open(); }
 
+	// True once a call has connected and the popup has scene-changed into the
+	// conversation. The phone is just decoration then and the conversation
+	// textbox is the active UI, so the cursor must not be confined to the phone.
+	bool isInCall() const { return _screenState == kConnected; }
+
 	// Swaps the welcome graphic for the No Signal / No Access / Old Email
 	// Only labels and blocks outgoing calls.
 	void setNoSignal(bool noSignal);
@@ -101,7 +106,7 @@ private:
 
 	void drawChrome();
 	void drawScreenContent();
-	void drawStatusIcons();
+	void drawStatusIcons(bool includeSignal = true);
 	void drawWebDirLabels();
 	void drawDialLabel();
 	void drawTypeMessage();
@@ -136,6 +141,8 @@ private:
 	// surface (+ text height, image/link hotspots). Called by drawContentView
 	// only when the page key changes.
 	void renderContentPage(int surfaceWidth);
+	// Per-click scroll amount (pixels) for the article/help content view.
+	uint contentScrollStep() const;
 	// Enter the content view for a list entry whose AUTOTEXT key is `key`.
 	void openContentView(const Common::String &key, const UICL::SrcDestRectPair &heading);
 	// Web button: open the first url entry as the browser home page (page 0).

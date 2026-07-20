@@ -19,21 +19,30 @@
  *
  */
 
-#ifndef DETECTION_H
-#define DETECTION_H
+#ifndef PHOENIXVR_SCRIPT_V1_H
+#define PHOENIXVR_SCRIPT_V1_H
 
-namespace AGDS {
+#include "phoenixvr/script.h"
 
-enum AGDSGameFlag {
-	AGDS_2511 = (1 << 0),
-	AGDS_2299 = (1 << 1),
+namespace PhoenixVR {
+class ScriptV1 : public Script {
+public:
+	struct Conditional : public Command {
+		Common::Array<Common::String> vars;
+		CommandPtr target;
+		Conditional(Common::Array<Common::String> args) : vars(Common::move(args)) {}
+	};
+	using ConditionalPtr = Common::SharedPtr<Conditional>;
+
+private:
+	WarpPtr _currentWarp;
+	TestPtr _currentTest;
+	ScopePtr _pluginScope;
+	ConditionalPtr _conditional;
+
+private:
+	void parseLine(const Common::String &line, uint lineno) override;
 };
+} // namespace PhoenixVR
 
-static constexpr int kAGDSVersionDemo2283 = 2283;
-static constexpr int kAGDSVersionBlackMirror2296 = 2296;
-static constexpr int kAGDSVersionBlackMirror2299 = 2299;
-static constexpr int kAGDSVersionNibiru2511 = 2511;
-
-} // End of namespace AGDS
-
-#endif // DETECTION_H
+#endif

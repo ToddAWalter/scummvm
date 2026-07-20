@@ -19,21 +19,32 @@
  *
  */
 
-#ifndef DETECTION_H
-#define DETECTION_H
+#include "phoenixvr/commands.h"
+#include "phoenixvr/phoenixvr.h"
 
-namespace AGDS {
+namespace PhoenixVR {
 
-enum AGDSGameFlag {
-	AGDS_2511 = (1 << 0),
-	AGDS_2299 = (1 << 1),
-};
+int Command::valueOf(const Common::String &value) {
+	if (!value.empty() && (Common::isDigit(value[0]) || value[0] == '-' || value[0] == '+'))
+		return atoi(value.c_str());
+	return g_engine->getVariable(value);
+}
 
-static constexpr int kAGDSVersionDemo2283 = 2283;
-static constexpr int kAGDSVersionBlackMirror2296 = 2296;
-static constexpr int kAGDSVersionBlackMirror2299 = 2299;
-static constexpr int kAGDSVersionNibiru2511 = 2511;
+void Scope::exec(ExecutionContext &ctx) const {
+	exec(ctx, 0);
+}
 
-} // End of namespace AGDS
+void Scope::exec(ExecutionContext &ctx, uint offset) const {
+	auto oldScope = ctx.scope;
+	if (!ctx.rootScope)
+		ctx.rootScope = this;
+	ctx.scope = this;
+	for (uint i = offset, n = commands.size(); i < n; ++i) {
+		if (!ctx.running)
+			break;
+		commands[i]->exec(ctx);
+	}
+	ctx.scope = oldScope;
+}
 
-#endif // DETECTION_H
+} // namespace PhoenixVR

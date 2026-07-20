@@ -1421,6 +1421,13 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		uint32 time = stack->pop()->getInt();
 
+		if (BaseEngine::instance().getGameId() == "sotv2") {
+			// script shifting sound position by -2998
+			// which cause issue with our sound stream.
+			// W/A shift forward by 2998
+			time += 2998;
+		}
+
 		if (DID_FAIL(setMusicStartTime(channel, time))) {
 			stack->pushBool(false);
 		} else {
@@ -1445,7 +1452,16 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		if (channel < 0 || channel >= NUM_MUSIC_CHANNELS || !_music[channel]) {
 			stack->pushInt(0);
 		} else {
-			stack->pushInt(_music[channel]->getPositionTime());
+			uint32 pos = _music[channel]->getPositionTime();
+			if (BaseEngine::instance().getGameId() == "sotv2") {
+				// when sound stream end, it's returning position as 0
+				// this confuse game script due position slider is slower
+				// get length of sound instead
+				if (pos == 0) {
+					pos = _music[channel]->getLength();
+				}
+			}
+			stack->pushInt(pos);
 		}
 		return STATUS_OK;
 	}
@@ -2866,9 +2882,10 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 
 		int32 gamma = stack->pop()->getInt(0);
 
+#ifdef ENABLE_WME3D
 		if (_renderer3D)
 			_renderer3D->setGamma(gamma);
-
+#endif
 		stack->pushNULL();
 
 		return STATUS_OK;
@@ -2881,9 +2898,10 @@ bool BaseGame::scCallMethod(ScScript *script, ScStack *stack, ScStack *thisStack
 		stack->correctParams(0);
 
 		int32 gamma = 0;
+#ifdef ENABLE_WME3D
 		if (_renderer3D)
 			gamma = _renderer3D->getGamma();
-
+#endif
 		stack->pushInt(gamma);
 
 		return STATUS_OK;
@@ -3744,7 +3762,11 @@ bool BaseGame::scSetProperty(const char *name, ScValue *value) {
 	// CursorHidden
 	//////////////////////////////////////////////////////////////////////////
 	else if (strcmp(name, "CursorHidden") == 0) {
-		_cursorHidden = value->getBool();
+		// 'Night in the Fog' scripts hide cursor and suppose to unhide,
+		// unhide does not happen, so skip hidding
+		if (BaseEngine::instance().getGameId() != "nightinthefog") {
+			_cursorHidden = value->getBool();
+		}
 		return STATUS_OK;
 	} else {
 		return BaseObject::scSetProperty(name, value);
