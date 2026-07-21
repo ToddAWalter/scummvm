@@ -290,6 +290,7 @@ PhoenixVREngine::PhoenixVREngine(OSystem *syst, const ADGameDescription *gameDes
 																					 _rgb565(2, 5, 6, 5, 0, 11, 5, 0, 0),
 																					 _thumbnail(isAmerzoneGame(gameDesc) ? 232 : 139, isAmerzoneGame(gameDesc) ? 174 : 103, _rgb565),
 																					 _lockKey(13),
+																					 _state(256),
 																					 _loadedCursors(16),
 																					 _fov(kPi2),
 																					 _angleX(0),
@@ -489,9 +490,13 @@ void PhoenixVREngine::loadNextScript() {
 	if (!s)
 		error("can't open script file %s", nextScript.c_str());
 
-	_script.reset(Script::load(*s, version()));
-	for (auto &var : _script->getVarNames())
-		declareVariable(var);
+	auto ver = version();
+	_script.reset(Script::load(*s, ver));
+	for (auto &var : _script->getVars()) {
+		declareVariable(var.name);
+		if (ver >= 2)
+			setVariable(var.name, var.value);
+	}
 	if (gameIdMatches("dracula1")) {
 		declareVariable("P_Alliance"); // Referenced by 0M1Script.lst, declared by 0M2Script.lst
 		declareVariable("reloaddone"); // Referenced by InsertCD.lst, declared by chapter scripts
@@ -754,6 +759,12 @@ void PhoenixVREngine::restart() {
 	_loaded = false;
 }
 
+void PhoenixVREngine::saveThumbnail() {
+	// saving thumbnail
+	Common::ScopedPtr<Graphics::ManagedSurface> screenshot(_screen->scale(_thumbnail.w, _thumbnail.h, true, Graphics::FLIP_V));
+	_thumbnail.simpleBlitFrom(*screenshot);
+}
+
 bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 	debug("gotowarp %s, save prev: %d", warp.c_str(), savePrev);
 	if (_warp && _warp->vrFile == warp) {
@@ -772,9 +783,7 @@ bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 	if (savePrev) {
 		assert(_warpIdx >= 0);
 		_prevWarp = _warpIdx;
-		// saving thumbnail
-		Common::ScopedPtr<Graphics::ManagedSurface> screenshot(_screen->scale(_thumbnail.w, _thumbnail.h, true, Graphics::FLIP_V));
-		_thumbnail.simpleBlitFrom(*screenshot);
+		saveThumbnail();
 	}
 	return true;
 }
@@ -1009,6 +1018,7 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 		return;
 	}
 
+	g_system->fillScreen(0);
 	_system->lockMouse(false);
 	dec->start();
 
@@ -1042,8 +1052,10 @@ void PhoenixVREngine::playMovie(const Common::String &movie) {
 				palette.reset(new Graphics::Palette(dec->getPalette(), 256));
 			}
 			if (s) {
-				if (!s->format.isCLUT8() || palette)
-					_screen->simpleBlitFrom(*s, Graphics::FLIP_NONE, false, 0xff, palette.get());
+				if (!s->format.isCLUT8() || palette) {
+					Common::Point dstPos((g_system->getWidth() - s->w) / 2, (g_system->getHeight() - s->h) / 2);
+					_screen->simpleBlitFrom(*s, dstPos, Graphics::FLIP_NONE, false, 0xff, palette.get());
+				}
 			}
 		}
 
@@ -1822,7 +1834,7 @@ Common::Error PhoenixVREngine::run() {
 			case Common::EVENT_RBUTTONUP: {
 				if (!_hasFocus)
 					break;
-				if (_prevWarp != -1) {
+				if (_prevWarp != -1 && version() == 1) {
 					returnToWarp();
 					break;
 				}
@@ -1946,8 +1958,8 @@ void PhoenixVREngine::captureContext() {
 		for (auto &cursor : warpCursors)
 			writeString(cursor);
 
-	for (auto &name : _script->getVarNames()) {
-		auto value = g_engine->getVariable(name);
+	for (auto &var : _script->getVars()) {
+		auto value = g_engine->getVariable(var.name);
 		ms.writeUint32LE(value);
 	}
 
@@ -2041,10 +2053,10 @@ bool PhoenixVREngine::enterScript() {
 		}
 	}
 	debug("vars at %08x", (uint32)ms.pos());
-	for (auto &name : _script->getVarNames()) {
+	for (auto &var : _script->getVars()) {
 		auto value = ms.readSint32LE();
-		debug("var %s: %d", name.c_str(), value);
-		g_engine->setVariable(name, value);
+		debug("var %s: %d", var.name.c_str(), value);
+		g_engine->setVariable(var.name, value);
 	}
 	debug("vars end at %08x", (uint32)ms.pos());
 	auto currentSubroutine = ms.readSint32LE();
@@ -2318,6 +2330,14 @@ void PhoenixVREngine::syncSoundSettings() {
 	}
 	_mixer->setVolumeForSoundType(Audio::Mixer::kMusicSoundType, muted ? 0 : musicVolume);
 	_mixer->setVolumeForSoundType(Audio::Mixer::kSFXSoundType, muted ? 0 : sfxVolume);
+}
+
+int PhoenixVREngine::retrieveState(int index) const {
+	return _state[index];
+}
+
+void PhoenixVREngine::storeState(int index, int value) {
+	_state[index] = value;
 }
 
 } // End of namespace PhoenixVR

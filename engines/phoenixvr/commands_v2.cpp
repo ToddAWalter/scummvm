@@ -54,7 +54,7 @@ struct Sub : public Command {
 struct Go_Back : public Command {
 	Go_Back(const Common::Array<Common::String> &args) {}
 	void exec(ExecutionContext &ctx) const override {
-		debug("go back");
+		g_engine->returnToWarp();
 	}
 };
 
@@ -67,11 +67,34 @@ struct Goto_Level : public Command {
 	}
 };
 
+struct Enter_Level : public Command {
+	Enter_Level(const Common::Array<Common::String> &args) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("enter level");
+	}
+};
+
+struct Leave_Save : public Command {
+	Leave_Save(const Common::Array<Common::String> &args) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("leave save");
+	}
+};
+
+struct Save_Slot : public Command {
+	int index;
+	Common::String name;
+	Save_Slot(const Common::Array<Common::String> &args) : index(atoi(args[0].c_str())), name(args[1]) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("save slot %d: %s", index, name.c_str());
+	}
+};
+
 struct Goto_Warp : public Command {
 	Common::String name;
 	Goto_Warp(const Common::Array<Common::String> &args) : name(args[0]) {}
 	void exec(ExecutionContext &ctx) const override {
-		g_engine->goToWarp(name);
+		g_engine->goToWarp(name, true);
 	}
 };
 
@@ -85,6 +108,41 @@ struct Play_AnimBloc : public Command {
 	void exec(ExecutionContext &ctx) const override {
 		debug("Play_AnimBloc %s %s %d %g", name.c_str(), dstVar.c_str(), dstVarValue, speed);
 		g_engine->playAnimation(name, dstVar, dstVarValue, speed);
+	}
+};
+
+struct Play_Amb : public Command {
+	Common::String path;
+	int volume;
+	int loops;
+	Play_Amb(const Common::Array<Common::String> &args) : path(args[0]), volume(atoi(args[1].c_str())), loops(atoi(args[2].c_str())) {}
+	void exec(ExecutionContext &ctx) const override {
+		g_engine->playSound(path, Audio::Mixer::kMusicSoundType, 100, loops);
+	}
+};
+
+struct Delay_Sound : public Command {
+	Common::String path;
+	int delay;
+	int volume;
+	int loops;
+	Delay_Sound(const Common::Array<Common::String> &args) : path(args[0]), delay(atoi(args[1].c_str())), volume(atoi(args[2].c_str())), loops(atoi(args[3].c_str())) {}
+	void exec(ExecutionContext &ctx) const override {
+		g_engine->playSound(path, Audio::Mixer::kMusicSoundType, 100, loops);
+	}
+};
+
+struct Play_3DSound : public Command {
+	Common::String path;
+	int angle1;
+	int angle2;
+	int volume;
+	int loops;
+	Play_3DSound(const Common::Array<Common::String> &args) : path(args[0]),
+															  angle1(atoi(args[1].c_str())), angle2(atoi(args[2].c_str())),
+															  volume(atoi(args[3].c_str())), loops(atoi(args[4].c_str())) {}
+	void exec(ExecutionContext &ctx) const override {
+		g_engine->playSound(path, Audio::Mixer::kMusicSoundType, 100, loops, true, angle1);
 	}
 };
 
@@ -150,25 +208,27 @@ struct Cursor_Set : public Command {
 };
 
 struct Retrieve_State : public Command {
-	Common::String index;
+	int index;
 	Common::String var;
 
-	Retrieve_State(const Common::Array<Common::String> &args) : index(args[0]), var(args[1]) {}
+	Retrieve_State(const Common::Array<Common::String> &args) : index(atoi(args[0].c_str())), var(args[1]) {}
 
 	void exec(ExecutionContext &ctx) const override {
-		debug("retrieve state stub %s %s", index.c_str(), var.c_str());
-		g_engine->setVariable(var, 1);
+		debug("retrieve state %d %s", index, var.c_str());
+		g_engine->setVariable(var, g_engine->retrieveState(index));
 	}
 };
 
 struct Store_State : public Command {
-	Common::String index;
+	int index;
 	Common::String var;
 
-	Store_State(const Common::Array<Common::String> &args) : index(args[0]), var(args[1]) {}
+	Store_State(const Common::Array<Common::String> &args) : index(atoi(args[0].c_str())), var(args[1]) {}
 
 	void exec(ExecutionContext &ctx) const override {
-		debug("store state stub %s %s -> %d", index.c_str(), var.c_str(), valueOf(var));
+		int value = valueOf(var);
+		debug("store state %d %d", index, value);
+		g_engine->storeState(index, value);
 	}
 };
 
@@ -200,7 +260,7 @@ struct Sprite_Load : public Command {
 	Common::String unk;
 	Sprite_Load(const Common::Array<Common::String> &args) : name(args[0]), path(args[1]), unk(args[2]) {}
 	void exec(ExecutionContext &ctx) const override {
-		debug("sprite load %s %s %s", name.c_str(), path.c_str(), unk.c_str());
+		warning("sprite load %s %s %s", name.c_str(), path.c_str(), unk.c_str());
 	}
 };
 
@@ -218,7 +278,7 @@ struct Sprite_Screen : public Command {
 			y = args[3];
 	}
 	void exec(ExecutionContext &ctx) const override {
-		debug("sprite screen %d %s %s %s", index, name.c_str(), x.c_str(), y.c_str());
+		warning("sprite screen %d %s %s %s", index, name.c_str(), x.c_str(), y.c_str());
 	}
 };
 
@@ -228,23 +288,46 @@ struct Set_Lens : public Command {
 	Common::String unk;
 	Set_Lens(const Common::Array<Common::String> &args) : index(args[0]), name(args[1]), unk(args[2]) {}
 	void exec(ExecutionContext &ctx) const override {
-		debug("set lens %s %s %s", index.c_str(), name.c_str(), unk.c_str());
+		warning("set lens %s %s %s", index.c_str(), name.c_str(), unk.c_str());
 	}
 };
 
 struct Set_Lensflare : public Command {
 	Set_Lensflare(const Common::Array<Common::String> &args) {}
 	void exec(ExecutionContext &ctx) const override {
-		debug("set lensflare");
+		warning("set lensflare");
+	}
+};
+
+struct Start_Light : public Command {
+	Common::String fx;
+	Start_Light(const Common::Array<Common::String> &args) : fx(args[0]) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("start light %s", fx.c_str());
+	}
+};
+
+struct Stop_Light : public Command {
+	Stop_Light(const Common::Array<Common::String> &args) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("stop light");
 	}
 };
 
 struct Set_Jump_Key : public Command {
-	Common::String key;
+	int key;
 	Common::String warp;
-	Set_Jump_Key(const Common::Array<Common::String> &args) : key(args[0]), warp(args.size() > 1 ? args[1] : Common::String{}) {}
+	Set_Jump_Key(const Common::Array<Common::String> &args) : warp(args.size() > 1 ? args[1] : Common::String{}) {
+		auto &keyName = args[0];
+		if (keyName == "_KEY_ESCAPE")
+			key = 0;
+		else if (keyName == "_KEY_RIGHT_CLIC")
+			key = 12;
+		else
+			error("unhandled key name: %s", keyName.c_str());
+	}
 	void exec(ExecutionContext &ctx) const override {
-		debug("set jump key %s %s", key.c_str(), warp.c_str());
+		g_engine->lockKey(key, warp);
 	}
 };
 
@@ -278,10 +361,51 @@ struct Load_Slot : public Command {
 	}
 };
 
+struct Start_Timer : public Command {
+	float seconds;
+	Common::String warp;
+	Start_Timer(const Common::Array<Common::String> &args) : seconds(atof(args[0].c_str())), warp(args[1].c_str()) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("start timer %g %s", seconds, warp.c_str());
+	}
+};
+
 struct Stop_Timer : public Command {
 	Stop_Timer(const Common::Array<Common::String> &args) {}
 	void exec(ExecutionContext &ctx) const override {
 		g_engine->killTimer();
+	}
+};
+
+struct Limit_View : public Command {
+	Common::String angle1, angle2;
+	Limit_View(const Common::Array<Common::String> &args) : angle1(args[0]), angle2(args[1]) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("limit view %d %d", valueOf(angle1), valueOf(angle2));
+	}
+};
+
+struct Set_View_Angle : public Command {
+	Common::String angle1, angle2;
+	Set_View_Angle(const Common::Array<Common::String> &args) : angle1(args[0]), angle2(args[1]) {}
+	void exec(ExecutionContext &ctx) const override {
+		warning("set view angle %d %d", valueOf(angle1), valueOf(angle2));
+	}
+};
+
+struct Exit_Game : public Command {
+	Exit_Game(const Common::Array<Common::String> &args) {}
+	void exec(ExecutionContext &ctx) const override {
+		debug("exit game");
+		g_engine->quitGame();
+	}
+};
+
+struct Quit_URL : public Command {
+	Common::String name;
+	Quit_URL(const Common::Array<Common::String> &args) : name(args[0]) {}
+	void exec(ExecutionContext &ctx) const override {
+		debug("quit url: %s", name.c_str());
 	}
 };
 
@@ -291,21 +415,34 @@ struct Stop_Timer : public Command {
 	E(Add)              \
 	E(Cursor_Load)      \
 	E(Cursor_Set)       \
+	E(Delay_Sound)      \
+	E(Enter_Level)      \
+	E(Exit_Game)        \
 	E(Fade)             \
 	E(Go_Back)          \
 	E(Goto_Level)       \
 	E(Goto_Warp)        \
+	E(Leave_Save)       \
+	E(Limit_View)       \
 	E(Load_Slot)        \
+	E(Play_3DSound)     \
+	E(Play_Amb)         \
+	E(Play_AnimBloc)    \
 	E(Play_Movie)       \
 	E(Play_Sound)       \
-	E(Play_AnimBloc)    \
+	E(Quit_URL)         \
 	E(Retrieve_State)   \
+	E(Save_Slot)        \
+	E(Set_Jump_Key)     \
 	E(Set_Lens)         \
 	E(Set_Lensflare)    \
-	E(Set_Jump_Key)     \
+	E(Set_View_Angle)   \
 	E(Sprite_Load)      \
 	E(Sprite_Screen)    \
+	E(Start_Light)      \
+	E(Start_Timer)      \
 	E(Stop_All_Sounds)  \
+	E(Stop_Light)       \
 	E(Stop_Sound)       \
 	E(Stop_Timer)       \
 	E(Store_State)      \
