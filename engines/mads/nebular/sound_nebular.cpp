@@ -30,8 +30,7 @@ class Mixer;
 }
 
 namespace MADS {
-
-namespace Nebular {
+namespace RexNebular {
 
 void RexSoundManager::validate() {
 	Common::File f;
@@ -62,31 +61,31 @@ void RexSoundManager::validate() {
 void RexSoundManager::loadDriver(int sectionNumber) {
 	switch (sectionNumber) {
 	case 1:
-		_driver = new Nebular::ASound1(_mixer, _opl);
+		_driver = new RexNebular::ASound1(_mixer, _opl);
 		break;
 	case 2:
-		_driver = new Nebular::ASound2(_mixer, _opl);
+		_driver = new RexNebular::ASound2(_mixer, _opl);
 		break;
 	case 3:
-		_driver = new Nebular::ASound3(_mixer, _opl);
+		_driver = new RexNebular::ASound3(_mixer, _opl);
 		break;
 	case 4:
-		_driver = new Nebular::ASound4(_mixer, _opl);
+		_driver = new RexNebular::ASound4(_mixer, _opl);
 		break;
 	case 5:
-		_driver = new Nebular::ASound5(_mixer, _opl);
+		_driver = new RexNebular::ASound5(_mixer, _opl);
 		break;
 	case 6:
-		_driver = new Nebular::ASound6(_mixer, _opl);
+		_driver = new RexNebular::ASound6(_mixer, _opl);
 		break;
 	case 7:
-		_driver = new Nebular::ASound7(_mixer, _opl);
+		_driver = new RexNebular::ASound7(_mixer, _opl);
 		break;
 	case 8:
-		_driver = new Nebular::ASound8(_mixer, _opl);
+		_driver = new RexNebular::ASound8(_mixer, _opl);
 		break;
 	case 9:
-		_driver = new Nebular::ASound9(_mixer, _opl);
+		_driver = new RexNebular::ASound9(_mixer, _opl);
 		break;
 	default:
 		_driver = nullptr;
@@ -2245,9 +2244,8 @@ int ASound8::command9() {
 }
 
 int ASound8::command10() {
-	byte *pData = loadData(0x2B3E, 10);
-	pData[6] = (getRandomNumber() & 7) + 85;
-	playSoundData(pData);
+	_channels[7].load(loadData(0x171c, 56));
+	_channels[8].load(loadData(0x1754, 56));
 
 	return 0;
 }
@@ -2271,7 +2269,7 @@ int ASound8::command13() {
 }
 
 int ASound8::command14() {
-	playSound(0x169E, 24);
+	_channels[8].load(loadData(0x169e, 24));
 
 	return 0;
 }
@@ -2324,16 +2322,16 @@ int ASound8::command21() {
 }
 
 int ASound8::command22() {
-	playSound(0x178C, 14);
-	playSound(0x179A, 14);
-	playSound(0x17A8, 14);
+	_channels[6].load(loadData(0x178C, 14));
+	_channels[7].load(loadData(0x179A, 14));
+	_channels[8].load(loadData(0x17A8, 14));
 
 	return 0;
 }
 
 int ASound8::command23() {
-	playSound(0x2B08, 34);
-	playSound(0x2B2A, 20);
+	_channels[7].load(loadData(0x16E8, 34));
+	_channels[8].load(loadData(0x170A, 20));
 
 	return 0;
 }
@@ -2416,7 +2414,7 @@ int ASound8::command30() {
 }
 
 int ASound8::command31() {
-	playSound(0x156A, 14);
+	_channels[7].load(loadData(0x156A, 14));
 
 	return 0;
 }
@@ -2767,6 +2765,5 @@ int ASound9::command51() {
 }
 
 
-} // namespace Nebular
-
+} // namespace RexNebular
 } // namespace MADS

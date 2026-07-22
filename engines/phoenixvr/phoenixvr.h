@@ -233,6 +233,9 @@ public:
 	int retrieveState(int index) const;
 	void storeState(int index, int value);
 
+	void spriteLoad(const Common::String &name, const Common::String &path);
+	void spriteScreen(int index, const Common::String &name, int x, int y);
+
 private:
 	struct ArchiveImage {
 		Common::String image;
@@ -275,6 +278,7 @@ private:
 	void renderImageOverlay();
 	void renderTimer();
 	void renderFade(int color);
+	void renderSprites();
 	void resetState();
 	const Graphics::Font *getFont(int size, bool bold) const;
 	Common::Path getSubtitlePath(const Common::String &path) const;
@@ -338,7 +342,14 @@ private:
 	};
 	Common::Array<PreloadedCursor> _loadedCursors;
 
-	Common::HashMap<Common::String, Graphics::ManagedSurface *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _cursorCache;
+	Common::HashMap<Common::String, Common::ScopedPtr<Graphics::ManagedSurface>, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _cursorCache;
+	Common::HashMap<Common::String, Common::ScopedPtr<Graphics::ManagedSurface>, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _loadedSprites;
+	struct Sprite {
+		Common::String name;
+		int x = 0;
+		int y = 0;
+	};
+	Common::Array<Sprite> _sprites;
 
 	Common::Array<Common::Array<Common::String>> _cursors;
 	Common::String _defaultCursor[2];
@@ -385,6 +396,8 @@ private:
 
 	bool _restarted = false;
 	bool _loaded = false;
+
+	Video::VideoDecoder *_currentDecoder = nullptr;
 };
 
 extern PhoenixVREngine *g_engine;
