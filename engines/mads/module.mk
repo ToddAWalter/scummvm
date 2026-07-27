@@ -68,6 +68,10 @@ MODULE_OBJS := \
 	nebular/nebular.o \
 	nebular/asound.o \
 	nebular/asound_nebular.o \
+	nebular/isound.o \
+	nebular/isound_nebular.o \
+	nebular/rsound.o \
+	nebular/rsound_nebular.o \
 	nebular/console.o \
 	nebular/copy.o \
 	nebular/extra.o \
@@ -75,6 +79,7 @@ MODULE_OBJS := \
 	nebular/main.o \
 	nebular/main_menu.o \
 	nebular/menus.o \
+	nebular/sound.o \
 	nebular/popup.o \
 	nebular/mads/mads.o \
 	nebular/rooms/room101.o \
@@ -258,11 +263,14 @@ MODULE_OBJS := \
 	phantom/phantom.o \
 	phantom/asound.o \
 	phantom/asound_phantom.o \
+	phantom/rsound.o \
+	phantom/rsound_phantom.o \
 	phantom/catacombs.o \
 	phantom/global.o \
 	phantom/main_menu.o \
 	phantom/menus.o \
 	phantom/main.o \
+	phantom/sound.o \
 	dragonsphere/mads/mads.o \
 	dragonsphere/rooms/section1.o \
 	dragonsphere/rooms/room101.o \
@@ -343,6 +351,7 @@ MODULE_OBJS := \
 	dragonsphere/main.o \
 	dragonsphere/main_menu.o \
 	dragonsphere/menus.o \
+	dragonsphere/sound.o \
 	forest/forest.o \
 	forest/digi.o \
 	forest/extra.o \
