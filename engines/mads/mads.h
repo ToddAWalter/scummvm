@@ -115,7 +115,6 @@ public:
 	uint32 getGameFeatures() const;
 	bool isDemo() const;
 	bool isCDROM() const;
-	virtual bool usesScummVMMenu() const { return false; }
 
 	void readConfigFile();
 	int getRandomNumber(int maxNumber);
@@ -169,6 +168,16 @@ public:
 	virtual void global_sound_driver() = 0;
 	virtual void global_game_main_loop() {}
 	virtual void global_verb_filter() {}
+
+	// Optional Macintosh presentation hooks. Defaults preserve the shared
+	// MADS rendering path used by DOS releases.
+	virtual bool hasInterfaceAnimations() const { return true; }
+	virtual bool drawPopup() { return false; }
+	virtual void onPopupDestroyed() {}
+	virtual bool getInterfaceSentenceColors(byte &, byte &) const {
+		return false;
+	}
+
 	virtual void player_keep_walking();
 
 	void playSpeech(Audio::AudioStream *stream);
