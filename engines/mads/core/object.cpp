@@ -22,7 +22,6 @@
 #include "mads/core/general.h"
 #include "mads/core/buffer.h"
 #include "mads/core/cycle.h"
-#include "mads/core/ems.h"
 #include "mads/core/env.h"
 #include "mads/core/error.h"
 #include "mads/core/fileio.h"
@@ -40,6 +39,7 @@
 #include "mads/core/popup.h"
 #include "mads/core/room.h"
 #include "mads/core/speech.h"
+#include "mads/nebular/popup.h"
 #include "mads/core/sprite.h"
 #include "mads/core/text.h"
 #include "mads/core/tile.h"
@@ -342,6 +342,9 @@ int object_examine(int number, long message, int speech) {
 	if (message) {
 		text_saves_screen = false;
 
+		if (isRex)
+			RexNebular::popup_shift_dialog_colors(-10);
+
 		memcpy(&cycling_palette[248].r, &master_palette[248].r, 8 * sizeof(RGBcolor));
 
 		if (speech) {
@@ -351,6 +354,9 @@ int object_examine(int number, long message, int speech) {
 		}
 
 		text_show(message);
+
+		if (isRex)
+			RexNebular::popup_shift_dialog_colors(10);
 
 		if (speech && speech_system_active && speech_on) {
 			speech_all_off();

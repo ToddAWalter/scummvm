@@ -19,16 +19,31 @@
  *
  */
 
-#include "mads/core/xms.h"
+#ifndef AUDIO_MAC_SND_MACE_H
+#define AUDIO_MAC_SND_MACE_H
 
-namespace MADS {
+#include "common/scummsys.h"
+#include "common/types.h"
 
-bool xms_exists = false;
-bool xms_disabled = false;
-word xms_version = 0;
-dword xms_controller = 0;
-word xms_chain_seg = 0;
-word xms_umb_list[XMS_MAX_UMB] = {};
-word xms_umb_mark = 0;
+namespace Common {
+class SeekableReadStream;
+}
 
-} // namespace MADS
+namespace Audio {
+
+class SeekableAudioStream;
+
+enum MacSndMACEType {
+	kMacSndMACE3,
+	kMacSndMACE6
+};
+
+SeekableAudioStream *makeMacSndMACEStream(
+	Common::SeekableReadStream *stream,
+	DisposeAfterUse::Flag disposeAfterUse,
+	uint16 rate, uint32 packetFrameCount, uint32 channels,
+	MacSndMACEType type);
+
+} // End of namespace Audio
+
+#endif
