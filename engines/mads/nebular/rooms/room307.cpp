@@ -24,6 +24,7 @@
 #include "mads/core/matte.h"
 #include "mads/core/pal.h"
 #include "mads/nebular/global.h"
+#include "mads/nebular/mac_nebular.h"
 #include "mads/nebular/nebular.h"
 #include "mads/nebular/mads/inventory.h"
 #include "mads/nebular/mads/words.h"
@@ -58,7 +59,7 @@ static Scratch local;
 
 static void handleRexDialog(int quote) {
 	char *curQuote = quote_string(kernel.quotes, quote);
-	if (font_string_width(kernel_message_font, curQuote, kernel_message_spacing) > 200) {
+	if (g_engine->getMessageTextWidth(kernel_message_font, curQuote, kernel_message_spacing) > 200) {
 		static char subQuote1[34], subQuote2[34];
 		quote_split_string(curQuote, subQuote1, subQuote2);
 		Common::strcpy_s(local._subQuote2, subQuote2);
@@ -362,6 +363,7 @@ static void room_307_init() {
 
 	pal_change_color(252, 63, 30, 20);
 	pal_change_color(253, 45, 15, 12);
+	setMacintoshMessageColors(0, 30, 63, 0, 30, 63);
 
 	section_3_music();
 

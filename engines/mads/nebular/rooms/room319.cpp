@@ -25,6 +25,7 @@
 #include "mads/core/mcga.h"
 #include "mads/core/pal.h"
 #include "mads/nebular/global.h"
+#include "mads/nebular/mac_nebular.h"
 #include "mads/nebular/nebular.h"
 #include "mads/nebular/mads/inventory.h"
 #include "mads/nebular/mads/words.h"
@@ -59,7 +60,7 @@ static void handleRexDialogues(int quote) {
 	kernel_message_purge();
 
 	char *curQuote = quote_string(kernel.quotes, quote);
-	if (font_string_width(kernel_message_font, curQuote, kernel_message_spacing) > 200) {
+	if (g_engine->getMessageTextWidth(kernel_message_font, curQuote, kernel_message_spacing) > 200) {
 		static char subQuote1[34], subQuote2[34];
 		quote_split_string(curQuote, subQuote1, subQuote2);
 		Common::strcpy_s(local._subQuote2, subQuote2);
@@ -120,6 +121,7 @@ static void room_319_init() {
 
 	pal_change_color(252, 63, 30, 2);
 	pal_change_color(253, 45, 15, 1);
+	setMacintoshMessageColors(0, 0, 63, 0, 0, 63);
 
 	local._slachePosY = 0;
 	local._slacheInitFl = false;
