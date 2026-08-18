@@ -937,26 +937,14 @@ void ColonyEngine::automapDrawWall(const Common::Rect &vp, int x1, int y1, int x
 	}
 }
 
+// Own side only: a feature opens from the cell that records it, so the far side
+// is a plain wall with nothing to use.
 int ColonyEngine::automapWallFeature(int fx, int fy, int dir) {
-	if (fx >= 0 && fx < 31 && fy >= 0 && fy < 31) {
-		int feat = _mapData[fx][fy][dir][0];
-		if (isPassableFeature(feat))
-			return feat;
-	}
-	int nx = fx, ny = fy, opp = -1;
-	switch (dir) {
-	case kDirNorth: ny = fy + 1; opp = kDirSouth; break;
-	case kDirSouth: ny = fy - 1; opp = kDirNorth; break;
-	case kDirEast:  nx = fx + 1; opp = kDirWest;  break;
-	case kDirWest:  nx = fx - 1; opp = kDirEast;  break;
-	default: return 0;
-	}
-	if (nx >= 0 && nx < 31 && ny >= 0 && ny < 31) {
-		int feat = _mapData[nx][ny][opp][0];
-		if (isPassableFeature(feat))
-			return feat;
-	}
-	return 0;
+	if (fx < 0 || fx >= 31 || fy < 0 || fy >= 31)
+		return 0;
+
+	const int feat = _mapData[fx][fy][dir][0];
+	return isPassableFeature(feat) ? feat : 0;
 }
 
 void ColonyEngine::automapDrawWallWithFeature(const Common::Rect &vp, int wx1, int wy1, int wx2, int wy2, int feat, int lExt, uint32 color) {
@@ -970,6 +958,21 @@ void ColonyEngine::automapDrawWallWithFeature(const Common::Rect &vp, int wx1, i
 		if (plen > 0) {
 			const int tx = (ppx * tickLen) / plen;
 			const int ty = (ppy * tickLen) / plen;
+			if (feat == kWallFeatureUpStairs || feat == kWallFeatureDnStairs) {
+				// A flight of steps, as on a floor plan.
+				const int mx = (wx1 + wx2) / 2;
+				const int my = (wy1 + wy2) / 2;
+				const int hx = (wx2 - wx1) / 4;
+				const int hy = (wy2 - wy1) / 4;
+				for (int i = -2; i <= 2; i++) {
+					if (i == 0)
+						continue;
+					const int ox = mx + tx * i;
+					const int oy = my + ty * i;
+					automapDrawWall(vp, ox - hx, oy - hy, ox + hx, oy + hy, color);
+				}
+				return;
+			}
 			const int ax = wx1 + (wx2 - wx1) / 4;
 			const int ay = wy1 + (wy2 - wy1) / 4;
 			const int bx = wx1 + 3 * (wx2 - wx1) / 4;
@@ -977,6 +980,70 @@ void ColonyEngine::automapDrawWallWithFeature(const Common::Rect &vp, int wx1, i
 			automapDrawWall(vp, ax - tx, ay - ty, ax + tx, ay + ty, color);
 			automapDrawWall(vp, bx - tx, by - ty, bx + tx, by + ty, color);
 		}
+	}
+}
+
+void ColonyEngine::changeAutomapZoom(bool zoomIn) {
+	_automapZoom = CLIP<float>(zoomIn ? _automapZoom * 1.25f : _automapZoom / 1.25f, 0.25f, 4.0f);
+}
+
+void ColonyEngine::drawAutomapCryoMarker(int x, int y, int halfSize, uint32 color, const Common::Rect &clip) {
+	if (x < clip.left || x >= clip.right || y < clip.top || y >= clip.bottom)
+		return;
+
+	const int r = MAX(halfSize, 2);
+	const int dx[4] = { x, x + r, x, x - r };
+	const int dy[4] = { y - r, y, y + r, y };
+	for (int i = 0; i < 4; i++) {
+		int x1 = dx[i], y1 = dy[i];
+		int x2 = dx[(i + 1) & 3], y2 = dy[(i + 1) & 3];
+		if (clipLineToRect(x1, y1, x2, y2, clip))
+			_gfx->drawLine(x1, y1, x2, y2, color);
+	}
+
+	const int cr = MAX(r / 3, 1);
+	if (x - cr >= clip.left && x + cr < clip.right && y - cr >= clip.top && y + cr < clip.bottom)
+		_gfx->fillEllipse(x, y, cr, cr, color);
+}
+
+// Octagon with a waistband, echoing the booth shape drawn in the 3D view.
+void ColonyEngine::drawAutomapTeleportMarker(int x, int y, int halfSize, uint32 color, const Common::Rect &clip) {
+	if (x < clip.left || x >= clip.right || y < clip.top || y >= clip.bottom)
+		return;
+
+	const int r = MAX(halfSize, 3);
+	const int k = MAX(r * 2 / 5, 1);
+	const int dx[8] = { -k,  k,  r,  r,  k, -k, -r, -r };
+	const int dy[8] = { -r, -r, -k,  k,  r,  r,  k, -k };
+	for (int i = 0; i < 8; i++) {
+		int x1 = x + dx[i], y1 = y + dy[i];
+		int x2 = x + dx[(i + 1) & 7], y2 = y + dy[(i + 1) & 7];
+		if (clipLineToRect(x1, y1, x2, y2, clip))
+			_gfx->drawLine(x1, y1, x2, y2, color);
+	}
+
+	int bx1 = x - r, by1 = y, bx2 = x + r, by2 = y;
+	if (clipLineToRect(bx1, by1, bx2, by2, clip))
+		_gfx->drawLine(bx1, by1, bx2, by2, color);
+}
+
+// Open-topped carriage: the only marker with a gap, so it reads at any zoom.
+void ColonyEngine::drawAutomapForkliftMarker(int x, int y, int halfSize, uint32 color, const Common::Rect &clip) {
+	if (x < clip.left || x >= clip.right || y < clip.top || y >= clip.bottom)
+		return;
+
+	const int r = MAX(halfSize, 3);
+	const int seg[4][4] = {
+		{ -r, -r, -r,  r },
+		{  r, -r,  r,  r },
+		{ -r,  r,  r,  r },
+		{ -r,  0,  r,  0 }
+	};
+	for (int i = 0; i < 4; i++) {
+		int x1 = x + seg[i][0], y1 = y + seg[i][1];
+		int x2 = x + seg[i][2], y2 = y + seg[i][3];
+		if (clipLineToRect(x1, y1, x2, y2, clip))
+			_gfx->drawLine(x1, y1, x2, y2, color);
 	}
 }
 
@@ -999,9 +1066,12 @@ void ColonyEngine::drawAutomap() {
 	_gfx->fillRect(vp, macColor ? 0xFFA0D0FF : (isMac ? packRGB(255, 255, 255) : 15));
 	_gfx->drawRect(vp, 0);
 
-	const int lExt = MIN(vpW, vpH) / 12;
-	if (lExt < 8)
+	const int baseExt = MIN(vpW, vpH) / 12;
+	if (baseExt < 8)
 		return;
+
+	// Cells are projected relative to the player, so scaling lExt zooms about him.
+	const int lExt = CLIP<int>((int)(baseExt * _automapZoom + 0.5f), 4, MIN(vpW, vpH));
 
 	const int xloc = (lExt * ((_me.xindex << 8) - _me.xloc)) >> 8;
 	const int yloc = (lExt * ((_me.yindex << 8) - _me.yloc)) >> 8;
@@ -1012,11 +1082,15 @@ void ColonyEngine::drawAutomap() {
 	const int tcos = _cost[mapAngle];
 	const uint32 lineColor = 0;
 
-	const int radius = (int)(sqrtf((float)(vpW * vpW + vpH * vpH)) / (2.0f * lExt)) + 2;
+	const int radius = MIN(31, (int)(sqrtf((float)(vpW * vpW + vpH * vpH)) / (2.0f * lExt)) + 2);
 	const int px = _me.xindex;
 	const int py = _me.yindex;
-	const int markerR = isMac ? 5 : 3;
-	const int foodR = isMac ? 3 : 2;
+	auto scaleR = [&](int r, int minR) { return CLIP<int>(r * lExt / baseExt, minR, r * 2); };
+	const int markerR = scaleR(isMac ? 5 : 3, 2);
+	const int foodR = scaleR(isMac ? 3 : 2, 1);
+	const int cryoR = scaleR(isMac ? 7 : 5, 3);
+	const int teleR = scaleR(isMac ? 6 : 4, 3);
+	const int forkR = scaleR(isMac ? 6 : 4, 3);
 
 	for (int dy = -radius; dy <= radius; dy++) {
 		for (int dx = -radius; dx <= radius; dx++) {
@@ -1042,20 +1116,24 @@ void ColonyEngine::drawAutomap() {
 			if (cx + 1 < 32 && (_wall[cx + 1][cy] & 0x02))
 				automapDrawWallWithFeature(vp, x1, y1, x2, y2, automapWallFeature(cx, cy, kDirEast), lExt, lineColor);
 
-			if (ABS(dx) <= 6 && ABS(dy) <= 6) {
-				int mx, my;
-				automapCellCorner(dx, dy, xloc, yloc, lExt, tsin, tcos, ccx, ccy, mx, my);
-				int mx2, my2;
-				automapCellCorner(dx + 1, dy + 1, xloc, yloc, lExt, tsin, tcos, ccx, ccy, mx2, my2);
-				mx = (mx + mx2) >> 1;
-				my = (my + my2) >> 1;
-
-				const uint8 rnum = _robotArray[cx][cy];
-				if (rnum > 0 && rnum != kMeNum && rnum <= _objects.size() && _objects[rnum - 1].alive)
+			const int mx = (x0 + x2) >> 1;
+			const int my = (y0 + y2) >> 1;
+			// Cryo pods, teleporters and the forklift are static, so they map
+			// beyond the robot/egg radar range.
+			const bool inRadar = (ABS(dx) <= 6 && ABS(dy) <= 6);
+			const uint8 rnum = _robotArray[cx][cy];
+			if (rnum > 0 && rnum != kMeNum && rnum <= _objects.size() && _objects[rnum - 1].alive) {
+				if (_objects[rnum - 1].type == kObjCryo)
+					drawAutomapCryoMarker(mx, my, cryoR, lineColor, vp);
+				else if (_objects[rnum - 1].type == kObjTeleport)
+					drawAutomapTeleportMarker(mx, my, teleR, lineColor, vp);
+				else if (_objects[rnum - 1].type == kObjForkLift)
+					drawAutomapForkliftMarker(mx, my, forkR, lineColor, vp);
+				else if (inRadar)
 					drawMiniMapMarker(mx, my, markerR, lineColor, isMac, &vp);
-				if (_foodArray[cx][cy] > 0)
-					drawMiniMapMarker(mx, my, foodR, lineColor, isMac, &vp);
 			}
+			if (inRadar && _foodArray[cx][cy] > 0)
+				drawMiniMapMarker(mx, my, foodR, lineColor, isMac, &vp);
 		}
 	}
 

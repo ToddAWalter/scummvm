@@ -92,7 +92,9 @@ enum ColonyAction {
 	kActionToggleWireframe,
 	kActionToggleFullscreen,
 	kActionEscape,
-	kActionFire
+	kActionFire,
+	kActionAutomapZoomIn,
+	kActionAutomapZoomOut
 };
 
 enum GameMode {
@@ -482,6 +484,7 @@ public:
 	void clearPlayerCellMarker();
 	void setPlayerCellMarker();
 	bool playerIntersectsObjectFootprint(const Thing &obj, int xloc, int yloc) const;
+	bool playerStartsInsideObject(int rnum) const;
 	void cCommand(int xnew, int ynew, bool allowInteraction);
 	bool scrollInfo(const Graphics::Font *macFont = nullptr);
 	bool checkSkipRequested();
@@ -490,6 +493,8 @@ public:
 	void checkCenter();
 	void fallThroughHole();
 	void playTunnelEffect(bool falling);
+	int rideTunnel(const uint8 *map, Locate *pobject);
+	void doDnStairs();
 
 	void doText(int entry, int center);
 	void inform(const char *text, bool hold);
@@ -509,6 +514,7 @@ private:
 	uint8 _dirXY[32][32];
 	bool _visited[8][32][32];  // per-level fog-of-war: _visited[level-1][x][y]
 	bool _showAutomap;
+	float _automapZoom;        // automap scale factor, 1.0 = default cell size
 
 	Locate _me;
 	Common::Array<Thing> _objects;
@@ -584,6 +590,7 @@ private:
 	uint32 _lastAnimUpdate = 0;
 	uint32 _lastWarningChimeTime = 0;
 	uint32 _lastCollisionSoundTime = 0;
+	int _bumpedObject = 0;
 	int _action0 = 0, _action1 = 0;
 	int _creature = 0;
 	bool _allGrow = false;
@@ -741,6 +748,9 @@ private:
 	bool patchMapFrom(const PassPatch &from, uint8 *mapdata);
 	void exitForklift();
 	void dropCarriedObject();
+	bool stepOutOfCell();
+	bool exitTeleport();
+	void teleportPlayer();
 	bool setDoorState(int x, int y, int direction, int state);
 	int openAdjacentDoors(int x, int y);
 	int goToDestination(const uint8 *map, Locate *pobject);
@@ -760,6 +770,10 @@ private:
 	bool hasFoodAt(int x, int y) const;
 	void drawMiniMap(uint32 lineColor);
 	void drawAutomap();
+	void changeAutomapZoom(bool zoomIn);
+	void drawAutomapCryoMarker(int x, int y, int halfSize, uint32 color, const Common::Rect &clip);
+	void drawAutomapTeleportMarker(int x, int y, int halfSize, uint32 color, const Common::Rect &clip);
+	void drawAutomapForkliftMarker(int x, int y, int halfSize, uint32 color, const Common::Rect &clip);
 	void markVisited();
 	void automapCellCorner(int dx, int dy, int xloc, int yloc, int lExt, int tsin, int tcos, int ccx, int ccy, int &sx, int &sy);
 	void automapDrawWall(const Common::Rect &vp, int x1, int y1, int x2, int y2, uint32 color);
@@ -835,6 +849,10 @@ private:
 	int _airlockY = -1;
 	int _airlockDirection = -1;
 	bool _airlockTerminate = false;
+	int _teleportX = -1;
+	int _teleportY = -1;
+	bool _teleportInside = false;
+	bool _teleportDone = false;
 
 	void playIntro();
 	bool makeStars(const Common::Rect &r, int btn);
@@ -874,6 +892,8 @@ private:
 	void handleDoorClick(int item);
 	void handleAirlockClick(int item);
 	void handleElevatorClick(int item);
+	void handleTeleportClick(int item);
+	void flashTeleportBooth();
 	void handleControlsClick(int item);
 	void dolSprite(int index);
 	void moveObject(int index);
