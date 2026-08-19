@@ -389,7 +389,7 @@ int ColonyEngine::occupiedObjectAt(int xnew, int ynew, int x, int y, const Locat
 				!playerIntersectsObjectFootprint(obj, xnew, ynew))
 			return 0;
 		if (obj.type <= kBaseObject)
-			obj.where.look = obj.where.ang = _me.ang + 128;
+			obj.where.look = obj.where.ang = objAngFromPlayer((uint8)(_me.ang + 128));
 	}
 	return rnum;
 }
@@ -798,10 +798,8 @@ int ColonyEngine::goToDestination(const uint8 *map, Locate *pobject) {
 		pobject->yindex = targetY;
 	}
 
-	if (targetMap > 0 && targetMap != _level) {
+	if (targetMap > 0 && targetMap != _level)
 		loadMap(targetMap);
-		_coreIndex = (targetMap == 1) ? 0 : 1;
-	}
 
 	if (pobject->xindex >= 0 && pobject->xindex < 32 &&
 		pobject->yindex >= 0 && pobject->yindex < 32)
@@ -949,10 +947,8 @@ int ColonyEngine::tryPassThroughFeature(int fromX, int fromY, int direction, Loc
 				pobject->look = pobject->ang;
 			}
 
-			if (targetMap > 0 && targetMap != _level) {
+			if (targetMap > 0 && targetMap != _level)
 				loadMap(targetMap);
-				_coreIndex = (targetMap == 1) ? 0 : 1;
-			}
 
 			if (pobject->xindex >= 0 && pobject->xindex < 32 &&
 				pobject->yindex >= 0 && pobject->yindex < 32)
