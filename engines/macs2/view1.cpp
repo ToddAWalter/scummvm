@@ -444,8 +444,9 @@ void View1::updateCursor(const byte *palette) {
 	// The array has 33 entries (indices 0-32). Cursor modes 0x13-0x1A map to entries 18-25.
 	int mode = (int)g_engine->_scriptExecutor->_cursorMode - 1;
 
-	// SCUMM-style UI: gameplay verbs share the walk cursor; the sentence line shows the active verb.
-	if (hasPersistentActionBar()) {
+	// SCUMM-style enhancement only: gameplay verbs share the walk cursor; the sentence
+	// line shows the active verb. Native V2 HUD must keep per-MouseNr graphics.
+	if (g_engine->enhancementEnabled(kEnhUIUX) && !g_engine->hasNativeHudAssets()) {
 		const Script::MouseMode cursorMode = g_engine->_scriptExecutor->_cursorMode;
 		switch (cursorMode) {
 		case Script::MouseMode::Talk:
@@ -488,7 +489,16 @@ void View1::updateCursor(const byte *palette) {
 		rgbaCursor[i] = rgbaCursorFormat.RGBToColor(paletteEntry[0], paletteEntry[1], paletteEntry[2]);
 	}
 
-	CursorMan.replaceCursor(rgbaCursor.data(), width, height, width >> 1, height >> 1, 0, &rgbaCursorFormat);
+	int hotX = width >> 1;
+	int hotY = height >> 1;
+	if (mode >= 0 && mode < ARRAYSIZE(g_engine->_cursorHotspots)) {
+		const Common::Point &hot = g_engine->_cursorHotspots[mode];
+		if (hot.x != 0 || hot.y != 0) {
+			hotX = hot.x;
+			hotY = hot.y;
+		}
+	}
+	CursorMan.replaceCursor(rgbaCursor.data(), width, height, hotX, hotY, 0, &rgbaCursorFormat);
 	// Enable a cursor palette so the backend won't re-blit the cursor on
 	// every screen palette change. The macs2 engine uses RGBA cursors with
 	// baked-in palette colors, so the cursor palette content is irrelevant -
@@ -555,16 +565,32 @@ void View1::drawBackgroundAnimations(Graphics::ManagedSurface &s) {
 		}
 		// Binary drawAllCharacters (1008:929c): drawAnimFrame(2, y, x+1, blob) - one
 		// advanceAnimFrame(save=1, mode=2) per frame, not a separate tick advance.
-		uint16 frameStart = BackgroundAnimationBlob::advanceAnimFrame(blob, true, 2);
-		int16 frameOffsetX = (int16)READ_LE_UINT16(&blob[frameStart]);
-		int16 frameOffsetY = (int16)READ_LE_UINT16(&blob[frameStart + 2]);
+		const uint32 frameStart = BackgroundAnimationBlob::advanceAnimFrame(blob, true, 2);
+		if (frameStart == 0 || frameStart + 10 > blob.size())
+			continue;
+		const int16 frameOffsetX = (int16)READ_LE_UINT16(&blob[frameStart]);
+		const int16 frameOffsetY = (int16)READ_LE_UINT16(&blob[frameStart + 2]);
 		AnimFrame currentFrame;
 		currentFrame._width = READ_LE_UINT16(&blob[frameStart + 6]);
 		currentFrame._height = READ_LE_UINT16(&blob[frameStart + 8]);
-		currentFrame._data.resize(currentFrame._width * currentFrame._height);
-		memcpy(currentFrame._data.data(), &blob[frameStart + 10],
-			   currentFrame._width * currentFrame._height);
-		drawSprite(current._x + 1 + frameOffsetX, current._y + frameOffsetY, currentFrame, s, false);
+		const uint32 pix = (uint32)currentFrame._width * (uint32)currentFrame._height;
+		// V2 blobs can be >64KB; reject corrupt/oversized frame headers.
+		if (currentFrame._width == 0 || currentFrame._height == 0 ||
+			currentFrame._width > 640 || currentFrame._height > 400 ||
+			frameStart + 10 + pix > blob.size()) {
+			continue;
+		}
+		currentFrame._data.resize(pix);
+		memcpy(currentFrame._data.data(), &blob[frameStart + 10], pix);
+		if (g_engine->isV2()) {
+			const int16 ox = (int16)(frameOffsetX << 1);
+			const int16 oy = (int16)(frameOffsetY << 1);
+			drawSpriteTransparent(0, 0, 200, current._x + 1 + ox, current._y + oy,
+								  currentFrame._width, currentFrame._height,
+								  currentFrame._data.data(), s);
+		} else {
+			drawSprite(current._x + 1 + frameOffsetX, current._y + frameOffsetY, currentFrame, s, false);
+		}
 	}
 }
 
@@ -781,17 +807,17 @@ void View1::drawPathfindingPoints(Graphics::ManagedSurface &s) {
 		yOffset = xData._height / 2;
 	}
 	for (int i = 0; i < 16; i++) {
-		PathfindingPoint &current = g_engine->pathfindingPoints[i];
+		PathfindingPoint &current = g_engine->_pathfindingPoints[i];
 		renderString(current._position.x - xOffset, current._position.y - yOffset, "x");
 
 		Common::String number = Common::String::format("%u", i);
 		renderString(current._position.x - xOffset + 10, current._position.y - yOffset + 10, number.c_str());
 
 		for (uint8 adjacentIndex : current._adjacentPoints) {
-			if (adjacentIndex >= g_engine->pathfindingPoints.size()) {
+			if (adjacentIndex >= g_engine->_pathfindingPoints.size()) {
 				continue;
 			}
-			PathfindingPoint &other = g_engine->pathfindingPoints[adjacentIndex - 1];
+			PathfindingPoint &other = g_engine->_pathfindingPoints[adjacentIndex - 1];
 			s.drawLine(current._position.x, current._position.y, other._position.x, other._position.y, 0xFFFFFFFF);
 		}
 	}
@@ -835,16 +861,16 @@ void View1::drawPath(Graphics::ManagedSurface &s) {
 }
 
 void View1::layoutActionBarButtons() {
+	_mainMenuButtonLocations.resize(9);
 	uint16 maxW = 0, maxH = 0;
-	for (int i = 0; i < 9 && i < (int)g_engine->_imageResources.size(); i++) {
+	for (int i = 0; i < (int)_mainMenuButtonLocations.size() && i < (int)g_engine->_imageResources.size(); i++) {
 		maxW = MAX(maxW, g_engine->_imageResources[i]._width);
 		maxH = MAX(maxH, g_engine->_imageResources[i]._height);
 	}
 	const uint16 btnW = maxW + 6;
 	const uint16 btnH = maxH + 6;
 
-	_mainMenuButtonLocations.resize(9);
-	for (int i = 0; i < 9; i++) {
+	for (int i = 0; i < (int)_mainMenuButtonLocations.size(); i++) {
 		const int col = i % 3;
 		const int row = i / 3;
 		const uint16 cellX = _mainMenuRect.left + 4 + col * (btnW + 4);
@@ -915,6 +941,7 @@ void View1::closeScriptActionBar(Script::MouseMode &outSavedCursorMode) {
 void View1::enterMapMode() {
 	// Binary handleInput end-block when scene+0x61db != 0 (1008:e8bf): fade, load map
 	// from scene+0x5DDB (_mapSceneOffsets[0]), set cursor 0x18 (PanelUse).
+	// this path is the DOS help-map overlay
 	uint32 helpOffset = g_engine->_mapSceneOffsets[0];
 	if (helpOffset == 0 || helpOffset >= (uint32)g_engine->_fileStream->size()) {
 		return;
@@ -942,7 +969,7 @@ void View1::drawMainMenu(Graphics::ManagedSurface &s) {
 	drawBorderSide(Common::Point(_mainMenuRect.left, _mainMenuRect.top), Common::Point(_mainMenuRect.width(), _mainMenuRect.height()), s);
 	drawNinePatchBorder(Common::Point(_mainMenuRect.left, _mainMenuRect.top), Common::Point(_mainMenuRect.width(), _mainMenuRect.height()), kBorderRaised, false, false, s);
 
-	for (int i = 0; i < 9 && i < (int)g_engine->_imageResources.size(); i++) {
+	for (int i = 0; i < (int)_mainMenuButtonLocations.size() && i < (int)g_engine->_imageResources.size(); i++) {
 		const Common::Rect &cell = _mainMenuButtonLocations[i];
 		const bool pressed = (_clickedButtonIndex == (uint16)(i + 1));
 		const BorderStyle &border = pressed ? kBorderPressed : kBorderRaised;
@@ -1317,7 +1344,7 @@ bool View1::handleInventoryClick(const MouseDownMessage &msg) {
 		return true;
 	}
 
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < (int)_inventoryButtonLocations.size(); i++) {
 		const Common::Rect &current = _inventoryButtonLocations[i];
 		if (!current.contains(msg._pos)) {
 			continue;
@@ -1465,7 +1492,7 @@ bool View1::handleContainerInventoryClick(const MouseDownMessage &msg) {
 		return true;
 	}
 
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < (int)_inventoryButtonLocations.size(); i++) {
 		const Common::Rect &current = _inventoryButtonLocations[i];
 		if (!current.contains(msg._pos)) {
 			continue;
@@ -1885,11 +1912,12 @@ bool View1::handleInput(const MouseDownMessage &msg) {
 			return true;
 		}
 		if (hasPersistentActionBar()) {
-			if (shouldShowActionBar()) {
+			const bool canCycleVerbs = shouldShowActionBar() || g_engine->hasNativeHudAssets();
+			if (canCycleVerbs) {
 				g_engine->nextCursorMode();
 				_activeInventoryItem = nullptr;
 				g_engine->_scriptExecutor->_interactedInventoryItemId = 0;
-				if (_actionBar)
+				if (_actionBar && shouldShowActionBar())
 					_actionBar->syncActiveVerbFromCursorMode();
 				updateCursor();
 				presentFrame();
@@ -2252,7 +2280,7 @@ void View1::draw() {
 	}
 
 	if (_uiPanelState == kUiPanelInventory && g_engine->enhancementEnabled(kEnhUIUX)) {
-		for (int i = 0; i < 6; i++) {
+		for (int i = 0; i < (int)_inventoryButtonLocations.size(); i++) {
 			if (_inventoryButtonLocations[i].contains(mousePos)) {
 				static const char *const buttonNames[] = {
 					"Schauen", "Benutzen", "Hoch", "Runter", "Ablegen", "Schliessen"};
@@ -2273,7 +2301,7 @@ void View1::draw() {
 	}
 
 	if (_uiPanelState == kUiPanelSaveLoad && g_engine->enhancementEnabled(kEnhUIUX)) {
-		for (int i = 0; i < 7; i++) {
+		for (int i = 0; i < ARRAYSIZE(_saveLoadButtonRects); i++) {
 			if (_saveLoadButtonRects[i].contains(mousePos)) {
 				static const char *const buttonNames[] = {
 					"Laden", "Speichern", "Musik an/aus",
@@ -2293,6 +2321,9 @@ void View1::draw() {
 			Graphics::ManagedSurface fullScreen(*g_events->getScreen(), Common::Rect(0, 0, sw, sh));
 			if (shouldShowActionBar()) {
 				_actionBar->draw(fullScreen);
+			} else if (g_engine->hasNativeHudAssets() && g_engine->_menuMode == 0) {
+				// hideActionBar / overview map: leave playfield pixels alone so
+				// scene art (and hotspots) remain visible in the former panel band.
 			} else {
 				const int top = actionBarTopY();
 				if (top >= 0 && top < sh)
@@ -2735,7 +2766,9 @@ void View1::drawAllCharacters(Graphics::ManagedSurface *surface, bool fullUpdate
 			// drawAllCharacters @ 1008:93f8-9440 (inlined; not a separate EXE function)
 			int32 depthOffset = ((int32)charY - (int32)g_engine->_walkDepthThresholdY) *
 								(int32)g_engine->_walkDepthScaleFactor / 100;
-			const uint16 scalingFactor = (uint16)((int32)g_engine->_walkBaseSpeedPct + depthOffset);
+			uint16 scalingFactor = (uint16)((int32)g_engine->_walkBaseSpeedPct + depthOffset);
+			if (obj->_hasDoubleResAnim)
+				scalingFactor = (uint16)(scalingFactor * 2);
 			if (obj->_index == 1) {
 				_scalingValues.characterY = (uint16)charY;
 				_scalingValues.scalingFactor = scalingFactor;
@@ -2747,6 +2780,8 @@ void View1::drawAllCharacters(Graphics::ManagedSurface *surface, bool fullUpdate
 				if (Macs2Engine::isWalkabilityBlocking((uint16)walkabilityOffset))
 					walkabilityOffset = 0;
 			}
+			if (g_engine->isV2())
+				walkabilityOffset = (int16)(walkabilityOffset << 1);
 			if (obj->_verticalOffsetScale != 0)
 				walkabilityOffset = (scalingFactor * obj->_verticalOffsetScale) / 100;
 
@@ -2759,27 +2794,44 @@ void View1::drawAllCharacters(Graphics::ManagedSurface *surface, bool fullUpdate
 
 			uint16 frameWidth;
 			uint16 frameHeight;
+			int16 offsetX = frame._offsetX;
+			int16 offsetY = frame._offsetY;
+			// Frame header offsets are authored in half-res when +0x2e3 is set.
+			if (obj->_hasDoubleResAnim) {
+				offsetX = (int16)(offsetX << 1);
+				offsetY = (int16)(offsetY << 1);
+			}
 			if (obj->_hasScaling) {
 				frameWidth = (frame._width * scalingFactor) / 100;
 				frameHeight = (frame._height * scalingFactor) / 100;
+			} else if (obj->_hasDoubleResAnim) {
+				// exact 2x blit of half-res anim data.
+				frameWidth = (uint16)(frame._width << 1);
+				frameHeight = (uint16)(frame._height << 1);
 			} else {
 				frameWidth = frame._width;
 				frameHeight = frame._height;
 			}
 
-			const int16 drawX = charX - (frameWidth >> 1) + frame._offsetX;
-			const int16 drawY = (charY - frameHeight) - walkabilityOffset + frame._offsetY;
+			const int16 drawX = charX - (frameWidth >> 1) + offsetX + (int16)obj->_objectAdjust1;
+			const int16 drawY = (charY - frameHeight) - walkabilityOffset + offsetY + (int16)obj->_objectAdjust2;
 			const uint8 depthThreshold = g_engine->depthThresholdForY(charY);
 			const byte *pixelData = frame._data.data();
 
 			// drawAllCharacters @ 1008:9573-9754: drawAnimFrame / drawAnimFrameShaded / drawAnimFrameDepth
 			const bool clipGameArea = hasPersistentActionBar();
+			const bool useMaskedShading = g_engine->isV2() && (obj->_hasScaling || obj->_hasShading);
 			if (obj->_hasScaling) {
 				drawSpriteTransparent(shadingTableOffset, depthThreshold, scalingFactor,
-									  drawX, drawY, frame._width, frame._height, pixelData, *surface);
+									  drawX, drawY, frame._width, frame._height, pixelData, *surface,
+									  useMaskedShading);
+			} else if (obj->_hasDoubleResAnim) {
+				drawSpriteTransparent(obj->_hasShading ? shadingTableOffset : 0, depthThreshold, 200,
+									  drawX, drawY, frame._width, frame._height, pixelData, *surface,
+									  useMaskedShading);
 			} else if (obj->_hasShading) {
 				drawSpriteScaled(shadingTableOffset, depthThreshold, drawX, drawY,
-								 frame._width, frame._height, pixelData, *surface);
+								 frame._width, frame._height, pixelData, *surface, useMaskedShading);
 			} else {
 				drawSprite(drawX, drawY, frame._width, frame._height,
 						   const_cast<byte *>(pixelData), *surface, false, false, 0, clipGameArea);
@@ -3090,7 +3142,26 @@ void View1::drawSpriteFitted(const Common::Rect &bounds, const Sprite &sprite, G
 	}
 }
 
-static byte applyShadingTable(byte color, int shadingTableOffset) {
+static byte applyShadingTable(byte color, int shadingTableOffset, byte bgColor, bool useMaskedShading) {
+	if (g_engine->_shadingTable.empty())
+		return color;
+
+	if (useMaskedShading) {
+		const uint intensity = (uint)CLIP(shadingTableOffset, 0, 0x1f);
+		if (color == 1) {
+			const uint idx = (uint)bgColor * 0x20u + intensity;
+			if (idx < g_engine->_shadingTable.size())
+				return g_engine->_shadingTable[idx];
+			return color;
+		}
+		if (intensity == 0)
+			return color;
+		const uint idx = (uint)color * 0x20u + intensity;
+		if (idx >= g_engine->_shadingTable.size())
+			return color;
+		return g_engine->_shadingTable[idx];
+	}
+
 	if (shadingTableOffset == 0)
 		return color;
 	// drawSpriteTransparent @ 1010:0fba: (color - 0xC0) * 0x20 + shadingTableOffset + scene+0x53D3
@@ -3105,7 +3176,7 @@ static byte applyShadingTable(byte color, int shadingTableOffset) {
 // drawSpriteScaled @ 1010:102b
 void View1::drawSpriteScaled(int shadingTableOffset, uint8 depthThreshold, int16 drawX, int16 drawY,
 							 uint16 srcWidth, uint16 srcHeight, const byte *srcPixels,
-							 Graphics::ManagedSurface &s) {
+							 Graphics::ManagedSurface &s, bool useMaskedShading) {
 	int screenY = drawY;
 	int srcRow = 0;
 	int remainingRows = srcHeight;
@@ -3117,8 +3188,11 @@ void View1::drawSpriteScaled(int shadingTableOffset, uint8 depthThreshold, int16
 					const uint8 bgDepth = g_engine->_depthMap.getPixel(screenX, screenY);
 					if (bgDepth < depthThreshold) {
 						const uint8 color = srcPixels[srcRow + srcX];
-						if (color != 0)
-							s.setPixel(screenX, screenY, applyShadingTable(color, shadingTableOffset));
+						if (color != 0) {
+							const byte bg = s.getPixel(screenX, screenY);
+							s.setPixel(screenX, screenY,
+									   applyShadingTable(color, shadingTableOffset, bg, useMaskedShading));
+						}
 					}
 				}
 				screenX++;
@@ -3133,7 +3207,7 @@ void View1::drawSpriteScaled(int shadingTableOffset, uint8 depthThreshold, int16
 // drawSpriteTransparent @ 1010:0ed1
 void View1::drawSpriteTransparent(int shadingTableOffset, uint8 depthThreshold, uint16 scalingFactor,
 								  int16 drawX, int16 drawY, uint16 srcWidth, uint16 srcHeight,
-								  const byte *srcPixels, Graphics::ManagedSurface &s) {
+								  const byte *srcPixels, Graphics::ManagedSurface &s, bool useMaskedShading) {
 	int screenY = drawY;
 	int srcRowOffset = 0;
 	int remainingRows = (int)srcHeight;
@@ -3151,7 +3225,9 @@ void View1::drawSpriteTransparent(int shadingTableOffset, uint8 depthThreshold, 
 				const uint8 color = *srcPtr;
 				if (color != 0 && screenX >= 0 && screenX < s.w &&
 					g_engine->_depthMap.getPixel(screenX, screenY) < depthThreshold) {
-					s.setPixel(screenX, screenY, applyShadingTable(color, shadingTableOffset));
+					const byte bg = s.getPixel(screenX, screenY);
+					s.setPixel(screenX, screenY,
+							   applyShadingTable(color, shadingTableOffset, bg, useMaskedShading));
 				}
 
 				screenX++;
@@ -3570,7 +3646,7 @@ bool Character::calculatePath(Common::Point target) {
 	// scene[i + 0x50C2] = isPathWalkable(finalDest, node[i])
 	bool reachable[MAX_NODES + 1] = {};
 	for (int i = 1; i <= nodeCount; i++) {
-		const Common::Point &nodePos = g_engine->pathfindingPoints[i - 1]._position;
+		const Common::Point &nodePos = g_engine->_pathfindingPoints[i - 1]._position;
 		reachable[i] = g_engine->isPathWalkable(target.y, target.x, nodePos.y, nodePos.x);
 	}
 
@@ -3578,7 +3654,7 @@ bool Character::calculatePath(Common::Point target) {
 	int bestCost = 0x7777;
 	int bestNode = 0;
 	for (int i = 1; i <= nodeCount; i++) {
-		const Common::Point &nodePos = g_engine->pathfindingPoints[i - 1]._position;
+		const Common::Point &nodePos = g_engine->_pathfindingPoints[i - 1]._position;
 		int costToDest = g_engine->euclideanDistance(nodePos, target);
 		int costToChar = g_engine->euclideanDistance(nodePos, charPos);
 		if (costToDest + costToChar < bestCost) {
@@ -3615,7 +3691,7 @@ bool Character::calculatePath(Common::Point target) {
 	_path.push_back(bestNode);
 	int currentNode = bestNode;
 	while (!reachable[currentNode]) {
-		const PathfindingPoint &curPt = g_engine->pathfindingPoints[currentNode - 1];
+		const PathfindingPoint &curPt = g_engine->_pathfindingPoints[currentNode - 1];
 		int localBestCost = 0x7777;
 		int nextNode = currentNode;
 		for (uint a = 0; a < curPt._adjacentPoints.size(); a++) {
@@ -3635,8 +3711,8 @@ bool Character::calculatePath(Common::Point target) {
 
 	// Step 4: Validate path - consecutive nodes must be walkable to each other
 	for (uint i = 0; i + 1 < _path.size(); i++) {
-		const Common::Point &p1 = g_engine->pathfindingPoints[_path[i + 1] - 1]._position;
-		const Common::Point &p2 = g_engine->pathfindingPoints[_path[i] - 1]._position;
+		const Common::Point &p1 = g_engine->_pathfindingPoints[_path[i + 1] - 1]._position;
+		const Common::Point &p2 = g_engine->_pathfindingPoints[_path[i] - 1]._position;
 		if (!g_engine->isPathWalkable(p1.y, p1.x, p2.y, p2.x)) {
 			// Path invalid - abort, go directly to target
 			_path.clear();
@@ -3651,14 +3727,14 @@ bool Character::calculatePath(Common::Point target) {
 	// is actually the character position.
 	_currentPathIndex = 0;
 	while (_currentPathIndex + 1 < (int16)_path.size()) {
-		const Common::Point &nextNodePos = g_engine->pathfindingPoints[_path[_currentPathIndex + 1] - 1]._position;
+		const Common::Point &nextNodePos = g_engine->_pathfindingPoints[_path[_currentPathIndex + 1] - 1]._position;
 		if (!g_engine->isPathWalkable(nextNodePos.y, nextNodePos.x, charPos.y, charPos.x))
 			break;
 		_currentPathIndex++;
 	}
 
 	// Set immediate target to the current path node
-	const Common::Point &firstTarget = g_engine->pathfindingPoints[_path[_currentPathIndex] - 1]._position;
+	const Common::Point &firstTarget = g_engine->_pathfindingPoints[_path[_currentPathIndex] - 1]._position;
 	_targetPosition = firstTarget;
 	return true;
 }
@@ -3669,7 +3745,7 @@ bool Character::canNodeConnectSourceToTarget(uint16 nodeIndex, const Common::Poi
 	// 1. Node must be able to see the target
 	// 2. Flood-fill connected component from node
 	// 3. Some node in component must see target AND some node must be seen from source
-	const Common::Point &nodePos = g_engine->pathfindingPoints[nodeIndex - 1]._position;
+	const Common::Point &nodePos = g_engine->_pathfindingPoints[nodeIndex - 1]._position;
 	if (!g_engine->isPathWalkable(nodePos.y, nodePos.x, target.y, target.x))
 		return false;
 
@@ -3683,7 +3759,7 @@ bool Character::canNodeConnectSourceToTarget(uint16 nodeIndex, const Common::Poi
 	for (int i = 1; i <= nodeCount; i++) {
 		if (!visited[i])
 			continue;
-		const Common::Point &p = g_engine->pathfindingPoints[i - 1]._position;
+		const Common::Point &p = g_engine->_pathfindingPoints[i - 1]._position;
 		if (g_engine->isPathWalkable(p.y, p.x, target.y, target.x))
 			anySeesTarget = true;
 		if (g_engine->isPathWalkable(charPos.y, charPos.x, p.y, p.x))
@@ -3698,7 +3774,7 @@ void Character::floodFillConnectedNodes(int nodeIndex, bool *visited, int nodeCo
 	if (visited[nodeIndex])
 		return;
 	visited[nodeIndex] = true;
-	const PathfindingPoint &pt = g_engine->pathfindingPoints[nodeIndex - 1];
+	const PathfindingPoint &pt = g_engine->_pathfindingPoints[nodeIndex - 1];
 	for (uint i = 0; i < pt._adjacentPoints.size(); i++) {
 		floodFillConnectedNodes(pt._adjacentPoints[i], visited, nodeCount);
 	}
@@ -3736,7 +3812,7 @@ bool Character::walkAlongPath() {
 	// Binary: if (pathNodeIndex != 0) posX/Y = nodeCoords[pathNodes[pathNodeIndex]]
 	if (_currentPathIndex >= 0 && _currentPathIndex < (int16)_path.size()) {
 		const uint16 snapIdx = _path[_currentPathIndex];
-		const Common::Point &snapPos = g_engine->pathfindingPoints[snapIdx - 1]._position;
+		const Common::Point &snapPos = g_engine->_pathfindingPoints[snapIdx - 1]._position;
 		_gameObject->_position = snapPos;
 	}
 	_currentPathIndex++;
@@ -3750,7 +3826,7 @@ bool Character::walkAlongPath() {
 		return false; // No more path segments after this
 	}
 	const uint16 nodeIdx = _path[_currentPathIndex];
-	const Common::Point &nodePos = g_engine->pathfindingPoints[nodeIdx - 1]._position;
+	const Common::Point &nodePos = g_engine->_pathfindingPoints[nodeIdx - 1]._position;
 	_targetPosition = nodePos;
 	_stepDeltaX = abs(_targetPosition.x - _gameObject->_position.x);
 	_stepDeltaY = abs(_targetPosition.y - _gameObject->_position.y);

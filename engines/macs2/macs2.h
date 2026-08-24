@@ -109,7 +109,7 @@ struct GlyphData : public Sprite {
 	char _ascii = 0;
 
 	void readFromeFile(Common::File &file);
-	void readFromMemory(Common::MemoryReadStream *stream);
+	void readFromMemory(Common::SeekableReadStream *stream);
 };
 
 struct AnimFrame : public Sprite {
@@ -117,7 +117,7 @@ struct AnimFrame : public Sprite {
 	int16 _offsetY = 0;
 
 	void readFromeFile(Common::File &file);
-	void readFromStream(Common::MemoryReadStream *stream);
+	void readFromStream(Common::SeekableReadStream *stream);
 	bool pixelHit(const Common::Point &point) const;
 	Common::Point getBottomMiddleOffset(uint16 scale = 100) const;
 };
@@ -281,7 +281,7 @@ protected:
 	}
 
 public:
-	Graphics::ManagedSurface readRLEImage(int64 offs, Common::MemoryReadStream *stream);
+	Graphics::ManagedSurface readRLEImage(int64 offs, Common::SeekableReadStream *stream);
 
 	/** Open primary MCS archive, check magic, load v1 or v2 layout. */
 	void readResourceFile();
@@ -294,6 +294,12 @@ public:
 	McsFileVersion detectMcsFileVersion(Common::SeekableReadStream &stream) const;
 	/** Load AHFFMACS0100 layout (loadResourceFile @ 1008:2e8d). */
 	void loadResourceFileV1();
+	/** Load AHFFMACS0200 layout */
+	void loadResourceFileV2();
+	/** Shared actor/scene/object directory load after dialect-specific globals */
+	void bootstrapMcsActorsObjectsAndScene();
+	/** Soft restart (options button 0x20 / Macs2PretReInit). */
+	void softRestart();
 	const char *getResourceMcsFilename() const;
 	/** Amiga: open DataA/Mdir, load OO objects as GameObjects, cursors, and scene stubs. */
 	void readAmigaResources();
@@ -330,10 +336,10 @@ public:
 	void readExecutable();
 
 	// Assumes that the stream is at the location of the number of background animations
-	void readBackgroundAnimations(Common::MemoryReadStream *stream);
+	void readBackgroundAnimations(Common::SeekableReadStream *stream);
 
 	// Assumes that the stream is at the start of the right section
-	void readImageResources(Common::MemoryReadStream *stream);
+	void readImageResources(Common::SeekableReadStream *stream);
 
 public:
 	Macs2Engine(OSystem *osystem, const ADGameDescription *gameDesc);
@@ -374,8 +380,7 @@ public:
 	Common::Array<PathfindingAreaOverride> _pathfindingOverrides;
 	// Area override table at scene+value*5+0x4EA8 (for getAreaAtPoint)
 	uint16 _areaOverrides[AREA_OVERRIDE_COUNT] = {0};
-	uint16 _pathfindingPoints[32];
-	Common::Array<PathfindingPoint> pathfindingPoints;
+	Common::Array<PathfindingPoint> _pathfindingPoints;
 	Common::Array<Common::Point> _path;
 
 	bool getPathfindingOverride(uint16 index, uint16 &result);
@@ -408,6 +413,8 @@ public:
 	Common::Array<uint16> _hotspotOverrides;
 
 	Common::Array<Macs2::AnimFrame> _imageResources;
+	/** Per-cursor hotspot from native HUD button metadata (v2); (0,0) = use center. */
+	Common::Point _cursorHotspots[33];
 
 	GlyphData _glyphs[256];
 	GlyphData _panelGlyphs[256]; // Font 2: clean sans-serif font used by save/load panel
@@ -511,7 +518,7 @@ public:
 	Common::Array<BackgroundAnimation> _backgroundAnimations;
 	Common::Array<BackgroundAnimationBlob> _backgroundAnimationsBlobs;
 
-	Common::MemoryReadStream *_fileStream = nullptr;
+	Common::SeekableReadStream *_fileStream = nullptr;
 	McsFileVersion _mcsFileVersion = McsFileVersion::Unknown;
 	/** Absolute file offset of the 0x3000-byte scene/object directory. */
 	uint32 _mcsDirectoryOffset = kMcsV1DirectoryOffset;
@@ -782,7 +789,8 @@ public:
 	uint16 overloadAnimSlot() const { return maxAnimSlots(); }
 	static uint16 specialAnimSlotToAnimSlot(uint16 specialSlot);
 	/** Scene hotspot override table entries (1-based inclusive max). */
-	uint16 maxHotspots() const { return 0x10; }
+	/** Hotspot remap table indices (1-based). DOS scene+0x5BD1: 16; V2 ActModule+0x6161: 32. */
+	uint16 maxHotspots() const { return isV2() ? 0x20 : 0x10; }
 	/** Per-object resource offset table entries. */
 	uint maxObjectResources() const { return 32; }
 	/** Anim slot used for the current orientation (overload-direction rule). */
@@ -826,6 +834,10 @@ public:
 	 * Called from changeScene; Amiga uses native MXMM from DataA.
 	 */
 	bool loadSceneGraphics(uint32 sceneIndex);
+	/** AHFFMACS0100 scene package (RLE maps). */
+	bool loadSceneGraphicsV1(uint32 sceneIndex);
+	/** AHFFMACS0200 ReadyModule scene package (MegaPic + half-res masks). */
+	bool loadSceneGraphicsV2(uint32 sceneIndex);
 
 	/**
 	 * Returns the game Id

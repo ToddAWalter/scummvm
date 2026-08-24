@@ -27,6 +27,7 @@
 #include "common/memstream.h"
 #include "common/path.h"
 #include "common/system.h"
+#include "common/util.h"
 #include "engines/enhancements.h"
 #include "macs2/amiga_archive.h"
 #include "macs2/amiga_decode.h"
@@ -1251,8 +1252,12 @@ OpcodeResult Script::ScriptExecutor::scriptChangeScene() {
 		currentView->startFadingWithSpeed(transitionSpeed);
 	}
 
-	// Binary step 8: set cursor to Walk (0x16) after scene change
-	_engine->setCursorMode(Script::MouseMode::Walk);
+	// V1 scriptChangeScene (1008:ad6e) forces Walk (0x16) after init
+	// V2 does not: it leaves it at the value scripts left it (typically via opcode 0x67 setCursorType)
+	// Overview/world-map init sets Use (0x15) so hotspot special 0x01 matches; forcing Walk here would
+	// send left-clicks through the walk path instead
+	if (!_engine->isV2())
+		_engine->setCursorMode(Script::MouseMode::Walk);
 	_interactedObjectID = 0;
 	_interactedInventoryItemId = 0;
 	// Binary: after init completes synchronously, terminate outer script context and
@@ -2185,19 +2190,19 @@ OpcodeResult Script::ScriptExecutor::scriptSetDirection() {
 		return OpcodeResult::Continue;
 	}
 	if (_engine->isV2()) {
-		if (specialSlot < 1 || specialSlot > 5) {
+		if (specialSlot < 1 || specialSlot > ARRAYSIZE(object->_specialAnimTriggers)) {
 			setScriptError(0x2e);
 			return OpcodeResult::Continue;
 		}
-		// Binary: clear any other special slot that already uses this direction.
-		for (uint i = 0; i < 5; i++) {
+		// clear any other slot that already uses this direction to 0.
+		for (uint i = 0; i < ARRAYSIZE(object->_specialAnimTriggers); i++) {
 			if (object->_specialAnimTriggers[i] == value)
 				object->_specialAnimTriggers[i] = 0;
 		}
 		object->_specialAnimTriggers[specialSlot - 1] = value;
-		return OpcodeResult::Continue;
+	} else {
+		object->_overloadAnimTriggerDirection = value;
 	}
-	object->_overloadAnimTriggerDirection = value;
 	return OpcodeResult::Continue;
 }
 
@@ -2237,13 +2242,13 @@ OpcodeResult Script::ScriptExecutor::scriptStopAnimation() {
 			obj->_useOverloadAnimation = false;
 			obj->_overloadAnimation.clear();
 		}
-		return OpcodeResult::Continue;
+	} else {
+		obj->_overloadAnimTriggerDirection = 0x7FFF;
+		obj->_useOverloadAnimation = false;
+		obj->_overloadAnimation.clear();
+		if (obj->_blobs.size() > 20)
+			obj->_blobs[20].clear();
 	}
-	obj->_overloadAnimTriggerDirection = 0x7FFF;
-	obj->_useOverloadAnimation = false;
-	obj->_overloadAnimation.clear();
-	if (obj->_blobs.size() > 20)
-		obj->_blobs[20].clear();
 	return OpcodeResult::Continue;
 }
 
@@ -2541,7 +2546,8 @@ OpcodeResult Script::ScriptExecutor::scriptSetHotspotOverride() {
 
 	clearScriptError();
 	const uint16 maxHotspot = _engine->maxHotspots();
-	if (v1 < 1 || v1 > maxHotspot || v2 < 1 || v2 > maxHotspot) {
+	// v1 validates both ids; v2 only rejects an out-of-range source
+	if (v1 < 1 || v1 > maxHotspot || (!_engine->isV2() && (v2 < 1 || v2 > maxHotspot))) {
 		setScriptError(0x1e);
 		return OpcodeResult::Continue;
 	}
@@ -3895,6 +3901,7 @@ OpcodeResult ScriptExecutor::scriptLoadDistanceMask() {
 	debugC(kDebugScript, "SCRIPT::loadDistanceMask(index=%u)", resourceIndex);
 	clearScriptError();
 	scriptSkipOpcodeRemainder(0x69);
+	// Depth mask is full playfield resolution on both dialects.
 	if (!_engine->loadMaskFromResource(resourceIndex, _executingScriptObjectId, _engine->_depthMap,
 									   _engine->screenWidth(), _engine->gameHeight(), false))
 		warning("loadDistanceMask: failed resource %u", resourceIndex);
@@ -3906,8 +3913,13 @@ OpcodeResult ScriptExecutor::scriptLoadAreaMask() {
 	debugC(kDebugScript, "SCRIPT::loadAreaMask(index=%u)", resourceIndex);
 	clearScriptError();
 	scriptSkipOpcodeRemainder(0x6A);
+	// V2 stores hotspot/path/shadow masks at half res (320x200) and upscales
+	// depth above is already full 640x400
+	const bool halfRes = _engine->isV2();
+	const int w = halfRes ? kScreenWidth : _engine->screenWidth();
+	const int h = halfRes ? kGameHeight : _engine->gameHeight();
 	if (!_engine->loadMaskFromResource(resourceIndex, _executingScriptObjectId, _engine->_hotspotMap,
-									   _engine->screenWidth(), _engine->gameHeight(), false))
+									   w, h, halfRes))
 		warning("loadAreaMask: failed resource %u", resourceIndex);
 	return OpcodeResult::Continue;
 }
@@ -3917,8 +3929,11 @@ OpcodeResult ScriptExecutor::scriptLoadWalkMask() {
 	debugC(kDebugScript, "SCRIPT::loadWalkMask(index=%u)", resourceIndex);
 	clearScriptError();
 	scriptSkipOpcodeRemainder(0x6B);
+	const bool halfRes = _engine->isV2();
+	const int w = halfRes ? kScreenWidth : _engine->screenWidth();
+	const int h = halfRes ? kGameHeight : _engine->gameHeight();
 	if (!_engine->loadMaskFromResource(resourceIndex, _executingScriptObjectId, _engine->_pathfindingMap,
-									   _engine->screenWidth(), _engine->gameHeight(), false))
+									   w, h, halfRes))
 		warning("loadWalkMask: failed resource %u", resourceIndex);
 	return OpcodeResult::Continue;
 }
@@ -3928,8 +3943,11 @@ OpcodeResult ScriptExecutor::scriptLoadShadowMask() {
 	debugC(kDebugScript, "SCRIPT::loadShadowMask(index=%u)", resourceIndex);
 	clearScriptError();
 	scriptSkipOpcodeRemainder(0x6C);
+	const bool halfRes = _engine->isV2();
+	const int w = halfRes ? kScreenWidth : _engine->screenWidth();
+	const int h = halfRes ? kGameHeight : _engine->gameHeight();
 	if (!_engine->loadMaskFromResource(resourceIndex, _executingScriptObjectId, _engine->_shadowMap,
-									   _engine->screenWidth(), _engine->gameHeight(), false))
+									   w, h, halfRes))
 		warning("loadShadowMask: failed resource %u", resourceIndex);
 	return OpcodeResult::Continue;
 }

@@ -120,7 +120,7 @@ void ActionBar::syncActiveVerbFromCursorMode() {
 		return;
 	}
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < ARRAYSIZE(kVerbs); i++) {
 		if (kVerbs[i].mode == mode) {
 			_activeVerbIndex = i;
 			return;
@@ -129,11 +129,11 @@ void ActionBar::syncActiveVerbFromCursorMode() {
 }
 
 bool ActionBar::useScummSkin() const {
-	return g_engine->enhancementEnabled(kEnhUIUX);
+	return !useNativeSkin() && g_engine->enhancementEnabled(kEnhUIUX);
 }
 
 bool ActionBar::useNativeSkin() const {
-	return !useScummSkin() && g_engine->hasNativeHudAssets();
+	return g_engine->hasNativeHudAssets();
 }
 
 int ActionBar::gameAreaBottomY() const {
@@ -202,7 +202,7 @@ void ActionBar::drawSentenceLine(Graphics::ManagedSurface &s) {
 }
 
 void ActionBar::drawVerbBar(Graphics::ManagedSurface &s) {
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < ARRAYSIZE(kVerbs); i++) {
 		const Common::Rect r = getVerbRect(i);
 		const bool isActive = (i == _activeVerbIndex);
 		const bool isHovered = (i == _hoveredVerb);
@@ -298,7 +298,7 @@ bool ActionBar::handleClick(const Common::Point &pos, bool scriptsRunning) {
 }
 
 bool ActionBar::handleClickScumm(const Common::Point &pos, bool scriptsRunning) {
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < ARRAYSIZE(kVerbs); i++) {
 		if (getVerbRect(i).contains(pos)) {
 			_activeVerbIndex = i;
 			g_engine->setCursorMode(kVerbs[i].mode);
@@ -410,7 +410,7 @@ void ActionBar::handleMouseMoveScumm(const Common::Point &pos) {
 	_hoveredScrollButton = -1;
 	clearSentenceObject();
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < ARRAYSIZE(kVerbs); i++) {
 		if (getVerbRect(i).contains(pos)) {
 			_hoveredVerb = i;
 			break;
@@ -845,11 +845,8 @@ bool ActionBar::handleClickNative(const Common::Point &pos) {
 		g_engine->_optionsSubMode = 2;
 		refreshSaveSlotNames();
 	} else if (id == 0x20) {
-		// Soft restart requires dialect-v2 reinit; not available until that loader lands.
-		debugC(1, kDebugScript, "ActionBar: restart button ignored (no soft-restart yet)");
-		g_engine->_menuMode = 1;
-		g_engine->_optionsSubMode = 0;
-		g_engine->setCursorMode(Script::MouseMode::PanelCursor);
+		g_engine->softRestart();
+		return true;
 	} else if (id == 0x21) {
 		::GUI::MessageDialog quitDialog(
 			Common::U32String("Quit the game?"),
