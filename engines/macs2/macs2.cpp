@@ -274,8 +274,8 @@ void Macs2Engine::loadResourceFileV2() {
 		return;
 
 	_fileStream->seek(_mcsDirectoryOffset + 0x3000, SEEK_SET);
-	_fileStream->read(_palVanilla, 0x300);
-	memcpy(_pal, _palVanilla, 0x300);
+	readPalette(_fileStream, _palVanilla);
+	_pal = _palVanilla;
 
 	for (int i = 0; i < ARRAYSIZE(_hudTextRecolor); i++) {
 		_hudTextRecolor[i] = _fileStream->readUint16LE();
@@ -393,7 +393,7 @@ void Macs2Engine::loadResourceFileV2() {
 				}
 			}
 			const int slot = (int)mouseNr - 1;
-			if (mouseNr != 0 && slot >= 0 && slot < 33) {
+			if (mouseNr != 0 && slot >= 0 && slot < ARRAYSIZE(_cursorHotspots)) {
 				const bool empty = _imageResources[slot]._data.empty();
 				if (empty || prefer) {
 					_imageResources[slot] = prefer && gotActive ? activeFrame : frame;
@@ -963,20 +963,10 @@ bool Macs2Engine::loadSceneGraphicsV1(uint32 sceneIndex) {
 		}
 	}
 
-	// We load the palette right afterwards - 0x300 is exactly 3 * 256d
-	Common::Array<uint8> palette;
-	palette.resize(0x300);
-	_fileStream->read(palette.data(), 0x300);
-
-	// TODO: Copy-pasted code here
-	// Make a copy that will not be color corrected, for fading
-	memcpy(_palVanilla, palette.data(), 256 * 3);
-	memcpy(_pal, palette.data(), 0x300);
-
-	// Adjust the palette
-	for (int i = 0; i < 256 * 3; i++) {
-		_pal[i] = (_pal[i] * 259 + 33) >> 6;
-	}
+	// Palette is 0x300 bytes (256 RGB triples). Keep an uncorrected copy for fades.
+	readPalette(_fileStream, _palVanilla);
+	_pal = _palVanilla;
+	expandPalette6To8(_pal);
 
 	// changeScene @ 1008:2574: 0x100-byte panel remap table (scene+0x1006 area, NOT shading table)
 	if (_panelRemapTable.size() != 0x100)
@@ -991,6 +981,7 @@ bool Macs2Engine::loadSceneGraphicsV1(uint32 sceneIndex) {
 	Graphics::ManagedSurface depthRLE = readRLEImage(_fileStream->pos(), _fileStream);
 	// Confirmed: depth map at scene offset 0x1013
 	_depthMap.blitFrom(depthRLE);
+	_sceneDepthMap.copyFrom(_depthMap);
 
 	// Offset 2017h
 	Graphics::ManagedSurface pathfindingRLE = readRLEImage(_fileStream->pos(), _fileStream);
@@ -1030,6 +1021,7 @@ bool Macs2Engine::loadSceneGraphicsV1(uint32 sceneIndex) {
 
 	// TODO: Remove the now superfluous one
 	readBackgroundAnimations(_fileStream);
+	updateAllBackgroundAnimationDepthMaps();
 
 	// Offset 51F7h
 	_numPathfindingPoints = _fileStream->readUint16LE();
@@ -1089,10 +1081,9 @@ bool Macs2Engine::loadSceneGraphicsV2(uint32 sceneIndex) {
 	if (!readMegaPicImage(stream, kWinScreenWidth, kWinGameHeight, _sceneBackground))
 		return false;
 
-	stream->read(_palVanilla, 0x300);
-	memcpy(_pal, _palVanilla, 0x300);
-	for (int i = 0; i < 256 * 3; i++)
-		_pal[i] = (_pal[i] * 259 + 33) >> 6;
+	readPalette(stream, _palVanilla);
+	_pal = _palVanilla;
+	expandPalette6To8(_pal);
 
 	if (_panelRemapTable.size() != 0x100)
 		_panelRemapTable.resize(0x100);
@@ -1678,7 +1669,7 @@ bool Macs2Engine::loadDeltaAnimResource(uint8 resourceIndex, uint16 executingObj
 	Common::Array<DeltaSfxEvent> savedSfx = Common::move(_deltaAnim.sfxEvents);
 	clearDeltaAnim();
 	_deltaAnim.sfxEvents = Common::move(savedSfx);
-	_fileStream->read(_deltaAnim.palette, 0x300);
+	readPalette(_fileStream, _deltaAnim.palette);
 	_deltaAnim.frames.resize(numFrames);
 	_deltaAnim.frameCount = numFrames;
 	_deltaAnim.loaded = true;
@@ -1797,11 +1788,10 @@ bool Macs2Engine::startDeltaPlayback(uint16 startFrame, uint16 endFrame, uint16 
 	_deltaAnim.playing = true;
 	_deltaAnim.applyPaletteOnStart = applyPalette;
 	if (applyPalette || _deltaAnim.currentFrame == 0) {
-		memcpy(_palVanilla, _deltaAnim.palette, 0x300);
-		memcpy(_pal, _deltaAnim.palette, 0x300);
-		for (int i = 0; i < 256 * 3; i++)
-			_pal[i] = (_pal[i] * 259 + 33) >> 6;
-		g_system->getPaletteManager()->setPalette(_pal, 0, 256);
+		_palVanilla = _deltaAnim.palette;
+		_pal = _deltaAnim.palette;
+		expandPalette6To8(_pal);
+		g_system->getPaletteManager()->setPalette(_pal);
 	}
 	const uint16 displayFrame = _deltaAnim.currentFrame;
 	playDeltaFrameSfx(displayFrame);
@@ -1891,6 +1881,68 @@ uint16 Macs2Engine::getWalkabilityAt(int16 y, int16 x) {
 		return 0xFF;
 	}
 	return value;
+}
+
+void Macs2Engine::updateBackgroundAnimationDepthMap(size_t animIndex) {
+	if (isV2() || _sceneDepthMap.w == 0 || animIndex >= _backgroundAnimations.size())
+		return;
+
+	BackgroundAnimation &anim = _backgroundAnimations[animIndex];
+	BackgroundAnimationBlob &blobEntry = _backgroundAnimationsBlobs[animIndex];
+	Common::Array<uint8> &blob = blobEntry.activeBlob();
+	if (blob.empty())
+		return;
+
+	const uint32 frameStart = BackgroundAnimationBlob::advanceAnimFrame(blob, false, 0);
+	if (frameStart == 0 || frameStart + 10 > blob.size())
+		return;
+
+	const uint16 pixelFrameNum = BackgroundAnimationBlob::getCurrentPixelFrameNumber(blob);
+	const int16 frameOffsetX = (int16)READ_LE_UINT16(&blob[frameStart]);
+	const int16 frameOffsetY = (int16)READ_LE_UINT16(&blob[frameStart + 2]);
+	const uint16 width = READ_LE_UINT16(&blob[frameStart + 6]);
+	const uint16 height = READ_LE_UINT16(&blob[frameStart + 8]);
+	if (width == 0 || height == 0 || frameStart + 10 + (uint32)width * height > blob.size())
+		return;
+
+	const int16 baseX = (int16)anim._x + 1 + frameOffsetX;
+	const int16 baseY = (int16)anim._y + frameOffsetY;
+	const byte *pixels = &blob[frameStart + 10];
+
+	if (pixelFrameNum <= 1) {
+		// First pixel frame (closed gate): restore authored depth under opaque pixels.
+		for (uint16 yy = 0; yy < height; yy++) {
+			for (uint16 xx = 0; xx < width; xx++) {
+				if (pixels[yy * width + xx] == 0)
+					continue;
+				const int px = baseX + (int)xx;
+				const int py = baseY + (int)yy;
+				if (px >= 0 && px < _depthMap.w && py >= 0 && py < _depthMap.h)
+					_depthMap.setPixel(px, py, _sceneDepthMap.getPixel(px, py));
+			}
+		}
+		return;
+	}
+
+	// Later pixel frames (open gate): walkable tiles under opaque pixels use path height.
+	for (uint16 yy = 0; yy < height; yy++) {
+		for (uint16 xx = 0; xx < width; xx++) {
+			if (pixels[yy * width + xx] == 0)
+				continue;
+			const int px = baseX + (int)xx;
+			const int py = baseY + (int)yy;
+			if (px < 0 || px >= _depthMap.w || py < 0 || py >= _depthMap.h)
+				continue;
+			const uint16 walkVal = getWalkabilityAt((int16)py, (int16)px);
+			if (isWalkabilityWalkable(walkVal))
+				_depthMap.setPixel(px, py, (byte)walkVal);
+		}
+	}
+}
+
+void Macs2Engine::updateAllBackgroundAnimationDepthMaps() {
+	for (size_t i = 0; i < _backgroundAnimations.size(); i++)
+		updateBackgroundAnimationDepthMap(i);
 }
 
 // snapToWalkablePosition (1008:9be2)
@@ -3462,6 +3514,50 @@ uint16 BackgroundAnimationBlob::advanceAnimFrame(Common::Array<uint8> &blob, boo
 	return bp12;
 }
 
+uint16 BackgroundAnimationBlob::getCurrentPixelFrameNumber(const Common::Array<uint8> &blob) {
+	if (blob.size() < 14)
+		return 1;
+
+	Common::MemorySeekableReadWriteStream stream(const_cast<byte *>(blob.data()), blob.size());
+	stream.readUint16LE();       // unknown
+	uint16 bp6 = stream.readUint16LE(); // sequence position
+	stream.readUint16LE();       // repeat counter
+	stream.readUint16LE();       // loop start
+	stream.readUint16LE();       // delay counter
+	const uint16 bp0E = stream.readUint16LE() + 1;
+
+	if (bp6 >= bp0E)
+		bp6 = 1;
+
+	uint8 bp0C = 0;
+	while (true) {
+		if (bp6 >= bp0E)
+			bp6 = 1;
+		stream.seek(0x0B + bp6, SEEK_SET);
+		bp0C = stream.readByte();
+		if (bp0C == 0x01) {
+			bp6++;
+			stream.readByte();
+			bp6++;
+		} else if (bp0C == 0x02) {
+			bp6++;
+			stream.readByte();
+			bp6++;
+		} else if (bp0C == 0x03) {
+			bp6 = stream.readByte();
+		} else {
+			break;
+		}
+	}
+
+	uint16 cx = bp0C - 0xA;
+	stream.seek(0xB + bp0E, SEEK_SET);
+	const uint16 frameCount = stream.readUint16LE();
+	if (cx == 0 || cx > frameCount)
+		cx = 1;
+	return cx;
+}
+
 // Matches binary decodeAnimBlob (1010:184d) + mirrorAnimFrame (1010:1319).
 // Iterates each frame in the blob and horizontally flips its pixel data in-place.
 void BackgroundAnimationBlob::mirrorAnimBlob(Common::Array<uint8> &blob) {
@@ -3538,6 +3634,24 @@ Audio::Timestamp MacsAudioStream::getLength() const {
 	return Audio::Timestamp(0, _data.size(), getRate());
 }
 
+void Macs2Engine::readPalette(Common::SeekableReadStream *stream, Graphics::Palette &dest) {
+	byte buf[Graphics::PALETTE_SIZE];
+	stream->read(buf, Graphics::PALETTE_SIZE);
+	if (dest.size() != Graphics::PALETTE_COUNT)
+		dest.resize(Graphics::PALETTE_COUNT, false);
+	dest.set(buf, 0, Graphics::PALETTE_COUNT);
+}
+
+void Macs2Engine::expandPalette6To8(Graphics::Palette &pal) {
+	for (uint i = 0; i < pal.size(); i++) {
+		byte r, g, b;
+		pal.get(i, r, g, b);
+		pal.set(i, (byte)((r * 259 + 33) >> 6),
+				(byte)((g * 259 + 33) >> 6),
+				(byte)((b * 259 + 33) >> 6));
+	}
+}
+
 void Macs2Engine::applyPaletteDarkening() {
 	// Binary: sceneData+0x5203 == 1 means copy source palette as-is to display;
 	// otherwise darken: display[i] = source[i] * (100 - darkenPercent) / 100.
@@ -3547,9 +3661,12 @@ void Macs2Engine::applyPaletteDarkening() {
 	if (darkenPercent > 100)
 		darkenPercent = 100;
 	uint16 brightnessFactor = 100 - darkenPercent;
-	for (int i = 0; i < 256 * 3; i++) {
-		uint8 darkened = (_palVanilla[i] * brightnessFactor) / 100;
-		_pal[i] = (darkened * 259 + 33) >> 6;
+	for (uint i = 0; i < Graphics::PALETTE_COUNT; i++) {
+		byte r, g, b;
+		_palVanilla.get(i, r, g, b);
+		_pal.set(i, (byte)((r * brightnessFactor / 100 * 259 + 33) >> 6),
+				 (byte)((g * brightnessFactor / 100 * 259 + 33) >> 6),
+				 (byte)((b * brightnessFactor / 100 * 259 + 33) >> 6));
 	}
 }
 
@@ -3577,37 +3694,41 @@ void Macs2Engine::applyScenePaletteEffect() {
 		selected[minIndex] = true;
 	}
 
-	byte refPalette[256 * 3];
-	memset(refPalette, 0, sizeof(refPalette));
+	Graphics::Palette refPalette(Graphics::PALETTE_COUNT);
 	int refSlot = 0x10;
 	for (int i = 0; i <= 0xBF; i++) {
 		if (selected[i]) {
-			refPalette[refSlot * 3 + 0] = _palVanilla[i * 3 + 0];
-			refPalette[refSlot * 3 + 1] = _palVanilla[i * 3 + 1];
-			refPalette[refSlot * 3 + 2] = _palVanilla[i * 3 + 2];
+			byte r, g, b;
+			_palVanilla.get(i, r, g, b);
+			refPalette.set(refSlot, r, g, b);
 			refSlot++;
 		}
 	}
 	for (int i = 0xC0; i <= 0xFF; i++) {
-		refPalette[i * 3 + 0] = _palVanilla[i * 3 + 0];
-		refPalette[i * 3 + 1] = _palVanilla[i * 3 + 1];
-		refPalette[i * 3 + 2] = _palVanilla[i * 3 + 2];
+		byte r, g, b;
+		_palVanilla.get(i, r, g, b);
+		refPalette.set(i, r, g, b);
 	}
 
 	uint8 remap[256];
 	for (int paletteIndex = 0; paletteIndex < 256; paletteIndex++) {
-		const byte *srcRgb = &_palVanilla[paletteIndex * 3];
+		byte srcR, srcG, srcB;
+		_palVanilla.get(paletteIndex, srcR, srcG, srcB);
 		uint32 bestDistance = 0x7FFF;
 		uint8 bestIndex = 0x10;
 		for (int candidate = 0x10; candidate <= 0xFF; candidate++) {
-			const byte *candidateRgb = &refPalette[candidate * 3];
-			uint32 distance = 0;
-			for (int channel = 0; channel < 3; channel++) {
-				int diff = (int)srcRgb[channel] - (int)candidateRgb[channel];
-				if (diff < 0)
-					diff = -diff;
-				distance += (uint32)diff;
-			}
+			byte candR, candG, candB;
+			refPalette.get(candidate, candR, candG, candB);
+			int dR = (int)srcR - (int)candR;
+			int dG = (int)srcG - (int)candG;
+			int dB = (int)srcB - (int)candB;
+			if (dR < 0)
+				dR = -dR;
+			if (dG < 0)
+				dG = -dG;
+			if (dB < 0)
+				dB = -dB;
+			const uint32 distance = (uint32)(dR + dG + dB);
 			if (distance < bestDistance) {
 				bestDistance = distance;
 				bestIndex = (uint8)candidate;
@@ -3644,14 +3765,13 @@ void Macs2Engine::applyScenePaletteEffect() {
 		}
 	}
 
-	byte remappedVanilla[256 * 3];
+	Graphics::Palette remappedVanilla(Graphics::PALETTE_COUNT);
 	for (int i = 0; i < 256; i++) {
-		const int src = remap[i];
-		remappedVanilla[i * 3 + 0] = refPalette[src * 3 + 0];
-		remappedVanilla[i * 3 + 1] = refPalette[src * 3 + 1];
-		remappedVanilla[i * 3 + 2] = refPalette[src * 3 + 2];
+		byte r, g, b;
+		refPalette.get(remap[i], r, g, b);
+		remappedVanilla.set(i, r, g, b);
 	}
-	memcpy(_palVanilla, remappedVanilla, 256 * 3);
+	_palVanilla = remappedVanilla;
 	applyPaletteDarkening();
 
 	View1 *view = (View1 *)findView("View1");
@@ -3690,9 +3810,9 @@ void Macs2Engine::updateBackgroundAnimationPalette() {
 
 	if (mapActive) {
 		// Preserve entries 0..15 (UI), update 16..255.
-		g_system->getPaletteManager()->setPalette(_pal + 16 * 3, 16, 240);
+		g_system->getPaletteManager()->setPalette(_pal.data() + 16 * 3, 16, 240);
 	} else {
-		g_system->getPaletteManager()->setPalette(_pal, 0, 256);
+		g_system->getPaletteManager()->setPalette(_pal);
 	}
 }
 

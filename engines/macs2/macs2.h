@@ -38,6 +38,7 @@
 #include "common/text-to-speech.h"
 #include "common/util.h"
 #include "engines/engine.h"
+#include "graphics/palette.h"
 #include "macs2/amiga_archive.h"
 #include "macs2/events.h"
 #include "macs2/macs2_constants.h"
@@ -166,6 +167,8 @@ struct BackgroundAnimationBlob {
 	}
 	AnimFrame getCurrentFrame();
 	static uint16 advanceAnimFrame(Common::Array<uint8> &blob, bool bpp6, uint16 bpp8);
+	/** 1-based pixel frame index from the current sequence position (advanceAnimFrame cx). */
+	static uint16 getCurrentPixelFrameNumber(const Common::Array<uint8> &blob);
 	static uint16 getAnimFrameCount(Common::Array<uint8> &blob);
 	// Mirrors (horizontally flips) all frames in an animation blob in-place.
 	// Matches binary decodeAnimBlob (1010:184d) which calls the row-flip at 1010:1319.
@@ -361,15 +364,17 @@ public:
 
 	// This is the depth map
 	Graphics::ManagedSurface _depthMap;
+	// Scene-load snapshot used to restore depth under background animation frame 0.
+	Graphics::ManagedSurface _sceneDepthMap;
 
 	// Shadow/shading intensity map (scene+0x301B). Per-pixel values 0-32
 	// control character sprite darkening via the shading table.
 	// Only scenes with shadow regions have non-zero data.
 	Graphics::ManagedSurface _shadowMap;
 
-	// TODO: use Graphics::Palette for this
-	byte _pal[256 * 3] = {0};
-	byte _palVanilla[256 * 3] = {0};
+	// _palVanilla: raw 6-bit VGA source. _pal: 8-bit display (darkened + expanded).
+	Graphics::Palette _pal{Graphics::PALETTE_COUNT};
+	Graphics::Palette _palVanilla{Graphics::PALETTE_COUNT};
 
 	Common::Array<Common::String> _debugOutput;
 	Common::Array<Common::String> _textLog;
@@ -400,6 +405,9 @@ public:
 	void removePathfindingOverride(uint16 index);
 
 	uint16 getWalkabilityAt(int16 y, int16 x);
+	/** Sync depth map with the current background animation frame (v1 gate fix). */
+	void updateBackgroundAnimationDepthMap(size_t animIndex);
+	void updateAllBackgroundAnimationDepthMaps();
 	bool isPathWalkable(int16 y1, int16 x1, int16 y2, int16 x2);
 	void snapToWalkablePosition(int16 *pTargetY, int16 *pTargetX, int16 charY, int16 charX);
 	int getPathfindingNodeCount() const { return (int)_numPathfindingPoints; }
@@ -469,7 +477,7 @@ public:
 		uint16 clipMiY = 0;
 		uint16 clipMaX = 0;
 		uint16 clipMaY = 0;
-		byte palette[0x300] = {};
+		Graphics::Palette palette{Graphics::PALETTE_COUNT};
 		bool applyPaletteOnStart = false;
 		Common::Array<DeltaFrame> frames;
 		Common::Array<DeltaSfxEvent> sfxEvents;
@@ -486,7 +494,7 @@ public:
 			clipMiX = clipMiY = 0;
 			clipMaX = (uint16)MAX(0, screenW - 1);
 			clipMaY = (uint16)MAX(0, screenH - 1);
-			memset(palette, 0, sizeof(palette));
+			palette = Graphics::Palette(Graphics::PALETTE_COUNT);
 		}
 	};
 	DeltaAnimState _deltaAnim;
@@ -591,6 +599,8 @@ public:
 	uint16 _paletteDarkenPercent;
 
 	void applyPaletteDarkening();
+	void readPalette(Common::SeekableReadStream *stream, Graphics::Palette &dest);
+	void expandPalette6To8(Graphics::Palette &pal);
 	// Palette quantization for g_wHelpButtonDisabled path (1000:103e).
 	// Histograms scene pixels, keeps 16 rarest colors (0..0xBF) plus UI range
 	// 0xC0..0xFF, remaps background + bg-anim blobs + palette via Manhattan RGB.
