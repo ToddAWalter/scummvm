@@ -123,6 +123,19 @@ struct AnimFrame : public Sprite {
 	Common::Point getBottomMiddleOffset(uint16 scale = 100) const;
 };
 
+enum class MenuMode : uint16 {
+	Hidden = 0,
+	Main = 1,
+	Options = 2,
+	DialogueList = 4
+};
+
+enum class OptionsSubMode : uint16 {
+	None = 0,
+	Save = 1,
+	Load = 2
+};
+
 /** Persistent native HUD button (megapic panel skin). */
 struct HudButton {
 	int16 x = 0;
@@ -131,7 +144,7 @@ struct HudButton {
 	uint16 activeStep = 0;
 	uint16 hoverStep = 0;
 	uint16 buttonId = 0; // 1=Walk, 2=Look, 3=Talk, 4=Use, 0x33=Options, ...
-	uint16 menuId = 0;   // 1=main bar, 2=options, ...
+	uint16 menuId = 0;
 	AnimFrame frame;
 	AnimFrame activeFrame;
 	AnimFrame hoverFrame;
@@ -505,8 +518,8 @@ public:
 	void applyDeltaFrameToBackground(const DeltaFrame &frame);
 	void playDeltaFrameSfx(uint16 displayFrame);
 	// Font glyph count (79 glyphs in the resource file's font data)
-	uint16 numGlyphs = 79;
-	uint16 maxGlyphHeight;
+	uint16 _numGlyphs = 79;
+	uint16 _maxGlyphHeight;
 
 	AnimFrame _animFrames[6];
 	// 6 flag/decoration animation frames at fixed file offset 0x6A5941, each followed by 6 padding bytes
@@ -535,6 +548,7 @@ public:
 	uint16 amigaTextLinePitch = 0;
 	/** True after loadAmigaSceneBackground installed copper colors in 0..31. */
 	bool _amigaNativePlayfieldPalette = false;
+	Common::Array<byte> _amigaLineCopperPal;
 	/** Amiga DataA/Mdir archive (owned). Null on DOS. */
 	Macs2AmigaArchive *_amigaArchive = nullptr;
 	/** Filled by loadAmigaSceneBackground; consumed by Amiga changeScene. */
@@ -554,10 +568,8 @@ public:
 	/** Y where the bottom HUD starts; scene above this is interactive. */
 	uint16 _panelTopY = 0;
 	uint16 _panelHeight = 0;
-	/** 0=hidden, 1=main verbs/invent, 2=options, 4=dialogue list. */
-	uint16 _menuMode = 1;
-	/** 0=none, 1=save, 2=load (options submenu). */
-	uint16 _optionsSubMode = 0;
+	MenuMode _menuMode = MenuMode::Main;
+	OptionsSubMode _optionsSubMode = OptionsSubMode::None;
 	Script::MouseMode _savedMenuCursorMode = Script::MouseMode::Walk;
 	uint16 _inventScroll = 1;
 	uint16 _inventOriginX = 0;
@@ -733,8 +745,11 @@ public:
 	Common::HashMap<uint32, TranslationEntry> _sceneTranslations;
 	Common::HashMap<uint32, TranslationEntry> _objectTranslations;
 	Common::HashMap<Common::String, Common::String> _hotspotLabelTranslations;
+	Common::HashMap<Common::String, Common::String> _uiLabelTranslations;
 	void loadTranslation();
 	Common::String translateHotspotLabel(const Common::String &cp850Name) const;
+	/** Action-bar / HUD chrome; German source key, same lookup rules as hotspot labels. */
+	Common::String translateUiLabel(const Common::String &source) const;
 	// Compute the sequential string index at the given byte offset in a string blob
 	int computeStringIndex(Common::MemoryReadStream *stream, int targetOffset);
 
@@ -773,8 +788,9 @@ public:
 
 	/**
 	 * Bottom HUD / action-bar visibility (dialect-neutral).
-	 * Driven by showActionBar / hideActionBar; Scumm verb strip and native
-	 * HUDs both respect this flag. Native skin also maps visible <-> menuMode.
+	 * hide/show opcodes toggle MenuMode Hidden vs Main and restore the cursor saved
+	 * on hide. The Scumm kEnhUIUX strip uses the same flag; cursor mode alone
+	 * never hides the bar.
 	 */
 	bool isBottomHudVisible() const { return _bottomHudVisible; }
 	void setBottomHudVisible(bool visible);
@@ -828,8 +844,8 @@ public:
 	 */
 	int dialogLineHeight() const {
 		if (isAmiga())
-			return amigaTextLinePitch ? (int)amigaTextLinePitch : (int)maxGlyphHeight;
-		return (int)maxGlyphHeight + dialogLineGap();
+			return amigaTextLinePitch ? (int)amigaTextLinePitch : (int)_maxGlyphHeight;
+		return (int)_maxGlyphHeight + dialogLineGap();
 	}
 
 	/** Depth-map compare Y for sprite occlusion (halved on v2 full-res depth). */
@@ -926,6 +942,9 @@ public:
 
 extern Macs2Engine *g_engine;
 #define SHOULD_QUIT ::Macs2::g_engine->shouldQuit()
+Common::String getObjectHotspotName(uint16 objectIndex);
+/** Display name for a hit id: 0x400+object or 0x800+scene hotspot. */
+Common::String lookupInteractionDisplayName(uint16 interactionId);
 
 } // End of namespace Macs2
 

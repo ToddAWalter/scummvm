@@ -54,6 +54,34 @@ namespace Macs2 {
 
 static constexpr const char *kGameSpeedModeConfigKey = "macs2_game_speed_mode";
 
+namespace {
+
+static constexpr uint16 kMaxSceneObjects = 0x200;
+
+Common::U32String hotspotLabelToU32(const Common::String &name) {
+	if (name.empty())
+		return Common::U32String();
+	return Common::U32String(name.c_str(), Common::kDos850);
+}
+
+bool isMapModeActive() {
+	if (g_events == nullptr)
+		return false;
+	View1 *view = (View1 *)g_events->findView("View1");
+	return view != nullptr && view->_currentMode == ViewMode::VM_HELP;
+}
+
+Common::Point getSceneObjectHotspotPosition(View1 *view, GameObject *obj) {
+	if (view != nullptr) {
+		Character *character = view->getCharacterByIndex(obj->_index);
+		if (character != nullptr && !character->_markedForDeletion)
+			return character->getPosition();
+	}
+	return obj->_position;
+}
+
+} // namespace
+
 void resetCharacterWalkPath(Character *character) {
 	if (character == nullptr || character->_gameObject == nullptr)
 		return;
@@ -207,12 +235,12 @@ void Macs2Engine::loadResourceFileV1() {
 	uint32 font1SizeField = _fileStream->readUint32LE(); // skip size field
 	(void)font1SizeField;
 	uint16 font1GlyphCount = _fileStream->readUint16LE();
-	maxGlyphHeight = 0;
+	_maxGlyphHeight = 0;
 	for (uint i = 0; i < font1GlyphCount; i++) {
 		_glyphs[i].readFromMemory(_fileStream);
-		maxGlyphHeight = MAX(_glyphs[i]._height, maxGlyphHeight);
+		_maxGlyphHeight = MAX(_glyphs[i]._height, _maxGlyphHeight);
 	}
-	numGlyphs = font1GlyphCount;
+	_numGlyphs = font1GlyphCount;
 
 	// Font 2: clean sans-serif font used by save/load panel (scene data offset 0x1044)
 	uint32 font2SizeField = _fileStream->readUint32LE();
@@ -245,7 +273,7 @@ void Macs2Engine::loadResourceFileV2() {
 	//   TalkVol + Font1 + SysFont + 0x400 map offsets
 	_shadingTable.clear();
 	_shadingTable.resize(0x800, 0);
-	numGlyphs = 0;
+	_numGlyphs = 0;
 	numPanelGlyphs = 0;
 	memset(_mapSceneOffsets, 0, sizeof(_mapSceneOffsets));
 	_imageResources.clear();
@@ -262,8 +290,8 @@ void Macs2Engine::loadResourceFileV2() {
 	}
 	_panelTopY = 0;
 	_panelHeight = 0;
-	_menuMode = 1;
-	_optionsSubMode = 0;
+	_menuMode = MenuMode::Main;
+	_optionsSubMode = OptionsSubMode::None;
 	_savedMenuCursorMode = Script::MouseMode::Walk;
 	_inventScroll = 1;
 	memset(_hudTextLayout, 0, sizeof(_hudTextLayout));
@@ -450,7 +478,7 @@ void Macs2Engine::loadResourceFileV2() {
 		_fileStream->seek(fontStart + (int64)fontSize, SEEK_SET);
 		return true;
 	};
-	if (!loadSizedFont(_glyphs, numGlyphs, maxGlyphHeight))
+	if (!loadSizedFont(_glyphs, _numGlyphs, _maxGlyphHeight))
 		warning("readGlobalAssetsV2: failed loading Font1");
 	if (!loadSizedFont(_panelGlyphs, numPanelGlyphs, maxPanelGlyphHeight))
 		warning("readGlobalAssetsV2: failed loading SysFont");
@@ -475,7 +503,7 @@ void Macs2Engine::loadResourceFileV2() {
 		   "readGlobalAssetsV2: panel=%u+%u megapics=%u buttons=%u cursors=%u invent=%ux%u @(%u,%u) fonts=%u/%u",
 		   _panelTopY, _panelHeight, megas, (uint)_hudButtons.size(), installed,
 		   _inventCols, _inventRows, _inventOriginX, _inventOriginY,
-		   numGlyphs, numPanelGlyphs);
+		   _numGlyphs, numPanelGlyphs);
 	_fileStream->seek(kMcsV2ActorIndexOffset, SEEK_SET);
 	bootstrapMcsActorsObjectsAndScene();
 }
@@ -645,8 +673,8 @@ void Macs2Engine::softRestart() {
 	stopSpeech();
 	clearDeltaAnim();
 	_skipSpeed = 1;
-	_menuMode = 1;
-	_optionsSubMode = 0;
+	_menuMode = MenuMode::Main;
+	_optionsSubMode = OptionsSubMode::None;
 	_inventScroll = 1;
 	_saveListScroll = 1;
 
@@ -1249,6 +1277,10 @@ void Macs2Engine::changeScene(uint32 newSceneIndex, bool executeScript) {
 		if (!loadSceneGraphics(newSceneIndex))
 			error("changeScene(): Failed to load scene graphics for scene %u", newSceneIndex);
 
+		_menuMode = MenuMode::Main;
+		_optionsSubMode = OptionsSubMode::None;
+		_bottomHudVisible = true;
+
 		View1 *currentView = (View1 *)findView("View1");
 		if (currentView != nullptr) {
 			// Do not push _pal here: scriptChangeScene fades the previous
@@ -1371,13 +1403,12 @@ void Macs2Engine::changeScene(uint32 newSceneIndex, bool executeScript) {
 	if (!loadSceneGraphics(newSceneIndex))
 		error("changeScene(): Failed to load scene graphics for scene %u", newSceneIndex);
 
-	// V2 starts with the main DisplayMenu bar visible; scene
-	// scripts (e.g. world map / overview map) may hideActionBar during isSceneInit
-	if (isV2()) {
-		_menuMode = 1;
-		_optionsSubMode = 0;
-		_bottomHudVisible = true;
-	}
+	// Scene change starts with the main HUD shown. v2 scripts may hide it
+	// during init (overview map). v1 has no hide/show opcodes; kEnhUIUX uses
+	// the same flag so a scene change restores the strip.
+	_menuMode = MenuMode::Main;
+	_optionsSubMode = OptionsSubMode::None;
+	_bottomHudVisible = true;
 
 	// Refresh characters
 	View1 *currentView = (View1 *)findView("View1");
@@ -1852,7 +1883,7 @@ bool Macs2Engine::loadOverlayFont(uint8 resourceIndex, uint16 executingObjectID)
 }
 
 bool Macs2Engine::findGlyph(char c, GlyphData &out) const {
-	for (int i = 0; i < numGlyphs; i++) {
+	for (int i = 0; i < _numGlyphs; i++) {
 		if (_glyphs[i]._ascii == c) {
 			out = _glyphs[i];
 			return true;
@@ -2278,6 +2309,7 @@ void Macs2Engine::nextCursorMode() {
 		setCursorMode(Script::MouseMode::Use);
 		break;
 	case Script::MouseMode::Use:
+	case Script::MouseMode::UseInventory:
 		setCursorMode(Script::MouseMode::Walk);
 		break;
 	default:
@@ -2287,15 +2319,22 @@ void Macs2Engine::nextCursorMode() {
 }
 
 void Macs2Engine::setBottomHudVisible(bool visible) {
-	_bottomHudVisible = visible;
+	// hide/show opcodes toggle Hidden vs Main. Cursor mode alone never hides
+	// the HUD. Native skin restores the cursor saved on hide.
 	if (hasNativeHudAssets()) {
 		if (visible) {
-			if (_menuMode == 0)
-				_menuMode = 1;
+			if (_menuMode == MenuMode::Hidden) {
+				_menuMode = MenuMode::Main;
+				if (_scriptExecutor)
+					setCursorMode(_savedMenuCursorMode);
+			}
 		} else {
-			_menuMode = 0;
+			if (_menuMode == MenuMode::Main && _scriptExecutor)
+				_savedMenuCursorMode = _scriptExecutor->_cursorMode;
+			_menuMode = MenuMode::Hidden;
 		}
 	}
+	_bottomHudVisible = visible;
 }
 
 void Macs2Engine::setCursorMode(Script::MouseMode newMode) {
@@ -2399,10 +2438,6 @@ uint16 Macs2Engine::getHotspotAtPoint(const Common::Point &p) {
 	return 0;
 }
 
-namespace {
-
-static constexpr uint16 kMaxSceneObjects = 0x200;
-
 Common::String getObjectHotspotName(uint16 objectIndex) {
 	const GameObjects &objects = GameObjects::instance();
 	if (objectIndex > 0 && objectIndex < objects._objectNames.size() && !objects._objectNames[objectIndex].empty()) {
@@ -2413,29 +2448,13 @@ Common::String getObjectHotspotName(uint16 objectIndex) {
 	return Common::String();
 }
 
-Common::U32String hotspotLabelToU32(const Common::String &name) {
-	if (name.empty())
-		return Common::U32String();
-	return Common::U32String(name.c_str(), Common::kDos850);
+Common::String lookupInteractionDisplayName(uint16 interactionId) {
+	if (interactionId >= 0x800)
+		return lookupSceneHotspotName((uint16)Scenes::instance()._currentSceneIndex, (uint16)(interactionId - 0x800));
+	if (interactionId >= 0x400)
+		return getObjectHotspotName((uint16)(interactionId - 0x400));
+	return Common::String();
 }
-
-bool isMapModeActive() {
-	if (g_events == nullptr)
-		return false;
-	View1 *view = (View1 *)g_events->findView("View1");
-	return view != nullptr && view->_currentMode == ViewMode::VM_HELP;
-}
-
-Common::Point getSceneObjectHotspotPosition(View1 *view, GameObject *obj) {
-	if (view != nullptr) {
-		Character *character = view->getCharacterByIndex(obj->_index);
-		if (character != nullptr && !character->_markedForDeletion)
-			return character->getPosition();
-	}
-	return obj->_position;
-}
-
-} // namespace
 
 void Macs2Engine::rebuildHotspotSnapshot() const {
 	_hotspotSnapshot.currentSceneIndex = Scenes::instance()._currentSceneIndex;
@@ -2579,7 +2598,7 @@ void Macs2Engine::getHotspotPositions(Common::Array<Graphics::HotspotInfo> &hots
 		if (isCharacter && GameObjects::isNpcIndex(entry.index))
 			hotspotType = Graphics::kHotspotNPC;
 
-		const Common::String name = getObjectHotspotName(entry.index);
+		const Common::String &name = getObjectHotspotName(entry.index);
 		hotspots.push_back(Graphics::HotspotInfo(screenPos, hotspotLabelToU32(name), hotspotType));
 	}
 }
@@ -2732,7 +2751,7 @@ void Macs2Engine::loadTranslation() {
 	}
 
 	uint16 version = f->readUint16LE();
-	if (version != 1 && version != 2) {
+	if (version != 1) {
 		warning("Unsupported macs2_translation.dat version %u", version);
 		delete f;
 		return;
@@ -2740,9 +2759,8 @@ void Macs2Engine::loadTranslation() {
 
 	uint16 numScenes = f->readUint16LE();
 	uint16 numObjects = f->readUint16LE();
-	uint16 numHotspotLabels = 0;
-	if (version >= 2)
-		numHotspotLabels = f->readUint16LE();
+	uint16 numHotspotLabels = f->readUint16LE();
+	uint16 numUiLabels = f->readUint16LE();
 
 	// Read index tables
 	struct IndexEntry {
@@ -2797,25 +2815,31 @@ void Macs2Engine::loadTranslation() {
 		_objectTranslations[objectIndex[i].id] = entry;
 	}
 
+	auto readLabelMap = [f](uint16 count, Common::HashMap<Common::String, Common::String> &out) {
+		for (uint16 i = 0; i < count; i++) {
+			uint16 keyLen = f->readUint16LE();
+			Common::String key;
+			for (uint16 k = 0; k < keyLen; k++)
+				key += (char)f->readByte();
+			uint16 valLen = f->readUint16LE();
+			Common::String val;
+			for (uint16 k = 0; k < valLen; k++)
+				val += (char)f->readByte();
+			if (!key.empty() && !val.empty())
+				out[key] = val;
+		}
+	};
+
 	_hotspotLabelTranslations.clear();
-	if (numHotspotLabels > 0)
+	_uiLabelTranslations.clear();
+	if (numHotspotLabels > 0 || numUiLabels > 0)
 		f->seek(stringDataEnd);
-	for (uint16 i = 0; i < numHotspotLabels; i++) {
-		uint16 keyLen = f->readUint16LE();
-		Common::String key;
-		for (uint16 k = 0; k < keyLen; k++)
-			key += (char)f->readByte();
-		uint16 valLen = f->readUint16LE();
-		Common::String val;
-		for (uint16 k = 0; k < valLen; k++)
-			val += (char)f->readByte();
-		if (!key.empty() && !val.empty())
-			_hotspotLabelTranslations[key] = val;
-	}
+	readLabelMap(numHotspotLabels, _hotspotLabelTranslations);
+	readLabelMap(numUiLabels, _uiLabelTranslations);
 
 	delete f;
-	debug("Loaded macs2_translation.dat: %u scenes, %u objects, %u overlay labels",
-		  numScenes, numObjects, (uint)_hotspotLabelTranslations.size());
+	debug("Loaded macs2_translation.dat: %u scenes, %u objects, %u overlay labels, %u UI labels",
+		  numScenes, numObjects, (uint)_hotspotLabelTranslations.size(), (uint)_uiLabelTranslations.size());
 }
 
 Common::String Macs2Engine::translateHotspotLabel(const Common::String &cp850Name) const {
@@ -2825,6 +2849,15 @@ Common::String Macs2Engine::translateHotspotLabel(const Common::String &cp850Nam
 	if (it != _hotspotLabelTranslations.end())
 		return it->_value;
 	return cp850Name;
+}
+
+Common::String Macs2Engine::translateUiLabel(const Common::String &source) const {
+	if (source.empty() || !(getFeatures() & GF_TRANSLATED))
+		return source;
+	auto it = _uiLabelTranslations.find(source);
+	if (it != _uiLabelTranslations.end())
+		return it->_value;
+	return source;
 }
 
 Common::StringArray Macs2Engine::decodeStrings(Common::MemoryReadStream *stream, int offset, int numStrings, int sceneId, int objectId) {
@@ -3664,9 +3697,15 @@ void Macs2Engine::applyPaletteDarkening() {
 	for (uint i = 0; i < Graphics::PALETTE_COUNT; i++) {
 		byte r, g, b;
 		_palVanilla.get(i, r, g, b);
-		_pal.set(i, (byte)((r * brightnessFactor / 100 * 259 + 33) >> 6),
-				 (byte)((g * brightnessFactor / 100 * 259 + 33) >> 6),
-				 (byte)((b * brightnessFactor / 100 * 259 + 33) >> 6));
+		if (isAmiga()) {
+			_pal.set(i, (byte)((r * brightnessFactor / 100 * 255) / 63),
+					 (byte)((g * brightnessFactor / 100 * 255) / 63),
+					 (byte)((b * brightnessFactor / 100 * 255) / 63));
+		} else {
+			_pal.set(i, (byte)((r * brightnessFactor / 100 * 259 + 33) >> 6),
+					 (byte)((g * brightnessFactor / 100 * 259 + 33) >> 6),
+					 (byte)((b * brightnessFactor / 100 * 259 + 33) >> 6));
+		}
 	}
 }
 
