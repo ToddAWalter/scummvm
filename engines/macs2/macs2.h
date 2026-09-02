@@ -555,6 +555,9 @@ public:
 	Common::Array<byte> _amigaPendingSceneScript;
 	Common::Array<byte> _amigaPendingSceneStrings;
 
+	/** Last string submitted to TTS; skips per-frame INTERRUPT restarts. */
+	mutable Common::String _ttsPreviousSaid;
+
 	/** Bottom HUD visible (showActionBar/hideActionBar); default shown. */
 	bool _bottomHudVisible = true;
 
@@ -662,7 +665,7 @@ public:
 	 * via SeekableAudioStream::openStreamFile (codec #ifdefs live in audio/).
 	 * SPEECH paths use the speech mixer handle; others use the SFX handle.
 	 */
-	void playDigitalAudioFile(const Common::Path &basename, bool speechBus);
+	void playAudioFile(const Common::Path &basename, bool speechBus);
 	void stopSpeech();
 	bool isSpeechPlaying() const;
 
@@ -912,7 +915,11 @@ public:
 
 	bool tick() override;
 
-	void sayText(const Common::String &text, Common::TextToSpeechManager::Action action = Common::TextToSpeechManager::INTERRUPT_NO_REPEAT) const;
+	void sayText(const Common::String &text,
+				 Common::TextToSpeechManager::Action action = Common::TextToSpeechManager::INTERRUPT_NO_REPEAT,
+				 uint16 speakerObjectId = 0) const;
+	void setTTSVoice(uint16 speakerObjectId) const;
+	void stopTextToSpeech() const;
 
 	void getHotspotPositions(Common::Array<Graphics::HotspotInfo> &hotspots) override;
 	bool hotspotDirty() const override;

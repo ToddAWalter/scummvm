@@ -80,7 +80,16 @@ public:
 		Common::Array<NextSequenceRef> nextSequences;
 	};
 
-	PlaySecondaryMovie(bool isRandom = false);
+	// Which of the action record types sharing this class is being played.
+	enum MovieType {
+		kSecondaryMovie,		// AR 53, up to Nancy13
+		kSecondaryMovieTerse,	// AR 41, Nancy13 and up
+		kRandomMovie,			// ARs 42, 43, 45
+		kMovieWithVolume,		// AR 44
+		kInteractiveMovie		// AR 47
+	};
+
+	PlaySecondaryMovie(MovieType movieType);
 	virtual ~PlaySecondaryMovie();
 
 	void init() override;
@@ -115,6 +124,11 @@ public:
 	// unused by playback.
 	uint16 _playStyle = 1;
 
+	// How many times the movie plays before the record finishes; 0 loops
+	// for as long as the scene lasts.
+	uint16 _numLoops = 1;
+	uint16 _playCount = 0;
+
 	// Volume of the movie's audio track, as a percentage. Carried by Nancy14+
 	// AR 44/47 only; every other record plays at full volume. SetMovieVolume
 	// (AR 150) can change it later.
@@ -142,8 +156,11 @@ public:
 
 	MoviePlayer _decoder;
 
-	// Random-movie state (only populated when _isRandom).
-	bool _isRandom = false;
+	MovieType _movieType;
+
+	bool isRandom() const { return _movieType == kRandomMovie; }
+
+	// Random-movie state (only populated for kRandomMovie).
 	// "RandomMovie" picks any sequence; otherwise it names the starting one.
 	Common::String _startingSequenceName;
 	uint16 _randomPlayerCursorAllowed = kPlayerCursorAllowed;
@@ -167,6 +184,7 @@ public:
 	RandomChainState _randomChainState = kRandomPlaying;
 	uint32 _randomPauseEndTime = 0;
 	bool _randomStopRequested = false;
+	bool _randomPaused = false;
 
 	// Talkable-character hover state: whether the mouse is over the character,
 	// and whether the recognition (secondary) movie is currently playing.
@@ -183,8 +201,13 @@ public:
 	uint32 _rewindLastFrameTime = 0;
 	uint32 _rewindFrameDelay = 66;
 
-	// Called by PlayRandomMovieControl::execute() to wind down the AR.
+	// Called by PlayRandomMovieControl::execute(). stopRandom() winds the AR
+	// down once the sequence that's playing finishes; stopRandomNow() ends it
+	// on the spot; pauseRandom() freezes the movie with the record still
+	// running.
 	void stopRandom() { _randomStopRequested = true; }
+	void stopRandomNow();
+	void pauseRandom(bool pause);
 
 	// Pick & start a fresh random sequence. No-op when not a random AR.
 	void playRandomSequence();
@@ -198,13 +221,15 @@ public:
 	// hovering plays the recognition ("turn around") movie.
 	void handleInput(NancyInput &input) override;
 	CursorManager::CursorType getHoverCursor() const override;
-	bool cursorSetFromScript() const override { return _isRandom && _talkSceneID != kNoScene; }
+	bool cursorSetFromScript() const override { return isRandom() && _talkSceneID != kNoScene; }
 
-	Common::String getRecordExtraInfo() const override { return Common::String::format("Scene %d", _sceneChange.sceneID); }
+	Common::String getRecordExtraInfo() const override {
+		return Common::String::format("Scene %d, file %s", _sceneChange.sceneID, _videoName.baseName().c_str());
+	}
 
 protected:
 	Common::String getRecordTypeName() const override {
-		return _isRandom ? "PlayRandomMovie" : "PlaySecondaryMovie";
+		return isRandom() ? "PlayRandomMovie" : "PlaySecondaryMovie";
 	}
 
 	// `ser` and `stream` must wrap the same input; `stream` is only
@@ -221,6 +246,12 @@ protected:
 	// Shared tail of the random-movie readers: pick the starting sequence
 	// (random or by name) and seed the flat playback fields from it.
 	void applyStartingRandomSequence();
+
+	// Nancy13 compacted the non-random layout: a z-order, an alpha selector,
+	// the cursor flag, a loop count, the frame range and the scene change.
+	// Direction follows from lastFrame preceding firstFrame, and a scene
+	// change is requested through the sceneID sentinel.
+	void readDataNancy13(Common::Serializer &ser, Common::SeekableReadStream &stream);
 
 	void readDataNancy14(Common::Serializer &ser, Common::SeekableReadStream &stream);
 
@@ -239,7 +270,7 @@ protected:
 
 	// A Nancy13 talkable character: has a conversation scene and a recognition
 	// movie to swap to on hover.
-	bool isTalkable() const { return _isRandom && _talkSceneID != kNoScene && !_secondaryMovie.name.empty(); }
+	bool isTalkable() const { return isRandom() && _talkSceneID != kNoScene && !_secondaryMovie.name.empty(); }
 
 	// Pick the next sequence (or "stay") per the weighted random rules.
 	// Returns -1 if "stay" was picked (and sets up the pause state),
@@ -274,8 +305,8 @@ public:
 
 	enum RandomMovieControlMode : byte {
 		kStopNow = 0,
-		kStopAfterSequence = 1,
-		kResume = 2
+		kPauseMovie = 1,
+		kResumeMovie = 2
 	};
 
 protected:
@@ -283,6 +314,9 @@ protected:
 
 	byte _mode = kStopNow;
 	SceneChangeWithFlag _sceneChange;
+	// Nancy13's record is the mode byte alone; earlier games append a scene
+	// change to it.
+	bool _hasSceneChange = true;
 };
 
 } // End of namespace Action

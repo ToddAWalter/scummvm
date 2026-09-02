@@ -148,15 +148,6 @@ static const CftFontResource *findStartupFontByName(const HarvesterEngine &engin
 	return nullptr;
 }
 
-static Common::String buildUseItemPrompt(const Common::String &itemLabel, const Common::String &targetLabel) {
-	if (itemLabel.empty())
-		return Common::String();
-	if (targetLabel.empty())
-		return Common::String::format("Use %s on ...", itemLabel.c_str());
-
-	return Common::String::format("Use %s on %s", itemLabel.c_str(), targetLabel.c_str());
-}
-
 static Common::String resolveStartupNpcLabel(const NpcRecord &npc) {
 	Common::String label = !npc.entityInitArg.empty() ? npc.entityInitArg : npc.npcName;
 	for (uint i = 0; i < label.size(); ++i) {
@@ -485,8 +476,18 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 		Common::Array<RoomCombatDamagePopupState> damagePopupStates;
 		uint nextCombatEffectId = 0;
 		ResolvedText inspectText;
+		Common::String currentInteractionPromptText;
 		bool showingInspectText = false;
 		bool inspectCanDismiss = false;
+		auto beginInspectText = [&](const ObjectRecord &object, const ResolvedText &text) {
+			inspectText = text;
+			showingInspectText = true;
+			inspectCanDismiss = false;
+			debugC(2, kDebugRoom,
+				"Harvester: showing IDENT object='%s' prompt='%s' box='%s' text='%s'",
+				object.objectName.c_str(), currentInteractionPromptText.c_str(),
+				inspectText.boxName.c_str(), inspectText.value.c_str());
+		};
 		ResolvedText combatLoadoutStatusText;
 		uint32 combatLoadoutStatusHideTick = 0;
 		bool closeInventoryAfterCombatLoadoutStatus = false;
@@ -2520,7 +2521,7 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 
 			const RoomHoverState hoverState = resolveRoomHoverState(
 				_engine, scene.state, scene.sceneObjects, scene.state.roomNpcs, scene.sceneRegions,
-				_mousePos, &flow._dialogue);
+				_mousePos, flow._menuTextConfig, &flow._dialogue);
 			if (hoverState.npc) {
 				playerState.attackTargetName = hoverState.npc->npcName;
 				playerState.attackTargetClassId = kRuntimeEntityClassNpc;
@@ -3505,7 +3506,7 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 	captureCurrentSaveState();
 
 	if (shouldRunStartupRoomProbe())
-		logStartupRoomProbe(_engine, scene, currentRoomTarget, _mousePos);
+		logStartupRoomProbe(_engine, scene, currentRoomTarget, _mousePos, flow._menuTextConfig);
 
 	while (!_engine.shouldQuit()) {
 		if (flow.hasPendingMainMenuReturn())
@@ -3593,7 +3594,7 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 			RoomHoverState hoverState = suppressHover
 				? RoomHoverState()
 				: resolveRoomHoverState(_engine, scene.state, scene.sceneObjects, scene.state.roomNpcs,
-					scene.sceneRegions, _mousePos, &flow._dialogue);
+					scene.sceneRegions, _mousePos, flow._menuTextConfig, &flow._dialogue);
 			if (!suppressHover && inventorySelectionActive && !hoverState.npc) {
 				if (ObjectRecord *selectedTarget = findSelectedInventoryRoomTarget(_mousePos))
 					hoverState.object = selectedTarget;
@@ -3624,10 +3625,11 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 					targetLabel = resolveCarryTargetLabel();
 				}
 				if (inventorySelectionActive) {
-					promptText = _inventory.buildSelectedPrompt(targetLabel);
+					promptText = _inventory.buildSelectedPrompt(targetLabel, flow._menuTextConfig);
 					_inventory.setPromptText(promptText);
 				} else {
-					promptText = buildUseItemPrompt(carriedRoomItemLabel, targetLabel);
+					promptText = buildUseItemPrompt(
+						flow._menuTextConfig, carriedRoomItemLabel, targetLabel);
 				}
 				hoverState.cursorSequence = 7;
 			} else if (_inventory.isOpen()) {
@@ -3642,6 +3644,8 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 			} else {
 				promptText = hoverState.promptText;
 			}
+			if (!showingInspectText)
+				currentInteractionPromptText = promptText;
 			if (Entity *cursor = entityManager ? entityManager->getCursorEntity() : nullptr) {
 				cursor->setAnimationSequence(
 					(showingInspectText || idleState.active || idleState.exiting ||
@@ -3659,7 +3663,8 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 			}
 			if (_inventory.isOpen()) {
 				_inventory.drawOverlay(*activeScreen);
-				drawInventoryWeekday(*activeScreen, *inventoryTooltipFont, _inventory.resolveWeekdayLabel());
+				drawInventoryWeekday(*activeScreen, *inventoryTooltipFont,
+					_inventory.resolveWeekdayLabel(flow._menuTextConfig));
 			}
 			if (inventorySelectionActive) {
 				_inventory.drawSelectedDragItem(*activeScreen, _mousePos);
@@ -3671,6 +3676,9 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 
 			if (showingInspectText) {
 				drawRoomInspectText(*activeScreen, *art, *inspectFont, inspectText, useNativeInspectFont);
+				if (!currentInteractionPromptText.empty())
+					drawRoomPrompt(*activeScreen, *promptFont,
+						currentInteractionPromptText, useNativePromptFont);
 			} else if (!combatLoadoutStatusText.value.empty()) {
 				drawRoomInspectText(*activeScreen, *art, *inspectFont, combatLoadoutStatusText,
 					useNativeInspectFont);
@@ -3906,7 +3914,8 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 								"Harvester: inventory left click selecting object='%s'",
 								inventoryHover->object.objectName.c_str());
 							_inventory.selectItem(inventoryHover->object.objectName);
-							_inventory.setPromptText(_inventory.buildSelectedPrompt(Common::String()));
+							_inventory.setPromptText(_inventory.buildSelectedPrompt(
+								Common::String(), flow._menuTextConfig));
 							needsRedraw = true;
 							break;
 						}
@@ -3937,7 +3946,7 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 
 				const RoomHoverState hoverState = resolveRoomHoverState(
 					_engine, scene.state, scene.sceneObjects, scene.state.roomNpcs, scene.sceneRegions,
-					_mousePos, &flow._dialogue);
+					_mousePos, flow._menuTextConfig, &flow._dialogue);
 				ObjectRecord *selectedRoomTarget = nullptr;
 				if (_inventory.hasSelection() && !hoverState.npc)
 					selectedRoomTarget = findSelectedInventoryRoomTarget(_mousePos);
@@ -4097,9 +4106,7 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 					clickedObject->identShown = true;
 					_engine.getScript()->markObjectIdentShown(*clickedObject);
 					if (canShowInspectText) {
-						inspectText = resolvedInspectText;
-						showingInspectText = true;
-						inspectCanDismiss = false;
+						beginInspectText(*clickedObject, resolvedInspectText);
 					} else if (hasInspectText) {
 						debug(1, "Harvester: unsupported IDENT textbox '%s' for object '%s'",
 							resolvedInspectText.boxName.c_str(), clickedObject->objectName.c_str());
@@ -4136,9 +4143,7 @@ Common::Error RoomSystem::runRoomLoop(Flow &flow, const Common::String &targetNa
 				if (!_engine.getScript()->resolveObjectInteraction(
 						*clickedObject, interaction, scene.state.roomName)) {
 					if (canShowInspectText) {
-						inspectText = resolvedInspectText;
-						showingInspectText = true;
-						inspectCanDismiss = false;
+						beginInspectText(*clickedObject, resolvedInspectText);
 					} else if (hasInspectText) {
 						debug(1, "Harvester: unsupported IDENT textbox '%s' for object '%s'",
 							resolvedInspectText.boxName.c_str(), clickedObject->objectName.c_str());

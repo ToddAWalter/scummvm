@@ -409,6 +409,9 @@ void ColonyEngine::playAnimation() {
 	_coderWin = Common::Rect();
 	_coderPressed = -1;
 	_coderPressInside = false;
+	const bool useSquarePixelViewport = !isMacRenderMode();
+	if (useSquarePixelViewport)
+		_gfx->setSquarePixelViewport(true);
 	_system->lockMouse(false);
 	warpMouseLogical(_centerX, _centerY);
 	const char *cursorName = "default arrow cursor";
@@ -599,7 +602,7 @@ void ColonyEngine::playAnimation() {
 		while (_system->getEventManager()->pollEvent(event)) {
 			if (event.type == Common::EVENT_QUIT || event.type == Common::EVENT_RETURN_TO_LAUNCHER) {
 				_animationRunning = false;
-				return;
+				break;
 			} else if (event.type == Common::EVENT_SCREEN_CHANGED) {
 				_gfx->computeScreenViewport();
 				needsDraw = true;
@@ -700,6 +703,8 @@ void ColonyEngine::playAnimation() {
 				}
 			}
 		}
+		if (!_animationRunning || shouldQuit())
+			break;
 
 		// updateAnimation has its own 50ms throttle; only redraw when we know
 		// the visible state changed (click feedback) or the cadence is due.
@@ -720,6 +725,8 @@ void ColonyEngine::playAnimation() {
 		_system->delayMillis(2);
 	}
 
+	if (useSquarePixelViewport)
+		_gfx->setSquarePixelViewport(false);
 	_system->lockMouse(true);
 	CursorMan.showMouse(false);
 	CursorMan.popAllCursors();
@@ -1036,7 +1043,7 @@ void ColonyEngine::drawColonyCoder(int animOx, int animOy) {
 	const int contentW = 172;
 	const char *instrText = (_animationName == "security")
 		? "Press the symbols as shown on the display to determine the correct value."
-		: "Press the symbols from the desk in reverse order to determine the correct value.";
+		: "Enter the appropriate symbol sequence to determine this reactor's code.";
 	Common::Array<Common::U32String> instrLines;
 	instrFont->wordWrapText(Common::U32String(instrText), contentW - 16, instrLines);
 	const int instrLineH = instrFont->getFontHeight() + 1;
