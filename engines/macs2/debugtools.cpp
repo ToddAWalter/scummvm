@@ -29,6 +29,7 @@
 #include "common/util.h"
 #include "macs2/detection.h"
 #include "macs2/gameobjects.h"
+#include "macs2/hotspot_names.h"
 #include "macs2/macs2.h"
 #include "macs2/music.h"
 #include "macs2/view1.h"
@@ -987,12 +988,8 @@ static void showCharactersWindow() {
 						// --- Editable GameObject fields ---
 						int orient = (int)c->_gameObject->_orientation;
 						if (ImGui::InputInt("Orientation", &orient)) {
-							c->_gameObject->_orientation = (uint8)CLIP(orient, 0, 255);
-						}
-
-						int animIdx = (int)c->_animationIndex;
-						if (ImGui::InputInt("Animation Index", &animIdx)) {
-							c->_animationIndex = (uint8)CLIP(animIdx, 0, 255);
+							// TODO: add a combo box for orientation instead of raw int input including speaking names
+							c->_gameObject->_orientation = (ObjectOrientation)CLIP((uint16)orient, (uint16)OrientationNone, (uint16)OrientationPickup);
 						}
 
 						ImGui::Text("Vertical Offset: %u", c->getVerticalOffset());
@@ -1024,9 +1021,6 @@ static void showCharactersWindow() {
 							if (ImGui::InputInt("Progress", &motionProg))
 								c->_motionProgress = (uint16)CLIP(motionProg, 0, 65535);
 							ImGui::Text("Pending VOffset Motion: %s", c->hasPendingVerticalMotion() ? "Y" : "N");
-							bool shouldMirror = c->_shouldMirrorCurrentAnimation;
-							if (ImGui::Checkbox("Mirror Animation", &shouldMirror))
-								c->_shouldMirrorCurrentAnimation = shouldMirror;
 							ImGui::TreePop();
 						}
 
@@ -1140,7 +1134,6 @@ static void showCharactersWindow() {
 								df.writeString(Common::String::format("  \"character\": {\n"));
 								df.writeString(Common::String::format("    \"positionX\": %d,\n", c->getPosition().x));
 								df.writeString(Common::String::format("    \"positionY\": %d,\n", c->getPosition().y));
-								df.writeString(Common::String::format("    \"shouldMirror\": %s,\n", c->_shouldMirrorCurrentAnimation ? "true" : "false"));
 								df.writeString(Common::String::format("    \"verticalOffset\": %u\n", c->getVerticalOffset()));
 								df.writeString("  }\n");
 								df.writeString("}\n");
@@ -1207,9 +1200,9 @@ static void showInventoryWindow() {
 			if (ImGui::CollapsingHeader("Current Inventory", ImGuiTreeNodeFlags_DefaultOpen)) {
 				for (uint i = 0; i < view->_inventoryItems.size(); i++) {
 					GameObject *obj = view->_inventoryItems[i];
-					const Common::String &name = (obj->_index < GameObjects::instance()._objectNames.size() && !GameObjects::instance()._objectNames[obj->_index].empty())
-													 ? GameObjects::instance()._objectNames[obj->_index]
-													 : "???";
+					Common::String name = lookupObjectHotspotName(obj->_index);
+					if (name.empty())
+						name = "???";
 					Common::String utf8Name = Common::U32String(name.c_str(), Common::kDos850).encode(Common::kUtf8);
 					ImGui::PushID(obj->_index);
 					if (ImGui::Button("Remove")) {
@@ -1231,9 +1224,9 @@ static void showInventoryWindow() {
 						continue;
 					if (obj->_blobs.size() <= 0x13 || obj->_blobs[0x13].empty())
 						continue;
-					const Common::String &name = (obj->_index < GameObjects::instance()._objectNames.size() && !GameObjects::instance()._objectNames[obj->_index].empty())
-													 ? GameObjects::instance()._objectNames[obj->_index]
-													 : "???";
+					Common::String name = lookupObjectHotspotName(obj->_index);
+					if (name.empty())
+						name = "???";
 					Common::String utf8Name = Common::U32String(name.c_str(), Common::kDos850).encode(Common::kUtf8);
 					if (filterBuf[0] != '\0' && !utf8Name.contains(filterBuf))
 						continue;
@@ -1898,7 +1891,6 @@ static void showDebugToolbarWindow() {
 			} channels[] = {
 				{kDebugGraphics, "Graphics"},
 				{kDebugPath, "Path"},
-				{kDebugScan, "Scan"},
 				{kDebugFilePath, "FilePath"},
 				{kDebugInput, "Input"},
 				{kDebugImGui, "ImGui"},

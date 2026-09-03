@@ -101,7 +101,6 @@ Common::String ScriptExecutor::identifyHelperOpcode(uint8 opcode, uint16 value) 
 inline void ScriptExecutor::scriptSkipBlock() {
 	_lastOpcodeTriggeredSkip = true;
 
-	_isSkipping = true;
 	if (_expectedEndLocation != _stream->pos()) {
 		warning("Macs2::ScriptExecutor::scriptSkipBlock resyncing stream from %u to %u",
 				(uint32)_expectedEndLocation, (uint32)_stream->pos());
@@ -137,11 +136,9 @@ inline void ScriptExecutor::scriptSkipBlock() {
 
 	// Fix up the expected location after skipping
 	_expectedEndLocation = _stream->pos();
-	_isSkipping = false;
 }
 
 void ScriptExecutor::scriptSkipAlternate() {
-	_isSkipping = true;
 	if (_expectedEndLocation != _stream->pos()) {
 		warning("Macs2::ScriptExecutor::scriptSkipAlternate resyncing stream from %u to %u",
 				(uint32)_expectedEndLocation, (uint32)_stream->pos());
@@ -174,7 +171,6 @@ void ScriptExecutor::scriptSkipAlternate() {
 
 	// Fix up the expected location after skipping
 	_expectedEndLocation = _stream->pos();
-	_isSkipping = false;
 }
 
 bool ScriptExecutor::skipToEndOfSkippableSection() {
@@ -437,7 +433,7 @@ void ScriptExecutor::scriptPrintString(bool alignRight) {
 		currentView->_stringBoxPosition = Common::Point(stringBoxX, stringBoxY);
 		currentView->_drawnStringBox = strings;
 		currentView->_isShowingTextBox = true;
-		currentView->currentSpeechActData.speaker = nullptr;
+		currentView->_currentSpeechActData.speaker = nullptr;
 		currentView->_continueScriptAfterUI = true;
 		_engine->sayText(joinTtsLines(strings), Common::TextToSpeechManager::INTERRUPT);
 		currentView->redraw();
@@ -491,8 +487,9 @@ void ScriptExecutor::clearScriptUiWaitState() {
 }
 
 void ScriptExecutor::recordScriptErrorPosition() {
-	if (!hasScriptError() || !_stream)
+	if (!hasScriptError() || !_stream) {
 		return;
+	}
 	// save position and scene/object context on halt.
 	_errorScriptPosition = (uint32)_stream->pos();
 	if (_executingScriptObjectId == 0) {
@@ -518,8 +515,9 @@ void ScriptExecutor::runSceneScriptPass(bool initRun, bool repeatRun) {
 	const ExecutorState previousState = _state;
 	_state = ExecutorState::Executing;
 	step();
-	if (_state != ExecutorState::WaitingForCallback)
+	if (_state != ExecutorState::WaitingForCallback) {
 		_state = previousState;
+	}
 }
 
 void ScriptExecutor::beginSceneEntryInitPass() {
@@ -535,13 +533,15 @@ void ScriptExecutor::beginSceneEntryInitPass() {
 }
 
 void ScriptExecutor::finishSceneEntryRepeatPass(bool terminateOuterScript) {
-	if (!_initPassComplete || hasScriptError())
+	if (!_initPassComplete || hasScriptError()) {
 		return;
+	}
 	// Binary scriptChangeScene / loadResourceFile: set script position to end and
 	// executingObjectId=0x201 to stop outer object iteration, then repeat pass.
 	if (terminateOuterScript) {
-		if (_stream)
+		if (_stream) {
 			_stream->seek(_stream->size(), SEEK_SET);
+		}
 		_executingScriptObjectId = 0x201;
 		_terminateOuterScriptBeforeRepeat = false;
 	}
@@ -1860,7 +1860,7 @@ Character *Script::ScriptExecutor::getOrCreateCharacter(uint16 objectID) {
 	return c;
 }
 
-void Script::ScriptExecutor::saveWalkRuntime(const Character *c, GameObject *o) {
+void Script::ScriptExecutor::saveWalkRuntime(const Character *c, GameObject *o) const {
 	if (c == nullptr || o == nullptr)
 		return;
 	GameObject::StoredWalkRuntime &s = o->_storedWalkRuntime;
@@ -1976,7 +1976,6 @@ void Script::ScriptExecutor::restoreOpenInventoryScriptContext() {
 	_scriptClickY = _savedScriptClickY;
 	_scriptClickResult = _savedScriptClickResult;
 	_state = ExecutorState::Executing;
-	_isRunningScript = true;
 }
 
 OpcodeResult Script::ScriptExecutor::scriptSetYOffset() {
@@ -2057,12 +2056,12 @@ OpcodeResult Script::ScriptExecutor::scriptSetOrientation() {
 		setScriptError(0x19);
 		return OpcodeResult::Continue;
 	}
-	if (animIndex < 9 || animIndex > 0x10) {
+	if (animIndex < OrientationStandingNorth || animIndex > OrientationStandingNorthWest) {
 		setScriptError(0x14);
 		return OpcodeResult::Continue;
 	}
 
-	object->_orientation = animIndex;
+	object->_orientation = (ObjectOrientation)animIndex;
 	return OpcodeResult::Continue;
 }
 
@@ -4192,7 +4191,6 @@ const uint ScriptExecutor::kV2OpcodeTableSize = ARRAYSIZE(ScriptExecutor::kV2Opc
 
 OpcodeResult Script::ScriptExecutor::executeOpcodes() {
 	debugC(kDebugScript, "----- Scripting function entered - scene: %.2x 1014: %.2x 1012: %.2x", Scenes::instance()._currentSceneIndex, _isSceneInitRun, _repeatRunFlag);
-	_isRunningScript = true;
 	// Confirmed: no interrupt mechanism exists. Wait states (frameWait, walkTarget,
 	// pcmSound, musicControl, adlibReady) are resolved by gameTick externally.
 
@@ -4266,7 +4264,6 @@ OpcodeResult Script::ScriptExecutor::executeOpcodes() {
 		if (opcodeResult == OpcodeResult::FinishScript)
 			break;
 	}
-	_isRunningScript = false;
 	if (hasScriptError())
 		recordScriptErrorPosition();
 	debugC(kDebugScript, "----- Scripting function left");
