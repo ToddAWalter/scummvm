@@ -5,6 +5,7 @@ MODULE_OBJS = \
 	amiga_decode.o \
 	amiga_resources.o \
 	character.o \
+	pathfinding.o \
 	midiparser_macs2.o \
 	music.o \
 	dialogs.o \
@@ -16,6 +17,7 @@ MODULE_OBJS = \
 	metaengine.o \
 	saveload.o \
 	scriptexecutor.o \
+	text.o \
 	actionbar.o \
 	view1.o
 

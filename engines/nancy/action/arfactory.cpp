@@ -197,7 +197,10 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 		else
 			return new HotMultiframeMultiSceneChange();	// Moved from 13
 	case 27:	// Nancy10
-		return new HotMultiframeMultiSceneCursorTypeSceneChange(); // Moved from 24
+		if (g_nancy->getGameType() <= kGameTypeNancy12)
+			return new HotMultiframeMultiSceneCursorTypeSceneChange();	// Moved from 24
+		else
+			return new HotMultiframeInvTypeSceneChange();
 	case 28:	// Nancy10
 		return new InteractiveVideo();	// Moved from 26
 	case 29:	// Nancy10
@@ -232,8 +235,12 @@ ActionRecord *ActionManager::createActionRecord(uint16 type, Common::SeekableRea
 	case 50:
 		return new ConversationVideo();
 	case 51:
-	case 52:
 		return new PlaySecondaryVideo();
+	case 52:
+		if (g_nancy->getGameType() <= kGameTypeNancy14)
+			return new PlaySecondaryVideo();
+		else
+			return new OverlayMultiframeTerse();
 	case 53:
 		if (g_nancy->getGameType() <= kGameTypeNancy13)
 			return new PlaySecondaryMovie(PlaySecondaryMovie::kSecondaryMovie);

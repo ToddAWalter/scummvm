@@ -39,6 +39,7 @@
 #include "macs2/macs2.h"
 #include "macs2/music.h"
 #include "macs2/actionbar.h"
+#include "macs2/pathfinding.h"
 
 namespace Macs2 {
 namespace {
@@ -753,6 +754,7 @@ void View1::drawCurrentSpeaker(Graphics::ManagedSurface &s) {
 
 void View1::renderString(uint16 x, uint16 y, const Common::String &s) {
 	Graphics::ManagedSurface surf = getSurface();
+	Text *text = &g_engine->_text;
 	uint16 currentX = x;
 	uint16 currentY = y;
 
@@ -760,7 +762,7 @@ void View1::renderString(uint16 x, uint16 y, const Common::String &s) {
 	uint16 widestGlyph = 1;
 	for (auto iter = s.begin(); iter != s.end(); iter++) {
 		GlyphData data;
-		if (g_engine->findGlyph(*iter, data)) {
+		if (text->findGlyph(*iter, data)) {
 			widestGlyph = MAX(widestGlyph, data._width);
 		}
 	}
@@ -768,7 +770,7 @@ void View1::renderString(uint16 x, uint16 y, const Common::String &s) {
 	// Second pass: render with correct spacing
 	for (auto iter = s.begin(); iter != s.end(); iter++) {
 		GlyphData data;
-		const bool found = g_engine->findGlyph(*iter, data);
+		const bool found = text->findGlyph(*iter, data);
 		if (found) {
 			drawSprite(currentX, currentY, data, surf, false);
 			currentX += data._width + 1;
@@ -786,20 +788,21 @@ void View1::renderString(const Common::Point &pos, const Common::String &s) {
 }
 
 void View1::renderStringTo(uint16 x, uint16 y, const Common::String &s, Graphics::ManagedSurface &surf) {
+	Text *text = &g_engine->_text;
 	uint16 currentX = x;
 	uint16 currentY = y;
 
 	uint16 widestGlyph = 1;
 	for (auto iter = s.begin(); iter != s.end(); iter++) {
 		GlyphData data;
-		if (g_engine->findGlyph(*iter, data)) {
+		if (text->findGlyph(*iter, data)) {
 			widestGlyph = MAX(widestGlyph, data._width);
 		}
 	}
 
 	for (auto iter = s.begin(); iter != s.end(); iter++) {
 		GlyphData data;
-		const bool found = g_engine->findGlyph(*iter, data);
+		const bool found = text->findGlyph(*iter, data);
 		if (found) {
 			drawSprite(currentX, currentY, data, surf, false);
 			currentX += data._width + 1;
@@ -810,25 +813,8 @@ void View1::renderStringTo(uint16 x, uint16 y, const Common::String &s, Graphics
 }
 
 int View1::measureStringWithFont(const Common::String &s, const GlyphData *glyphs, uint16 numGlyphs) {
-	int width = 0;
-	uint16 widestGlyph = 1;
-	for (uint i = 0; i < numGlyphs; i++) {
-		widestGlyph = MAX(widestGlyph, glyphs[i]._width);
-	}
-	for (auto iter = s.begin(); iter != s.end(); iter++) {
-		bool found = false;
-		for (uint i = 0; i < numGlyphs; i++) {
-			if (glyphs[i]._ascii == *iter) {
-				width += glyphs[i]._width + 1;
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			width += widestGlyph;
-		}
-	}
-	return width;
+	Text *text = &g_engine->_text;
+	return text->measureString(s, glyphs, numGlyphs);
 }
 
 void View1::renderStringWithFont(uint16 x, uint16 y, const Common::String &s, const GlyphData *glyphs, uint16 numGlyphs) {
@@ -877,8 +863,8 @@ void View1::drawOverlayTextEntries() {
 		int x = entry.position.x;
 		const Common::String &text = entry.text;
 		// Use overlay font if loaded, otherwise fall back to main font
-		const GlyphData *font = g_engine->numOverlayGlyphs > 0 ? g_engine->_overlayGlyphs : g_engine->_glyphs;
-		const uint16 fontCount = g_engine->numOverlayGlyphs > 0 ? g_engine->numOverlayGlyphs : g_engine->_numGlyphs;
+		const GlyphData *font = g_engine->_text.numOverlayGlyphs > 0 ? g_engine->_text._overlayGlyphs : g_engine->_text._glyphs;
+		const uint16 fontCount = g_engine->_text.numOverlayGlyphs > 0 ? g_engine->_text.numOverlayGlyphs : g_engine->_text._numGlyphs;
 
 		if (entry.alignment == 1) {
 			x -= measureStringWithFont(text, font, fontCount);
@@ -896,12 +882,13 @@ void View1::drawOverlayTextEntries() {
 }
 
 void View1::showStringBox(const Common::StringArray &sa) {
+	Text *text = &g_engine->_text;
 	const int padW = g_engine->dialogPadW();
 	const int padH = g_engine->dialogPadH();
 	const int textInset = g_engine->dialogTextInset();
 	const int lineHeight = g_engine->dialogLineHeight();
-	const int totalWidth = g_engine->measureStrings(sa) + padW;
-	const int totalHeight = g_engine->measureStringsVertically(sa) + padH;
+	const int totalWidth = text->measureStrings(sa) + padW;
+	const int totalHeight = text->measureStringsVertically(sa, lineHeight) + padH;
 	g_engine->_textLog.push_back(Common::String::format(
 									 "Render text box: lines=%u pos=(%d,%d) size=(%d,%d) text=\"", sa.size(),
 									 _stringBoxPosition.x, _stringBoxPosition.y, totalWidth, totalHeight) +
@@ -918,25 +905,26 @@ void View1::showStringBox(const Common::StringArray &sa) {
 }
 
 void View1::drawPathfindingPoints(Graphics::ManagedSurface &s) {
+	Text *text = &g_engine->_text;
 	GlyphData xData;
 	int xOffset = 0;
 	int yOffset = 0;
-	if (g_engine->findGlyph('x', xData)) {
+	if (text->findGlyph('x', xData)) {
 		xOffset = xData._width / 2;
 		yOffset = xData._height / 2;
 	}
 	for (int i = 0; i < 16; i++) {
-		const PathfindingPoint &current = g_engine->_pathfindingPoints[i];
+		const PathfindingPoint &current = g_engine->_pathfinding._points[i];
 		renderString(current._position.x - xOffset, current._position.y - yOffset, "x");
 
 		const Common::String &number = Common::String::format("%u", i);
 		renderString(current._position.x - xOffset + 10, current._position.y - yOffset + 10, number.c_str());
 
 		for (uint8 adjacentIndex : current._adjacentPoints) {
-			if (adjacentIndex >= g_engine->_pathfindingPoints.size()) {
+			if (adjacentIndex >= g_engine->_pathfinding._points.size()) {
 				continue;
 			}
-			PathfindingPoint &other = g_engine->_pathfindingPoints[adjacentIndex - 1];
+			PathfindingPoint &other = g_engine->_pathfinding._points[adjacentIndex - 1];
 			s.drawLine(current._position.x, current._position.y, other._position.x, other._position.y, 0xFFFFFFFF);
 		}
 	}
@@ -971,11 +959,13 @@ void View1::drawDebugOutput(Graphics::ManagedSurface &s) {
 }
 
 void View1::drawPath(Graphics::ManagedSurface &s) {
-	if (g_engine->_path.size() < 2) {
-		return;
-	}
-	for (uint i = 0; i < g_engine->_path.size() - 1; i++) {
-		s.drawLine(g_engine->_path[i].x, g_engine->_path[i].y, g_engine->_path[i + 1].x, g_engine->_path[i + 1].y, 0xFF);
+	Common::Array<Common::Point> pts;
+	for (Character *c : _characters) {
+		if (c == nullptr)
+			continue;
+		c->getPathPolyline(pts);
+		for (uint i = 0; i + 1 < pts.size(); i++)
+			s.drawLine(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, 0xFF);
 	}
 }
 
@@ -1061,10 +1051,7 @@ void View1::closeScriptActionBar(Script::MouseMode &outSavedCursorMode) {
 }
 
 void View1::enterMapMode() {
-	// Binary handleInput end-block when scene+0x61db != 0 (1008:e8bf): fade, load map
-	// from scene+0x5DDB (_mapSceneOffsets[0]), set cursor 0x18 (PanelUse).
-	// this path is the DOS help-map overlay
-	const uint32 helpOffset = g_engine->_mapSceneOffsets[0];
+	const uint32 helpOffset = g_engine->_helpOffsets[0];
 	if (helpOffset == 0 || helpOffset >= (uint32)g_engine->_fileStream->size()) {
 		return;
 	}
@@ -1077,7 +1064,6 @@ void View1::enterMapMode() {
 	g_engine->applyPaletteDarkening();
 	Graphics::ManagedSurface mapDepth = g_engine->readRLEImage(g_engine->_fileStream->pos(), g_engine->_fileStream);
 	g_engine->_depthMap.blitFrom(mapDepth);
-	g_engine->_mapSubSceneTableFilePos = g_engine->_fileStream->pos();
 	_currentMode = ViewMode::VM_HELP;
 	g_engine->setCursorMode(Script::MouseMode::PanelUse);
 	updateCursor();
@@ -1137,17 +1123,18 @@ bool View1::handleDialogueChoiceClick(int clickY, int clickX) {
 	// Checks if click is within text box bounds (X+9..X+W-9, Y+9..Y+H-9).
 	// Iterates choice entries to find which line was clicked.
 	// Stores script index at scene+0x53B7 and clears scene+0x53B9.
+	Text *text = &g_engine->_text;
 	const int padW = g_engine->dialogPadW();
 	const int padH = g_engine->dialogPadH();
 	const int textInset = g_engine->dialogTextInset();
-	const int boxW = g_engine->measureStrings(_drawnStringBox) + padW;
-	const int boxH = g_engine->measureStringsVertically(_drawnStringBox) + padH;
+	const int lineHeight = g_engine->dialogLineHeight();
+	const int boxW = text->measureStrings(_drawnStringBox) + padW;
+	const int boxH = text->measureStringsVertically(_drawnStringBox, lineHeight) + padH;
 	if (clickX < _stringBoxPosition.x + textInset || clickY < _stringBoxPosition.y + textInset ||
 		clickX > _stringBoxPosition.x + boxW - textInset || clickY > _stringBoxPosition.y + boxH - textInset) {
 		return false;
 	}
 
-	const int lineHeight = g_engine->dialogLineHeight();
 	const int firstLineY = _stringBoxPosition.y + textInset;
 	const int relY = clickY - firstLineY;
 	debug("handleDialogueChoiceClick: clickY=%d firstLineY=%d relY=%d lineHeight=%d clickedLine=%d",
@@ -1756,7 +1743,7 @@ bool View1::handleHelpClick(const MouseDownMessage &msg) {
 		const uint8 depth = g_engine->_depthMap.getPixel(msg._pos.x, msg._pos.y);
 		if (depth > 0 && depth < 0xFA) {
 			// Binary: fileSeek(scene + 0x5DD7 + depth*4) = _mapSceneOffsets[depth-1]
-			uint32 subSceneOffset = g_engine->_mapSceneOffsets[depth - 1];
+			uint32 subSceneOffset = g_engine->_helpOffsets[depth - 1];
 			if (subSceneOffset != 0 && subSceneOffset < (uint32)g_engine->_fileStream->size()) {
 				startFadeToBlack(8);
 				Graphics::ManagedSurface preview = g_engine->readRLEImage(subSceneOffset, g_engine->_fileStream);
@@ -1794,28 +1781,7 @@ void View1::walkToScreenPosition(const Common::Point &pos) {
 		return;
 	}
 
-	const Common::Point &charPos = protagonist->getPosition();
-
-	Common::Point target = pos;
-	g_engine->snapToWalkablePosition(&target.y, &target.x, charPos.y, charPos.x);
-
-	protagonist->_pathFinalDestination = target;
-	protagonist->_currentPathIndex = 0;
-	protagonist->_path.clear();
-
-	const bool directPath = g_engine->isPathWalkable(target.y, target.x, charPos.y, charPos.x);
-	if (directPath || Macs2Engine::isWalkabilityBlocking(g_engine->getWalkabilityAt(target.y, target.x))) {
-		protagonist->_targetPosition = target;
-	} else {
-		const bool found = protagonist->calculatePath(target);
-		if (!found) {
-			protagonist->_targetPosition = target;
-		}
-	}
-	protagonist->_stepDeltaX = (int16)ABS(protagonist->_targetPosition.x - charPos.x);
-	protagonist->_stepDeltaY = (int16)ABS(protagonist->_targetPosition.y - charPos.y);
-	protagonist->_stepError = 0;
-	protagonist->_stepDirectionSet = false;
+	protagonist->setWalkTarget(pos, true);
 	g_engine->_scriptExecutor->saveWalkRuntime(protagonist, protagonist->_gameObject);
 }
 
@@ -2267,6 +2233,10 @@ bool View1::msgKeypress(const KeypressMessage &msg) {
 }
 
 void View1::draw() {
+	drawSceneFrame(false);
+}
+
+void View1::drawSceneFrame(bool fullUpdate) {
 	if (_paletteDirty && _currentFadeValue < 0) {
 		setViewPaletteSafely(g_engine->_pal);
 		_paletteDirty = false;
@@ -2283,7 +2253,7 @@ void View1::draw() {
 
 	// Handle highlighting
 
-	drawAllCharacters(&s, true);
+	drawAllCharacters(&s, fullUpdate);
 	drawOverlayTextEntries();
 	if (shouldDrawPathfindingOverlay()) {
 		drawPathfindingPoints(s);
@@ -2410,7 +2380,7 @@ void View1::draw() {
 }
 
 void View1::drawSceneUpdate() {
-	draw();
+	drawSceneFrame(true);
 	_needsRedraw = false;
 }
 
@@ -2684,6 +2654,8 @@ bool View1::tick() {
 				g_engine->runScriptExecutor();
 			}
 		}
+		if (!exec->isScriptMidExecution())
+			drawSceneUpdate();
 	}
 
 	redraw();
@@ -2833,9 +2805,9 @@ void View1::drawAllCharacters(Graphics::ManagedSurface *surface, bool fullUpdate
 			}
 
 			int16 walkabilityOffset = 0;
-			if (g_engine->_pathfindingMap.w > 0) {
-				walkabilityOffset = g_engine->getWalkabilityAt(charY, charX);
-				if (Macs2Engine::isWalkabilityBlocking((uint16)walkabilityOffset))
+			if (g_engine->_pathfinding._map.w > 0) {
+				walkabilityOffset = g_engine->_pathfinding.walkabilityAt(charY, charX);
+				if (Pathfinding::isWalkabilityBlocking((uint16)walkabilityOffset))
 					walkabilityOffset = 0;
 			}
 			if (g_engine->isV2())
@@ -3138,6 +3110,10 @@ void View1::drawSprite(int16 x, int16 y, const Sprite &sprite, Graphics::Managed
 	drawSprite(x, y, sprite._width, sprite._height, const_cast<byte *>(sprite._data.data()), s, mirrored, useDepth, depth, clipToGameArea);
 }
 
+void View1::drawSprite(int16 x, int16 y, const GlyphData &glyph, Graphics::ManagedSurface &s, bool mirrored, bool useDepth, uint8 depth, bool clipToGameArea) {
+	drawSprite(x, y, glyph._width, glyph._height, const_cast<byte *>(glyph._data.data()), s, mirrored, useDepth, depth, clipToGameArea);
+}
+
 void View1::drawSpriteClipped(uint16 x, uint16 y, const Common::Rect &clippingRect, uint16 width, uint16 height, const byte *const data, Graphics::ManagedSurface &s) {
 	for (int currentX = 0; currentX < width; currentX++) {
 		for (int currentY = 0; currentY < height; currentY++) {
@@ -3335,11 +3311,12 @@ void View1::showSpeechAct(uint16 characterIndex, const Common::Array<Common::Str
 	_currentSpeechActData.position = position;
 	_currentSpeechActData.onRightSide = onRightSide;
 
+	Text *text = &g_engine->_text;
 	const int padW = g_engine->dialogPadW();
 	const int padH = g_engine->dialogPadH();
 	const int portraitGap = g_engine->portraitTextGap();
-	const int totalWidth = g_engine->measureStrings(strings) + padW;
-	const int totalHeight = g_engine->measureStringsVertically(strings) + padH;
+	const int totalWidth = text->measureStrings(strings) + padW;
+	const int totalHeight = text->measureStringsVertically(strings, g_engine->dialogLineHeight()) + padH;
 	int stringBoxX = position.x;
 	int stringBoxY = position.y;
 	Common::Point portraitBoxPosition = position;
@@ -3774,8 +3751,8 @@ void View1::drawOriginalSaveLoadPanel(Graphics::ManagedSurface &s) {
 		} else {
 			label = "NONE";
 		}
-		const GlyphData *font = g_engine->numPanelGlyphs > 0 ? g_engine->_panelGlyphs : g_engine->_glyphs;
-		const uint16 fontCount = g_engine->numPanelGlyphs > 0 ? g_engine->numPanelGlyphs : g_engine->_numGlyphs;
+		const GlyphData *font = g_engine->_text.numPanelGlyphs > 0 ? g_engine->_text._panelGlyphs : g_engine->_text._glyphs;
+		const uint16 fontCount = g_engine->_text.numPanelGlyphs > 0 ? g_engine->_text.numPanelGlyphs : g_engine->_text._numGlyphs;
 		renderStringWithFont(panelX + 6, panelY + 6 + slot * slotH, label, font, fontCount);
 	}
 }

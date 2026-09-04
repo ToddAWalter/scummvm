@@ -315,18 +315,7 @@ OpcodeResult ScriptExecutor::scriptChangeAnimation() {
 uint16 ScriptExecutor::getAreaAtPoint(uint16 x, uint16 y) {
 	// getAreaAtPoint (1008:101d). Reads the pathfinding map pixel and applies
 	// the area override table at sceneData + value*5 + 0x4EA8.
-	if (x >= (uint16)_engine->screenWidth() || y >= (uint16)_engine->gameHeight() ||
-		_engine->_pathfindingMap.w == 0) {
-		return 0;
-	}
-	uint16 result = _engine->_pathfindingMap.getPixel(x, y);
-	if (result >= AREA_OVERRIDE_MIN && result < 250) {
-		uint16 overrideValue = _engine->getPathfindingOverride2(result);
-		if (overrideValue >= AREA_OVERRIDE_MIN) {
-			result = overrideValue;
-		}
-	}
-	return result;
+	return _engine->_pathfinding.areaAt(x, y);
 }
 
 bool ScriptExecutor::loadIndexedResource(Common::Array<uint8> &outData, uint8 resourceIndex, uint16 /*objectTableOffset*/) {
@@ -424,7 +413,8 @@ void ScriptExecutor::scriptPrintString(bool alignRight) {
 	int stringBoxX = x;
 	const int stringBoxY = y;
 	if (alignRight) {
-		const int totalWidth = g_engine->measureStrings(strings) + g_engine->dialogPadW();
+		Text *text = &g_engine->_text;
+		const int totalWidth = text->measureStrings(strings) + g_engine->dialogPadW();
 		stringBoxX -= totalWidth;
 	}
 
@@ -587,7 +577,7 @@ void ScriptExecutor::debugLogActorWalkState(const char *context) {
 	const int16 x = actor->_position.x;
 	const int16 y = actor->_position.y;
 	const uint16 area = getAreaAtPoint((uint16)x, (uint16)y);
-	const uint16 walk = _engine->getWalkabilityAt(y, x);
+	const uint16 walk = _engine->_pathfinding.walkabilityAt(y, x);
 	View1 *view = (View1 *)_engine->findView("View1");
 	Character *character = view ? view->getCharacterByIndex(actorIndex) : nullptr;
 
@@ -595,7 +585,7 @@ void ScriptExecutor::debugLogActorWalkState(const char *context) {
 		   "%s: actor=(%d,%d) area=%u walk=%u/0x%04x int16=%d walkable=%s var[122]=%u "
 		   "cursor=0x%02x executorState=%u walkWaitObj=%u frameWait=%u soundWait=%d musicWait=%d "
 		   "pendingVMotion=%s vOff=%u motionTgt=%u motionProg=%u/%u repeatRun=%d",
-		   context, x, y, area, walk, walk, (int16)walk, Macs2Engine::isWalkabilityWalkable(walk) ? "yes" : "NO",
+		   context, x, y, area, walk, walk, (int16)walk, Pathfinding::isWalkabilityWalkable(walk) ? "yes" : "NO",
 		   getVariableValue(122), (uint)_cursorMode, (uint)_state, _walkTargetObjectIndex,
 		   _frameWaitTicksRemaining, _waitForPcmSound ? 1 : 0, _waitForMusicControl ? 1 : 0,
 		   (character && character->hasPendingVerticalMotion()) ? "yes" : "no",
@@ -1425,25 +1415,7 @@ OpcodeResult Script::ScriptExecutor::scriptWalkToPosition() {
 		c = &stackCharacter;
 	}
 
-	const Common::Point current = c->getPosition();
-	const Common::Point target(x, y);
-
-	c->_currentPathIndex = 0;
-	c->_path.clear();
-	c->_pathFinalDestination = target;
-
-	bool directPath = _engine->isPathWalkable(y, x, current.y, current.x);
-	if (!directPath && Macs2Engine::isWalkabilityWalkable(_engine->getWalkabilityAt(y, x))) {
-		c->calculatePath(target);
-	}
-	if (c->_path.empty()) {
-		c->_targetPosition = c->_pathFinalDestination;
-	}
-
-	c->_stepDeltaX = (int16)ABS((int32)c->_targetPosition.x - current.x);
-	c->_stepDeltaY = (int16)ABS((int32)c->_targetPosition.y - current.y);
-	c->_stepError = 0;
-	c->_stepDirectionSet = false;
+	c->setWalkTarget(Common::Point(x, y), false);
 
 	// Binary loadObjectData seeds runtime+0x21D from the object table vertical offset;
 	// scriptWalkToPosition does not change it. Match that so waitForWalk can complete
@@ -1836,7 +1808,7 @@ OpcodeResult Script::ScriptExecutor::scriptTestPathfinding() {
 		setScriptError(2);
 		return OpcodeResult::Continue;
 	}
-	_pathWalkableResult = _engine->isPathWalkable(y, x, object->_position.y, object->_position.x);
+	_pathWalkableResult = _engine->_pathfinding.isLineWalkable(y, x, object->_position.y, object->_position.x);
 	return OpcodeResult::Continue;
 }
 
@@ -2092,8 +2064,8 @@ OpcodeResult Script::ScriptExecutor::scriptMoveToPosition() {
 
 	const Common::Point target(x, y);
 	// Binary scriptMoveToPosition (1008:bafc): isPathWalkable(targetY, targetX, objY, objX).
-	if (!_engine->isPathWalkable(y, x, object->_position.y, object->_position.x) &&
-		Macs2Engine::isWalkabilityWalkable(_engine->getWalkabilityAt(target))) {
+	if (!_engine->_pathfinding.isLineWalkable(y, x, object->_position.y, object->_position.x) &&
+		Pathfinding::isWalkabilityWalkable(_engine->_pathfinding.walkabilityAt(target))) {
 		setScriptError(0x15);
 		return OpcodeResult::Continue;
 	}
@@ -2777,15 +2749,15 @@ OpcodeResult Script::ScriptExecutor::scriptSetPathfinding() {
 	uint16 overrideValue = scriptReadValue16();
 	debugC(kDebugScript, "SCRIPT::setPathfinding(areaID=%u, active=%u, overrideValue=%u/0x%04x int16=%d walkable=%s)",
 		   areaID, active, overrideValue, overrideValue, (int16)overrideValue,
-		   (!active || Macs2Engine::isWalkabilityWalkable(overrideValue)) ? "yes" : "NO");
+		   (!active || Pathfinding::isWalkabilityWalkable(overrideValue)) ? "yes" : "NO");
 	if (areaID < 200 || areaID > 0xEF) {
 		setScriptError(0x0D);
 		return OpcodeResult::Continue;
 	}
 	if (active) {
-		g_engine->setPathfindingOverride(areaID, overrideValue);
+		g_engine->_pathfinding.setWalkOverride(areaID, overrideValue);
 	} else {
-		g_engine->removePathfindingOverride(areaID);
+		g_engine->_pathfinding.removeWalkOverride(areaID);
 	}
 	debugLogActorWalkState("after setPathfinding");
 	return OpcodeResult::Continue;
@@ -3127,7 +3099,7 @@ OpcodeResult Script::ScriptExecutor::scriptSetPathfindingRemap() {
 		setScriptError(0x0D);
 		return OpcodeResult::Continue;
 	}
-	g_engine->_areaOverrides[sourceValue - AREA_OVERRIDE_MIN] = targetValue;
+	g_engine->_pathfinding._areaOverrides[sourceValue - AREA_OVERRIDE_MIN] = targetValue;
 	return OpcodeResult::Continue;
 }
 
@@ -3955,7 +3927,7 @@ OpcodeResult ScriptExecutor::scriptLoadWalkMask() {
 	const bool halfRes = _engine->isV2();
 	const int w = halfRes ? kScreenWidth : _engine->screenWidth();
 	const int h = halfRes ? kGameHeight : _engine->gameHeight();
-	if (!_engine->loadMaskFromResource(resourceIndex, _executingScriptObjectId, _engine->_pathfindingMap,
+	if (!_engine->loadMaskFromResource(resourceIndex, _executingScriptObjectId, _engine->_pathfinding._map,
 									   w, h, halfRes))
 		warning("loadWalkMask: failed resource %u", resourceIndex);
 	return OpcodeResult::Continue;

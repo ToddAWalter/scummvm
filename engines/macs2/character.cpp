@@ -27,6 +27,7 @@
 #include "macs2/events.h"
 #include "macs2/macs2.h"
 #include "macs2/macs2_constants.h"
+#include "macs2/pathfinding.h"
 #include "macs2/scriptexecutor.h"
 #include "macs2/view1.h"
 
@@ -142,157 +143,77 @@ bool Character::handleWalkability(Character *c) {
 }
 
 uint16 Character::lookupWalkability(const Common::Point &p) const {
-	return g_engine->getWalkabilityAt((int16)p.y, (int16)p.x);
+	return g_engine->_pathfinding.walkabilityAt(p);
 }
 
 bool Character::isWalkable(const Common::Point &p) const {
-	return Macs2Engine::isWalkabilityWalkable(lookupWalkability(p));
+	return Pathfinding::isWalkabilityWalkable(lookupWalkability(p));
 }
 
 Character::Character() : _pathfindingOverlay(g_engine->screenWidth() * g_engine->gameHeight(), 0) {
 }
 
 bool Character::calculatePath(Common::Point target) {
-	// Binary calculatePath (1008:1966). Params: charY, charX, finalDestY, finalDestX, actorIndex.
-	// The binary operates on the runtime struct directly; we store equivalent state in _path etc.
-	const Common::Point &charPos = _gameObject->_position;
-	const int nodeCount = g_engine->getPathfindingNodeCount();
+	const PathRoute route = g_engine->_pathfinding.calculateRoute(_gameObject->_position, target);
+	_path = route.nodes;
+	_currentPathIndex = route.startIndex;
+	_targetPosition = route.found ? route.firstWaypoint : target;
+	return route.found;
+}
 
-	// Step 1: Mark reachability anchored on FINAL DESTINATION (not character)
-	// scene[i + 0x50C2] = isPathWalkable(finalDest, node[i])
-	bool reachable[kPathNodeSlots + 1] = {};
-	for (int i = 1; i <= nodeCount; i++) {
-		const Common::Point &nodePos = g_engine->_pathfindingPoints[i - 1]._position;
-		reachable[i] = g_engine->isPathWalkable(target.y, target.x, nodePos.y, nodePos.x);
-	}
+void Character::setWalkTarget(const Common::Point &target, bool snap) {
+	Common::Point dest = target;
+	const Common::Point current = getPosition();
+	Pathfinding &pf = g_engine->_pathfinding;
+	if (snap)
+		pf.snapToWalkable(&dest.y, &dest.x, current.y, current.x);
 
-	// Step 2: Find best entry node (lowest combined distance to both source and dest)
-	int bestCost = 0x7777;
-	int bestNode = 0;
-	for (int i = 1; i <= nodeCount; i++) {
-		const Common::Point &nodePos = g_engine->_pathfindingPoints[i - 1]._position;
-		int costToDest = g_engine->euclideanDistance(nodePos, target);
-		int costToChar = g_engine->euclideanDistance(nodePos, charPos);
-		if (costToDest + costToChar < bestCost) {
-			// Verify this node can connect source to target
-			// Binary calls canNodeConnectSourceToTarget(destY, destX, charY, charX, i)
-			// due to calculatePath being invoked with swapped source/dest params.
-			// This means the gate check is "can node see CHARACTER" and the flood-fill
-			// checks "any node reachable from DEST" AND "any node visible from CHARACTER".
-			// TODO: validate this with a playthought:
-			//   PVS-Studio V764: Possible incorrect order of arguments passed to
-			//   'canNodeConnectSourceToTarget' function: 'target' and 'charPos'.
-			// I didn't had any issues in previous runs
-			if (canNodeConnectSourceToTarget(i, target, charPos, reachable, nodeCount)) {
-				// Recompute cost (binary does this twice)
-				costToDest = g_engine->euclideanDistance(nodePos, target);
-				costToChar = g_engine->euclideanDistance(nodePos, charPos);
-				bestCost = costToDest + costToChar;
-				bestNode = i;
-			}
-		}
-	}
-
-	if (bestNode == 0) {
-		// No path found - go directly to target
-		// Binary: pathNodeCount=0, pathIndex=1
-		_path.clear();
-		_currentPathIndex = 1;
-		_targetPosition = target;
-		return false;
-	}
-
-	// Step 3: smoothPath - build path from bestNode toward a reachable node
-	_path.clear();
-	_path.push_back(bestNode);
-	int currentNode = bestNode;
-	while (!reachable[currentNode]) {
-		const PathfindingPoint &curPt = g_engine->_pathfindingPoints[currentNode - 1];
-		int localBestCost = 0x7777;
-		int nextNode = currentNode;
-		for (uint a = 0; a < curPt._adjacentPoints.size(); a++) {
-			const int adjIdx = curPt._adjacentPoints[a];
-			const int cost = g_engine->computeMinCostToReachable(adjIdx, 0x7fff, _gameObject->_index, reachable, nodeCount, target);
-			const int edgeCost = g_engine->walkableDistance(adjIdx, currentNode);
-			if (cost + edgeCost < localBestCost) {
-				nextNode = adjIdx;
-				localBestCost = cost + edgeCost;
-			}
-		}
-		currentNode = nextNode;
-		_path.push_back(currentNode);
-		if (_path.size() > kPathNodeSlots)
-			break; // safety
-	}
-
-	// Step 4: Validate path - consecutive nodes must be walkable to each other
-	for (uint i = 0; i + 1 < _path.size(); i++) {
-		const Common::Point &p1 = g_engine->_pathfindingPoints[_path[i + 1] - 1]._position;
-		const Common::Point &p2 = g_engine->_pathfindingPoints[_path[i] - 1]._position;
-		if (!g_engine->isPathWalkable(p1.y, p1.x, p2.y, p2.x)) {
-			// Path invalid - abort, go directly to target
-			_path.clear();
-			_targetPosition = target;
-			return false;
-		}
-	}
-
-	// Step 5: Skip-forward optimization - skip nodes the character can already reach directly.
-	// Binary: checks isPathWalkable(nextNode, charPos) - "can character see the next node?"
-	// Note: binary's calculatePath is called with swapped params, so its 'finalDest' param
-	// is actually the character position.
+	_pathFinalDestination = dest;
 	_currentPathIndex = 0;
-	while (_currentPathIndex + 1 < (int16)_path.size()) {
-		const Common::Point &nextNodePos = g_engine->_pathfindingPoints[_path[_currentPathIndex + 1] - 1]._position;
-		if (!g_engine->isPathWalkable(nextNodePos.y, nextNodePos.x, charPos.y, charPos.x))
-			break;
-		_currentPathIndex++;
+	_path.clear();
+
+	const bool direct = pf.isLineWalkable(dest.y, dest.x, current.y, current.x);
+	if (snap) {
+		if (direct || Pathfinding::isWalkabilityBlocking(pf.walkabilityAt(dest.y, dest.x)))
+			_targetPosition = dest;
+		else if (!calculatePath(dest))
+			_targetPosition = dest;
+	} else {
+		if (!direct && Pathfinding::isWalkabilityWalkable(pf.walkabilityAt(dest.y, dest.x)))
+			calculatePath(dest);
+		if (_path.empty())
+			_targetPosition = dest;
 	}
 
-	// Set immediate target to the current path node
-	const Common::Point &firstTarget = g_engine->_pathfindingPoints[_path[_currentPathIndex] - 1]._position;
-	_targetPosition = firstTarget;
-	return true;
+	_stepDeltaX = (int16)ABS(_targetPosition.x - current.x);
+	_stepDeltaY = (int16)ABS(_targetPosition.y - current.y);
+	_stepError = 0;
+	_stepDirectionSet = false;
 }
 
-bool Character::canNodeConnectSourceToTarget(uint16 nodeIndex, const Common::Point &charPos, const Common::Point &target, const bool *reachable, int nodeCount) {
-	// Checks if node can connect source (charPos) to target:
-	// 1. Node must be able to see the target
-	// 2. Flood-fill connected component from node
-	// 3. Some node in component must see target AND some node must be seen from source
-	const Common::Point &nodePos = g_engine->_pathfindingPoints[nodeIndex - 1]._position;
-	if (!g_engine->isPathWalkable(nodePos.y, nodePos.x, target.y, target.x))
-		return false;
+void Character::getPathPolyline(Common::Array<Common::Point> &out) const {
+	out.clear();
+	if (_gameObject == nullptr)
+		return;
 
-	// Flood-fill connected nodes
-	bool visited[kPathNodeSlots + 1] = {};
-	floodFillConnectedNodes(nodeIndex, visited, nodeCount);
+	out.push_back(getPosition());
 
-	// Check both conditions
-	bool anySeesTarget = false;
-	bool anySeenFromSource = false;
-	for (int i = 1; i <= nodeCount; i++) {
-		if (!visited[i])
+	const Common::Array<PathfindingPoint> &nodes = g_engine->_pathfinding._points;
+	int idx = _currentPathIndex;
+	if (idx < 0)
+		idx = 0;
+	for (int i = idx; i < (int)_path.size(); i++) {
+		const uint16 nodeIdx = _path[i];
+		if (nodeIdx == 0 || nodeIdx > nodes.size())
 			continue;
-		const Common::Point &p = g_engine->_pathfindingPoints[i - 1]._position;
-		if (g_engine->isPathWalkable(p.y, p.x, target.y, target.x))
-			anySeesTarget = true;
-		if (g_engine->isPathWalkable(charPos.y, charPos.x, p.y, p.x))
-			anySeenFromSource = true;
+		out.push_back(nodes[nodeIdx - 1]._position);
 	}
-	return anySeesTarget && anySeenFromSource;
-}
 
-void Character::floodFillConnectedNodes(int nodeIndex, bool *visited, int nodeCount) {
-	if (nodeIndex < 1 || nodeIndex > nodeCount)
-		return;
-	if (visited[nodeIndex])
-		return;
-	visited[nodeIndex] = true;
-	const PathfindingPoint &pt = g_engine->_pathfindingPoints[nodeIndex - 1];
-	for (uint i = 0; i < pt._adjacentPoints.size(); i++) {
-		floodFillConnectedNodes(pt._adjacentPoints[i], visited, nodeCount);
-	}
+	if (out.back() != _pathFinalDestination)
+		out.push_back(_pathFinalDestination);
+
+	if (out.size() < 2)
+		out.clear();
 }
 
 const Common::Point &Character::getPosition() const {
@@ -304,8 +225,8 @@ void Character::setPosition(const Common::Point &newPosition) {
 }
 
 uint16 Character::getVerticalOffset() const {
-	uint16 result = g_engine->getWalkabilityAt(getPosition());
-	if (Macs2Engine::isWalkabilityBlocking(result)) {
+	uint16 result = g_engine->_pathfinding.walkabilityAt(getPosition());
+	if (Pathfinding::isWalkabilityBlocking(result)) {
 		result = 0;
 	}
 
@@ -323,7 +244,7 @@ uint16 Character::getVerticalOffset() const {
 bool Character::walkAlongPath() {
 	if (_currentPathIndex >= 0 && _currentPathIndex < (int16)_path.size()) {
 		const uint16 snapIdx = _path[_currentPathIndex];
-		const Common::Point &snapPos = g_engine->_pathfindingPoints[snapIdx - 1]._position;
+		const Common::Point &snapPos = g_engine->_pathfinding._points[snapIdx - 1]._position;
 		_gameObject->_position = snapPos;
 	}
 	_currentPathIndex++;
@@ -337,7 +258,7 @@ bool Character::walkAlongPath() {
 		return false; // No more path segments after this
 	}
 	const uint16 nodeIdx = _path[_currentPathIndex];
-	const Common::Point &nodePos = g_engine->_pathfindingPoints[nodeIdx - 1]._position;
+	const Common::Point &nodePos = g_engine->_pathfinding._points[nodeIdx - 1]._position;
 	_targetPosition = nodePos;
 	_stepDeltaX = (int16)ABS(_targetPosition.x - _gameObject->_position.x);
 	_stepDeltaY = (int16)ABS(_targetPosition.y - _gameObject->_position.y);
@@ -431,30 +352,9 @@ void Character::startLerpTo(const Common::Point &target, uint32 duration, bool i
 
 void Character::startPickup(Macs2::GameObject *object) {
 	_pickedUpObject = object;
-	_pathFinalDestination = getObjectEffectivePosition(object);
 	_pickupFrameCounter = 0;
 	_pickupItemTransferred = false;
-
-	const Common::Point &current = getPosition();
-	const int16 destX = _pathFinalDestination.x;
-	const int16 destY = _pathFinalDestination.y;
-
-	_currentPathIndex = 0;
-	_path.clear();
-
-	const bool directPath = g_engine->isPathWalkable(destY, destX, current.y, current.x);
-	if (!directPath && Macs2Engine::isWalkabilityWalkable(g_engine->getWalkabilityAt(destY, destX))) {
-		calculatePath(Common::Point(destX, destY));
-	}
-
-	if (_path.empty()) {
-		_targetPosition = _pathFinalDestination;
-	}
-
-	_stepDeltaX = (int16)ABS(_targetPosition.x - current.x);
-	_stepDeltaY = (int16)ABS(_targetPosition.y - current.y);
-	_stepError = 0;
-	_stepDirectionSet = false;
+	setWalkTarget(getObjectEffectivePosition(object), false);
 }
 
 bool Character::hasPendingVerticalMotion() const {
@@ -665,41 +565,41 @@ void Character::update() {
 			pos = savedPos;
 			// Wall-sliding: build push vector from +/-1 and +/-2 samples
 			int pushX = 0, pushY = 0;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x + 1, pos.y))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x + 1, pos.y))))
 				pushX--;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x - 1, pos.y))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x - 1, pos.y))))
 				pushX++;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y + 1))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y + 1))))
 				pushY--;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y - 1))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y - 1))))
 				pushY++;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x + 2, pos.y))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x + 2, pos.y))))
 				pushX--;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x - 2, pos.y))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x - 2, pos.y))))
 				pushX++;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y + 2))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y + 2))))
 				pushY--;
-			if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y - 2))))
+			if (Pathfinding::isWalkabilityBlocking(lookupWalkability(Common::Point(pos.x, pos.y - 2))))
 				pushY++;
 			// Apply push vector
 			while (pushX != 0 || pushY != 0) {
 				if (pushX < 0) {
-					if (Macs2Engine::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x - 1, pos.y))))
+					if (Pathfinding::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x - 1, pos.y))))
 						pos.x--;
 					pushX++;
 				}
 				if (pushX > 0) {
-					if (Macs2Engine::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x + 1, pos.y))))
+					if (Pathfinding::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x + 1, pos.y))))
 						pos.x++;
 					pushX--;
 				}
 				if (pushY < 0) {
-					if (Macs2Engine::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x, pos.y - 1))))
+					if (Pathfinding::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x, pos.y - 1))))
 						pos.y--;
 					pushY++;
 				}
 				if (pushY > 0) {
-					if (Macs2Engine::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x, pos.y + 1))))
+					if (Pathfinding::isWalkabilityWalkable(lookupWalkability(Common::Point(pos.x, pos.y + 1))))
 						pos.y++;
 					pushY--;
 				}
@@ -719,7 +619,7 @@ void Character::update() {
 				   "walk cancelled pixelsMoved=%d walkSpeed=%d at (%d,%d) area=%u walk=%u finalDest=(%d,%d)",
 				   pixelsMoved, walkSpeed, pos.x, pos.y, tileArea, lookupWalkability(pos),
 				   _pathFinalDestination.x, _pathFinalDestination.y);
-		} else if (Macs2Engine::isWalkabilityBlocking(lookupWalkability(pos))) {
+		} else if (Pathfinding::isWalkabilityBlocking(lookupWalkability(pos))) {
 			debugC(kDebugPath,
 				   "walk cancelled (non-walkable) pixelsMoved=%d walkSpeed=%d at (%d,%d) walk=%u",
 				   pixelsMoved, walkSpeed, pos.x, pos.y, lookupWalkability(pos));
