@@ -19,13 +19,14 @@
  *
  */
 
-#ifndef FREESCAPE_8BITDETOKENIZER_H
-#define FREESCAPE_8BITDETOKENIZER_H
+#ifndef FREESCAPE_LANGUAGE_VARIABLES_H
+#define FREESCAPE_LANGUAGE_VARIABLES_H
 
-#include "freescape/language/instruction.h"
+#include "common/scummsys.h"
 
 namespace Freescape {
 
+// Variable and bit assignments used by the classic Freescape games.
 enum {
 	k8bitGameBitTravelRock = 30
 };
@@ -42,17 +43,8 @@ enum {
 	k8bitMaxVariable = 64
 };
 
-enum {
-	kConditionalShot = 1 << 0,
-	kConditionalTimeout = 1 << 1,
-	kConditionalCollided = 1 << 2,
-	kConditionalActivated = 1 << 3,
-};
-
 extern uint8 k8bitVariableShield;
-
-Common::String detokenise8bitCondition(Common::Array<uint16> &tokenisedCondition, FCLInstructionVector &instructions, bool enableActivated);
 
 } // End of namespace Freescape
 
-#endif // FREESCAPE_8BITDETOKENIZER_H
+#endif // FREESCAPE_LANGUAGE_VARIABLES_H

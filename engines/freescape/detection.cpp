@@ -1158,12 +1158,30 @@ const ADGameDescription gameDescriptions[] = {
 	// 3D Construction Kit games
 	{
 		"3dkit",
+		"A Chance in Hell",
+		AD_ENTRY1s("Datafile0.bin", "8b4d53e7758b69a8df43947baddcf94a", 5589),
+		Common::EN_ANY,
+		Common::kPlatformAmstradCPC,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERCPC)
+	},
+	{
+		"3dkit",
+		"Cube",
+		AD_ENTRY1s("CUBE.RUN", "3b7930be0f646b98885cfb70c26c89a2", 66138),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
+	},
+	{
+		"3dkit",
 		"The 3-D Kit Game",
 		AD_ENTRY1s("3DKIT.RUN", "f35147729a2f5b6852a504223aeb6a57", 112158),
 		Common::EN_ANY,
 		Common::kPlatformDOS,
-		ADGF_UNSUPPORTED,
-		GUIO1(GUIO_NOMIDI)
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
 	},
 	{
 		"3dkit",
