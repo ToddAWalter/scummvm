@@ -26,22 +26,27 @@
 namespace Freescape {
 
 void Kit8Engine::resetScripts() {
+	stopAllSounds();
+	_pendingSound = 0;
+	_soundSyncReady = false;
 	memset(_kitVariables, 0, sizeof(_kitVariables));
 	_changedVariables = 0;
 	_currentKey = 255;
-	_textColor = 7;
 	_kitVariables[121] = _kitVariables[125] = 255;
 	_kitVariables[127] = 0x9c;
 	_script = ScriptState();
 	_activeConditions = nullptr;
 	_initialScriptPending = true;
 	_scriptFrameActive = false;
+	_redrawPending = false;
 	_shotObject = _hitObject = _activatedObject = 0;
 	_fallen = _crushed = _pendingTimer = _timerTriggered = false;
 	_crossVisible = true;
 	_timerTicks = _timerInterval = _delayUntil = 0;
 	_lastTime = g_system->getMillis();
+	_nextFrameTime = _lastTime;
 	_scriptSurface.fillRect(_fullscreenViewArea, 255);
+	memcpy(_attributes, _borderAttributes, sizeof(_attributes));
 }
 
 void Kit8Engine::readSystemVariables() {
@@ -83,6 +88,11 @@ void Kit8Engine::writeSystemVariables() {
 
 void Kit8Engine::updateTimeVariables() {
 	uint32 now = g_system->getMillis();
+	// The Spectrum beeper disables interrupts until the effect ends.
+	if (isSpectrum() && isPlayingSound()) {
+		_lastTime = now;
+		return;
+	}
 	uint32 elapsed = (now - _lastTime) / 20;
 	_lastTime += 20 * elapsed;
 	uint16 counter = (_kitVariables[122] | (_kitVariables[123] << 8)) + elapsed;
@@ -125,10 +135,15 @@ void Kit8Engine::beginScriptFrame() {
 }
 
 void Kit8Engine::updateScripts() {
+	if (isSpectrum() && isPlayingSound())
+		return;
 	_fallen |= _hasFallen;
 	_crushed |= _playerWasCrushed;
 	_hasFallen = _playerWasCrushed = false;
 	_avoidRenderingFrames = 0;
+	if ((!_scriptFrameActive || _redrawPending) && !isFrameReady())
+		return;
+	_redrawPending = false;
 	if (_delayUntil && int32(_delayUntil - g_system->getMillis()) > 0)
 		return;
 	_delayUntil = 0;
@@ -137,6 +152,8 @@ void Kit8Engine::updateScripts() {
 	uint budget = 4096;
 	while (budget) {
 		if (_script.stack.empty()) {
+			// The CPC runner enables text after its first initialization condition.
+			_textOutputEnabled = true;
 			if (_conditionIndex == _activeConditions->size()) {
 				if (!_globalPhase)
 					break;
@@ -158,6 +175,9 @@ void Kit8Engine::updateScripts() {
 		return;
 	updateInstruments();
 	_scriptFrameActive = false;
+	// Approximate 8-bit rendering time using Freescape's movement cadence.
+	_nextFrameTime = _lastTime + kFrameDuration;
+	_soundSyncReady = true;
 	_shotObject = _hitObject = _activatedObject = 0;
 }
 
@@ -250,6 +270,8 @@ FCLExecutionResult Kit8Engine::executeCode(ScriptState &script, uint &budget) {
 		case Token::SOUND:
 		case Token::SYNCSND:
 			executeSound(instruction);
+			if (isSpectrum() && isPlayingSound())
+				return kFCLPaused;
 			break;
 		case Token::DELAY:
 			_delayUntil = g_system->getMillis() + 20 * (instruction._source ? instruction._source : 256);
@@ -264,6 +286,9 @@ FCLExecutionResult Kit8Engine::executeCode(ScriptState &script, uint &budget) {
 			writeSystemVariables();
 			_scriptSurface.fillRect(_viewArea, 255);
 			updateInstruments();
+			_nextFrameTime = _lastTime + kFrameDuration;
+			_redrawPending = true;
+			_soundSyncReady = true;
 			return kFCLPaused;
 		default:
 			error("Unsupported 8-bit 3D Construction Kit instruction %u", op);
@@ -422,15 +447,21 @@ void Kit8Engine::executeCall(const FCLInstruction &instruction, ScriptState &scr
 }
 
 void Kit8Engine::executeColour(const FCLInstruction &instruction) {
-	_palette[instruction._source & 3] = MIN<int>(26, instruction._destination);
+	if (isC64() && instruction._source >= 4)
+		return;
+	if (isSpectrum() && instruction._source >= 3) {
+		// The Spectrum runner routes selectors 3 and above to the hardware border.
+		_palette[3] = instruction._destination & 7;
+		return;
+	}
+	uint index = instruction._source & 3;
+	_palette[index] = isSpectrum() ? instruction._destination & (index == 2 ? 1 : 7) :
+		isC64() ? instruction._destination & 15 : MIN<int>(26, instruction._destination);
 	applyPalette();
 }
 
 void Kit8Engine::executeSound(const FCLInstruction &instruction) {
-	if (instruction._source && !_soundWarning) {
-		warning("8-bit 3D Construction Kit sound effects are not implemented");
-		_soundWarning = true;
-	}
+	playSound(instruction._source, instruction.getType() == Token::SYNCSND);
 }
 
 bool Kit8Engine::executeObjectConditions(GeometricObject *object, bool shot, bool collided, bool activated) {

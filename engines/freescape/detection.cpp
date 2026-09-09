@@ -110,12 +110,12 @@ const ADGameDescription gameDescriptions[] = {
 		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
-		"driller", // Tape re-relase
+		"driller", // Tape rerelease
 		"",
-		AD_ENTRY1s("DRILLER.C64.DATA", "4afec6eea3887343e7f91fb21a2f2948", 43278),
+		AD_ENTRY1s("DRILLER.C64.DATA", "4d7ed1343f9cd522447602bf402c79a6", 56329),
 		Common::EN_ANY,
 		Common::kPlatformC64,
-		ADGF_UNSUPPORTED, //| GF_C64_TAPE,
+		ADGF_UNSTABLE | GF_C64_TAPE | GF_C64_PACKED,
 		GUIO3(GUIO_NOMIDI, GAMEOPTION_AUTOMATIC_DRILLING, GUIO_RENDERC64)
 	},
 	{
@@ -535,7 +535,8 @@ const ADGameDescription gameDescriptions[] = {
 	{
 		"darkside", // Tape release
 		"",
-		AD_ENTRY1s("DARKSIDE.C64.DATA", "7d5fc9a962a146e303a0c71a2d5c651e", 48129),
+		AD_ENTRY2s("DARKSIDE.C64.DATA", "7d5fc9a962a146e303a0c71a2d5c651e", 48129,
+			"DARKSIDE.C64.DATA2", "b0c66200fcd60cf746f00bd7f9177d70", 2682),
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		GF_C64_TAPE,
@@ -668,7 +669,8 @@ const ADGameDescription gameDescriptions[] = {
 	{
 		"totaleclipse2", // Tape release
 		"",
-		AD_ENTRY1s("TOTALECLIPSE2.C64.DATA", "7ab839a4260c197f24b41ef6ab45ef21", 47105),
+		AD_ENTRY2s("TOTALECLIPSE2.C64.DATA", "7ab839a4260c197f24b41ef6ab45ef21", 47105,
+			"TOTALECLIPSE2.C64.DATA2", "0c1ddf1de6b8995d52bfb21abed062f4", 2818),
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_UNSTABLE | GF_C64_TAPE,
@@ -728,7 +730,8 @@ const ADGameDescription gameDescriptions[] = {
 	{
 		"totaleclipse", // Tape relese
 		"",
-		AD_ENTRY1s("TOTALECLIPSE.C64.DATA", "968fd46b941a00f887741dfc348ac149", 47105),
+		AD_ENTRY2s("TOTALECLIPSE.C64.DATA", "968fd46b941a00f887741dfc348ac149", 47105,
+			"TOTALECLIPSE.C64.DATA2", "c45f16800b83c8dc4e0bcdbc3a4a75ac", 4097),
 		Common::EN_ANY,
 		Common::kPlatformC64,
 		ADGF_TESTING | GF_C64_TAPE,
@@ -1158,9 +1161,39 @@ const ADGameDescription gameDescriptions[] = {
 	// 3D Construction Kit games
 	{
 		"3dkit",
+		"Dead by Dawn",
+		AD_ENTRY2s("3dkit.zx.data", "ec7ff343b0ba9f2e685bde2fb8f6d8d8", 13242,
+			"3dkit.zx.code", "1ef359f328832b77f0adead4d292f21f", 24575),
+		Common::EN_ANY,
+		Common::kPlatformZX,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERZX)
+	},
+	{
+		"3dkit",
 		"A Chance in Hell",
 		AD_ENTRY1s("Datafile0.bin", "8b4d53e7758b69a8df43947baddcf94a", 5589),
 		Common::EN_ANY,
+		Common::kPlatformAmstradCPC,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERCPC)
+	},
+	{
+		"3dkit",
+		"A Chance in Hell",
+		AD_ENTRY2s("3D1", "a3a5df3cf7ef4fec315e2eb18e00de26", 39938,
+			"3D4", "t:252c24449148d4ba4a176b14fed3f15d", 8002),
+		Common::EN_ANY,
+		Common::kPlatformC64,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERC64)
+	},
+	{
+		"3dkit",
+		"Ciudadela Fantasma",
+		AD_ENTRY2s("DATA.DAT", "284bd42e1ce459a9c97e30496d35803f", 6271,
+			"CIUDAD10.BIN", "ad9339f91dd579351f0a1a7b4d963c49", 25216),
+		Common::ES_ESP,
 		Common::kPlatformAmstradCPC,
 		ADGF_UNSTABLE,
 		GUIO2(GUIO_NOMIDI, GUIO_RENDERCPC)
@@ -1230,6 +1263,24 @@ const ADGameDescription gameDescriptions[] = {
 	},
 	{
 		"3dkit",
+		"Christmas Tree Demo",
+		AD_ENTRY1s("CHRISTMA.RUN", "106b8f0dd0384d3138a8f0f62caef392", 69910),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE | ADGF_DEMO,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
+	},
+	{
+		"3dkit",
+		"Desert Maze",
+		AD_ENTRY1s("DESMAZE.RUN", "5cfab15e53d77029bdb02c87acae3186", 99212),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
+	},
+	{
+		"3dkit",
 		"Desert Sands v1.3",
 		AD_ENTRY1s("SANDS.RUN", "de4f0391d43ce48b0bb6f589dfe470f5", 73964),
 		Common::EN_ANY,
@@ -1248,12 +1299,30 @@ const ADGameDescription gameDescriptions[] = {
 	},
 	{
 		"3dkit",
+		"Easy? or Not?",
+		AD_ENTRY1s("EASY.RUN", "28e4c38ff4d06443433a02f857069fa4", 93108),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
+	},
+	{
+		"3dkit",
 		"Eerie Estates",
 		AD_ENTRY1s("EERIE.RUN", "5455621ccac85393579aa71670d9d9d8", 105314),
 		Common::EN_ANY,
 		Common::kPlatformDOS,
 		ADGF_UNSUPPORTED,
 		GUIO1(GUIO_NOMIDI)
+	},
+	{
+		"3dkit",
+		"Funnyrace",
+		AD_ENTRY1s("FUNRACE.RUN", "a8643c6eb251802a9e27612d417592be", 99098),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
 	},
 	{
 		"3dkit",
@@ -1302,6 +1371,15 @@ const ADGameDescription gameDescriptions[] = {
 	},
 	{
 		"3dkit",
+		"Mountain Adventure",
+		AD_ENTRY1s("MOUNTAIN.RUN", "ec3bb57fe23b1a6785e870af1baa74d7", 129106),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
+	},
+	{
+		"3dkit",
 		"Rubber Room v1.0",
 		AD_ENTRY1s("RUBROOM.RUN", "81b31463957a2951fd356010bdaba520", 71830),
 		Common::EN_ANY,
@@ -1317,6 +1395,15 @@ const ADGameDescription gameDescriptions[] = {
 		Common::kPlatformDOS,
 		ADGF_UNSUPPORTED,
 		GUIO1(GUIO_NOMIDI)
+	},
+	{
+		"3dkit",
+		"Tunnel Adventure",
+		AD_ENTRY1s("TUNNEL.RUN", "414738d92decdfee028fa0d04679c23d", 98918),
+		Common::EN_ANY,
+		Common::kPlatformDOS,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_RENDERVGA)
 	},
 	{
 		"3dkit",
@@ -1443,12 +1530,13 @@ ADDetectedGames FreescapeMetaEngineDetection::detectZxTapeGames(const Common::FS
 		Common::File file;
 		Common::String name = node.getName();
 		if ((name.hasSuffixIgnoreCase(".tap") || name.hasSuffixIgnoreCase(".tzx")) && file.open(node)) {
+			Freescape::ZxTapeFileList files;
+			// Decode sampled recordings once, then match each game's virtual filenames.
+			if (!Freescape::extractZxSpectrumTapeFiles(file, "", files))
+				continue;
 			for (const ADGameDescription *desc = Freescape::gameDescriptions; desc->gameId; ++desc) {
 				if (!(desc->flags & skipADFlags) && desc->platform == Common::kPlatformZX) {
-					file.seek(0);
-					Freescape::ZxTapeFileList files;
-					if (Freescape::extractZxSpectrumTapeFiles(file, desc->gameId, files) &&
-							Freescape::matchZxSpectrumTapeFiles(files, *desc, _md5Bytes))
+					if (Freescape::matchZxSpectrumTapeFiles(files, *desc, _md5Bytes))
 						detectedGames.push_back(ADDetectedGame(desc));
 				}
 			}

@@ -11,41 +11,31 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
-#ifndef GUI_HELP_DIALOG_H
-#define GUI_HELP_DIALOG_H
+#ifndef FREESCAPE_SOUND_3DCK_H
+#define FREESCAPE_SOUND_3DCK_H
 
-#include "gui/dialog.h"
-#include "common/str.h"
-#include "common/str-array.h"
+#include "common/array.h"
 
-namespace GUI {
+namespace Audio {
+class Mixer;
+}
 
-class CommandSender;
-class TabWidget;
+namespace Freescape {
 
-/**
- * Multitab help dialog
- */
-class HelpDialog : public Dialog {
-public:
-	HelpDialog();
+class Sound;
 
-	void handleCommand(CommandSender *sender, uint32 cmd, uint32 data) override;
+static const uint32 kKitPITClock = 1193182;
 
-private:
-	void addTabs(const char * const *tabs);
-	TabWidget *_tab;
-};
+Sound *createKitAdLibSound(Audio::Mixer *mixer, const Common::Array<byte> &data);
 
-
-} // End of namespace GUI
+} // namespace Freescape
 
 #endif

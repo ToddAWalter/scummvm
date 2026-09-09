@@ -27,6 +27,8 @@
 namespace Freescape {
 
 void KitEngine::resetScripts() {
+	stopAllSounds();
+	_pendingSound = -1;
 	// V255 survives ENDGAME, as in the original runner.
 	memset(_kitVariables, 0, 255 * sizeof(_kitVariables[0]));
 	_changedVariables = 0;
@@ -35,6 +37,7 @@ void KitEngine::resetScripts() {
 	_lastScriptTick = _ticks;
 	_scriptFrameActive = _scriptDelayed = false;
 	_initialScriptPending = _initialCondition != 0;
+	_pendingInteractions = _shootCooldown = _activateCooldown = 0;
 	_scriptQueue.clear();
 	_suspendedScripts.clear();
 	_scriptSurface.fillRect(_fullscreenViewArea, 0);
@@ -74,6 +77,7 @@ void KitEngine::resetScripts() {
 void KitEngine::startScript(ScriptState &script) {
 	script.code = script.source;
 	script.ip = script.restart = 0;
+	script.resumeTick = 0;
 	script.loops.clear();
 	script.predicate = FCLPredicateState(true);
 	script.events = script.object ? script.object->flags & 0x38 : 0;
@@ -204,6 +208,10 @@ void KitEngine::updateScripts() {
 				_scriptQueueIndex++;
 				continue;
 			}
+			if (animator && script.running && int32(_scriptTicks - script.resumeTick) < 0) {
+				_scriptQueueIndex++;
+				continue;
+			}
 			if (!script.running)
 				startScript(script);
 			entry.resume = true;
@@ -217,7 +225,9 @@ void KitEngine::updateScripts() {
 			script.running = false;
 			if (animator)
 				object->flags |= 2;
-		} else if (!animator) {
+		} else if (animator) {
+			script.resumeTick = _scriptTicks + kFCLRedrawTicks;
+		} else {
 			_suspendedScripts.push_back(&script);
 		}
 		_scriptQueueIndex++;
@@ -390,6 +400,7 @@ FCLExecutionResult KitEngine::executeCode(ScriptState &script, uint &budget) {
 			break;
 		case Token::REDRAW:
 			_scriptSurface.fillRect(_viewArea, 0);
+			playPendingSound();
 			return animator ? kFCLYielded : kFCLPaused;
 		case Token::LOOP:
 			executeLoop(instruction, script);
@@ -593,7 +604,7 @@ bool KitEngine::executeGoto(const FCLInstruction &instruction) {
 	if (instruction._sourceType != Token::UNKNOWN)
 		area = getVariableOrConstant(instruction._source, instruction._sourceType);
 	int32 entrance = getVariableOrConstant(instruction._destination, instruction._destinationType);
-	if (!_areaMap.contains(area) || !_areaMap[area]->entranceWithID(entrance & 0x7fff)) {
+	if (!_areaMap.contains(area)) {
 		warning("Invalid 3D Construction Kit GOTO (%d, %u)", entrance, area);
 		return false;
 	}
@@ -723,10 +734,11 @@ void KitEngine::executeMove(const FCLInstruction &instruction, ScriptState &scri
 }
 
 void KitEngine::executeSound(const FCLInstruction &instruction) {
-	if (!_soundWarning) {
-		warning("3D Construction Kit sound playback is not implemented");
-		_soundWarning = true;
-	}
+	uint16 index = getVariableOrConstant(instruction._source, instruction._sourceType);
+	if (instruction.getType() == Token::SYNCSND)
+		_pendingSound = index == 0xffff ? -1 : index;
+	else if (_sound)
+		_sound->playSound(index, Sound::kTypeNormal);
 }
 
 bool KitEngine::executeObjectConditions(GeometricObject *obj, bool shot, bool collided, bool activated) {
@@ -799,18 +811,6 @@ bool KitEngine::moveAnimation(ScriptState &script, Math::Vector3d movement, bool
 	}
 	_areaMap[script.area]->getSortedObjects().clear();
 	return unobstructed;
-}
-
-void KitEngine::updatePlayerMovement(float deltaTime) {
-	if (_scriptFrameActive)
-		return;
-	float height = _position.y();
-	FreescapeEngine::updatePlayerMovement(deltaTime);
-	if (_hasFallen) {
-		_kitVariables[10] += MAX<int>(0, height - _position.y() - _maxFallingDistance);
-		_hasFallen = false;
-		_avoidRenderingFrames = 0;
-	}
 }
 
 } // namespace Freescape

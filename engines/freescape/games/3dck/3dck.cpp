@@ -30,6 +30,7 @@ namespace Freescape {
 
 enum {
 	kKitAnimatorType = 16,
+	kKitDisabledType = 0x7f,
 	kKitInitiallyInvisible = 0x04,
 	kKitMovable = 0x80
 };
@@ -126,10 +127,15 @@ void KitEngine::loadAssets() {
 		_palette[i] = (component << 2) | (component >> 4);
 	}
 	_border->setPalette(_palette, 0, 256);
+	// Preserve the full VGA palette during shared border processing.
+	_border->convertToInPlace(_gfx->_texturePixelFormat);
 	_gfx->_palette = _palette;
 	_gfx->_keyColor = 0;
 	_scriptSurface.create(_screenW, _screenH, _gfx->_texturePixelFormat);
 	_scriptSurface.fillRect(_fullscreenViewArea, 0);
+	uint16 soundSize = readBlockSize(file);
+	Common::SeekableSubReadStream sounds(&file, file.pos(), file.pos() + soundSize);
+	loadSounds(sounds);
 }
 
 void KitEngine::loadWorld(Common::SeekableReadStream &file) {
@@ -178,7 +184,8 @@ void KitEngine::loadWorld(Common::SeekableReadStream &file) {
 	_angleRotationIndex = 0;
 
 	file.skip(2);
-	uint32 indicatorOffset = 2 * file.readUint16BE();
+	// DOS word offsets wrap at 64 KiB.
+	uint32 indicatorOffset = uint16(2 * file.readUint16BE());
 	uint16 indicatorCount = file.readUint16BE();
 	_initialCondition = file.readUint16BE();
 	if (indicatorOffset > uint32(file.size()) || (!indicatorOffset && indicatorCount))
@@ -195,10 +202,14 @@ void KitEngine::loadWorld(Common::SeekableReadStream &file) {
 	requireBytes(file, uint32(areaCount) * 4);
 	Common::Array<uint32> areaOffsets;
 	for (uint i = 0; i < areaCount; i++) {
-		uint32 offset = file.readUint32BE();
-		if (offset >= areasEnd / 2)
+		uint32 offset = uint16(2 * file.readUint32BE());
+		if (indicatorCount && offset >= indicatorOffset && offset < indicatorOffset + 2 * _indicatorData.size()) {
+			warning("Ignoring stale 3D Construction Kit area offset %u into indicator data", offset);
+			continue;
+		}
+		if (offset >= areasEnd)
 			error("Invalid 3D Construction Kit area offset");
-		areaOffsets.push_back(2 * offset);
+		areaOffsets.push_back(offset);
 	}
 	Common::sort(areaOffsets.begin(), areaOffsets.end());
 	if (areaOffsets.empty() || globalConditions < uint32(file.pos()) ||
@@ -266,6 +277,8 @@ Area *KitEngine::loadArea(Common::SeekableReadStream &file) {
 	for (uint i = 0; i < objectCount; i++) {
 		ObjectData record;
 		Object *obj = loadObject(objectData, record);
+		if (record.type == kKitDisabledType)
+			continue;
 		if (data.objects.contains(record.id))
 			error("Duplicate 3D Construction Kit object %u in area %u", record.id, id);
 		data.objects[record.id] = record;
@@ -280,12 +293,9 @@ Area *KitEngine::loadArea(Common::SeekableReadStream &file) {
 			error("Duplicate 3D Construction Kit object %u", obj->getObjectID());
 		(*map)[obj->getObjectID()] = obj;
 	}
-	if (objectData.pos() != objectData.size())
-		error("Invalid 3D Construction Kit object count");
+	// Unused records can remain between the counted objects and conditions.
 	file.seek(conditions);
 	data.conditions = loadConditions(file);
-	if (file.pos() != file.size())
-		error("Invalid 3D Construction Kit area condition size");
 	debugC(1, kFreescapeDebugParser, "3DCK area %u: %u objects, %u conditions", id, objectCount, data.conditions.size());
 
 	Area *area = new Area(id, flags, objects, entrances, false);
@@ -315,6 +325,10 @@ Object *KitEngine::loadObject(Common::SeekableReadStream &file, ObjectData &data
 		error("Invalid 3D Construction Kit object size");
 	requireBytes(file, 2 * (words - 10));
 	uint32 end = file.pos() + 2 * (words - 10);
+	if (data.type == kKitDisabledType) {
+		file.seek(end);
+		return nullptr;
+	}
 	Common::SeekableSubReadStream payload(&file, file.pos(), end);
 	if (data.type > kKitAnimatorType)
 		error("Unsupported 3D Construction Kit object %u (type %u)", data.id, data.type);
@@ -325,6 +339,13 @@ Object *KitEngine::loadObject(Common::SeekableReadStream &file, ObjectData &data
 	if (geometric) {
 		ObjectType type = ObjectType(data.type);
 		int colorCount = GeometricObject::numberOfColoursForObjectOfType(type);
+		int ordinateCount = GeometricObject::numberOfOrdinatesForType(type);
+		// Hidden editor remnants can lack geometry (Desert Maze).
+		if ((data.flags & kKitInitiallyInvisible) && payload.size() < colorCount + 2 * ordinateCount) {
+			warning("Ignoring incomplete hidden 3D Construction Kit object %u", data.id);
+			file.seek(end);
+			return nullptr;
+		}
 		colors = new Common::Array<uint8>();
 		for (int i = 0; i < colorCount; i += 2) {
 			byte first, second;
@@ -332,7 +353,12 @@ Object *KitEngine::loadObject(Common::SeekableReadStream &file, ObjectData &data
 			colors->push_back(first);
 			colors->push_back(second);
 		}
-		int ordinateCount = GeometricObject::numberOfOrdinatesForType(type);
+		if (GeometricObject::isPyramid(type)) {
+			// Kit stores opposite sides together; the renderer walks around the base.
+			const byte sides[] = {(*colors)[2], (*colors)[0], (*colors)[3], (*colors)[1]};
+			for (uint i = 0; i < ARRAYSIZE(sides); i++)
+				(*colors)[i] = sides[i];
+		}
 		if (ordinateCount) {
 			requireBytes(payload, 2 * ordinateCount);
 			ordinates = new Common::Array<float>();
@@ -394,22 +420,27 @@ void KitEngine::initGameState() {
 void KitEngine::gotoArea(uint16 areaID, int entranceID) {
 	if (!_areaMap.contains(areaID))
 		error("Unknown 3D Construction Kit area %u", areaID);
+	float oldScale = _currentArea ? _currentArea->getScale() : 1;
 	if (_currentArea)
 		_kitVariables[9] = _currentArea->getAreaID();
 	_currentArea = _areaMap[areaID];
 	Entrance *entrance = static_cast<Entrance *>(_currentArea->entranceWithID(entranceID));
-	if (!entrance)
-		error("Unknown 3D Construction Kit entrance %d", entranceID);
-	_position = entrance->getOrigin();
-	_position.y() += _playerHeight;
-	Math::Vector3d rotation = entrance->getRotation();
-	_pitch = rotation.x();
-	_yaw = 90.0f - rotation.y();
-	_roll = rotation.z();
+	if (entrance) {
+		_position = entrance->getOrigin();
+		_position.y() += _playerHeight;
+		Math::Vector3d rotation = entrance->getRotation();
+		_pitch = rotation.x();
+		_yaw = 90.0f - rotation.y();
+		_roll = rotation.z();
+	} else {
+		// RUNVGA retains world coordinates and rotation when the entrance is absent.
+		_position *= oldScale / _currentArea->getScale();
+	}
 	_lastPosition = _position;
 	_gfx->_scale = _currentArea->getScale();
 	_gotoExecuted = true;
 	_delayedShootObject = nullptr;
+	_pendingInteractions = 0;
 	_timerTicks = 0;
 	_scriptSurface.fillRect(_viewArea, 0);
 	resetInput();
@@ -421,6 +452,56 @@ void KitEngine::checkIfStillInArea() {
 	float limit = 8192.0f / _currentArea->getScale();
 	_position.x() = CLIP(_position.x(), 0.0f, limit);
 	_position.z() = CLIP(_position.z(), 0.0f, limit);
+}
+
+void KitEngine::updatePlayerMovement(float deltaTime) {
+	if (_scriptFrameActive || _initialScriptPending)
+		return;
+	updateInteractions();
+	if (!_eventManager->isActionActive(kActionMoveUp))
+		_moveForward = false;
+	if (!_eventManager->isActionActive(kActionMoveDown))
+		_moveBackward = false;
+	if (!_eventManager->isActionActive(kActionMoveLeft))
+		_strafeLeft = false;
+	if (!_eventManager->isActionActive(kActionMoveRight))
+		_strafeRight = false;
+
+	Math::Vector3d front = _flyMode ? _cameraFront : directionToVector(0, _yaw, false);
+	Math::Vector3d movement;
+	if (_moveForward)
+		movement += front;
+	if (_moveBackward)
+		movement -= front;
+	if (_strafeLeft)
+		movement += _cameraRight;
+	if (_strafeRight)
+		movement -= _cameraRight;
+	if (movement.length() == 0)
+		return;
+	movement.normalize();
+
+	// The runner advances one full step per completed script frame.
+	float height = _position.y();
+	resolveCollisions(_position + movement * _playerSteps[_playerStepIndex]);
+	checkIfStillInArea();
+	bool blocked = (_position - _lastPosition).length() < 1;
+	_lastPosition = _position;
+	_gotoExecuted = false;
+	clearGameBit(31);
+	if (_hasFallen)
+		_pendingSound = 7;
+	else if (!_flyMode && _position.y() > height)
+		_pendingSound = 5;
+	else if (!_flyMode && _position.y() < height)
+		_pendingSound = 6;
+	else if (blocked)
+		_pendingSound = 2;
+	if (_hasFallen) {
+		_kitVariables[10] += MAX<int>(0, height - _position.y() - _maxFallingDistance);
+		_hasFallen = false;
+		_avoidRenderingFrames = 0;
+	}
 }
 
 bool KitEngine::checkIfGameEnded() {

@@ -20,6 +20,7 @@
  */
 
 #include "common/algorithm.h"
+#include "common/endian.h"
 #include "common/substream.h"
 #include "math/utils.h"
 
@@ -34,20 +35,54 @@ static void requireBytes(Common::SeekableReadStream &file, uint32 size) {
 }
 
 Kit8Engine::Kit8Engine(OSystem *syst, const ADGameDescription *gd) : FreescapeEngine(syst, gd) {
-	_screenW = 320;
-	_screenH = 200;
+	_screenW = isSpectrum() ? 256 : 320;
+	_screenH = isSpectrum() ? 192 : 200;
 	_fullscreenViewArea = Common::Rect(_screenW, _screenH);
 	_playerHeightNumber = _playerHeightMaxNumber = 0;
 	_playerWidth = _playerDepth = 16;
 	_soundIndexShoot = -1;
+	_soundIndexCollide = 5;
+	_soundIndexFall = 7;
 }
 
 void Kit8Engine::loadAssets() {
-	Common::File file;
-	if (!file.open(_gameDescription->filesDescriptions[0].fileName))
+	Common::File dataFile;
+	if (!dataFile.open(_gameDescription->filesDescriptions[0].fileName))
 		error("Unable to open 8-bit 3D Construction Kit data");
+	requireBytes(dataFile, 160);
+	uint32 signature = dataFile.readUint32BE();
+	uint32 dataOffset = 0;
+	uint32 dataEnd = dataFile.size();
+	if (isC64()) {
+		dataFile.seek(0);
+		if (dataFile.readUint16LE() != 0x0400)
+			error("Invalid 3D Construction Kit C64 runner address");
+		// The compiled runner embeds its world at $4a00.
+		dataOffset = 2 + 0x4a00 - 0x0400;
+		if (dataOffset + 160 > dataEnd)
+			error("Truncated 3D Construction Kit C64 runner");
+		dataFile.seek(dataOffset + 4);
+		uint16 size = dataFile.readUint16LE();
+		if (size < 160 || dataOffset + size > dataEnd)
+			error("Invalid 3D Construction Kit C64 world size");
+		dataEnd = dataOffset + size;
+	} else if (isCPC() && signature != MKTAG('K', 'I', 'T', 'A') && signature != MKTAG('K', 'I', 'T', 'C')) {
+		byte header[128];
+		dataFile.seek(0);
+		dataFile.read(header, sizeof(header));
+		uint16 checksum = 0;
+		for (uint i = 0; i < 67; i++)
+			checksum += header[i];
+		if (checksum != READ_LE_UINT16(header + 67) || READ_LE_UINT24(header + 64) != dataFile.size() - sizeof(header))
+			error("Invalid 3D Construction Kit AMSDOS header");
+		dataOffset = sizeof(header);
+	}
+	Common::SeekableSubReadStream file(&dataFile, dataOffset, dataEnd);
 	requireBytes(file, 160);
-	if (file.readUint32BE() != MKTAG('K', 'I', 'T', 'C') || file.readUint16LE() != file.size())
+	signature = file.readUint32BE();
+	bool validSignature = isSpectrum() ? signature == MKTAG('K', 'I', 'T', 'S') :
+		signature == MKTAG('K', 'I', 'T', 'C') || (isCPC() && signature == MKTAG('K', 'I', 'T', 'A'));
+	if (!validSignature || file.readUint16LE() != file.size())
 		error("Unsupported 8-bit 3D Construction Kit data format");
 	uint16 procedures = file.readUint16LE();
 	uint16 conditions = file.readUint16LE();
@@ -68,9 +103,18 @@ void Kit8Engine::loadAssets() {
 	if (!width || !height || x + width > _screenW || y + height > _screenH || !_walkSpeed || !turnSpeed)
 		error("Invalid 8-bit 3D Construction Kit display or movement settings");
 	_viewArea = Common::Rect(x, y, x + width, y + height);
-	// CPC projection scales: 125 * 64 / (extent - 1), with a depth scale of 18.
+	// Projection scales: 125 * 64 / (extent - 1), with a depth scale of 18.
 	int xScale = 8000 / (width - 1);
 	int yScale = 8000 / (height - 1);
+	if (isC64()) {
+		// C64 normalizes the projection scales to 64.
+		xScale = 64;
+		yScale = 64 * width / height;
+		if (yScale >= 64) {
+			xScale = 4096 / yScale;
+			yScale = 64;
+		}
+	}
 	if (xScale > 127 || yScale > 127)
 		error("Unsupported 8-bit 3D Construction Kit viewport size");
 	_fieldOfView = 2 * Math::rad2deg(atan(18.0f / xScale));
@@ -106,6 +150,9 @@ void Kit8Engine::loadAssets() {
 		Common::String text;
 		while (length--)
 			text += char(messageData.readByte());
+		// C64 message lengths include the editor's terminator.
+		if (isC64() && !text.empty() && byte(text.lastChar()) == 0xff)
+			text.deleteLastChar();
 		_kitMessages[id] = text;
 	}
 	Common::SeekableSubReadStream procedureData(&file, procedures, conditions);
@@ -126,14 +173,18 @@ void Kit8Engine::loadAssets() {
 		if (entry._key == 255)
 			continue;
 		for (byte id : _areaData[entry._key].globals) {
-			if (!_areaMap.contains(255) || !_areaMap[255]->objectWithID(id) || entry._value->objectWithID(id))
-				error("Invalid 8-bit 3D Construction Kit global object %u", id);
+			// The CPC runner ignores references to absent globals.
+			if (!_areaMap.contains(255) || !_areaMap[255]->objectWithID(id))
+				continue;
+			if (entry._value->objectWithID(id))
+				error("Duplicate 8-bit 3D Construction Kit global object %u", id);
 			entry._value->addObjectFromArea(id, _areaMap[255]);
 		}
 	}
 	if (!_areaMap.contains(_startArea) || !_areaMap[_startArea]->entranceWithID(_startEntrance))
 		error("Invalid 8-bit 3D Construction Kit starting entrance");
 	loadPresentation();
+	loadSounds();
 }
 
 Common::Array<Kit8Engine::ConditionData> Kit8Engine::loadConditions(Common::SeekableReadStream &file) {
@@ -170,7 +221,7 @@ Area *Kit8Engine::loadArea(Common::SeekableReadStream &file) {
 	AreaData &data = _areaData[id];
 	for (uint i = 0; i < 4; i++) {
 		data.palette[i] = file.readByte();
-		if (data.palette[i] > 26)
+		if (data.palette[i] > (isSpectrum() ? (i == 2 ? 1 : 7) : isC64() ? 15 : 26))
 			error("Invalid 8-bit 3D Construction Kit palette");
 	}
 	byte scale = file.readByte();
@@ -186,6 +237,12 @@ Area *Kit8Engine::loadArea(Common::SeekableReadStream &file) {
 		byte type = header[0] & 0x0f;
 		byte objectID = header[7];
 		byte size = header[8];
+		if (id == 255 && !objectID && !size) {
+			// Ciudadela Fantasma ends its globals with an unused, incomplete record.
+			warning("Ignoring incomplete 8-bit 3D Construction Kit global object");
+			file.seek(conditions);
+			break;
+		}
 		if (size < 9 || start + size > conditions)
 			error("Invalid 8-bit 3D Construction Kit object size");
 		if (objectID == 255) {
@@ -249,6 +306,15 @@ GeometricObject *Kit8Engine::loadGeometricObject(Common::SeekableReadStream &fil
 		colors->push_back(color & 15);
 		colors->push_back(color >> 4);
 	}
+	if (type == kCubeType) {
+		// CPC Kit stores the positive X face first.
+		SWAP((*colors)[0], (*colors)[1]);
+	} else if (GeometricObject::isPyramid(type)) {
+		// Kit stores opposite sides together; the renderer walks around the base.
+		const byte sides[] = {(*colors)[2], (*colors)[0], (*colors)[3], (*colors)[1]};
+		for (uint i = 0; i < ARRAYSIZE(sides); i++)
+			(*colors)[i] = sides[i];
+	}
 	Common::Array<float> *ordinates = nullptr;
 	if (ordinateCount) {
 		static const byte pyramidAxes[3][2] = {{1, 2}, {0, 2}, {0, 1}};
@@ -304,6 +370,8 @@ void Kit8Engine::gotoArea(uint16 areaID, int entranceID) {
 	memcpy(_palette, data.palette, sizeof(_palette));
 	for (byte id : data.globals) {
 		Object *object = _currentArea->objectWithID(id);
+		if (!object)
+			continue;
 		object->restore();
 		object->makeVisible();
 	}
@@ -335,26 +403,46 @@ void Kit8Engine::setMovementMode(byte mode) {
 	_lastPosition = _position;
 }
 
-void Kit8Engine::checkIfStillInArea() {
+Math::Vector3d Kit8Engine::clipPosition(const Math::Vector3d &position) const {
 	float scale = _currentArea->getScale();
-	_position.x() = CLIP(_position.x(), 0.0f, 4063.5f / scale);
-	_position.y() = CLIP(_position.y(), 0.0f, 2015.5f / scale);
-	_position.z() = CLIP(_position.z(), 0.0f, 4063.5f / scale);
+	// Walking bounds apply to the feet, before restoring the eye height.
+	float height = _flyMode ? 0 : _playerHeight;
+	return Math::Vector3d(CLIP(position.x(), 0.0f, 4063.5f / scale),
+		CLIP(position.y() - height, 0.0f, 2015.5f / scale) + height,
+		CLIP(position.z(), 0.0f, 4063.5f / scale));
+}
+
+void Kit8Engine::checkIfStillInArea() {
+	_position = clipPosition(_position);
 }
 
 void Kit8Engine::updatePlayerMovement(float deltaTime) {
-	if (_scriptFrameActive || _initialScriptPending)
+	if (!isFrameReady() || _scriptFrameActive || _initialScriptPending || (isSpectrum() && isPlayingSound()))
 		return;
 	Math::Vector3d front = _cameraFront;
 	if (_movementMode == 3)
 		_cameraFront = directionToVector(0, _yaw, false);
-	FreescapeEngine::updatePlayerMovement(deltaTime);
+	FreescapeEngine::updatePlayerMovement(kFrameDuration / 1000.0f);
 	_cameraFront = front;
+}
+
+void Kit8Engine::pauseEngineIntern(bool pause) {
+	uint32 now = g_system->getMillis();
+	if (pause)
+		_pauseStartTime = now;
+	else {
+		uint32 elapsed = now - _pauseStartTime;
+		_lastTime += elapsed;
+		_nextFrameTime += elapsed;
+		if (_delayUntil)
+			_delayUntil += elapsed;
+	}
+	FreescapeEngine::pauseEngineIntern(pause);
 }
 
 void Kit8Engine::checkSensors() {
 	// TODO: sensor firing.
-	if (_scriptFrameActive || !_currentArea)
+	if (!isFrameReady() || _scriptFrameActive || !_currentArea)
 		return;
 	for (auto *object : _sensors) {
 		Sensor *sensor = static_cast<Sensor *>(object);

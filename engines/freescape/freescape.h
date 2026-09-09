@@ -406,6 +406,7 @@ public:
 	void updatePlayerMovementSmooth(float deltaTime);
 	void updatePlayerMovementClassic(float deltaTime);
 	void resolveCollisions(Math::Vector3d newPosition);
+	virtual Math::Vector3d clipPosition(const Math::Vector3d &position) const { return position; }
 	virtual void checkIfStillInArea();
 	void changePlayerHeight(int index);
 	void increaseStepSize();
@@ -522,7 +523,7 @@ public:
 	void waitForSounds(Sound::Type type = Sound::kTypeNormal);
 	void stopAllSounds(Sound::Type type = Sound::kTypeNormal);
 	bool isPlayingSound(Sound::Type type = Sound::kTypeNormal);
-	void playSound(int index, bool sync, Sound::Type type = Sound::kTypeNormal);
+	virtual void playSound(int index, bool sync, Sound::Type type = Sound::kTypeNormal);
 	void playWav(const Common::Path &filename);
 	void playMusic(const Common::Path &filename);
 
@@ -681,7 +682,8 @@ public:
 	Common::RandomSource *_rnd;
 
 	// C64 specifics
-	byte *decompressC64RLE(byte *buffer, int *size, byte marker);
+	Common::Array<byte> unpackC64Snapshot(const Common::Array<byte> &packed);
+	Common::Array<byte> unpackC64Snapshot(Common::SeekableReadStream *file, const Common::Path &continuation);
 	byte *_extraBuffer;
 };
 
@@ -699,6 +701,7 @@ enum GameReleaseFlags {
 	GF_ATARI_BUDGET = (1 << 10),
 	GF_C64_TAPE = (1 << 11),
 	GF_C64_DISC = (1 << 12),
+	GF_C64_PACKED = (1 << 13),
 };
 
 extern FreescapeEngine *g_freescape;

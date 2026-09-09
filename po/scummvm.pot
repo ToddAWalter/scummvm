@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScummVM 2026.3.1git\n"
 "Report-Msgid-Bugs-To: scummvm-devel@lists.scummvm.org\n"
-"POT-Creation-Date: 2026-09-08 00:00+0000\n"
+"POT-Creation-Date: 2026-09-08 21:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1054,7 +1054,7 @@ msgstr ""
 #: engines/awe/metaengine.cpp:57 engines/bagel/metaengine.cpp:66
 #: engines/crab/input/input.cpp:95 engines/crab/input/input.cpp:145
 #: engines/dragons/metaengine.cpp:158 engines/fool/metaengine.cpp:159
-#: engines/freescape/movement.cpp:35 engines/got/metaengine.cpp:70
+#: engines/freescape/movement.cpp:36 engines/got/metaengine.cpp:70
 #: engines/griffon/metaengine.cpp:121 engines/grim/grim.cpp:481
 #: engines/grim/grim.cpp:563 engines/icb/icb.cpp:68 engines/icb/icb.cpp:152
 #: engines/scumm/metaengine.cpp:1139 engines/supernova/metaengine.cpp:273
@@ -1076,7 +1076,7 @@ msgstr ""
 #: engines/awe/metaengine.cpp:58 engines/bagel/metaengine.cpp:67
 #: engines/crab/input/input.cpp:101 engines/crab/input/input.cpp:151
 #: engines/dragons/metaengine.cpp:164 engines/fool/metaengine.cpp:165
-#: engines/freescape/movement.cpp:44 engines/got/metaengine.cpp:71
+#: engines/freescape/movement.cpp:45 engines/got/metaengine.cpp:71
 #: engines/griffon/metaengine.cpp:127 engines/grim/grim.cpp:486
 #: engines/grim/grim.cpp:568 engines/icb/icb.cpp:73 engines/icb/icb.cpp:157
 #: engines/scumm/metaengine.cpp:1106 engines/supernova/metaengine.cpp:279
@@ -2682,7 +2682,7 @@ msgid "Fit to page"
 msgstr ""
 
 #: gui/printing-dialog.cpp:60 backends/graphics/opengl/opengl-graphics.cpp:315
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:127
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:125
 #: engines/glk/dialogs.cpp:372 engines/twine/metaengine.cpp:312
 msgid "Center"
 msgstr ""
@@ -2915,7 +2915,7 @@ msgid ""
 "in the Options dialog."
 msgstr ""
 
-#: gui/widget.cpp:475 gui/widget.cpp:477 gui/widget.cpp:482 gui/widget.cpp:484
+#: gui/widget.cpp:446 gui/widget.cpp:448 gui/widget.cpp:453 gui/widget.cpp:455
 msgid "Clear value"
 msgstr ""
 
@@ -3733,7 +3733,7 @@ msgstr ""
 #. I18N: Skipping cutscene playback
 #: engines/metaengine.cpp:112 engines/access/metaengine.cpp:246
 #: engines/composer/metaengine.cpp:126 engines/drascula/metaengine.cpp:224
-#: engines/efh/metaengine.cpp:379 engines/freescape/movement.cpp:93
+#: engines/efh/metaengine.cpp:379 engines/freescape/movement.cpp:94
 #: engines/grim/grim.cpp:533 engines/grim/grim.cpp:633
 #: engines/illusions/metaengine.cpp:142 engines/macs2/metaengine.cpp:58
 #: engines/made/metaengine.cpp:151 engines/mohawk/myst.cpp:566
@@ -4060,7 +4060,7 @@ msgid "Toggle aspect ratio correction"
 msgstr ""
 
 #: backends/graphics/opengl/opengl-graphics.cpp:316
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:128
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:126
 msgid "Pixel-perfect scaling"
 msgstr ""
 
@@ -4069,17 +4069,17 @@ msgid "Even pixels scaling"
 msgstr ""
 
 #: backends/graphics/opengl/opengl-graphics.cpp:318
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:129
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:127
 msgid "Fit to window"
 msgstr ""
 
 #: backends/graphics/opengl/opengl-graphics.cpp:319
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:130
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:128
 msgid "Stretch to window"
 msgstr ""
 
 #: backends/graphics/opengl/opengl-graphics.cpp:320
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:131
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:129
 msgid "Fit to window (4:3)"
 msgstr ""
 
@@ -4089,37 +4089,37 @@ msgid "Resolution: %dx%d"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1079
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2868
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2876
 msgid "Active graphics filter:"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1100
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2902
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2910
 msgid "Enabled aspect ratio correction"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1102
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2908
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2916
 msgid "Disabled aspect ratio correction"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1115
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2924
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2932
 msgid "Filtering enabled"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1117
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2926
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2934
 msgid "Filtering disabled"
 msgstr ""
 
 #: backends/graphics/openglsdl/openglsdl-graphics.cpp:1143
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2953
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:2961
 msgid "Stretch mode"
 msgstr ""
 
 #: backends/graphics/riscossdl/riscossdl-graphics.cpp:30
-#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:121
+#: backends/graphics/surfacesdl/surfacesdl-graphics.cpp:119
 msgid "SDL Surface"
 msgstr ""
 
@@ -6765,7 +6765,7 @@ msgstr ""
 #. I18N: ESC key
 #: engines/bagel/metaengine.cpp:59 engines/bagel/metaengine.cpp:65
 #: engines/bbvs/metaengine.cpp:111 engines/cruise/metaengine.cpp:223
-#: engines/freescape/movement.cpp:107 engines/got/metaengine.cpp:78
+#: engines/freescape/movement.cpp:117 engines/got/metaengine.cpp:78
 #: engines/hugo/metaengine.cpp:197 engines/lure/metaengine.cpp:209
 #: engines/mads/metaengine.cpp:270 engines/mm/mm1/metaengine.cpp:42
 #: engines/mm/mm1/metaengine.cpp:48 engines/saga/metaengine.cpp:328
@@ -7291,7 +7291,7 @@ msgid ""
 msgstr ""
 
 #: engines/buried/saveload.cpp:179 engines/mtropolis/saveload.cpp:158
-#: engines/nancy/nancy.cpp:957 engines/tot/saveload.cpp:269
+#: engines/nancy/nancy.cpp:967 engines/tot/saveload.cpp:269
 #: engines/vcruise/vcruise.cpp:356
 msgid "Saved game was created with a newer version of ScummVM. Unable to load."
 msgstr ""
@@ -7552,13 +7552,13 @@ msgid "Move backward"
 msgstr ""
 
 #: engines/colony/metaengine.cpp:124 engines/dm/metaengine.cpp:162
-#: engines/freescape/movement.cpp:53 engines/hpl1/metaengine.cpp:78
+#: engines/freescape/movement.cpp:54 engines/hpl1/metaengine.cpp:78
 #: engines/mm/mm1/metaengine.cpp:104
 msgid "Strafe left"
 msgstr ""
 
 #: engines/colony/metaengine.cpp:131 engines/dm/metaengine.cpp:182
-#: engines/freescape/movement.cpp:61 engines/hpl1/metaengine.cpp:79
+#: engines/freescape/movement.cpp:62 engines/hpl1/metaengine.cpp:79
 #: engines/mm/mm1/metaengine.cpp:105
 msgid "Strafe right"
 msgstr ""
@@ -8446,33 +8446,38 @@ msgid "Enable background music ported from the C64 version"
 msgstr ""
 
 #. I18N: Combat command in Might & Magic 1
-#: engines/freescape/movement.cpp:69 engines/mm/mm1/metaengine.cpp:84
+#: engines/freescape/movement.cpp:70 engines/mm/mm1/metaengine.cpp:84
 msgid "Shoot"
 msgstr ""
 
-#: engines/freescape/movement.cpp:78
+#: engines/freescape/movement.cpp:79
 msgid "Rotate up"
 msgstr ""
 
-#: engines/freescape/movement.cpp:83
+#: engines/freescape/movement.cpp:84
 msgid "Rotate down"
 msgstr ""
 
-#: engines/freescape/movement.cpp:88
+#: engines/freescape/movement.cpp:89
 msgid "Turn back"
 msgstr ""
 
+#. I18N: Return refers to return/enter key
+#: engines/freescape/movement.cpp:103 engines/tsage/metaengine.cpp:196
+msgid "Return"
+msgstr ""
+
 #. I18N: Toggles between cursor lock modes, switching between free cursor movement and camera/head movement.
-#: engines/freescape/movement.cpp:101
+#: engines/freescape/movement.cpp:111
 msgid "Change mode"
 msgstr ""
 
-#: engines/freescape/movement.cpp:112
+#: engines/freescape/movement.cpp:122
 msgid "Info menu"
 msgstr ""
 
 #. I18N: Toggles the red/blue stereoscopic 3D effect (anaglyph glasses).
-#: engines/freescape/movement.cpp:119
+#: engines/freescape/movement.cpp:129
 msgid "Toggle red/blue 3D"
 msgstr ""
 
@@ -14133,11 +14138,6 @@ msgstr ""
 
 #: engines/trecision/metaengine.cpp:163
 msgid "Open system menu"
-msgstr ""
-
-#. I18N: Return refers to return/enter key
-#: engines/tsage/metaengine.cpp:196
-msgid "Return"
 msgstr ""
 
 #: engines/tsage/metaengine.cpp:221

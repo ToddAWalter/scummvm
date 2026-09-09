@@ -33,23 +33,33 @@ static const byte kCPCInks[27] = {
 };
 
 void Kit8Engine::loadPresentation() {
-	static const byte patterns[15][4] = {
-		{0x0f, 0x0f, 0x0f, 0x0f}, {0xf0, 0xf0, 0xf0, 0xf0}, {0xff, 0xff, 0xff, 0xff},
-		{0x0a, 0x05, 0x0a, 0x05}, {0xa0, 0x50, 0xa0, 0x50}, {0xaa, 0x55, 0xaa, 0x55},
-		{0xa5, 0x5a, 0xa5, 0x5a}, {0xaf, 0x5f, 0xaf, 0x5f}, {0xfa, 0xf5, 0xfa, 0xf5},
-		{0x02, 0x08, 0x02, 0x08}, {0x20, 0x80, 0x20, 0x80}, {0x22, 0x88, 0x22, 0x88},
-		{0x2d, 0x87, 0x2d, 0x87}, {0x2f, 0x8f, 0x2f, 0x8f}, {0xff, 0x66, 0x66, 0xff}
-	};
-	memcpy(_colorPatterns, patterns, sizeof(_colorPatterns));
-	_colorMap.resize(ARRAYSIZE(_colorPatterns));
-	for (uint i = 0; i < _colorMap.size(); i++)
-		_colorMap[i] = _colorPatterns[i];
 	_gfx->_keyColor = 0;
 	_scriptSurface.create(_screenW, _screenH, Graphics::PixelFormat::createFormatCLUT8());
 	_scriptSurface.fillRect(_fullscreenViewArea, 255);
 	_overlaySurface.create(_screenW, _screenH, _gfx->_texturePixelFormat);
 	_borderSurface.create(_screenW, _screenH, Graphics::PixelFormat::createFormatCLUT8());
 	_borderSurface.fillRect(_fullscreenViewArea, 0);
+	_colorMap.resize(ARRAYSIZE(_colorPatterns));
+	for (uint i = 0; i < _colorMap.size(); i++)
+		_colorMap[i] = _colorPatterns[i];
+	if (isSpectrum()) {
+		loadPresentationZX();
+		return;
+	}
+	if (isC64()) {
+		loadPresentationC64();
+		return;
+	}
+	// Shade 0 is transparent; the CPC runner indexes these patterns with shade - 1.
+	static const byte patterns[15][4] = {
+		{0x00, 0x00, 0x00, 0x00},
+		{0x0f, 0x0f, 0x0f, 0x0f}, {0xf0, 0xf0, 0xf0, 0xf0}, {0xff, 0xff, 0xff, 0xff},
+		{0x0a, 0x05, 0x0a, 0x05}, {0xa0, 0x50, 0xa0, 0x50}, {0xaa, 0x55, 0xaa, 0x55},
+		{0xa5, 0x5a, 0xa5, 0x5a}, {0xaf, 0x5f, 0xaf, 0x5f}, {0xfa, 0xf5, 0xfa, 0xf5},
+		{0x02, 0x08, 0x02, 0x08}, {0x20, 0x80, 0x20, 0x80}, {0x22, 0x88, 0x22, 0x88},
+		{0x2d, 0x87, 0x2d, 0x87}, {0x2f, 0x8f, 0x2f, 0x8f}
+	};
+	memcpy(_colorPatterns, patterns, sizeof(_colorPatterns));
 
 	Common::File file;
 	if (file.open("BORDER.DAT")) {
@@ -67,7 +77,8 @@ void Kit8Engine::loadPresentation() {
 	}
 	_borderSurface.fillRect(_viewArea, 255);
 	// A saved editor data file omits the runner's font and border.
-	if (file.open("DISC.BIN") && file.size() == 25216) {
+	const char *runner = _gameDescription->filesDescriptions[1].fileName;
+	if (file.open(runner ? runner : "DISC.BIN") && file.size() == 25216) {
 		byte header[128];
 		file.read(header, sizeof(header));
 		if (READ_LE_UINT16(header + 21) == 0x3e00 && READ_LE_UINT16(header + 24) == 25088) {
@@ -78,6 +89,14 @@ void Kit8Engine::loadPresentation() {
 }
 
 void Kit8Engine::applyPalette() {
+	if (isSpectrum()) {
+		applyPaletteZX();
+		return;
+	}
+	if (isC64()) {
+		applyPaletteC64();
+		return;
+	}
 	_gfx->_fourColorBackground = kCPCInks[_palette[0]];
 	_gfx->_underFireBackgroundColor = kCPCInks[_palette[2]];
 	_gfx->_paperColor = kCPCInks[_palette[1]];
@@ -88,22 +107,25 @@ void Kit8Engine::applyPalette() {
 }
 
 void Kit8Engine::printText(const Common::String &text, byte x, byte y, byte color) {
-	if (x >= 40 || y >= 25)
+	if (!_textOutputEnabled || x >= _screenW / 8 || y >= _screenH / 8)
 		return;
 	Graphics::DosFont font;
-	byte background = ((color >> 3) & 1) | ((color >> 1) & 2);
-	for (uint i = 0; i < text.size() && x < 40; i++, x++) {
+	byte foreground = isSpectrum() ? 1 : color & (isC64() ? 15 : 3);
+	byte background = isSpectrum() ? 0 : isC64() ? color >> 4 : ((color >> 3) & 1) | ((color >> 1) & 2);
+	for (uint i = 0; i < text.size() && x < _screenW / 8; i++, x++) {
 		byte chr = text[i];
+		if (isSpectrum())
+			_attributes[y * 32 + x] = color;
 		_scriptSurface.fillRect(Common::Rect(8 * x, 8 * y, 8 * x + 8, 8 * y + 8), background);
 		if (_hasFont && chr >= 32 && chr < 128) {
 			for (int row = 0; row < 8; row++) {
 				for (int col = 0; col < 8; col++) {
 					if (_fontData[chr - 32][row] & (0x80 >> col))
-						_scriptSurface.setPixel(8 * x + col, 8 * y + row, color & 3);
+						_scriptSurface.setPixel(8 * x + col, 8 * y + row, foreground);
 				}
 			}
 		} else
-			font.drawChar(_scriptSurface.surfacePtr(), chr, 8 * x, 8 * y, color & 3);
+			font.drawChar(_scriptSurface.surfacePtr(), chr, 8 * x, 8 * y, foreground);
 	}
 }
 
@@ -116,36 +138,44 @@ void Kit8Engine::updateInstruments() {
 	for (const auto &instrument : _instruments) {
 		byte type = instrument[0], x = instrument[1], y = instrument[2], length = instrument[3];
 		byte variable = instrument[4] & 127, color = instrument[5];
-		if (!type || type > 3 || x >= 40 || y >= 25 || !length)
+		if (!type || type > 3 || x >= _screenW / 8 || y >= _screenH / 8 || !length)
 			continue;
 		uint16 value = _kitVariables[variable];
 		if (type == 1) {
-			if (length > 5 || x + length > 40)
+			if (length > 5 || x + length > _screenW / 8)
 				continue;
 			if (length > 3)
 				value |= _kitVariables[(variable + 1) & 127] << 8;
 			printText(Common::String::format("%0*u", length, value), x, y, color);
 		} else {
-			if ((type == 2 && x + length > 40) || (type == 3 && y + length > 25))
+			if ((type == 2 && x + length > _screenW / 8) || (type == 3 && y + length > _screenH / 8))
 				continue;
 			Common::Rect bar(8 * x, 8 * y, 8 * (x + (type == 2 ? length : 1)), 8 * (y + (type == 3 ? length : 1)));
-			_scriptSurface.fillRect(bar, (color >> 2) & 3);
+			if (isSpectrum())
+				setAttributesZX(bar, color);
+			_scriptSurface.fillRect(bar, isSpectrum() ? 0 : isC64() ? color >> 4 : (color >> 2) & 3);
 			int filled = MIN<int>(value, 8 * length);
+			if (isC64() && type == 2)
+				filled &= ~1;
 			if (type == 2)
 				bar.right = bar.left + filled;
 			else
 				bar.top = bar.bottom - filled;
 			if (!bar.isEmpty())
-				_scriptSurface.fillRect(bar, color & 3);
+				_scriptSurface.fillRect(bar, isSpectrum() ? 1 : color & (isC64() ? 15 : 3));
 		}
 	}
 }
 
 void Kit8Engine::drawUI() {
-	uint32 colors[4];
-	for (uint i = 0; i < 4; i++) {
+	uint32 colors[16];
+	bool flash = (g_system->getMillis() / 320) & 1;
+	for (uint i = 0; i < (isSpectrum() || isC64() ? 16 : 4); i++) {
 		byte r, g, b;
-		_gfx->selectColorFromFourColorPalette(i, r, g, b);
+		if (isSpectrum() || isC64())
+			_gfx->readFromPalette(i, r, g, b);
+		else
+			_gfx->selectColorFromFourColorPalette(i, r, g, b);
 		colors[i] = _overlaySurface.format.ARGBToColor(255, r, g, b);
 	}
 	for (int y = 0; y < _screenH; y++) {
@@ -153,6 +183,14 @@ void Kit8Engine::drawUI() {
 			byte pen = _scriptSurface.getPixel(x, y);
 			if (pen == 255)
 				pen = _borderSurface.getPixel(x, y);
+			if (isC64() && pen == 16)
+				pen = _palette[0];
+			if (isSpectrum() && pen != 255) {
+				byte attr = _attributes[(y / 8) * 32 + x / 8];
+				if ((attr & 128) && flash)
+					pen ^= 1;
+				pen = ((attr >> 3) & 8) | (pen ? attr & 7 : (attr >> 3) & 7);
+			}
 			_overlaySurface.setPixel(x, y, pen == 255 ? 0 : colors[pen]);
 		}
 	}
@@ -161,11 +199,19 @@ void Kit8Engine::drawUI() {
 		_gfx->setViewport(_fullscreenViewArea);
 		_gfx->renderCrossair(_crossairPosition);
 	}
+	playPendingSound();
 }
 
 bool Kit8Engine::handleInput(const Common::Event &event) {
 	if (event.type == Common::EVENT_KEYDOWN || event.type == Common::EVENT_KEYUP) {
+		if (isSpectrum() && event.kbd.keycode == Common::KEYCODE_BREAK) {
+			if (event.type == Common::EVENT_KEYDOWN)
+				_gameStateControl = kFreescapeGameStateRestart;
+			return true;
+		}
 		byte key = event.kbd.ascii < 128 ? event.kbd.ascii : 255;
+		if (event.kbd.keycode == Common::KEYCODE_RETURN || event.kbd.keycode == Common::KEYCODE_KP_ENTER)
+			key = 13;
 		if (key >= 'a' && key <= 'z')
 			key -= 'a' - 'A';
 		if (event.type == Common::EVENT_KEYDOWN)
@@ -174,18 +220,33 @@ bool Kit8Engine::handleInput(const Common::Event &event) {
 			_currentKey = 255;
 		if (!_scriptFrameActive)
 			_kitVariables[121] = _currentKey;
-	} else if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START) {
+	} else if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START || event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_END) {
+		if (isSpectrum() && (event.customType == kActionRiseOrFlyUp || event.customType == kActionLowerOrFlyDown)) {
+			if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START && !_scriptFrameActive && !isPlayingSound())
+				setMovementMode(event.customType == kActionRiseOrFlyUp ? 1 : 0);
+			return true;
+		}
+		if (event.customType == kActionSkip || event.customType == kActionInfoMenu) {
+			byte key = event.customType == kActionSkip ? ' ' : 'I';
+			if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START) {
+				_currentKey = key;
+				if (isSpectrum() && event.customType == kActionInfoMenu && !_scriptFrameActive) {
+					_pitch = _roll = 0;
+					updateCamera();
+				}
+			} else if (_currentKey == key)
+				_currentKey = 255;
+			if (!_scriptFrameActive)
+				_kitVariables[121] = _currentKey;
+			return true;
+		}
+		if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_END)
+			return false;
 		switch (event.customType) {
 		case kActionShoot:
 		case kActionActivate:
 			if (!_scriptFrameActive)
 				interact(event.customType == kActionShoot);
-			return true;
-		case kActionSkip:
-			_kitVariables[121] = ' ';
-			return true;
-		case kActionInfoMenu:
-			_kitVariables[121] = 'I';
 			return true;
 		case kActionEscape:
 		case kActionChangeMode:
@@ -208,7 +269,7 @@ bool Kit8Engine::handleInput(const Common::Event &event) {
 }
 
 void Kit8Engine::interact(bool shot) {
-	if (!_viewArea.contains(_crossairPosition) || (shot && !_kitVariables[125]))
+	if (!_viewArea.contains(_crossairPosition) || (shot && !_kitVariables[125]) || (isSpectrum() && isPlayingSound()))
 		return;
 	float x = 2.0f * (_crossairPosition.x - _viewArea.left) / _viewArea.width() - 1;
 	float y = 1 - 2.0f * (_crossairPosition.y - _viewArea.top) / _viewArea.height();
@@ -220,6 +281,7 @@ void Kit8Engine::interact(bool shot) {
 		if (_kitVariables[125] != 255)
 			_kitVariables[125]--;
 		_shootingFrames = 3;
+		playSound(3, true);
 	}
 	if (!object || !object->isGeometric())
 		return;
