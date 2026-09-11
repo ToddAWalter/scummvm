@@ -49,6 +49,7 @@ struct MacSndResource {
 };
 
 const MacSndResource kMacSndResources[] = {
+	{ "JAKE",     8001 }, { "JEN",      8002 },
 	{ "B-0003SL", 7022 }, { "B-0004SL", 7023 }, { "B-0006SL", 7021 },
 	{ "DING",     7000 }, { "F-0013SL", 8018 }, { "F-0016SL", 8017 },
 	{ "F-0061SL", 8015 }, { "F-0067SL", 8016 }, { "F-0140SL", 8020 },
@@ -225,8 +226,10 @@ void AudioPlayer::cleanMysterySounds() {
 
 bool AudioPlayer::initMacMysterySounds(uint mysteryNum) {
 	const uint16 firstResourceId = 1001;
-	const Common::Path candidates[2] = {
+	const Common::Path candidates[] = {
+		Common::Path(Common::String::format("M%u.DBD", mysteryNum)),
 		Common::Path(Common::String::format("M%02u.DBD", mysteryNum)),
+		Common::Path(Common::String::format("M%u.CPD", mysteryNum)),
 		Common::Path(Common::String::format("M%02u.CPD", mysteryNum))
 	};
 
@@ -259,6 +262,9 @@ void AudioPlayer::playMacSnd(uint16 resourceId, Audio::SoundHandle &handle,
 	Common::SeekableReadStream *stream =
 		openMacResource(Common::Path("EEM Sound&Music"),
 						MKTAG('s', 'n', 'd', ' '), resourceId);
+	if (!stream)
+		stream = openMacResource(Common::Path("Eagle Eye Mysteries CD"),
+								 MKTAG('s', 'n', 'd', ' '), resourceId);
 	if (!stream) {
 		warning("AudioPlayer: Mac snd resource %u missing", resourceId);
 		return;
@@ -470,6 +476,11 @@ bool AudioPlayer::playMacMysterySound(uint num) {
 		delete stream;
 		warning("AudioPlayer: Mac mystery sound resource %u is not playable",
 				resourceId);
+		return false;
+	}
+	// Some unused speech resources contain only a two-sample placeholder.
+	if (audioStream->getLength().msecs() == 0) {
+		delete audioStream;
 		return false;
 	}
 

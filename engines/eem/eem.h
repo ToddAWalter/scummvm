@@ -45,6 +45,8 @@
 
 namespace EEM {
 
+class TravisScrollBar;
+
 class AudioPlayer;
 class MusicPlayer;
 
@@ -98,10 +100,11 @@ enum ScreenId {
 /// Distribution variant from `ADGameDescription::extra` (set by
 /// `gameDescriptions[]` in `detection.cpp`).
 enum Variant {
-	kVariantCD       = 0,
-	kVariantFloppy   = 1,
-	kVariantLondonCD = 2,
-	kVariantMac      = 3,
+	kVariantCD        = 0,
+	kVariantFloppy    = 1,
+	kVariantLondonCD  = 2,
+	kVariantMacFloppy = 3,
+	kVariantMacCD     = 4,
 };
 
 /// `_Partner @ 29be:7918`. Selected at the partner-pick screen
@@ -132,6 +135,7 @@ public:
 	Variant getVariant() const { return _variant; }
 	bool isFloppy() const { return _variant == kVariantFloppy || isDemo(); }
 	bool isLondon() const { return _variant == kVariantLondonCD; }
+	bool isMacCD() const { return _variant == kVariantMacCD; }
 	// London (game) and Macintosh (platform) are orthogonal -- the London CD
 	// shipped for both DOS and Mac -- so derive Mac-ness from the platform
 	// rather than the single-valued `_variant` (which can only hold one of
@@ -194,8 +198,7 @@ public:
 	const EEMFont &getFont() const { return _font; }
 	uint8       getPartnerIndex() const { return _partner; }
 
-	/// Interactive-region cursor. DOS/EEM1 uses a red-outline pointer; Mac
-	/// London uses the original Color QuickDraw arrow.
+	/// Highlight interactive regions; Mac London retains its native colours.
 	void setInteractiveMouseCursor(bool active);
 
 	/// Interactive cursor over searchable hotspots.
@@ -207,7 +210,7 @@ public:
 	void setSiteHotspotCursorId(int cursorId);
 
 	/// `_DisplayClue @ 2404:05e6`. 
-	void displayClue(const byte *clueBlock);
+	void displayClue(const byte *clueBlock, uint maxEntries = 32);
 
 	/// EEM2/London `_DoPuzzle @ 2542:1482`. A clue entry can gate the rest of
 	/// itself behind a "check the manual / a real map" puzzle
@@ -316,7 +319,7 @@ private:
 	void screenDriver();
 
 	/// Re-render helpers for the corresponding `doX()` modal screens.
-	void drawNotebookFrame(int &page);
+	void drawNotebookFrame(int &page, TravisScrollBar *scrollBar = nullptr);
 
 	/// Resolve a single NoteIndex entry to displayable notebook text.
 	/// Handles the CD (4-byte) vs floppy (7-byte) entry strides.
@@ -343,6 +346,7 @@ private:
 		int pageBreaksCap;
 		int *numPages;
 		int *page;
+		TravisScrollBar *scrollBar = nullptr;
 	};
 
 	/// One NoteIndex entry as displayable accuse-screen text.
@@ -360,6 +364,7 @@ private:
 	void floppyKDHint(uint kdSlot, const byte *kdIdx,
 					  const byte *bufBase, uint32 mysSize);
 	void displayScrapbookExtra(uint mysteryNum);
+	void displayMacPracticeScrapbook();
 	void accuseDrawGallery(int highlighted,
 						   Common::Array<Common::Rect> &rects,
 						   Common::Array<int> &suspects, uint8 num,
@@ -496,6 +501,7 @@ private:
 
 	bool waitIntroDelay(uint32 maxMs);
 	void runMacStartup();
+	void playMacCDIntro();
 	void showMacEAKidsLogo();
 	void showMacStillLogo(uint picId, uint palId, uint holdMs,
 						  bool playThunder);
@@ -505,8 +511,8 @@ private:
 	/// Start London mystery 0 after a freshly-created detective chooses a partner.
 	bool startLondonTrainingMystery();
 	void showLondonEAKidsLogo();
-	void showLondonLogo(uint picId, uint palId, uint holdMs,
-						bool playThunder = false);
+	void showStillPicture(uint picId, uint palId, uint holdMs,
+						  bool playThunder = false, bool holdLastFrame = false);
 	void showLondonCharSelect();
 	void playLondonInitCluesAnim(uint16 caseType, const Picture &bg,
 								 bool haveBriefingBg);
@@ -575,6 +581,7 @@ public:
 	/// `_StartTravelMusic @ 20a2:0595`. Picks `MUS%05d.XMI` from
 	/// `_mystery._siteNumber % 5`, one-shot.
 	void startTravelMusic();
+	void finishTravelMusic(bool skipped);
 
 	/// `_IsMIDIPlaying` spin + `_StopMIDI` cleanup in `_DoSiteLoop`.
 	void waitForMusicDone(uint32 maxMs = 60000);
@@ -630,6 +637,7 @@ private:
 	Mystery    _mystery;         ///< M<n>.BIN
 	EEMFont    _font;            ///< FONT.FNT (8 px)
 	EEMFont    _dialogFont;      ///< Mac 14pt FONT used inside speech balloons.
+	EEMFont    _newspaperFont;
 
 	Common::Array<byte> _sitePals; ///< 40 × 768 bytes, 6-bit VGA.
 
