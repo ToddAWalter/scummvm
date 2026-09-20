@@ -132,7 +132,7 @@ static bool isTimerDurationDependency(DependencyType type) {
 		(type == DependencyType::kTimerLessThanDependencyTime || type == DependencyType::kTimerGreaterThanDependencyTime);
 }
 
-void ActionManager::addNewActionRecord(Common::SeekableReadStream &inputData) {
+void ActionManager::addNewActionRecord(Common::SeekableReadStream &inputData, const Common::String &includeSource) {
 	ActionRecord *newRecord = createAndLoadNewRecord(inputData);
 	if (!newRecord) {
 		inputData.seek(0x30);
@@ -141,6 +141,7 @@ void ActionManager::addNewActionRecord(Common::SeekableReadStream &inputData) {
 		warning("Action Record type %i is unimplemented or invalid!", ARType);
 		return;
 	}
+	newRecord->_includeSource = includeSource;
 	_records.push_back(newRecord);
 }
 
@@ -671,7 +672,7 @@ void ActionManager::processDependency(DependencyRecord &dep, ActionRecord &recor
 
 			break;
 		case DependencyType::kTimerIsActive:
-			// Nancy11+ only: satisfied while the software-timer slot is running/counting
+			// Nancy11+ only: satisfied while the software-timer slot is active
 			dep.satisfied = NancySceneState.isSoftwareTimerActive(dep.label);
 
 			break;

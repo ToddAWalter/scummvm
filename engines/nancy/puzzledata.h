@@ -156,8 +156,9 @@ struct MagnetMazePuzzleData : public PuzzleData {
 	Common::Array<int16> magnetState;
 };
 
-// Per-item (inMap, inItems, mapRow, mapCol, itemsRow, itemsCol) packed as
-// 6 int16s.
+// Nancy10 GridMapPuzzle: per-item (inMap, inItems, mapRow, mapCol, itemsRow,
+// itemsCol) packed as 6 int16s.
+// Nancy14 LetterGridPuzzle: the marked column of each row, -1 = unmarked.
 struct GridMapPuzzleData : public PuzzleData {
 	GridMapPuzzleData() {}
 	virtual ~GridMapPuzzleData() {}
@@ -337,7 +338,13 @@ struct TimerData : public PuzzleData {
 		void reset() { *this = Timer(); }
 	};
 
-	static const uint kNumTimers = 10;
+	// Nancy11-13 have 10 timers, and Nancy14+ have 20. However, only Nancy15+
+	// save all 20: Nancy14 has 20 timers, but its scripts never use any past
+	// the first 10, so its saves keep storing 10 timers. Since the TimerData chunk isn't
+	// length-prefixed, storing more timers for Nancy14 would break existing
+	// saves unless the savegame version is bumped.
+	static const uint kNumTimers = 20;
+	static const uint kNumSavedTimers = 10;		// Timers stored in saves before Nancy15
 	static const uint kNumTriggers = 20;
 
 	TimerData() {}
@@ -492,6 +499,19 @@ struct DrivingData : public PuzzleData {
 	bool flatTire = false;
 	double fuelBurnAccum = 0.0;	// fractional fuel drained but not yet a whole unit
 	bool infiniteFuel = false;	// cheat toggle, kept across building visits
+};
+
+// Nancy12 MirrorLightPuzzle (AR 163). The angle of each mirror, so a mirror stays
+// where the player turned it when the puzzle scene is left and re-entered.
+// An angle of -1 marks a mirror that was never saved, which keeps its initial angle.
+struct MirrorLightData : public PuzzleData {
+	MirrorLightData() {}
+	virtual ~MirrorLightData() {}
+
+	static constexpr uint32 getTag() { return MKTAG('M', 'I', 'R', 'L'); }
+	virtual void synchronize(Common::Serializer &ser);
+
+	Common::Array<double> angles;	// radians, indexed by mirror
 };
 
 // Nancy14 BuildPuzzle (AR 166). The board as it was after the last drop. A puzzle

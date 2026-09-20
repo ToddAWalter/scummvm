@@ -1606,7 +1606,7 @@ void Scene::load(bool fromSaveFile) {
 
 	uint numRecords = 0;
 	while (actionRecordChunk = sceneIFF->getChunkStream("ACT", numRecords), actionRecordChunk != nullptr) {
-		_actionManager.addNewActionRecord(*actionRecordChunk);
+		_actionManager.addNewActionRecord(*actionRecordChunk, sceneIFF->getChunkSource("ACT", numRecords));
 		delete actionRecordChunk;
 		++numRecords;
 	}
@@ -1844,6 +1844,12 @@ bool Scene::isSoftwareTimerActive(uint16 index) const {
 	}
 
 	const TimerData::Timer &timer = ((const TimerData *)_puzzleData.getVal(TimerData::getTag()))->timers[index];
+
+	// Nancy12+ also counts a paused timer as active
+	if (g_nancy->getGameType() >= kGameTypeNancy12) {
+		return timer.state != TimerData::Timer::kIdle;
+	}
+
 	return timer.state == TimerData::Timer::kRunning ||
 		timer.state == TimerData::Timer::kOneShot ||
 		timer.state == TimerData::Timer::kRepeating;
