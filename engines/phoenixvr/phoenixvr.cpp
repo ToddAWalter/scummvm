@@ -800,6 +800,7 @@ bool PhoenixVREngine::goToWarp(const Common::String &warp, bool savePrev) {
 		_nextWarp = _script->getWarp(warp);
 
 	_hoverIndex = -1;
+	_hoverLeaveIndex = -1;
 	_messengerInventoryHover = -1;
 	if (savePrev) {
 		assert(_warpIdx >= 0);
@@ -1783,6 +1784,8 @@ void PhoenixVREngine::tick(float dt) {
 		_rolloverText = TextState();
 		_archiveImages.clear();
 		_archiveTexts.clear();
+		_hoverIndex = -1;
+		_hoverLeaveIndex = -1;
 		_warpIdx = _nextWarp;
 		_warp = _script->getWarp(_nextWarp);
 		debug("warp %d -> %s %s", _nextWarp, _warp->vrFile.c_str(), _warp->testFile.c_str());
@@ -1844,6 +1847,8 @@ void PhoenixVREngine::tick(float dt) {
 	auto &cursors = _cursors[_warpIdx];
 	bool anyMatched = false;
 	int messengerInventoryHover = -1;
+	int hoverIndex = -1;
+	int hoverLeaveIndex = -1;
 	int regionCount = _regSet ? _regSet->size() : 0;
 	for (int i = 0, n = MAX<int>(regionCount, cursors.size()); i != n; ++i) {
 		auto *region = getRegion(i);
@@ -1857,24 +1862,33 @@ void PhoenixVREngine::tick(float dt) {
 				messengerInventoryHover = i;
 
 			auto test = _warp->getTest(i);
-			if (test && test->hover == 1 && _hoverIndex < 0) {
-				debug("executing hover test %d", i);
-				_hoverIndex = i;
-				executeTest(i);
+			if (test) {
+				if (test->hover == 1 && hoverIndex < 0)
+					hoverIndex = i;
+				else if (test->hover == 2 && hoverLeaveIndex < 0)
+					hoverLeaveIndex = i;
 			}
 
 			if (!cursor && validTestIdx) {
 				cursor = loadCursor(cursors[i].name);
 			}
-		} else if (i == _hoverIndex) {
-			debug("leaving hover region");
-			auto leave = _warp->getTest(i - 1);
-			if (!leave || leave->hover != 2)
-				leave = _warp->getTest(i + 1);
-			if (leave && leave->hover == 2) {
-				executeTest(leave->idx);
-			}
-			_hoverIndex = -1;
+		}
+	}
+
+	if (hoverLeaveIndex != _hoverLeaveIndex) {
+		int prevHoverLeaveIndex = _hoverLeaveIndex;
+		_hoverLeaveIndex = hoverLeaveIndex;
+		if (prevHoverLeaveIndex >= 0) {
+			debug("executing hover leave test %d", prevHoverLeaveIndex);
+			executeTest(prevHoverLeaveIndex);
+		}
+	}
+
+	if (hoverIndex != _hoverIndex) {
+		_hoverIndex = hoverIndex;
+		if (hoverIndex >= 0) {
+			debug("executing hover test %d", hoverIndex);
+			executeTest(hoverIndex);
 		}
 	}
 
@@ -2209,7 +2223,7 @@ void PhoenixVREngine::captureContext() {
 			ms.writeByte(0);
 	};
 
-	ms.writeSint32LE(fromAngle(_angleY.angle() + kPi2));
+	ms.writeSint32LE(fromAngle(kPi2 - _angleY.angle()));
 	ms.writeSint32LE(fromAngle(_angleX.angle()));
 	ms.writeSint32LE(0);
 	ms.writeSint32LE(0);
