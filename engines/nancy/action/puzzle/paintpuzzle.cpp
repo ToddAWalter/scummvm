@@ -92,7 +92,7 @@ void PaintPuzzle::readData(Common::SeekableReadStream &stream) {
 	_solveScene._flag.label = stream.readSint16LE();
 	_solveScene._flag.flag = stream.readByte();
 
-	_solveSound.readData(stream);			// 0x150
+	_solveSoundBlock.readData(stream);			// 0x150
 
 	readExitHotspots(stream, _exitHotspots);
 }
@@ -360,31 +360,6 @@ void PaintPuzzle::paintRegion(uint regionIndex, int colorIndex) {
 	redraw();
 }
 
-void PaintPuzzle::playSoundBlock(const RandomSoundBlock &block) {
-	if (block.names.empty()) {
-		return;
-	}
-
-	uint idx = block.names.size() == 1 ? 0 : g_nancy->_randomSource->getRandomNumber(block.names.size() - 1);
-	const Common::String &name = block.names[idx];
-	if (name.empty() || name == "NO SOUND") {
-		return;
-	}
-
-	SoundDescription desc;
-	desc.name = name;
-	desc.channelID = block.channel;
-	desc.numLoops = block.numLoops > 0 ? block.numLoops : 1;
-	desc.volume = block.volume;
-
-	g_nancy->_sound->loadSound(desc);
-	g_nancy->_sound->playSound(desc);
-}
-
-bool PaintPuzzle::isSoundBlockPlaying(const RandomSoundBlock &block) const {
-	return !block.names.empty() && g_nancy->_sound->isSoundPlaying((uint16)block.channel);
-}
-
 void PaintPuzzle::handleInput(NancyInput &input) {
 	// A solve without a scene change leaves the puzzle playable
 	if (_state != kRun || (_solved && !_solveHandled)) {
@@ -473,18 +448,18 @@ void PaintPuzzle::execute() {
 			// No scene change: set the flag and keep the puzzle on screen, so
 			// the scene's own records can react to it.
 			_solveHandled = true;
-			playSoundBlock(_solveSound);
+			playSoundBlock(_solveSoundBlock);
 			NancySceneState.setEventFlag(_solveScene._flag);
 		} else if (_takenExit >= 0 || (_solved && !_solveHandled)) {
 			if (_solved) {
-				playSoundBlock(_solveSound);
+				playSoundBlock(_solveSoundBlock);
 			}
 			_state = kActionTrigger;
 		}
 		break;
 	case kActionTrigger:
 		// The solve sound gets to finish first
-		if (_takenExit < 0 && isSoundBlockPlaying(_solveSound)) {
+		if (_takenExit < 0 && isSoundBlockPlaying(_solveSoundBlock)) {
 			break;
 		}
 

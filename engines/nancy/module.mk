@@ -15,6 +15,7 @@ MODULE_OBJS = \
   action/conversation.o \
   action/interactivevideo.o \
   action/overlay.o \
+  action/puzzlerecord.o \
   action/secondarymovie.o \
   action/secondaryvideo.o \
   action/puzzle/adjustpuzzle.o \
@@ -37,6 +38,7 @@ MODULE_OBJS = \
   action/puzzle/dotconnectpuzzle.o \
   action/puzzle/drivingpuzzle.o \
   action/puzzle/dropsortpuzzle.o \
+  action/puzzle/escapegridpuzzle.o \
   action/puzzle/gridmappuzzle.o \
   action/puzzle/hamradiopuzzle.o \
   action/puzzle/hangmanpuzzle.o \

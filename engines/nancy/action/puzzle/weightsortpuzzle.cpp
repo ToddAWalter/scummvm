@@ -128,8 +128,8 @@ void WeightSortPuzzle::readData(Common::SeekableReadStream &stream) {
 		outcome.sound.readData(stream);
 	}
 
-	readExitHotspot(stream, _exitHotspot, _exitCursorType, _exitScene, _exitFlag);
-	_exitScene.continueSceneSound = kContinueSceneSound;
+	readExitHotspot(stream);
+	_exitScene._sceneChange.continueSceneSound = kContinueSceneSound;
 }
 
 // Drops the object at a random spot fully inside its container.
@@ -155,12 +155,7 @@ void WeightSortPuzzle::scatterContainer(uint container) {
 }
 
 void WeightSortPuzzle::init() {
-	Common::Rect vpBounds = NancySceneState.getViewport().getBounds();
-	_drawSurface.create(vpBounds.width(), vpBounds.height(), g_nancy->_graphics->getInputPixelFormat());
-	_drawSurface.clear(g_nancy->_graphics->getTransColor());
-	setTransparent(true);
-	setVisible(true);
-	moveTo(vpBounds);
+	initViewportSurface();
 
 	_typeImages.resize(_objectTypes.size());
 	for (uint i = 0; i < _objectTypes.size(); ++i) {
@@ -362,32 +357,6 @@ void WeightSortPuzzle::carryObject(int object, NancyInput &input) {
 	}
 }
 
-void WeightSortPuzzle::setDataCursor(uint16 cursorType, bool hotspotVariant) const {
-	g_nancy->_cursor->setCursorType((CursorManager::CursorType)cursorType, true, hotspotVariant);
-}
-
-SoundDescription WeightSortPuzzle::playSoundBlock(const RandomSoundBlock &block) {
-	SoundDescription desc;
-	if (block.names.empty()) {
-		return desc;
-	}
-
-	uint idx = block.names.size() == 1 ? 0 : g_nancy->_randomSource->getRandomNumber(block.names.size() - 1);
-	const Common::String &name = block.names[idx];
-	if (name.empty() || name == "NO SOUND") {
-		return desc;
-	}
-
-	desc.name = name;
-	desc.channelID = block.channel;
-	desc.numLoops = block.numLoops > 0 ? block.numLoops : 1;
-	desc.volume = block.volume;
-
-	g_nancy->_sound->loadSound(desc);
-	g_nancy->_sound->playSound(desc);
-	return desc;
-}
-
 void WeightSortPuzzle::redraw() {
 	_drawSurface.clear(g_nancy->_graphics->getTransColor());
 
@@ -439,8 +408,7 @@ void WeightSortPuzzle::execute() {
 		break;
 	case kActionTrigger:
 		if (_exitRequested) {
-			NancySceneState.setEventFlag(_exitFlag);
-			NancySceneState.changeScene(_exitScene);
+			_exitScene.execute();
 		} else {
 			NancySceneState.setEventFlag(_outcomes[_outcome].flag);
 			NancySceneState.changeScene(_outcomes[_outcome].scene);
@@ -533,9 +501,7 @@ void WeightSortPuzzle::handleInput(NancyInput &input) {
 		return;
 	}
 
-	if (!_exitHotspot.isEmpty() &&
-			NancySceneState.getViewport().convertViewportToScreen(_exitHotspot).contains(input.mousePos)) {
-		setDataCursor(_exitCursorType, false);
+	if (hoverExitHotspot(input)) {
 		if (click) {
 			_exitRequested = true;
 		}

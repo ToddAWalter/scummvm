@@ -22,7 +22,7 @@
 #ifndef NANCY_ACTION_QUIZPUZZLE_H
 #define NANCY_ACTION_QUIZPUZZLE_H
 
-#include "engines/nancy/action/actionrecord.h"
+#include "engines/nancy/action/puzzlerecord.h"
 #include "engines/nancy/commontypes.h"
 #include "engines/nancy/util.h"
 
@@ -32,9 +32,9 @@ namespace Action {
 // Text-entry quiz with multiple text boxes. Three data formats: Nancy 8,
 // Nancy 9 - Nancy 14, and Nancy 15, which rewrote the record around
 // count-prefixed answer lists and RandomSoundBlocks.
-class QuizPuzzle : public RenderActionRecord {
+class QuizPuzzle : public PuzzleRecord {
 public:
-	QuizPuzzle() : RenderActionRecord(7) {}
+	QuizPuzzle() : PuzzleRecord(7) {}
 	virtual ~QuizPuzzle();
 
 	void init() override;
@@ -103,7 +103,7 @@ private:
 	// Picks one name out of `block` at random and starts it, tracking it in
 	// _activeBoxSound so the state machine can wait for it. Returns false when
 	// the block is empty or names no sound.
-	bool playSoundBlock(const RandomSoundBlock &block);
+	bool playBoxSoundBlock(const RandomSoundBlock &block);
 	void showBoxSubtitle(const Common::String &perBoxText, const Common::String &perRecordText);
 
 	uint32 getSaveKey();
@@ -116,14 +116,8 @@ private:
 	uint16 _fontID = 0;
 	uint16 _cursorBlinkInterval = 500;
 
-	SoundDescription _doneSound;		// Nancy 8 - Nancy 14 solve sound
 	Common::String _doneText;
 	RandomSoundBlock _doneSoundBlock;	// Nancy 15 solve sound
-
-	SceneChangeWithFlag _solveScene;	// entered when all boxes are solved
-	SceneChangeWithFlag _cancelScene;	// entered when the puzzle is given up on
-	Common::Rect _exitHotspot;			// Nancy 9+: viewport-relative give-up hotspot
-	uint16 _exitCursorType = 0;			// Nancy 15
 
 	// ---- Data (Nancy 8) ----
 	SoundDescription _correctSound;		// one sound shared by every box
