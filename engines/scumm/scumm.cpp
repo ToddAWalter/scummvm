@@ -412,7 +412,8 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	} else if (_game.id == GID_REBEL2 && _game.platform == Common::kPlatformPSX) {
 		_screenHeight = 240;
 #endif
-	} else if (_game.id == GID_REBEL2 && ConfMan.getBool("rebel2_hires")) {
+	} else if (_game.id == GID_REBEL2 &&
+			Common::checkGameGUIOption(GAMEOPTION_REBEL2_HIRES, _game.guioptions) && ConfMan.getBool("rebel2_hires")) {
 		_screenWidth = 640;
 		_screenHeight = 400;
 	} else if (_game.version == 8 || _game.heversion >= 71) {
@@ -1069,8 +1070,10 @@ Common::Error ScummEngine::init() {
 		SearchMan.addSubDirectoryMatching(gameDataDir, "data");
 	}
 
-	if (_game.id == GID_REBEL1 && _game.platform == Common::kPlatformMacintosh)
+	if (_game.id == GID_REBEL1 && _game.platform == Common::kPlatformMacintosh) {
 		SearchMan.addSubDirectoryMatching(gameDataDir, "REBEL", 0, 2);
+		SearchMan.addSubDirectoryMatching(gameDataDir, "REBELMAC", 0, 2);
+	}
 #endif
 
 	// Extra directories needed for the Steam versions
@@ -1186,6 +1189,9 @@ Common::Error ScummEngine::init() {
 			_filenamePattern.genMethod = kGenRoomNum;
 		} else if (_game.id == GID_REBEL1 || _game.id == GID_REBEL2) {
 			_fileHandle = new ScummFile(this);
+			// RA2 must disable the SCUMM GUI before Mac screen initialization.
+			if (_game.id == GID_REBEL2)
+				_useOriginalGUI = false;
 		} else if (_game.platform == Common::kPlatformMacintosh) {
 			// The mac versions of Indy4, Sam&Max, DOTT, FT and The Dig used a
 			// special meta (container) file format to store the actual SCUMM data
@@ -1873,8 +1879,6 @@ void ScummEngine_v7::setupScumm(const Common::Path &macResourceFile) {
 		_numActors = 0;
 
 		setupScummVars();
-
-		_useOriginalGUI = false;
 
 		_sound = new Sound(this, _mixer, false);
 		// Rebel Assault 2 doesn't use iMUSE for audio.
