@@ -1290,6 +1290,7 @@ static void room_203_daemon() {
 			kernel_synch(KERNEL_ANIM, aa[1], KERNEL_NOW, 0);
 			aainfo[1]._active = -1;
 			aainfo[1]._frame = 0;
+			local->_96 = 53;
 			local->_a8 = 0;
 			break;
 
