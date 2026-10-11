@@ -1,7 +1,7 @@
 For a more comprehensive changelog of the latest experimental code, see:
         https://github.com/scummvm/scummvm/commits/
 
-#### 2026.4.0 (2026-10-XX)
+#### 2026.4.0 "Never-slop" (2026-10-10)
 
  New games:
    - Added support for Mortadelo y Filemón: Una Aventura de Cine Edición Original.
@@ -80,6 +80,7 @@ For a more comprehensive changelog of the latest experimental code, see:
 
  Hopkins:
    - Added the missing underwater base 3D first-person shooter.
+   - Optional quality-of-life HUD for underwater base shooter with map and autopilot.
 
  Kyra:
    - Added support for Korean fan-translation of kyra1 (added in 2026.3.0).
@@ -138,7 +139,12 @@ For a more comprehensive changelog of the latest experimental code, see:
    - Fixed time-based puzzles sometimes getting stuck after restarting ScummVM.
 
  Voyeur:
-   - Match original first person movement with mouse when looking at mansion
+   - Match original first person movement with mouse when looking at mansion.
+
+ Android port:
+   - Support Android 17.
+   - Add TTS support.
+   - Add external MIDI device support.
 
  Atari port:
    - Added integration with nFM library.
