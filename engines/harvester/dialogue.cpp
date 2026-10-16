@@ -107,8 +107,8 @@ public:
 		flow.queueDialogueInteraction(interaction);
 	}
 
-	static void requestMainMenuReturn(Flow &flow) {
-		flow.requestMainMenuReturn();
+	static void requestGameOverReturn(Flow &flow) {
+		flow.requestGameOverReturn();
 	}
 
 	static const MenuTextConfig &getMenuTextConfig(const Flow &flow) {
@@ -133,6 +133,9 @@ static const int kDialogueOtherX = 171;
 static const int kDialogueOtherY = 183;
 static const int kDialogueTextEntryX = 208;
 static const int kDialogueTextEntryY = 184;
+static const uint kDialogueTextEntryMaxLength = 26;
+static const int kDialogueTextEntryMaxWidth = 550;
+static const uint32 kDialogueTextEntryBlinkTicks = 0x30;
 static const int kDialogueOtherWidth = 120;
 static const int kDialogueTopicStartX = 168;
 static const int kDialogueTopicEndX = 482;
@@ -143,9 +146,6 @@ static const int kDialogueGenericByeResponseIndex = 13;
 static const char *const kCdChangePromptPalettePath = "1:/GRAPHIC/PAL/CD1.PAL";
 static const char *const kDialogueKeywordBitmapPath = "1:/GRAPHIC/OTHER/KEYWORD.BM";
 static const char *const kDialogueLocalizedKeywordBitmapPath = "GRAPHIC/OTHER/KEYWORD.BM";
-static const char *const kDialogueGameOverBitmapPath = "1:/GRAPHIC/OTHER/GAMEOVER.BM";
-static const char *const kDialogueGameOverPalettePath = "1:/GRAPHIC/PAL/GAMEOVER.PAL";
-static const char *const kDialogueGameOverMusicPath = "SOUND/MUSIC/ANXIETY.CMP";
 
 static const byte kTextColorNormal = 255;
 static const byte kTextColorHover = 251;
@@ -769,6 +769,8 @@ public:
 		topics.push_back(_genericByeTopic);
 		debugC(1, kDebugDialogue, "Harvester: keyword menu default topic='%s'", _genericByeTopic.c_str());
 		bool editingOther = false;
+		bool textEntryCursorVisible = false;
+		uint32 textEntryBlinkTimestamp = 0;
 		Common::String typedTopic;
 		Common::Error releaseError = waitForPointerRelease();
 		if (releaseError.getCode() != Common::kNoError)
@@ -776,43 +778,66 @@ public:
 
 		Graphics::FrameLimiter limiter(g_system, 60);
 		for (;;) {
+			const uint32 now = getRuntimeClockTicks();
+			if (editingOther && now - textEntryBlinkTimestamp > kDialogueTextEntryBlinkTicks) {
+				textEntryCursorVisible = !textEntryCursorVisible;
+				textEntryBlinkTimestamp = now;
+			}
 			const int hoveredTopicIndex = editingOther ? -1 : getDialogueMenuItemAt(*_menuFont, topics.size(), _mousePos);
-			const bool hoverOther = !editingOther && isDialogueOtherHit(_mousePos);
+			const bool hoverOther = editingOther || isDialogueOtherHit(_mousePos);
 			drawDialogueOverlay(&_keywordBitmap, nullptr, &topics, hoveredTopicIndex, hoverOther,
-				editingOther ? &typedTopic : nullptr);
+				editingOther ? &typedTopic : nullptr, textEntryCursorVisible);
 
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result))
+				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result)) {
+					if (editingOther && _entityManager)
+						_entityManager->showCursor();
 					return result;
+				}
 
 				if (editingOther) {
+					bool acceptInput = false;
+					bool cancelInput = false;
 					if (event.type == Common::EVENT_KEYDOWN) {
 						if (event.kbd.keycode == Common::KEYCODE_ESCAPE) {
-							typedTopic.clear();
-							editingOther = false;
-							debugC(1, kDebugDialogue, "Harvester: keyword menu cancelled Other input");
-							if (_entityManager)
-								_entityManager->showCursor();
-						} else if (event.kbd.keycode == Common::KEYCODE_BACKSPACE) {
+							cancelInput = true;
+						} else if (event.kbd.keycode == Common::KEYCODE_BACKSPACE ||
+								event.kbd.keycode == Common::KEYCODE_LEFT) {
 							if (!typedTopic.empty())
 								typedTopic.deleteLastChar();
+						} else if (event.kbd.keycode == Common::KEYCODE_HOME) {
+							typedTopic.clear();
 						} else if (event.kbd.keycode == Common::KEYCODE_RETURN ||
 								event.kbd.keycode == Common::KEYCODE_KP_ENTER) {
-							if (!typedTopic.empty()) {
-								selectedTopic = typedTopic;
-								selection.fromTypedInput = true;
-								debugC(1, kDebugDialogue, "Harvester: keyword menu typed topic='%s'",
-									selectedTopic.c_str());
-								if (_entityManager)
-									_entityManager->showCursor();
-								return Common::kNoError;
-							}
-						} else if (event.kbd.ascii >= 0x20 && event.kbd.ascii <= 0x7e &&
-								typedTopic.size() < 79) {
+							acceptInput = true;
+						} else if (event.kbd.ascii >= 0x1f && event.kbd.ascii <= 0x80 &&
+								event.kbd.ascii != '~' && typedTopic.size() < kDialogueTextEntryMaxLength &&
+								(!_subtitleCftFont || _subtitleCftFont->hasGlyph(event.kbd.ascii))) {
 							typedTopic += (char)event.kbd.ascii;
+							if (_highlightFont->getStringWidth(typedTopic) > kDialogueTextEntryMaxWidth)
+								typedTopic.deleteLastChar();
 						}
+					} else if (event.type == Common::EVENT_LBUTTONDOWN) {
+						acceptInput = Common::Rect(3, 460, 318, 477).contains(event.mouse);
+						cancelInput = Common::Rect(321, 460, 636, 477).contains(event.mouse);
+						if (cancelInput)
+							g_system->delayMillis(400);
+					}
+					if (acceptInput || cancelInput) {
+						editingOther = false;
+						if (_entityManager)
+							_entityManager->showCursor();
+						if (acceptInput && !typedTopic.empty()) {
+							selectedTopic = typedTopic;
+							selection.fromTypedInput = true;
+							debugC(1, kDebugDialogue, "Harvester: keyword menu typed topic='%s'",
+								selectedTopic.c_str());
+							return Common::kNoError;
+						}
+						typedTopic.clear();
+						debugC(1, kDebugDialogue, "Harvester: keyword menu cancelled Other input");
 					}
 					continue;
 				}
@@ -841,6 +866,8 @@ public:
 					if (isDialogueOtherHit(_mousePos)) {
 						typedTopic.clear();
 						editingOther = true;
+						textEntryCursorVisible = false;
+						textEntryBlinkTimestamp = getRuntimeClockTicks();
 						debugC(1, kDebugDialogue, "Harvester: keyword menu entered Other input");
 						if (_entityManager)
 							_entityManager->hideCursor();
@@ -869,80 +896,17 @@ public:
 	}
 
 	Common::Error runGameOverScreen() override {
-		Graphics::Screen *screen = _engine.getScreen();
-		ResourceManager *resources = _engine.getResources();
-		if (!screen || !resources)
-			return Common::kReadingFailed;
-
-		IndexedBitmap gameOverBitmap;
-		byte gameOverPalette[256 * 3];
-		if (!loadBitmapResource(*resources, kDialogueGameOverBitmapPath, gameOverBitmap) ||
-				!loadPaletteResource(*resources, kDialogueGameOverPalettePath, gameOverPalette)) {
-			return Common::kReadingFailed;
-		}
-
-		_engine.stopSpeech();
-		_engine.stopMusic();
-		_engine.stopSound();
-
-		screen->fillRect(screen->getBounds(), 0);
-		blitBitmap(*screen, gameOverBitmap, 0, 0);
-		setScaledPalette(*screen, gameOverPalette, 1.0f);
-		screen->makeAllDirty();
-		screen->update();
-
-		(void)_engine.playMusic(kDialogueGameOverMusicPath);
-
-		bool dismissed = false;
-		Graphics::FrameLimiter limiter(g_system, 60);
-		while (!dismissed && !SHOULD_QUIT) {
-			Common::Event event;
-			while (g_system->getEventManager()->pollEvent(event)) {
-				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result)) {
-					_engine.stopMusic();
-					return result;
-				}
-
-				switch (event.type) {
-				case Common::EVENT_LBUTTONDOWN:
-				case Common::EVENT_RBUTTONDOWN:
-				case Common::EVENT_KEYDOWN:
-					dismissed = true;
-					break;
-				default:
-					break;
-				}
-			}
-
-			if (_entityManager)
-				(void)_entityManager->syncCursorEntityPosition(_mousePos);
-			if (dismissed)
-				break;
-
-			limiter.delayBeforeSwap();
-			limiter.startFrame();
-		}
-
-		_engine.stopMusic();
-		if (dismissed) {
-			Common::Error releaseError = waitForPointerRelease();
-			if (releaseError.getCode() != Common::kNoError)
-				return releaseError;
-		}
-
-		DialogueFlowAccess::requestMainMenuReturn(_flow);
+		// GOG run_game_over_screen (0x7c540) enters run_main_menu (0x67390)
+		// with GAMEOVER.BM and GAMEOVER.PAL retained as the menu backdrop.
+		debugC(1, kDebugDialogue, "Harvester: dialogue death requesting game-over menu");
+		DialogueFlowAccess::requestGameOverReturn(_flow);
 		return Common::kNoError;
 	}
 
 	void assignTopicBuffer(Common::String &topicBuffer, int &topicBufferLineIndex,
-			int responseLineIndex, const char *label) override {
+			int responseLineIndex, const char *) override {
 		topicBuffer = _text->getDialogueResponseLine(responseLineIndex);
 		topicBufferLineIndex = responseLineIndex;
-
-		Common::Array<Common::String> topics;
-		splitDialogueMenuLine(topicBuffer, topics);
-		logDialogueMenuItems(label, responseLineIndex, topicBuffer, topics);
 	}
 
 	bool matchesResponseLine(const Common::String &selectedTopic, int responseLineIndex) override {
@@ -1064,7 +1028,8 @@ private:
 
 	void drawDialogueOverlay(const IndexedBitmap *overlayBitmap,
 			const Common::Array<Common::String> *subtitleLines, const Common::Array<Common::String> *topics,
-			int hoveredTopicIndex, bool hoverOther, const Common::String *textEntryValue) {
+			int hoveredTopicIndex, bool hoverOther, const Common::String *textEntryValue,
+			bool textEntryCursorVisible = false) {
 		Graphics::Screen *activeScreen = getActiveScreen();
 		if (!activeScreen)
 			return;
@@ -1123,8 +1088,9 @@ private:
 
 		if (textEntryValue) {
 			drawFontString(*_highlightFont, _highlightFontUsesCft,
-				*textEntryValue + "_", kDialogueTextEntryX, kDialogueTextEntryY,
-				kDialogueKeywordTextWidth - 30, kTextColorNormal);
+				*textEntryValue + (textEntryCursorVisible ? "~" : ""),
+				kDialogueTextEntryX, kDialogueTextEntryY, kDialogueTextEntryMaxWidth,
+				kTextColorNormal);
 		}
 
 		if (_entityManager)
@@ -1493,7 +1459,8 @@ void DialogueSystem::syncRuntimeSaveState(Common::Serializer &s) {
 }
 
 Common::Error DialogueSystem::runRoomNpcDialogue(const IndexedBitmap &backdrop, const byte *palette,
-		float paletteBrightness, const NpcRecord &npc, const Common::String &usedItemName,
+		float paletteBrightness, const Common::String &currentRoomName,
+		const NpcRecord &npc, const Common::String &usedItemName,
 		Flow &flow) {
 	Script *script = _engine.getScript();
 	Text *text = _engine.getText();
@@ -1513,11 +1480,17 @@ Common::Error DialogueSystem::runRoomNpcDialogue(const IndexedBitmap &backdrop, 
 		return Common::kNoError;
 	}
 
+	if (!usedItemName.empty() && script->addRuntimeObjectToInventory(usedItemName)) {
+		debugC(2, kDebugDialogue, "Harvester: presented item moved to inventory object='%s' npc='%s'",
+			usedItemName.c_str(), npc.npcName.c_str());
+	}
+
 	RoomNpcDialogueSession session(_engine, _mousePos, flow, backdrop, palette, paletteBrightness, npc);
 	if (!session.isValid())
 		return Common::kReadingFailed;
+	// START_DIALOG may invoke an NPC assigned to another room.
 	DialogueRuntime runtime(
-		_engine, *script, *text, flow, npc.roomName, session.getGenericByeTopic(), session);
+		_engine, *script, *text, flow, currentRoomName, session.getGenericByeTopic(), session);
 
 	for (uint i = 0; i < _npcHandlers.size(); ++i) {
 		if (_npcHandlers[i]->matchesNpc(npc.npcName))

@@ -90,14 +90,19 @@ private:
 	MortimerFlight &currentFlight() { return _castleActive ? _castle : _flight; }
 	bool interactive() const { return _castleActive ? _castle.courseView() :
 		_crashStage == kNoCrash && !_interviewActive && _introIndex < 0 && _flight.interactive(); }
+	bool canFire() const { return interactive() && (!_castleActive || _castle.acceptsShots()); }
+	bool gameplay() const { return _interviewActive || _castleActive || _crashStage != kNoCrash ||
+		(_introIndex < 0 && (!_isDemo || _flight.interactive())); }
+	bool canPause() const;
 	void setMouse(const Common::Point &position);
 	void updateSteering(bool centerView = false);
 	void updateView(int x, int y);
 	void updateInterface();
 	void fire();
+	bool updateAutofire();
 	Common::Point moviePoint(const Common::Point &point) const;
 	Common::Point screenPoint(const Common::Point &point) const;
-	void draw();
+	void draw(bool paused = false);
 	void drawSprite(const MortimerSprite &sprite, int x, int y, bool centered = false, const Common::Rect *clip = nullptr);
 	void drawProjectile();
 	void drawTargets();
@@ -151,6 +156,7 @@ private:
 	uint _creditedRescues;
 	uint _segment, _carriedStones, _completedSpecies, _shellShocks, _shockFrame, _crashCount;
 	uint _uiFrame, _shotFrame, _glowFrame, _glowStones, _pendingGlowStones;
+	uint _fireButtons, _fireCountdown;
 	uint _iconFlash[7];
 	bool _finished, _controllerMode, _interviewActive, _castleActive;
 	bool _resourcesLoaded, _playingCached;

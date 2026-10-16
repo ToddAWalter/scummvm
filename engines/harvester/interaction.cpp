@@ -84,6 +84,26 @@ bool ItemInteractions::hasCarriedRoomItem() const {
 	return !_carriedRoomItemName.empty();
 }
 
+bool ItemInteractions::hasSelectedItem() const {
+	return hasCarriedRoomItem() || _inventory.hasSelection();
+}
+
+Common::String ItemInteractions::getSelectedItemName() const {
+	return hasCarriedRoomItem() ? _carriedRoomItemName : _inventory.getSelectedItemName();
+}
+
+void ItemInteractions::clearSelectedItem() {
+	clearCarriedRoomItem();
+	_inventory.clearSelection();
+}
+
+void ItemInteractions::hideCarriedRoomItem() {
+	if (!hasCarriedRoomItem())
+		return;
+	hideSceneObject(_carriedRoomItemName, nullptr);
+	_sceneRuntime.removeSceneEntityByName(_carriedRoomItemName);
+}
+
 void ItemInteractions::clearCarriedRoomItem() {
 	_carriedRoomItemName.clear();
 	_carriedRoomItemLabel.clear();
@@ -128,8 +148,8 @@ bool ItemInteractions::shouldCancelDeniedPickup(const InteractionResult &interac
 
 Common::Error ItemInteractions::restoreDeniedPickup(Script &script, const ObjectRecord &savedObject, bool clearCarryState,
 		InteractionCallbacks &callbacks, bool &needsRedraw) {
-	if (!script.syncRuntimeObjectRecord(savedObject))
-		return Common::kReadingFailed;
+	// This returns whether fields changed, not whether the record was found.
+	(void)script.syncRuntimeObjectRecord(savedObject);
 	if (clearCarryState)
 		clearCarriedRoomItem();
 
@@ -198,9 +218,12 @@ Common::Error ItemInteractions::beginRoomItemCarry(const ObjectRecord &object,
 	if (!spritePath.empty())
 		loadBitmapResource(*resources, spritePath, _carriedRoomItemBitmap);
 
-	script->setRuntimeObjectVisible(object.currentOwnerOrRoom, object.objectName, false);
-	hideSceneObject(object.objectName, nullptr);
-	_sceneRuntime.removeSceneEntityByName(object.objectName);
+	ObjectRecord carriedObject = object;
+	++carriedObject.currentX;
+	(void)script->syncRuntimeObjectRecord(carriedObject);
+	hideCarriedRoomItem();
+	debugC(2, kDebugRoom, "Harvester: carrying room item object='%s' owner='%s'",
+		object.objectName.c_str(), object.currentOwnerOrRoom.c_str());
 
 	bool didTransition = false;
 	if (shouldDispatchPickupActionOnCarryStart(object)) {
@@ -244,40 +267,34 @@ Common::Error ItemInteractions::beginRoomItemCarry(const ObjectRecord &object,
 	return Common::kNoError;
 }
 
-Common::Error ItemInteractions::handleInventoryTargetInteraction(const ObjectRecord &target,
+Common::Error ItemInteractions::handleSelectedItemTargetInteraction(const ObjectRecord &target,
 		Interaction &interactionProcessor, bool &needsRedraw) {
-	if (!_inventory.hasSelection())
+	if (!hasSelectedItem())
 		return Common::kNoError;
 
-	const Common::String selectedItemName = _inventory.getSelectedItemName();
+	const Common::String selectedItemName = getSelectedItemName();
 	InteractionResult interaction;
 	const bool handled = _engine.getScript()->resolveUseItemInteraction(
 		selectedItemName, target, interaction, _scene.state.roomName);
 	if (!handled) {
-		debugC(1, kDebugInventory,
-			"Harvester: inventory target miss selected='%s' target='%s' owner='%s' action='%s'",
-			selectedItemName.c_str(), target.objectName.c_str(),
-			target.currentOwnerOrRoom.c_str(), target.actionTag.c_str());
-		return Common::kNoError;
+		debugC(3, kDebugRoom, "Harvester: item use miss selected='%s' target='%s'",
+			selectedItemName.c_str(), target.objectName.c_str());
+		return handleSelectedItemMiss(interactionProcessor, needsRedraw);
 	}
 
-	StartupRoomTransitionKind roomTransition = interaction.roomTransition;
-	if (roomTransition == kStartupRoomTransitionNone && !interaction.nextRoomName.empty())
-		roomTransition = kStartupRoomTransitionCloseup;
-
-	// Flow shares one inventory system across nested room loops. Clear the held item
-	// before entering a closeup so it is not still carried while the child room loop
-	// is active.
-	if (!interaction.nextRoomName.empty() &&
-			roomTransition != kStartupRoomTransitionChangeRoom)
-		_inventory.clearSelection();
+	// GOG handle_target_interaction (0x7ff50) accepts room-carried items and
+	// requests a scene rebuild after every USEITEM match. Clear the selection
+	// before callbacks can enter another room or stow a consumed item.
+	clearSelectedItem();
+	interaction.visualRuntimeStateChanged = true;
+	debugC(2, kDebugRoom, "Harvester: using item object='%s' target='%s'",
+		selectedItemName.c_str(), target.objectName.c_str());
 
 	bool didTransition = false;
 	Common::Error interactionError =
 		interactionProcessor.handleInteractionResult(interaction, didTransition, selectedItemName);
 	if (interactionError.getCode() != Common::kNoError)
 		return interactionError;
-	_inventory.clearSelection();
 	if (interactionProcessor.hasPendingMainMenuReturn())
 		return Common::kNoError;
 	if (!_inventory.refresh())
@@ -287,43 +304,29 @@ Common::Error ItemInteractions::handleInventoryTargetInteraction(const ObjectRec
 	return Common::kNoError;
 }
 
-ObjectRecord *ItemInteractions::findSelectedInventoryRoomTarget(const Common::Point &point) {
-	if (!_inventory.hasSelection())
-		return nullptr;
+Common::Error ItemInteractions::handleSelectedItemMiss(Interaction &interactionProcessor, bool &needsRedraw) {
+	static const char *const responseTags[] = {
+		"GEN_RESP_3", "GEN_RESP_2", "GEN_RESP_4", "GEN_RESP_1", "GEN_RESP_1"
+	};
+	InteractionResult interaction;
+	_engine.getScript()->executeActionTag(responseTags[_engine.getRandomNumber(4)],
+		interaction, true, _scene.state.roomName);
+	bool didTransition = false;
+	Common::Error interactionError =
+		interactionProcessor.handleInteractionResult(interaction, didTransition, getSelectedItemName());
+	needsRedraw = true;
+	return interactionError;
+}
 
+const Entity *ItemInteractions::findSelectedItemTarget(const Common::Point &point, bool opaquePixels) {
+	if (!hasSelectedItem())
+		return nullptr;
 	EntityManager *entityManager = _engine.getRuntimeEntities();
-	Script *script = _engine.getScript();
-	if (!entityManager || !script)
+	const IndexedBitmap *bitmap = hasCarriedRoomItem() ? &_carriedRoomItemBitmap : _inventory.getSelectedItemBitmap();
+	if (!entityManager || !bitmap || !bitmap->isValid())
 		return nullptr;
-
-	const Common::String selectedItemName = _inventory.getSelectedItemName();
-	ObjectRecord *bestTarget = nullptr;
-	int bestDrawIndex = -1;
-	for (ObjectRecord &candidate : _scene.sceneObjects) {
-		if (candidate.objectName.empty() ||
-				!script->hasUseItemInteraction(selectedItemName, candidate)) {
-			continue;
-		}
-
-		const Entity *entity = entityManager->findSceneEntityByName(candidate.objectName);
-		if (!entity || !entity->hitTest(point))
-			continue;
-		if (entity->getClassId() == kEntityClassBackground ||
-				entity->getClassId() == kEntityClassPlayer ||
-				entity->getClassId() == kEntityClassRectHotspot19) {
-			continue;
-		}
-
-		const int drawIndex = entityManager->findSceneEntityDrawIndexByName(entity->getName());
-		if (drawIndex < 0)
-			continue;
-		if (!bestTarget || drawIndex > bestDrawIndex) {
-			bestTarget = &candidate;
-			bestDrawIndex = drawIndex;
-		}
-	}
-
-	return bestTarget;
+	const Common::Point position(point.x - (int)bitmap->width / 2, point.y - (int)bitmap->height / 2);
+	return entityManager->findTopSceneEntityOverlappingBitmap(*bitmap, position, getSelectedItemName(), opaquePixels);
 }
 
 Common::Error ItemInteractions::handleRoomItemPickup(const ObjectRecord &object, bool playerPresent,
@@ -757,8 +760,8 @@ Common::Error Interaction::runScriptedDialogue(const Common::String &npcName,
 			return Common::kReadingFailed;
 
 		Common::Error dialogueError = _flow.runRoomNpcDialogue(
-			dialogueBackdrop, _scene.palette, _scene.targetPaletteBrightness, *dialogueNpc,
-			usedItemName);
+			dialogueBackdrop, _scene.palette, _scene.targetPaletteBrightness,
+			_scene.state.roomName, *dialogueNpc, usedItemName);
 		if (dialogueError.getCode() != Common::kNoError)
 			return dialogueError;
 	} else {

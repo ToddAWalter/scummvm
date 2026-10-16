@@ -34,8 +34,6 @@
 #include "common/util.h"
 #include "engines/util.h"
 #include "graphics/cursorman.h"
-#include "graphics/font.h"
-#include "graphics/fontman.h"
 #include "graphics/paletteman.h"
 #include "gui/message.h"
 
@@ -75,7 +73,7 @@ Common::KeymapArray MortimerEngine::initKeymaps() {
 	const Binding bindings[] = {
 		{"FIRE", _s("Fire"), kActionFire, {"MOUSE_LEFT", "MOUSE_RIGHT", "JOY_A", "JOY_B"}},
 		{"PAUSE", _s("Pause"), kActionPause, {"SPACE", "JOY_START", nullptr, nullptr}},
-		{"SKIP", _s("Skip"), kActionSkip, {"ESCAPE", "JOY_Y", nullptr, nullptr}},
+		{"SKIP", _s("Skip cutscene / open menu"), kActionSkip, {"ESCAPE", "JOY_Y", nullptr, nullptr}},
 		{"RESTART", _s("Restart"), kActionRestart, {"C+r", "JOY_X", nullptr, nullptr}},
 		{"QUIT", _s("Quit"), kActionQuit, {"q", "A+q", nullptr, nullptr}},
 		{"MENU", _s("Game menu"), kActionMenu, {"F5", "JOY_LEFT_SHOULDER", nullptr, nullptr}},
@@ -122,7 +120,8 @@ MortimerEngine::MortimerEngine(OSystem *system, bool isDemo) : Engine(system), _
 	_viewport(24, 20, 616, 360), _mouse(320, 240), _view(44, 60), _aim(320, 190), _shotWeapon(MortimerFlight::kRevitascope),
 	_crashStage(kNoCrash), _nextFrameTime(0), _pauseTime(0), _introIndex(-1), _loadedRegion(-1), _creditedRescues(0),
 	_segment(0), _carriedStones(0), _completedSpecies(0), _shellShocks(0), _shockFrame(0), _crashCount(0),
-	_uiFrame(0), _shotFrame(3), _glowFrame(10), _glowStones(0), _pendingGlowStones(0), _finished(false),
+	_uiFrame(0), _shotFrame(3), _glowFrame(10), _glowStones(0), _pendingGlowStones(0),
+	_fireButtons(0), _fireCountdown(0), _finished(false),
 	_controllerMode(false), _interviewActive(false), _castleActive(false), _resourcesLoaded(false), _playingCached(false), _needsRepair(false), _hitJolt(false),
 	_cheats(ConfMan.getBool("mortimer_cheats")), _programmer(!isDemo && ConfMan.getBool("mortimer_programmer_easter_egg")), _invulnerable(false) {
 	memset(_steering, 0, sizeof(_steering));
@@ -374,6 +373,7 @@ void MortimerEngine::updateMovieContext() {
 
 bool MortimerEngine::enterCampaignScene() {
 	stopSounds();
+	_fireButtons = _fireCountdown = 0;
 	if (_highScoresActive) {
 		setScoreNameInput(false);
 		_highScoresActive = false;
@@ -605,6 +605,7 @@ void MortimerEngine::creditRescues() {
 }
 
 bool MortimerEngine::restart(bool all) {
+	_fireButtons = _fireCountdown = 0;
 	_crashStage = kNoCrash;
 	_needsRepair = _hitJolt = false;
 	_shockFrame = _crashCount = 0;
@@ -1078,6 +1079,8 @@ Common::Point MortimerEngine::screenPoint(const Common::Point &point) const {
 }
 
 void MortimerEngine::fire() {
+	// Retail SHELL 40e510 repeats held input every 1/7/7 ticks by flight difficulty.
+	_fireCountdown = _flightDifficulty ? 7 : 1;
 	MortimerFlight &flight = currentFlight();
 	if (_shotFrame >= 3) {
 		_shot = _aim;
@@ -1107,6 +1110,19 @@ void MortimerEngine::fire() {
 	}
 }
 
+bool MortimerEngine::updateAutofire() {
+	if (_finished || !canFire()) {
+		_fireButtons = _fireCountdown = 0;
+		return true;
+	}
+	if (!_fireButtons)
+		return true;
+	if (_fireCountdown && --_fireCountdown)
+		return true;
+	fire();
+	return !_castleActive || processCastle();
+}
+
 void MortimerEngine::updateInterface() {
 	++_uiFrame;
 	_shockFrame ^= 1;
@@ -1132,10 +1148,19 @@ bool MortimerEngine::speechPlaying() const {
 
 void MortimerEngine::pauseEngineIntern(bool pause) {
 	Engine::pauseEngineIntern(pause);
-	if (pause)
+	if (pause) {
 		_pauseTime = _system->getMillis();
-	else
+		// Dialogs may consume the button release while the engine is paused.
+		_fireButtons = _fireCountdown = 0;
+	} else {
 		_nextFrameTime += _system->getMillis() - _pauseTime;
+	}
+}
+
+bool MortimerEngine::canPause() const {
+	// SHELL's input handler excludes mode 4 (the animal and castle riddles).
+	const int scene = _interviewActive ? _interview.sceneId() : _castleActive ? _castle.sceneId() : -1;
+	return !isPaused() && !(scene >= 8 && scene <= 11) && scene != 23;
 }
 
 Common::Error MortimerEngine::run() {
@@ -1201,6 +1226,21 @@ Common::Error MortimerEngine::run() {
 		}
 		Common::Event event;
 		while (_eventMan->pollEvent(event)) {
+			if (event.kbdRepeat && (event.type == Common::EVENT_KEYDOWN ||
+				event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START))
+				continue;
+			if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_END && event.customType == kActionFire) {
+				if (_fireButtons)
+					--_fireButtons;
+				continue;
+			}
+			if (event.type == Common::EVENT_FOCUS_LOST || event.type == Common::EVENT_INPUT_CHANGED)
+				_fireButtons = _fireCountdown = 0;
+			// The event manager leaves global menu requests to an already paused engine.
+			if (event.type == Common::EVENT_MAINMENU && pause.isActive()) {
+				event.type = Common::EVENT_CUSTOM_ENGINE_ACTION_START;
+				event.customType = kActionMenu;
+			}
 			if (_highScoresActive && !isPaused()) {
 				if (_highScores.enteringName()) {
 					if (event.type == Common::EVENT_KEYDOWN && !event.kbdRepeat && _highScores.handleKey(event.kbd)) {
@@ -1219,8 +1259,6 @@ Common::Error MortimerEngine::run() {
 				continue;
 			}
 			if (event.type == Common::EVENT_KEYDOWN) {
-				if (event.kbdRepeat)
-					continue;
 				if (handleCheatKey(event.kbd)) {
 					if (!_loadError.empty()) {
 						exit = true;
@@ -1245,11 +1283,13 @@ Common::Error MortimerEngine::run() {
 				switch (event.customType) {
 				case kActionFire:
 					if (!isPaused() && !_finished) {
-						if (_castleActive) {
-							if (_castle.courseView() && _castle.acceptsShots())
-								fire();
-							else
-								_castle.click(_mouse);
+						if (canFire()) {
+							++_fireButtons;
+							fire();
+							if (_castleActive)
+								exit = !processCastle();
+						} else if (_castleActive) {
+							_castle.click(_mouse);
 							exit = !processCastle();
 						} else if (_interviewActive) {
 							const bool playing = _interview.playingMovie();
@@ -1257,16 +1297,24 @@ Common::Error MortimerEngine::run() {
 							if (playing && !_interview.playingMovie())
 								stopSounds();
 							exit = !processInterview();
-						} else if (interactive()) {
-							fire();
 						}
 					}
 					break;
 				case kActionSkip:
-					if (pause.isActive())
+					if (!gameplay()) {
+						if (pause.isActive())
+							pause.clear();
+						else if (!isPaused())
+							exit = !nextScene(true);
+						break;
+					}
+					// fall through
+				case kActionMenu:
+					if (pause.isActive()) {
 						pause.clear();
-					else if (!interactive() || _cheats)
-						exit = !nextScene(true);
+						draw();
+					}
+					openMainMenuDialog();
 					break;
 				case kActionQuit:
 					exit = true;
@@ -1274,16 +1322,13 @@ Common::Error MortimerEngine::run() {
 				case kActionPause:
 					if (pause.isActive())
 						pause.clear();
-					else
+					else if (canPause())
 						pause = pauseEngine();
 					break;
 				case kActionRestart:
 					if (pause.isActive())
 						pause.clear();
 					exit = !restart();
-					break;
-				case kActionMenu:
-					openMainMenuDialog();
 					break;
 				case kActionMouse:
 					_controllerMode = false;
@@ -1305,13 +1350,13 @@ Common::Error MortimerEngine::run() {
 			continue;
 		if (!isPaused() && !_finished && int32(_system->getMillis() - _nextFrameTime) >= 0) {
 			_nextFrameTime += 1000 / currentMovie().frameRate();
-			if (!updateScene())
+			if (!updateScene() || !updateAutofire())
 				break;
 			// Avoid racing through queued frames following a slow backend call.
 			if (int32(_system->getMillis() - _nextFrameTime) > 250)
 				_nextFrameTime = _system->getMillis() + 1000 / currentMovie().frameRate();
 		}
-		draw();
+		draw(pause.isActive());
 		if (_finished) {
 			if (!_viewingHighScores) {
 				GUI::MessageDialog dialog(_("Play again?"), _("Restart"), _("Quit"));
@@ -1432,7 +1477,7 @@ void MortimerEngine::drawDashboard() {
 		drawSprite(_cockpit[3], 306, 465, true);
 }
 
-void MortimerEngine::draw() {
+void MortimerEngine::draw(bool paused) {
 	if (_interviewActive) {
 		_interview.draw(_screen, _intro, _soundState.variable(1));
 		if (_interview.showDashboard())
@@ -1473,11 +1518,8 @@ void MortimerEngine::draw() {
 		if (_interviewActive && _interview.payingBonus())
 			_subtitles.drawScore(_screen, _score);
 	}
-	if (isPaused()) {
-		const Graphics::Font *font = FontMan.getFontByUsage(Graphics::FontManager::kConsoleFont);
-		_screen.fillRect(Common::Rect(90, 142, 550, 182), 10);
-		font->drawString(&_screen, _("Paused"), 90, 155, 460, 20, Graphics::kTextAlignCenter);
-	}
+	if (paused)
+		_subtitles.drawPause(_screen, _isDemo);
 	_system->copyRectToScreen(_screen.getPixels(), _screen.pitch, 0, 0, 640, 480);
 	_system->updateScreen();
 }

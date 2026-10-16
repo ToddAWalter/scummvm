@@ -241,12 +241,13 @@ void Entity::setAnimationEnabled(bool enabled) {
 	}
 }
 
-void Entity::setCurrentFrame(int frame) {
+void Entity::setCurrentFrame(int frame, bool preserveScreenBase) {
 	if (_frames.empty())
 		return;
 
 	advanceAnimationFrame(frame);
-	updateScreenBaseFromCurrentFrame();
+	if (!preserveScreenBase)
+		updateScreenBaseFromCurrentFrame();
 }
 
 void Entity::setAnimationFrameRange(int firstFrame, int lastFrame, bool looping) {
@@ -580,6 +581,33 @@ bool Entity::hitTest(const Common::Point &point) const {
 	return isOpaqueAt(point);
 }
 
+bool Entity::overlapsBitmap(const IndexedBitmap &bitmap, const Common::Point &position, bool opaquePixels) const {
+	if (!_visible || !bitmap.isValid())
+		return false;
+	const Common::Rect bounds = getFrameRect();
+	const Common::Rect bitmapBounds(position.x, position.y,
+		position.x + bitmap.width, position.y + bitmap.height);
+	if (bounds.right < bitmapBounds.left || bitmapBounds.right < bounds.left ||
+			bounds.bottom < bitmapBounds.top || bitmapBounds.bottom < bounds.top)
+		return false;
+	if (!opaquePixels)
+		return true;
+	const bool rectangleTarget = _classId == kEntityClassRectHotspot;
+	if ((!rectangleTarget && !hasOpaqueFrame()) || bitmap.width > 640 || bitmap.height > 480 ||
+			bounds.width() > 640 || bounds.height() > 480)
+		return false;
+
+	for (uint y = 0; y < bitmap.height; ++y) {
+		for (uint x = 0; x < bitmap.width; x += 2) {
+			const Common::Point point(position.x + x, position.y + y);
+			if (bitmap.pixels[y * bitmap.width + x] &&
+					(rectangleTarget ? bounds.contains(point) : isOpaqueAt(point)))
+				return true;
+		}
+	}
+	return false;
+}
+
 bool Entity::overlapsEntity(const Entity &other) const {
 	if (this == &other || !_visible || !other._visible)
 		return false;
@@ -873,10 +901,6 @@ Entity *EntityManager::spawnSceneAnimationEntity(const Common::String &name,
 	if (!entity)
 		return nullptr;
 
-	// Native room ANIM entities center the initially shown frame on the record
-	// x/y pivot, lower the render-list depth anchor by half z_extent, and then
-	// keep that cached screen base while later frame ABM x/y offsets shift the
-	// final draw rect.
 	entity->setAnchorMode(kEntityAnchorCentered);
 	entity->setZExtent(3.0f);
 	entity->setPosition(position.x, position.y, z - floorf(MAX<float>(entity->getZExtent(), 0.0f) * 0.5f));
@@ -886,7 +910,7 @@ Entity *EntityManager::spawnSceneAnimationEntity(const Common::String &name,
 	int startFrame = playBackwards ? entity->getLastFrame() : 0;
 	if (!playBackwards && initialFrame >= 0)
 		startFrame = CLIP<int>(initialFrame, 0, entity->getLastFrame());
-	entity->setCurrentFrame(startFrame);
+	entity->setCurrentFrame(startFrame, true);
 	// Non-looping room ANIM records can be authored visible but are started by SET_ANIM.
 	const bool shouldAdvance = active && (looping || initialFrame >= 0);
 	entity->setAnimationEnabled(shouldAdvance);
@@ -1018,6 +1042,24 @@ const Entity *EntityManager::findTopSceneEntityAt(const Common::Point &point, in
 			return entity;
 	}
 
+	return nullptr;
+}
+
+const Entity *EntityManager::findTopSceneEntityOverlappingBitmap(const IndexedBitmap &bitmap,
+		const Common::Point &position, const Common::String &excludedName, bool opaquePixels) const {
+	for (int i = (int)_sceneEntities.size() - 1; i >= 0; --i) {
+		const Entity *entity = _sceneEntities[(uint)i];
+		const int classId = entity->getClassId();
+		if (entity->getName().empty() || entity->getName().equalsIgnoreCase(excludedName) ||
+				entity->getName().equalsIgnoreCase("STAT") || classId == kEntityClassCursor ||
+				classId > kEntityClassRectHotspot)
+			continue;
+		if (!opaquePixels && classId != kEntityClassObject && classId != kEntityClassRectHotspot &&
+				classId != kEntityClassNpc && classId != kEntityClassPlayer)
+			continue;
+		if (entity->overlapsBitmap(bitmap, position, opaquePixels))
+			return entity;
+	}
 	return nullptr;
 }
 
