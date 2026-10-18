@@ -26,7 +26,6 @@
 #include "common/events.h"
 #include "common/ptr.h"
 #include "common/system.h"
-#include "graphics/blit.h"
 #include "graphics/font.h"
 #include "graphics/fontman.h"
 #include "graphics/framelimiter.h"
@@ -93,29 +92,6 @@
 
 namespace Harvester {
 
-class DialogueFlowAccess {
-public:
-	static bool handleSystemEvent(Flow &flow, const Common::Event &event, Common::Error &result) {
-		return flow.handleSystemEvent(event, result);
-	}
-
-	static void executeStartupAudioCommands(Flow &flow, const Common::Array<AudioCommand> &commands) {
-		flow.executeStartupAudioCommands(commands);
-	}
-
-	static void queueDialogueInteraction(Flow &flow, const InteractionResult &interaction) {
-		flow.queueDialogueInteraction(interaction);
-	}
-
-	static void requestGameOverReturn(Flow &flow) {
-		flow.requestGameOverReturn();
-	}
-
-	static const MenuTextConfig &getMenuTextConfig(const Flow &flow) {
-		return flow._menuTextConfig;
-	}
-};
-
 namespace {
 
 static const int kDialogueOverlayX = 167;
@@ -150,7 +126,6 @@ static const char *const kDialogueLocalizedKeywordBitmapPath = "GRAPHIC/OTHER/KE
 static const byte kTextColorNormal = 255;
 static const byte kTextColorHover = 251;
 static const byte kShadowColor = 0;
-static const byte kTransparentPaletteIndex = 0;
 
 static bool isDialogueVoiceInterruptEvent(const Common::Event &event) {
 	return event.type == Common::EVENT_LBUTTONDOWN ||
@@ -209,59 +184,11 @@ static void syncDialogueSharedState(Common::Serializer &s, DialogueSharedState &
 	syncDialogueInt(s, state.dialogueStateD2f30);
 }
 
-static const CftFontResource *findStartupFontByName(const HarvesterEngine &engine, const char *fontName) {
-	const Text *text = engine.getText();
-	if (!text || !fontName)
-		return nullptr;
-
-	for (const CftFontResource &font : text->getFonts()) {
-		if (font.name.equalsIgnoreCase(fontName))
-			return &font;
-	}
-
-	return nullptr;
-}
-
 static void blitBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap, int x, int y) {
 	if (!bitmap.isValid())
 		return;
 
 	screen.copyRectToSurface(bitmap.pixels.data(), bitmap.width, x, y, bitmap.width, bitmap.height);
-}
-
-static void blitTransparentBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap, int x, int y) {
-	if (!bitmap.isValid())
-		return;
-
-	int srcX = 0;
-	int srcY = 0;
-	int destX = x;
-	int destY = y;
-	int width = (int)bitmap.width;
-	int height = (int)bitmap.height;
-
-	if (destX < 0) {
-		srcX = -destX;
-		width += destX;
-		destX = 0;
-	}
-	if (destY < 0) {
-		srcY = -destY;
-		height += destY;
-		destY = 0;
-	}
-	if (destX >= screen.w || destY >= screen.h || width <= 0 || height <= 0)
-		return;
-
-	width = MIN<int>(width, screen.w - destX);
-	height = MIN<int>(height, screen.h - destY);
-	if (width <= 0 || height <= 0)
-		return;
-
-	const byte *src = bitmap.pixels.data() + srcY * bitmap.width + srcX;
-	byte *dst = (byte *)screen.getBasePtr(destX, destY);
-	Graphics::keyBlit(dst, src, screen.pitch, bitmap.width, width, height,
-		screen.format.bytesPerPixel, kTransparentPaletteIndex);
 }
 
 static void drawShadowedString(Graphics::Screen &screen, const Graphics::Font &font, const Common::String &text,
@@ -457,7 +384,7 @@ public:
 			const IndexedBitmap &backdrop, const byte *palette, float paletteBrightness,
 			const NpcRecord &npc)
 		: _engine(engine), _mousePos(mousePos), _flow(flow),
-		  _menuTextConfig(DialogueFlowAccess::getMenuTextConfig(flow)), _backdrop(backdrop),
+		  _menuTextConfig(flow.getMenuTextConfig()), _backdrop(backdrop),
 		  _palette(palette), _paletteBrightness(paletteBrightness), _npc(npc),
 		  _script(engine.getScript()), _text(engine.getText()), _art(engine.getArt()),
 		  _entityManager(engine.getRuntimeEntities()),
@@ -472,12 +399,12 @@ public:
 			return;
 		}
 
-		if (const CftFontResource *subtitleFontResource = findStartupFontByName(_engine, "TEXTFONT")) {
+		if (const CftFontResource *subtitleFontResource = _text->findFont("TEXTFONT")) {
 			_subtitleCftFont.reset(new HarvesterCftFont(*subtitleFontResource));
 			if (!_subtitleCftFont->isValid())
 				_subtitleCftFont.reset();
 		}
-		if (const CftFontResource *menuFontResource = findStartupFontByName(_engine, "TEXTFNT2")) {
+		if (const CftFontResource *menuFontResource = _text->findFont("TEXTFNT2")) {
 			_menuCftFont.reset(new HarvesterCftFont(*menuFontResource));
 			if (!_menuCftFont->isValid())
 				_menuCftFont.reset();
@@ -562,7 +489,7 @@ public:
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result)) {
+				if (_flow.handleSystemEvent(event, result)) {
 					_engine.stopSpeech();
 					return result;
 				}
@@ -598,7 +525,7 @@ public:
 				Common::Event event;
 				while (g_system->getEventManager()->pollEvent(event)) {
 					Common::Error result = Common::kNoError;
-					if (DialogueFlowAccess::handleSystemEvent(_flow, event, result))
+					if (_flow.handleSystemEvent(event, result))
 						return result;
 
 					if (isDialogueContinueEvent(event))
@@ -688,7 +615,7 @@ public:
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result))
+				if (_flow.handleSystemEvent(event, result))
 					return result;
 				if (event.type == Common::EVENT_MOUSEMOVE)
 					_mousePos = event.mouse;
@@ -713,7 +640,7 @@ public:
 
 				while (g_system->getEventManager()->pollEvent(event)) {
 					Common::Error result = Common::kNoError;
-					if (DialogueFlowAccess::handleSystemEvent(_flow, event, result))
+					if (_flow.handleSystemEvent(event, result))
 						return result;
 
 					switch (event.type) {
@@ -791,7 +718,7 @@ public:
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result)) {
+				if (_flow.handleSystemEvent(event, result)) {
 					if (editingOther && _entityManager)
 						_entityManager->showCursor();
 					return result;
@@ -805,19 +732,17 @@ public:
 							cancelInput = true;
 						} else if (event.kbd.keycode == Common::KEYCODE_BACKSPACE ||
 								event.kbd.keycode == Common::KEYCODE_LEFT) {
-							if (!typedTopic.empty())
-								typedTopic.deleteLastChar();
+							deleteTextEntryCharacter(typedTopic);
 						} else if (event.kbd.keycode == Common::KEYCODE_HOME) {
 							typedTopic.clear();
 						} else if (event.kbd.keycode == Common::KEYCODE_RETURN ||
 								event.kbd.keycode == Common::KEYCODE_KP_ENTER) {
 							acceptInput = true;
 						} else if (event.kbd.ascii >= 0x1f && event.kbd.ascii <= 0x80 &&
-								event.kbd.ascii != '~' && typedTopic.size() < kDialogueTextEntryMaxLength &&
+								event.kbd.ascii != '~' &&
 								(!_subtitleCftFont || _subtitleCftFont->hasGlyph(event.kbd.ascii))) {
-							typedTopic += (char)event.kbd.ascii;
-							if (_highlightFont->getStringWidth(typedTopic) > kDialogueTextEntryMaxWidth)
-								typedTopic.deleteLastChar();
+							appendTextEntryCharacter(typedTopic, *_highlightFont, event.kbd.ascii,
+								kDialogueTextEntryMaxLength, kDialogueTextEntryMaxWidth);
 						}
 					} else if (event.type == Common::EVENT_LBUTTONDOWN) {
 						acceptInput = Common::Rect(3, 460, 318, 477).contains(event.mouse);
@@ -899,7 +824,7 @@ public:
 		// GOG run_game_over_screen (0x7c540) enters run_main_menu (0x67390)
 		// with GAMEOVER.BM and GAMEOVER.PAL retained as the menu backdrop.
 		debugC(1, kDebugDialogue, "Harvester: dialogue death requesting game-over menu");
-		DialogueFlowAccess::requestGameOverReturn(_flow);
+		_flow.requestGameOverReturn();
 		return Common::kNoError;
 	}
 
@@ -940,7 +865,7 @@ public:
 				interaction.lightingCommand != kStartupLightingCommandNone ||
 				interaction.requestPlayerGotoXZ ||
 				!interaction.audioCommands.empty()) {
-			DialogueFlowAccess::queueDialogueInteraction(_flow, interaction);
+			_flow.queueDialogueInteraction(interaction);
 		}
 	}
 
@@ -948,7 +873,7 @@ public:
 		if (!interaction.musicPath.empty())
 			(void)_engine.playMusic(interaction.musicPath);
 		if (!interaction.audioCommands.empty())
-			DialogueFlowAccess::executeStartupAudioCommands(_flow, interaction.audioCommands);
+			_flow.executeStartupAudioCommands(interaction.audioCommands);
 		interaction.musicPath.clear();
 		interaction.audioCommands.clear();
 	}
@@ -982,7 +907,7 @@ private:
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result))
+				if (_flow.handleSystemEvent(event, result))
 					return result;
 			}
 
@@ -1283,7 +1208,7 @@ private:
 			Common::Event event;
 			while (g_system->getEventManager()->pollEvent(event)) {
 				Common::Error result = Common::kNoError;
-				if (DialogueFlowAccess::handleSystemEvent(_flow, event, result))
+				if (_flow.handleSystemEvent(event, result))
 					return result;
 
 				if (event.type == Common::EVENT_KEYDOWN) {
@@ -1377,96 +1302,102 @@ DialogueSystem::DialogueSystem(HarvesterEngine &engine, Common::Point &mousePos)
 
 DialogueSystem::~DialogueSystem() {
 	for (uint i = 0; i < _npcHandlers.size(); ++i)
-		delete _npcHandlers[i];
+		delete _npcHandlers[i].handler;
+}
+
+NpcDialogueHandler *DialogueSystem::findNpcHandler(const Common::String &npcName) const {
+	for (const NpcHandlerRegistration &registration : _npcHandlers) {
+		for (const char *name : registration.names) {
+			if (npcName.equalsIgnoreCase(name))
+				return registration.handler;
+		}
+	}
+	return nullptr;
 }
 
 bool DialogueSystem::hasRoomNpcHandler(const Common::String &npcName) const {
-	for (uint i = 0; i < _npcHandlers.size(); ++i) {
-		if (_npcHandlers[i]->matchesNpc(npcName))
-			return true;
-	}
-
-	return false;
+	return findNpcHandler(npcName) != nullptr;
 }
 
 void DialogueSystem::registerNpcHandlers() {
-	_npcHandlers.push_back(new AuthorityDialogueHandler());
-	_npcHandlers.push_back(new BeggarDialogueHandler());
-	_npcHandlers.push_back(new BoyleDialogueHandler());
-	_npcHandlers.push_back(new BusterDialogueHandler());
-	_npcHandlers.push_back(new ButcherDialogueHandler());
-	_npcHandlers.push_back(new DwayneDialogueHandler());
-	_npcHandlers.push_back(new EdnaDialogueHandler());
-	_npcHandlers.push_back(new Fireman1DialogueHandler());
-	_npcHandlers.push_back(new Fireman2DialogueHandler());
-	_npcHandlers.push_back(new ChessmasterDialogueHandler());
-	_npcHandlers.push_back(new CloakAtndDialogueHandler());
-	_npcHandlers.push_back(new CuratorDialogueHandler());
-	_npcHandlers.push_back(new DadDialogueHandler());
-	_npcHandlers.push_back(new DarkWomanDialogueHandler());
-	_npcHandlers.push_back(new JimmyDialogueHandler());
-	_npcHandlers.push_back(new InquisitorDialogueHandler());
-	_npcHandlers.push_back(new KarinDialogueHandler());
-	_npcHandlers.push_back(new WaspWomanDialogueHandler());
-	_npcHandlers.push_back(new GladiatorDialogueHandler());
-	_npcHandlers.push_back(new LibrarianDialogueHandler());
-	_npcHandlers.push_back(new LoomisDialogueHandler());
-	_npcHandlers.push_back(new McknightDialogueHandler());
-	_npcHandlers.push_back(new MembDirDialogueHandler());
-	_npcHandlers.push_back(new MaintManDialogueHandler());
-	_npcHandlers.push_back(new MadamDialogueHandler());
-	_npcHandlers.push_back(new MomDialogueHandler());
-	_npcHandlers.push_back(new MotherDialogueHandler());
-	_npcHandlers.push_back(new MoynahanDialogueHandler());
-	_npcHandlers.push_back(new MrPottsDialogueHandler());
-	_npcHandlers.push_back(new MrsPottsDialogueHandler());
-	_npcHandlers.push_back(new LodgeChefDialogueHandler());
-	_npcHandlers.push_back(new NudeManDialogueHandler());
-	_npcHandlers.push_back(new ParsonsDialogueHandler());
-	_npcHandlers.push_back(new PastorelliDialogueHandler());
-	_npcHandlers.push_back(new PhelpsDialogueHandler());
-	_npcHandlers.push_back(new PriestDialogueHandler());
-	_npcHandlers.push_back(new RyderDialogueHandler());
-	_npcHandlers.push_back(new ValetDialogueHandler());
-	_npcHandlers.push_back(new VetDialogueHandler());
-	_npcHandlers.push_back(new SparkyDialogueHandler());
-	_npcHandlers.push_back(new StephanieDialogueHandler());
-	_npcHandlers.push_back(new SwellDialogueHandler());
-	_npcHandlers.push_back(new WhaleyDialogueHandler());
-	_npcHandlers.push_back(new HankDialogueHandler());
-	_npcHandlers.push_back(new HerrillDialogueHandler());
-	_npcHandlers.push_back(new JohnsonDialogueHandler());
-	_npcHandlers.push_back(new PtaMomDialogueHandler());
+	_npcHandlers.push_back({ new AuthorityDialogueHandler(), { "AUTHORITY", "AUTHORITY2" } });
+	_npcHandlers.push_back({ new BeggarDialogueHandler(), { "BEGGAR" } });
+	_npcHandlers.push_back({ new BoyleDialogueHandler(), { "BOYLE" } });
+	_npcHandlers.push_back({ new BusterDialogueHandler(), { "BUSTER" } });
+	_npcHandlers.push_back({ new ButcherDialogueHandler(), { "BUTCHER" } });
+	_npcHandlers.push_back({ new DwayneDialogueHandler(), { "DWAYNE", "DWAYNE_DNALFT", "DWAYNE_ST_BEDRM" } });
+	_npcHandlers.push_back({ new EdnaDialogueHandler(), { "EDNA" } });
+	_npcHandlers.push_back({ new Fireman1DialogueHandler(), { "FIREMAN1" } });
+	_npcHandlers.push_back({ new Fireman2DialogueHandler(), { "FIREMAN2" } });
+	_npcHandlers.push_back({ new ChessmasterDialogueHandler(), { "CHESSMASTER" } });
+	_npcHandlers.push_back({ new CloakAtndDialogueHandler(), { "CLOAK_ATND" } });
+	_npcHandlers.push_back({ new CuratorDialogueHandler(), { "CURATOR" } });
+	_npcHandlers.push_back({ new DadDialogueHandler(), { "DAD" } });
+	_npcHandlers.push_back({ new DarkWomanDialogueHandler(), { "DARK_WOMAN" } });
+	_npcHandlers.push_back({ new JimmyDialogueHandler(), { "JIMMY" } });
+	_npcHandlers.push_back({ new InquisitorDialogueHandler(), { "INQUISITOR" } });
+	_npcHandlers.push_back({ new KarinDialogueHandler(), { "KARIN", "KARIN_STANDING", "KARIN_CEM10", "KARIN_OFFICE" } });
+	_npcHandlers.push_back({ new WaspWomanDialogueHandler(), { "WASP_WOMAN" } });
+	_npcHandlers.push_back({ new GladiatorDialogueHandler(), { "GLADIATOR" } });
+	_npcHandlers.push_back({ new LibrarianDialogueHandler(), { "LIBRARIAN" } });
+	_npcHandlers.push_back({ new LoomisDialogueHandler(), { "LOOMIS" } });
+	_npcHandlers.push_back({ new McknightDialogueHandler(), { "MCKNIGHT" } });
+	_npcHandlers.push_back({ new MembDirDialogueHandler(), { "MEMB_DIR" } });
+	_npcHandlers.push_back({ new MaintManDialogueHandler(), { "MAINT_MAN" } });
+	_npcHandlers.push_back({ new MadamDialogueHandler(), { "MADAM" } });
+	_npcHandlers.push_back({ new MomDialogueHandler(), { "MOM" } });
+	_npcHandlers.push_back({ new MotherDialogueHandler(), { "MOTHER" } });
+	_npcHandlers.push_back({ new MoynahanDialogueHandler(), { "MOYNAHAN", "MOYNAHAN_MBLM" } });
+	_npcHandlers.push_back({ new MrPottsDialogueHandler(), { "MR_POTTS", "POTTS_FLESH", "MR_POTTS_CEM10", "MR_POTTS_HALL" } });
+	_npcHandlers.push_back({ new MrsPottsDialogueHandler(), { "MRS_POTTS", "MRS_POTTS_ST_BEDRM" } });
+	_npcHandlers.push_back({ new LodgeChefDialogueHandler(), { "LODGE_CHEF" } });
+	_npcHandlers.push_back({ new NudeManDialogueHandler(), { "NUDE_MAN" } });
+	_npcHandlers.push_back({ new ParsonsDialogueHandler(), { "PARSONS" } });
+	_npcHandlers.push_back({ new PastorelliDialogueHandler(), { "PASTORELLI" } });
+	_npcHandlers.push_back({ new PhelpsDialogueHandler(), { "PHELPS" } });
+	_npcHandlers.push_back({ new PriestDialogueHandler(), { "PRIEST" } });
+	_npcHandlers.push_back({ new RyderDialogueHandler(), { "RYDER", "RYDER_TV_OUT" } });
+	_npcHandlers.push_back({ new ValetDialogueHandler(), { "VALET" } });
+	_npcHandlers.push_back({ new VetDialogueHandler(), { "VET" } });
+	_npcHandlers.push_back({ new SparkyDialogueHandler(), { "SPARKY" } });
+	_npcHandlers.push_back({ new StephanieDialogueHandler(), { "STEPHANIE" } });
+	_npcHandlers.push_back({ new SwellDialogueHandler(), { "SWELL" } });
+	_npcHandlers.push_back({ new WhaleyDialogueHandler(), { "WHALEY" } });
+	_npcHandlers.push_back({ new HankDialogueHandler(), { "HANK" } });
+	_npcHandlers.push_back({ new HerrillDialogueHandler(), { "HERRILL", "HERRILL_LOG" } });
+	_npcHandlers.push_back({ new JohnsonDialogueHandler(), { "JOHNSON" } });
+	_npcHandlers.push_back({ new PtaMomDialogueHandler(), { "PTA_MOM1", "PTA_MOM2", "PTA_MOM3", "PTA_MOM4", "PTA_MOM5" } });
 
-	_npcHandlers.push_back(new SergeantDialogueHandler());
-	_npcHandlers.push_back(new StubNpcDialogueHandler("PTA_MOM"));
+	_npcHandlers.push_back({ new SergeantDialogueHandler(), { "SERGEANT" } });
+	_npcHandlers.push_back({ new StubNpcDialogueHandler("PTA_MOM"), { "PTA_MOM" } });
 }
 
 void DialogueSystem::resetRoomNpcDialogueState() {
 	_sharedDialogueState = DialogueSharedState();
 	for (uint i = 0; i < _npcHandlers.size(); ++i)
-		_npcHandlers[i]->resetState();
+		_npcHandlers[i].handler->resetState();
 }
 
 void DialogueSystem::syncRuntimeSaveState(Common::Serializer &s) {
 	syncDialogueSharedState(s, _sharedDialogueState);
 	for (uint i = 0; i < _npcHandlers.size(); ++i)
-		_npcHandlers[i]->syncState(s);
+		_npcHandlers[i].handler->syncState(s);
 	if (s.isLoading()) {
 		for (uint i = 0; i < _npcHandlers.size(); ++i)
-			_npcHandlers[i]->migrateSharedState(_sharedDialogueState);
+			_npcHandlers[i].handler->migrateSharedState(_sharedDialogueState);
 	}
 }
 
 Common::Error DialogueSystem::runRoomNpcDialogue(const IndexedBitmap &backdrop, const byte *palette,
-		float paletteBrightness, const Common::String &currentRoomName,
+		float paletteBrightness, const ScriptExecutionContext &executionContext,
 		const NpcRecord &npc, const Common::String &usedItemName,
 		Flow &flow) {
 	Script *script = _engine.getScript();
 	Text *text = _engine.getText();
 	if (!script || !text || !backdrop.isValid())
 		return Common::kReadingFailed;
-	if (!hasRoomNpcHandler(npc.npcName)) {
+	NpcDialogueHandler *handler = findNpcHandler(npc.npcName);
+	if (!handler) {
 		debugC(1, kDebugDialogue,
 			"Harvester: blocked room NPC dialogue npc='%s' reason='no handler'",
 			npc.npcName.c_str());
@@ -1490,15 +1421,9 @@ Common::Error DialogueSystem::runRoomNpcDialogue(const IndexedBitmap &backdrop, 
 		return Common::kReadingFailed;
 	// START_DIALOG may invoke an NPC assigned to another room.
 	DialogueRuntime runtime(
-		_engine, *script, *text, flow, currentRoomName, session.getGenericByeTopic(), session);
+		_engine, *script, *text, flow, executionContext, session.getGenericByeTopic(), session);
 
-	for (uint i = 0; i < _npcHandlers.size(); ++i) {
-		if (_npcHandlers[i]->matchesNpc(npc.npcName))
-			return _npcHandlers[i]->handleDialogue(runtime, usedItemName, _sharedDialogueState);
-	}
-
-	debug(1, "Harvester: unsupported room NPC dialogue handler '%s'", npc.npcName.c_str());
-	return Common::kNoError;
+	return handler->handleDialogue(runtime, usedItemName, _sharedDialogueState);
 }
 
 } // End of namespace Harvester

@@ -26,6 +26,7 @@
 #include "harvester/art.h"
 #include "harvester/cheats.h"
 #include "harvester/detection.h"
+#include "harvester/dialogue.h"
 #include "harvester/flow.h"
 #include "harvester/harvester.h"
 #include "harvester/inventory.h"
@@ -34,8 +35,17 @@
 #include "harvester/room_presentation.h"
 #include "harvester/scene.h"
 #include "harvester/room_support.h"
+#include "harvester/scene_entities.h"
 
 namespace Harvester {
+
+static const int kCursorSequenceWalk = 0;
+static const int kCursorSequenceExamine = 1;
+static const int kCursorSequenceTalk = 2;
+static const int kCursorSequenceOperate = 4;
+static const int kCursorSequencePickup = 5;
+static const int kCursorSequenceTransition = 6;
+static const int kCursorSequenceNeutral = 7;
 
 static const uint32 kRoomExitFastClickWindowTicks = 20;
 static const int kNativeInventoryDragCloseLeft = 0x45;
@@ -73,6 +83,250 @@ static void debugLogInventoryClick(const char *buttonLabel, const Common::Point 
 		inventoryHover->bounds.top, inventoryHover->bounds.right, inventoryHover->bounds.bottom,
 		InventorySystem::isExitObject(inventoryHover->object),
 		InventorySystem::isStatusObject(inventoryHover->object));
+}
+
+static bool canTalkToRoomNpc(HarvesterEngine &engine, const NpcRecord &npc,
+		const DialogueSystem *dialogue) {
+	Script *script = engine.getScript();
+	if (!script || !script->isNamedNpcDeathTypeClear(npc.npcName))
+		return false;
+
+	return dialogue && dialogue->hasRoomNpcHandler(npc.npcName);
+}
+
+const ObjectRecord *Input::findRoomObjectAtPoint(HarvesterEngine &engine,
+		const Common::Array<ObjectRecord> &sceneObjects, const Common::Point &point) {
+	EntityManager *entityManager = engine.getRuntimeEntities();
+	if (!entityManager)
+		return nullptr;
+
+	const Entity *topEntity = nullptr;
+	const ObjectRecord *topObject = nullptr;
+	int topDrawIndex = -1;
+	for (const ObjectRecord &object : sceneObjects) {
+		if (object.objectName.empty())
+			continue;
+
+		const Entity *entity = entityManager->findSceneEntityByName(object.objectName);
+		if (!entity || !entity->hitTest(point))
+			continue;
+		if (entity->getClassId() == kEntityClassBackground ||
+			entity->getClassId() == kEntityClassPlayer ||
+			entity->getClassId() == kEntityClassRectHotspot19) {
+			continue;
+		}
+		const int drawIndex = entityManager->findSceneEntityDrawIndexByName(entity->getName());
+		if (drawIndex < 0)
+			continue;
+		const bool objectVisible = object.visible && object.runtimeVisible;
+		const bool topObjectVisible = topObject && topObject->visible && topObject->runtimeVisible;
+		if (!topEntity ||
+			(objectVisible && !topObjectVisible) ||
+			(objectVisible == topObjectVisible && drawIndex > topDrawIndex)) {
+			topEntity = entity;
+			topObject = &object;
+			topDrawIndex = drawIndex;
+		}
+	}
+	if (!topEntity)
+		return nullptr;
+
+	return topObject;
+}
+
+static const RegionRecord *findRoomRegionAtPoint(HarvesterEngine &engine,
+		const Common::Array<RegionRecord> &sceneRegions, const Common::Point &point) {
+	EntityManager *entityManager = engine.getRuntimeEntities();
+	if (!entityManager)
+		return nullptr;
+
+	const Entity *topEntity = nullptr;
+	int topDrawIndex = -1;
+	for (const RegionRecord &region : sceneRegions) {
+		const Entity *entity = entityManager->findSceneEntityByName(region.regionName);
+		if (!entity || !entity->hitTest(point))
+			continue;
+		if (entity->getClassId() != kEntityClassRectHotspot19)
+			continue;
+		const int drawIndex = entityManager->findSceneEntityDrawIndexByName(entity->getName());
+		if (drawIndex < 0)
+			continue;
+		if (!topEntity || drawIndex > topDrawIndex) {
+			topEntity = entity;
+			topDrawIndex = drawIndex;
+		}
+	}
+	if (!topEntity)
+		return nullptr;
+
+	return SceneEntities::findSceneRegionByName(sceneRegions, topEntity->getName());
+}
+
+static const Entity *findRoomPlayerAtPoint(HarvesterEngine &engine, const Common::Point &point) {
+	EntityManager *entityManager = engine.getRuntimeEntities();
+	if (!entityManager)
+		return nullptr;
+
+	const Entity *entity = entityManager->findTopSceneEntityAt(point);
+	if (!entity || entity->getClassId() != kEntityClassPlayer)
+		return nullptr;
+
+	return entity;
+}
+
+static const NpcRecord *findRoomNpcAtPoint(HarvesterEngine &engine,
+		const Common::Array<NpcRecord> &sceneNpcs, const Common::Point &point,
+		const DialogueSystem *dialogue) {
+	EntityManager *entityManager = engine.getRuntimeEntities();
+	if (!entityManager)
+		return nullptr;
+
+	const Entity *entity = entityManager->findTopSceneEntityAt(point);
+	if (!entity || entity->getClassId() != kEntityClassNpc)
+		return nullptr;
+
+	const NpcRecord *npc = SceneEntities::findSceneNpcByName(sceneNpcs, entity->getName());
+	if (!npc || !canTalkToRoomNpc(engine, *npc, dialogue))
+		return nullptr;
+
+	return npc;
+}
+
+static bool suppressesInitialObjectInspectGate(const ObjectRecord &object) {
+	// Native HARVEST.SCR uses ident key X as a no-text sentinel.
+	return object.identTextKey.equalsIgnoreCase("X");
+}
+
+static bool usesBareOperatePrompt(const ObjectRecord &object) {
+	return object.objectName.equalsIgnoreCase("HAPPLY_HS") ||
+		object.objectName.equalsIgnoreCase("KILL_STEPH_HS");
+}
+
+static bool unlocksRoomObjectInteractionAfterInitialExamine(const ObjectRecord &object,
+		Script &script) {
+	if (suppressesInitialObjectInspectGate(object))
+		return false;
+
+	return object.operatable || script.isPickupObject(object);
+}
+
+static int resolveRoomObjectCursorSequence(const ObjectRecord &object, Script &script) {
+	if (object.objectName.equalsIgnoreCase("EXIT_BM") || object.objectName.equalsIgnoreCase("EXIT_HS"))
+		return kCursorSequenceTransition;
+
+	ResolvedText inspectText;
+	const bool pickupObject = script.isPickupObject(object);
+	const bool pickupBlocked = pickupObject && script.isPickupBlockedByAction(object);
+	if (!object.identShown && unlocksRoomObjectInteractionAfterInitialExamine(object, script))
+		return kCursorSequenceExamine;
+	if (pickupObject && !pickupBlocked)
+		return kCursorSequencePickup;
+	if (pickupBlocked)
+		return kCursorSequenceExamine;
+	if (object.operatable)
+		return kCursorSequenceOperate;
+	if (script.resolveObjectInspectText(object, inspectText))
+		return kCursorSequenceExamine;
+
+	if (script.hasObjectInteraction(object))
+		return kCursorSequenceExamine;
+
+	return kCursorSequenceNeutral;
+}
+
+static Common::String buildRoomObjectPrompt(const ObjectRecord &object, Script &script,
+		int cursorSequence, const MenuTextConfig &menuTextConfig) {
+	// Native room prompts come from explicit interaction metadata. Neutral scene sprites
+	// should not surface synthetic "Examine <object id>" prompts or steal hover/click focus.
+	if (cursorSequence == kCursorSequenceNeutral)
+		return Common::String();
+
+	const Common::String label = script.resolveObjectLabel(object);
+	if (label.empty())
+		return Common::String();
+
+	if (cursorSequence == kCursorSequenceOperate) {
+		if (usesBareOperatePrompt(object))
+			return label;
+		return Common::String::format("%s %s", menuTextConfig.operateVerb.c_str(), label.c_str());
+	}
+	if (cursorSequence == kCursorSequencePickup)
+		return Common::String::format("%s %s", menuTextConfig.pickUpVerb.c_str(), label.c_str());
+	if (cursorSequence == kCursorSequenceTalk)
+		return Common::String::format("%s %s", menuTextConfig.talkToVerb.c_str(), label.c_str());
+	if (cursorSequence == kCursorSequenceTransition)
+		return Common::String::format("Go to %s", label.c_str());
+
+	return Common::String::format("%s %s", menuTextConfig.examineTheVerb.c_str(), label.c_str());
+}
+
+static Common::String buildRoomNpcPrompt(const NpcRecord &npc,
+		const MenuTextConfig &menuTextConfig) {
+	Common::String label = !npc.entityInitArg.empty() ? npc.entityInitArg : npc.npcName;
+	for (uint i = 0; i < label.size(); ++i) {
+		if (label[i] == '_')
+			label.setChar(' ', i);
+	}
+
+	if (label.empty())
+		return Common::String();
+	return Common::String::format("%s %s", menuTextConfig.talkToVerb.c_str(), label.c_str());
+}
+
+RoomHoverState Input::resolveRoomHoverState(HarvesterEngine &engine, const RoomSetupState &state,
+		const Common::Array<ObjectRecord> &sceneObjects,
+		const Common::Array<NpcRecord> &sceneNpcs,
+		const Common::Array<RegionRecord> &sceneRegions, const Common::Point &mousePos,
+		const MenuTextConfig &menuTextConfig, const DialogueSystem *dialogue) {
+	RoomHoverState hoverState;
+	EntityManager *entityManager = engine.getRuntimeEntities();
+	if (const Entity *playerEntity = findRoomPlayerAtPoint(engine, mousePos)) {
+		hoverState.playerEntity = playerEntity;
+		hoverState.cursorSequence = kCursorSequenceExamine;
+		return hoverState;
+	}
+	if (const NpcRecord *npc = findRoomNpcAtPoint(engine, sceneNpcs, mousePos, dialogue)) {
+		hoverState.npc = npc;
+		hoverState.cursorSequence = kCursorSequenceTalk;
+		hoverState.promptText = buildRoomNpcPrompt(*npc, menuTextConfig);
+		return hoverState;
+	}
+
+	Script *script = engine.getScript();
+	if (!script)
+		return hoverState;
+	hoverState.object = findRoomObjectAtPoint(engine, sceneObjects, mousePos);
+	hoverState.region = findRoomRegionAtPoint(engine, sceneRegions, mousePos);
+	if (entityManager && hoverState.object && hoverState.region) {
+		const int objectDrawIndex =
+			entityManager->findSceneEntityDrawIndexByName(hoverState.object->objectName);
+		const int regionDrawIndex =
+			entityManager->findSceneEntityDrawIndexByName(hoverState.region->regionName);
+		if (regionDrawIndex >= 0 && objectDrawIndex >= 0 && regionDrawIndex > objectDrawIndex)
+			hoverState.object = nullptr;
+	}
+	if (hoverState.object) {
+		hoverState.cursorSequence = resolveRoomObjectCursorSequence(*hoverState.object, *script);
+		hoverState.promptText = buildRoomObjectPrompt(
+			*hoverState.object, *script, hoverState.cursorSequence, menuTextConfig);
+		if (hoverState.cursorSequence != kCursorSequenceNeutral || !hoverState.promptText.empty())
+			return hoverState;
+		hoverState.object = nullptr;
+	}
+	if (hoverState.region && hoverState.region->cursorEnabled) {
+		hoverState.object = nullptr;
+		hoverState.cursorSequence = kCursorSequenceTransition;
+		hoverState.promptText.clear();
+		return hoverState;
+	}
+
+	if (Player::supportsMovementBand(state) &&
+		mousePos.y >= state.roomMaxZScreenY &&
+		mousePos.y <= state.roomMinZScreenY) {
+		hoverState.cursorSequence = kCursorSequenceWalk;
+	}
+
+	return hoverState;
 }
 
 Input::Input(HarvesterEngine &engine, Flow &flow, Scene &session, SceneState &scene,
@@ -114,7 +368,7 @@ void Input::queueCombatLoadoutStatusMessage(const Common::String &message, bool 
 }
 
 bool Input::openInventoryOverlay() {
-	RoomPlayerState &playerState = _session.getPlayerState();
+	Player &player = _session.getPlayer();
 	InputState &inputState = _session.getInputState();
 
 	inputState.moveLeft = false;
@@ -123,32 +377,27 @@ bool Input::openInventoryOverlay() {
 	inputState.moveDown = false;
 	_session.clearPendingRegionInteraction();
 	(void)_session.cancelPlayerAttackAnimation();
-	playerState.hasMoveTarget = false;
-	playerState.turnActive = false;
-	playerState.turnTargetFacing = -1;
+	player.cancelMovement();
 	if (!_roomItems.stowCarriedRoomItemToInventory())
 		return false;
 	return _inventory.open();
 }
 
 void Input::capturePlayerAttackTarget() {
-	RoomPlayerState &playerState = _session.getPlayerState();
+	Player &player = _session.getPlayer();
 
-	playerState.attackTargetName.clear();
-	playerState.attackTargetClassId = -1;
+	player.clearAttackTarget();
 
-	const RoomHoverState hoverState = resolveRoomHoverState(
-		_engine, _scene.state, _scene.sceneObjects, _scene.state.roomNpcs, _scene.sceneRegions,
-		_flow._mousePos, _flow._menuTextConfig, &_flow._dialogue);
-	_session.capturePlayerAttackTarget(_flow._mousePos, hoverState.npc);
+	const RoomHoverState hoverState = _flow.getRoomHoverState(_scene);
+	_session.capturePlayerAttackTarget(_flow.getMousePos(), hoverState.npc);
 }
 
 void Input::handleMouseMove(bool &needsRedraw) {
 	if (_inventory.isOpen() && _inventory.hasSelection()) {
-		const InventoryVisual *inventoryHover = _inventory.findItemAtPoint(_flow._mousePos);
+		const InventoryVisual *inventoryHover = _inventory.findItemAtPoint(_flow.getMousePos());
 		// Native inventory handoff is driven by the latched selected item, not by
 		// a second click after the selection has already been made.
-		if (!inventoryHover && isOutsideNativeInventoryDragCloseBounds(_flow._mousePos)) {
+		if (!inventoryHover && isOutsideNativeInventoryDragCloseBounds(_flow.getMousePos())) {
 			if (_inventory.close())
 				needsRedraw = true;
 		}
@@ -157,12 +406,13 @@ void Input::handleMouseMove(bool &needsRedraw) {
 }
 
 InputResult Input::handleRightButtonDown(bool &needsRedraw) {
-	RoomPlayerState &playerState = _session.getPlayerState();
-	RoomIdleAnimationState &idleState = _session.getIdleState();
+	Player &player = _session.getPlayer();
+	const RoomPlayerState &playerState = player.getState();
+	const RoomIdleAnimationState &idleState = player.getIdleState();
 
 	_session.notePlayerActivity();
 	if (idleState.active || idleState.exiting) {
-		if (Player::requestIdleAnimationExit(_scene.state, playerState, idleState))
+		if (player.requestIdleAnimationExit(_scene.state))
 			needsRedraw = true;
 		return InputResult();
 	}
@@ -170,8 +420,8 @@ InputResult Input::handleRightButtonDown(bool &needsRedraw) {
 		return InputResult();
 	_session.clearPendingRegionInteraction();
 	if (_inventory.isOpen()) {
-		const InventoryVisual *inventoryHover = _inventory.findItemAtPoint(_flow._mousePos);
-		debugLogInventoryClick("right", _flow._mousePos, inventoryHover);
+		const InventoryVisual *inventoryHover = _inventory.findItemAtPoint(_flow.getMousePos());
+		debugLogInventoryClick("right", _flow.getMousePos(), inventoryHover);
 		if (_inventory.hasSelection()) {
 			debugC(1, kDebugInventory,
 				"Harvester: inventory right click cleared active selection='%s'",
@@ -202,13 +452,7 @@ InputResult Input::handleRightButtonDown(bool &needsRedraw) {
 						_presentationState.closeInventoryAfterCombatLoadoutStatus = true;
 					}
 					_session.captureCurrentSaveState();
-					if (playerState.entity) {
-						(void)Player::syncCombatLoadoutVisual(_engine, _scene.state, playerState,
-							_engine.getScript()->getPlayerCombatLoadout());
-					} else if (_engine.getScript()) {
-						playerState.combatLoadout =
-							_engine.getScript()->getPlayerCombatLoadout();
-					}
+					player.syncCombatLoadout(_engine, _scene.state);
 					if (!_inventory.refresh())
 						return InputResult::leaveRoom(Common::kReadingFailed);
 				}
@@ -228,7 +472,7 @@ InputResult Input::handleRightButtonDown(bool &needsRedraw) {
 				InteractionResult interaction;
 				bool didTransition = false;
 				const bool executedActionTag = _engine.getScript()->executeActionTag(
-						secondaryAction.actionTag, interaction, true, _scene.state.roomName);
+						secondaryAction.actionTag, interaction, true, _scene.executionContext());
 				debugC(1, kDebugInventory,
 					"Harvester: inventory right click executeActionTag('%s') -> %d music='%s' cutscene='%s' nextRoom='%s'",
 					secondaryAction.actionTag.c_str(), executedActionTag,
@@ -282,17 +526,10 @@ InputResult Input::handleRightButtonDown(bool &needsRedraw) {
 	Script *script = _engine.getScript();
 	if (!_presentationState.showingInspectText && !_session.isPlayerCombatLocked() && script && playerState.entity &&
 			script->getPlayerCurrentHitPoints() > 0 && !script->isPlayerControlPaused()) {
-		playerState.hasMoveTarget = false;
-		playerState.turnActive = false;
-		playerState.turnTargetFacing = -1;
-		playerState.turnFirstFrame = -1;
-		playerState.turnLastFrame = -1;
-		playerState.turnEndFrame = -1;
-		playerState.turnPlayBackwards = false;
-		(void)Player::syncCombatLoadoutVisual(_engine, _scene.state, playerState,
-			script->getPlayerCombatLoadout());
+		player.cancelMovementForAttack();
+		(void)player.syncCombatLoadoutVisual(_engine, _scene.state, script->getPlayerCombatLoadout());
 		capturePlayerAttackTarget();
-		if (Player::startAttackAnimation(_scene.state, playerState, _flow._mousePos)) {
+		if (player.startAttackAnimation(_scene.state, _flow.getMousePos())) {
 			debugC(1, kDebugCombat,
 				"Harvester: combat player attack start loadout=%d weapon='%s' damage=%d damage_type='%s' target_class='%s' target='%s' cursor=(%d,%d)",
 				playerState.combatLoadout,
@@ -300,11 +537,10 @@ InputResult Input::handleRightButtonDown(bool &needsRedraw) {
 				Player::resolveCombatLoadoutDamageAmount(playerState.combatLoadout),
 				Player::describeCombatDamageType(Player::resolveCombatLoadoutDamageType(playerState.combatLoadout)),
 				describeCombatTargetClass(playerState.attackTargetClassId),
-				playerState.attackTargetName.c_str(), _flow._mousePos.x, _flow._mousePos.y);
+				playerState.attackTargetName.c_str(), _flow.getMousePos().x, _flow.getMousePos().y);
 			needsRedraw = true;
 		} else {
-			playerState.attackTargetName.clear();
-			playerState.attackTargetClassId = -1;
+			player.clearAttackTarget();
 		}
 	}
 	return InputResult();
@@ -319,8 +555,9 @@ void Input::handleLeftButtonUp() {
 }
 
 InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
-	RoomPlayerState &playerState = _session.getPlayerState();
-	RoomIdleAnimationState &idleState = _session.getIdleState();
+	Player &player = _session.getPlayer();
+	const RoomPlayerState &playerState = player.getState();
+	const RoomIdleAnimationState &idleState = player.getIdleState();
 	InputState &inputState = _session.getInputState();
 
 	const uint32 now = Player::getRuntimeClockTicks();
@@ -329,7 +566,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 		now - inputState.lastLeftButtonReleaseTick < kRoomExitFastClickWindowTicks;
 	_session.notePlayerActivity();
 	if (idleState.active || idleState.exiting) {
-		if (Player::requestIdleAnimationExit(_scene.state, playerState, idleState))
+		if (player.requestIdleAnimationExit(_scene.state))
 			needsRedraw = true;
 		return InputResult();
 	}
@@ -348,8 +585,8 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 
 	const Common::Rect inventoryPanelBounds = _inventory.getPanelBounds();
 	if (_inventory.isOpen()) {
-		const InventoryVisual *inventoryHover = _inventory.findItemAtPoint(_flow._mousePos);
-		debugLogInventoryClick("left", _flow._mousePos, inventoryHover);
+		const InventoryVisual *inventoryHover = _inventory.findItemAtPoint(_flow.getMousePos());
+		debugLogInventoryClick("left", _flow.getMousePos(), inventoryHover);
 		if (inventoryHover) {
 			if (InventorySystem::isExitObject(inventoryHover->object)) {
 				debugC(1, kDebugInventory, "Harvester: inventory left click exit button");
@@ -368,7 +605,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 					inventoryHover->object.objectName.c_str());
 				_inventory.selectItem(inventoryHover->object.objectName);
 				_inventory.setPromptText(_inventory.buildSelectedPrompt(
-					Common::String(), _flow._menuTextConfig));
+					Common::String(), _flow.getMenuTextConfig()));
 				needsRedraw = true;
 				return InputResult();
 			}
@@ -388,29 +625,27 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 		}
 
 		if (_inventory.hasSelection()) {
-			if (!inventoryPanelBounds.contains(_flow._mousePos) && _inventory.close())
+			if (!inventoryPanelBounds.contains(_flow.getMousePos()) && _inventory.close())
 				needsRedraw = true;
 			return InputResult();
 		}
-		if (!inventoryPanelBounds.contains(_flow._mousePos) && _inventory.close())
+		if (!inventoryPanelBounds.contains(_flow.getMousePos()) && _inventory.close())
 			needsRedraw = true;
 		return InputResult();
 	}
 
-	const RoomHoverState hoverState = resolveRoomHoverState(
-		_engine, _scene.state, _scene.sceneObjects, _scene.state.roomNpcs, _scene.sceneRegions,
-		_flow._mousePos, _flow._menuTextConfig, &_flow._dialogue);
+	const RoomHoverState hoverState = _flow.getRoomHoverState(_scene);
 	RoomHoverState clickHoverState = hoverState;
 	const Entity *itemTarget = nullptr;
 	if (_roomItems.hasSelectedItem()) {
 		clickHoverState = RoomHoverState();
-		itemTarget = _roomItems.findSelectedItemTarget(_flow._mousePos);
+		itemTarget = _roomItems.findSelectedItemTarget(_flow.getMousePos());
 		if (!itemTarget)
 			return InputResult();
 		if (itemTarget == playerState.entity)
 			clickHoverState.playerEntity = itemTarget;
 		if (itemTarget->getClassId() == kEntityClassNpc &&
-				_flow._dialogue.hasRoomNpcHandler(itemTarget->getName()) &&
+				_flow.hasRoomNpcHandler(itemTarget->getName()) &&
 				_engine.getScript()->isNamedNpcDeathTypeClear(itemTarget->getName())) {
 			for (const NpcRecord &npc : _scene.state.roomNpcs) {
 				if (npc.npcName.equalsIgnoreCase(itemTarget->getName())) {
@@ -419,11 +654,11 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 				}
 			}
 		}
-		clickHoverState.object = findSceneObjectByName(_scene.sceneObjects, itemTarget->getName());
+		clickHoverState.object = SceneEntities::findSceneObjectByName(_scene.sceneObjects, itemTarget->getName());
 	}
 	debugC(1, kDebugRoom,
 		"Harvester: room click room='%s' mouse=(%d,%d) object='%s' npc='%s' region='%s' cursor_sequence=%d prompt='%s'",
-		_scene.state.roomName.c_str(), _flow._mousePos.x, _flow._mousePos.y,
+		_scene.state.roomName.c_str(), _flow.getMousePos().x, _flow.getMousePos().y,
 		clickHoverState.object ? clickHoverState.object->objectName.c_str() : "",
 		clickHoverState.npc ? clickHoverState.npc->npcName.c_str() : "",
 		clickHoverState.region ? clickHoverState.region->regionName.c_str() : "",
@@ -453,7 +688,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 		}
 
 		ObjectRecord *roomTarget = clickHoverState.object
-			? findSceneObjectByName(_scene.sceneObjects, clickHoverState.object->objectName)
+			? SceneEntities::findSceneObjectByName(_scene.sceneObjects, clickHoverState.object->objectName)
 			: nullptr;
 		if (roomTarget) {
 			Common::Error interactionError =
@@ -486,9 +721,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 		inputState.moveRight = false;
 		inputState.moveUp = false;
 		inputState.moveDown = false;
-		playerState.hasMoveTarget = false;
-		playerState.turnActive = false;
-		playerState.turnTargetFacing = -1;
+		player.cancelMovement();
 		bool didTransition = false;
 		Common::Error dialogueError = _interactionProcessor.runScriptedDialogue(
 			hoverState.npc->npcName, Common::String(), Common::String(), didTransition);
@@ -514,7 +747,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 			needsRedraw = true;
 			return InputResult();
 		}
-		_interactionProcessor.queueRegionInteraction(*hoverState.region, _flow._mousePos);
+		_interactionProcessor.queueRegionInteraction(*hoverState.region, _flow.getMousePos());
 		Common::Error interactionError =
 			_interactionProcessor.tryActivatePendingRegion(_inventory, needsRedraw);
 		if (interactionError.getCode() != Common::kNoError)
@@ -523,7 +756,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 		return InputResult();
 	}
 	ObjectRecord *clickedObject = hoverState.object
-		? findSceneObjectByName(_scene.sceneObjects, hoverState.object->objectName)
+		? SceneEntities::findSceneObjectByName(_scene.sceneObjects, hoverState.object->objectName)
 		: nullptr;
 	if (!clickedObject) {
 		_session.clearPendingRegionInteraction();
@@ -532,17 +765,17 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 				const Common::Rect playerRect = playerState.entity->getScreenRect();
 				debugC(1, kDebugPathfinding,
 					"Harvester: pathfinding click accepted room='%s' mouse=(%d,%d) movement_band=(y=%d..%d,z=%d..%d) player=(%d,%d,z=%.2f) player_rect=(%d,%d)-(%d,%d)",
-					_scene.state.roomName.c_str(), _flow._mousePos.x, _flow._mousePos.y,
+					_scene.state.roomName.c_str(), _flow.getMousePos().x, _flow.getMousePos().y,
 					_scene.state.roomMaxZScreenY, _scene.state.roomMinZScreenY,
 					_scene.state.roomMinZ, _scene.state.roomMaxZ,
 					playerState.centerX, playerState.bottomY, (double)playerState.z,
 					playerRect.left, playerRect.top, playerRect.right, playerRect.bottom);
 			}
-			Player::setMoveTargetFromScreenPoint(_scene.state, playerState, _flow._mousePos.x, _flow._mousePos.y);
+			player.setMoveTargetFromScreenPoint(_scene.state, _flow.getMousePos().x, _flow.getMousePos().y);
 			if (_engine.isPathfindingDebugEnabled()) {
 				debugC(1, kDebugPathfinding,
 					"Harvester: pathfinding click target room='%s' mouse=(%d,%d) target=(%d,%d,z=%.2f)",
-					_scene.state.roomName.c_str(), _flow._mousePos.x, _flow._mousePos.y,
+					_scene.state.roomName.c_str(), _flow.getMousePos().x, _flow.getMousePos().y,
 					playerState.targetX, playerState.targetBottomY, (double)playerState.targetZ);
 			}
 			needsRedraw = true;
@@ -567,7 +800,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 	const bool unlocksAfterInitialExamine =
 		unlocksRoomObjectInteractionAfterInitialExamine(*clickedObject, *_engine.getScript());
 	const bool canShowInspectText =
-		hasInspectText && resolveInspectTextboxBitmap(_art, resolvedInspectText);
+		hasInspectText && RoomPresentation::resolveInspectTextboxBitmap(_art, resolvedInspectText);
 	if (!clickedObject->identShown && unlocksAfterInitialExamine) {
 		clickedObject->identShown = true;
 		_engine.getScript()->markObjectIdentShown(*clickedObject);
@@ -577,9 +810,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 			debug(1, "Harvester: unsupported IDENT textbox '%s' for object '%s'",
 				resolvedInspectText.boxName.c_str(), clickedObject->objectName.c_str());
 		}
-		playerState.hasMoveTarget = false;
-		playerState.turnActive = false;
-		playerState.turnTargetFacing = -1;
+		player.cancelMovement();
 		needsRedraw = true;
 		return InputResult();
 	}
@@ -593,7 +824,7 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 
 	InteractionResult interaction;
 	if (!_engine.getScript()->resolveObjectInteraction(
-			*clickedObject, interaction, _scene.state.roomName)) {
+			*clickedObject, interaction, _scene.executionContext())) {
 		if (canShowInspectText) {
 			beginInspectText(*clickedObject, resolvedInspectText);
 		} else if (hasInspectText) {
@@ -617,8 +848,8 @@ InputResult Input::handleLeftButtonDown(bool &needsRedraw) {
 }
 
 InputResult Input::handleKeyDown(const Common::KeyState &key, bool &needsRedraw) {
-	RoomPlayerState &playerState = _session.getPlayerState();
-	RoomIdleAnimationState &idleState = _session.getIdleState();
+	Player &player = _session.getPlayer();
+	const RoomIdleAnimationState &idleState = player.getIdleState();
 	InputState &inputState = _session.getInputState();
 
 	if (_presentationState.showingInspectText) {
@@ -635,7 +866,7 @@ InputResult Input::handleKeyDown(const Common::KeyState &key, bool &needsRedraw)
 	if (key.hasFlags(Common::KBD_CTRL))
 		inputState.attackModifierHeld = true;
 	if (idleState.active || idleState.exiting) {
-		if (Player::requestIdleAnimationExit(_scene.state, playerState, idleState))
+		if (player.requestIdleAnimationExit(_scene.state))
 			needsRedraw = true;
 		return InputResult();
 	}
@@ -644,7 +875,7 @@ InputResult Input::handleKeyDown(const Common::KeyState &key, bool &needsRedraw)
 		InteractionResult cheatInteraction;
 		CheatActivation cheatActivation;
 		const CheatInputResult cheatInputResult = _cheats.processKey(
-			key, *script, _scene.state.roomName,
+			key, *script, _scene.executionContext(),
 			cheatInteraction, cheatActivation);
 		if (cheatInputResult != kCheatInputIgnored) {
 			if (cheatInputResult == kCheatInputComplete && cheatActivation.activated) {
@@ -707,7 +938,7 @@ InputResult Input::handleKeyDown(const Common::KeyState &key, bool &needsRedraw)
 			key.keycode == Common::KEYCODE_RCTRL) {
 		inputState.attackModifierHeld = true;
 	} else if (key.keycode == Common::KEYCODE_k && _engine.isCombatDebugEnabled()) {
-		Common::Error debugKillError = _session.killDebugActiveMonster(_flow._mousePos, needsRedraw);
+		Common::Error debugKillError = _session.killDebugActiveMonster(_flow.getMousePos(), needsRedraw);
 		if (debugKillError.getCode() != Common::kNoError)
 			return InputResult::leaveRoom(debugKillError);
 		return InputResult();
@@ -734,15 +965,13 @@ InputResult Input::handleKeyDown(const Common::KeyState &key, bool &needsRedraw)
 		inputState.moveUp = false;
 		inputState.moveDown = false;
 		_session.clearPendingRegionInteraction();
-		playerState.hasMoveTarget = false;
-		playerState.turnActive = false;
-		playerState.turnTargetFacing = -1;
+		player.cancelMovement();
 		_session.captureCurrentSaveState();
 		Graphics::Screen *activeScreen = _engine.getScreen();
 		if (!activeScreen)
 			return InputResult::leaveRoom(Common::kNoError);
 		IndexedBitmap roomMenuBackdrop;
-		drawRoomScene(_engine, *activeScreen, _scene, _scene.targetPaletteBrightness);
+		RoomPresentation::drawRoomScene(_engine, *activeScreen, _scene, _scene.targetPaletteBrightness);
 		if (!captureScreenBackdrop(*activeScreen, roomMenuBackdrop))
 			return InputResult::leaveRoom(Common::kReadingFailed);
 		Common::Error menuError = _flow.runRoomMenu(

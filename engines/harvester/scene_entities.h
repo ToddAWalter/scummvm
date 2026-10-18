@@ -32,6 +32,7 @@ class SceneEntities {
 public:
 	SceneEntities(RoomSetupState &state, Script *script, ResourceManager *resources, EntityManager *entityManager);
 
+	static bool loadRoomSceneResources(const RoomSetupState &state, ResourceManager &resources, SceneState &scene);
 	bool loadSceneResources(const RoomSetupState &state, SceneState &scene) const;
 	bool reconcileSceneEntitiesInPlace(const SceneState &previousScene,
 		RoomSetupState &updatedState, const SceneState &updatedScene);
@@ -43,6 +44,15 @@ public:
 	void populateRoomNpcs();
 	void populateRoomMonsters();
 	void restoreRoomMonsterAnimations();
+
+	static const ObjectRecord *findSceneObjectByName(const Common::Array<ObjectRecord> &objects,
+		const Common::String &objectName);
+	static ObjectRecord *findSceneObjectByName(Common::Array<ObjectRecord> &objects,
+		const Common::String &objectName);
+	static const RegionRecord *findSceneRegionByName(const Common::Array<RegionRecord> &regions,
+		const Common::String &regionName);
+	static const NpcRecord *findSceneNpcByName(const Common::Array<NpcRecord> &npcs,
+		const Common::String &npcName);
 
 	void removeSceneEntityByName(const Common::String &entityName);
 	static Common::Rect getSceneObjectBounds(const ObjectRecord &object);
@@ -56,10 +66,16 @@ public:
 
 private:
 	bool isTimerMaterializedInCurrentRoom(const Common::String &timerName) const;
+	Entity *createSceneObjectEntity(const ObjectRecord &object,
+		const Common::String &spritePath, const Common::Rect &hotspotBounds);
 	bool isInteractiveSceneHotspot(const ObjectRecord &object) const;
 	EntityClass resolveSceneObjectClassLocal(const ObjectRecord &object, const Entity *entity) const;
 	static Common::Rect getSceneRegionBounds(const RegionRecord &region);
+	Entity *createSceneRegionEntity(const RegionRecord &region,
+		const Common::Rect &bounds, const Common::String &diagnosticRoomName);
 	static bool applyRoomNpcPlacement(Entity &entity, const NpcRecord &npc);
+	static void configureRoomNpcAnimation(Entity &entity, const NpcRecord &npc, bool preservedCorpse);
+	Entity *createSceneMonsterEntity(const MonsterRecord &monster);
 
 	RoomSetupState &_state;
 	Script *_script;

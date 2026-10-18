@@ -19,8 +19,6 @@
  *
  */
 
-#include <math.h>
-
 #include "harvester/flow.h"
 
 #include "common/algorithm.h"
@@ -32,7 +30,6 @@
 #include "common/ptr.h"
 #include "common/serializer.h"
 #include "common/system.h"
-#include "graphics/blit.h"
 #include "graphics/font.h"
 #include "graphics/fontman.h"
 #include "graphics/framelimiter.h"
@@ -40,10 +37,12 @@
 #include "harvester/detection.h"
 #include "harvester/fst_player.h"
 #include "harvester/harvester.h"
+#include "harvester/input.h"
 #include "harvester/palette_utils.h"
 #include "harvester/resources.h"
 #include "harvester/entity.h"
 #include "harvester/scene_entities.h"
+#include "harvester/room_presentation.h"
 #include "harvester/art.h"
 #include "harvester/monster.h"
 #include "harvester/player.h"
@@ -74,10 +73,6 @@ static const char *const kTownMapBitmapPaths[] = {
 };
 
 static const int kCursorSequence7 = 7;
-static const int kIdentTextboxX = 177;
-static const int kIdentTextboxY = 85;
-static const int kIdentTextboxTextInsetX = 10;
-static const int kIdentTextboxTextInsetY = 5;
 static const int kNativeIdentTextLineSpacing = 3;
 static const char *const kPlayerActorEntityName = "PLAYER";
 // ramp_palette_brightness (0x23a30) waits four DOS centiseconds per step.
@@ -102,325 +97,10 @@ static const uint32 kTransitionWaitFrameMinMs = 120;
 static const int kTownMapEdgeThreshold = 9;
 static const int kTownMapCursorHitExtent = 5;
 
-static const byte kIdentTextColor = 0xd3;
-static const byte kShadowColor = 0;
 static const byte kTownMapLabelColor = 0x28;
-static const int kRoomDebugLabelPaddingX = 3;
-static const int kRoomDebugLabelPaddingY = 2;
-static const int kRoomDebugRoomNameX = 4;
-static const int kRoomDebugRoomNameY = 4;
-static const int kTimerDebugOverlayXDivisor = 8;
-static const int kTimerDebugOverlayLineSpacing = 1;
 
 static const int kCursorSequenceWalk = 0;
-static const int kCursorSequenceExamine = 1;
-static const int kCursorSequenceTalk = 2;
-static const int kCursorSequenceOperate = 4;
-static const int kCursorSequencePickup = 5;
-static const int kCursorSequenceTransition = 6;
-static const int kCursorSequenceNeutral = 7;
 } // End of anonymous namespace
-
-static const CftFontResource *findStartupFontByName(const HarvesterEngine &engine, const char *fontName) {
-	const Text *text = engine.getText();
-	if (!text || !fontName)
-		return nullptr;
-
-	for (const CftFontResource &font : text->getFonts()) {
-		if (font.name.equalsIgnoreCase(fontName))
-			return &font;
-	}
-
-	return nullptr;
-}
-
-static byte findNearestPaletteColor(const byte *palette, byte red, byte green, byte blue) {
-	if (!palette)
-		return 0;
-
-	byte bestIndex = 0;
-	uint32 bestDistance = 0xffffffffu;
-	for (int i = 0; i < 256; ++i) {
-		const int paletteOffset = i * 3;
-		const int dr = (int)palette[paletteOffset] - red;
-		const int dg = (int)palette[paletteOffset + 1] - green;
-		const int db = (int)palette[paletteOffset + 2] - blue;
-		const uint32 distance = (uint32)(dr * dr + dg * dg + db * db);
-		if (distance < bestDistance) {
-			bestDistance = distance;
-			bestIndex = (byte)i;
-		}
-	}
-
-	return bestIndex;
-}
-
-static Common::String resolveRoomDebugObjectLabel(HarvesterEngine &engine, const ObjectRecord &object) {
-	if (Script *script = engine.getScript()) {
-		const Common::String resolvedLabel = script->resolveObjectLabel(object);
-		if (!resolvedLabel.empty())
-			return resolvedLabel;
-	}
-
-	return object.objectName;
-}
-
-static Common::String resolveRoomDebugNpcLabel(const NpcRecord &npc) {
-	Common::String label = !npc.entityInitArg.empty() ? npc.entityInitArg : npc.npcName;
-	for (uint i = 0; i < label.size(); ++i) {
-		if (label[i] == '_')
-			label.setChar(' ', i);
-	}
-
-	return label;
-}
-
-static Common::String resolveCombatDebugLabel(const Common::String &name, int currentHitPoints, int maxHitPoints) {
-	Common::String label = name;
-	for (uint i = 0; i < label.size(); ++i) {
-		if (label[i] == '_')
-			label.setChar(' ', i);
-	}
-
-	return Common::String::format("%s (%d/%d)", label.c_str(), currentHitPoints, maxHitPoints);
-}
-
-static void drawRoomDebugLabel(Graphics::Screen &screen, const Graphics::Font &font,
-		const Common::String &text, int x, int y, byte textColor, byte backgroundColor) {
-	if (text.empty())
-		return;
-
-	const int labelWidth = font.getStringWidth(text) + kRoomDebugLabelPaddingX * 2;
-	const int labelHeight = font.getFontHeight() + kRoomDebugLabelPaddingY * 2;
-	const int drawX = CLIP<int>(x, 0, MAX(0, screen.w - labelWidth));
-	const int drawY = CLIP<int>(y, 0, MAX(0, screen.h - labelHeight));
-	const Common::Rect background(drawX, drawY,
-		MIN<int>(screen.w, drawX + labelWidth), MIN<int>(screen.h, drawY + labelHeight));
-	screen.fillRect(background, backgroundColor);
-	font.drawString(&screen, text,
-		background.left + kRoomDebugLabelPaddingX,
-		background.top + kRoomDebugLabelPaddingY,
-		MAX(0, background.width() - kRoomDebugLabelPaddingX * 2),
-		textColor);
-}
-
-static void drawRoomDebugOverlay(HarvesterEngine &engine, Graphics::Screen &screen,
-		const SceneState &scene) {
-	if (!engine.isRoomDebugEnabled())
-		return;
-
-	const Graphics::Font *font = FontMan.getFontByUsage(Graphics::FontManager::kGUIFont);
-	if (!font)
-		return;
-
-	byte displayPalette[256 * 3];
-	screen.getPalette(displayPalette);
-	const byte black = findNearestPaletteColor(displayPalette, 0x00, 0x00, 0x00);
-	const byte white = findNearestPaletteColor(displayPalette, 0xff, 0xff, 0xff);
-	const byte darkGray = findNearestPaletteColor(displayPalette, 0x40, 0x40, 0x40);
-	const byte red = findNearestPaletteColor(displayPalette, 0xff, 0x00, 0x00);
-	Common::String roomName = scene.state.roomName;
-	roomName.toUppercase();
-
-	drawRoomDebugLabel(screen, *font, roomName,
-		kRoomDebugRoomNameX, kRoomDebugRoomNameY, black, white);
-
-	for (const RegionRecord &region : scene.sceneRegions)
-		drawRoomDebugLabel(screen, *font, region.regionName, region.left, region.top, white, darkGray);
-
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	for (const ObjectRecord &object : scene.sceneObjects) {
-		const Entity *entity = entityManager
-			? entityManager->findSceneEntityByName(object.objectName)
-			: nullptr;
-		if (entity && entity->getClassId() == kEntityClassBackground)
-			continue;
-
-		drawRoomDebugLabel(screen, *font, resolveRoomDebugObjectLabel(engine, object),
-			object.currentX, object.currentY, white, black);
-	}
-
-	for (const NpcRecord &npc : scene.state.roomNpcs) {
-		const Entity *entity = entityManager
-			? entityManager->findSceneEntityByName(npc.npcName)
-			: nullptr;
-		if (!entity || entity->getClassId() != kEntityClassNpc || !entity->isVisible())
-			continue;
-
-		const Common::Rect npcRect = entity->getScreenRect();
-		drawRoomDebugLabel(screen, *font, resolveRoomDebugNpcLabel(npc),
-			npcRect.left, npcRect.top, white, red);
-	}
-}
-
-static void drawCombatDebugOverlay(HarvesterEngine &engine, Graphics::Screen &screen,
-		const SceneState &scene) {
-	if (!engine.isCombatDebugEnabled())
-		return;
-
-	const Graphics::Font *font = FontMan.getFontByUsage(Graphics::FontManager::kGUIFont);
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	Script *script = engine.getScript();
-	if (!font || !entityManager)
-		return;
-
-	byte displayPalette[256 * 3];
-	screen.getPalette(displayPalette);
-	const byte black = findNearestPaletteColor(displayPalette, 0x00, 0x00, 0x00);
-	const byte white = findNearestPaletteColor(displayPalette, 0xff, 0xff, 0xff);
-	const byte red = findNearestPaletteColor(displayPalette, 0xff, 0x00, 0x00);
-
-	const Entity *playerEntity = entityManager->findSceneEntityByName(kPlayerActorEntityName);
-	if (script && playerEntity &&
-			playerEntity->getClassId() == kEntityClassPlayer &&
-			playerEntity->isVisible()) {
-		const Common::Rect playerRect = playerEntity->getScreenRect();
-		drawRoomDebugLabel(screen, *font,
-			resolveCombatDebugLabel(playerEntity->getName(),
-				script->getPlayerCurrentHitPoints(), Script::kDefaultPlayerHitPoints),
-			playerRect.left, playerRect.top, white, red);
-	}
-
-	for (const MonsterRecord &monster : scene.state.roomMonsters) {
-		const Entity *entity = entityManager->findSceneEntityByName(monster.monsterName);
-		if (!entity || entity->getClassId() != kEntityClassMonster || !entity->isVisible())
-			continue;
-
-		const Common::Rect monsterRect = entity->getScreenRect();
-		drawRoomDebugLabel(screen, *font,
-			resolveCombatDebugLabel(monster.monsterName,
-				monster.currentHitPoints, monster.initialHitPoints),
-			monsterRect.left, monsterRect.top, white, black);
-	}
-}
-
-static Common::Rect getPathfindingMovementBounds(const Graphics::Screen &screen,
-		const RoomSetupState &state) {
-	if (!Player::supportsMovementBand(state))
-		return Common::Rect();
-
-	return Common::Rect(0, state.roomMaxZScreenY, screen.w, state.roomMinZScreenY + 1);
-}
-
-static void drawClippedDebugFrame(Graphics::Screen &screen, Common::Rect rect, byte color) {
-	rect.clip(screen.getBounds());
-	if (rect.isEmpty())
-		return;
-
-	screen.frameRect(rect, color);
-}
-
-static bool canEntityAffectPlayerPathfinding(const Entity &entity) {
-	if (!entity.isVisible())
-		return false;
-
-	switch (entity.getClassId()) {
-	case kEntityClassCursor:
-	case kEntityClassBackground:
-	case kEntityClassPlayer:
-	case kEntityClassRectHotspot:
-	case kEntityClassRectHotspot19:
-	case kEntityClassTimer:
-		return false;
-	default:
-		break;
-	}
-
-	return entity.getClassId() == kEntityClassDisabledHotspot || entity.hasFrames();
-}
-
-static void drawPathfindingBlockerOutline(Graphics::Screen &screen, EntityManager &entityManager,
-		const Common::String &entityName, const Common::Rect &movementBounds, byte color) {
-	const Entity *entity = entityManager.findSceneEntityByName(entityName);
-	if (!entity || !canEntityAffectPlayerPathfinding(*entity))
-		return;
-
-	Common::Rect rect = entity->getScreenRect();
-	if (rect.isEmpty())
-		return;
-
-	Common::Rect overlap = rect;
-	overlap.clip(movementBounds);
-	if (overlap.isEmpty())
-		return;
-
-	drawClippedDebugFrame(screen, rect, color);
-}
-
-static void drawPathfindingDebugOverlay(HarvesterEngine &engine, Graphics::Screen &screen,
-		const SceneState &scene) {
-	if (!engine.isPathfindingDebugEnabled())
-		return;
-
-	byte displayPalette[256 * 3];
-	screen.getPalette(displayPalette);
-	const byte blue = findNearestPaletteColor(displayPalette, 0x00, 0x40, 0xff);
-	const byte green = findNearestPaletteColor(displayPalette, 0x00, 0xff, 0x00);
-	const Common::Rect movementBounds = getPathfindingMovementBounds(screen, scene.state);
-	if (movementBounds.isEmpty())
-		return;
-
-	drawClippedDebugFrame(screen, movementBounds, blue);
-
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	if (!entityManager)
-		return;
-
-	for (const ObjectRecord &object : scene.sceneObjects)
-		drawPathfindingBlockerOutline(screen, *entityManager,
-			object.objectName, movementBounds, green);
-
-	for (const AnimRecord &anim : scene.sceneAnimations)
-		drawPathfindingBlockerOutline(screen, *entityManager,
-			anim.animName, movementBounds, green);
-}
-
-static Common::String resolveTimerDebugLabel(const TimerRecord &timer, const Entity &entity) {
-	const Common::String actionTag = timer.arg2.empty() ? Common::String("<none>") : timer.arg2;
-
-	return Common::String::format("%s start=%d current=%d action=%s",
-		timer.timerName.c_str(), entity.getTimerInitialValue(),
-		entity.getTimerCurrentValue(), actionTag.c_str());
-}
-
-static void drawTimerDebugOverlay(HarvesterEngine &engine, Graphics::Screen &screen,
-		const SceneState &) {
-	if (!engine.isTimerDebugEnabled())
-		return;
-
-	const Graphics::Font *font = FontMan.getFontByUsage(Graphics::FontManager::kGUIFont);
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	Script *script = engine.getScript();
-	if (!font || !entityManager || !script)
-		return;
-
-	Common::Array<Common::String> labels;
-	for (const TimerRecord &timer : script->getTimers()) {
-		const Entity *entity = entityManager->findSceneEntityByName(timer.timerName);
-		if (!entity || entity->getClassId() != kEntityClassTimer || !entity->isTimerEnabled())
-			continue;
-
-		const TimerRecord *runtimeTimer = script->findRuntimeTimerRecord(timer.timerName);
-		labels.push_back(resolveTimerDebugLabel(runtimeTimer ? *runtimeTimer : timer, *entity));
-	}
-	if (labels.empty())
-		return;
-
-	byte displayPalette[256 * 3];
-	screen.getPalette(displayPalette);
-	const byte black = findNearestPaletteColor(displayPalette, 0x00, 0x00, 0x00);
-	const byte white = findNearestPaletteColor(displayPalette, 0xff, 0xff, 0xff);
-
-	const int labelHeight = font->getFontHeight() + kRoomDebugLabelPaddingY * 2;
-	const int lineHeight = labelHeight + kTimerDebugOverlayLineSpacing;
-	const int totalHeight = (int)labels.size() * labelHeight +
-		(int)(labels.size() - 1) * kTimerDebugOverlayLineSpacing;
-	const int x = screen.w / kTimerDebugOverlayXDivisor;
-	const int y = CLIP<int>((screen.h - totalHeight) / 2, 0, MAX(0, screen.h - totalHeight));
-
-	for (uint i = 0; i < labels.size(); ++i)
-		drawRoomDebugLabel(screen, *font, labels[i], x, y + (int)i * lineHeight, white, black);
-}
 
 static int clampTownMapPanelIndex(int panelIndex) {
 	return CLIP<int>(panelIndex, 0, ARRAYSIZE(kTownMapBitmapPaths) - 1);
@@ -554,56 +234,9 @@ static bool applyStartupActorPlacement(const RoomSetupState &state, Entity &enti
 		state.playerSpawnX, state.playerSpawnY, (float)state.playerSpawnZ, &state.entranceName);
 }
 
-static void getPaletteByteRange(const byte *palette, byte &minValue, byte &maxValue) {
-	minValue = 255;
-	maxValue = 0;
-
-	for (uint i = 0; i < 256 * 3; ++i) {
-		minValue = MIN(minValue, palette[i]);
-		maxValue = MAX(maxValue, palette[i]);
-	}
-}
-
-static uint32 hashPalette(const byte *palette) {
-	uint32 hash = 2166136261U;
-	for (uint i = 0; i < 256 * 3; ++i) {
-		hash ^= palette[i];
-		hash *= 16777619U;
-	}
-
-	return hash;
-}
-
 void logScenePaletteSummary(const char *label, const SceneState &scene, float brightness) {
 	debugC(2, kDebugRoom, "Harvester: %s room='%s' palette='%s' brightness=%.2f",
 		label, scene.state.roomName.c_str(), scene.state.palettePath.c_str(), (double)brightness);
-}
-
-static void blitBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap, int x, int y) {
-	if (!bitmap.isValid())
-		return;
-
-	screen.copyRectToSurface(bitmap.pixels.data(), bitmap.width, x, y, bitmap.width, bitmap.height);
-}
-
-static void blitTransparentBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap,
-		int x, int y) {
-	if (!bitmap.isValid())
-		return;
-
-	for (uint32 srcY = 0; srcY < bitmap.height; ++srcY) {
-		const int destY = y + (int)srcY;
-		if (destY < 0 || destY >= screen.h)
-			continue;
-		for (uint32 srcX = 0; srcX < bitmap.width; ++srcX) {
-			const int destX = x + (int)srcX;
-			if (destX < 0 || destX >= screen.w)
-				continue;
-			const byte color = bitmap.pixels[srcY * bitmap.width + srcX];
-			if (color != 0)
-				*(byte *)screen.getBasePtr(destX, destY) = color;
-		}
-	}
 }
 
 bool captureScreenBackdrop(const Graphics::Screen &screen, IndexedBitmap &bitmap) {
@@ -617,35 +250,6 @@ bool captureScreenBackdrop(const Graphics::Screen &screen, IndexedBitmap &bitmap
 		memcpy(bitmap.pixels.data() + y * bitmap.width, screen.getBasePtr(0, y), bitmap.width);
 
 	return true;
-}
-
-static void drawShadowedString(Graphics::Screen &screen, const Graphics::Font &font, const Common::String &text,
-		int x, int y, int width, byte color, Graphics::TextAlign align = Graphics::kTextAlignLeft) {
-	font.drawString(&screen, text, x + 1, y + 1, width, kShadowColor, align);
-	font.drawString(&screen, text, x, y, width, color, align);
-}
-
-static void drawWrappedShadowedText(Graphics::Screen &screen, const Graphics::Font &font, const Common::String &text,
-		int x, int y, int width, byte color) {
-	Common::Array<Common::String> lines;
-	font.wordWrapText(text, width, lines);
-
-	const int lineHeight = font.getFontHeight() + 2;
-	for (uint i = 0; i < lines.size(); ++i)
-		drawShadowedString(screen, font, lines[i], x, y + i * lineHeight, width, color);
-}
-
-static void drawWrappedText(Graphics::Screen &screen, const Graphics::Font &font, const Common::String &text,
-		int x, int y, int width, byte color, int lineSpacing, bool useCftCharacterWrapping = false) {
-	Common::Array<Common::String> lines;
-	if (useCftCharacterWrapping)
-		wrapCftTextByCharacterCount(font, text, width, lines);
-	else
-		font.wordWrapText(text, width, lines);
-
-	const int lineHeight = font.getFontHeight() + lineSpacing;
-	for (uint i = 0; i < lines.size(); ++i)
-		font.drawString(&screen, lines[i], x, y + i * lineHeight, width, color);
 }
 
 static void setScaledPalette(Graphics::Screen &screen, const byte *palette, float brightness) {
@@ -663,50 +267,11 @@ static void setScaledDisplayPalette(Graphics::Screen &screen, const byte *palett
 	screen.setPalette(scaledPalette);
 }
 
-static bool loadPaletteResource(ResourceManager &resources, const Common::String &path, byte *dest) {
-	Common::Array<byte> data;
-	if (!resources.loadFile(path, data) || data.size() < 256 * 3)
-		return false;
-
-	memcpy(dest, data.data(), 256 * 3);
-
-	byte minValue = 0;
-	byte maxValue = 0;
-	getPaletteByteRange(dest, minValue, maxValue);
-	debugC(3, kDebugRoom,
-		"Harvester: decoded room palette '%s' bytes=%u range=[%u,%u] hash=%08x idx0=(%u,%u,%u) idx1=(%u,%u,%u) idx127=(%u,%u,%u) idx255=(%u,%u,%u)",
-		path.c_str(), (uint)data.size(), minValue, maxValue, hashPalette(dest),
-		dest[0], dest[1], dest[2],
-		dest[3], dest[4], dest[5],
-		dest[127 * 3], dest[127 * 3 + 1], dest[127 * 3 + 2],
-		dest[255 * 3], dest[255 * 3 + 1], dest[255 * 3 + 2]);
-
-	return true;
-}
-
-Common::Rect getRoomObjectHotspotBounds(const ObjectRecord &object) {
-	if (object.boundsX2 > object.currentX && object.boundsY2 > object.currentY)
-		return Common::Rect(object.currentX, object.currentY, object.boundsX2 + 1, object.boundsY2 + 1);
-
-	return Common::Rect();
-}
-
 static Common::Rect getRegionBounds(const RegionRecord &region) {
 	if (region.right > region.left && region.bottom > region.top)
 		return Common::Rect(region.left, region.top, region.right, region.bottom);
 
 	return Common::Rect();
-}
-
-Common::String resolveSceneObjectSpritePath(const ObjectRecord &object) {
-	const bool atInitialPlacement = object.currentX == object.initialX &&
-		object.currentY == object.initialY &&
-		object.currentOwnerOrRoom.equalsIgnoreCase(object.initialOwnerOrRoom);
-	if (!object.altSpritePath.empty() &&
-		(!atInitialPlacement || object.currentOwnerOrRoom.equalsIgnoreCase("INVENTORY")))
-		return object.altSpritePath;
-
-	return object.spritePath;
 }
 
 bool loadBitmapResource(ResourceManager &resources, const Common::String &path, IndexedBitmap &bitmap) {
@@ -718,358 +283,9 @@ bool loadBitmapResource(ResourceManager &resources, const Common::String &path, 
 	return decodeBitmap(data, bitmap);
 }
 
-static void logSceneObjectSelection(const char *decision, const char *source, const ObjectRecord &object,
-		const Common::String &detail = Common::String()) {
-	const Common::Rect hotspotBounds = getRoomObjectHotspotBounds(object);
-	const Common::String resolvedSpritePath = resolveSceneObjectSpritePath(object);
-	debugC(3, kDebugScene,
-		"Harvester: scene object %s source='%s' object='%s' owner='%s' visible=%d runtimeVisible=%d sprite='%s' alt='%s' resolved='%s' pos=(%d,%d,%d) bounds=(%d,%d)-(%d,%d) action='%s' detail='%s'",
-		decision, source, object.objectName.c_str(), object.currentOwnerOrRoom.c_str(),
-		object.visible, object.runtimeVisible, object.spritePath.c_str(), object.altSpritePath.c_str(),
-		resolvedSpritePath.c_str(),
-		object.currentX, object.currentY, object.currentZ,
-		hotspotBounds.left, hotspotBounds.top, hotspotBounds.right, hotspotBounds.bottom,
-		object.actionTag.c_str(), detail.c_str());
-}
-
-static bool shouldQueueSceneObject(const ObjectRecord &object) {
-	return object.visible;
-}
-
-bool shouldDisplaySceneAnimation(const AnimRecord &anim) {
-	return anim.active || anim.visible;
-}
-
-static void queueSceneObject(const char *source, const ObjectRecord &object,
-		Common::Array<ObjectRecord> &sceneObjects) {
-	if (!shouldQueueSceneObject(object)) {
-		logSceneObjectSelection("skipped", source, object, object.visible ? "inactive" : "visible=0");
-		return;
-	}
-
-	for (const ObjectRecord &sceneObject : sceneObjects) {
-		if (sceneObject.currentOwnerOrRoom.equalsIgnoreCase(object.currentOwnerOrRoom) &&
-			sceneObject.objectName.equalsIgnoreCase(object.objectName)) {
-			logSceneObjectSelection("skipped", source, object, "duplicate owner/object");
-			return;
-		}
-	}
-
-	sceneObjects.push_back(object);
-	logSceneObjectSelection("queued", source, object);
-}
-
-bool loadRoomSceneResources(const RoomSetupState &state, ResourceManager &resources, SceneState &scene) {
-	scene = SceneState();
-	scene.state = state;
-	scene.targetPaletteBrightness = state.paletteBrightness;
-	if (!loadPaletteResource(resources, state.palettePath, scene.palette)) {
-		return false;
-	}
-
-	Common::Array<ObjectRecord> sceneObjects;
-	for (const ObjectRecord &object : state.roomObjects)
-		queueSceneObject("room", object, sceneObjects);
-	for (const ObjectRecord &object : state.activeObjects)
-		queueSceneObject("active", object, sceneObjects);
-
-	scene.sceneObjects = Common::move(sceneObjects);
-	for (const AnimRecord &anim : state.roomAnimations) {
-		if (shouldDisplaySceneAnimation(anim))
-			scene.sceneAnimations.push_back(anim);
-	}
-	scene.sceneRegions = state.roomRegions;
-
-	debugC(2, kDebugRoom,
-		"Harvester: room scene loaded room='%s' objects=%u anims=%u npcs=%u monsters=%u timers=%u regions=%u",
-		state.roomName.c_str(), (uint)scene.sceneObjects.size(), (uint)scene.sceneAnimations.size(),
-		(uint)state.roomNpcs.size(), (uint)state.roomMonsters.size(),
-		(uint)state.roomTimers.size(), (uint)scene.sceneRegions.size());
-
-	return true;
-}
-
 bool shouldRunStartupRoomProbe() {
 	return ConfMan.hasKey("harvester_debug_probe_startup_room") &&
 		ConfMan.getBool("harvester_debug_probe_startup_room");
-}
-
-void drawRoomScene(HarvesterEngine &engine, Graphics::Screen &screen, const SceneState &scene,
-		float brightness) {
-	setScaledPalette(screen, scene.palette, brightness);
-	screen.fillRect(screen.getBounds(), 0);
-	if (engine.getRuntimeEntities())
-		engine.getRuntimeEntities()->drawSceneEntities(screen);
-	drawRoomDebugOverlay(engine, screen, scene);
-	drawCombatDebugOverlay(engine, screen, scene);
-	drawPathfindingDebugOverlay(engine, screen, scene);
-	drawTimerDebugOverlay(engine, screen, scene);
-}
-
-const ObjectRecord *findSceneObjectByName(const Common::Array<ObjectRecord> &objects,
-		const Common::String &objectName) {
-	for (const ObjectRecord &object : objects) {
-		if (object.objectName.equalsIgnoreCase(objectName))
-			return &object;
-	}
-
-	return nullptr;
-}
-
-const RegionRecord *findSceneRegionByName(const Common::Array<RegionRecord> &regions,
-		const Common::String &regionName) {
-	for (const RegionRecord &region : regions) {
-		if (region.regionName.equalsIgnoreCase(regionName))
-			return &region;
-	}
-
-	return nullptr;
-}
-
-static const NpcRecord *findSceneNpcByName(const Common::Array<NpcRecord> &npcs,
-		const Common::String &npcName) {
-	for (const NpcRecord &npc : npcs) {
-		if (npc.npcName.equalsIgnoreCase(npcName))
-			return &npc;
-	}
-
-	return nullptr;
-}
-
-static bool canTalkToRoomNpc(HarvesterEngine &engine, const NpcRecord &npc,
-		const DialogueSystem *dialogue) {
-	Script *script = engine.getScript();
-	if (!script || !script->isNamedNpcDeathTypeClear(npc.npcName))
-		return false;
-
-	return dialogue && dialogue->hasRoomNpcHandler(npc.npcName);
-}
-
-ObjectRecord *findSceneObjectByName(Common::Array<ObjectRecord> &objects,
-		const Common::String &objectName) {
-	for (ObjectRecord &object : objects) {
-		if (object.objectName.equalsIgnoreCase(objectName))
-			return &object;
-	}
-
-	return nullptr;
-}
-
-static const ObjectRecord *findRoomObjectAtPoint(HarvesterEngine &engine,
-		const Common::Array<ObjectRecord> &sceneObjects, const Common::Point &point) {
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	if (!entityManager)
-		return nullptr;
-
-	const Entity *topEntity = nullptr;
-	const ObjectRecord *topObject = nullptr;
-	int topDrawIndex = -1;
-	for (const ObjectRecord &object : sceneObjects) {
-		if (object.objectName.empty())
-			continue;
-
-		const Entity *entity = entityManager->findSceneEntityByName(object.objectName);
-		if (!entity || !entity->hitTest(point))
-			continue;
-		if (entity->getClassId() == kEntityClassBackground ||
-			entity->getClassId() == kEntityClassPlayer ||
-			entity->getClassId() == kEntityClassRectHotspot19) {
-			continue;
-		}
-		const int drawIndex = entityManager->findSceneEntityDrawIndexByName(entity->getName());
-		if (drawIndex < 0)
-			continue;
-		const bool objectVisible = object.visible && object.runtimeVisible;
-		const bool topObjectVisible = topObject && topObject->visible && topObject->runtimeVisible;
-		if (!topEntity ||
-			(objectVisible && !topObjectVisible) ||
-			(objectVisible == topObjectVisible && drawIndex > topDrawIndex)) {
-			topEntity = entity;
-			topObject = &object;
-			topDrawIndex = drawIndex;
-		}
-	}
-	if (!topEntity)
-		return nullptr;
-
-	return topObject;
-}
-
-static const RegionRecord *findRoomRegionAtPoint(HarvesterEngine &engine,
-		const Common::Array<RegionRecord> &sceneRegions, const Common::Point &point) {
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	if (!entityManager)
-		return nullptr;
-
-	const Entity *topEntity = nullptr;
-	int topDrawIndex = -1;
-	for (const RegionRecord &region : sceneRegions) {
-		const Entity *entity = entityManager->findSceneEntityByName(region.regionName);
-		if (!entity || !entity->hitTest(point))
-			continue;
-		if (entity->getClassId() != kEntityClassRectHotspot19)
-			continue;
-		const int drawIndex = entityManager->findSceneEntityDrawIndexByName(entity->getName());
-		if (drawIndex < 0)
-			continue;
-		if (!topEntity || drawIndex > topDrawIndex) {
-			topEntity = entity;
-			topDrawIndex = drawIndex;
-		}
-	}
-	if (!topEntity)
-		return nullptr;
-
-	return findSceneRegionByName(sceneRegions, topEntity->getName());
-}
-
-static const Entity *findRoomPlayerAtPoint(HarvesterEngine &engine, const Common::Point &point) {
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	if (!entityManager)
-		return nullptr;
-
-	const Entity *entity = entityManager->findTopSceneEntityAt(point);
-	if (!entity || entity->getClassId() != kEntityClassPlayer)
-		return nullptr;
-
-	return entity;
-}
-
-static const NpcRecord *findRoomNpcAtPoint(HarvesterEngine &engine,
-		const Common::Array<NpcRecord> &sceneNpcs, const Common::Point &point,
-		const DialogueSystem *dialogue) {
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	if (!entityManager)
-		return nullptr;
-
-	const Entity *entity = entityManager->findTopSceneEntityAt(point);
-	if (!entity || entity->getClassId() != kEntityClassNpc)
-		return nullptr;
-
-	const NpcRecord *npc = findSceneNpcByName(sceneNpcs, entity->getName());
-	if (!npc || !canTalkToRoomNpc(engine, *npc, dialogue))
-		return nullptr;
-
-	return npc;
-}
-
-const IndexedBitmap *resolveInspectTextboxBitmap(const Art &art, const ResolvedText &text) {
-	if (text.boxName.equalsIgnoreCase("BOX1"))
-		return art.getTextboxBitmap(0);
-	if (text.boxName.equalsIgnoreCase("BOX2"))
-		return art.getTextboxBitmap(1);
-	if (text.boxName.equalsIgnoreCase("BOX3"))
-		return art.getTextboxBitmap(2);
-	if (text.boxName.equalsIgnoreCase("BOX4"))
-		return art.getTextboxBitmap(3);
-
-	return nullptr;
-}
-
-void drawRoomInspectText(Graphics::Screen &screen, const Art &art, const Graphics::Font &font,
-		const ResolvedText &inspectText, bool useNativeFont) {
-	const IndexedBitmap *textbox = resolveInspectTextboxBitmap(art, inspectText);
-	if (!textbox || !textbox->isValid())
-		return;
-
-	blitBitmap(screen, *textbox, kIdentTextboxX, kIdentTextboxY);
-	if (useNativeFont) {
-		drawWrappedText(screen, font, inspectText.value,
-			kIdentTextboxX + kIdentTextboxTextInsetX,
-			kIdentTextboxY + kIdentTextboxTextInsetY,
-			MAX<int>(0, (int)textbox->width - 2),
-			0,
-			kNativeIdentTextLineSpacing,
-			true);
-		return;
-	}
-
-	drawWrappedShadowedText(screen, font, inspectText.value,
-		kIdentTextboxX + kIdentTextboxTextInsetX,
-		kIdentTextboxY + kIdentTextboxTextInsetY,
-		MAX<int>(0, (int)textbox->width - (kIdentTextboxTextInsetX + 2)),
-		kIdentTextColor);
-}
-
-static bool suppressesInitialObjectInspectGate(const ObjectRecord &object) {
-	// Native HARVEST.SCR uses ident key X as a no-text sentinel.
-	return object.identTextKey.equalsIgnoreCase("X");
-}
-
-static bool usesBareOperatePrompt(const ObjectRecord &object) {
-	return object.objectName.equalsIgnoreCase("HAPPLY_HS") ||
-		object.objectName.equalsIgnoreCase("KILL_STEPH_HS");
-}
-
-bool unlocksRoomObjectInteractionAfterInitialExamine(const ObjectRecord &object,
-		Script &script) {
-	if (suppressesInitialObjectInspectGate(object))
-		return false;
-
-	return object.operatable || script.isPickupObject(object);
-}
-
-static int resolveRoomObjectCursorSequence(const ObjectRecord &object, Script &script) {
-	if (object.objectName.equalsIgnoreCase("EXIT_BM") || object.objectName.equalsIgnoreCase("EXIT_HS"))
-		return kCursorSequenceTransition;
-
-	ResolvedText inspectText;
-	const bool pickupObject = script.isPickupObject(object);
-	const bool pickupBlocked = pickupObject && script.isPickupBlockedByAction(object);
-	if (!object.identShown && unlocksRoomObjectInteractionAfterInitialExamine(object, script))
-		return kCursorSequenceExamine;
-	if (pickupObject && !pickupBlocked)
-		return kCursorSequencePickup;
-	if (pickupBlocked)
-		return kCursorSequenceExamine;
-	if (object.operatable)
-		return kCursorSequenceOperate;
-	if (script.resolveObjectInspectText(object, inspectText))
-		return kCursorSequenceExamine;
-
-	if (script.hasObjectInteraction(object))
-		return kCursorSequenceExamine;
-
-	return kCursorSequenceNeutral;
-}
-
-static Common::String buildRoomObjectPrompt(const ObjectRecord &object, Script &script,
-		int cursorSequence, const MenuTextConfig &menuTextConfig) {
-	// Native room prompts come from explicit interaction metadata. Neutral scene sprites
-	// should not surface synthetic "Examine <object id>" prompts or steal hover/click focus.
-	if (cursorSequence == kCursorSequenceNeutral)
-		return Common::String();
-
-	const Common::String label = script.resolveObjectLabel(object);
-	if (label.empty())
-		return Common::String();
-
-	if (cursorSequence == kCursorSequenceOperate) {
-		if (usesBareOperatePrompt(object))
-			return label;
-		return Common::String::format("%s %s", menuTextConfig.operateVerb.c_str(), label.c_str());
-	}
-	if (cursorSequence == kCursorSequencePickup)
-		return Common::String::format("%s %s", menuTextConfig.pickUpVerb.c_str(), label.c_str());
-	if (cursorSequence == kCursorSequenceTalk)
-		return Common::String::format("%s %s", menuTextConfig.talkToVerb.c_str(), label.c_str());
-	if (cursorSequence == kCursorSequenceTransition)
-		return Common::String::format("Go to %s", label.c_str());
-
-	return Common::String::format("%s %s", menuTextConfig.examineTheVerb.c_str(), label.c_str());
-}
-
-static Common::String buildRoomNpcPrompt(const NpcRecord &npc,
-		const MenuTextConfig &menuTextConfig) {
-	Common::String label = !npc.entityInitArg.empty() ? npc.entityInitArg : npc.npcName;
-	for (uint i = 0; i < label.size(); ++i) {
-		if (label[i] == '_')
-			label.setChar(' ', i);
-	}
-
-	if (label.empty())
-		return Common::String();
-	return Common::String::format("%s %s", menuTextConfig.talkToVerb.c_str(), label.c_str());
 }
 
 bool doesPlayerFacingMatchRegion(int playerFacing, const RegionRecord &region) {
@@ -1097,65 +313,14 @@ bool doesPlayerOverlapRegion(const Entity &playerEntity, const RegionRecord &reg
 	return playerMaxZ >= region.minZ && region.maxZ >= (int)playerEntity.getZ();
 }
 
-RoomHoverState resolveRoomHoverState(HarvesterEngine &engine, const RoomSetupState &state,
-		const Common::Array<ObjectRecord> &sceneObjects,
-		const Common::Array<NpcRecord> &sceneNpcs,
-		const Common::Array<RegionRecord> &sceneRegions, const Common::Point &mousePos,
-		const MenuTextConfig &menuTextConfig, const DialogueSystem *dialogue) {
-	RoomHoverState hoverState;
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	if (const Entity *playerEntity = findRoomPlayerAtPoint(engine, mousePos)) {
-		hoverState.playerEntity = playerEntity;
-		hoverState.cursorSequence = kCursorSequenceExamine;
-		return hoverState;
-	}
-	if (const NpcRecord *npc = findRoomNpcAtPoint(engine, sceneNpcs, mousePos, dialogue)) {
-		hoverState.npc = npc;
-		hoverState.cursorSequence = kCursorSequenceTalk;
-		hoverState.promptText = buildRoomNpcPrompt(*npc, menuTextConfig);
-		return hoverState;
-	}
-
-	Script *script = engine.getScript();
-	if (!script)
-		return hoverState;
-	hoverState.object = findRoomObjectAtPoint(engine, sceneObjects, mousePos);
-	hoverState.region = findRoomRegionAtPoint(engine, sceneRegions, mousePos);
-	if (entityManager && hoverState.object && hoverState.region) {
-		const int objectDrawIndex =
-			entityManager->findSceneEntityDrawIndexByName(hoverState.object->objectName);
-		const int regionDrawIndex =
-			entityManager->findSceneEntityDrawIndexByName(hoverState.region->regionName);
-		if (regionDrawIndex >= 0 && objectDrawIndex >= 0 && regionDrawIndex > objectDrawIndex)
-			hoverState.object = nullptr;
-	}
-	if (hoverState.object) {
-		hoverState.cursorSequence = resolveRoomObjectCursorSequence(*hoverState.object, *script);
-		hoverState.promptText = buildRoomObjectPrompt(
-			*hoverState.object, *script, hoverState.cursorSequence, menuTextConfig);
-		if (hoverState.cursorSequence != kCursorSequenceNeutral || !hoverState.promptText.empty())
-			return hoverState;
-		hoverState.object = nullptr;
-	}
-	if (hoverState.region && hoverState.region->cursorEnabled) {
-		hoverState.object = nullptr;
-		hoverState.cursorSequence = kCursorSequenceTransition;
-		hoverState.promptText.clear();
-		return hoverState;
-	}
-
-	if (Player::supportsMovementBand(state) &&
-		mousePos.y >= state.roomMaxZScreenY &&
-		mousePos.y <= state.roomMinZScreenY) {
-		hoverState.cursorSequence = kCursorSequenceWalk;
-	}
-
-	return hoverState;
+RoomHoverState Flow::getRoomHoverState(const SceneState &scene) const {
+	return Input::resolveRoomHoverState(_engine, scene.state, scene.sceneObjects,
+		scene.state.roomNpcs, scene.sceneRegions, _mousePos, _menuTextConfig, &_dialogue);
 }
 
 static bool findRoomObjectProbePoint(HarvesterEngine &engine, const Common::Array<ObjectRecord> &sceneObjects,
 		const ObjectRecord &object, Common::Point &probePoint) {
-	const Common::Rect bounds = getRoomObjectHotspotBounds(object);
+	const Common::Rect bounds = SceneEntities::getSceneObjectBounds(object);
 	if (bounds.isEmpty())
 		return false;
 
@@ -1168,7 +333,7 @@ static bool findRoomObjectProbePoint(HarvesterEngine &engine, const Common::Arra
 		Common::Point(bounds.right - 1, bounds.bottom - 1)
 	};
 	for (const Common::Point &candidate : corners) {
-		const ObjectRecord *hit = findRoomObjectAtPoint(engine, sceneObjects, candidate);
+		const ObjectRecord *hit = Input::findRoomObjectAtPoint(engine, sceneObjects, candidate);
 		if (hit && hit->objectName.equalsIgnoreCase(object.objectName)) {
 			probePoint = candidate;
 			return true;
@@ -1180,7 +345,7 @@ static bool findRoomObjectProbePoint(HarvesterEngine &engine, const Common::Arra
 	for (int y = bounds.top; y < bounds.bottom; y += yStep) {
 		for (int x = bounds.left; x < bounds.right; x += xStep) {
 			const Common::Point candidate(x, y);
-			const ObjectRecord *hit = findRoomObjectAtPoint(engine, sceneObjects, candidate);
+			const ObjectRecord *hit = Input::findRoomObjectAtPoint(engine, sceneObjects, candidate);
 			if (hit && hit->objectName.equalsIgnoreCase(object.objectName)) {
 				probePoint = candidate;
 				return true;
@@ -1191,11 +356,9 @@ static bool findRoomObjectProbePoint(HarvesterEngine &engine, const Common::Arra
 	return false;
 }
 
-void logStartupRoomProbe(HarvesterEngine &engine, const SceneState &scene,
-		const Common::String &entranceName, Common::Point &mousePos,
-		const MenuTextConfig &menuTextConfig) {
-	EntityManager *entityManager = engine.getRuntimeEntities();
-	Script *script = engine.getScript();
+void Flow::logStartupRoomProbe(const SceneState &scene, const Common::String &entranceName) {
+	EntityManager *entityManager = _engine.getRuntimeEntities();
+	Script *script = _engine.getScript();
 	if (!entityManager || !script)
 		return;
 
@@ -1225,23 +388,23 @@ void logStartupRoomProbe(HarvesterEngine &engine, const SceneState &scene,
 	}
 
 	for (const ObjectRecord &object : scene.sceneObjects) {
-		if (getRoomObjectHotspotBounds(object).isEmpty())
+		if (SceneEntities::getSceneObjectBounds(object).isEmpty())
 			continue;
 
 		Common::Point probePoint;
-		if (!findRoomObjectProbePoint(engine, scene.sceneObjects, object, probePoint))
+		if (!findRoomObjectProbePoint(_engine, scene.sceneObjects, object, probePoint))
 			continue;
 
-		const ObjectRecord *hoveredObject = findRoomObjectAtPoint(engine, scene.sceneObjects, probePoint);
+		const ObjectRecord *hoveredObject = Input::findRoomObjectAtPoint(_engine, scene.sceneObjects, probePoint);
 		if (!hoveredObject)
 			continue;
 
-		mousePos = probePoint;
+		_mousePos = probePoint;
 		const Common::String objectLabel = script->resolveObjectLabel(*hoveredObject);
 		ResolvedText inspectText;
-		const RoomHoverState hoverState = resolveRoomHoverState(
-			engine, scene.state, scene.sceneObjects, scene.state.roomNpcs, scene.sceneRegions,
-			probePoint, menuTextConfig);
+		const RoomHoverState hoverState = Input::resolveRoomHoverState(
+			_engine, scene.state, scene.sceneObjects, scene.state.roomNpcs, scene.sceneRegions,
+			probePoint, _menuTextConfig);
 		const bool hasInteraction = script->hasObjectInteraction(*hoveredObject);
 		const bool hasInspectText = script->resolveObjectInspectText(*hoveredObject, inspectText);
 		debugC(1, kDebugRoom,
@@ -1256,9 +419,9 @@ void logStartupRoomProbe(HarvesterEngine &engine, const SceneState &scene,
 			bool foundFloorProbe = false;
 			for (int y = scene.state.roomMaxZScreenY; y <= scene.state.roomMinZScreenY && !foundFloorProbe; y += 12) {
 				for (int x = 48; x < 592; x += 16) {
-					const RoomHoverState candidateHover = resolveRoomHoverState(
-						engine, scene.state, scene.sceneObjects, scene.state.roomNpcs, scene.sceneRegions,
-						Common::Point(x, y), menuTextConfig);
+					const RoomHoverState candidateHover = Input::resolveRoomHoverState(
+						_engine, scene.state, scene.sceneObjects, scene.state.roomNpcs, scene.sceneRegions,
+						Common::Point(x, y), _menuTextConfig);
 					if (candidateHover.cursorSequence == kCursorSequenceWalk) {
 						floorProbe = Common::Point(x, y);
 						foundFloorProbe = true;
@@ -1268,8 +431,8 @@ void logStartupRoomProbe(HarvesterEngine &engine, const SceneState &scene,
 			}
 
 			const RoomHoverState floorHover = foundFloorProbe
-				? resolveRoomHoverState(engine, scene.state, scene.sceneObjects, scene.state.roomNpcs,
-					scene.sceneRegions, floorProbe, menuTextConfig)
+				? Input::resolveRoomHoverState(_engine, scene.state, scene.sceneObjects, scene.state.roomNpcs,
+					scene.sceneRegions, floorProbe, _menuTextConfig)
 				: RoomHoverState();
 			debugC(1, kDebugRoom,
 				"Harvester: startup probe floor room='%s' point=(%d,%d) found=%d cursor_sequence=%d prompt='%s'",
@@ -1278,22 +441,17 @@ void logStartupRoomProbe(HarvesterEngine &engine, const SceneState &scene,
 
 			Entity *player = entityManager->findSceneEntityByName(kPlayerActorEntityName);
 			if (player && foundFloorProbe && floorHover.cursorSequence == kCursorSequenceWalk) {
-				RoomPlayerState probePlayer;
-				probePlayer.entity = player;
-				probePlayer.centerX = scene.state.playerSpawnX;
-				probePlayer.bottomY = scene.state.playerSpawnY;
-				probePlayer.z = (float)scene.state.playerSpawnZ;
-				probePlayer.facing = scene.state.playerFacing;
-				Player::setMoveTargetFromScreenPoint(scene.state, probePlayer, floorProbe.x, floorProbe.y);
-				for (int i = 0; i < 32 && probePlayer.hasMoveTarget; ++i)
-					(void)Player::stepMoveTarget(
-						engine, scene.state, scene.sceneObjects, scene.sceneAnimations, probePlayer);
+				Player probePlayer;
+				probePlayer.initialize(scene.state, player, 0);
+				probePlayer.setMoveTargetFromScreenPoint(scene.state, floorProbe.x, floorProbe.y);
+				for (int i = 0; i < 32 && probePlayer.getState().hasMoveTarget; ++i)
+					(void)probePlayer.stepMoveTarget(_engine, scene.state, scene.sceneObjects, scene.sceneAnimations);
 
 				const Common::Rect movedRect = player->getScreenRect();
 				debugC(1, kDebugPlayer,
 					"Harvester: startup probe movement room='%s' target=(%d,%d) final_rect=(%d,%d)-(%d,%d) z=%.2f",
 					scene.state.roomName.c_str(), floorProbe.x, floorProbe.y,
-					movedRect.left, movedRect.top, movedRect.right, movedRect.bottom, (double)probePlayer.z);
+					movedRect.left, movedRect.top, movedRect.right, movedRect.bottom, (double)probePlayer.getState().z);
 
 				player->setCurrentFrame(Player::resolveFacingFrame(scene.state.playerFacing));
 				(void)applyRoomActorPlacement(scene.state, *player,
@@ -1325,7 +483,7 @@ static bool loadQuickTipsScene(HarvesterEngine &engine, SceneState &scene) {
 	if (!engine.getScript()->resolveRoomSetupState("START", state, *engine.getResources()))
 		return false;
 
-	return loadRoomSceneResources(state, *engine.getResources(), scene);
+	return SceneEntities::loadRoomSceneResources(state, *engine.getResources(), scene);
 }
 
 static void renderQuickTipsScreen(HarvesterEngine &engine, const SceneState &scene,
@@ -1335,7 +493,7 @@ static void renderQuickTipsScreen(HarvesterEngine &engine, const SceneState &sce
 	if (!screen)
 		return;
 
-	drawRoomScene(engine, *screen, scene, scene.targetPaletteBrightness);
+	RoomPresentation::drawRoomScene(engine, *screen, scene, scene.targetPaletteBrightness);
 	drawQuickTipsPanel(engine, config, layout, tipText);
 
 	if (engine.getRuntimeEntities())
@@ -1514,7 +672,7 @@ Common::Error Flow::runQuickTips() {
 			return transitionError;
 
 		logScenePaletteSummary("quick tips scene palette", scene, kPaletteBrightnessBlack);
-		drawRoomScene(_engine, *screen, scene, kPaletteBrightnessBlack);
+		RoomPresentation::drawRoomScene(_engine, *screen, scene, kPaletteBrightnessBlack);
 		screen->makeAllDirty();
 		screen->update();
 
@@ -1612,14 +770,14 @@ Common::Error Flow::runDemoEnding() {
 		IndexedBitmap bitmap;
 		byte palette[256 * 3];
 		if (!loadBitmapResource(*resources, bitmapPath, bitmap) ||
-				!loadPaletteResource(*resources, palettePath, palette)) {
+				!Art::loadPaletteResource(*resources, palettePath, palette)) {
 			warning("Harvester: unable to load DOS demo ending screen %d", screenNumber);
 			return Common::kReadingFailed;
 		}
 
 		setScaledPalette(*screen, palette, kPaletteBrightnessBlack);
 		screen->fillRect(Common::Rect(0, 0, screen->w, screen->h), 0);
-		blitBitmap(*screen, bitmap, 0, 0);
+		RoomPresentation::blitBitmap(*screen, bitmap, 0, 0);
 		screen->makeAllDirty();
 		screen->update();
 
@@ -1665,14 +823,15 @@ Common::Error Flow::runDemoIntroduction() {
 	ResourceManager *resources = _engine.getResources();
 	EntityManager *entityManager = _engine.getRuntimeEntities();
 	const Art *art = _engine.getArt();
-	const CftFontResource *fontResource = findStartupFontByName(_engine, "TEXTFONT");
+	const Text *text = _engine.getText();
+	const CftFontResource *fontResource = text ? text->findFont("TEXTFONT") : nullptr;
 	if (!screen || !resources || !art || !fontResource)
 		return Common::kReadingFailed;
 
 	IndexedBitmap bitmap;
 	byte palette[256 * 3];
 	if (!loadBitmapResource(*resources, kDemoIntroductionBitmapPath, bitmap) ||
-			!loadPaletteResource(*resources, kDemoIntroductionPalettePath, palette)) {
+			!Art::loadPaletteResource(*resources, kDemoIntroductionPalettePath, palette)) {
 		return Common::kReadingFailed;
 	}
 
@@ -1687,9 +846,9 @@ Common::Error Flow::runDemoIntroduction() {
 		entityManager->hideCursor();
 	setScaledPalette(*screen, palette, kPaletteBrightnessBlack);
 	screen->fillRect(Common::Rect(0, 0, screen->w, screen->h), 0);
-	blitBitmap(*screen, bitmap, 0, 0);
+	RoomPresentation::blitBitmap(*screen, bitmap, 0, 0);
 	blitTransparentBitmap(*screen, art->getLogoBitmap(), 160, 0);
-	drawWrappedText(*screen, font, kDemoIntroductionText, 90, 200, 420, 0xce,
+	RoomPresentation::drawWrappedText(*screen, font, kDemoIntroductionText, 90, 200, 420, 0xce,
 		kNativeIdentTextLineSpacing);
 	screen->makeAllDirty();
 	screen->update();
@@ -1777,12 +936,12 @@ Common::Error Flow::runRoomMenu(const IndexedBitmap &backdrop, const byte *palet
 }
 
 Common::Error Flow::runRoomNpcDialogue(const IndexedBitmap &backdrop, const byte *palette,
-		float paletteBrightness, const Common::String &currentRoomName,
+		float paletteBrightness, const ScriptExecutionContext &executionContext,
 		const NpcRecord &npc, const Common::String &usedItemName) {
 	_queuedDialogueInteraction = InteractionResult();
 	_hasQueuedDialogueInteraction = false;
 	return _dialogue.runRoomNpcDialogue(backdrop, palette, paletteBrightness,
-		currentRoomName, npc, usedItemName, *this);
+		executionContext, npc, usedItemName, *this);
 }
 
 Common::Error Flow::runTownMapSelector(const Common::String &mapEntryName,
@@ -1794,7 +953,8 @@ Common::Error Flow::runTownMapSelector(const Common::String &mapEntryName,
 	Graphics::Screen *screen = _engine.getScreen();
 	const Graphics::Font *font = FontMan.getFontByUsage(Graphics::FontManager::kGUIFont);
 	Common::ScopedPtr<HarvesterCftFont> townMapFont;
-	if (const CftFontResource *townMapFontResource = findStartupFontByName(_engine, "TEXTFONT")) {
+	const Text *text = _engine.getText();
+	if (const CftFontResource *townMapFontResource = text ? text->findFont("TEXTFONT") : nullptr) {
 		townMapFont.reset(new HarvesterCftFont(*townMapFontResource));
 		if (townMapFont->isValid())
 			font = townMapFont.get();
@@ -1814,7 +974,7 @@ Common::Error Flow::runTownMapSelector(const Common::String &mapEntryName,
 		: kTownMapNightPaletteBrightness;
 
 	byte palette[256 * 3];
-	if (!loadPaletteResource(*resources, kTownMapPalettePath, palette))
+	if (!Art::loadPaletteResource(*resources, kTownMapPalettePath, palette))
 		return Common::kReadingFailed;
 
 	Common::Array<IndexedBitmap> panels;
@@ -1867,9 +1027,9 @@ Common::Error Flow::runTownMapSelector(const Common::String &mapEntryName,
 		if (needsRedraw) {
 			setScaledPalette(*screen, palette, paletteBrightness);
 			screen->fillRect(screen->getBounds(), 0);
-			blitBitmap(*screen, panels[(uint)currentPanel], 0, 0);
+			RoomPresentation::blitBitmap(*screen, panels[(uint)currentPanel], 0, 0);
 			if (hoveredLocation) {
-				drawShadowedString(*screen, *font, hoveredLocation->labelText,
+				RoomPresentation::drawShadowedString(*screen, *font, hoveredLocation->labelText,
 					hoveredLocation->labelX, hoveredLocation->labelY, screen->w, kTownMapLabelColor);
 			}
 			if (EntityManager *entityManager = _engine.getRuntimeEntities())
@@ -2201,26 +1361,16 @@ bool Flow::populateRoomSceneEntities(RoomSetupState &state,
 					state.entranceName.c_str());
 			}
 			if (reusedPlayer) {
-				RoomPlayerState playerState;
-				playerState.entity = player;
-				playerState.centerX = state.playerSpawnX;
-				playerState.bottomY = state.playerSpawnY;
-				playerState.z = (float)state.playerSpawnZ;
-				playerState.facing = state.playerFacing;
-				playerState.combatLoadout = -1;
-				(void)Player::syncCombatLoadoutVisual(_engine, state, playerState, playerCombatLoadout);
+				Player loadoutPlayer;
+				loadoutPlayer.initialize(state, player, -1);
+				(void)loadoutPlayer.syncCombatLoadoutVisual(_engine, state, playerCombatLoadout);
 			}
-			RoomPlayerState playerSpawnState;
-			playerSpawnState.entity = player;
-			playerSpawnState.centerX = state.playerSpawnX;
-			playerSpawnState.bottomY = state.playerSpawnY;
-			playerSpawnState.z = (float)state.playerSpawnZ;
-			playerSpawnState.facing = state.playerFacing;
-			if (Player::resolveBlockedStartupSpawn(
-					_engine, state, drawableObjects, drawableAnimations, playerSpawnState)) {
-				state.playerSpawnX = playerSpawnState.centerX;
-				state.playerSpawnY = playerSpawnState.bottomY;
-				state.playerSpawnZ = (int)playerSpawnState.z;
+			Player spawnPlayer;
+			spawnPlayer.initialize(state, player, 0);
+			if (spawnPlayer.resolveBlockedStartupSpawn(_engine, state, drawableObjects, drawableAnimations)) {
+				state.playerSpawnX = spawnPlayer.getState().centerX;
+				state.playerSpawnY = spawnPlayer.getState().bottomY;
+				state.playerSpawnZ = (int)spawnPlayer.getState().z;
 			}
 			if (reusedPlayer)
 				entityManager->adoptSceneEntity(player);
@@ -2400,7 +1550,9 @@ bool Flow::tickRuntimeEntities() {
 	EntityManager *entityManager = _engine.getRuntimeEntities();
 	if (!entityManager)
 		return false;
-	return entityManager->tickSceneEntities() || entityManager->syncCursorEntityPosition(_mousePos);
+	const bool sceneChanged = entityManager->tickSceneEntities();
+	const bool cursorChanged = entityManager->syncCursorEntityPosition(_mousePos);
+	return sceneChanged || cursorChanged;
 }
 
 bool Flow::handleSystemEvent(const Common::Event &event, Common::Error &result) {

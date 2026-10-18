@@ -26,6 +26,7 @@
 #include "common/str.h"
 #include "harvester/combat.h"
 #include "harvester/input.h"
+#include "harvester/player.h"
 #include "harvester/interaction.h"
 #include "harvester/room_presentation.h"
 #include "harvester/scene_entities.h"
@@ -63,8 +64,7 @@ public:
 	Scene(HarvesterEngine &engine, Flow &flow, SceneState &scene, EntityManager *entityManager,
 		InventorySystem &inventory, CheatSystem &cheats, const RoomViewResources &view, bool canExitCloseupToParent);
 
-	RoomPlayerState &getPlayerState() { return _playerState; }
-	RoomIdleAnimationState &getIdleState() { return _idleState; }
+	Player &getPlayer() { return _player; }
 	InputState &getInputState() { return _inputState; }
 
 	void initializePlayerState();
@@ -125,10 +125,8 @@ private:
 	EntityManager *_entityManager;
 	InventorySystem &_inventory;
 	SceneEntities _sceneRuntime;
-	RoomPlayerState _playerState;
-	Combat _combat;
+	Player _player;
 	CombatEffects _combatEffects;
-	RoomIdleAnimationState _idleState;
 	InputState _inputState;
 	Common::String _pendingRegionName;
 	CheatSystem &_cheats;
@@ -139,6 +137,7 @@ private:
 	ItemInteractions _roomItems;
 	RoomPresentation _presentation;
 	Interaction _interactionProcessor;
+	Combat _combat;
 };
 
 } // End of namespace Harvester

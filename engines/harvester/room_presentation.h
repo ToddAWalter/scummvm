@@ -23,10 +23,10 @@
 #define HARVESTER_ROOM_PRESENTATION_H
 
 #include "common/error.h"
+#include "graphics/font.h"
 #include "harvester/script.h"
 
 namespace Graphics {
-class Font;
 class Screen;
 }
 
@@ -63,10 +63,21 @@ public:
 	RoomPresentation(HarvesterEngine &engine, SceneState &scene,
 		const Art *art, const Graphics::Font *inspectFont, bool useNativeInspectFont);
 
+	static void drawRoomScene(HarvesterEngine &engine, Graphics::Screen &screen,
+		const SceneState &scene, float brightness);
+
+	static void blitBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap, int x, int y);
+	static void drawShadowedString(Graphics::Screen &screen, const Graphics::Font &font, const Common::String &text,
+		int x, int y, int width, byte color, Graphics::TextAlign align = Graphics::kTextAlignLeft);
+	static void drawWrappedText(Graphics::Screen &screen, const Graphics::Font &font, const Common::String &text,
+		int x, int y, int width, byte color, int lineSpacing, bool useCftCharacterWrapping = false);
+	static const IndexedBitmap *resolveInspectTextboxBitmap(const Art &art, const ResolvedText &text);
+	static void drawRoomInspectText(Graphics::Screen &screen, const Art &art, const Graphics::Font &font,
+		const ResolvedText &inspectText, bool useNativeFont);
+
 	bool captureDialogueBackdrop(IndexedBitmap &dialogueBackdrop);
 	Common::Error applyLightingCommand(StartupLightingCommand lightingCommand);
 	Common::Error runModalShowText(const ResolvedText &modalText, Flow &flow);
-	static void blitBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap, int x, int y);
 
 private:
 	HarvesterEngine &_engine;

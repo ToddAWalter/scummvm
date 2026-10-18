@@ -36,6 +36,7 @@ class Art {
 public:
 	bool load(ResourceManager &resources);
 	bool loadQuickTipsResources(ResourceManager &resources, bool useTextboxPanel);
+	static bool loadPaletteResource(ResourceManager &resources, const Common::String &path, byte *dest);
 	void drawWaitFrame(Graphics::Screen &screen) const;
 
 	const byte *getWaitPalette() const { return _waitPalette; }
@@ -53,7 +54,6 @@ private:
 	bool loadPalette(ResourceManager &resources, const Common::String &path, byte *dest) const;
 	bool loadBitmap(ResourceManager &resources, const Common::String &path, IndexedBitmap &bitmap) const;
 	bool loadAnimation(ResourceManager &resources, const Common::String &path, Common::Array<AbmFrame> &frames) const;
-	void blitTransparentBitmap(Graphics::Screen &screen, const IndexedBitmap &bitmap, int x, int y) const;
 	void blitTransparentAnimationFrame(Graphics::Screen &screen, const Common::Array<AbmFrame> &frames,
 		uint frameIndex, int x, int y) const;
 
