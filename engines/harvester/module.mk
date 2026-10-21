@@ -6,7 +6,11 @@ MODULE_OBJS = \
 	cft_font.o \
 	cheats.o \
 	console.o \
-	dialogue.o \
+	dialogue/dialogue.o \
+	dialogue/dialogue_menu.o \
+	dialogue/dialogue_playback.o \
+	dialogue/dialogue_render.o \
+	dialogue/dialogue_session.o \
 	flow/flow.o \
 	flow/flow_debug.o \
 	flow/flow_map.o \
@@ -16,7 +20,9 @@ MODULE_OBJS = \
 	fst_player.o \
 	harvester.o \
 	inventory.o \
-	media_manager.o \
+	media/audio_decoder.o \
+	media/media_manager.o \
+	media/media_playback.o \
 	menu/menu.o \
 	menu/menu_config.o \
 	menu/menu_navigation.o \
@@ -44,7 +50,12 @@ MODULE_OBJS = \
 	combat/combat_reactions.o \
 	combat/combat_targeting.o \
 	scene/interaction.o \
+	scene/interaction_effects.o \
+	scene/interaction_outcomes.o \
+	scene/interaction_transitions.o \
 	scene/input.o \
+	scene/input_inventory.o \
+	scene/input_keyboard.o \
 	scene/room_presentation.o \
 	scene/scene_entities.o \
 	scene/scene.o \
