@@ -68,9 +68,10 @@ public:
 
 	bool hasQueuedDebugInteraction() const { return _hasQueuedDebugInteraction; }
 	bool queueDebugInteraction(const InteractionResult &interaction);
-	bool requestDebugRoomChange(const Common::String &roomName);
+	bool requestDebugRoomChange(const Common::String &roomName, int discNumber);
 
 	Common::Error runDemoEnding();
+	Common::Error runHelpScreen(const byte *palette, float paletteBrightness);
 	Common::Error runRoomMenu(const IndexedBitmap &backdrop, const byte *palette,
 		float paletteBrightness, bool canSaveGame);
 	Common::Error runRoomNpcDialogue(const IndexedBitmap &backdrop, const byte *palette,
@@ -122,7 +123,7 @@ private:
 	void clearPendingMainMenuReturn();
 	bool hasPendingCloseupParentRestart() const;
 	void clearPendingCloseupParentRestart();
-	Common::String takePendingDebugRoomChange();
+	Common::String takePendingDebugRoomChange(int &discNumber);
 
 	HarvesterEngine &_engine;
 	Common::Array<Common::String> _quickTips;
@@ -143,6 +144,7 @@ private:
 	bool _pendingMainMenuReturn = false;
 	bool _pendingCloseupParentRestart = false;
 	Common::String _pendingDebugRoomName;
+	int _pendingDebugRoomDisc = 0;
 	uint _roomLoopDepth = 0;
 	uint32 _roomSetupTransitionShownTick = 0;
 };

@@ -22,12 +22,15 @@
 #include "harvester/flow/flow.h"
 
 #include "common/algorithm.h"
+#include "common/debug.h"
 #include "common/events.h"
 #include "common/memstream.h"
 #include "common/serializer.h"
+#include "harvester/detection.h"
 #include "harvester/harvester.h"
 #include "harvester/scene/input.h"
 #include "harvester/entity.h"
+#include "harvester/resources.h"
 #include "harvester/script/script.h"
 
 namespace Harvester {
@@ -164,6 +167,17 @@ Common::Error Flow::runMainMenu() {
 	return _menu.runMainMenu(*this);
 }
 
+Common::Error Flow::runHelpScreen(const byte *palette, float paletteBrightness) {
+	EntityManager *entityManager = _engine.getRuntimeEntities();
+	if (entityManager)
+		entityManager->pauseTimerCountdowns();
+	Common::Error result = _menu.runHelpScreen(palette, paletteBrightness, *this);
+	if (entityManager)
+		entityManager->resumeTimerCountdowns();
+	debugC(1, kDebugRoom, "Harvester: help screen close error=%d", result.getCode());
+	return result;
+}
+
 Common::Error Flow::runRoomMenu(const IndexedBitmap &backdrop, const byte *palette,
 		float paletteBrightness, bool canSaveGame) {
 	return _menu.runRoomMenu(backdrop, palette, paletteBrightness, *this, canSaveGame);
@@ -233,6 +247,7 @@ void Flow::prepareForNewGame() {
 	clearPendingGameOverReturn();
 	clearPendingNewGameRestart();
 	_pendingDebugRoomName.clear();
+	_pendingDebugRoomDisc = 0;
 	_queuedDebugInteraction = InteractionResult();
 	_hasQueuedDebugInteraction = false;
 	_engine.clearPendingLoadedSaveRoomState();
@@ -318,17 +333,21 @@ void Flow::clearPendingCloseupParentRestart() {
 	_pendingCloseupParentRestart = false;
 }
 
-bool Flow::requestDebugRoomChange(const Common::String &roomName) {
-	if (roomName.empty())
+bool Flow::requestDebugRoomChange(const Common::String &roomName, int discNumber) {
+	if (roomName.empty() || discNumber < ResourceManager::kFirstDiscNumber ||
+			discNumber > ResourceManager::kLastDiscNumber)
 		return false;
 
 	_pendingDebugRoomName = roomName;
+	_pendingDebugRoomDisc = discNumber;
 	return true;
 }
 
-Common::String Flow::takePendingDebugRoomChange() {
+Common::String Flow::takePendingDebugRoomChange(int &discNumber) {
 	const Common::String roomName = _pendingDebugRoomName;
+	discNumber = _pendingDebugRoomDisc;
 	_pendingDebugRoomName.clear();
+	_pendingDebugRoomDisc = 0;
 	return roomName;
 }
 
@@ -353,7 +372,21 @@ Common::Error Flow::runRoomLoop(const Common::String &entranceName) {
 			return Common::kNoError;
 		}
 
-		targetName = takePendingDebugRoomChange();
+		int discNumber = 0;
+		targetName = takePendingDebugRoomChange(discNumber);
+		ResourceManager *resources = _engine.getResources();
+		Script *script = _engine.getScript();
+		if (!resources || !script) {
+			--_roomLoopDepth;
+			return Common::kReadingFailed;
+		}
+		if (discNumber != resources->getCurrentDisc() &&
+				(!_engine.activateDisc(discNumber) || !script->reloadTownWorld(*resources))) {
+			warning("Harvester: unable to prepare debug room '%s' on disc %d", targetName.c_str(), discNumber);
+			--_roomLoopDepth;
+			return Common::kReadingFailed;
+		}
+		debugC(1, kDebugRoom, "Harvester: debug room change room='%s' disc=%d", targetName.c_str(), discNumber);
 		targetIsRoomName = true;
 	}
 }
