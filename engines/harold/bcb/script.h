@@ -19,27 +19,28 @@
  *
  */
 
-// Based on xoreos' ASF code
+#ifndef BCB_SCRIPT_H
+#define BCB_SCRIPT_H
 
-#ifndef AUDIO_DECODERS_ASF_H
-#define AUDIO_DECODERS_ASF_H
+namespace BCB {
 
-namespace Audio {
+enum GameStateOffset {
+	kStateDispatcherControlCode = 0x0000,
+	kStateMovieToPlayId = 0x0004,
+	kStateRequiredDiscIndex = 0x0008,
+	kStateGameClockTicks = 0x000c,
+	kStateClearDisplayBeforeMediaCheckFlag = 0x0014,
+	kStateSceneChoiceUiSetToShowId = 0x001c,
+	kStateCurrentScriptSequenceId = 0x0020,
+	kStateSelectedSceneChoiceValue = 0x0024,
+	kStateSceneChoiceExtraButtonFlag = 0x0028,
+	kStateStillImageToShowId = 0x0030,
+	kStateMovieHistory = 0x0040,
+	kStateMovieHistoryCount = 0x0088,
+	kStateComputerChoiceStateByIndex = 0x0098,
+	kStateMainSceneNightFlag = 0x0160
+};
 
-/**
- * Try to load a ASF from the given seekable stream and create a RewindableAudioStream
- * from that data.
- *
- * @param stream          The SeekableReadStream from which to read the ASF data.
- * @param disposeAfterUse Whether to delete the stream after use.
- *
- * @return A new SeekableAudioStream, or 0, if an error occurred.
- */
+} // End of namespace BCB
 
-SeekableAudioStream *makeASFStream(
-	Common::SeekableReadStream *stream,
-	DisposeAfterUse::Flag disposeAfterUse);
-
-} // End of namespace Audio
-
-#endif // AUDIO_DECODERS_ASF_H
+#endif // BCB_SCRIPT_H
