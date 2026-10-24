@@ -35,6 +35,7 @@ struct NancyInput;
 
 namespace Script {
 
+class GraphNode;
 class SceneContext;
 
 // What the player does that records get told about
@@ -119,7 +120,8 @@ public:
 	bool isActive() const { return _isActive && !_isDone; }
 	bool isDone() const { return _isDone; }
 	bool hasStarted() const { return _hasStarted; }
-	double getZ() const { return _z; }
+	// Counted from the node the record is under, when it is under one
+	double getZ() const;
 
 	// Puts the record no closer to the player than the given z
 	void limitZ(double z);
@@ -142,9 +144,18 @@ public:
 	bool sendChangeCursor(const ScriptPoint &point, bool inViewport, uint &cursorType, bool &isHot);
 	bool sendMouseEvent(RecordEvent event, const ScriptPoint &point, bool inViewport);
 	bool sendKeyEvent(RecordEvent event, Common::KeyCode key);
+	void sendMouseScroll(const ScriptPoint &point, bool inViewport, int notches);
 
-	// Where the record puts what it shows, for the kinds that show something
-	const ScriptMatrix &getTransform() const { return _transform; }
+	// Where the record puts what it shows, for the kinds that show something,
+	// after the nodes it is under moved it
+	ScriptMatrix getTransform() const;
+
+	// Nancy21: puts the record under a node; null for none
+	GraphNode *getParentNode() const { return _parentNode; }
+	void setParentNode(GraphNode *node);
+
+	// A node above the record changed its z or its transform
+	void onParentNodeChanged();
 
 	// Shows or hides what the record draws, once the records of a frame have run
 	virtual void updateGraphics() {}
@@ -153,6 +164,18 @@ public:
 	// something that can be skipped, and what it does when the skipping begins.
 	virtual bool isSkippable() const { return false; }
 	virtual void onSkip() {}
+
+	// A record that ended during a skip doesn't keep it going when the scripts
+	// start it over, as the random fidget movies do
+	bool canBeSkipped() const { return !_hasEndedInSkip && isSkippable(); }
+	void onSkipEnded() { _hasEndedInSkip = false; }
+
+	// Enhancement: what a character says can be skipped as well. Returns
+	// whether the record was saying something.
+	virtual bool skipSpeech() { return false; }
+
+	// For the debugger: what the scripts gave the record, as "name = value"
+	void describeFields(Common::Array<Common::String> &lines);
 
 protected:
 	lua_State *getLua() const;
@@ -200,11 +223,14 @@ private:
 
 	double _z = 0.0;
 	ScriptMatrix _transform;
+	GraphNode *_parentNode = nullptr;
 	bool _hasActiveFunction = false;
 	bool _hasStarted = false;
 	bool _isActive = true;
 	bool _wasActive = false;
 	bool _isDone = false;
+	bool _isFinishing = false;	// while OnDone runs
+	bool _hasEndedInSkip = false;
 	bool _hasRunOnce = false;
 
 	bool _isScriptOwned = false;
@@ -217,6 +243,12 @@ void registerRecordAPI(lua_State *L);
 
 // The record a script handed in, or a script error
 Record *checkRecord(lua_State *L, int index);
+
+// The record a value stands for, or null when it is something else
+Record *toRecord(lua_State *L, int index);
+
+// For the debugger: a value of the scripts as text
+Common::String describeValue(lua_State *L, int index);
 
 } // End of namespace Script
 } // End of namespace Nancy

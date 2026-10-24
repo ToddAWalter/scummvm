@@ -23,16 +23,21 @@
 #include "common/random.h"
 #include "common/textconsole.h"
 
+#include "image/png.h"
+
 #include "engines/nancy/cursor.h"
 #include "engines/nancy/enginedata.h"
 #include "engines/nancy/graphics.h"
 #include "engines/nancy/nancy.h"
+#include "engines/nancy/puzzledata.h"
 #include "engines/nancy/resource.h"
 #include "engines/nancy/sound.h"
 
 #include "engines/nancy/script/api.h"
 #include "engines/nancy/script/convo.h"
 #include "engines/nancy/script/luabind.h"
+#include "engines/nancy/script/particles.h"
+#include "engines/nancy/script/physics.h"
 #include "engines/nancy/script/records.h"
 #include "engines/nancy/script/ref.h"
 #include "engines/nancy/script/scenecontext.h"
@@ -62,7 +67,8 @@ static const RecordKindNames kRecordKindNames[kNumRecordKinds] = {
 	{ "Text", "ND.TextAR" },
 	{ "Override", "ND.OverrideAR" },
 	{ "Particle", "ND.ParticleAR" },
-	{ "AnimOverlay", "ND.AnimOvlAR" }
+	{ "AnimOverlay", "ND.AnimOvlAR" },
+	{ "Physics", "ND.PhysicsAR" }
 };
 
 const char *getRecordKindName(RecordKind kind) {
@@ -95,8 +101,11 @@ Record *makeRecord(RecordKind kind, SceneContext &context) {
 		return new ConvoRecord(context, false);
 	case kRecordText:
 		return new TextRecord(context);
+	case kRecordParticle:
+		return new ParticleRecord(context);
+	case kRecordPhysics:
+		return new PhysicsRecord(context);
 	default:
-		// TODO: The Particle record
 		return nullptr;
 	}
 }
@@ -107,15 +116,27 @@ Record *makeRecord(RecordKind kind, SceneContext &context) {
 static const double kBackgroundScriptZ = -5.0;
 static const int kBackgroundZ = 6;
 
-void RecordGraphic::setScriptZ(double z, int32 streamZOffset) {
-	const int engineZ = kBackgroundZ + (int)(z - kBackgroundScriptZ) + streamZOffset;
-	setZOrder((uint16)CLIP<int>(engineZ, 0, 0xFFFF));
+// Scripts tell apart z values as close as 0.001, and every stream is one step
+// closer than the one that began it
+static const double kStepsPerScriptZ = 1000.0;
+static const int kMaxScriptZOrder = 59000;
+
+uint16 RecordGraphic::getScriptZOrder(double z, int32 zOffset) {
+	const double steps = (z - kBackgroundScriptZ + zOffset) * kStepsPerScriptZ;
+	return (uint16)CLIP<int>(kBackgroundZ + (int)floor(steps + 0.5), 0, kMaxScriptZOrder);
+}
+
+uint16 RecordGraphic::getBackgroundZOrder(int32 zOffset) {
+	return getScriptZOrder(kBackgroundScriptZ, zOffset);
+}
+
+void RecordGraphic::setScriptZ(double z, const SceneContext &context) {
+	setZOrder(getScriptZOrder(z, context.getZOffset()));
+	setViewTransform(context.getViewTransform());
 }
 
 // Where something that was placed in the viewport ends up once the transform
-// of its record has moved it.
-// TODO: Movies only take their place from the transform. Draw what it rotates
-// and scales as well.
+// of its record has moved it
 static Common::Rect getTransformedDest(const ScriptRect &dest, const ScriptMatrix &transform, int width, int height) {
 	// Far enough for anything a script moves around, and safe to add a size to
 	const int kLimit = 16000;
@@ -724,7 +745,7 @@ bool OverrideRecord::hasMessagingName(const Common::String &name) {
 
 void OverrideRecord::onZChanged() {
 	if (_canvas) {
-		_canvas->setScriptZ(getZ(), getContext().getZOffset());
+		_canvas->setScriptZ(getZ(), getContext());
 	}
 }
 
@@ -756,7 +777,7 @@ void OverrideRecord::updateGraphics() {
 		_canvas->init();
 		_canvas->_drawSurface.create(bounds.width(), bounds.height(), g_nancy->_graphics->getTransparentPixelFormat());
 		_canvas->moveTo(bounds);
-		_canvas->setScriptZ(getZ(), getContext().getZOffset());
+		_canvas->setScriptZ(getZ(), getContext());
 		_canvas->registerGraphics();
 	}
 
@@ -798,6 +819,39 @@ bool OverrideRecord::setField(const Common::String &key) {
 
 // Overlay
 
+// The "LOADSAVE" tree holds the pictures the camera took, which are kept with
+// the saved game
+static const char *const kPictureTreeName = "LOADSAVE";
+
+static bool loadOverlayImage(const Common::String &name, const Common::String &treeName, Graphics::ManagedSurface &image) {
+	if (!treeName.equalsIgnoreCase(kPictureTreeName)) {
+		return g_nancy->_resource->loadImage(Common::Path(name), image, treeName);
+	}
+
+#ifdef USE_PNG
+	const ScriptPictureData *pictures = (const ScriptPictureData *)NancySceneState.getPuzzleData(ScriptPictureData::getTag());
+	if (!pictures->pictures.contains(name)) {
+		warning("Could not find picture %s amongst the saved ones", name.c_str());
+		return false;
+	}
+
+	const Common::Array<byte> &data = pictures->pictures[name];
+	Common::MemoryReadStream stream(data.data(), data.size());
+	Image::PNGDecoder decoder;
+	if (!decoder.loadStream(stream)) {
+		return false;
+	}
+
+	Graphics::Surface *converted = decoder.getSurface()->convertTo(g_nancy->_graphics->getInputPixelFormat(32));
+	GraphicsManager::copyToManaged(*converted, image);
+	converted->free();
+	delete converted;
+	return true;
+#else
+	return false;
+#endif
+}
+
 void OverlayRecord::readTable(int tableIndex) {
 	lua_State *L = getLua();
 
@@ -806,7 +860,11 @@ void OverlayRecord::readTable(int tableIndex) {
 		luaL_error(L, "OverlayAR must be created with a ovl parameter");
 	}
 
-	if (!g_nancy->_resource->loadImage(Common::Path(imageName), _image)) {
+	// Nancy21 can name the tree the image is in
+	Common::String treeName;
+	readField(L, tableIndex, "tree", treeName);
+
+	if (!loadOverlayImage(imageName, treeName, _image)) {
 		luaL_error(L, "Could not load overlay %s", imageName.c_str());
 	}
 
@@ -849,7 +907,7 @@ void OverlayRecord::applyRects() {
 }
 
 void OverlayRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext().getZOffset());
+	_graphic.setScriptZ(getZ(), getContext());
 }
 
 void OverlayRecord::updateGraphics() {
@@ -862,7 +920,7 @@ void OverlayRecord::updateGraphics() {
 }
 
 // What a script draws by itself goes over everything else the scene shows
-static const uint16 kAttachmentZ = 999;
+static const uint16 kAttachmentZ = 59999;
 
 // TODO: The picture is cut off at the edges of the viewport
 void OverlayRecord::renderNow() {
@@ -912,12 +970,28 @@ bool OverlayRecord::getField(const Common::String &key) {
 bool OverlayRecord::setField(const Common::String &key) {
 	lua_State *L = getLua();
 
+	// Only a change gets the picture drawn anew
 	if (key == "onScreen") {
-		_dest = checkRect(L, 3);
+		const ScriptRect dest = checkRect(L, 3);
+		if (dest == _dest) {
+			return true;
+		}
+
+		_dest = dest;
 	} else if (key == "source") {
-		_source = checkRect(L, 3);
+		const ScriptRect source = checkRect(L, 3);
+		if (source == _source) {
+			return true;
+		}
+
+		_source = source;
 	} else if (key == "modColor") {
-		_modColor = checkColor(L, 3);
+		const uint32 modColor = checkColor(L, 3);
+		if (modColor == _modColor) {
+			return true;
+		}
+
+		_modColor = modColor;
 	} else {
 		return false;
 	}
@@ -989,7 +1063,11 @@ void AnimOverlayRecord::readTable(int tableIndex) {
 		luaL_error(L, "AnimOverlays must have a ovl field");
 	}
 
-	if (!g_nancy->_resource->loadImage(Common::Path(imageName), _image)) {
+	// Nancy21 can name the tree the image is in
+	Common::String treeName;
+	readField(L, tableIndex, "tree", treeName);
+
+	if (!loadOverlayImage(imageName, treeName, _image)) {
 		luaL_error(L, "Could not load overlay %s", imageName.c_str());
 	}
 
@@ -1066,7 +1144,7 @@ bool AnimOverlayRecord::prepareReset() {
 }
 
 void AnimOverlayRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext().getZOffset());
+	_graphic.setScriptZ(getZ(), getContext());
 }
 
 void AnimOverlayRecord::updateGraphics() {
@@ -1130,11 +1208,17 @@ bool AnimOverlayRecord::setField(const Common::String &key) {
 	lua_State *L = getLua();
 
 	if (key == "onScreen") {
-		_dest = checkRect(L, 3);
-		applyFrame();
+		const ScriptRect dest = checkRect(L, 3);
+		if (dest != _dest) {
+			_dest = dest;
+			applyFrame();
+		}
 	} else if (key == "modColor") {
-		_modColor = checkColor(L, 3);
-		applyFrame();
+		const uint32 modColor = checkColor(L, 3);
+		if (modColor != _modColor) {
+			_modColor = modColor;
+			applyFrame();
+		}
 	} else if (key == "pauseOnLastFrame") {
 		_pausesOnLastFrame = lua_toboolean(L, 3) != 0;
 	} else if (key == "visible") {
@@ -1180,6 +1264,24 @@ void SoundRecord::onSkip() {
 		g_nancy->_sound->stopSound(_sound);
 		_endTime = 0.0;
 	}
+}
+
+// The channels speech plays on: NPCVoice, PlayerVoice, Voice1, Voice2, UIVoice
+// and EngineVoice
+static const uint16 kFirstVoiceChannel = 24;
+static const uint16 kLastVoiceChannel = 29;
+
+bool SoundRecord::skipSpeech() {
+	if (!isActive() || !hasStarted() || _isLooping || !_isPlaying ||
+			_channel < kFirstVoiceChannel || _channel > kLastVoiceChannel ||
+			!g_nancy->_sound->isSoundPlaying(_sound)) {
+		return false;
+	}
+
+	// The record ends with its next run, and takes the caption with it
+	g_nancy->_sound->stopSound(_sound);
+	_endTime = 0.0;
+	return true;
 }
 
 void SoundRecord::runOnce() {
@@ -1329,11 +1431,18 @@ void TextRecord::readTable(int tableIndex) {
 	_graphic.registerGraphics();
 }
 
+// The transform moves the text, like the scrolling lists of the UI do with theirs
 void TextRecord::applyDest() {
 	const Common::Rect dest = _dest.toRect();
-	_graphic._drawSurface.create(MAX<int>(dest.width(), 1), MAX<int>(dest.height(), 1), g_nancy->_graphics->getTransparentPixelFormat());
-	_graphic.moveTo(dest);
-	_isDirty = true;
+	const int width = MAX<int>(dest.width(), 1);
+	const int height = MAX<int>(dest.height(), 1);
+	if (_graphic._drawSurface.w != width || _graphic._drawSurface.h != height) {
+		_graphic._drawSurface.create(width, height, g_nancy->_graphics->getTransparentPixelFormat());
+		_isDirty = true;
+	}
+
+	_graphic.moveTo(getTransformedDest(_dest, getTransform(), width, height));
+	_graphic.setNeedsRedraw(true);
 }
 
 void TextRecord::setText(const Common::String &text) {
@@ -1395,7 +1504,7 @@ void TextRecord::run(double sceneTime, double elapsedTime) {
 }
 
 void TextRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext().getZOffset());
+	_graphic.setScriptZ(getZ(), getContext());
 }
 
 void TextRecord::updateGraphics() {
@@ -1497,10 +1606,36 @@ void MovieRecord::readTable(int tableIndex) {
 	readField(L, tableIndex, "pauseOnLastFrame", _pausesOnLastFrame);
 	readField(L, tableIndex, "visible", _isVisible);
 
+	// The whole of every frame, unless a part of it is asked for
+	_source = ScriptRect(0, 0, _player.getWidth(), _player.getHeight());
+	if (pushField(L, tableIndex, "source")) {
+		_source = checkRect(L, -1);
+		lua_pop(L, 1);
+	}
+
+	double volume = 0.85;
+	readField(L, tableIndex, "volume", volume);
+	_player.setVolume((byte)CLIP<int>((int)(volume * 100.0 + 0.5), 0, 100));
+
+	// true is forever, false once, and a number that many times
+	lua_getfield(L, tableIndex, "loop");
+	if (lua_isboolean(L, -1)) {
+		_numLoops = lua_toboolean(L, -1) ? 0 : 1;
+	} else if (lua_isnumber(L, -1)) {
+		_numLoops = lua_tointeger(L, -1);
+	} else if (!lua_isnil(L, -1)) {
+		luaL_error(L, "loop must be either a boolean or a number");
+	}
+
+	lua_pop(L, 1);
+
+	if (pushField(L, tableIndex, "modColor")) {
+		_modColor = checkColor(L, -1);
+		lua_pop(L, 1);
+	}
+
 	_graphic.init();
-	_graphic._drawSurface.create(_player.getWidth(), _player.getHeight(), g_nancy->_graphics->getScreenPixelFormat());
 	_graphic.setVisible(false);
-	applyPosition();
 	onZChanged();
 	_graphic.registerGraphics();
 
@@ -1508,15 +1643,45 @@ void MovieRecord::readTable(int tableIndex) {
 	drawFrame();
 }
 
-void MovieRecord::applyPosition() {
-	_graphic.moveTo(getTransformedDest(_dest, getTransform(), _player.getWidth(), _player.getHeight()));
+// Scripts hide a movie that keeps playing with a color without any alpha
+bool MovieRecord::isSeeThrough() const {
+	return (_modColor >> 24) == 0;
 }
 
 void MovieRecord::drawFrame() {
-	// A frame with see-through parts would let the one before it show
-	_graphic._drawSurface.clear(0);
-	_player.drawFrame(_graphic._drawSurface, Common::Point(0, 0));
-	_graphic.setNeedsRedraw(true);
+	if (isSeeThrough()) {
+		return;
+	}
+
+	const ScriptMatrix transform = getTransform();
+	const Common::Rect source = _source.toRect();
+
+	if (transform.isTranslation() && _modColor == kNoModColor) {
+		Graphics::ManagedSurface &surface = _graphic._drawSurface;
+		if (surface.w != source.width() || surface.h != source.height() || !surface.getPixels()) {
+			surface.create(MAX<int>(source.width(), 1), MAX<int>(source.height(), 1), g_nancy->_graphics->getScreenPixelFormat());
+		}
+
+		// A frame with see-through parts would let the one before it show
+		surface.clear(0);
+		_player.drawFrame(surface, source, Common::Point(0, 0));
+		_graphic.setTransparent(false);
+		_graphic.moveTo(getTransformedDest(_dest, transform, source.width(), source.height()));
+		_graphic.setNeedsRedraw(true);
+		return;
+	}
+
+	// Turned, resized or colored frames get drawn anew, the way overlays are
+	if (_frame.w != _player.getWidth() || _frame.h != _player.getHeight()) {
+		_frame.create(_player.getWidth(), _player.getHeight(), g_nancy->_graphics->getScreenPixelFormat());
+	}
+
+	_frame.clear(0);
+	_player.drawFrame(_frame, Common::Point(0, 0));
+
+	Common::Rect clipped = source;
+	clipped.clip(Common::Rect(_frame.w, _frame.h));
+	placePicture(_graphic, _frame, clipped, _dest, transform, _modColor);
 }
 
 void MovieRecord::runOnce() {
@@ -1524,26 +1689,30 @@ void MovieRecord::runOnce() {
 	drawFrame();
 }
 
-// A movie that plays through and ends
+// A movie that plays through and ends; one that loops forever never does
 bool MovieRecord::isSkippable() const {
-	return isActive() && hasStarted() && !_isPaused && !_pausesOnLastFrame;
+	return isActive() && hasStarted() && !_isPaused && !_pausesOnLastFrame && _numLoops != 0;
 }
 
 void MovieRecord::run(double sceneTime, double elapsedTime) {
-	// A movie that is being skipped moves on by one frame every time it runs
-	if (getContext().isSkipping() && isSkippable()) {
-		const int frame = _player.getCurrentFrame();
-		bool hasEnded = frame == _lastFrame;
-
-		if (!hasEnded && _lastFrame > frame) {
-			hasEnded = _player.decodeNextFrame() == nullptr;
-		} else if (!hasEnded) {
-			_player.goToFrame(frame - 1);
+	// A movie that is being skipped moves on by one frame every time it runs, so
+	// the scripts that wait for one of its frames still see it. The frames on the
+	// way aren't decoded, and neither is the last one: a skipped movie ends, which
+	// hides it, and getting to its last frame can take decoding all of it, since
+	// some have no other keyframe than their first one.
+	if (getContext().isSkipping() && canBeSkipped()) {
+		if (_skipFrame < 0) {
+			_skipFrame = _player.getCurrentFrame();
 		}
 
-		if (hasEnded) {
-			_player.goToFrame(_lastFrame);
-			drawFrame();
+		if (_skipFrame < _lastFrame) {
+			++_skipFrame;
+		} else if (_skipFrame > _lastFrame) {
+			--_skipFrame;
+		}
+
+		// The movie stays at its last frame for the scripts until it starts over
+		if (_skipFrame == _lastFrame) {
 			_endTime = sceneTime;
 			finish();
 		}
@@ -1551,11 +1720,21 @@ void MovieRecord::run(double sceneTime, double elapsedTime) {
 		return;
 	}
 
+	_skipFrame = -1;
+
 	if (!_isPaused && _player.update()) {
 		drawFrame();
 	}
 
 	if (_player.isRangePlaying()) {
+		return;
+	}
+
+	// Another time through
+	++_numPlayed;
+	if (_numLoops == 0 || _numPlayed < _numLoops) {
+		_player.playRange(_firstFrame, _lastFrame);
+		drawFrame();
 		return;
 	}
 
@@ -1571,6 +1750,8 @@ void MovieRecord::run(double sceneTime, double elapsedTime) {
 
 bool MovieRecord::prepareReset() {
 	_endTime = 0.0;
+	_numPlayed = 0;
+	_skipFrame = -1;
 	_isPaused = false;
 	_hasCalledOnPause = false;
 	_player.goToFrame(_firstFrame);
@@ -1579,11 +1760,11 @@ bool MovieRecord::prepareReset() {
 }
 
 void MovieRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext().getZOffset());
+	_graphic.setScriptZ(getZ(), getContext());
 }
 
 void MovieRecord::updateGraphics() {
-	_graphic.setVisible(isActive() && _isVisible);
+	_graphic.setVisible(isActive() && _isVisible && !isSeeThrough());
 }
 
 // movie:Play() and movie:Pause()
@@ -1612,6 +1793,10 @@ bool MovieRecord::getField(const Common::String &key) {
 		lua_pushstring(L, _name.c_str());
 	} else if (key == "onScreen") {
 		pushRect(L, _dest);
+	} else if (key == "source") {
+		pushRect(L, _source);
+	} else if (key == "modColor") {
+		pushColor(L, _modColor);
 	} else if (key == "Play") {
 		lua_pushcfunction(L, moviePlay);
 	} else if (key == "Pause") {
@@ -1623,7 +1808,7 @@ bool MovieRecord::getField(const Common::String &key) {
 	} else if (key == "visible") {
 		lua_pushboolean(L, _isVisible);
 	} else if (key == "frame") {
-		lua_pushinteger(L, _player.getCurrentFrame());
+		lua_pushinteger(L, _skipFrame >= 0 ? _skipFrame : _player.getCurrentFrame());
 	} else if (key == "endTime") {
 		lua_pushnumber(L, _endTime);
 	} else if (key == "firstFrame") {
@@ -1642,9 +1827,28 @@ bool MovieRecord::getField(const Common::String &key) {
 bool MovieRecord::setField(const Common::String &key) {
 	lua_State *L = getLua();
 
+	// Scripts set these every frame, mostly to what they already are
 	if (key == "onScreen") {
-		_dest = checkRect(L, 3);
-		applyPosition();
+		const ScriptRect dest = checkRect(L, 3);
+		if (dest != _dest) {
+			_dest = dest;
+			applyPosition();
+		}
+	} else if (key == "source" && g_nancy->getGameType() >= kGameTypeNancy21) {
+		// Earlier games only take the part of the frames when the movie is made
+		const ScriptRect source = checkRect(L, 3);
+		if (source != _source) {
+			_source = source;
+			drawFrame();
+		}
+	} else if (key == "modColor") {
+		const uint32 modColor = checkColor(L, 3);
+		if (modColor != _modColor) {
+			_modColor = modColor;
+			drawFrame();
+		}
+	} else if (key == "volume") {
+		_player.setVolume((byte)CLIP<int>((int)(luaL_checknumber(L, 3) * 100.0 + 0.5), 0, 100));
 	} else if (key == "pauseOnLastFrame") {
 		_pausesOnLastFrame = lua_toboolean(L, 3) != 0;
 	} else if (key == "visible") {

@@ -34,6 +34,7 @@ struct lua_State;
 namespace Nancy {
 
 struct NancyInput;
+struct ViewTransform;
 
 namespace Script {
 
@@ -41,6 +42,7 @@ class LuaState;
 class Record;
 struct RefImage;
 class ConvoRecord;
+class GraphNode;
 struct ConvoResponse;
 class SummaryRecord;
 
@@ -90,6 +92,10 @@ public:
 	bool hasRecords() const { return !_records.empty() || !_newRecords.empty(); }
 	const Common::Array<Record *> &getRecords() const { return _records; }
 
+	// For the debugger: the global a script keeps the record in, like "doorNAV",
+	// or an entry of a table in one, like "laptopSFX[2]"; empty for none
+	Common::String findGlobalName(const Record *record) const;
+
 	// The record that describes the scene, which is always the first one
 	SummaryRecord *getSummary() const { return _summary; }
 
@@ -98,6 +104,9 @@ public:
 	uint getFrame() const { return _frame; }
 	void setFrame(uint frame) { _frame = frame; }
 	int32 getZOffset() const { return _zOffset; }
+
+	// Nancy21: the zoom of the stream the scene is in
+	const ViewTransform *getViewTransform() const;
 
 	// The seconds the scene has been running for
 	double getTime() const { return _time; }
@@ -109,6 +118,10 @@ public:
 	bool skipMovies();
 	bool isSkipping() const { return _isSkipping; }
 
+	// Enhancement: ends what the characters of the scene are saying. Returns false
+	// when nobody is talking.
+	bool skipSpeech();
+
 	// The conversation of the scene, once one has begun
 	ConvoRecord *getConvo() const { return _convo; }
 	void setConvo(ConvoRecord *convo) { _convo = convo; }
@@ -118,6 +131,12 @@ public:
 
 	// The panels a scene adds to the UI call into its scripts, so they go when it does
 	void setMakesUI() { _makesUI = true; }
+
+	// Nancy21: a new node to group records under, which lasts as long as the scene
+	GraphNode *createGraphNode();
+
+	// Lets the records under a node know that it changed its z or transform
+	void onGraphNodeChanged(GraphNode *node);
 
 	// Runs another script as a part of this scene
 	bool include(const Common::String &name);
@@ -156,6 +175,7 @@ private:
 	SummaryRecord *_summary = nullptr;
 	ConvoRecord *_convo = nullptr;
 	Common::Array<ConvoResponse *> _convoResponses;
+	Common::Array<GraphNode *> _graphNodes;
 	Common::HashMap<Common::String, RefImage *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _refs;
 
 	double _time = 0.0;

@@ -22,6 +22,7 @@
 #ifndef NANCY_UI_NDUI_COMMON_H
 #define NANCY_UI_NDUI_COMMON_H
 
+#include "common/rect.h"
 #include "common/str.h"
 #include "common/stream.h"
 
@@ -35,6 +36,8 @@ namespace NDUI {
 // set of panels, each holding a list of controls, described by NDUI chunks spread
 // over one IFF per widget. Controls react to the player by firing events, each of
 // which performs an action on a named panel or control, or hands it to the engine.
+// The original's toolkit, Ndui.dll, is built on the DXUT widgets of the DirectX SDK
+// (CDXUTDialog and its controls), which the panels and controls here follow.
 
 enum ControlType {
 	kControlButton		= 1,
@@ -93,6 +96,8 @@ enum EventType {
 	kEventShow			= 16,	// the panel holding the control was shown
 	kEventHide			= 17,	// the panel holding the control was hidden
 	kEventUpdate		= 18,	// sent every frame while the panel is visible; "load" to Nancy19 scripts
+	kEventEnable		= 19,	// Nancy20: the panel holding the control was enabled...
+	kEventDisable		= 20,	// ...or disabled
 	kEventActionRecord	= 100	// sent by a scene's action record
 };
 
@@ -102,6 +107,9 @@ enum ActionType {
 	kActionHide				= 2,
 	kActionToggle			= 3,
 	kActionSetRange			= 5,	// scroll bars
+	kActionExpand			= 5,	// Nancy20 panels, which can be collapsed...
+	kActionCollapse			= 6,
+	kActionToggleCollapsed	= 7,	// ...to their caption, which script panels don't have
 	kActionEnable			= 8,
 	kActionDisable			= 9,
 	kActionToggleEnabled	= 10,
@@ -109,6 +117,7 @@ enum ActionType {
 	kActionSetText			= 12,	// also empties a list box
 	kActionSetValue			= 13,
 	kActionSetTexture		= 14,
+	kActionSetImage			= 15,	// Nancy21: a texture and a source rect, in one
 	kActionQuery			= 30,	// asks the engine to send its value back with kActionSetValue
 	kActionShowItem			= 40,	// inventory panels
 	kActionHideItem			= 41
@@ -142,6 +151,11 @@ public:
 	virtual ~ObjectFactory() {}
 	virtual bool createObject(const Common::String &name, const Common::String &templateName) = 0;
 };
+
+// Nancy21 passes rectangles around as the value of an action, with the four
+// sides packed into the bytes of the number. A side that doesn't fit gives -1.
+double encodeRect(int32 left, int32 top, int32 right, int32 bottom);
+Common::Rect decodeRect(double value);
 
 // Adds the actions that bring a panel or control from the state it starts in to the given one
 void addStateChanges(Common::Array<UIStateData::Change> &changes, const Common::String &name, int32 initialState, bool visible, bool enabled);

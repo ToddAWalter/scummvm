@@ -761,6 +761,42 @@ void PlayerCharacterData::synchronize(Common::Serializer &ser) {
 	}
 }
 
+void InventorySoundOverrideData::synchronize(Common::Serializer &ser) {
+	for (uint i = 0; i < kMaxPlayerCharacters; ++i) {
+		uint16 count = overrides[i].size();
+		ser.syncAsUint16LE(count);
+
+		if (ser.isSaving()) {
+			for (auto &entry : overrides[i]) {
+				uint16 itemID = entry._key;
+				ser.syncAsUint16LE(itemID);
+				syncOverride(ser, entry._value);
+			}
+		} else {
+			overrides[i].clear();
+
+			for (uint j = 0; j < count; ++j) {
+				uint16 itemID = 0;
+				ser.syncAsUint16LE(itemID);
+				syncOverride(ser, overrides[i].getOrCreateVal(itemID));
+			}
+		}
+	}
+}
+
+void InventorySoundOverrideData::syncOverride(Common::Serializer &ser, Override &override) {
+	ser.syncAsByte(override.isDefault);
+	ser.syncString(override.caption);
+	ser.syncString(override.sound.name);
+	ser.syncAsUint16LE(override.sound.channelID);
+	ser.syncAsUint16LE(override.sound.playCommands);
+	ser.syncAsUint16LE(override.sound.numLoops);
+	ser.syncAsUint16LE(override.sound.volume);
+	ser.syncAsUint16LE(override.sound.panAnchorFrame);
+	ser.syncAsUint32LE(override.sound.samplesPerSec);
+	ser.syncAsByte(override.sound.isPanning);
+}
+
 void WordFindPuzzleData::synchronize(Common::Serializer &ser) {
 	ser.syncAsSint16LE(currentWord);
 }
@@ -800,6 +836,11 @@ void MirrorLightData::synchronize(Common::Serializer &ser) {
 		angles.resize(num);
 	for (uint i = 0; i < num; ++i)
 		ser.syncAsDoubleLE(angles[i]);
+}
+
+void MultiBuildPuzzleData::synchronize(Common::Serializer &ser) {
+	ser.syncAsUint16LE(sceneID);
+	syncInt16Array(ser, placeCounts);
 }
 
 void BuildPuzzleData::synchronize(Common::Serializer &ser) {
@@ -1023,6 +1064,31 @@ void ScriptSavedData::synchronize(Common::Serializer &ser) {
 	}
 }
 
+void ScriptPictureData::synchronize(Common::Serializer &ser) {
+	uint16 numPictures = pictures.size();
+	ser.syncAsUint16LE(numPictures);
+
+	Common::Array<Common::String> names;
+	if (ser.isSaving()) {
+		for (auto &entry : pictures) {
+			names.push_back(entry._key);
+		}
+	} else {
+		pictures.clear();
+		names.resize(numPictures);
+	}
+
+	for (Common::String &name : names) {
+		ser.syncString(name);
+
+		Common::Array<byte> &picture = pictures[name];
+		uint32 size = picture.size();
+		ser.syncAsUint32LE(size);
+		picture.resize(size);
+		ser.syncBytes(picture.data(), size);
+	}
+}
+
 void ScriptJournalData::synchronize(Common::Serializer &ser) {
 	for (uint i = 0; i < kMaxPlayerCharacters; ++i) {
 		uint16 numEntries = journalEntries[i].size();
@@ -1072,6 +1138,8 @@ PuzzleData *makePuzzleData(const uint32 tag) {
 		return new ScriptSavedData();
 	case ScriptJournalData::getTag():
 		return new ScriptJournalData();
+	case ScriptPictureData::getTag():
+		return new ScriptPictureData();
 	case StreamData::getTag():
 		return new StreamData();
 	case BuildBoardData::getTag():
@@ -1082,6 +1150,8 @@ PuzzleData *makePuzzleData(const uint32 tag) {
 		return new DragSurfaceData();
 	case BuildPuzzleData::getTag():
 		return new BuildPuzzleData();
+	case MultiBuildPuzzleData::getTag():
+		return new MultiBuildPuzzleData();
 	case MirrorLightData::getTag():
 		return new MirrorLightData();
 	case DrivingData::getTag():
@@ -1134,6 +1204,8 @@ PuzzleData *makePuzzleData(const uint32 tag) {
 		return new TaskbarData();
 	case PlayerCharacterData::getTag():
 		return new PlayerCharacterData();
+	case InventorySoundOverrideData::getTag():
+		return new InventorySoundOverrideData();
 	default:
 		return nullptr;
 	}

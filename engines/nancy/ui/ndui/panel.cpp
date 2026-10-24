@@ -169,10 +169,9 @@ void Panel::addBuiltInTooltip() {
 	static const double kHideAfter = 10.0;
 	static const char *const kFontName = "UIFont";
 
-	// TODO: The colors of the original aren't known; these are the usual ones
-	// of a tooltip
-	static const uint32 kBackgroundColor = 0xFFFFFFE1;
-	static const uint32 kTextColor = 0xFF000000;
+	// White text with nothing behind it
+	static const uint32 kBackgroundColor = 0x00000000;
+	static const uint32 kTextColor = 0xFFFFFFFF;
 
 	// Centered, and on a single line
 	static const int32 kAlignCenter = 2;
@@ -231,6 +230,16 @@ void Panel::addBuiltInTooltip() {
 	delete _tooltip;
 	_tooltip = new Tooltip(this);
 	_tooltip->read(stream);
+}
+
+bool Panel::hasControl(const Common::String &name) const {
+	for (const Control *control : _controls) {
+		if (control->getName().equalsIgnoreCase(name)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool Panel::createObject(const Common::String &name, const Common::String &templateName) {
@@ -462,9 +471,20 @@ bool Panel::takeAction(const Action &action) {
 		break;
 	case kActionEnable:
 		_enabled = true;
+		fireEvent(kEventEnable);
 		break;
 	case kActionDisable:
 		_enabled = false;
+		fireEvent(kEventDisable);
+		break;
+	case kActionExpand:
+		setCollapsed(false);
+		break;
+	case kActionCollapse:
+		setCollapsed(true);
+		break;
+	case kActionToggleCollapsed:
+		setCollapsed(!_isCollapsed);
 		break;
 	case kActionSetValue:
 		// A scroll panel follows its scroll bar, a whole step at a time
@@ -543,15 +563,39 @@ void Panel::finishBlending() {
 // Every show needs a matching hide before the panel goes away
 void Panel::show() {
 	++_showCount;
-	setVisible(true);
+	if (_isCollapsed) {
+		_isShownWhenExpanded = true;
+	} else {
+		setVisible(true);
+	}
+
 	arrangeControls();
 	fireEvent(kEventShow);
+}
+
+void Panel::setCollapsed(bool isCollapsed) {
+	if (isCollapsed == _isCollapsed) {
+		return;
+	}
+
+	_isCollapsed = isCollapsed;
+	if (isCollapsed) {
+		_isShownWhenExpanded = isVisible();
+		setVisible(false);
+		if (_capture) {
+			_capture->_isPressed = false;
+			_capture = nullptr;
+		}
+	} else {
+		setVisible(_isShownWhenExpanded);
+	}
 }
 
 void Panel::hide() {
 	--_showCount;
 	if (_showCount == 0) {
 		setVisible(false);
+		_isShownWhenExpanded = false;
 		if (_capture) {
 			_capture->_isPressed = false;
 			_capture = nullptr;
@@ -747,7 +791,7 @@ bool Panel::handleInput(NancyInput &input, bool canHover, bool &isOverControl) {
 	Control *hovered = (isInside && _enabled) ? getControlAt(pos) : nullptr;
 	if (isInside && !hovered) {
 		Common::Point unscrolledPos(pos.x, pos.y - _scrollOffset);
-		isInside = _background->_bounds.contains(unscrolledPos);
+		isInside = _capturesClicks && _background->_bounds.contains(unscrolledPos);
 	}
 
 	for (Control *control : _controls) {

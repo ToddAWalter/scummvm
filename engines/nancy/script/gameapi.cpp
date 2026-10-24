@@ -20,15 +20,21 @@
  */
 
 #include "common/debug.h"
+#include "common/memstream.h"
+#include "common/system.h"
+
+#include "image/png.h"
 
 #include "engines/nancy/cursor.h"
 #include "engines/nancy/enginedata.h"
+#include "engines/nancy/graphics.h"
 #include "engines/nancy/input.h"
 #include "engines/nancy/nancy.h"
 #include "engines/nancy/puzzledata.h"
 #include "engines/nancy/sound.h"
 
 #include "engines/nancy/script/api.h"
+#include "engines/nancy/script/graphnode.h"
 #include "engines/nancy/script/luabind.h"
 #include "engines/nancy/script/luastate.h"
 #include "engines/nancy/script/record.h"
@@ -192,6 +198,10 @@ static const uint kNoCursorType = 0xFFFFFFFF;
 static int cursorIndex(lua_State *L) {
 	const char *name = luaL_checkstring(L, 2);
 
+	if (strcmp(name, "MoveTo") == 0) {
+		return indexFunctions(L);
+	}
+
 	const int type = g_nancy->_cursor->getCursorTypeByName(name);
 	if (type >= 0) {
 		pushCursor(L, type, false);
@@ -282,9 +292,22 @@ static int cursorNewIndex(lua_State *L) {
 	return 0;
 }
 
+// Cursor:MoveTo(point), Nancy21: puts the mouse at a place in the viewport
+static int cursorMoveTo(lua_State *L) {
+	ScriptPoint point;
+	if (!readPoint(L, 2, point)) {
+		return luaL_argerror(L, 2, "expected a point");
+	}
+
+	const Common::Rect screen = NancySceneState.getViewport().convertViewportToScreen(Common::Rect(point.x, point.y, point.x + 1, point.y + 1));
+	g_nancy->_cursor->warpCursor(Common::Point(screen.left, screen.top));
+	return 0;
+}
+
 static const luaL_Reg kCursorFunctions[] = {
 	{ "__index", cursorIndex },
 	{ "__newindex", cursorNewIndex },
+	{ "MoveTo", cursorMoveTo },
 	{ nullptr, nullptr }
 };
 
@@ -423,7 +446,6 @@ static const luaL_Reg kGameFunctions[] = {
 };
 
 // Draw, for the "Render" functions of the records
-// TODO: Draw:Tri
 
 static Graphics::ManagedSurface *checkDrawTarget(lua_State *L) {
 	Graphics::ManagedSurface *target = getDrawTarget();
@@ -483,6 +505,56 @@ static int drawLine(lua_State *L) {
 	return 0;
 }
 
+// Draw:Tri(a, b, c, color[, colorB[, colorC]]), Nancy19: a filled triangle.
+// From Nancy20 on, each corner can have a color of its own, and the color goes
+// from one corner to the others. The corners given no color take the first one.
+static int drawTri(lua_State *L) {
+	double x[3], y[3];
+	for (int i = 0; i < 3; ++i) {
+		checkDrawPlace(L, i + 2, x[i], y[i]);
+	}
+
+	uint32 colors[3];
+	colors[0] = checkColor(L, 5);
+	colors[1] = lua_isnoneornil(L, 6) ? colors[0] : checkColor(L, 6);
+	colors[2] = lua_isnoneornil(L, 7) ? colors[0] : checkColor(L, 7);
+	Graphics::ManagedSurface *target = checkDrawTarget(L);
+
+	const double area = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0]);
+	if (area == 0.0) {
+		return 0;
+	}
+
+	const int minX = MAX<int>(0, (int)floor(MIN(x[0], MIN(x[1], x[2]))));
+	const int maxX = MIN<int>(target->w - 1, (int)ceil(MAX(x[0], MAX(x[1], x[2]))));
+	const int minY = MAX<int>(0, (int)floor(MIN(y[0], MIN(y[1], y[2]))));
+	const int maxY = MIN<int>(target->h - 1, (int)ceil(MAX(y[0], MAX(y[1], y[2]))));
+
+	for (int py = minY; py <= maxY; ++py) {
+		for (int px = minX; px <= maxX; ++px) {
+			// How much of each corner the middle of the pixel has
+			const double cx = px + 0.5;
+			const double cy = py + 0.5;
+			const double w0 = ((x[1] - cx) * (y[2] - cy) - (x[2] - cx) * (y[1] - cy)) / area;
+			const double w1 = ((x[2] - cx) * (y[0] - cy) - (x[0] - cx) * (y[2] - cy)) / area;
+			const double w2 = 1.0 - w0 - w1;
+			if (w0 < 0.0 || w1 < 0.0 || w2 < 0.0) {
+				continue;
+			}
+
+			uint32 argb = 0;
+			for (int shift = 0; shift < 32; shift += 8) {
+				const double channel = w0 * ((colors[0] >> shift) & 0xFF) + w1 * ((colors[1] >> shift) & 0xFF) + w2 * ((colors[2] >> shift) & 0xFF);
+				argb |= (uint32)CLIP<int>((int)(channel + 0.5), 0, 255) << shift;
+			}
+
+			target->setPixel(px, py, getDrawColor(*target, argb));
+		}
+	}
+
+	return 0;
+}
+
 // Draw:Circle(circle, color), Nancy20, where the circle is a table with a
 // center and a radius. Only the outline is drawn, as a polygon of 19 sides.
 static int drawCircle(lua_State *L) {
@@ -525,6 +597,7 @@ static const luaL_Reg kDrawFunctions[] = {
 	{ "__index", indexFunctions },
 	{ "Rect", drawRect },
 	{ "Line", drawLine },
+	{ "Tri", drawTri },
 	{ "Circle", drawCircle },
 	{ nullptr, nullptr }
 };
@@ -712,10 +785,46 @@ static int saveGame(lua_State *L) {
 	return 0;
 }
 
+// Save:Screenshot(rect[, name]), Nancy21: keeps a picture of a part of the
+// viewport with the game, for the camera of the cell phone. Overlays show it
+// from the "LOADSAVE" tree. Gives the name of the picture, or an empty one when
+// it couldn't be taken.
+static int saveScreenshot(lua_State *L) {
+	const ScriptRect &rect = checkRect(L, 2);
+	const Common::String name = lua_gettop(L) > 2 ? Common::String(luaL_checkstring(L, 3)) : Common::String::format("%u_OVL", g_system->getMillis());
+
+	// The viewport as it was drawn last, before it got scaled onto the screen
+	const Graphics::ManagedSurface &image = g_nancy->_graphics->getGameImage();
+	Common::Rect area = NancySceneState.getViewport().convertViewportToScreen(rect.toRect());
+	area.clip(Common::Rect(image.w, image.h));
+
+	bool isTaken = false;
+	if (!area.isEmpty()) {
+		const Graphics::Surface part = image.rawSurface().getSubArea(area);
+		Graphics::Surface *picture = part.convertTo(Graphics::PixelFormat::createFormatRGB24());
+
+		Common::MemoryWriteStreamDynamic png(DisposeAfterUse::YES);
+		if (Image::writePNG(png, *picture)) {
+			ScriptPictureData *pictures = (ScriptPictureData *)NancySceneState.getPuzzleData(ScriptPictureData::getTag());
+			Common::Array<byte> &data = pictures->pictures[name];
+			data.resize((uint)png.size());
+			memcpy(data.data(), png.getData(), png.size());
+			isTaken = true;
+		}
+
+		picture->free();
+		delete picture;
+	}
+
+	lua_pushstring(L, isTaken ? name.c_str() : "");
+	return 1;
+}
+
 static const luaL_Reg kSaveFunctions[] = {
 	{ "__index", indexFunctions },
 	{ "Data", saveData },
 	{ "Game", saveGame },
+	{ "Screenshot", saveScreenshot },
 	{ nullptr, nullptr }
 };
 
@@ -961,15 +1070,8 @@ static int sceneChangeScene(lua_State *L) {
 	return 1;
 }
 
-// Scene:BeginStream(name, scene, frame, lifetime, capturesInput, runsFirst)
-static int sceneBeginStream(lua_State *L) {
-	checkContext(L);
-	const char *name = luaL_checkstring(L, 2);
-	const char *sceneName = luaL_checkstring(L, 3);
-	const int frame = luaL_checkint(L, 4);
-	const Common::String lifetime = luaL_checkstring(L, 5);
-
-	State::StreamFlags flags;
+// How long a stream lives: "manual" (until it ends itself), "withScene" or "withStream"
+static bool readStreamLifetime(const Common::String &lifetime, State::StreamFlags &flags) {
 	if (lifetime == "manual") {
 		flags.lifetime = State::StreamFlags::kIndependent;
 	} else if (lifetime == "withScene") {
@@ -977,13 +1079,58 @@ static int sceneBeginStream(lua_State *L) {
 	} else if (lifetime == "withStream") {
 		flags.lifetime = State::StreamFlags::kEndsWithParent;
 	} else {
-		return luaL_argerror(L, 5, "parameter must be \"manual\", \"withScene\" or \"withStream\"");
+		return false;
 	}
 
-	luaL_checktype(L, 6, LUA_TBOOLEAN);
-	luaL_checktype(L, 7, LUA_TBOOLEAN);
-	flags.capturesInput = lua_toboolean(L, 6) != 0;
-	flags.runsFirst = lua_toboolean(L, 7) != 0;
+	return true;
+}
+
+// Scene:BeginStream(name, scene, frame, lifetime, capturesInput, runsFirst), or
+// from Nancy21 on, Scene:BeginStream({stream, scene, frame, ends, captureInput})
+static int sceneBeginStream(lua_State *L) {
+	checkContext(L);
+
+	Common::String name;
+	Common::String sceneName;
+	int frame = 0;
+	State::StreamFlags flags;
+
+	if (lua_istable(L, 2)) {
+		if (!readField(L, 2, "stream", name)) {
+			return luaL_argerror(L, 2, "Table must have 'stream' field");
+		}
+
+		if (!readField(L, 2, "scene", sceneName)) {
+			return luaL_argerror(L, 2, "Table must have 'scene' field");
+		}
+
+		readField(L, 2, "frame", frame);
+
+		Common::String lifetime = "manual";
+		readField(L, 2, "ends", lifetime);
+		if (!readStreamLifetime(lifetime, flags)) {
+			return luaL_argerror(L, 2, "ends field must be \"manual\", \"withScene\" or \"withStream\"");
+		}
+
+		// TODO: "restartParent" and "isUI", which no script sets
+		readField(L, 2, "captureInput", flags.capturesInput);
+
+		// A stream is a step closer than the one that began it
+		flags.zOffset = 1;
+	} else {
+		name = luaL_checkstring(L, 2);
+		sceneName = luaL_checkstring(L, 3);
+		frame = luaL_checkint(L, 4);
+
+		if (!readStreamLifetime(luaL_checkstring(L, 5), flags)) {
+			return luaL_argerror(L, 5, "parameter must be \"manual\", \"withScene\" or \"withStream\"");
+		}
+
+		luaL_checktype(L, 6, LUA_TBOOLEAN);
+		luaL_checktype(L, 7, LUA_TBOOLEAN);
+		flags.capturesInput = lua_toboolean(L, 6) != 0;
+		flags.runsFirst = lua_toboolean(L, 7) != 0;
+	}
 
 	State::SceneStreamManager &streams = NancySceneState.getStreams();
 	const bool isNew = !streams.isRunning(name);
@@ -991,6 +1138,27 @@ static int sceneBeginStream(lua_State *L) {
 
 	lua_pushboolean(L, isNew);
 	return 1;
+}
+
+// Scene:GraphNode(), Nancy21: a new node to group records of the scene under
+static int sceneGraphNode(lua_State *L) {
+	checkContext(L)->createGraphNode()->push(L);
+	return 1;
+}
+
+// Scene:TransferChild(child), Nancy21: takes a record or a node out of the node
+// it was put under
+static int sceneTransferChild(lua_State *L) {
+	checkContext(L);
+
+	GraphNode *node = testGraphNode(L, 2);
+	if (node) {
+		node->setParent(nullptr);
+	} else {
+		checkRecord(L, 2)->setParentNode(nullptr);
+	}
+
+	return 0;
 }
 
 // Scene:EndStream(name)
@@ -1050,11 +1218,24 @@ static const luaL_Reg kSceneFunctions[] = {
 	{ "BeginStream", sceneBeginStream },
 	{ "EndStream", sceneEndStream },
 	{ "ChangeScene", sceneChangeScene },
+	{ "GraphNode", sceneGraphNode },
+	{ "TransferChild", sceneTransferChild },
 	{ nullptr, nullptr }
 };
 
 // Streams
-// TODO: Streams.environment and Streams.mainName
+
+// Streams.environment is the environment of the main stream's scene
+static int streamsIndex(lua_State *L) {
+	const Common::String key = luaL_checkstring(L, 2);
+
+	if (key == "environment") {
+		lua_pushstring(L, NancySceneState.getStreams().getEnvironment().c_str());
+		return 1;
+	}
+
+	return indexFunctions(L);
+}
 
 // Streams:GetScene(stream), which gives no name for a stream that isn't running
 static int streamsGetScene(lua_State *L) {
@@ -1063,14 +1244,85 @@ static int streamsGetScene(lua_State *L) {
 	return 1;
 }
 
+// Streams:GetStreams(withUI), Nancy21: the names of the running streams, the
+// main stream among them. The one of the UI is only in there when asked for.
+static int streamsGetStreams(lua_State *L) {
+	const bool withUI = lua_toboolean(L, 2) != 0;
+
+	Common::Array<Common::String> names;
+	NancySceneState.getStreams().getStreamNames(names, withUI);
+
+	lua_createtable(L, names.size(), 0);
+	for (uint i = 0; i < names.size(); ++i) {
+		lua_pushstring(L, names[i].c_str());
+		lua_rawseti(L, -2, i + 1);
+	}
+
+	return 1;
+}
+
+// Streams:GetZ(stream), Nancy21
+static int streamsGetZ(lua_State *L) {
+	lua_pushnumber(L, NancySceneState.getStreams().getZ(luaL_checkstring(L, 2)));
+	return 1;
+}
+
+// Streams:GetTransform(stream) and Streams:SetTransform(stream, matrix), Nancy21
+static int streamsGetTransform(lua_State *L) {
+	const ScriptMatrix *transform = NancySceneState.getStreams().getTransform(luaL_checkstring(L, 2));
+	pushMatrix(L, transform ? *transform : ScriptMatrix());
+	return 1;
+}
+
+static int streamsSetTransform(lua_State *L) {
+	const char *streamName = luaL_checkstring(L, 2);
+	NancySceneState.getStreams().setTransform(streamName, checkMatrix(L, 3));
+	return 0;
+}
+
 static const luaL_Reg kStreamsFunctions[] = {
-	{ "__index", indexFunctions },
+	{ "__index", streamsIndex },
 	{ "GetScene", streamsGetScene },
+	{ "GetStreams", streamsGetStreams },
+	{ "GetZ", streamsGetZ },
+	{ "GetTransform", streamsGetTransform },
+	{ "SetTransform", streamsSetTransform },
 	{ nullptr, nullptr }
 };
 
+// Hands a message to the scene or the record it is for, or else to the UI.
+// Returns whether a scene or a record took it.
+static bool deliverMessage(lua_State *L, const char *actionName, UI::NDUI::Action &action) {
+	// The targets that answer do so to the control whose event is being handled
+	UI::NDUI::Manager *ui = NancySceneState.getNDUI();
+	if (ui) {
+		action.sender = ui->getEventSender();
+	}
+
+	// The scripts of a scene send in its name, and the ones of the UI in the
+	// name of that control
+	Message message;
+	message.action = actionName;
+	message.target = action.target;
+	message.text = action.text;
+	message.value = action.value;
+
+	const SceneContext *context = LuaState::getContext(L);
+	if (context && !context->getStreamName().equalsIgnoreCase(State::SceneStreamManager::getUIStreamName())) {
+		message.sender = context->getSceneName();
+	} else {
+		message.sender = action.sender;
+	}
+
+	bool wasTaken = false;
+	if (!NancySceneState.receiveMessage(message, wasTaken) && ui) {
+		ui->takeAction(action);
+	}
+
+	return wasTaken;
+}
+
 // Player, who is the character being played unless a function is told otherwise
-// TODO: AddCellPhoneNumber
 
 // The number of a character, or -1 when there is none of that name
 static int findCharacter(const char *name) {
@@ -1251,8 +1503,83 @@ void showPlayerEntries() {
 	}
 }
 
+// Player.time is the clock of the game, as {days, hours, minutes}. Player.name
+// is the character being played.
+static int playerIndex(lua_State *L) {
+	const Common::String key = luaL_checkstring(L, 2);
+
+	if (key == "time") {
+		const Time time = NancySceneState.getPlayerTime();
+		lua_createtable(L, 0, 3);
+		lua_pushinteger(L, time.getDays());
+		lua_setfield(L, -2, "days");
+		lua_pushinteger(L, time.getHours());
+		lua_setfield(L, -2, "hours");
+		lua_pushinteger(L, time.getMinutes());
+		lua_setfield(L, -2, "minutes");
+		return 1;
+	}
+
+	if (key == "name") {
+		const PCUI *players = GetEngineData(PCUI);
+		const uint character = g_nancy->getPlayerCharacter();
+		lua_pushstring(L, players && character < players->characters.size() ? players->characters[character].name.c_str() : "");
+		return 1;
+	}
+
+	return indexFunctions(L);
+}
+
+static int playerNewIndex(lua_State *L) {
+	const Common::String key = luaL_checkstring(L, 2);
+	if (key != "time") {
+		return luaL_error(L, "Player does not have field %s", key.c_str());
+	}
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+
+	static const char *const kFieldNames[] = { "days", "hours", "minutes" };
+	int values[3] = { 0, 0, 0 };
+	for (uint i = 0; i < 3; ++i) {
+		if (!readField(L, 3, kFieldNames[i], values[i])) {
+			return luaL_error(L, "Player.time must have a field '%s'", kFieldNames[i]);
+		}
+	}
+
+	NancySceneState.setPlayerClock((uint32)values[0] * 86400000 + (uint32)values[1] * 3600000 + (uint32)values[2] * 60000);
+	return 0;
+}
+
+// The phone book and the text messages of the cell phone are kept by a record of
+// the scripts, which goes by the name "PhoneManager"
+static const char *const kPhoneManagerName = "PhoneManager";
+
+// Player:AddCellPhoneNumber(contact[, character])
+static int playerAddCellPhoneNumber(lua_State *L) {
+	UI::NDUI::Action action;
+	action.type = UI::NDUI::kActionSetText;
+	action.target = kPhoneManagerName;
+	action.text = luaL_checkstring(L, 2);
+	deliverMessage(L, "setText", action);
+	return 0;
+}
+
+// Player:SendCellPhoneText(message[, character]), where the message is a number
+static int playerSendCellPhoneText(lua_State *L) {
+	UI::NDUI::Action action;
+	action.type = UI::NDUI::kActionSetValue;
+	action.target = kPhoneManagerName;
+	action.hasValue = true;
+	action.value = luaL_checkinteger(L, 2);
+	deliverMessage(L, "setValue", action);
+	return 0;
+}
+
 static const luaL_Reg kPlayerFunctions[] = {
-	{ "__index", indexFunctions },
+	{ "__index", playerIndex },
+	{ "__newindex", playerNewIndex },
+	{ "AddCellPhoneNumber", playerAddCellPhoneNumber },
+	{ "SendCellPhoneText", playerSendCellPhoneText },
 	{ "Switch", playerSwitch },
 	{ "HasInventoryItem", playerHasInventoryItem },
 	{ "AddInventoryItem", playerAddInventoryItem },
@@ -1278,7 +1605,6 @@ bool findText(const Common::String &key, Common::String &text) {
 }
 
 // Message, which has the UI do something to one of its panels or controls
-// TODO: Message:EncodeRect
 
 struct MessageActionName {
 	const char *name;
@@ -1296,13 +1622,14 @@ static const MessageActionName kMessageActionNames[] = {
 	{ "addText", UI::NDUI::kActionAddText },
 	{ "setText", UI::NDUI::kActionSetText },
 	{ "setValue", UI::NDUI::kActionSetValue },
+	{ "setImage", UI::NDUI::kActionSetImage },
+	{ "expand", UI::NDUI::kActionExpand },
+	{ "collapse", UI::NDUI::kActionCollapse },
+	{ "toggleCollapsed", UI::NDUI::kActionToggleCollapsed },
 	{ "getValue", UI::NDUI::kActionQuery },
 	{ "showItem", UI::NDUI::kActionShowItem },
 	{ "hideItem", UI::NDUI::kActionHideItem }
 };
-
-// The stream the scripts of the UI run in
-static const char *const kUIStreamName = "UIStream";
 
 // Message:Send(action, target[, value[, text[, isTextKey]]])
 // The target is a scene, a record that was given a name for it, or a part of
@@ -1345,39 +1672,21 @@ static int messageSend(lua_State *L) {
 		}
 	}
 
-	// The targets that answer do so to the control whose event is being handled
-	UI::NDUI::Manager *ui = NancySceneState.getNDUI();
-	if (ui) {
-		action.sender = ui->getEventSender();
-	}
+	lua_pushboolean(L, deliverMessage(L, named->name, action));
+	return 1;
+}
 
-	// The scripts of a scene send in its name, and the ones of the UI in the
-	// name of that control
-	Message message;
-	message.action = named->name;
-	message.target = action.target;
-	message.text = action.text;
-	message.value = action.value;
-
-	const SceneContext *context = LuaState::getContext(L);
-	if (context && !context->getStreamName().equalsIgnoreCase(kUIStreamName)) {
-		message.sender = context->getSceneName();
-	} else {
-		message.sender = action.sender;
-	}
-
-	bool wasTaken = false;
-	if (!NancySceneState.receiveMessage(message, wasTaken) && ui) {
-		ui->takeAction(action);
-	}
-
-	lua_pushboolean(L, wasTaken);
+// Message:EncodeRect(rect), the value "setImage" takes a source rect as
+static int messageEncodeRect(lua_State *L) {
+	const ScriptRect &rect = checkRect(L, 2);
+	lua_pushnumber(L, UI::NDUI::encodeRect(rect.left, rect.top, rect.right, rect.bottom));
 	return 1;
 }
 
 static const luaL_Reg kMessageFunctions[] = {
 	{ "__index", indexFunctions },
 	{ "Send", messageSend },
+	{ "EncodeRect", messageEncodeRect },
 	{ nullptr, nullptr }
 };
 
@@ -1459,8 +1768,27 @@ static int autotextRemoveCC(lua_State *L) {
 	return 1;
 }
 
+// Autotext.<key> is the text of that key, or nil when there is none
+static int autotextIndex(lua_State *L) {
+	indexFunctions(L);
+	if (!lua_isnil(L, -1) || lua_type(L, 2) != LUA_TSTRING) {
+		return 1;
+	}
+
+	lua_pop(L, 1);
+
+	Common::String text;
+	if (findText(lua_tostring(L, 2), text)) {
+		lua_pushstring(L, text.c_str());
+	} else {
+		lua_pushnil(L);
+	}
+
+	return 1;
+}
+
 static const luaL_Reg kAutotextFunctions[] = {
-	{ "__index", indexFunctions },
+	{ "__index", autotextIndex },
 	{ "RemoveCC", autotextRemoveCC },
 	{ nullptr, nullptr }
 };
@@ -1474,6 +1802,13 @@ void registerGameAPI(lua_State *L) {
 	luaL_getmetatable(L, "ND.ZHelper");
 	lua_pushnumber(L, 0.0);
 	lua_setfield(L, -2, "middle");
+	if (g_nancy->getGameType() >= kGameTypeNancy21) {
+		// The range z gets kept in
+		lua_pushnumber(L, -1.0);
+		lua_setfield(L, -2, "min");
+		lua_pushnumber(L, 8.9);
+		lua_setfield(L, -2, "max");
+	}
 	lua_pop(L, 1);
 
 	registerType(L, kCursorIndexType, kCursorIndexFunctions);
@@ -1486,6 +1821,10 @@ void registerGameAPI(lua_State *L) {
 	registerGlobal(L, "Scene", "ND.Scene", kSceneFunctions);
 	registerGlobal(L, "Autotext", "ND.Autotext", kAutotextFunctions);
 	registerGlobal(L, "Streams", "ND.Streams", kStreamsFunctions);
+	luaL_getmetatable(L, "ND.Streams");
+	lua_pushstring(L, State::SceneStreamManager::getMainStreamName());
+	lua_setfield(L, -2, "mainName");
+	lua_pop(L, 1);
 	registerGlobal(L, "Player", "ND.CurPlayer", kPlayerFunctions);
 	registerGlobal(L, "Message", "ND.Message", kMessageFunctions);
 	registerGlobal(L, "Viewport", "ND.Viewport", kViewportFunctions);

@@ -4733,7 +4733,7 @@ static void x8_setup_spatial_compensation(const uint8 *src, uint8 *dst, ptrdiff_
 		sum += avg * 9;
 	} else {
 		// the edge pixel, in the top line and left column
-		uint8 c = *(src - 1 - stride);
+		c = *(src - 1 - stride);
 		dst[area3] = c;
 		sum += c;
 		// edge pixel is not part of min/max
@@ -5740,13 +5740,13 @@ static void x8_vlc_init(void) {
 	int i;
 
 	// set ac tables
-	for (int i = 0; i < 2; i++)
+	for (i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
 			for (int k = 0; k < 8; k++)
 				j_ac_vlc[i][j][k] = x8_init_vlc(AC_VLC_BITS, 77, x8_ac_quant_table[i][j][k]);
 
 	// set dc tables
-	for (int i = 0; i < 2; i++)
+	for (i = 0; i < 2; i++)
 		for (int j = 0; j < 8; j++)
 			j_dc_vlc[i][j] = x8_init_vlc(DC_VLC_BITS, 34, x8_dc_quant_table[i][j]);
 
@@ -6765,16 +6765,16 @@ int ff_vc1_parse_frame_header_adv(VC1Context *v, Bits *gb) {
 	v->field_mode = field_mode;
 	v->fcm = fcm;
 
-	assert(v->s.mb_height == v->s.height + 15 >> 4 || v->s.mb_height == FFALIGN(v->s.height + 15 >> 4, 2));
+	assert(v->s.mb_height == (v->s.height + 15) >> 4 || v->s.mb_height == FFALIGN((v->s.height + 15) >> 4, 2));
 	if (v->field_mode) {
-		v->s.mb_height = FFALIGN(v->s.height + 15 >> 4, 2);
+		v->s.mb_height = FFALIGN((v->s.height + 15) >> 4, 2);
 		v->fptype = get_bits(gb, 3);
 		if (v->fptype & 4) // B-picture
 			v->s.pict_type = (v->fptype & 2) ? AV_PICTURE_TYPE_BI : AV_PICTURE_TYPE_B;
 		else
 			v->s.pict_type = (v->fptype & 2) ? AV_PICTURE_TYPE_P : AV_PICTURE_TYPE_I;
 	} else {
-		v->s.mb_height = v->s.height + 15 >> 4;
+		v->s.mb_height = (v->s.height + 15) >> 4;
 		switch (get_unary(gb, 0, 4)) {
 		case 0:
 			v->s.pict_type = AV_PICTURE_TYPE_P;
@@ -8457,10 +8457,10 @@ static inline void vc1_p_h_loop_filter(VC1Context *v, uint8 *dest, uint32 *cbp, 
 			right_is_intra = is_intra[1] & (1 << block_num);
 			right_cbp = cbp[1] >> (block_num * 4);
 		} else if (block_num & 1) {
-			right_is_intra = is_intra[1] & (1 << block_num - 1);
+			right_is_intra = is_intra[1] & (1 << (block_num - 1));
 			right_cbp = cbp[1] >> ((block_num - 1) * 4);
 		} else {
-			right_is_intra = is_intra[0] & (1 << block_num + 1);
+			right_is_intra = is_intra[0] & (1 << (block_num + 1));
 			right_cbp = cbp[0] >> ((block_num + 1) * 4);
 		}
 
@@ -8508,10 +8508,10 @@ static inline void vc1_p_v_loop_filter(VC1Context *v, uint8 *dest, const uint32 
 			bottom_is_intra = is_intra[s->mb_stride] & (1 << block_num);
 			bottom_cbp = cbp[s->mb_stride] >> (block_num * 4);
 		} else if (block_num < 2) {
-			bottom_is_intra = is_intra[0] & (1 << block_num + 2);
+			bottom_is_intra = is_intra[0] & (1 << (block_num + 2));
 			bottom_cbp = cbp[0] >> ((block_num + 2) * 4);
 		} else {
-			bottom_is_intra = is_intra[s->mb_stride] & (1 << block_num - 2);
+			bottom_is_intra = is_intra[s->mb_stride] & (1 << (block_num - 2));
 			bottom_cbp = cbp[s->mb_stride] >> ((block_num - 2) * 4);
 		}
 
@@ -9412,8 +9412,8 @@ void ff_vc1_mc_1mv(VC1Context *v, int dir) {
 	}
 
 	if (v->rangeredfrm || use_ic || s->h_edge_pos < 22 || v_edge_pos < 22 ||
-		(unsigned)(src_x - s->mspel) > s->h_edge_pos - (mx & 3) - 16 - s->mspel * 3 ||
-		(unsigned)(src_y - 1) > v_edge_pos - (my & 3) - 16 - 3) {
+		(unsigned)(src_x - s->mspel) > (unsigned)(s->h_edge_pos - (mx & 3) - 16 - s->mspel * 3) ||
+		(unsigned)(src_y - 1) > (unsigned)(v_edge_pos - (my & 3) - 16 - 3)) {
 		uint8 *ubuf = s->sc.edge_emu_buffer + 19 * s->linesize;
 		uint8 *vbuf = ubuf + 9 * s->uvlinesize;
 		const int k = 17 + s->mspel * 2;
@@ -9421,11 +9421,11 @@ void ff_vc1_mc_1mv(VC1Context *v, int dir) {
 		srcY -= s->mspel * (1 + s->linesize);
 		if (interlace) {
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcY, linesize << 1, linesize << 1, k,
-									 v->field_mode ? k : k + 1 >> 1, src_x - s->mspel,
-									 src_y - s->mspel >> !v->field_mode, s->h_edge_pos, s->v_edge_pos >> 1);
+									 v->field_mode ? k : (k + 1) >> 1, src_x - s->mspel,
+									 (src_y - s->mspel) >> !v->field_mode, s->h_edge_pos, s->v_edge_pos >> 1);
 			if (!v->field_mode)
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + linesize, srcY + linesize, linesize << 1,
-										 linesize << 1, k, k >> 1, src_x - s->mspel, src_y - s->mspel + 1 >> 1,
+										 linesize << 1, k, k >> 1, src_x - s->mspel, (src_y - s->mspel + 1) >> 1,
 										 s->h_edge_pos, s->v_edge_pos >> 1);
 		} else
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcY, linesize, linesize, k,
@@ -9440,9 +9440,9 @@ void ff_vc1_mc_1mv(VC1Context *v, int dir) {
 									 uvsrc_y >> !v->field_mode, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 			if (!v->field_mode) {
 				s->vdsp.emulated_edge_mc(ubuf + uvlinesize, srcU + uvlinesize, uvlinesize << 1, uvlinesize << 1, 9, 4,
-										 uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
+										 uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 				s->vdsp.emulated_edge_mc(vbuf + uvlinesize, srcV + uvlinesize, uvlinesize << 1, uvlinesize << 1, 9, 4,
-										 uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
+										 uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 			}
 		} else {
 			s->vdsp.emulated_edge_mc(ubuf, srcU, uvlinesize, uvlinesize, 9, v->field_mode ? 17 : 9, uvsrc_x,
@@ -9606,20 +9606,20 @@ void ff_vc1_mc_4mv_luma(VC1Context *v, int n, int dir, int avg) {
 		srcY += linesize;
 
 	if (v->rangeredfrm || use_ic || s->h_edge_pos < 13 || v_edge_pos < 23 ||
-		(unsigned)(src_x - s->mspel) > s->h_edge_pos - (mx & 3) - 8 - s->mspel * 2 ||
-		(unsigned)(src_y - (s->mspel << fieldmv)) > v_edge_pos - (my & 3) - ((8 + s->mspel * 2) << fieldmv)) {
+		(unsigned)(src_x - s->mspel) > (unsigned)(s->h_edge_pos - (mx & 3) - 8 - s->mspel * 2) ||
+		(unsigned)(src_y - (s->mspel << fieldmv)) > (unsigned)(v_edge_pos - (my & 3) - ((8 + s->mspel * 2) << fieldmv))) {
 		const int k = 9 + s->mspel * 2;
 
 		srcY -= s->mspel * (1 + (s->linesize << fieldmv));
 		/* check emulate edge stride and offset */
 		if (interlace) {
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcY, linesize << 1, linesize << 1, k,
-									 v->field_mode ? k : (k << fieldmv) + 1 >> 1, src_x - s->mspel,
-									 src_y - (s->mspel << fieldmv) >> !v->field_mode, s->h_edge_pos,
+									 v->field_mode ? k : ((k << fieldmv) + 1) >> 1, src_x - s->mspel,
+									 (src_y - (s->mspel << fieldmv)) >> !v->field_mode, s->h_edge_pos,
 									 s->v_edge_pos >> 1);
 			if (!v->field_mode && !fieldmv)
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + linesize, srcY + linesize, linesize << 1,
-										 linesize << 1, k, k >> 1, src_x - s->mspel, src_y - s->mspel + 1 >> 1,
+										 linesize << 1, k, k >> 1, src_x - s->mspel, (src_y - s->mspel + 1) >> 1,
 										 s->h_edge_pos, s->v_edge_pos >> 1);
 		} else
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcY, linesize, linesize, k,
@@ -9762,7 +9762,7 @@ void ff_vc1_mc_4mv_chroma(VC1Context *v, int dir) {
 	}
 
 	if (v->rangeredfrm || use_ic || s->h_edge_pos < 18 || v_edge_pos < 18 ||
-		(unsigned)uvsrc_x > (s->h_edge_pos >> 1) - 9 || (unsigned)uvsrc_y > (v_edge_pos >> 1) - 9) {
+		(unsigned)uvsrc_x > (unsigned)((s->h_edge_pos >> 1) - 9) || (unsigned)uvsrc_y > (unsigned)((v_edge_pos >> 1) - 9)) {
 		if (interlace) {
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcU, uvlinesize << 1, uvlinesize << 1, 9,
 									 v->field_mode ? 9 : 5, uvsrc_x, uvsrc_y >> !v->field_mode, s->h_edge_pos >> 1,
@@ -9772,10 +9772,10 @@ void ff_vc1_mc_4mv_chroma(VC1Context *v, int dir) {
 									 s->v_edge_pos >> 2);
 			if (!v->field_mode) {
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + uvlinesize, srcU + uvlinesize, uvlinesize << 1,
-										 uvlinesize << 1, 9, 4, uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1,
+										 uvlinesize << 1, 9, 4, uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1,
 										 s->v_edge_pos >> 2);
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + 16 + uvlinesize, srcV + uvlinesize, uvlinesize << 1,
-										 uvlinesize << 1, 9, 4, uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1,
+										 uvlinesize << 1, 9, 4, uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1,
 										 s->v_edge_pos >> 2);
 			}
 		} else {
@@ -9881,20 +9881,20 @@ void ff_vc1_mc_4mv_chroma4(VC1Context *v, int dir, int dir2, int avg) {
 		uvmy_field[i] = (uvmy_field[i] & 3) << 1;
 
 		if (use_ic || s->h_edge_pos < 10 || v_edge_pos < (5 << fieldmv) ||
-			(unsigned)uvsrc_x > (s->h_edge_pos >> 1) - 5 || (unsigned)uvsrc_y > v_edge_pos - (5 << fieldmv)) {
+			(unsigned)uvsrc_x > (unsigned)((s->h_edge_pos >> 1) - 5) || (unsigned)uvsrc_y > (unsigned)(v_edge_pos - (5 << fieldmv))) {
 			if (interlace) {
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcU, uvlinesize << 1, uvlinesize << 1, 5,
-										 (5 << fieldmv) + 1 >> 1, uvsrc_x, uvsrc_y >> 1, s->h_edge_pos >> 1,
+										 ((5 << fieldmv) + 1) >> 1, uvsrc_x, uvsrc_y >> 1, s->h_edge_pos >> 1,
 										 s->v_edge_pos >> 2);
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + 16, srcV, uvlinesize << 1, uvlinesize << 1, 5,
-										 (5 << fieldmv) + 1 >> 1, uvsrc_x, uvsrc_y >> 1, s->h_edge_pos >> 1,
+										 ((5 << fieldmv) + 1) >> 1, uvsrc_x, uvsrc_y >> 1, s->h_edge_pos >> 1,
 										 s->v_edge_pos >> 2);
 				if (!fieldmv) {
 					s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + uvlinesize, srcU + uvlinesize, uvlinesize << 1,
-											 uvlinesize << 1, 5, 2, uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1,
+											 uvlinesize << 1, 5, 2, uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1,
 											 s->v_edge_pos >> 2);
 					s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + 16 + uvlinesize, srcV + uvlinesize,
-											 uvlinesize << 1, uvlinesize << 1, 5, 2, uvsrc_x, uvsrc_y + 1 >> 1,
+											 uvlinesize << 1, uvlinesize << 1, 5, 2, uvsrc_x, (uvsrc_y + 1) >> 1,
 											 s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 				}
 			} else {
@@ -10013,8 +10013,8 @@ void ff_vc1_interp_mc(VC1Context *v) {
 	}
 
 	if (v->rangeredfrm || s->h_edge_pos < 22 || v_edge_pos < 22 || use_ic ||
-		(unsigned)(src_x - 1) > s->h_edge_pos - (mx & 3) - 16 - 3 ||
-		(unsigned)(src_y - 1) > v_edge_pos - (my & 3) - 16 - 3) {
+		(unsigned)(src_x - 1) > (unsigned)(s->h_edge_pos - (mx & 3) - 16 - 3) ||
+		(unsigned)(src_y - 1) > (unsigned)(v_edge_pos - (my & 3) - 16 - 3)) {
 		uint8 *ubuf = s->sc.edge_emu_buffer + 19 * s->linesize;
 		uint8 *vbuf = ubuf + 9 * s->uvlinesize;
 		const int k = 17 + s->mspel * 2;
@@ -10022,11 +10022,11 @@ void ff_vc1_interp_mc(VC1Context *v) {
 		srcY -= s->mspel * (1 + s->linesize);
 		if (interlace) {
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcY, linesize << 1, linesize << 1, k,
-									 v->field_mode ? k : (k + 1 >> 1), src_x - s->mspel,
-									 src_y - s->mspel >> !v->field_mode, s->h_edge_pos, s->v_edge_pos >> 1);
+									 v->field_mode ? k : ((k + 1) >> 1), src_x - s->mspel,
+									 (src_y - s->mspel) >> !v->field_mode, s->h_edge_pos, s->v_edge_pos >> 1);
 			if (!v->field_mode)
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer + linesize, srcY + linesize, linesize << 1,
-										 linesize << 1, k, k >> 1, src_x - s->mspel, src_y - s->mspel + 1 >> 1,
+										 linesize << 1, k, k >> 1, src_x - s->mspel, (src_y - s->mspel + 1) >> 1,
 										 s->h_edge_pos, s->v_edge_pos >> 1);
 		} else
 			s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, srcY, linesize, linesize, k,
@@ -10041,9 +10041,9 @@ void ff_vc1_interp_mc(VC1Context *v) {
 									 uvsrc_y >> !v->field_mode, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 			if (!v->field_mode) {
 				s->vdsp.emulated_edge_mc(ubuf + uvlinesize, srcU + uvlinesize, uvlinesize << 1, uvlinesize << 1, 9, 4,
-										 uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
+										 uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 				s->vdsp.emulated_edge_mc(vbuf + uvlinesize, srcV + uvlinesize, uvlinesize << 1, uvlinesize << 1, 9, 4,
-										 uvsrc_x, uvsrc_y + 1 >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
+										 uvsrc_x, (uvsrc_y + 1) >> 1, s->h_edge_pos >> 1, s->v_edge_pos >> 2);
 			}
 		} else {
 			s->vdsp.emulated_edge_mc(ubuf, srcU, uvlinesize, uvlinesize, 9, v->field_mode ? 17 : 9, uvsrc_x,
@@ -10567,7 +10567,7 @@ static int vc1_decode_ac_coeff(VC1Context *v, int *last, int *skip, int *value, 
 		int escape = decode210(gb);
 		if (escape != 2) {
 			index = get_vlc2(gb, ff_vc1_ac_coeff_table[codingset]);
-			if (index >= ff_vc1_ac_sizes[codingset] - 1U)
+			if ((unsigned)index >= ff_vc1_ac_sizes[codingset] - 1U)
 				return (-1);
 			run = vc1_index_decode_table[codingset][index][0];
 			level = vc1_index_decode_table[codingset][index][1];
@@ -11424,7 +11424,7 @@ static int vc1_decode_p_mb(VC1Context *v) {
 					ff_vc1_mc_4mv_chroma(v, 0);
 				v->mb_type[s->block_index[i]] = is_intra[i];
 				if (!coded_inter)
-					coded_inter = !is_intra[i] & is_coded[i];
+					coded_inter = (!is_intra[i]) & is_coded[i];
 			}
 			// if there are no coded blocks then don't do anything more
 			dst_idx = 0;
@@ -12491,7 +12491,7 @@ static int vc1_decode_b_mb_intfr(VC1Context *v) {
 					dir = bmvtype == BMV_TYPE_BACKWARD;
 					ff_vc1_pred_mv_intfr(v, 0, 0, 0, 1, v->range_x, v->range_y, dir);
 					if (mvsw) {
-						int dir2 = dir;
+						dir2 = dir;
 						if (mvsw)
 							dir2 = !dir;
 						for (i = 0; i < 2; i++) {
@@ -13396,8 +13396,8 @@ static void guess_mv(ERContext *s) {
 		if (f == MV_FROZEN)
 			num_avail++;
 		else if (s->last_pic.f->data[0] && s->last_pic.motion_val[0]) {
-			const int mb_y = mb_xy / s->mb_stride;
-			const int mb_x = mb_xy % s->mb_stride;
+			mb_y = mb_xy / s->mb_stride;
+			mb_x = mb_xy % s->mb_stride;
 			const int mot_index = (mb_x + mb_y * mot_stride) * mot_step;
 			s->cur_pic.motion_val[0][mot_index][0] = s->last_pic.motion_val[0][mot_index][0];
 			s->cur_pic.motion_val[0][mot_index][1] = s->last_pic.motion_val[0][mot_index][1];
@@ -13450,8 +13450,8 @@ static void guess_mv(ERContext *s) {
 		for (pass = 0; (changed || pass < 2) && pass < 10; pass++) {
 			changed = 0;
 			for (blocklist_index = 0; blocklist_index < blocklist_length; blocklist_index++) {
-				const int mb_x = blocklist[blocklist_index][0];
-				const int mb_y = blocklist[blocklist_index][1];
+				mb_x = blocklist[blocklist_index][0];
+				mb_y = blocklist[blocklist_index][1];
 				const int mb_xy = mb_x + mb_y * mb_stride;
 				int mv_predictor[8][2];
 				int ref[8];
@@ -13641,8 +13641,8 @@ static void guess_mv(ERContext *s) {
 		next_blocklist_length = 0;
 
 		for (blocklist_index = 0; blocklist_index < blocklist_length; blocklist_index++) {
-			const int mb_x = blocklist[blocklist_index][0];
-			const int mb_y = blocklist[blocklist_index][1];
+			mb_x = blocklist[blocklist_index][0];
+			mb_y = blocklist[blocklist_index][1];
 			const int mb_xy = mb_x + mb_y * mb_stride;
 
 			if (fixed[mb_xy] & (MV_CHANGED | MV_UNCHANGED | MV_FROZEN)) {
@@ -13850,7 +13850,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 
 		for (i = s->mb_num - 1; i >= 0; i--) {
 			const int mb_xy = s->mb_index2xy[i];
-			int error = s->error_status_table[mb_xy];
+			error = s->error_status_table[mb_xy];
 
 			if (error & (1 << error_type))
 				end_ok = 1;
@@ -13870,7 +13870,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 
 		for (i = s->mb_num - 1; i >= 0; i--) {
 			const int mb_xy = s->mb_index2xy[i];
-			int error = s->error_status_table[mb_xy];
+			error = s->error_status_table[mb_xy];
 
 			if (error & ER_AC_END)
 				end_ok = 0;
@@ -13913,7 +13913,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 	for (error_type = 1; error_type <= 3; error_type++) {
 		for (i = s->mb_num - 1; i >= 0; i--) {
 			const int mb_xy = s->mb_index2xy[i];
-			int error = s->error_status_table[mb_xy];
+			error = s->error_status_table[mb_xy];
 
 			if (!s->mbskip_table || !s->mbskip_table[mb_xy]) // FIXME partition specific
 				distance++;
@@ -13950,7 +13950,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 	if (!s->partitioned_frame) {
 		for (i = 0; i < s->mb_num; i++) {
 			const int mb_xy = s->mb_index2xy[i];
-			int error = s->error_status_table[mb_xy];
+			error = s->error_status_table[mb_xy];
 			if (error & ER_MB_ERROR)
 				error |= ER_MB_ERROR;
 			s->error_status_table[mb_xy] = error;
@@ -13960,7 +13960,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 	dc_error = ac_error = mv_error = 0;
 	for (i = 0; i < s->mb_num; i++) {
 		const int mb_xy = s->mb_index2xy[i];
-		int error = s->error_status_table[mb_xy];
+		error = s->error_status_table[mb_xy];
 		if (error & ER_DC_ERROR)
 			dc_error++;
 		if (error & ER_AC_ERROR)
@@ -13982,7 +13982,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 	guessed_mb_type = is_intra_likely ? MB_TYPE_INTRA4x4 : (MB_TYPE_16x16 | (false ? MB_TYPE_L0 : MB_TYPE_FORWARD_MV));
 	for (i = 0; i < s->mb_num; i++) {
 		const int mb_xy = s->mb_index2xy[i];
-		int error = s->error_status_table[mb_xy];
+		error = s->error_status_table[mb_xy];
 		if (!((error & ER_DC_ERROR) && (error & ER_MV_ERROR)))
 			continue;
 
@@ -14006,7 +14006,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 			const int mv_dir = dir ? MV_DIR_BACKWARD : MV_DIR_FORWARD;
 			int mv_type;
 
-			int error = s->error_status_table[mb_xy];
+			error = s->error_status_table[mb_xy];
 
 			if (IS_INTRA(mb_type))
 				continue; // intra
@@ -14043,7 +14043,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 				const int mb_type = s->cur_pic.mb_type[mb_xy];
 				int mv_dir = MV_DIR_FORWARD | MV_DIR_BACKWARD;
 
-				int error = s->error_status_table[mb_xy];
+				error = s->error_status_table[mb_xy];
 
 				if (IS_INTRA(mb_type))
 					continue;
@@ -14142,7 +14142,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 			const int mb_xy = mb_x + mb_y * s->mb_stride;
 			const int mb_type = s->cur_pic.mb_type[mb_xy];
 
-			int error = s->error_status_table[mb_xy];
+			error = s->error_status_table[mb_xy];
 
 			if (IS_INTER(mb_type))
 				continue;
@@ -14177,7 +14177,7 @@ void ff_er_frame_end(ERContext *s, int *decode_error_flags) {
 	/* clean a few tables */
 	for (i = 0; i < s->mb_num; i++) {
 		const int mb_xy = s->mb_index2xy[i];
-		int error = s->error_status_table[mb_xy];
+		error = s->error_status_table[mb_xy];
 
 		if (s->mbskip_table && s->cur_pic.f->pict_type != AV_PICTURE_TYPE_B &&
 			(error & (ER_DC_ERROR | ER_MV_ERROR | ER_AC_ERROR))) {
@@ -14227,8 +14227,8 @@ static inline int hpel_motion(PictureState *s, uint8 *dest, uint8 *src, int src_
 		dxy |= (motion_y & 1) << 1;
 	src += src_y * s->linesize + src_x;
 
-	if ((unsigned)src_x >= MAX(s->h_edge_pos - (motion_x & 1) - 7, 0) ||
-		(unsigned)src_y >= MAX(s->v_edge_pos - (motion_y & 1) - 7, 0)) {
+	if ((unsigned)src_x >= (unsigned)MAX(s->h_edge_pos - (motion_x & 1) - 7, 0) ||
+		(unsigned)src_y >= (unsigned)MAX(s->v_edge_pos - (motion_y & 1) - 7, 0)) {
 		s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, src, s->linesize, s->linesize, 9, 9, src_x, src_y,
 								 s->h_edge_pos, s->v_edge_pos);
 		src = s->sc.edge_emu_buffer;
@@ -14255,7 +14255,7 @@ static inline void mpeg_motion_internal(PictureState *s, uint8 *dest_y, uint8 *d
 	src_x = s->mb_x * 16 + (motion_x >> 1);
 	src_y = (mb_y << (4 - block_y_half)) + (motion_y >> 1);
 
-	if (!is_mpeg12 && FMT_H263 == FMT_H263) {
+	if (!is_mpeg12) {
 		if ((0) && field_based) {
 			mx = (motion_x >> 1) | (motion_x & 1);
 			my = motion_y >> 1;
@@ -14268,7 +14268,7 @@ static inline void mpeg_motion_internal(PictureState *s, uint8 *dest_y, uint8 *d
 			uvsrc_y = src_y >> 1;
 		}
 		// Even chroma mv's are full pel in H261
-	} else if (!CONFIG_SMALL && !is_mpeg12 || CONFIG_SMALL && FMT_H263 == FMT_H261) {
+	} else if ((!CONFIG_SMALL && !is_mpeg12) || (CONFIG_SMALL && FMT_H263 == FMT_H261)) {
 		assert(FMT_H263 == FMT_H261);
 		mx = motion_x / 4;
 		my = motion_y / 4;
@@ -14303,8 +14303,8 @@ static inline void mpeg_motion_internal(PictureState *s, uint8 *dest_y, uint8 *d
 	ptr_cb = ref_picture[1] + uvsrc_y * uvlinesize + uvsrc_x;
 	ptr_cr = ref_picture[2] + uvsrc_y * uvlinesize + uvsrc_x;
 
-	if ((unsigned)src_x >= MAX(s->h_edge_pos - (motion_x & 1) - 15, 0) ||
-		(unsigned)src_y >= MAX(v_edge_pos - (motion_y & 1) - h + 1, 0)) {
+	if ((unsigned)src_x >= (unsigned)MAX(s->h_edge_pos - (motion_x & 1) - 15, 0) ||
+		(unsigned)src_y >= (unsigned)MAX(v_edge_pos - (motion_y & 1) - h + 1, 0)) {
 		if (is_mpeg12 || (CONFIG_SMALL && (false || false))) {
 
 			return;
@@ -14395,8 +14395,8 @@ static inline void qpel_motion(PictureState *s, uint8 *dest_y, uint8 *dest_cb, u
 	ptr_cb = ref_picture[1] + uvsrc_y * uvlinesize + uvsrc_x;
 	ptr_cr = ref_picture[2] + uvsrc_y * uvlinesize + uvsrc_x;
 
-	if ((unsigned)src_x >= MAX(s->h_edge_pos - (motion_x & 3) - 15, 0) ||
-		(unsigned)src_y >= MAX(v_edge_pos - (motion_y & 3) - h + 1, 0)) {
+	if ((unsigned)src_x >= (unsigned)MAX(s->h_edge_pos - (motion_x & 3) - 15, 0) ||
+		(unsigned)src_y >= (unsigned)MAX(v_edge_pos - (motion_y & 3) - h + 1, 0)) {
 		s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, ptr_y, s->linesize, s->linesize, 17, 17 + field_based, src_x,
 								 src_y * (1 << field_based), s->h_edge_pos, s->v_edge_pos);
 		ptr_y = s->sc.edge_emu_buffer;
@@ -14468,8 +14468,8 @@ static void chroma_4mv_motion(PictureState *s, uint8 *dest_cb, uint8 *dest_cr, u
 
 	offset = src_y * s->uvlinesize + src_x;
 	ptr = ref_picture[1] + offset;
-	if ((unsigned)src_x >= MAX((s->h_edge_pos >> 1) - (dxy & 1) - 7, 0) ||
-		(unsigned)src_y >= MAX((s->v_edge_pos >> 1) - (dxy >> 1) - 7, 0)) {
+	if ((unsigned)src_x >= (unsigned)MAX((s->h_edge_pos >> 1) - (dxy & 1) - 7, 0) ||
+		(unsigned)src_y >= (unsigned)MAX((s->v_edge_pos >> 1) - (dxy >> 1) - 7, 0)) {
 		s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, ptr, s->uvlinesize, s->uvlinesize, 9, 9, src_x, src_y,
 								 s->h_edge_pos >> 1, s->v_edge_pos >> 1);
 		ptr = s->sc.edge_emu_buffer;
@@ -14515,8 +14515,8 @@ static inline void apply_8x8(PictureState *s, uint8 *dest_y, uint8 *dest_cb, uin
 				dxy &= ~12;
 
 			ptr = ref_picture[0] + (src_y * s->linesize) + (src_x);
-			if ((unsigned)src_x >= MAX(s->h_edge_pos - (motion_x & 3) - 7, 0) ||
-				(unsigned)src_y >= MAX(s->v_edge_pos - (motion_y & 3) - 7, 0)) {
+			if ((unsigned)src_x >= (unsigned)MAX(s->h_edge_pos - (motion_x & 3) - 7, 0) ||
+				(unsigned)src_y >= (unsigned)MAX(s->v_edge_pos - (motion_y & 3) - 7, 0)) {
 				s->vdsp.emulated_edge_mc(s->sc.edge_emu_buffer, ptr, s->linesize, s->linesize, 9, 9, src_x, src_y,
 										 s->h_edge_pos, s->v_edge_pos);
 				ptr = s->sc.edge_emu_buffer;

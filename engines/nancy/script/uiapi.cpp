@@ -45,9 +45,10 @@ namespace Script {
 // A description gets written out the way a chunk has it, and read by the panel
 // or control it is for.
 //
-// TODO: The textShadow and captureClicks fields, the ways of arranging controls
-// other than left to right and right to left, and the events the controls don't
-// send yet: enable, disable, mouseEnter and mouseLeave.
+// TODO: The textShadow field, the ways of arranging controls other than left to
+// right and right to left, and the events the controls don't send yet: mouseEnter,
+// mouseLeave, and enable and disable for a control of its own; only whole panels
+// send those.
 
 static const char *const kPanelType = "ND.Panel";
 
@@ -75,7 +76,9 @@ static const NamedValue kEventNames[] = {
 	{ "scrollBarValueChanged", UI::NDUI::kEventScrolled },
 	{ "show", UI::NDUI::kEventShow },
 	{ "hide", UI::NDUI::kEventHide },
-	{ "load", UI::NDUI::kEventUpdate }
+	{ "load", UI::NDUI::kEventUpdate },
+	{ "enable", UI::NDUI::kEventEnable },
+	{ "disable", UI::NDUI::kEventDisable }
 };
 
 static const NamedValue kInitialStates[] = {
@@ -341,7 +344,13 @@ void writeTextElement(lua_State *L, int tableIndex, const Common::String &fontNa
 	int32 horizontalAlignment = kAlignCenter;
 	int32 verticalAlignment = kAlignTop;
 
+	// A font named in the font table takes the place of the one by number
+	Common::String name = fontName;
+	bool bold = isBold;
+
 	pushTableField(L, tableIndex, "font");
+	readField(L, -1, "name", name);
+	readField(L, -1, "bold", bold);
 	readNamedField(L, -1, "horzAlign", kHorizontalAlignments, ARRAYSIZE(kHorizontalAlignments), horizontalAlignment);
 	readNamedField(L, -1, "vertAlign", kVerticalAlignments, ARRAYSIZE(kVerticalAlignments), verticalAlignment);
 	readField(L, -1, "wrap", wraps);
@@ -354,8 +363,8 @@ void writeTextElement(lua_State *L, int tableIndex, const Common::String &fontNa
 		out.writeUint32BE(kDefaultColor);
 	}
 
-	writeName(out, fontName);
-	out.writeByte(isBold);
+	writeName(out, name);
+	out.writeByte(bold);
 	out.writeSint32LE(horizontalAlignment);
 	out.writeSint32LE(verticalAlignment);
 	out.writeByte(wraps);
@@ -699,6 +708,11 @@ static int newPanel(lua_State *L, byte kind) {
 	bool savesState = true;
 	if (readField(L, 2, "save", savesState)) {
 		panel->setSavesState(savesState);
+	}
+
+	bool capturesClicks = true;
+	if (readField(L, 2, "captureClicks", capturesClicks)) {
+		panel->setCapturesClicks(capturesClicks);
 	}
 
 	if (pushField(L, 2, "createObject")) {

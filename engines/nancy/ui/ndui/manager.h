@@ -69,7 +69,7 @@ public:
 // get created while the game runs, like journal entries and conversation responses.
 class Manager {
 public:
-	static const uint16 kTooltipZ = 2000;
+	static const uint16 kTooltipZ = 64000;
 
 	// What the UI asked of the engine, which has to wait until the UI is done
 	// handling the player's input, since it can replace the UI
@@ -187,6 +187,7 @@ private:
 	void onSaverAction(const Action &action);
 	void onSaveQueryAction(const Action &action);
 	void onSaveOverwriteAction(const Action &action);
+	void onExitQueryAction(const Action &action);
 	void onGameWindowAction(const Action &action);
 	void onCellPhoneAction(const Action &action);
 	void onItemStreamClicked(const InvButton &button);
@@ -212,6 +213,7 @@ private:
 	// Nancy17 tooltips are drawn on top of every panel
 	RenderObject _tooltipWindow{kTooltipZ};
 	const Control *_hoveredControl = nullptr;
+	uint16 _heldArrowKeys = 0;	// the input of the last frame, to tell when an arrow key goes down
 	Tooltip *_hoveredTooltip = nullptr;
 	const Control *_tooltipControl = nullptr;
 	uint32 _tooltipHoverStart = 0;
@@ -239,6 +241,10 @@ private:
 	// What the player was about to do when asked whether to save first
 	bool _hasPendingAction = false;
 	Action _pendingAction;
+
+	// Nancy21: the scripts say when the game can't be saved, e.g. during a
+	// cutscene. Leaving the game then asks whether to leave without saving.
+	bool _isSavingAllowed = true;
 
 	Request _request;
 };

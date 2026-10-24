@@ -84,6 +84,11 @@ public:
 	// Whether saved games keep what was done to the panel and its controls
 	void setSavesState(bool savesState) { _savesState = savesState; }
 
+	bool hasControl(const Common::String &name) const;
+
+	// Nancy19: a panel that doesn't capture clicks only takes the mouse over its controls
+	void setCapturesClicks(bool capturesClicks) { _capturesClicks = capturesClicks; }
+
 	// Nancy17 keeps the items apart from the panel that shows them, which comes
 	// with nothing but a template for their buttons
 	void addItemButtons(const Common::Array<byte> &buttonTemplate);
@@ -136,6 +141,7 @@ private:
 	void readControl(Common::SeekableReadStream &stream);
 	void show();
 	void hide();
+	void setCollapsed(bool isCollapsed);
 	void fireEvent(int32 eventType);
 	void redraw();
 	Control *getControlAt(const Common::Point &pos) const;
@@ -145,6 +151,7 @@ private:
 	byte _kind;
 	bool _isPlaced = false;
 	bool _savesState = true;
+	bool _capturesClicks = true;
 	ObjectFactory *_objectFactory = nullptr;
 	const INVD::Item *_newItem = nullptr;	// the item whose button is being made
 
@@ -167,6 +174,11 @@ private:
 	int32 _scrollOffset = 0;
 
 	int32 _initialState = kStartVisible;
+
+	// A collapsed panel stays out of sight, and shows again when it gets
+	// expanded, if it would have been showing by then
+	bool _isCollapsed = false;
+	bool _isShownWhenExpanded = false;
 	int _showCount = 0;
 	bool _enabled = true;
 	uint32 _lastUpdateTime = 0;

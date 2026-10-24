@@ -30,6 +30,7 @@
 #include "engines/nancy/util.h"
 
 #include "engines/nancy/script/convo.h"
+#include "engines/nancy/script/graphnode.h"
 #include "engines/nancy/script/luabind.h"
 #include "engines/nancy/script/luastate.h"
 #include "engines/nancy/script/record.h"
@@ -72,6 +73,10 @@ SceneContext::~SceneContext() {
 
 	for (ConvoResponse *response : _convoResponses) {
 		delete response;
+	}
+
+	for (GraphNode *node : _graphNodes) {
+		delete node;
 	}
 
 	for (auto &ref : _refs) {
@@ -137,6 +142,38 @@ bool SceneContext::load() {
 	return true;
 }
 
+Common::String SceneContext::findGlobalName(const Record *record) const {
+	lua_State *L = getLua();
+	const int top = lua_gettop(L);
+	Common::String name;
+
+	lua_pushnil(L);
+	while (name.empty() && lua_next(L, LUA_GLOBALSINDEX)) {
+		if (lua_type(L, -2) == LUA_TSTRING) {
+			if (toRecord(L, -1) == record) {
+				name = lua_tostring(L, -2);
+			} else if (lua_istable(L, -1)) {
+				lua_pushnil(L);
+				while (name.empty() && lua_next(L, -2)) {
+					if (toRecord(L, -1) == record) {
+						const Common::String key = lua_type(L, -2) == LUA_TSTRING ?
+							Common::String::format("\"%s\"", lua_tostring(L, -2)) :
+							Common::String::format("%g", lua_tonumber(L, -2));
+						name = Common::String::format("%s[%s]", lua_tostring(L, -4), key.c_str());
+					}
+
+					lua_pop(L, 1);
+				}
+			}
+		}
+
+		lua_pop(L, 1);
+	}
+
+	lua_settop(L, top);
+	return name;
+}
+
 bool SceneContext::include(const Common::String &name) {
 	return _lua->runScript(name);
 }
@@ -195,7 +232,7 @@ static const double kSkipFrameSeconds = 1.0 / 15.0;
 
 bool SceneContext::hasSkippableRecord() const {
 	for (const Record *record : _records) {
-		if (record->isSkippable()) {
+		if (record->canBeSkipped()) {
 			return true;
 		}
 	}
@@ -214,6 +251,15 @@ bool SceneContext::skipMovies() {
 	}
 
 	return true;
+}
+
+bool SceneContext::skipSpeech() {
+	bool hasSkipped = false;
+	for (Record *record : _records) {
+		hasSkipped |= record->skipSpeech();
+	}
+
+	return hasSkipped;
 }
 
 void SceneContext::end() {
@@ -308,6 +354,9 @@ void SceneContext::run(double elapsedTime) {
 	for (uint i = 0; _isSkipping && i < kSkipFramesPerRun; ++i) {
 		if (_hasChangedScene || !hasSkippableRecord()) {
 			_isSkipping = false;
+			for (Record *record : _records) {
+				record->onSkipEnded();
+			}
 		} else {
 			runFrame(kSkipFrameSeconds);
 		}
@@ -411,6 +460,30 @@ void SceneContext::deleteDroppedRecords() {
 	}
 }
 
+const ViewTransform *SceneContext::getViewTransform() const {
+	return NancySceneState.getStreams().getViewTransform(_streamName);
+}
+
+GraphNode *SceneContext::createGraphNode() {
+	GraphNode *node = new GraphNode(*this);
+	_graphNodes.push_back(node);
+	return node;
+}
+
+void SceneContext::onGraphNodeChanged(GraphNode *node) {
+	for (Record *record : _records) {
+		if (record->getParentNode() && record->getParentNode()->isUnder(node)) {
+			record->onParentNodeChanged();
+		}
+	}
+
+	for (Record *record : _newRecords) {
+		if (record->getParentNode() && record->getParentNode()->isUnder(node)) {
+			record->onParentNodeChanged();
+		}
+	}
+}
+
 bool SceneContext::getViewportMouse(const NancyInput &input, ScriptPoint &point) {
 	const UI::Viewport &viewport = NancySceneState.getViewport();
 	const Common::Rect screenPosition = viewport.getScreenPosition();
@@ -466,12 +539,15 @@ void SceneContext::handleInput(NancyInput &input) {
 		record->sendMouseMove(point, inViewport);
 	}
 
-	for (Record *record : _inputOrder) {
-		uint cursorType = 0;
-		bool isHot = false;
-		if (record->sendChangeCursor(point, inViewport, cursorType, isHot)) {
-			g_nancy->_cursor->setCursorType((CursorManager::CursorType)cursorType, true, isHot);
-			break;
+	// The UI that took the mouse already picked the cursor
+	if (input.mousePos.x >= 0) {
+		for (Record *record : _inputOrder) {
+			uint cursorType = 0;
+			bool isHot = false;
+			if (record->sendChangeCursor(point, inViewport, cursorType, isHot)) {
+				g_nancy->_cursor->setCursorType((CursorManager::CursorType)cursorType, true, isHot);
+				break;
+			}
 		}
 	}
 
@@ -491,6 +567,14 @@ void SceneContext::handleInput(NancyInput &input) {
 	if (input.input & NancyInput::kRightMouseButtonUp) {
 		sendMouseEvent(kEventRightUp, point, inViewport);
 		sendMouseEvent(kEventRightClick, point, inViewport);
+	}
+
+	// Every record tracks mouse wheel events, one notch at a time; up is 1
+	if (input.input & NancyInput::kMouseWheel) {
+		const int notches = (input.input & NancyInput::kMouseWheelUp) ? 1 : -1;
+		for (Record *record : _inputOrder) {
+			record->sendMouseScroll(point, inViewport, notches);
+		}
 	}
 
 	// The keys that went down last frame have no release of their own

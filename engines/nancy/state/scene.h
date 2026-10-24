@@ -144,6 +144,11 @@ public:
 	// Nancy17 streams: scenes that run next to the one the player walks around in,
 	// which is the main stream
 	SceneStreamManager &getStreams() { return _streams; }
+
+#ifdef ENABLE_NANCY_V4
+	// Nancy19: the script of the main scene; null while there is none
+	Script::SceneContext *getScriptScene() const { return _scriptScene; }
+#endif
 	void addSceneVisit(uint16 sceneID) { _flags.sceneCounts.getOrCreateVal(sceneID)++; }
 	void pushScene(int16 itemID = -1);
 
@@ -169,6 +174,7 @@ public:
 	}
 
 	void setPlayerTime(Time time, byte relative);
+	void setPlayerClock(Time time);	// Nancy21: the days, hours and minutes at once
 	Time getPlayerTime() const { return _timers.playerTime; }
 	Time getTimerTime() const { return _timers.timerIsActive ? _timers.timerTime : 0; }
 	uint getPlayerTimeMinutes() const;
@@ -465,14 +471,8 @@ private:
 		int16 primaryVideoResponsePicked = -1;
 	};
 
-	struct InventorySoundOverride {
-		bool isDefault = false; // When true, other fields are ignored
-		SoundDescription sound;
-		Common::String caption;
-	};
-
-	// The overrides of the character being played
-	Common::HashMap<uint16, InventorySoundOverride> &activeSoundOverrides();
+	// The inventory sound overrides of the character being played
+	Common::HashMap<uint16, InventorySoundOverrideData::Override> &activeSoundOverrides();
 
 	// UI
 	UI::FullScreenImage _frame;
@@ -510,9 +510,6 @@ private:
 	int16 _lastHintCharacter;
 	int16 _lastHintID;
 	NancyState::NancyState _gameStateRequested;
-	// One set of overrides per player character; everything before Nancy15 only
-	// ever touches the first
-	Common::HashMap<uint16, InventorySoundOverride> _inventorySoundOverrides[kMaxPlayerCharacters];
 
 	Misc::Lightning *_lightning;
 	Misc::ViewportFader *_viewportFader;

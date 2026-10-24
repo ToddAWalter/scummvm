@@ -497,6 +497,29 @@ struct PlayerCharacterData : public PuzzleData {
 	Common::String designs[kMaxPlayerCharacters];
 };
 
+// Inventory "can't" sound overrides, installed by AR 123 (InventorySoundOverride).
+// An override stays in place until another record replaces or removes it, so it
+// has to survive both scene changes and a save/load. One set per player character;
+// everything before Nancy15 only ever touches the first.
+struct InventorySoundOverrideData : public PuzzleData {
+	struct Override {
+		bool isDefault = false; // When true, other fields are ignored
+		SoundDescription sound;
+		Common::String caption;
+	};
+
+	InventorySoundOverrideData() {}
+	virtual ~InventorySoundOverrideData() {}
+
+	static constexpr uint32 getTag() { return MKTAG('I', 'S', 'N', 'D'); }
+	virtual void synchronize(Common::Serializer &ser);
+
+	Common::HashMap<uint16, Override> overrides[kMaxPlayerCharacters];
+
+private:
+	static void syncOverride(Common::Serializer &ser, Override &override);
+};
+
 // Nancy13+ WordFindPuzzle (AR 170). The puzzle is solved one word at a time across
 // several scene visits; this remembers which word is currently active so progress
 // survives leaving and re-entering the scene (and saving/loading).
@@ -571,6 +594,18 @@ struct MirrorLightData : public PuzzleData {
 	virtual void synchronize(Common::Serializer &ser);
 
 	Common::Array<double> angles;	// radians, indexed by mirror
+};
+
+// Nancy10 MultiBuildPuzzle (AR 235). How many times each ingredient went in when
+// the puzzle was last left. A record with its retain byte set picks the counts
+// back up when it runs in the same scene (cake mixing, after "add more
+// ingredients"); any other record starts over.
+struct MultiBuildPuzzleData : public PuzzleData {
+	static constexpr uint32 getTag() { return MKTAG('M', 'B', 'L', 'D'); }
+	virtual void synchronize(Common::Serializer &ser);
+
+	uint16 sceneID = kNoScene;
+	Common::Array<int16> placeCounts;
 };
 
 // Nancy14 BuildPuzzle (AR 166). The board as it was after the last drop. A puzzle
@@ -698,6 +733,15 @@ struct ScriptSavedData : public PuzzleData {
 	virtual void synchronize(Common::Serializer &ser);
 
 	Common::HashMap<Common::String, Common::Array<byte>, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> values;
+};
+
+// Nancy21. The pictures the camera of the cell phone took, as PNG files, which
+// the scripts show from the "LOADSAVE" tree
+struct ScriptPictureData : public PuzzleData {
+	static constexpr uint32 getTag() { return MKTAG('S', 'C', 'P', 'C'); }
+	virtual void synchronize(Common::Serializer &ser);
+
+	Common::HashMap<Common::String, Common::Array<byte>, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> pictures;
 };
 
 // Nancy19. The journal entries and the tasks the scripts gave every player

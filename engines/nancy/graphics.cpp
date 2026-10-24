@@ -154,30 +154,43 @@ void GraphicsManager::draw(bool updateScreen) {
 
 	// Update graphics for all RenderObjects and determine
 	// the areas of the screen that need to be redrawn
+	bool isZoomed = false;
 	for (auto it : _objects) {
 		RenderObject &current = *it;
 
 		current.updateGraphics();
+		isZoomed |= current.isVisible() && current.isZoomed();
 
 		if (current.needsRedraw()) {
+			const Common::Rect &drawnPosition = current.getDrawnScreenPosition();
 			if (current.isVisible()) {
-				if (current.hasMoved() && !current.getPreviousScreenPosition().isEmpty()) {
+				if (!drawnPosition.isEmpty() && drawnPosition != current.getScreenPosition()) {
 					// Object moved to a new location on screen, update the previous one
-					addDirtyRect(current, current.getPreviousScreenPosition());
+					addDirtyRect(current, drawnPosition);
 				}
 
 				// Redraw the current location
 				addDirtyRect(current, current.getScreenPosition());
-			} else if (!current.getPreviousScreenPosition().isEmpty()) {
-				// Object just turned invisible, redraw the last location
-				addDirtyRect(current, current.getPreviousScreenPosition());
+			} else if (!drawnPosition.isEmpty()) {
+				// Object just turned invisible, redraw the last location. An object
+				// that stays invisible has nothing to clean up, however often it changes.
+				addDirtyRect(current, drawnPosition);
 			}
 		}
 
+		current.setDrawnScreenPosition(current.isVisible() ? current.getScreenPosition() : Common::Rect());
 		current.setNeedsRedraw(false);
 		current.setHasMoved(false);
 		current.updatePreviousScreenPosition();
 	}
+
+	// While anything is zoomed into, and once it stops being, all of the
+	// viewport gets drawn anew
+	if (isZoomed || _wasZoomed) {
+		_dirtyRects.push_back(NancySceneState.getViewport().getScreenPosition());
+	}
+
+	_wasZoomed = isZoomed;
 
 	filterDirtyRects(_dirtyRects);
 
@@ -251,45 +264,50 @@ void GraphicsManager::filterDirtyRects(Common::List<Common::Rect> &rects) {
 // Perform the actual drawing. This checks for cases where something would be fully obscured,
 // and skips them (e.g. redrawing the Viewport won't also redraw the background)
 void GraphicsManager::drawObjects(Graphics::ManagedSurface &target, const Common::List<Common::Rect> &rects, Layer layer) {
-	for (const Common::Rect &rect : rects) {
-		for (RenderObject **it = _objects.begin(); it < _objects.end(); ++it) {
-			RenderObject &current = **it;
+	if (rects.empty()) {
+		return;
+	}
 
-			if (!isInLayer(current, layer) || !current.isVisible() || current.getScreenPosition().isEmpty()) {
+	// What gets drawn and where, worked out once for all of the rects
+	struct DrawnObject {
+		const RenderObject *object;
+		Common::Rect position;
+		bool isOpaque;
+	};
+
+	Common::Array<DrawnObject> drawn;
+	for (const RenderObject *object : _objects) {
+		if (!isInLayer(*object, layer) || !object->isVisible()) {
+			continue;
+		}
+
+		DrawnObject entry;
+		entry.object = object;
+		entry.position = getDrawnPosition(*object);
+		entry.isOpaque = !object->_drawSurface.hasTransparentColor() && object->_drawSurface.format != _transparentPixelFormat;
+		if (!entry.position.isEmpty()) {
+			drawn.push_back(entry);
+		}
+	}
+
+	for (const Common::Rect &rect : rects) {
+		for (uint i = 0; i < drawn.size(); ++i) {
+			const Common::Rect intersection = rect.findIntersectingRect(drawn[i].position);
+			if (intersection.isEmpty()) {
 				continue;
 			}
 
-			bool shouldSkip = false;
-
-			Common::Rect intersection = rect.findIntersectingRect(current.getScreenPosition());
-			if (!intersection.isEmpty()) {
-				// Found an intersecting RenderObject. Loop through the following
-				// RenderObjects, and see if we have another that fully obscures the intersection
-				for (auto it2 = it + 1; it2 < _objects.end(); ++it2) {
-					RenderObject &other = **it2;
-
-					if (!isInLayer(other, layer) || !other.isVisible() || other.getScreenPosition().isEmpty()) {
-						continue;
-					}
-
-					Common::Rect intersection2 = intersection.findIntersectingRect(other.getScreenPosition());
-					if (intersection == intersection2) {
-						// The entire area that would be drawn is obscured by another RenderObject.
-						// If the obscuring RenderObject is not transparent, we skip drawing current
-
-						if (!other._drawSurface.hasTransparentColor() && other._drawSurface.format != _transparentPixelFormat) {
-							// No transparency, skip current
-							shouldSkip = true;
-							break;
-						}
-					}
+			// An opaque object that comes later and covers all of the area hides it
+			bool isHidden = false;
+			for (uint j = i + 1; j < drawn.size(); ++j) {
+				if (drawn[j].isOpaque && intersection.findIntersectingRect(drawn[j].position) == intersection) {
+					isHidden = true;
+					break;
 				}
+			}
 
-				if (shouldSkip) {
-					continue;
-				}
-
-				blitObject(target, current, rect.findIntersectingRect(current.getScreenPosition()));
+			if (!isHidden) {
+				blitObject(target, *drawn[i].object, intersection);
 			}
 		}
 	}
@@ -519,8 +537,11 @@ void GraphicsManager::reorderObject(RenderObject *object) {
 void GraphicsManager::removeObject(RenderObject *object) {
 	for (auto &r : _objects) {
 		if (r == object) {
-			// Make sure the object gets properly cleared
-			addDirtyRect(*r, r->getPreviousScreenPosition());
+			// Make sure the object gets properly cleared, where it was drawn
+			if (!r->getDrawnScreenPosition().isEmpty()) {
+				addDirtyRect(*r, r->getDrawnScreenPosition());
+			}
+
 			_objects.erase(&r);
 			break;
 		}
@@ -763,7 +784,50 @@ void GraphicsManager::blitObject(Graphics::ManagedSurface &target, const RenderO
 		return;
 	}
 
-	target.blitFrom(src._drawSurface, src._drawSurface.getBounds().findIntersectingRect(src.convertToLocal(screenRect)), screenRect);
+	if (!src.isZoomed()) {
+		target.blitFrom(src._drawSurface, src._drawSurface.getBounds().findIntersectingRect(src.convertToLocal(screenRect)), screenRect);
+		return;
+	}
+
+	// A zoomed object gets stretched from where it would be without the zoom
+	const ViewTransform &view = *src.getViewTransform();
+	const Common::Rect viewport = NancySceneState.getViewport().getScreenPosition();
+
+	Common::Rect unzoomed;
+	unzoomed.left = viewport.left + (int)floor((screenRect.left - viewport.left - view.offsetX) / view.scaleX);
+	unzoomed.top = viewport.top + (int)floor((screenRect.top - viewport.top - view.offsetY) / view.scaleY);
+	unzoomed.right = viewport.left + (int)ceil((screenRect.right - viewport.left - view.offsetX) / view.scaleX);
+	unzoomed.bottom = viewport.top + (int)ceil((screenRect.bottom - viewport.top - view.offsetY) / view.scaleY);
+	if (unzoomed.isEmpty()) {
+		return;
+	}
+
+	const Common::Rect source = src._drawSurface.getBounds().findIntersectingRect(src.convertToLocal(unzoomed));
+	if (!source.isEmpty()) {
+		target.blitFrom(src._drawSurface, source, screenRect);
+	}
+}
+
+Common::Rect GraphicsManager::getDrawnPosition(const RenderObject &object) const {
+	const Common::Rect position = object.getScreenPosition();
+	if (!object.isZoomed() || position.isEmpty()) {
+		return position;
+	}
+
+	const ViewTransform &view = *object.getViewTransform();
+	const Common::Rect viewport = NancySceneState.getViewport().getScreenPosition();
+	if (view.scaleX <= 0.0 || view.scaleY <= 0.0) {
+		return Common::Rect();
+	}
+
+	// Scaled around the top left of the viewport, then moved, and kept inside it
+	Common::Rect zoomed;
+	zoomed.left = viewport.left + (int)floor((position.left - viewport.left) * view.scaleX + view.offsetX);
+	zoomed.top = viewport.top + (int)floor((position.top - viewport.top) * view.scaleY + view.offsetY);
+	zoomed.right = viewport.left + (int)ceil((position.right - viewport.left) * view.scaleX + view.offsetX);
+	zoomed.bottom = viewport.top + (int)ceil((position.bottom - viewport.top) * view.scaleY + view.offsetY);
+	zoomed.clip(viewport);
+	return zoomed;
 }
 
 int GraphicsManager::objectComparator(const void *a, const void *b) {

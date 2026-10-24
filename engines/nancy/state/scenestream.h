@@ -27,8 +27,13 @@
 
 #include "engines/nancy/commontypes.h"
 #include "engines/nancy/puzzledata.h"
+#include "engines/nancy/renderobject.h"
 
 #include "engines/nancy/action/actionmanager.h"
+
+#ifdef ENABLE_NANCY_V4
+#include "engines/nancy/script/mathtypes.h"
+#endif
 
 namespace Common {
 class SeekableReadStream;
@@ -90,6 +95,12 @@ public:
 	// Nancy19: hands a message to the scene. Returns false when it isn't for it.
 	bool receiveMessage(const Script::Message &message, bool &wasTaken);
 
+#ifdef ENABLE_NANCY_V4
+	// Enhancement: what Esc skips in the scene of the stream
+	bool skipSpeech();
+	bool skipMovies();
+#endif
+
 	void changeScene(const Common::String &sceneName, uint16 frameID);
 	void end() { _isEnded = true; }
 	bool isEnded() const { return _isEnded; }
@@ -107,9 +118,16 @@ public:
 	const Common::String &getName() const { return _name; }
 	const StreamFlags &getFlags() const { return _flags; }
 	int32 getZOffset() const { return _zOffset; }
+#ifdef ENABLE_NANCY_V4
+	Script::SceneContext *getScriptScene() const { return _scriptScene; }
+#endif
 	const Common::String &getSceneName() const { return _sceneName; }
 	SceneChangeDescription &getSceneInfo() { return _sceneInfo; }
 	Action::ActionManager &getActionManager() { return _actionManager; }
+#ifdef ENABLE_NANCY_V4
+	Script::ScriptMatrix &getTransform() { return _transform; }
+#endif
+	ViewTransform &getViewTransform() { return _viewTransform; }
 
 	Common::Array<Child> _children;
 
@@ -135,7 +153,12 @@ private:
 #ifdef ENABLE_NANCY_V4
 	// Nancy19: the script of the scene, which takes the place of the action records
 	Script::SceneContext *_scriptScene = nullptr;
+
+	Script::ScriptMatrix _transform;	// Nancy21
 #endif
+
+	// The zoom of everything the stream draws
+	ViewTransform _viewTransform;
 
 	// Every stream has generic event flags of its own
 	Common::Array<byte> _genericFlags;
@@ -174,17 +197,48 @@ public:
 
 	void onMainSceneChange();
 	void changeEnvironment(const Common::String &newEnvironment);
+	const Common::String &getEnvironment() const { return _environment; }
+
+	// The names of the running streams, in the order they run in. The UI's
+	// stream is left out unless asked for.
+	void getStreamNames(Common::Array<Common::String> &names, bool withUI) const;
+
+	// The running stream of that name; null when there is none
+	SceneStream *find(const Common::String &name) const;
+
+	static const char *getMainStreamName();
+	static const char *getUIStreamName();
 
 	// Nancy19: hands a message to the scenes of the streams it is for. Returns
 	// false when there is none.
 	bool receiveMessage(const Script::Message &message, bool &wasTaken);
+
+#ifdef ENABLE_NANCY_V4
+	// Enhancement: Esc skips what is being said in any of the streams, or else
+	// the movies they play. Returns whether there was something to skip.
+	bool skipSpeech();
+	bool skipMovies();
+#endif
+
+#ifdef ENABLE_NANCY_V4
+	// Nancy21: what the scripts move and scale everything in a stream with; null
+	// when there is no such stream. Only the scaling and the offset get drawn.
+	const Script::ScriptMatrix *getTransform(const Common::String &name);
+	void setTransform(const Common::String &name, const Script::ScriptMatrix &transform);
+#endif
+
+	// What a stream gets drawn with; null when there is no such stream
+	const ViewTransform *getViewTransform(const Common::String &name);
+
+	// Nancy21: where a stream is among the others. Every stream is a step closer
+	// than the one that began it, and the main stream is at 0.
+	double getZ(const Common::String &name) const;
 
 	// Keeps the streams in the saved game, and starts them again after loading
 	void store();
 	void restore();
 
 private:
-	SceneStream *find(const Common::String &name) const;
 	void endChildren(const Common::Array<SceneStream::Child> &children);
 
 	// Every stream in the order they run and get input in. The main stream is
@@ -193,6 +247,11 @@ private:
 	Common::Array<SceneStream::Child> _mainStreamChildren;
 	SceneStream *_running = nullptr;
 	Common::String _environment;
+
+#ifdef ENABLE_NANCY_V4
+	Script::ScriptMatrix _mainStreamTransform;
+#endif
+	ViewTransform _mainStreamViewTransform;
 };
 
 } // End of namespace State
