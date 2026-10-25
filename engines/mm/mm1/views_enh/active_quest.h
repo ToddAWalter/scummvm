@@ -19,24 +19,32 @@
  *
  */
 
-#ifndef MM_UTILS_STRINGS_DATA_H
-#define MM_UTILS_STRINGS_DATA_H
+#ifndef MM1_VIEWS_ENH_ACTIVE_QUEST_H
+#define MM1_VIEWS_ENH_ACTIVE_QUEST_H
 
-#include "common/hash-str.h"
-#include "common/path.h"
+#include "mm/mm1/views_enh/scroll_view.h"
 
 namespace MM {
+namespace MM1 {
+namespace ViewsEnh {
 
-class StringsData : public Common::StringMap {
+class ActiveQuest : public ScrollView {
+private:
+	int _selectedQuest = 0;
+
+	void moveSelection(int delta);
+
 public:
-	StringsData() : Common::StringMap() {}
+	ActiveQuest();
+	~ActiveQuest() override {}
 
-	/**
-	 * Loads the data
-	 */
-	bool load(const Common::Path &filename);
+	bool msgFocus(const FocusMessage &msg) override;
+	void draw() override;
+	bool msgAction(const ActionMessage &msg) override;
 };
 
+} // namespace ViewsEnh
+} // namespace MM1
 } // namespace MM
 
 #endif

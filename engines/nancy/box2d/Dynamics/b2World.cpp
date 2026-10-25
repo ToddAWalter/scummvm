@@ -55,7 +55,7 @@ b2World::b2World(const b2AABB& worldAABB, const b2Vec2& gravity, bool doSleep)
 {
 	m_destructionListener = NULL;
 	m_boundaryListener = NULL;
-	m_contactFilter = &b2_defaultFilter;
+	m_contactFilter = &m_defaultFilter;
 	m_contactListener = NULL;
 	m_debugDraw = NULL;
 
@@ -861,6 +861,11 @@ void b2World::DrawShape(b2Shape* shape, const b2XForm& xf, const b2Color& color,
 				m_debugDraw->DrawPolygon(vertices, vertexCount, coreColor);
 			}
 		}
+		break;
+	
+	case e_unknownShape:
+	case e_shapeTypeCount:
+		b2Assert(false);
 		break;
 	}
 }
