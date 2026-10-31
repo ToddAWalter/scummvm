@@ -29,7 +29,9 @@
 
 #include "hollywood/monsters/gameplay/cursor.h"
 #include "hollywood/monsters/gameplay/game_state.h"
+#include "hollywood/monsters/game_strings.h"
 #include "hollywood/monsters/music.h"
+#include "hollywood/text_translation.h"
 
 struct ADGameDescription;
 
@@ -63,6 +65,11 @@ public:
 	bool isDemo() const;
 	bool isFirstEdition() const;
 	bool hasSpeechData() const;
+	const TextTranslation *textTranslation() const { return &_translation; }
+	const HollywoodGameStrings &gameStrings() const { return _gameStrings; }
+	bool setSubtitleLanguage(const Common::String &language);
+	void cycleSubtitleLanguage();
+	Common::String nextSubtitleLanguageName() const;
 
 	HollywoodFont *font() const { return _font; }
 	HollywoodCursor *cursor() { return &_cursor; }
@@ -95,10 +102,13 @@ public:
 	};
 
 private:
+	uint nextSubtitleLanguageIndex() const;
 	Common::Error syncGameStream(Common::Serializer &s);
 	void normalizeLoadedGameState();
 
 	const ADGameDescription *_gameDescription;
+	TextTranslation _translation;
+	HollywoodGameStrings _gameStrings;
 	HollywoodFont *_font;
 	HollywoodCursor _cursor;
 	MusicPlayer _introMusic;

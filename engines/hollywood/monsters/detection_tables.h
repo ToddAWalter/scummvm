@@ -61,7 +61,7 @@
 			"RESOURCE.004", "a79d937879665b899c255957c7310d42", 265002432),
 		Common::ES_ESP,
 		Common::kPlatformWindows,
-		ADGF_UNSTABLE,
+		ADGF_UNSTABLE | kMonstersTranslationFlags,
 		GUIO2(GAMEOPTION_RESTORED_CONTENT, GUIO_NOMIDI)
 	},
 
@@ -88,11 +88,11 @@
 			"RESOURCE.003", "352126965c51832ce970faece65cc2f8", 9444153),
 		Common::ES_ESP,
 		Common::kPlatformWindows,
-		ADGF_UNSTABLE,
+		ADGF_UNSTABLE | kMonstersTranslationFlags,
 		GUIO2(GAMEOPTION_RESTORED_CONTENT, GUIO_NOMIDI)
 	},
 
-	// English fan translation v1.0.0 by ShinjiGR and A.P.$lasH, based on the Spanish Windows release.
+	// English fan translation v1.0.0 by ShinjiGR, patched by A.P.$lasH for the Spanish Windows release.
 	// RESOURCE.003 retains the original header, so hash its translated text at the end.
 	{
 		"hollywood",
@@ -116,7 +116,7 @@
 			"RESOURCE.003", "352126965c51832ce970faece65cc2f8", 9444153),
 		Common::ES_ESP,
 		Common::kPlatformDOS,
-		ADGF_UNSTABLE,
+		ADGF_UNSTABLE | kMonstersTranslationFlags,
 		GUIO2(GAMEOPTION_RESTORED_CONTENT, GUIO_NOMIDI)
 	},
 
