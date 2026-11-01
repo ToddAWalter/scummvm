@@ -98,6 +98,9 @@ public:
 	// Makes a record that ran start over. Only some kinds can.
 	bool reset();
 
+	// Nancy22: works like reset(), but makes the record active as well
+	bool restart();
+
 	// Draws an active record right away, where its transform puts it on the
 	// screen. Scripts do this for what hangs off the cursor.
 	void render();
@@ -120,8 +123,10 @@ public:
 	bool isActive() const { return _isActive && !_isDone; }
 	bool isDone() const { return _isDone; }
 	bool hasStarted() const { return _hasStarted; }
+	bool hasRunOnce() const { return _hasRunOnce; }
 	// Counted from the node the record is under, when it is under one
 	double getZ() const;
+	double getLocalZ() const { return _z; }
 
 	// Puts the record no closer to the player than the given z
 	void limitZ(double z);

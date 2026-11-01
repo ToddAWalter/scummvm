@@ -25,13 +25,13 @@
 #include "common/random.h"
 
 #include "engines/nancy/nancy.h"
-#include "engines/nancy/iff.h"
+#include "engines/nancy/resource/iff.h"
 #include "engines/nancy/input.h"
 #include "engines/nancy/sound.h"
 #include "engines/nancy/graphics.h"
 #include "engines/nancy/cursor.h"
 #include "engines/nancy/util.h"
-#include "engines/nancy/resource.h"
+#include "engines/nancy/resource/resource.h"
 
 #include "engines/nancy/state/scene.h"
 #include "engines/nancy/state/map.h"
@@ -1750,7 +1750,12 @@ void Scene::synchronize(Common::Serializer &ser) {
 		g_nancy->_sound->stopAllSounds();
 
 		_streams.clear();
-		load(true);
+
+		// The scripts of a scene read the flags and what the scripts saved
+		// while the scene loads, so it waits until those are back
+		if (g_nancy->getGameType() < kGameTypeNancy19) {
+			load(true);
+		}
 	}
 
 	ser.syncAsUint16LE(_sceneState.pushedScene.sceneID);
@@ -1960,6 +1965,16 @@ void Scene::synchronize(Common::Serializer &ser) {
 			_ndui->restoreState(((UIStateData *)getPuzzleData(UIStateData::getTag()))->changes);
 		}
 
+		if (g_nancy->getGameType() >= kGameTypeNancy19) {
+			// Nancy22's managers answer the scripts of every scene, the one that
+			// loads now included
+			if (g_nancy->getGameType() >= kGameTypeNancy22) {
+				beginManagers();
+			}
+
+			load(true);
+		}
+
 		if (!_streams.isEmpty()) {
 			_streams.restore();
 		}
@@ -2047,6 +2062,10 @@ void Scene::init() {
 	} else {
 		// Normal boot, load default first scene
 		_state = kLoad;
+
+		if (g_nancy->getGameType() >= kGameTypeNancy22) {
+			beginManagers();
+		}
 		// Make sure the nancy8+ save menu doesn't display a save name on new game
 		ConfMan.removeKey("display_slot", Common::ConfigManager::kTransientDomain);
 	}
@@ -2416,6 +2435,9 @@ void Scene::run() {
 	}
 
 	_streams.process();
+
+	// The scenes of a loaded game have all started by now
+	_loadName.clear();
 
 	// The records a skipped cinematic set off have started by now; its dialogue
 	// shouldn't go on without it
@@ -3175,6 +3197,13 @@ void Scene::initUI() {
 
 	_ndui->applyMatteColor();
 	_ndui->registerGraphics();
+}
+
+// Nancy22 begins the stream of the managers along with the game. They keep what
+// the scripts of every scene ask them for, and send each other messages.
+void Scene::beginManagers() {
+	_streams.begin(SceneStreamManager::getManagerStreamName(), "ManagerMain_SC", 0, StreamFlags());
+	_streams.loadNow(SceneStreamManager::getManagerStreamName());
 }
 
 #ifdef ENABLE_NANCY_V4

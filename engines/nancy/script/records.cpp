@@ -30,7 +30,7 @@
 #include "engines/nancy/graphics.h"
 #include "engines/nancy/nancy.h"
 #include "engines/nancy/puzzledata.h"
-#include "engines/nancy/resource.h"
+#include "engines/nancy/resource/resource.h"
 #include "engines/nancy/sound.h"
 
 #include "engines/nancy/script/api.h"
@@ -41,7 +41,9 @@
 #include "engines/nancy/script/records.h"
 #include "engines/nancy/script/ref.h"
 #include "engines/nancy/script/scenecontext.h"
+#include "engines/nancy/script/transformer.h"
 #include "engines/nancy/script/types.h"
+#include "engines/nancy/script/xsheet.h"
 
 #include "engines/nancy/state/scene.h"
 
@@ -68,7 +70,9 @@ static const RecordKindNames kRecordKindNames[kNumRecordKinds] = {
 	{ "Override", "ND.OverrideAR" },
 	{ "Particle", "ND.ParticleAR" },
 	{ "AnimOverlay", "ND.AnimOvlAR" },
-	{ "Physics", "ND.PhysicsAR" }
+	{ "Physics", "ND.PhysicsAR" },
+	{ "Xsheet", "ND.XsheetAR" },
+	{ "Transformer", "ND.TransformerAR" }
 };
 
 const char *getRecordKindName(RecordKind kind) {
@@ -105,6 +109,10 @@ Record *makeRecord(RecordKind kind, SceneContext &context) {
 		return new ParticleRecord(context);
 	case kRecordPhysics:
 		return new PhysicsRecord(context);
+	case kRecordXsheet:
+		return new XsheetRecord(context);
+	case kRecordTransformer:
+		return new TransformerRecord(context);
 	default:
 		return nullptr;
 	}
@@ -277,7 +285,9 @@ void SummaryRecord::readTable(int tableIndex) {
 		luaL_error(L, "No environment specified");
 	}
 
-	if (!readField(L, tableIndex, "bg", _backgroundName)) {
+	// Nancy21 can leave the background out, e.g. for a scene that keeps the
+	// picture of the one before as its facade
+	if (!readField(L, tableIndex, "bg", _backgroundName) && g_nancy->getGameType() < kGameTypeNancy21) {
 		luaL_error(L, "No background specified");
 	}
 
@@ -291,6 +301,12 @@ void SummaryRecord::readTable(int tableIndex) {
 	}
 
 	lua_pop(L, 1);
+
+	// Whether turning goes on past the first and the last frame, and Nancy22:
+	// whether the player can turn around
+	readField(L, tableIndex, "wrap", _wraps);
+	readField(L, tableIndex, "enableUturn", _hasUturn);
+	readField(L, tableIndex, "facade", _isFacade);
 
 	// The background is behind everything else
 	limitZ(kBackgroundScriptZ);
@@ -350,6 +366,29 @@ void SummaryRecord::updateTheme(double sceneTime) {
 
 void SummaryRecord::runOnce() {
 	playTheme();
+
+	if (_isFacade) {
+		showFacade();
+	}
+}
+
+// Nancy22: a scene with a facade keeps what the viewport showed when it started
+// as its background, e.g. the character after a conversation is over
+void SummaryRecord::showFacade() {
+	const Graphics::ManagedSurface &image = g_nancy->_graphics->getGameImage();
+	Common::Rect area = NancySceneState.getViewport().getScreenPosition();
+	area.clip(Common::Rect(image.w, image.h));
+	if (area.isEmpty()) {
+		return;
+	}
+
+	_facade._drawSurface.copyFrom(image.rawSurface().getSubArea(area));
+	_facade.init();
+	_facade.moveTo(Common::Rect(area.width(), area.height()));
+	_facade.setTransparent(false);
+	_facade.setScriptZ(kBackgroundScriptZ, getContext());
+	_facade.setVisible(true);
+	_facade.registerGraphics();
 }
 
 void SummaryRecord::setBackground(UI::Viewport *background) {
@@ -379,14 +418,24 @@ SummaryRecord::Turn SummaryRecord::getTurnAt(const ScriptPoint &point, bool inVi
 
 	const Common::Point place = point.toPoint();
 	if (boot->leftNodeHotspot.contains(place)) {
-		return kTurnLeft;
+		return canTurn(kTurnLeft) ? kTurnLeft : kNoTurn;
 	} else if (boot->rightNodeHotspot.contains(place)) {
-		return kTurnRight;
+		return canTurn(kTurnRight) ? kTurnRight : kNoTurn;
 	} else if (boot->uturnNodeHotspot.contains(place)) {
-		return kTurnAround;
+		return _hasUturn ? kTurnAround : kNoTurn;
 	}
 
 	return kNoTurn;
+}
+
+// Turning left goes to the next frame, and right to the one before. A node that
+// doesn't wrap stops at its first and last frame.
+bool SummaryRecord::canTurn(Turn turn) const {
+	if (_wraps) {
+		return true;
+	}
+
+	return turn == kTurnLeft ? _frame + 1 < _numFrames : _frame > 0;
 }
 
 void SummaryRecord::onMouseMove(const ScriptPoint &point, bool inViewport) {
@@ -464,6 +513,10 @@ void SummaryRecord::run(double sceneTime, double elapsedTime) {
 	updateTheme(sceneTime);
 
 	if (_numFrames <= 1 || _turn == kNoTurn) {
+		return;
+	}
+
+	if (!canTurn(_turn)) {
 		return;
 	}
 
@@ -549,6 +602,19 @@ void NavLogicRecord::readTable(int tableIndex) {
 
 	readField(L, tableIndex, "rightClick", _isRightClick);
 
+	// Nancy22: a hotspot can act like a button, which goes off when the button
+	// of the mouse that went down over it comes up over it again
+	Common::String mouseMode;
+	if (readField(L, tableIndex, "mouseMode", mouseMode)) {
+		if (mouseMode == "OnClick") {
+			_isPressedAndReleased = false;
+		} else if (mouseMode == "OnDownAndUp") {
+			_isPressedAndReleased = true;
+		} else {
+			luaL_error(L, "Mouse mode set to unrecognized value '%s'", mouseMode.c_str());
+		}
+	}
+
 	// The flags to set, by name
 	if (pushField(L, tableIndex, "flags")) {
 		luaL_checktype(L, -1, LUA_TTABLE);
@@ -605,8 +671,17 @@ bool NavLogicRecord::isOver(const ScriptPoint &point) const {
 	return _hasRefColor ? pixel == _refColor : (pixel >> 24) != 0;
 }
 
+// A hotspot that is held down tells its scripts when the mouse leaves it and
+// comes back, with OnUp and OnDown
 void NavLogicRecord::onMouseMove(const ScriptPoint &point, bool inViewport) {
+	const bool wasMouseOver = _isMouseOver;
 	_isMouseOver = inViewport && isOver(point);
+
+	if (_isDown && _isMouseOver && !wasMouseOver) {
+		callFunction("OnDown");
+	} else if (_isDown && !_isMouseOver && wasMouseOver) {
+		callFunction("OnUp");
+	}
 }
 
 bool NavLogicRecord::getCursor(const ScriptPoint &point, bool inViewport, uint &cursorType, bool &isHot) {
@@ -620,12 +695,35 @@ bool NavLogicRecord::getCursor(const ScriptPoint &point, bool inViewport, uint &
 }
 
 bool NavLogicRecord::onMouseEvent(RecordEvent event, const ScriptPoint &point, bool inViewport) {
+	if (_isPressedAndReleased) {
+		const RecordEvent downEvent = _isRightClick ? kEventRightDown : kEventLeftDown;
+		const RecordEvent upEvent = _isRightClick ? kEventRightUp : kEventLeftUp;
+
+		if (event == downEvent && _isMouseOver) {
+			callFunction("OnDown");
+			_isDown = true;
+		} else if (event == upEvent) {
+			const bool wasDown = _isDown;
+			_isDown = false;
+			if (wasDown && _isMouseOver) {
+				trigger();
+			}
+		}
+
+		return false;
+	}
+
 	const RecordEvent clickEvent = _isRightClick ? kEventRightClick : kEventLeftClick;
 	if (event != clickEvent || !isOver(point)) {
 		return false;
 	}
 
 	trigger();
+	return true;
+}
+
+bool NavLogicRecord::prepareReset() {
+	_isDown = false;
 	return true;
 }
 
@@ -656,6 +754,8 @@ bool NavLogicRecord::getField(const Common::String &key) {
 		pushRect(L, _hotspot);
 	} else if (key == "mouseOver") {
 		lua_pushboolean(L, _isMouseOver);
+	} else if (key == "down") {
+		lua_pushboolean(L, _isDown);
 	} else if (key == "refColor" && _hasRefColor) {
 		pushColor(L, _refColor);
 	} else if (key == "source") {
@@ -718,7 +818,38 @@ static bool isOverrideFunctionName(const Common::String &name) {
 }
 
 OverrideRecord::~OverrideRecord() {
+	setMessagingName(Common::String(), true);
 	delete _canvas;
+}
+
+bool OverrideRecord::setMessagingName(const Common::String &name, bool takeOver) {
+	if (name.equalsIgnoreCase(_messagingName) && !name.empty()) {
+		return true;
+	}
+
+	NancyEngine::MessagingNameMap &names = g_nancy->_messagingNames;
+
+	if (!_messagingName.empty()) {
+		NancyEngine::MessagingNameMap::iterator it = names.find(_messagingName);
+		if (it != names.end() && it->_value == this) {
+			names.erase(it);
+		}
+	}
+
+	_messagingName.clear();
+
+	if (name.empty()) {
+		return true;
+	}
+
+	if (!takeOver && names.contains(name)) {
+		warning("Name '%s' already registered for messaging.", name.c_str());
+		return false;
+	}
+
+	names.setVal(name, this);
+	_messagingName = name;
+	return true;
 }
 
 void OverrideRecord::readTable(int tableIndex) {
@@ -735,6 +866,12 @@ void OverrideRecord::readTable(int tableIndex) {
 }
 
 bool OverrideRecord::hasMessagingName(const Common::String &name) {
+	const NancyEngine::MessagingNameMap &names = g_nancy->_messagingNames;
+	NancyEngine::MessagingNameMap::const_iterator it = names.find(name);
+	if (it != names.end()) {
+		return it->_value == this;
+	}
+
 	lua_State *L = getLua();
 
 	pushStoredValue("messagingName");
@@ -797,9 +934,27 @@ static int overrideDone(lua_State *L) {
 	return 0;
 }
 
+// this:SetMessagingName(name[, takeOver]), Nancy22: the name the record gets
+// messages under from now on; an empty one for none. A name that another record
+// has stays with it unless the record takes it over. Gives whether it got the name.
+static int overrideSetMessagingName(lua_State *L) {
+	OverrideRecord *record = dynamic_cast<OverrideRecord *>(checkRecord(L, 1));
+	const char *name = luaL_checkstring(L, 2);
+	const bool takeOver = lua_gettop(L) > 2 && lua_toboolean(L, 3);
+
+	lua_pushboolean(L, record && record->setMessagingName(name, takeOver));
+	return 1;
+}
+
 bool OverrideRecord::getField(const Common::String &key) {
 	if (key == "Done") {
 		lua_pushcfunction(getLua(), overrideDone);
+		return true;
+	}
+
+	// Nancy22
+	if (key == "SetMessagingName") {
+		lua_pushcfunction(getLua(), overrideSetMessagingName);
 		return true;
 	}
 
@@ -823,7 +978,7 @@ bool OverrideRecord::setField(const Common::String &key) {
 // the saved game
 static const char *const kPictureTreeName = "LOADSAVE";
 
-static bool loadOverlayImage(const Common::String &name, const Common::String &treeName, Graphics::ManagedSurface &image) {
+bool loadTreeImage(const Common::String &name, const Common::String &treeName, Graphics::ManagedSurface &image) {
 	if (!treeName.equalsIgnoreCase(kPictureTreeName)) {
 		return g_nancy->_resource->loadImage(Common::Path(name), image, treeName);
 	}
@@ -864,7 +1019,7 @@ void OverlayRecord::readTable(int tableIndex) {
 	Common::String treeName;
 	readField(L, tableIndex, "tree", treeName);
 
-	if (!loadOverlayImage(imageName, treeName, _image)) {
+	if (!loadTreeImage(imageName, treeName, _image)) {
 		luaL_error(L, "Could not load overlay %s", imageName.c_str());
 	}
 
@@ -1067,7 +1222,7 @@ void AnimOverlayRecord::readTable(int tableIndex) {
 	Common::String treeName;
 	readField(L, tableIndex, "tree", treeName);
 
-	if (!loadOverlayImage(imageName, treeName, _image)) {
+	if (!loadTreeImage(imageName, treeName, _image)) {
 		luaL_error(L, "Could not load overlay %s", imageName.c_str());
 	}
 
@@ -1197,6 +1352,9 @@ bool AnimOverlayRecord::getField(const Common::String &key) {
 		lua_pushinteger(L, _sources.size());
 	} else if (key == "fps") {
 		lua_pushnumber(L, _framesPerSecond);
+	} else if (key == "source") {
+		// Nancy22: the part of the image that shows now
+		pushRect(L, _frame >= 1 && _frame <= (int)_sources.size() ? _sources[_frame - 1] : ScriptRect());
 	} else {
 		return false;
 	}
@@ -1258,6 +1416,10 @@ void SoundRecord::readTable(int tableIndex) {
 	}
 }
 
+SoundRecord::SoundRecord(SceneContext &context) : Record(context, "ND.SoundAR") {
+	_channel = g_nancy->getGameType() >= kGameTypeNancy22 ? 16 : 14;
+}
+
 // A sound that is playing while a movie gets skipped is cut short
 void SoundRecord::onSkip() {
 	if (isActive() && hasStarted() && !_isLooping) {
@@ -1266,14 +1428,9 @@ void SoundRecord::onSkip() {
 	}
 }
 
-// The channels speech plays on: NPCVoice, PlayerVoice, Voice1, Voice2, UIVoice
-// and EngineVoice
-static const uint16 kFirstVoiceChannel = 24;
-static const uint16 kLastVoiceChannel = 29;
-
 bool SoundRecord::skipSpeech() {
 	if (!isActive() || !hasStarted() || _isLooping || !_isPlaying ||
-			_channel < kFirstVoiceChannel || _channel > kLastVoiceChannel ||
+			!isVoiceChannel(_channel) ||
 			!g_nancy->_sound->isSoundPlaying(_sound)) {
 		return false;
 	}
@@ -1307,10 +1464,11 @@ void SoundRecord::runOnce() {
 
 	_isPlaying = g_nancy->_sound->isSoundPlaying(_sound);
 	_wasPreempted = false;
+	_channelSerial = g_nancy->_sound->getChannelSerial(_channel);
 
 	// The record is done once the sound has played through, whether it loops or not
-	const double length = _isPlaying ? g_nancy->_sound->getLength(_sound).msecs() / 1000.0 : 0.0;
-	_endTime = getContext().getTime() + length;
+	_duration = _isPlaying ? g_nancy->_sound->getLength(_sound).msecs() / 1000.0 : 0.0;
+	_endTime = getContext().getTime() + _duration;
 
 	// What the sound says is kept under its name
 	UI::NDUI::Manager *ui = NancySceneState.getNDUI();
@@ -1321,12 +1479,16 @@ void SoundRecord::runOnce() {
 }
 
 void SoundRecord::run(double sceneTime, double elapsedTime) {
-	// Something else taking over the channel ends the record early
-	if (_isPlaying && !_isLooping && !g_nancy->_sound->isSoundPlaying(_sound) && sceneTime < _endTime) {
+	// The sound is cut off when another sound starts on its channel, or the
+	// channel is stopped. Ending a little before its length doesn't count.
+	if (_isPlaying && g_nancy->_sound->getChannelSerial(_channel) != _channelSerial && (sceneTime < _endTime || _isLooping)) {
 		_wasPreempted = true;
 	}
 
-	if (_endTime <= sceneTime || _wasPreempted) {
+	// From Nancy21 on, a sound that loops keeps the record going
+	const bool hasPlayedThrough = _endTime <= sceneTime && !(_isLooping && g_nancy->getGameType() >= kGameTypeNancy21);
+
+	if (hasPlayedThrough || _wasPreempted) {
 		// The caption goes with the sound, unless another one has replaced it
 		UI::NDUI::Manager *ui = NancySceneState.getNDUI();
 		if (!_caption.empty() && ui && ui->getCaption() == _caption) {
@@ -1345,10 +1507,55 @@ bool SoundRecord::prepareReset() {
 	return true;
 }
 
-bool SoundRecord::getField(const Common::String &key) {
+// Scripts hand a record other sounds, or move it to another channel, and then
+// restart it. A record that plays stops when it moves.
+bool SoundRecord::setField(const Common::String &key) {
 	lua_State *L = getLua();
 
 	if (key == "channel") {
+		if (_isPlaying && hasStarted() && !isDone()) {
+			g_nancy->_sound->stopSound(_sound);
+		}
+
+		_channel = checkSoundChannel(L, 3);
+	} else if (key == "volume") {
+		_volume = luaL_checknumber(L, 3);
+	} else if (key == "useCC") {
+		_usesCaption = lua_toboolean(L, 3) != 0;
+	} else if (key == "loop") {
+		_isLooping = lua_toboolean(L, 3) != 0;
+	} else if (key == "sounds") {
+		_names.clear();
+		readStringList(L, 3, _names);
+		if (_names.empty()) {
+			luaL_error(L, "sounds must have one or more fields in its table");
+		}
+	} else {
+		return false;
+	}
+
+	return true;
+}
+
+// sound:StopIfPlaying(), Nancy23: stops the channel, unless another sound has
+// started on it since this one did
+static int soundStopIfPlaying(lua_State *L) {
+	((SoundRecord *)checkRecord(L, 1))->stopIfPlaying();
+	return 0;
+}
+
+void SoundRecord::stopIfPlaying() {
+	if (_isPlaying && g_nancy->_sound->getChannelSerial(_channel) == _channelSerial) {
+		g_nancy->_sound->stopSound(_sound);
+	}
+}
+
+bool SoundRecord::getField(const Common::String &key) {
+	lua_State *L = getLua();
+
+	if (key == "StopIfPlaying") {
+		lua_pushcfunction(L, soundStopIfPlaying);
+	} else if (key == "channel") {
 		pushSoundChannel(L, _channel);
 	} else if (key == "volume") {
 		lua_pushnumber(L, _volume);
@@ -1358,6 +1565,19 @@ bool SoundRecord::getField(const Common::String &key) {
 		lua_pushnumber(L, _endTime);
 	} else if (key == "preempted") {
 		lua_pushboolean(L, _wasPreempted);
+	} else if (key == "duration") {
+		lua_pushnumber(L, _duration);
+	} else if (key == "sounds") {
+		// A single sound comes back as its name
+		if (_names.size() == 1) {
+			lua_pushstring(L, _names[0].c_str());
+		} else {
+			lua_createtable(L, _names.size(), 0);
+			for (uint i = 0; i < _names.size(); ++i) {
+				lua_pushstring(L, _names[i].c_str());
+				lua_rawseti(L, -2, i + 1);
+			}
+		}
 	} else {
 		return false;
 	}
@@ -1689,9 +1909,15 @@ void MovieRecord::runOnce() {
 	drawFrame();
 }
 
-// A movie that plays through and ends; one that loops forever never does
+// A movie that plays through and ends; one that loops forever never does. One
+// that stops on its last frame can be skipped until it gets there: Nancy23's
+// cinematics are made of those, each starting when the one before is done.
 bool MovieRecord::isSkippable() const {
-	return isActive() && hasStarted() && !_isPaused && !_pausesOnLastFrame && _numLoops != 0;
+	if (!isActive() || !hasStarted() || _isPaused || _numLoops == 0) {
+		return false;
+	}
+
+	return !_pausesOnLastFrame || (_player.isRangePlaying() && !_hasCalledOnPause);
 }
 
 void MovieRecord::run(double sceneTime, double elapsedTime) {
@@ -1711,10 +1937,18 @@ void MovieRecord::run(double sceneTime, double elapsedTime) {
 			--_skipFrame;
 		}
 
-		// The movie stays at its last frame for the scripts until it starts over
+		// The movie stays at its last frame for the scripts until it starts over.
+		// One that stops there shows it, as the next movie takes over from it.
 		if (_skipFrame == _lastFrame) {
-			_endTime = sceneTime;
-			finish();
+			if (_pausesOnLastFrame) {
+				_player.goToFrame(_lastFrame);
+				drawFrame();
+				_hasCalledOnPause = true;
+				callFunction("OnPause");
+			} else {
+				_endTime = sceneTime;
+				finish();
+			}
 		}
 
 		return;

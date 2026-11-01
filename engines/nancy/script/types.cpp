@@ -141,6 +141,9 @@ static int rectIndex(lua_State *L) {
 		center.v[0] = rect.left + rect.width() * 0.5f;
 		center.v[1] = rect.top + rect.height() * 0.5f;
 		pushVector(L, center);
+	} else if (key == "size") {
+		// Nancy22: the width and the height as a point
+		pushPoint(L, ScriptPoint(rect.width(), rect.height()));
 	} else if (key == "leftTop") {
 		pushPoint(L, ScriptPoint(rect.left, rect.top));
 	} else if (key == "rightTop") {
@@ -266,6 +269,15 @@ static int rectLeftBottomSet(lua_State *L) {
 	return 1;
 }
 
+// rect:RightBottomSet(place), Nancy20
+static int rectRightBottomSet(lua_State *L) {
+	const ScriptRect &rect = checkRect(L, 1);
+	double x, y;
+	checkPlaceArguments(L, 2, x, y);
+	pushRect(L, ScriptRect((int32)(x - rect.width()), (int32)(y - rect.height()), (int32)x, (int32)y));
+	return 1;
+}
+
 static const luaL_Reg kRectFunctions[] = {
 	{ "__index", rectIndex },
 	{ "__newindex", rectNewIndex },
@@ -278,6 +290,7 @@ static const luaL_Reg kRectFunctions[] = {
 	{ "CenterSet", rectCenterSet },
 	{ "LeftTopSet", rectLeftTopSet },
 	{ "LeftBottomSet", rectLeftBottomSet },
+	{ "RightBottomSet", rectRightBottomSet },
 	{ nullptr, nullptr }
 };
 
@@ -452,9 +465,16 @@ static int colorNew(lua_State *L) {
 	return 1;
 }
 
+// color.number, Nancy20: all four components in one number, as a signed one
 static int colorIndex(lua_State *L) {
 	uint32 color = checkColor(L, 1);
-	int shift = getColorComponentShift(luaL_checkstring(L, 2));
+	const char *key = luaL_checkstring(L, 2);
+	if (strcmp(key, "number") == 0) {
+		lua_pushnumber(L, (int32)color);
+		return 1;
+	}
+
+	int shift = getColorComponentShift(key);
 	if (shift < 0) {
 		return indexFunctions(L);
 	}
@@ -466,6 +486,11 @@ static int colorIndex(lua_State *L) {
 static int colorNewIndex(lua_State *L) {
 	uint32 *color = (uint32 *)checkUserData(L, 1, kColorType);
 	const char *key = luaL_checkstring(L, 2);
+	if (strcmp(key, "number") == 0) {
+		*color = (uint32)(int32)luaL_checknumber(L, 3);
+		return 0;
+	}
+
 	uint32 value = (uint32)(int32)luaL_checknumber(L, 3) & 0xFF;
 
 	int shift = getColorComponentShift(key);

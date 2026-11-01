@@ -28,7 +28,7 @@
 #include "common/lua/lualib.h"
 
 #include "engines/nancy/nancy.h"
-#include "engines/nancy/resource.h"
+#include "engines/nancy/resource/resource.h"
 
 #include "engines/nancy/script/api.h"
 #include "engines/nancy/script/luastate.h"
@@ -195,6 +195,15 @@ LuaState::LuaState(SceneContext *context) {
 	removeGlobal(_state, "load");
 	removeGlobal(_state, "loadfile");
 	removeGlobal(_state, "print");
+
+	// Nancy1New has loadstring again, which QueryTable_SC builds its lambdas with
+	if (g_nancy->getGameType() == kGameTypeNancy22) {
+		removeGlobal(_state, "loadstring");
+	}
+
+	if (g_nancy->getGameType() >= kGameTypeNancy22) {
+		removeGlobal(_state, "setfenv");
+	}
 
 	// The random numbers of the library come from one generator that all
 	// states share, so it is seeded with the first one

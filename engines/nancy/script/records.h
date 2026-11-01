@@ -57,8 +57,10 @@ enum RecordKind {
 	kRecordParticle		= 9,
 	kRecordAnimOverlay	= 10,
 	kRecordPhysics		= 11,	// Nancy21
+	kRecordXsheet		= 12,	// Nancy22
+	kRecordTransformer	= 13,	// Nancy22
 
-	kNumRecordKinds		= 12
+	kNumRecordKinds		= 14
 };
 
 // What scripts call the kind ("NavLogic"), and the type of its objects ("ND.NavLogic")
@@ -122,9 +124,11 @@ private:
 
 	// The side of the node the mouse is on
 	Turn getTurnAt(const ScriptPoint &point, bool inViewport) const;
+	bool canTurn(Turn turn) const;
 	void setFrame(uint frame);
 	void playTheme();
 	void updateTheme(double sceneTime);
+	void showFacade();
 
 	Common::String _environment;
 	Common::String _backgroundName;
@@ -142,6 +146,11 @@ private:
 	bool _isTurningFast = false;
 	double _lastTurnTime = 0.0;
 	double _sceneTime = 0.0;
+
+	bool _wraps = true;
+	bool _hasUturn = true;
+	bool _isFacade = false;
+	RecordGraphic _facade;
 };
 
 // Changes the scene and sets flags, either right away or when its hotspot gets clicked
@@ -152,7 +161,7 @@ public:
 protected:
 	void readTable(int tableIndex) override;
 	void run(double sceneTime, double elapsedTime) override;
-	bool prepareReset() override { return true; }
+	bool prepareReset() override;
 	bool hasTransform() const override { return true; }
 	bool getField(const Common::String &key) override;
 	bool setField(const Common::String &key) override;
@@ -193,6 +202,8 @@ private:
 
 	bool _isRightClick = false;	// Nancy20: the right button clicks it, not the left
 	bool _isMouseOver = false;
+	bool _isPressedAndReleased = false;	// Nancy22: goes off when the button comes up
+	bool _isDown = false;
 
 	Common::Array<Flag> _flags;
 };
@@ -209,6 +220,9 @@ public:
 	void onDie() override { callFunction("OnDie"); }
 	bool hasMessagingName(const Common::String &name) override;
 
+	// Nancy22: takes a name to get messages under, or gives it up with an empty one
+	bool setMessagingName(const Common::String &name, bool takeOver);
+
 protected:
 	void readTable(int tableIndex) override;
 	bool prepareReset() override { return true; }
@@ -222,7 +236,12 @@ protected:
 private:
 	// What the "Render" function draws on, for the records that have one
 	RecordGraphic *_canvas = nullptr;
+
+	Common::String _messagingName;	// Nancy22, from SetMessagingName
 };
+
+// Loads an image from a tree, or a picture the camera took from the "LOADSAVE" one
+bool loadTreeImage(const Common::String &name, const Common::String &treeName, Graphics::ManagedSurface &image);
 
 // Shows a part of an image
 class OverlayRecord : public Record {
@@ -308,10 +327,11 @@ private:
 // Plays a sound, picked at random when it has several
 class SoundRecord : public Record {
 public:
-	SoundRecord(SceneContext &context) : Record(context, "ND.SoundAR") {}
+	SoundRecord(SceneContext &context);
 
 	void onSkip() override;
 	bool skipSpeech() override;
+	void stopIfPlaying();
 
 protected:
 	void readTable(int tableIndex) override;
@@ -319,10 +339,11 @@ protected:
 	void run(double sceneTime, double elapsedTime) override;
 	bool prepareReset() override;
 	bool getField(const Common::String &key) override;
+	bool setField(const Common::String &key) override;
 
 private:
 	Common::Array<Common::String> _names;
-	uint16 _channel = 14;
+	uint16 _channel;	// FX1 unless the table says otherwise
 	double _volume = 1.0;
 	bool _isLooping = false;
 	bool _usesCaption = true;
@@ -331,6 +352,8 @@ private:
 	Common::String _caption;	// what the sound says, while it is the one on screen
 	bool _isPlaying = false;
 	bool _wasPreempted = false;
+	uint32 _channelSerial = 0;	// of the channel, once the sound started
+	double _duration = 0.0;		// of the sound that plays, in seconds
 	double _endTime = 0.0;
 };
 

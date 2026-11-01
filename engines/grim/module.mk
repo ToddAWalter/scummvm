@@ -42,13 +42,22 @@ MODULE_OBJS := \
 	emi/lua_v2_actor.o \
 	emi/lua_v2_sound.o \
 	emi/emi_registry.o \
-	imuse/imuse.o \
+	imuse/imuse_cmds.o \
+	imuse/imuse_dispatch.o \
+	imuse/imuse_engine.o \
+	imuse/imuse_fades.o \
+	imuse/imuse_files.o \
+	imuse/imuse_groups.o \
+	imuse/imuse_hmi.o \
+	imuse/imuse_internalmixer.o \
 	imuse/imuse_mcmp_mgr.o \
-	imuse/imuse_music.o \
-	imuse/imuse_script.o \
-	imuse/imuse_sndmgr.o \
+	imuse/imuse_scripts.o \
+	imuse/imuse_streamer.o \
 	imuse/imuse_tables.o \
-	imuse/imuse_track.o \
+	imuse/imuse_tracks.o \
+	imuse/imuse_triggers.o \
+	imuse/imuse_utils.o \
+	imuse/imuse_waveout.o \
 	lua/lapi.o \
 	lua/lauxlib.o \
 	lua/lbuffer.o \

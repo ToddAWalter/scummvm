@@ -27,11 +27,11 @@
 
 #include "audio/audiostream.h"
 #include "audio/decoders/raw.h"
-#include "engines/nancy/sound_vorbis.h"
+#include "engines/nancy/resource/sound_vorbis.h"
 
 #include "engines/nancy/nancy.h"
 #include "engines/nancy/sound.h"
-#include "engines/nancy/iff.h"
+#include "engines/nancy/resource/iff.h"
 
 #include "engines/nancy/state/scene.h"
 #include "engines/nancy/state/map.h"
@@ -313,6 +313,8 @@ void SoundManager::loadSound(const SoundDescription &description, SoundEffectDes
 	}
 
 	Channel &existing = _channels[description.channelID];
+	++existing.serial;
+
 	if (!forceReload && existing.stream != nullptr) {
 		// There's a channel already loaded. Check if we're trying to reload the exact same sound
 		if (	description.name == existing.name &&
@@ -489,7 +491,9 @@ void SoundManager::pauseSound(const SoundDescription &description, bool pause) {
 }
 
 void SoundManager::pauseSound(const Common::String &chunkName, bool pause) {
-	pauseSound(_commonSounds[chunkName], pause);
+	if (_commonSounds.contains(chunkName)) {
+		pauseSound(_commonSounds[chunkName], pause);
+	}
 }
 
 void SoundManager::pauseAllSounds(bool pause) {
@@ -516,8 +520,13 @@ bool SoundManager::isSoundPlaying(const SoundDescription &description) const {
 	}
 }
 
+// Nancy19 and up have no common sounds
 bool SoundManager::isSoundPlaying(const Common::String &chunkName) const {
-	return isSoundPlaying(_commonSounds[chunkName]);
+	return _commonSounds.contains(chunkName) && isSoundPlaying(_commonSounds[chunkName]);
+}
+
+uint32 SoundManager::getChannelSerial(uint16 channelID) const {
+	return channelID < _channels.size() ? _channels[channelID].serial : 0;
 }
 
 void SoundManager::stopSound(uint16 channelID) {
@@ -525,6 +534,7 @@ void SoundManager::stopSound(uint16 channelID) {
 		return;
 
 	Channel &chan = _channels[channelID];
+	++chan.serial;
 
 	if (isSoundPlaying(channelID)) {
 		_mixer->stopHandle(chan.handle);
@@ -552,7 +562,9 @@ void SoundManager::stopSound(const SoundDescription &description) {
 }
 
 void SoundManager::stopSound(const Common::String &chunkName) {
-	stopSound(_commonSounds[chunkName]);
+	if (_commonSounds.contains(chunkName)) {
+		stopSound(_commonSounds[chunkName]);
+	}
 }
 
 void SoundManager::stopAllSounds() {

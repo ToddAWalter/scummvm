@@ -508,6 +508,9 @@ bool Panel::takeAction(const Action &action) {
 
 		showItem((int16)action.value, action.type == kActionShowItem);
 		break;
+	case kActionCycleFocus:
+		cycleFocus();
+		break;
 	default:
 		return false;
 	}
@@ -648,6 +651,10 @@ bool Panel::removeControl(const Common::String &name) {
 			}
 		}
 
+		if (_focus == control) {
+			_focus = nullptr;
+		}
+
 		if (_capture == control) {
 			_capture = nullptr;
 		}
@@ -665,6 +672,10 @@ EditBox *Panel::getKeyboardFocus() const {
 		return nullptr;
 	}
 
+	if (_focus && _focus->isVisible() && _focus->isEnabled()) {
+		return _focus;
+	}
+
 	for (EditBox *editBox : _editBoxes) {
 		if (editBox->isVisible() && editBox->isEnabled()) {
 			return editBox;
@@ -672,6 +683,27 @@ EditBox *Panel::getKeyboardFocus() const {
 	}
 
 	return nullptr;
+}
+
+// The edit box after the focused one, going around to the first
+void Panel::cycleFocus() {
+	EditBox *current = getKeyboardFocus();
+	if (!current) {
+		return;
+	}
+
+	uint start = 0;
+	while (_editBoxes[start] != current) {
+		++start;
+	}
+
+	for (uint i = 1; i <= _editBoxes.size(); ++i) {
+		EditBox *editBox = _editBoxes[(start + i) % _editBoxes.size()];
+		if (editBox->isVisible() && editBox->isEnabled()) {
+			_focus = editBox;
+			break;
+		}
+	}
 }
 
 bool Panel::isItemButton(const Common::String &name) const {

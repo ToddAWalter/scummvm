@@ -29,6 +29,7 @@
 #include "engines/grim/lipsync.h"
 #include "engines/grim/movie/movie.h"
 #include "engines/grim/sound.h"
+#include "engines/grim/imuse/imuse_engine.h"
 #include "engines/grim/lua.h"
 #include "engines/grim/resource.h"
 #include "engines/grim/savegame.h"
@@ -87,12 +88,12 @@ Actor::Actor() :
 		_walkedLast(false), _walkedCur(false),
 		_collisionMode(CollisionOff), _collisionScale(1.f),
 		_lastTurnDir(0), _currTurnDir(0),
-		_sayLineText(0), _talkDelay(0),
+		_sayLineText(0),
 		_attachedActor(0), _attachedJoint(""),
 		_globalAlpha(1.f), _alphaMode(AlphaOff),
 		 _mustPlaceText(false),
 		_puckOrient(false), _talking(false),
-		_inOverworld(false), _drawnToClean(false), _backgroundTalk(false),
+		_inOverworld(false), _drawnToClean(false), _backgroundTalk(false), _talkSoundId(0),
 		_sortOrder(0), _useParentSortOrder(false),
 		_sectorSortOrder(0), _hasSectorSortOrder(false), _fakeUnbound(false), _lightMode(LightFastDyn),
 		_hasFollowedBoxes(false), _lookAtActor(0) {
@@ -145,6 +146,7 @@ void Actor::saveState(SaveGame *savedState) const {
 	savedState->writeString(_talkSoundName);
 	savedState->writeBool(_talking);
 	savedState->writeBool(_backgroundTalk);
+	savedState->writeLESint32(_talkSoundId);
 
 	savedState->writeLEUint32((uint32)_collisionMode);
 	savedState->writeFloat(_collisionScale);
@@ -303,6 +305,9 @@ bool Actor::restoreState(SaveGame *savedState) {
 	_talkSoundName      = savedState->readString();
 	_talking = savedState->readBool();
 	_backgroundTalk = savedState->readBool();
+	if (savedState->saveMinorVersion() >= 30)
+		_talkSoundId = savedState->readLESint32();
+
 	if (isTalking()) {
 		g_grim->addTalkingActor(this);
 	}
@@ -1185,14 +1190,11 @@ void Actor::sayLine(const char *msgId, bool background, float x, float y) {
 
 	Set *currSet = g_grim->getCurrSet();
 
-	if (g_grim->getSpeechMode() != GrimEngine::TextOnly) {
-		// if there is no costume probably the character is drawn by a smush movie, so
-		// we don't want to go out of sync with it.
-		if (g_grim->getGameType() == GType_GRIM && getCurrentCostume()) {
-			_talkDelay = 500;
-		}
-		g_sound->startVoice(_talkSoundName.c_str());
-	}
+	bool started = false;
+	_talkSoundId = 0;
+
+	if (g_grim->getSpeechMode() != GrimEngine::TextOnly)
+		started = g_sound->startVoice(_talkSoundName.c_str(), 127, 64, background, &_talkSoundId);
 
 	// If the actor is clearly not visible then don't try to play the lip sync
 	if (_visible && (!g_movie->isPlaying() || g_grim->getMode() == GrimEngine::NormalMode)) {
@@ -1210,6 +1212,18 @@ void Actor::sayLine(const char *msgId, bool background, float x, float y) {
 		// In these cases, revert to using the mumble chore.
 		if (g_grim->getSpeechMode() != GrimEngine::TextOnly)
 			_lipSync = g_resourceloader->getLipSync(soundLip);
+
+		// Ask iMUSE if there's lipsync data...
+		if (g_grim->getGameType() == GType_GRIM && _lipSync) {
+			bool hasTalkChore = false;
+			for (int i = 1; i < 10; i++) {
+				if (_talkChore[i].isValid())
+					hasTalkChore = true;
+			}
+
+			if (!started || !g_imuse->iMUSEGetPhoneme(_talkSoundId, 0) || !hasTalkChore)
+				_lipSync = nullptr;
+		}
 		// If there's no lip sync file then load the mumble chore if it exists
 		// (the mumble chore doesn't exist with the cat races announcer)
 		if (!_lipSync)
@@ -1258,7 +1272,7 @@ void Actor::sayLine(const char *msgId, bool background, float x, float y) {
 		textObject->setDefaults(&g_grim->_sayLineDefaults);
 		textObject->setFGColor(_talkColor);
 		textObject->setIsSpeech();
-		if (m == GrimEngine::TextOnly || g_grim->getMode() == GrimEngine::SmushMode) {
+		if (m == GrimEngine::TextOnly || g_grim->getMode() == GrimEngine::SmushMode || (g_grim->getGameType() == GType_GRIM && !started)) {
 			textObject->setDuration(500 + msg.size() * 15 * (11 - g_grim->getTextSpeed()));
 		}
 		if (g_grim->getGameType() == GType_MONKEY4 && (x != -1 || y != -1)) {
@@ -1318,6 +1332,7 @@ void Actor::shutUp() {
 		g_sound->stopSound(_talkSoundName.c_str());
 		_talkSoundName = "";
 	}
+	_talkSoundId = 0;
 
 	if (_lipSync) {
 		if (_talkAnim != -1)
@@ -1641,16 +1656,32 @@ void Actor::update(uint frameTime) {
 
 	// Update lip syncing
 	if (_lipSync) {
-		int posSound;
+		int anim = -1;
+		bool hasAnim = false;
 
 		// While getPosIn16msTicks will return "-1" to indicate that the
 		// sound is no longer playing, it is more appropriate to check first
-		if (g_grim->getSpeechMode() != GrimEngine::TextOnly && g_sound->getSoundStatus(_talkSoundName.c_str()))
-			posSound = g_sound->getPosIn16msTicks(_talkSoundName.c_str());
-		else
-			posSound = -1;
-		if (posSound != -1) {
-			int anim = _lipSync->getAnim(posSound);
+		if (g_grim->getSpeechMode() != GrimEngine::TextOnly && g_sound->getSoundStatus(_talkSoundName.c_str())) {
+			if (g_grim->getGameType() == GType_GRIM) {
+				// The original gets the phoneme from iMUSE, and stops
+				// talking if there's no lip sync data for the voice
+				int phoneme = g_imuse->iMUSEGetPhoneme(_talkSoundId, 0);
+				if (phoneme) {
+					anim = LipSync::getAnimFromPhoneme(phoneme);
+					hasAnim = true;
+				} else {
+					shutUp();
+				}
+			} else {
+				int posSound = g_sound->getPosIn16msTicks(_talkSoundName.c_str());
+				if (posSound != -1) {
+					anim = _lipSync->getAnim(posSound);
+					hasAnim = true;
+				}
+			}
+		}
+
+		if (hasAnim) {
 			if (_talkAnim != anim) {
 				if (anim != -1) {
 					if (_talkChore[anim].isValid()) {
@@ -1717,23 +1748,21 @@ void Actor::update(uint frameTime) {
 
 // Not all the talking actors are in the current set, and so on not all the talking actors
 // update() is called. For example, Don when he comes out of his office after reaping Meche.
-bool Actor::updateTalk(uint frameTime) {
+bool Actor::updateTalk() {
 	if (_talking) {
 		// If there's no sound file then we're obviously not talking
 		GrimEngine::SpeechMode m = g_grim->getSpeechMode();
 		TextObject *textObject = nullptr;
 		if (_sayLineText)
 			textObject = TextObject::getPool().getObject(_sayLineText);
-		if (m == GrimEngine::TextOnly && !textObject) {
+
+		bool hasVoice = m != GrimEngine::TextOnly && (g_grim->getGameType() != GType_GRIM || _talkSoundId);
+		if (!hasVoice && !textObject) {
 			shutUp();
 			return false;
-		} else if (m != GrimEngine::TextOnly && (_talkSoundName.empty() || !g_sound->getSoundStatus(_talkSoundName.c_str()))) {
-			_talkDelay -= frameTime;
-			if (_talkDelay <= 0) {
-				_talkDelay = 0;
-				shutUp();
-				return false;
-			}
+		} else if (hasVoice && (_talkSoundName.empty() || !g_sound->getSoundStatus(_talkSoundName.c_str()))) {
+			shutUp();
+			return false;
 		}
 		return true;
 	}

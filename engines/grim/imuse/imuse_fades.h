@@ -19,25 +19,35 @@
  *
  */
 
-#ifndef NANCY_SOUND_VORBIS_H
-#define NANCY_SOUND_VORBIS_H
+#ifndef GRIM_IMUSE_FADES_H
+#define GRIM_IMUSE_FADES_H
 
-#include "common/types.h"
+#include "common/scummsys.h"
+#include "common/textconsole.h"
+#include "common/util.h"
 
-namespace Common {
-class SeekableReadStream;
-}
+namespace Grim {
 
-namespace Audio {
-class SeekableAudioStream;
-}
+class IMuseFadesHandler {
 
-namespace Nancy {
+private:
+	IMuse *_engine;
+	Common::Mutex *_mutex;
+	IMuseFade _fades[IMUSE_MAX_FADES] = {};
+	int _fadesOn = 0;
 
-Audio::SeekableAudioStream *makeHISVorbisStream(
-	Common::SeekableReadStream *stream,
-	DisposeAfterUse::Flag disposeAfterUse);
+	void clearAllFades();
+public:
+	IMuseFadesHandler(IMuse *engine, Common::Mutex *mutex);
+	~IMuseFadesHandler();
 
-} // End of namespace Nancy
+	int init();
+	void saveLoad(Common::Serializer &ser);
+	int fadeParam(int soundId, int opcode, int destinationValue, int fadeLength);
+	void clearFadeStatus(int soundId, int opcode);
+	void loop();
 
-#endif // NANCY_SOUND_VORBIS_H
+};
+
+} // End of namespace Grim
+#endif
