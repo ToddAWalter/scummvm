@@ -1361,6 +1361,16 @@ void Scene::registerGraphics() {
 	_frame.registerGraphics();
 	_viewport.registerGraphics();
 
+	// The scenes of the streams, and from Nancy19 on the scripts of the main
+	// scene, have their own graphics
+	_streams.registerGraphics();
+
+#ifdef ENABLE_NANCY_V4
+	if (_scriptScene) {
+		_scriptScene->registerGraphics();
+	}
+#endif
+
 	// Pre-Nancy 10: inventory box is always-on-screen.
 	// Nancy 10+: a separate popup widget driven by UIIV (initially hidden).
 	// Nancy 16+: all of the UI is made of NDUI panels.
@@ -1464,7 +1474,8 @@ void Scene::showInventoryButtons() {
 }
 
 void Scene::inheritBrotherProgress(uint characterIndex) {
-	if (characterIndex != kPlayerCharacterFrank && characterIndex != kPlayerCharacterJoe) {
+	if (g_nancy->getGameType() != kGameTypeNancy15 ||
+			(characterIndex != kPlayerCharacterFrank && characterIndex != kPlayerCharacterJoe)) {
 		return;
 	}
 
@@ -1904,6 +1915,12 @@ void Scene::synchronize(Common::Serializer &ser) {
 
 	if (_ndui && ser.isSaving()) {
 		_ndui->saveState(((UIStateData *)getPuzzleData(UIStateData::getTag()))->changes);
+	}
+
+	// Nancy19 and up switch characters from their scripts, which don't keep
+	// track of who is being played, so a saved game gets told here
+	if (ser.isSaving() && g_nancy->getGameType() >= kGameTypeNancy19) {
+		((PlayerCharacterData *)getPuzzleData(PlayerCharacterData::getTag()))->characterIndex = g_nancy->getPlayerCharacter();
 	}
 
 	byte numPuzzleData = _puzzleData.size();
