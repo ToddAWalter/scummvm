@@ -87,6 +87,7 @@ struct HotspotStyle {
 	byte borderOpacity = 180;
 	bool labelBorder = true;
 	bool scaleWithGame = true;
+	bool scaleWithOverlay = true;
 	const Font *font = nullptr;
 };
 
@@ -102,6 +103,8 @@ public:
 	void setStyle(const HotspotStyle &style);
 	void invalidate();
 	void releaseResources();
+	bool ownsOverlay() const { return _ownsOverlay; }
+	void hideOverlay(OSystem &system);
 	bool empty() const { return _hotspots.empty(); }
 	void setHotspots(Common::Array<HotspotInfo> hotspots);
 	void exchangeHotspots(Common::Array<HotspotInfo> &hotspots);
@@ -189,6 +192,7 @@ private:
 	Surface _overlay;
 	Common::Array<HotspotInfo> _hotspots;
 	bool _dirty = true;
+	bool _ownsOverlay = false;
 	Common::Point _gameSize;
 	int _screenChangeID = -1;
 	MarkerShape _shape = kMarkerCrosshair;
@@ -201,7 +205,7 @@ private:
 
 protected:
 	HotspotStyle _style;
-	float _sizeScale;   ///< Overlay/game scale factor applied to marker geometry
+	float _sizeScale;   ///< Visual scale applied to markers and labels
 	int _markerSize;    ///< Scaled size of square and crosshair markers
 	int _pointRadius;   ///< Scaled radius of point marker
 	int _lineThickness; ///< Scaled thickness of lines for markers and text boxes
