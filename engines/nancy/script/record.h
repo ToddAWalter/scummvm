@@ -35,8 +35,38 @@ struct NancyInput;
 
 namespace Script {
 
+class BlendStages;
 class GraphNode;
 class SceneContext;
+struct RecordNodeState;
+
+// The types of records a script can make, in the order of their names
+enum RecordType {
+	kRecordNavLogic		= 0,
+	kRecordSummary		= 1,
+	kRecordOverlay		= 2,
+	kRecordMovie		= 3,
+	kRecordSound		= 4,
+	kRecordVideoConvo	= 5,
+	kRecordSoundConvo	= 6,
+	kRecordText			= 7,
+	kRecordOverride		= 8,
+	kRecordParticle		= 9,
+	kRecordAnimOverlay	= 10,
+	kRecordPhysics		= 11,	// Nancy21
+	kRecordXsheet		= 12,	// Nancy22
+	kRecordTransformer	= 13,	// Nancy22
+	kRecordTimer		= 14,	// Nancy24
+	kRecordHotspot		= 15,	// Nancy26
+	kRecordSink			= 16,
+	kRecordButton		= 17,
+	kRecordEditBox		= 18,
+	kRecordRadioButton	= 19,
+	kRecordCheckBox		= 20,
+	kRecordSlider		= 21,
+
+	kNumRecordTypes		= 22
+};
 
 // What the player does that records get told about
 enum RecordEvent {
@@ -75,6 +105,10 @@ public:
 	virtual ~Record();
 
 	const char *getTypeName() const { return _typeName; }
+
+	// Which of the types above the record is
+	virtual RecordType getType() const = 0;
+
 	SceneContext &getContext() const { return _context; }
 
 	// Takes over the fields of the table that made the record
@@ -120,7 +154,7 @@ public:
 	// Whether messages sent to the given name are for this record
 	virtual bool hasMessagingName(const Common::String &name) { return false; }
 
-	bool isActive() const { return _isActive && !_isDone; }
+	bool isActive() const;
 	bool isDone() const { return _isDone; }
 	bool hasStarted() const { return _hasStarted; }
 	bool hasRunOnce() const { return _hasRunOnce; }
@@ -162,6 +196,94 @@ public:
 	// Where the record puts what it shows, for the kinds that show something,
 	// after the nodes it is under moved it
 	ScriptMatrix getTransform() const;
+
+	// The record's own, before the nodes it is under: the product of its blend
+	// stages when it has any
+	ScriptMatrix getLocalTransform() const;
+
+	// Whether what the record draws gets shown: while it is visible from Nancy26
+	// on, while it is active before
+	bool isShown() const;
+
+	// Nancy26: the part of the screen the Transformers the record is under let it
+	// draw in; empty for all of it
+	Common::Rect getScreenClip() const;
+
+	// A color what the record draws gets multiplied with, made as see-through
+	// as the record is
+	uint32 applyAlpha(uint32 modColor) const;
+
+	// The same, for a picture that gets drawn now. Nancy26 draws it again once
+	// the record is made more or less see-through.
+	uint32 takeModColor(uint32 modColor);
+	bool hasAlphaChanged() const;
+
+	// The blend stages of the record: Nancy22 has them in Transformers, and
+	// Nancy26 in every record
+	BlendStages &getStages();
+	virtual void onStagesChanged();
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26: works like reset(), but leaves the record inactive
+	bool resetInactive();
+
+	// Nancy26 orders records like a tree: a record's z only places it among the
+	// records under the same node, and a node with all it holds goes where its
+	// own z puts it. The scene works out the place of every record in that
+	// order, and getZ() then gives a z that keeps it.
+	void setDrawRank(int rank);
+
+	// Nancy26: every record is a node of a tree, which can be enabled (gets the
+	// player's input), visible (gets drawn) and paused (doesn't run), and can be
+	// see-through. A record is each of them when it says so itself, and the
+	// Transformers it is attached to don't say otherwise. "active" stands for
+	// all three: enabled, visible and not paused.
+	bool isNodeEnabled() const;
+	bool isNodeVisible() const;
+	bool isNodePaused() const;
+	double getAlpha() const;
+	void setLocalEnabled(bool isEnabled);
+	void setLocalVisible(bool isVisible);
+	void setLocalPaused(bool isPaused);
+	void setActiveFlags(bool isActive);
+
+	// Nancy26: the order keys go to the records in, highest first
+	double getKeyZ() const;
+
+	// Nancy26: the record's own transform changed, by its stages or a script
+	virtual void onLocalTransformChanged();
+
+	// Nancy26: the records the mouse can be over, which take the clicks. The
+	// point is in the coordinates of the screen. A button is 0 for the left one
+	// and 1 for the right one.
+	virtual bool isMouseRegion() const { return false; }
+	virtual bool hitTest(const ScriptPoint &point) const { return false; }
+	virtual void setMouseOver(bool isOver) {}
+	virtual bool pressRegion(int button) { return false; }	// returns whether it took the click
+	virtual void releaseRegion(int button) {}
+	virtual bool getRegionCursor(uint &cursorType, bool &isHot) const { return false; }
+
+	// Nancy26: the mouse wheel turned while the mouse was at the point, in the
+	// coordinates of the screen. Returns whether the record took it.
+	virtual bool scrollRegion(const ScriptPoint &point, int notches) { return false; }
+
+	// Nancy26: whether the keys go no further than this record
+	virtual bool capturesKeys() const { return false; }
+
+	// Nancy26: a key that went down, for the records that type; returns
+	// whether the record took it
+	virtual bool handleKey(Common::KeyCode key, uint16 ascii) { return false; }
+
+	// Nancy26: the name the record goes by of its own, and the one its
+	// messages come from
+	const Common::String &getUniqueAlias() const;
+	const Common::String &getName() const;
+
+	// Nancy26: a message another record sent, from the Lua state L, with numArgs
+	// arguments from firstArg on. Leaves what the record's Receive function
+	// returned on the stack of L, and returns how many values that is.
+	int receiveMessage(lua_State *L, const Common::String &sender, const Common::String &action, int firstArg, int numArgs);
+#endif
 
 	// Nancy21: puts the record under a node; null for none
 	GraphNode *getParentNode() const { return _parentNode; }
@@ -257,6 +379,22 @@ private:
 	bool _isScriptOwned = false;
 	uint _numObjects = 0;	// the objects standing for the record that Lua still has
 	bool _isDropped = false;
+
+	BlendStages *_stages = nullptr;
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26: what makes the record a node of the tree, and what goes with it.
+	// The other games have none.
+	void createNodeState();
+	void destroyNodeState();
+	void readNodeFields(int tableIndex);
+	void updateNode(double sceneTime, double elapsedTime);
+	int getNodeScriptField(const Common::String &key);
+	bool getNodeField(const Common::String &key);
+	bool setNodeField(const Common::String &key);
+
+	RecordNodeState *_nodeState = nullptr;
+#endif
 };
 
 // Makes the "AR" object, and the types of the records

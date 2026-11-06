@@ -236,6 +236,21 @@ MODULE_OBJS += \
   script/types.o \
   script/uiapi.o \
   script/xsheet.o
+
+# Nancy26 and newer, whose UI is made of records as well
+ifdef ENABLE_NANCY_V5
+MODULE_OBJS += \
+  script/v5/bitmaptext.o \
+  script/v5/bootobjects.o \
+  script/v5/cliptransformer.o \
+  script/v5/gamefunctions.o \
+  script/v5/messaging.o \
+  script/v5/recordnode.o \
+  script/v5/scriptinput.o \
+  script/v5/streamtree.o \
+  script/v5/textrecord.o \
+  script/v5/widgets.o
+endif
 endif
 
 # This module can be built as a plugin

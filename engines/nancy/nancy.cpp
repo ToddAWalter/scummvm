@@ -65,7 +65,6 @@ NancyEngine::NancyEngine(GameType type, OSystem *syst, const ADGameDescription *
 		Engine(syst),
 		_gameDescription(gd),
 		_gameType(type),
-		_system(syst),
 		_datFileMajorVersion(1),
 		_datFileMinorVersion(0),
 		_false(type <= kGameTypeNancy2 ? 1 : 0),
@@ -454,8 +453,8 @@ const Common::String NancyEngine::getEventFlagName(uint flagID) const {
 	if (flagID >= 2000) {
 		flagID -= 2000;
 
-		const Common::Array<Common::String> &flagNames = dynamic_cast<const EVNT *>(getEngineData("EVNT"))->eventFlagNames;
-		return (flagID < flagNames.size()) ? flagNames[flagID] : "";
+		const EVNT *evnt = dynamic_cast<const EVNT *>(getEngineData("EVNT"));
+		return evnt && flagID < evnt->eventFlagNames.size() ? evnt->eventFlagNames[flagID] : "";
 	}
 
 	const GenericEventFlagCategory *categories = kGenericEventFlagCategories;
@@ -959,6 +958,51 @@ void NancyEngine::bootScriptedGameEngine() {
 	_engineData.setVal("BSUM", bootSummary);
 	_engineData.setVal("ScriptBootData", boot);
 
+	// Nancy26 can't be started without its scripts, which the metaengine checks
+	if (getGameType() < kGameTypeNancy26) {
+		bootScriptedGameData(boot, flags, inventory, environments, players, viewport, autotext, convo);
+#ifdef ENABLE_NANCY_V5
+	} else {
+		bootNancy26Data(boot, flags, inventory, environments, viewport, autotext);
+#endif
+	}
+
+	_staticData.numItems = inventory->items.size();
+	_staticData.numEventFlags = (uint16)(kNumGenericEventFlags + flags->numRecords);
+
+	// Saved games get matched against the name of the game
+	const Common::String &saveName = boot->saveFolderName.empty() ? boot->defaultSaveName : boot->saveFolderName;
+	Common::strlcpy((char *)bootSummary->header, saveName.c_str(), sizeof(bootSummary->header));
+	bootSummary->firstScene.sceneID = 0;
+
+	// The clock of the game runs a little faster than a real one
+	if (boot->playerTimeScale > 0.0) {
+		bootSummary->playerTimeMinuteLength = (uint16)(60000.0 / boot->playerTimeScale);
+	}
+
+	_cursor->init(*boot);
+
+	_graphics->init();
+	_graphics->loadSystemFonts(*boot);
+
+	_sound->initSoundChannels();
+
+	// Nancy26 has no player characters to pick from
+	if (players->characters.empty()) {
+		return;
+	}
+
+	uint startCharacter = 0;
+	for (uint i = 0; i < players->characters.size(); ++i) {
+		if (players->characters[i].name.equalsIgnoreCase(players->startCharacterName)) {
+			startCharacter = i;
+		}
+	}
+
+	setPlayerCharacter(startCharacter);
+}
+
+void NancyEngine::bootScriptedGameData(ScriptBootData *boot, EVNT *flags, INVD *inventory, ENVS *environments, PCUI *players, VIEW *viewport, CVTX *autotext, CVTX *convo) {
 	// The order matters: the cursors of the inventory go by item
 	Script::BootTables fontTables;
 	fontTables.boot = boot;
@@ -1006,35 +1050,6 @@ void NancyEngine::bootScriptedGameEngine() {
 			error("Failed to load text file %s", name.c_str());
 		}
 	}
-
-	_staticData.numItems = inventory->items.size();
-	_staticData.numEventFlags = (uint16)(kNumGenericEventFlags + flags->numRecords);
-
-	// Saved games get matched against the name of the game
-	const Common::String &saveName = boot->saveFolderName.empty() ? boot->defaultSaveName : boot->saveFolderName;
-	Common::strlcpy((char *)bootSummary->header, saveName.c_str(), sizeof(bootSummary->header));
-	bootSummary->firstScene.sceneID = 0;
-
-	// The clock of the game runs a little faster than a real one
-	if (boot->playerTimeScale > 0.0) {
-		bootSummary->playerTimeMinuteLength = (uint16)(60000.0 / boot->playerTimeScale);
-	}
-
-	_cursor->init(*boot);
-
-	_graphics->init();
-	_graphics->loadSystemFonts(*boot);
-
-	_sound->initSoundChannels();
-
-	uint startCharacter = 0;
-	for (uint i = 0; i < players->characters.size(); ++i) {
-		if (players->characters[i].name.equalsIgnoreCase(players->startCharacterName)) {
-			startCharacter = i;
-		}
-	}
-
-	setPlayerCharacter(startCharacter);
 }
 #endif
 

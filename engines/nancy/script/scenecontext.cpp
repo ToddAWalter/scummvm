@@ -52,7 +52,25 @@ SceneContext::SceneContext(const Common::String &streamName, const Common::Strin
 		_sceneName(sceneName),
 		_frame(frame),
 		_zOffset(zOffset) {
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		_streamState = NancySceneState.getStreams().getNodeState(streamName);
+	}
+#endif
+
 	_lua = new LuaState(this);
+}
+
+// Nancy26 draws whole streams over each other, so the z of a record only counts
+// within the band of its stream
+int32 SceneContext::getZOffset() const {
+#ifdef ENABLE_NANCY_V5
+	if (_streamState) {
+		return _streamState->band;
+	}
+#endif
+
+	return _zOffset;
 }
 
 SceneContext::~SceneContext() {
@@ -128,9 +146,15 @@ bool SceneContext::load() {
 	// Nothing can be made before there is a summary. A scene can go on to make
 	// more of them, and so can the scripts it includes; the last one that names
 	// a background is the one that shows.
-	_summary = _newRecords.empty() ? nullptr : dynamic_cast<SummaryRecord *>(_newRecords[0]);
+	_summary = _newRecords.empty() ? nullptr : toSummaryRecord(_newRecords[0]);
+
+	// Nancy26's included scripts make records first, and a scene has only one summary
+	for (uint i = 0; !_summary && i < _newRecords.size() && g_nancy->getGameType() >= kGameTypeNancy26; ++i) {
+		_summary = toSummaryRecord(_newRecords[i]);
+	}
+
 	for (Record *record : _newRecords) {
-		SummaryRecord *summary = dynamic_cast<SummaryRecord *>(record);
+		SummaryRecord *summary = toSummaryRecord(record);
 		if (_summary && summary && !summary->getBackgroundName().empty()) {
 			_summary = summary;
 		}
@@ -435,6 +459,12 @@ void SceneContext::run(double elapsedTime) {
 	renderAttachment();
 	applyGraphNodeChanges();
 
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		updateDrawRanks();
+	}
+#endif
+
 	for (Record *record : _records) {
 		record->updateGraphics();
 	}
@@ -535,8 +565,8 @@ const ViewTransform *SceneContext::getViewTransform() const {
 	return NancySceneState.getStreams().getViewTransform(_streamName);
 }
 
-GraphNode *SceneContext::createGraphNode() {
-	GraphNode *node = new GraphNode(*this);
+GraphNode *SceneContext::createGraphNode(Record *owner) {
+	GraphNode *node = new GraphNode(*this, owner);
 	_graphNodes.push_back(node);
 	return node;
 }
@@ -698,8 +728,12 @@ void SceneContext::handleInput(NancyInput &input) {
 	}
 }
 
-void SceneContext::changeScene(const Common::String &streamName, const Common::String &sceneName, uint16 frame) {
+void SceneContext::changeScene(const Common::String &name, const Common::String &sceneName, uint16 frame) {
 	State::SceneStreamManager &streams = NancySceneState.getStreams();
+
+	// No name stands for the stream of this scene, which isn't always the one
+	// that runs: Nancy26 hands the input to the records of all streams at once
+	const Common::String &streamName = name.empty() ? _streamName : name;
 
 	_hasChangedScene = true;
 

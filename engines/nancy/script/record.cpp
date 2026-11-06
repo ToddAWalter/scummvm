@@ -21,6 +21,8 @@
 
 #include "common/algorithm.h"
 
+#include "engines/nancy/nancy.h"
+
 #include "engines/nancy/script/api.h"
 #include "engines/nancy/script/graphnode.h"
 #include "engines/nancy/script/luabind.h"
@@ -28,7 +30,13 @@
 #include "engines/nancy/script/record.h"
 #include "engines/nancy/script/records.h"
 #include "engines/nancy/script/scenecontext.h"
+#include "engines/nancy/script/transformer.h"
 #include "engines/nancy/script/types.h"
+
+#ifdef ENABLE_NANCY_V5
+#include "engines/nancy/script/v5/recordnode.h"
+#include "engines/nancy/script/v5/streamtree.h"
+#endif
 
 namespace Nancy {
 namespace Script {
@@ -38,9 +46,73 @@ static const char *const kRecordMarker = "__record";
 
 Record::Record(SceneContext &context, const char *typeName) :
 		_context(context),
-		_typeName(typeName) {}
+		_typeName(typeName) {
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		createNodeState();
+	}
+#endif
+}
 
-Record::~Record() {}
+Record::~Record() {
+#ifdef ENABLE_NANCY_V5
+	destroyNodeState();
+#endif
+
+	delete _stages;
+}
+
+bool Record::isActive() const {
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState) {
+		return _nodeState->isActive();
+	}
+#endif
+
+	return _isActive && !_isDone;
+}
+
+// What the records draw with. Nancy26 has its own, in v5/recordnode.cpp.
+#ifndef ENABLE_NANCY_V5
+bool Record::isShown() const {
+	return isActive();
+}
+
+Common::Rect Record::getScreenClip() const {
+	return Common::Rect();
+}
+
+uint32 Record::applyAlpha(uint32 modColor) const {
+	return modColor;
+}
+
+uint32 Record::takeModColor(uint32 modColor) {
+	return modColor;
+}
+
+bool Record::hasAlphaChanged() const {
+	return false;
+}
+
+void Record::onStagesChanged() {
+}
+#endif
+
+BlendStages &Record::getStages() {
+	if (!_stages) {
+		_stages = new BlendStages(*this);
+	}
+
+	return *_stages;
+}
+
+ScriptMatrix Record::getLocalTransform() const {
+	if (_stages && !_stages->isEmpty()) {
+		return _stages->getTransform();
+	}
+
+	return _transform;
+}
 
 lua_State *Record::getLua() const {
 	return _context.getLua();
@@ -107,9 +179,20 @@ void Record::create(int tableIndex) {
 	readField(L, tableIndex, "z", _z);
 	readField(L, tableIndex, "scriptOwns", _isScriptOwned);
 
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState) {
+		readNodeFields(tableIndex);
+	}
+#endif
+
 	lua_getfield(L, tableIndex, "active");
 	if (lua_isboolean(L, -1)) {
 		_isActive = lua_toboolean(L, -1) != 0;
+#ifdef ENABLE_NANCY_V5
+		if (_nodeState) {
+			setActiveFlags(_isActive);
+		}
+#endif
 	} else if (lua_isfunction(L, -1)) {
 		_hasActiveFunction = true;
 	}
@@ -152,6 +235,13 @@ void Record::onObjectCollected() {
 }
 
 void Record::update(double sceneTime, double elapsedTime) {
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState) {
+		updateNode(sceneTime, elapsedTime);
+		return;
+	}
+#endif
+
 	if (_isDone) {
 		return;
 	}
@@ -214,6 +304,12 @@ void Record::render() {
 }
 
 double Record::getZ() const {
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState && _nodeState->drawRank >= 0) {
+		return getRankZ(_nodeState->drawRank);
+	}
+#endif
+
 	return _parentNode ? _z + _parentNode->getZ() : _z;
 }
 
@@ -242,6 +338,12 @@ void Record::limitZ(double z) {
 
 void Record::finish() {
 	_isDone = true;
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState) {
+		setActiveFlags(false);
+	}
+#endif
+
 	if (getContext().isSkipping()) {
 		_hasEndedInSkip = true;
 	}
@@ -266,6 +368,14 @@ bool Record::reset() {
 	_hasRunOnce = false;
 	_isDone = false;
 	_hasStarted = false;
+
+	// Nancy26's Reset makes the record active, like Restart
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState) {
+		setActiveFlags(true);
+	}
+#endif
+
 	callFunction("OnReset");
 	return true;
 }
@@ -322,6 +432,14 @@ int Record::getScriptField() {
 	lua_State *L = getLua();
 	const Common::String key = luaL_checkstring(L, 2);
 
+	// What a script stored under the name of a function for the player's input
+	// wins over the base fields of Nancy26
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState && !isEventFunctionName(key)) {
+		return getNodeScriptField(key);
+	}
+#endif
+
 	if (key == "active") {
 		lua_pushboolean(L, isActive());
 		return 1;
@@ -369,6 +487,17 @@ int Record::getScriptField() {
 int Record::setScriptField() {
 	lua_State *L = getLua();
 	const Common::String key = luaL_checkstring(L, 2);
+
+#ifdef ENABLE_NANCY_V5
+	if (_nodeState) {
+		if (!setNodeField(key) && !setField(key)) {
+			lua_pushvalue(L, 3);
+			storeValue(key.c_str());
+		}
+
+		return 0;
+	}
+#endif
 
 	if (key == "active") {
 		if (lua_isfunction(L, 3)) {
@@ -755,7 +884,7 @@ static const luaL_Reg kRecordFunctions[] = {
 
 // AR:<kind>(table)
 static int createRecord(lua_State *L) {
-	const RecordKind kind = (RecordKind)lua_tointeger(L, lua_upvalueindex(1));
+	const RecordType type = (RecordType)lua_tointeger(L, lua_upvalueindex(1));
 	const char *kindName = lua_tostring(L, lua_upvalueindex(2));
 
 	SceneContext *context = LuaState::getContext(L);
@@ -770,11 +899,12 @@ static int createRecord(lua_State *L) {
 		return luaL_argerror(L, 1, "Expected a table as the parameter");
 	}
 
-	if (kind != kRecordSummary && !context->hasRecords()) {
+	// Nancy26's scenes include scripts that make records before the summary
+	if (type != kRecordSummary && !context->hasRecords() && g_nancy->getGameType() < kGameTypeNancy26) {
 		return luaL_error(L, "Summary AR must be the first AR in the scene");
 	}
 
-	Record *record = makeRecord(kind, *context);
+	Record *record = makeRecord(type, *context);
 	if (!record) {
 		return luaL_error(L, "AR:%s is not supported yet", kindName);
 	}
@@ -793,8 +923,8 @@ static int recordGetActualField(lua_State *L) {
 }
 
 void registerRecordAPI(lua_State *L) {
-	for (uint i = 0; i < kNumRecordKinds; ++i) {
-		const char *typeName = getRecordTypeName((RecordKind)i);
+	for (uint i = 0; i < kNumRecordTypes; ++i) {
+		const char *typeName = getRecordTypeName((RecordType)i);
 		if (luaL_newmetatable(L, typeName)) {
 			luaL_register(L, nullptr, kRecordFunctions);
 
@@ -824,11 +954,11 @@ void registerRecordAPI(lua_State *L) {
 
 	// One function for every kind, which knows the kind it makes
 	luaL_getmetatable(L, "ND.AR");
-	for (uint i = 0; i < kNumRecordKinds; ++i) {
+	for (uint i = 0; i < kNumRecordTypes; ++i) {
 		lua_pushinteger(L, i);
-		lua_pushstring(L, getRecordKindName((RecordKind)i));
+		lua_pushstring(L, getRecordKindName((RecordType)i));
 		lua_pushcclosure(L, createRecord, 2);
-		lua_setfield(L, -2, getRecordKindName((RecordKind)i));
+		lua_setfield(L, -2, getRecordKindName((RecordType)i));
 	}
 
 	lua_pop(L, 1);

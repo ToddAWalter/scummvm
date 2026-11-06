@@ -179,15 +179,15 @@ Common::Error NancyMetaEngine::createInstance(OSystem *syst, Engine **engine, co
 	}
 #endif
 
-	if (gd) {
-		*engine = Nancy::NancyEngine::create(gameType, syst, gd);
+	// Nancy26 needs the scripts of Nancy19 as well
+#if !defined(ENABLE_NANCY_V4) || !defined(ENABLE_NANCY_V5)
+	if (gameType >= Nancy::kGameTypeNancy26) {
+		return Common::Error(Common::kUnsupportedGameidError, _s("Support for Nancy Drew 26 and newer is not compiled in"));
 	}
+#endif
 
-	if (gd) {
-		return Common::kNoError;
-	} else {
-		return Common::Error();
-	}
+	*engine = Nancy::NancyEngine::create(gameType, syst, gd);
+	return Common::kNoError;
 }
 
 int NancyMetaEngine::getMaximumSaveSlot() const { int r = ConfMan.getInt("nancy_max_saves"); return r ? r : AdvancedMetaEngine::getMaximumSaveSlot(); }

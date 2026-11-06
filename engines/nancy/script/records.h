@@ -44,33 +44,12 @@ namespace Script {
 
 struct RefImage;
 
-// The kinds of records a script can make, in the order of the names below
-enum RecordKind {
-	kRecordNavLogic		= 0,
-	kRecordSummary		= 1,
-	kRecordOverlay		= 2,
-	kRecordMovie		= 3,
-	kRecordSound		= 4,
-	kRecordVideoConvo	= 5,
-	kRecordSoundConvo	= 6,
-	kRecordText			= 7,
-	kRecordOverride		= 8,
-	kRecordParticle		= 9,
-	kRecordAnimOverlay	= 10,
-	kRecordPhysics		= 11,	// Nancy21
-	kRecordXsheet		= 12,	// Nancy22
-	kRecordTransformer	= 13,	// Nancy22
-	kRecordTimer		= 14,	// Nancy24
+// What scripts call the type ("NavLogic"), and the Lua type of its objects ("ND.NavLogic")
+const char *getRecordKindName(RecordType type);
+const char *getRecordTypeName(RecordType type);
 
-	kNumRecordKinds		= 15
-};
-
-// What scripts call the kind ("NavLogic"), and the type of its objects ("ND.NavLogic")
-const char *getRecordKindName(RecordKind kind);
-const char *getRecordTypeName(RecordKind kind);
-
-// Returns null for the kinds that are not supported
-Record *makeRecord(RecordKind kind, SceneContext &context);
+// Returns null for the types that are not supported
+Record *makeRecord(RecordType type, SceneContext &context);
 
 // What the "Draw" object of the scripts draws on: the record whose "Render"
 // function is running. Null at any other time.
@@ -79,6 +58,10 @@ Graphics::ManagedSurface *getDrawTarget();
 // Draw:OVL(table), Nancy24: draws the picture of an Overlay record onto what
 // the record that is rendering draws
 int drawOverlay(lua_State *L);
+
+// Where something that was placed in the viewport ends up once the transform
+// of its record has moved it
+Common::Rect getTransformedDest(const ScriptRect &dest, const ScriptMatrix &transform, int width, int height);
 
 // What a record draws. Records are placed in the coordinates of the viewport.
 class RecordGraphic : public RenderObject {
@@ -94,8 +77,13 @@ public:
 	static uint16 getScriptZOrder(double z, int32 zOffset);
 	static uint16 getBackgroundZOrder(int32 zOffset);
 
+	// The highest z order of what the records draw
+	static const int kMaxScriptZOrder = 59000;
+
 protected:
-	bool isViewportRelative() const override { return true; }
+	// Nancy26 has the viewport at the top left of the screen, and lets records
+	// draw on all of it, the UI along the bottom included
+	bool isViewportRelative() const override;
 };
 
 // The first record of every scene, which names the area the scene belongs to
@@ -108,11 +96,19 @@ class SummaryRecord : public Record {
 public:
 	SummaryRecord(SceneContext &context) : Record(context, "ND.Summary") {}
 
+	RecordType getType() const override { return kRecordSummary; }
+
 	const Common::String &getEnvironment() const { return _environment; }
 	const Common::String &getBackgroundName() const { return _backgroundName; }
 
 	// The viewport that shows the background, once it has been loaded
 	void setBackground(UI::Viewport *background);
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26: the left and right arrow keys turn the view, and the down
+	// arrow turns it around. Returns whether the key did something.
+	bool turnByKey(Common::KeyCode key);
+#endif
 
 	void registerGraphics() override;
 
@@ -163,10 +159,17 @@ private:
 	RecordGraphic _facade;
 };
 
+// The record as a summary, or null for a record of another type
+inline SummaryRecord *toSummaryRecord(Record *record) {
+	return record && record->getType() == kRecordSummary ? static_cast<SummaryRecord *>(record) : nullptr;
+}
+
 // Changes the scene and sets flags, either right away or when its hotspot gets clicked
 class NavLogicRecord : public Record {
 public:
 	NavLogicRecord(SceneContext &context) : Record(context, "ND.NavLogic") {}
+
+	RecordType getType() const override { return kRecordNavLogic; }
 
 protected:
 	void readTable(int tableIndex) override;
@@ -223,6 +226,8 @@ private:
 class OverrideRecord : public Record {
 public:
 	OverrideRecord(SceneContext &context) : Record(context, "ND.OverrideAR") {}
+
+	RecordType getType() const override { return kRecordOverride; }
 	virtual ~OverrideRecord();
 
 	void updateGraphics() override;
@@ -258,6 +263,8 @@ bool loadTreeImage(const Common::String &name, const Common::String &treeName, G
 class OverlayRecord : public Record {
 public:
 	OverlayRecord(SceneContext &context) : Record(context, "ND.Overlay") {}
+
+	RecordType getType() const override { return kRecordOverlay; }
 
 	void updateGraphics() override;
 	void registerGraphics() override;
@@ -302,6 +309,8 @@ private:
 class AnimOverlayRecord : public Record {
 public:
 	AnimOverlayRecord(SceneContext &context) : Record(context, "ND.AnimOvlAR") {}
+
+	RecordType getType() const override { return kRecordAnimOverlay; }
 
 	void updateGraphics() override;
 	void registerGraphics() override;
@@ -354,6 +363,8 @@ class SoundRecord : public Record {
 public:
 	SoundRecord(SceneContext &context);
 
+	RecordType getType() const override { return kRecordSound; }
+
 	void onSkip() override;
 	bool skipSpeech() override;
 	void stopIfPlaying();
@@ -369,6 +380,12 @@ protected:
 private:
 	// Nancy24: "VOICE", "MUSIC" or "EFFECTS", the volume the sound goes by
 	void readChannelType(int index);
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26 has the UI show what a sound says through messages to "CC": its
+	// text, if the sound has one, and taking it down again once the sound is over
+	void sendCaption(bool isShown);
+#endif
 	const char *getChannelType() const;
 
 	Common::Array<Common::String> _names;
@@ -380,6 +397,7 @@ private:
 
 	SoundDescription _sound;
 	Common::String _caption;	// what the sound says, while it is the one on screen
+	bool _hasSentCaption = false;	// Nancy26: told the UI to show it
 	bool _isPlaying = false;
 	bool _wasPreempted = false;
 	uint32 _channelSerial = 0;	// of the channel, once the sound started
@@ -394,6 +412,8 @@ private:
 class TextRecord : public Record {
 public:
 	TextRecord(SceneContext &context) : Record(context, "ND.TextAR") {}
+
+	RecordType getType() const override { return kRecordText; }
 
 	void updateGraphics() override;
 	void registerGraphics() override;
@@ -440,6 +460,8 @@ private:
 class MovieRecord : public Record {
 public:
 	MovieRecord(SceneContext &context) : Record(context, "ND.Movie") {}
+
+	RecordType getType() const override { return kRecordMovie; }
 
 	void updateGraphics() override;
 	void registerGraphics() override;

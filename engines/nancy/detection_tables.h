@@ -668,6 +668,18 @@ static const ADGameDescription gameDescriptions[] = {
 		ADGF_TESTING | ADGF_DROPPLATFORM,
 		NANCY_GUIOPTIONS
 	},
+	{	// French Steam version from cedricl31 in bug #17426
+		"nancy11", nullptr,
+		{
+			{ "ciftree.dat", 0, "822cdaa603871a1786824cffd0b7bca8", 56370839 },
+			{ "gre_oil_cinematic.bik", 0, "28a2b6f939f1c7795e47a99337d7343a", 21514180 },
+			AD_LISTEND
+		},
+		Common::FR_FRA,
+		Common::kPlatformWindows,
+		ADGF_TESTING | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
 	{
 		"nancy11", nullptr,
 		{
@@ -895,6 +907,14 @@ static const ADGameDescription gameDescriptions[] = {
 	{ // MD5 by bluegr
 		"nancy25", nullptr,
 		AD_ENTRY1s("ciftree.dat", "1bd3132fb7ad8998d31e2b64c5978c25", 86918002),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
+	{ // MD5 by bluegr
+		"nancy26", nullptr,
+		AD_ENTRY1s("ciftree.dat", "a3ee96dab1e23c0ed0279cbf17826aca", 187384114),
 		Common::EN_ANY,
 		Common::kPlatformWindows,
 		ADGF_UNSTABLE | ADGF_DROPPLATFORM,

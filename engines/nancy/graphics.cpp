@@ -284,6 +284,10 @@ void GraphicsManager::drawObjects(Graphics::ManagedSurface &target, const Common
 		DrawnObject entry;
 		entry.object = object;
 		entry.position = getDrawnPosition(*object);
+		if (!object->getClipRect().isEmpty()) {
+			entry.position.clip(object->getClipRect());
+		}
+
 		entry.isOpaque = !object->_drawSurface.hasTransparentColor() && object->_drawSurface.format != _transparentPixelFormat;
 		if (!entry.position.isEmpty()) {
 			drawn.push_back(entry);
@@ -778,6 +782,10 @@ const Graphics::PixelFormat &GraphicsManager::getInputPixelFormat(uint bpp) {
 }
 
 Common::Rect GraphicsManager::getScreenBounds() {
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		return Common::Rect(1024, 768);
+	}
+
 	return (g_nancy->getGameType() >= kGameTypeNancy16) ? Common::Rect(800, 600) : Common::Rect(640, 480);
 }
 

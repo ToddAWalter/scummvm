@@ -231,7 +231,7 @@ void SceneStream::loadBackground(const Common::Path &videoFile) {
 	_background->setZOrder(_background->getZOrder() + _zOffset);
 #ifdef ENABLE_NANCY_V4
 	if (_scriptScene) {
-		_background->setZOrder(Script::RecordGraphic::getBackgroundZOrder(_zOffset));
+		_background->setZOrder(Script::RecordGraphic::getBackgroundZOrder(_scriptScene->getZOffset()));
 	}
 #endif
 	_background->setViewTransform(&_viewTransform);
@@ -346,21 +346,32 @@ static const char *const kUIStreamName = "UIStream";
 static const char *const kEnvStreamName = "EnvStream";
 static const char *const kManagerStreamName = "ManagerStream";
 
+// Nancy26 calls the streams the exe begins by itself by other names, which the
+// scripts use too
+static const char *const kNancy26MainStreamName = "MAIN";
+static const char *const kNancy26UIStreamName = "UI";
+static const char *const kNancy26EnvStreamName = "ENV";
+static const char *const kNancy26ManagerStreamName = "MANAGER";
+
 const char *SceneStreamManager::getMainStreamName() {
-	return kMainStreamName;
+	return g_nancy->getGameType() >= kGameTypeNancy26 ? kNancy26MainStreamName : kMainStreamName;
 }
 
 const char *SceneStreamManager::getUIStreamName() {
-	return kUIStreamName;
+	return g_nancy->getGameType() >= kGameTypeNancy26 ? kNancy26UIStreamName : kUIStreamName;
 }
 
 const char *SceneStreamManager::getManagerStreamName() {
-	return kManagerStreamName;
+	return g_nancy->getGameType() >= kGameTypeNancy26 ? kNancy26ManagerStreamName : kManagerStreamName;
+}
+
+static const char *getEnvStreamName() {
+	return g_nancy->getGameType() >= kGameTypeNancy26 ? kNancy26EnvStreamName : kEnvStreamName;
 }
 
 #ifdef ENABLE_NANCY_V4
 const Script::ScriptMatrix *SceneStreamManager::getTransform(const Common::String &name) {
-	if (name.equalsIgnoreCase(kMainStreamName)) {
+	if (name.equalsIgnoreCase(getMainStreamName())) {
 		return &_mainStreamTransform;
 	}
 
@@ -372,7 +383,7 @@ void SceneStreamManager::setTransform(const Common::String &name, const Script::
 	Script::ScriptMatrix *matrix = nullptr;
 	ViewTransform *view = nullptr;
 
-	if (name.equalsIgnoreCase(kMainStreamName)) {
+	if (name.equalsIgnoreCase(getMainStreamName())) {
 		matrix = &_mainStreamTransform;
 		view = &_mainStreamViewTransform;
 	} else {
@@ -426,7 +437,7 @@ bool SceneStreamManager::skipMovies() {
 #endif
 
 const ViewTransform *SceneStreamManager::getViewTransform(const Common::String &name) {
-	if (name.equalsIgnoreCase(kMainStreamName)) {
+	if (name.equalsIgnoreCase(getMainStreamName())) {
 		return &_mainStreamViewTransform;
 	}
 
@@ -436,6 +447,16 @@ const ViewTransform *SceneStreamManager::getViewTransform(const Common::String &
 
 double SceneStreamManager::getZ(const Common::String &name) const {
 	const SceneStream *stream = find(name);
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		if (name.equalsIgnoreCase(getMainStreamName())) {
+			return _mainNodeState.z;
+		}
+
+		return stream ? stream->getNodeState().z : 0.0;
+	}
+#endif
+
 	return stream ? stream->getZOffset() : 0.0;
 }
 
@@ -451,14 +472,14 @@ int32 SceneStreamManager::getFrontZOffset() const {
 }
 
 void SceneStreamManager::getStreamNames(Common::Array<Common::String> &names, bool withUI) const {
-	if (withUI && find(kUIStreamName)) {
-		names.push_back(kUIStreamName);
+	if (withUI && find(getUIStreamName())) {
+		names.push_back(getUIStreamName());
 	}
 
 	for (const SceneStream *stream : _streams) {
 		if (!stream) {
-			names.push_back(kMainStreamName);
-		} else if (!stream->isEnded() && !stream->getName().equalsIgnoreCase(kUIStreamName)) {
+			names.push_back(getMainStreamName());
+		} else if (!stream->isEnded() && !stream->getName().equalsIgnoreCase(getUIStreamName())) {
 			names.push_back(stream->getName());
 		}
 	}
@@ -489,6 +510,15 @@ void SceneStreamManager::begin(const Common::String &name, const Common::String 
 	} else {
 		_streams.push_back(stream);
 	}
+
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		stream->getNodeState().z = flags.z;
+		stream->getNodeState().isInViewport = flags.isInViewport;
+		stream->getNodeState().sequence = ++_numBegun;
+		updateBands();
+	}
+#endif
 
 	// The stream that starts another one decides how long it lives
 	SceneStream::Child child;
@@ -546,7 +576,7 @@ void SceneStreamManager::changeScene(const Common::String &name, const SceneChan
 		return;
 	}
 
-	if (name.empty() || name.equalsIgnoreCase(kMainStreamName)) {
+	if (name.empty() || name.equalsIgnoreCase(getMainStreamName())) {
 		SceneStream *running = _running;
 		_running = nullptr;
 		NancySceneState.changeScene(sceneDescription);
@@ -561,7 +591,7 @@ void SceneStreamManager::changeScene(const Common::String &name, const Common::S
 	if (stream) {
 		stream->changeScene(sceneName, frameID);
 #ifdef ENABLE_NANCY_V4
-	} else if (name.empty() || name.equalsIgnoreCase(kMainStreamName)) {
+	} else if (name.empty() || name.equalsIgnoreCase(getMainStreamName())) {
 		// Nancy20 has scenes of the main stream that go by name
 		SceneStream *running = _running;
 		_running = nullptr;
@@ -574,7 +604,7 @@ void SceneStreamManager::changeScene(const Common::String &name, const Common::S
 }
 
 Common::String SceneStreamManager::getSceneName(const Common::String &name) const {
-	if (name.equalsIgnoreCase(kMainStreamName)) {
+	if (name.equalsIgnoreCase(getMainStreamName())) {
 		return NancySceneState.getMainSceneName();
 	}
 
@@ -584,7 +614,7 @@ Common::String SceneStreamManager::getSceneName(const Common::String &name) cons
 
 #ifdef ENABLE_NANCY_V4
 const Script::SceneContext *SceneStreamManager::findScriptScene(const Common::String &name) const {
-	if (name.equalsIgnoreCase(kMainStreamName)) {
+	if (name.equalsIgnoreCase(getMainStreamName())) {
 		return NancySceneState.getScriptScene();
 	}
 
@@ -638,8 +668,18 @@ void SceneStreamManager::process() {
 		return;
 	}
 
-	// Streams begin and end while the records run
-	const Common::Array<SceneStream *> streams = _streams;
+	// Streams begin and end while the records run. Nancy26 runs the frontmost
+	// ones first, so the managers are ready for the scenes that call on them.
+	Common::Array<SceneStream *> streams = _streams;
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		getDrawOrder(streams);
+		for (uint i = 0; i < streams.size() / 2; ++i) {
+			SWAP(streams[i], streams[streams.size() - 1 - i]);
+		}
+	}
+#endif
+
 	for (SceneStream *stream : streams) {
 		if (!stream) {
 			NancySceneState.processMainStream();
@@ -661,6 +701,12 @@ void SceneStreamManager::process() {
 			returnViewedItem(_streams[i]->getName());
 			delete _streams[i];
 			_streams.remove_at(i);
+
+#ifdef ENABLE_NANCY_V5
+			if (g_nancy->getGameType() >= kGameTypeNancy26) {
+				updateBands();
+			}
+#endif
 		} else {
 			++i;
 		}
@@ -783,11 +829,11 @@ void SceneStreamManager::changeEnvironmentStream(const ENVS &envs, const Common:
 	}
 
 	if (sceneName.empty()) {
-		end(kEnvStreamName);
-	} else if (find(kEnvStreamName)) {
-		changeScene(kEnvStreamName, sceneName, 0);
+		end(getEnvStreamName());
+	} else if (find(getEnvStreamName())) {
+		changeScene(getEnvStreamName(), sceneName, 0);
 	} else {
-		begin(kEnvStreamName, sceneName, 0, StreamFlags());
+		begin(getEnvStreamName(), sceneName, 0, StreamFlags());
 	}
 }
 
@@ -823,7 +869,8 @@ void SceneStreamManager::store() {
 		StreamData::Stream saved;
 
 		if (stream) {
-			if (stream->isEnded()) {
+			// Nancy26's popups and cheat tools are left out
+			if (stream->isEnded() || !stream->getFlags().isSaved) {
 				continue;
 			}
 

@@ -47,6 +47,14 @@
 #include "engines/nancy/script/types.h"
 #include "engines/nancy/script/xsheet.h"
 
+#ifdef ENABLE_NANCY_V5
+#include "engines/nancy/script/v5/cliptransformer.h"
+#include "engines/nancy/script/v5/messaging.h"
+#include "engines/nancy/script/v5/streamtree.h"
+#include "engines/nancy/script/v5/textrecord.h"
+#include "engines/nancy/script/v5/widgets.h"
+#endif
+
 #include "engines/nancy/state/scene.h"
 
 #include "engines/nancy/ui/viewport.h"
@@ -60,7 +68,7 @@ struct RecordKindNames {
 	const char *typeName;
 };
 
-static const RecordKindNames kRecordKindNames[kNumRecordKinds] = {
+static const RecordKindNames kRecordKindNames[kNumRecordTypes] = {
 	{ "NavLogic", "ND.NavLogic" },
 	{ "Summary", "ND.Summary" },
 	{ "Overlay", "ND.Overlay" },
@@ -75,21 +83,51 @@ static const RecordKindNames kRecordKindNames[kNumRecordKinds] = {
 	{ "Physics", "ND.PhysicsAR" },
 	{ "Xsheet", "ND.XsheetAR" },
 	{ "Transformer", "ND.TransformerAR" },
-	{ "Timer", "ND.TimerAR" }
+	{ "Timer", "ND.TimerAR" },
+	{ "Hotspot", "ND.Hotspot" },
+	{ "Sink", "ND.SinkAR" },
+	{ "Button", "ND.ButtonAR" },
+	{ "EditBox", "ND.EditBoxAR" },
+	{ "RadioButton", "ND.RadioButton" },
+	{ "CheckBox", "ND.CheckBox" },
+	{ "Slider", "ND.Slider" }
 };
 
-const char *getRecordKindName(RecordKind kind) {
-	return kRecordKindNames[kind].kindName;
+const char *getRecordKindName(RecordType type) {
+	return kRecordKindNames[type].kindName;
 }
 
-const char *getRecordTypeName(RecordKind kind) {
-	return kRecordKindNames[kind].typeName;
+const char *getRecordTypeName(RecordType type) {
+	return kRecordKindNames[type].typeName;
 }
 
-Record *makeRecord(RecordKind kind, SceneContext &context) {
-	switch (kind) {
+Record *makeRecord(RecordType type, SceneContext &context) {
+	switch (type) {
 	case kRecordNavLogic:
+#ifdef ENABLE_NANCY_V5
+		// Nancy26's NavLogic is another name for a Hotspot
+		if (g_nancy->getGameType() >= kGameTypeNancy26) {
+			return new HotspotRecord(context);
+		}
+#endif
+
 		return new NavLogicRecord(context);
+#ifdef ENABLE_NANCY_V5
+	case kRecordHotspot:
+		return new HotspotRecord(context);
+	case kRecordSink:
+		return new SinkRecord(context);
+	case kRecordButton:
+		return new WidgetRecord(context, kRecordButton);
+	case kRecordRadioButton:
+		return new WidgetRecord(context, kRecordRadioButton);
+	case kRecordCheckBox:
+		return new WidgetRecord(context, kRecordCheckBox);
+	case kRecordSlider:
+		return new SliderRecord(context);
+	case kRecordEditBox:
+		return new EditBoxRecord(context);
+#endif
 	case kRecordSummary:
 		return new SummaryRecord(context);
 	case kRecordOverlay:
@@ -107,6 +145,12 @@ Record *makeRecord(RecordKind kind, SceneContext &context) {
 	case kRecordSoundConvo:
 		return new ConvoRecord(context, false);
 	case kRecordText:
+#ifdef ENABLE_NANCY_V5
+		if (g_nancy->getGameType() >= kGameTypeNancy26) {
+			return new BitmapTextRecord(context);
+		}
+#endif
+
 		return new TextRecord(context);
 	case kRecordParticle:
 		return new ParticleRecord(context);
@@ -115,6 +159,12 @@ Record *makeRecord(RecordKind kind, SceneContext &context) {
 	case kRecordXsheet:
 		return new XsheetRecord(context);
 	case kRecordTransformer:
+#ifdef ENABLE_NANCY_V5
+		if (g_nancy->getGameType() >= kGameTypeNancy26) {
+			return new ClipTransformerRecord(context);
+		}
+#endif
+
 		return new TransformerRecord(context);
 	case kRecordTimer:
 		return new TimerRecord(context);
@@ -132,15 +182,30 @@ static const int kBackgroundZ = 6;
 // Scripts tell apart z values as close as 0.001, and every stream is one step
 // closer than the one that began it
 static const double kStepsPerScriptZ = 1000.0;
-static const int kMaxScriptZOrder = 59000;
 
 uint16 RecordGraphic::getScriptZOrder(double z, int32 zOffset) {
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		return getBandZOrder(z, zOffset);
+	}
+#endif
+
 	const double steps = (z - kBackgroundScriptZ + zOffset) * kStepsPerScriptZ;
 	return (uint16)CLIP<int>(kBackgroundZ + (int)floor(steps + 0.5), 0, kMaxScriptZOrder);
 }
 
 uint16 RecordGraphic::getBackgroundZOrder(int32 zOffset) {
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		return getBandBackgroundZOrder(zOffset);
+	}
+#endif
+
 	return getScriptZOrder(kBackgroundScriptZ, zOffset);
+}
+
+bool RecordGraphic::isViewportRelative() const {
+	return g_nancy->getGameType() < kGameTypeNancy26;
 }
 
 void RecordGraphic::setScriptZ(double z, const SceneContext &context) {
@@ -148,9 +213,7 @@ void RecordGraphic::setScriptZ(double z, const SceneContext &context) {
 	setViewTransform(context.getViewTransform());
 }
 
-// Where something that was placed in the viewport ends up once the transform
-// of its record has moved it
-static Common::Rect getTransformedDest(const ScriptRect &dest, const ScriptMatrix &transform, int width, int height) {
+Common::Rect getTransformedDest(const ScriptRect &dest, const ScriptMatrix &transform, int width, int height) {
 	// Far enough for anything a script moves around, and safe to add a size to
 	const int kLimit = 16000;
 
@@ -599,6 +662,40 @@ bool SummaryRecord::onMouseEvent(RecordEvent event, const ScriptPoint &point, bo
 	}
 }
 
+#ifdef ENABLE_NANCY_V5
+bool SummaryRecord::turnByKey(Common::KeyCode key) {
+	if (_numFrames <= 1 || !_canRotate) {
+		return false;
+	}
+
+	switch (key) {
+	case Common::KEYCODE_LEFT:
+		if (!canTurn(kTurnLeft)) {
+			return false;
+		}
+
+		setFrame((_frame + 1) % _numFrames);
+		return true;
+	case Common::KEYCODE_RIGHT:
+		if (!canTurn(kTurnRight)) {
+			return false;
+		}
+
+		setFrame((_frame + _numFrames - 1) % _numFrames);
+		return true;
+	case Common::KEYCODE_DOWN:
+		if (!_hasUturn) {
+			return false;
+		}
+
+		setFrame((_frame + _numFrames / 2) % _numFrames);
+		return true;
+	default:
+		return false;
+	}
+}
+#endif
+
 void SummaryRecord::run(double sceneTime, double elapsedTime) {
 	_sceneTime = sceneTime;
 	updateTheme(sceneTime);
@@ -1014,7 +1111,7 @@ void OverrideRecord::updateGraphics() {
 	const bool hasRender = lua_isfunction(L, -1);
 	lua_pop(L, 1);
 
-	if (!hasRender || !isActive()) {
+	if (!hasRender || !isShown()) {
 		if (_canvas) {
 			_canvas->setVisible(false);
 		}
@@ -1075,6 +1172,12 @@ bool OverrideRecord::getField(const Common::String &key) {
 		lua_pushcfunction(getLua(), overrideSetMessagingName);
 		return true;
 	}
+
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		return pushRecordDrawFunction(getLua(), key);
+	}
+#endif
 
 	return false;
 }
@@ -1242,18 +1345,19 @@ void OverlayRecord::applyRects() {
 		return;
 	}
 
+	const uint32 modColor = takeModColor(_modColor);
 	if (!_hasDestTable) {
-		placePicture(_graphic, _image, source, _dest, getTransform(), _modColor);
+		placePicture(_graphic, _image, source, _dest, getTransform(), modColor);
 		return;
 	}
 
 	// The copies of the picture are drawn into one surface that covers them all
 	const ScriptMatrix transform = getTransform();
-	const bool isKeyed = transform.isTranslation() && _modColor == kNoModColor;
+	const bool isKeyed = transform.isTranslation() && modColor == kNoModColor;
 	Common::Array<RecordGraphic> pictures(_tableDests.size());
 	Common::Rect area;
 	for (uint i = 0; i < _tableDests.size(); ++i) {
-		placePicture(pictures[i], _image, source, _tableDests[i], transform, _modColor);
+		placePicture(pictures[i], _image, source, _tableDests[i], transform, modColor);
 		if (i == 0) {
 			area = pictures[i].getScreenPositionRaw();
 		} else {
@@ -1282,7 +1386,7 @@ void OverlayRecord::registerGraphics() {
 }
 
 void OverlayRecord::updateGraphics() {
-	if (_hasDestTable && isActive()) {
+	if (_hasDestTable && isShown()) {
 		Common::Array<ScriptRect> dests;
 		readDestTable(dests);
 		if (dests != _tableDests) {
@@ -1291,11 +1395,12 @@ void OverlayRecord::updateGraphics() {
 		}
 	}
 
-	if (_isPlacementStale && isActive()) {
+	if ((_isPlacementStale || hasAlphaChanged()) && isShown()) {
 		applyRects();
 	}
 
-	_graphic.setVisible(isActive() && _hasPicture);
+	_graphic.setClipRect(getScreenClip());
+	_graphic.setVisible(isShown() && _hasPicture);
 
 	if (_hasAttachment) {
 		_attachment.setVisible(_isAttachmentDrawn);
@@ -1557,7 +1662,7 @@ void AnimOverlayRecord::applyFrame() {
 		return;
 	}
 
-	placePicture(_graphic, _image, source, _dest, getTransform(), _modColor);
+	placePicture(_graphic, _image, source, _dest, getTransform(), takeModColor(_modColor));
 }
 
 // Starts over from the first frame
@@ -1617,7 +1722,12 @@ void AnimOverlayRecord::registerGraphics() {
 }
 
 void AnimOverlayRecord::updateGraphics() {
-	_graphic.setVisible(isActive() && _isVisible && _hasPicture);
+	if (hasAlphaChanged() && isShown() && _hasPicture) {
+		applyFrame();
+	}
+
+	_graphic.setClipRect(getScreenClip());
+	_graphic.setVisible(isShown() && _isVisible && _hasPicture);
 }
 
 // anim:Play() and anim:Pause(), for the records that play something
@@ -1827,6 +1937,16 @@ void SoundRecord::runOnce() {
 	_duration = _isPlaying ? g_nancy->_sound->getLength(_sound).msecs() / 1000.0 : 0.0;
 	_endTime = getContext().getTime() + _duration;
 
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		if (_isPlaying && _usesCaption) {
+			sendCaption(true);
+		}
+
+		return;
+	}
+#endif
+
 	// What the sound says is kept under its name
 	UI::NDUI::Manager *ui = NancySceneState.getNDUI();
 	_caption.clear();
@@ -1834,6 +1954,23 @@ void SoundRecord::runOnce() {
 		ui->setCaption(_caption);
 	}
 }
+
+#ifdef ENABLE_NANCY_V5
+void SoundRecord::sendCaption(bool isShown) {
+	lua_State *L = getLua();
+	const int top = lua_gettop(L);
+
+	if (isShown) {
+		lua_pushstring(L, _sound.name.c_str());
+		sendMessage(L, getName(), "CC", "SetIfExists", top + 1, 1);
+	} else {
+		sendMessage(L, getName(), "CC", "Clear", top + 1, 0);
+	}
+
+	lua_settop(L, top);
+	_hasSentCaption = isShown;
+}
+#endif
 
 void SoundRecord::run(double sceneTime, double elapsedTime) {
 	// The sound is cut off when another sound starts on its channel, or the
@@ -1853,6 +1990,12 @@ void SoundRecord::run(double sceneTime, double elapsedTime) {
 		}
 
 		_caption.clear();
+#ifdef ENABLE_NANCY_V5
+		if (_hasSentCaption) {
+			sendCaption(false);
+		}
+#endif
+
 		finish();
 	}
 }
@@ -2192,9 +2335,13 @@ void MovieRecord::readTable(int tableIndex) {
 	readField(L, tableIndex, "visible", _isVisible);
 
 	// The whole of every frame, unless a part of it is asked for
+	// An empty source, like Nancy26's (-1, -1, -1, -1), shows the whole movie
 	_source = ScriptRect(0, 0, _player.getWidth(), _player.getHeight());
 	if (pushField(L, tableIndex, "source")) {
-		_source = checkRect(L, -1);
+		if (!checkRect(L, -1).isEmpty()) {
+			_source = checkRect(L, -1);
+		}
+
 		lua_pop(L, 1);
 	}
 
@@ -2230,7 +2377,7 @@ void MovieRecord::readTable(int tableIndex) {
 
 // Scripts hide a movie that keeps playing with a color without any alpha
 bool MovieRecord::isSeeThrough() const {
-	return (_modColor >> 24) == 0;
+	return (applyAlpha(_modColor) >> 24) == 0;
 }
 
 void MovieRecord::drawFrame() {
@@ -2245,8 +2392,9 @@ void MovieRecord::applyPosition() {
 
 	const ScriptMatrix transform = getTransform();
 	const Common::Rect source = _source.toRect();
+	const uint32 modColor = takeModColor(_modColor);
 
-	if (transform.isTranslation() && _modColor == kNoModColor) {
+	if (transform.isTranslation() && modColor == kNoModColor) {
 		Graphics::ManagedSurface &surface = _graphic._drawSurface;
 		if (surface.w != source.width() || surface.h != source.height() || !surface.getPixels()) {
 			surface.create(MAX<int>(source.width(), 1), MAX<int>(source.height(), 1), g_nancy->_graphics->getScreenPixelFormat());
@@ -2274,7 +2422,7 @@ void MovieRecord::applyPosition() {
 
 	Common::Rect clipped = source;
 	clipped.clip(Common::Rect(_frame.w, _frame.h));
-	placePicture(_graphic, _frame, clipped, _dest, transform, _modColor);
+	placePicture(_graphic, _frame, clipped, _dest, transform, modColor);
 }
 
 void MovieRecord::runOnce() {
@@ -2289,6 +2437,13 @@ bool MovieRecord::isSkippable() const {
 	if (!isActive() || !hasStarted() || _isPaused || _numLoops == 0) {
 		return false;
 	}
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26: not while the movie is hidden or paused with what it hangs under
+	if (g_nancy->getGameType() >= kGameTypeNancy26 && (!isNodeVisible() || isNodePaused())) {
+		return false;
+	}
+#endif
 
 	return !_pausesOnLastFrame || (_player.isRangePlaying() && !_hasCalledOnPause);
 }
@@ -2375,7 +2530,12 @@ void MovieRecord::onZChanged() {
 }
 
 void MovieRecord::updateGraphics() {
-	_graphic.setVisible(isActive() && _isVisible && !isSeeThrough());
+	if (hasAlphaChanged() && isShown()) {
+		applyPosition();
+	}
+
+	_graphic.setClipRect(getScreenClip());
+	_graphic.setVisible(isShown() && _isVisible && !isSeeThrough());
 }
 
 void MovieRecord::describeState(Common::Array<Common::String> &lines) const {

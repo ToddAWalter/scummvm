@@ -29,6 +29,10 @@
 
 #include "engines/nancy/script/types.h"
 
+#ifdef ENABLE_NANCY_V5
+#include "engines/nancy/script/v5/streamtree.h"
+#endif
+
 struct lua_State;
 
 namespace Nancy {
@@ -110,7 +114,18 @@ public:
 	const Common::String &getSceneName() const { return _sceneName; }
 	uint getFrame() const { return _frame; }
 	void setFrame(uint frame) { _frame = frame; }
-	int32 getZOffset() const { return _zOffset; }
+	int32 getZOffset() const;
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26: the stream of the scene was put at another place among the
+	// others, so everything it draws goes elsewhere
+	void onBandChanged();
+
+	// Nancy26: what the stream of the scene says about all its records
+	bool isStreamEnabled() const { return !_streamState || _streamState->isEnabled; }
+	bool isStreamVisible() const { return !_streamState || _streamState->isVisible; }
+	bool isStreamPaused() const { return _streamState && _streamState->isPaused; }
+#endif
 
 	// Nancy21: the zoom of the stream the scene is in
 	const ViewTransform *getViewTransform() const;
@@ -139,8 +154,9 @@ public:
 	// The panels a scene adds to the UI call into its scripts, so they go when it does
 	void setMakesUI() { _makesUI = true; }
 
-	// Nancy21: a new node to group records under, which lasts as long as the scene
-	GraphNode *createGraphNode();
+	// Nancy21: a new node to group records under, which lasts as long as the scene.
+	// A Transformer record owns the one it is.
+	GraphNode *createGraphNode(Record *owner = nullptr);
 
 	// Lets the records under a node know that it changed its z or transform,
 	// once the frame is over
@@ -175,6 +191,9 @@ private:
 	bool callSceneFunction(const char *name, int numArgs);
 	void pushMessage(const Message &message);
 	void runFrame(double elapsedTime);
+#ifdef ENABLE_NANCY_V5
+	void updateDrawRanks();	// Nancy26
+#endif
 	void deleteDroppedRecords();
 	void renderAttachment();
 	bool hasSkippableRecord() const;
@@ -188,6 +207,10 @@ private:
 	bool _isLoading = false;
 	uint _frame;
 	int32 _zOffset;
+
+#ifdef ENABLE_NANCY_V5
+	const StreamNodeState *_streamState = nullptr;	// Nancy26
+#endif
 
 	LuaState *_lua;
 	Common::Array<Record *> _records;
