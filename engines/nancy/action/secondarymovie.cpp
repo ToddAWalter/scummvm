@@ -30,6 +30,7 @@
 
 #include "engines/nancy/action/secondarymovie.h"
 #include "engines/nancy/state/scene.h"
+#include "engines/nancy/ui/ndui/manager.h"
 
 #include "common/random.h"
 #include "common/serializer.h"
@@ -55,6 +56,10 @@ PlaySecondaryMovie::~PlaySecondaryMovie() {
 
 	if (_playerCursorAllowed == kNoPlayerCursorAllowed) {
 		g_nancy->setMouseEnabled(true);
+	}
+
+	if (_hasLockedUIMouse && NancySceneState.getNDUI()) {
+		NancySceneState.getNDUI()->unlockMouseInput();
 	}
 }
 
@@ -371,7 +376,14 @@ void PlaySecondaryMovie::applyStartingRandomSequence() {
 			_lastFrame = src.lastFrame;
 			_videoFormat = kLargeVideoFormat;
 			_videoSceneChange = kMovieNoSceneChange;
-			_playerCursorAllowed = (byte)_randomPlayerCursorAllowed;
+			// In Nancy18 a random movie doesn't take the cursor away from the scene,
+			// only from the panels of the UI
+			if (g_nancy->getGameType() >= kGameTypeNancy18) {
+				_playerCursorAllowed = kPlayerCursorAllowed;
+				_locksUIMouse = _randomPlayerCursorAllowed == kNoPlayerCursorAllowed;
+			} else {
+				_playerCursorAllowed = (byte)_randomPlayerCursorAllowed;
+			}
 			_playDirection = kPlayMovieForward;
 		}
 	}
@@ -1277,6 +1289,11 @@ void PlaySecondaryMovie::execute() {
 			g_nancy->setMouseEnabled(false);
 		}
 
+		if (_locksUIMouse && !_hasLockedUIMouse && NancySceneState.getNDUI()) {
+			NancySceneState.getNDUI()->lockMouseInput();
+			_hasLockedUIMouse = true;
+		}
+
 		NancySceneState.setActiveMovie(this);
 
 		if (g_nancy->getGameType() >= kGameTypeNancy10)
@@ -1452,8 +1469,10 @@ void PlaySecondaryMovie::execute() {
 			} else {
 				// Hide it right away, as the flags of its last frame may stop the
 				// record from running; e.g. pouring the hot sauce in Nancy17 scene
-				// 3008, where the bottle overlay takes over
-				if (_hideOnFinish) {
+				// 3008, where the bottle overlay takes over. A movie that changes
+				// the scene stays until the next one replaces it, or the scene would
+				// show without it for a moment, like Helena in Nancy18 scene 2320.
+				if (_hideOnFinish && _videoSceneChange != kMovieSceneChange) {
 					setVisible(false);
 					_mask.setVisible(false);
 				}

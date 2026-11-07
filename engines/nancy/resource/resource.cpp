@@ -79,6 +79,7 @@ bool ResourceManager::loadImage(const Common::Path &name, Graphics::ManagedSurfa
 			bmpDec.loadStream(*stream);
 			surf.copyFrom(*bmpDec.getSurface());
 			surf.setPalette(bmpDec.getPalette().data(), 0, MIN<uint>(256, bmpDec.getPalette().size())); // LOGO.BMP reports 257 colors
+			delete stream;
 			return true;
 		}
 	}
@@ -89,14 +90,12 @@ bool ResourceManager::loadImage(const Common::Path &name, Graphics::ManagedSurfa
 	}
 
 	// Check for loose .cif images. This bypasses tree search even with a provided treeName
-	if (!stream) {
-		stream = SearchMan.createReadStreamForMember(name.append(".cif"));
-		if (stream) {
-			// .cifs are compressed, so we need to extract
-			CifFile cifFile(stream, name); // cifFile takes ownership of the current stream
-			stream = cifFile.createReadStream();
-			info = cifFile.getInfo();
-		}
+	stream = SearchMan.createReadStreamForMember(name.append(".cif"));
+	if (stream) {
+		// .cifs are compressed, so we need to extract
+		CifFile cifFile(stream, name); // cifFile takes ownership of the current stream
+		stream = cifFile.createReadStream();
+		info = cifFile.getInfo();
 	}
 
 	// Search inside the ciftrees
