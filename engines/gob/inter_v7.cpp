@@ -848,13 +848,6 @@ void Inter_v7::o7_playVmdOrMusic() {
 	if (props.startFrame == -2)
 		props.noBlock    = true;
 
-	if ((props.slot == 1 && !(props.flags & VideoPlayer::kFlagNoVideo)) ||
-		startFrameCopy == -20) {
-		props.loop = true;
-		// TODO: one more mode is missing if start frame == -200
-		// In that case, the video is not closed at the end, but does not loop either
-	}
-
 	_vm->_vidPlayer->evaluateFlags(props);
 
 	bool primary = true;
@@ -872,13 +865,14 @@ void Inter_v7::o7_playVmdOrMusic() {
 		props.noBlock = true;
 	}
 
-	// if (_vm->_vidPlayer->getSoundFlags() & 0x100) {
-	// 	props.noWaitSound = true;
-	// }
-	// Actually, the noWaitSound flag seems to be always set (at least in Adibou/Adi4),
-	// independently of the "no wait" sound flag 0x100 in the VMD file header.
+	if ((props.slot == 1 && !(props.flags & VideoPlayer::kFlagNoVideo) && _vm->_vidPlayer->hasVideo(slot)) ||
+		startFrameCopy == -20) {
+		props.loop = true;
+		// TODO: one more mode is missing if start frame == -200
+		// In that case, the video is not closed at the end, but does not loop either
+	}
 
-	props.noWaitSound = true;
+	_vm->_vidPlayer->setAutoUpdate(slot, true);
 
 	if (props.startFrame == -2 || props.startFrame == -3) {
 		props.startFrame = 0;
@@ -1666,12 +1660,11 @@ void Inter_v7::o7_printText(OpFuncParams &params) {
 		_vm->_draw->_transparency = 1;
 	}
 
-	// colMod is read from conf file (_off_=xxx).
-	// in Playtoons, it's not present in the conf file, thus always equal to the default value (0).
-	// Maybe used in ADIs...
-	//	if (!_vm->_draw->_transparency)
-	//		_vm->_draw->_backColor += colMod;
-	//	_vm->_draw->_frontColor += colMod;
+	int16 colorOffset = _vm->_draw->_colorOffset; // NB: _colorOffset is often 0, but set to 10 by o7_startAdi4Application
+	if (_vm->_draw->_transparency == 0 && (_vm->_draw->_backColor <= 255 - colorOffset))
+		_vm->_draw->_backColor += colorOffset;
+	if (_vm->_draw->_frontColor <= 255 - colorOffset)
+		_vm->_draw->_frontColor += colorOffset;
 
 	int16 oldTransparency = _vm->_draw->_transparency;
 	int i = 0;
