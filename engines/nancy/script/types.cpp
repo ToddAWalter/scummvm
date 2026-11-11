@@ -19,6 +19,7 @@
  *
  */
 
+#include "engines/nancy/nancy.h"
 #include "engines/nancy/script/luabind.h"
 #include "engines/nancy/script/mathtypes.h"
 #include "engines/nancy/script/types.h"
@@ -32,6 +33,18 @@ static const char *const kPointType = "ND.Point";
 static const char *const kPointHelperType = "ND.PointHelper";
 static const char *const kColorType = "ND.Color";
 static const char *const kColorHelperType = "ND.ColorHelper";
+
+// What a script point holds
+struct PointValue {
+	float x = 0.0f;
+	float y = 0.0f;
+
+	PointValue() {}
+	PointValue(double px, double py) : x((float)px), y((float)py) {}
+};
+
+static bool hasFractionalPoints();
+static void pushPointValue(lua_State *L, const PointValue &point);
 
 Common::Rect ScriptRect::toRect() const {
 	if (isEmpty()) {
@@ -57,8 +70,8 @@ ScriptRect &checkRect(lua_State *L, int index) {
 }
 
 // The functions that take a place accept either a point or two numbers
-static ScriptPoint checkPointArguments(lua_State *L, int index) {
-	ScriptPoint point;
+static Common::Point32 checkPointArguments(lua_State *L, int index) {
+	Common::Point32 point;
 
 	if (lua_gettop(L) == index) {
 		if (!readPoint(L, index, point)) {
@@ -133,7 +146,12 @@ static int rectIndex(lua_State *L) {
 	} else if (key == "height") {
 		lua_pushinteger(L, rect.height());
 	} else if (key == "center") {
-		pushPoint(L, ScriptPoint(rect.left + rect.width() / 2, rect.top + rect.height() / 2));
+		// From Nancy26 on, the middle of a rect can be half a pixel in
+		if (hasFractionalPoints()) {
+			pushPointValue(L, PointValue(rect.left + rect.width() * 0.5f, rect.top + rect.height() * 0.5f));
+		} else {
+			pushPoint(L, Common::Point32(rect.left + rect.width() / 2, rect.top + rect.height() / 2));
+		}
 	} else if (key == "centerV") {
 		// Not rounded, unlike "center"
 		ScriptVector center;
@@ -143,15 +161,15 @@ static int rectIndex(lua_State *L) {
 		pushVector(L, center);
 	} else if (key == "size") {
 		// Nancy22: the width and the height as a point
-		pushPoint(L, ScriptPoint(rect.width(), rect.height()));
+		pushPoint(L, Common::Point32(rect.width(), rect.height()));
 	} else if (key == "leftTop") {
-		pushPoint(L, ScriptPoint(rect.left, rect.top));
+		pushPoint(L, Common::Point32(rect.left, rect.top));
 	} else if (key == "rightTop") {
-		pushPoint(L, ScriptPoint(rect.right, rect.top));
+		pushPoint(L, Common::Point32(rect.right, rect.top));
 	} else if (key == "leftBottom") {
-		pushPoint(L, ScriptPoint(rect.left, rect.bottom));
+		pushPoint(L, Common::Point32(rect.left, rect.bottom));
 	} else if (key == "rightBottom") {
-		pushPoint(L, ScriptPoint(rect.right, rect.bottom));
+		pushPoint(L, Common::Point32(rect.right, rect.bottom));
 	} else {
 		return indexFunctions(L);
 	}
@@ -190,7 +208,7 @@ static int rectEquals(lua_State *L) {
 static int rectContains(lua_State *L) {
 	const ScriptRect &rect = checkRect(L, 1);
 
-	ScriptPoint point;
+	Common::Point32 point;
 	if (!readPoint(L, 2, point)) {
 		return luaL_error(L, "Single parameter must be a Point, a Vector or a table with x and y fields");
 	}
@@ -199,9 +217,19 @@ static int rectContains(lua_State *L) {
 	return 1;
 }
 
+// Rect:Clamp(point) and Rect:Clamp(x, y), Nancy27: the nearest point of the
+// rect, right and bottom edges included
+static int rectClamp(lua_State *L) {
+	const ScriptRect &rect = checkRect(L, 1);
+	const Common::Point32 point = checkPointArguments(L, 2);
+	pushPoint(L, Common::Point32(CLIP<int32>(point.x, rect.left, MAX(rect.left, rect.right)),
+								 CLIP<int32>(point.y, rect.top, MAX(rect.top, rect.bottom))));
+	return 1;
+}
+
 static int rectOffset(lua_State *L) {
 	ScriptRect rect = checkRect(L, 1);
-	ScriptPoint offset = checkPointArguments(L, 2);
+	Common::Point32 offset = checkPointArguments(L, 2);
 	rect.translate(offset.x, offset.y);
 	pushRect(L, rect);
 	return 1;
@@ -224,7 +252,7 @@ static int rectIntersect(lua_State *L) {
 
 static int rectCenteredOn(lua_State *L) {
 	ScriptRect rect = checkRect(L, 1);
-	ScriptPoint center = checkPointArguments(L, 2);
+	Common::Point32 center = checkPointArguments(L, 2);
 	rect.translate(center.x - (rect.left + rect.width() / 2), center.y - (rect.top + rect.height() / 2));
 	pushRect(L, rect);
 	return 1;
@@ -307,6 +335,7 @@ static const luaL_Reg kRectFunctions[] = {
 	{ "__newindex", rectNewIndex },
 	{ "__eq", rectEquals },
 	{ "Contains", rectContains },
+	{ "Clamp", rectClamp },
 	{ "Offset", rectOffset },
 	{ "Intersect", rectIntersect },
 	{ "CenteredOn", rectCenteredOn },
@@ -328,15 +357,37 @@ static const luaL_Reg kRectHelperFunctions[] = {
 
 // Point
 
-void pushPoint(lua_State *L, const ScriptPoint &point) {
+// The coordinates of points can have fractions from Nancy26 on. Before that,
+// numbers lose theirs when they become coordinates.
+static bool hasFractionalPoints() {
+	return g_nancy->getGameType() >= kGameTypeNancy26;
+}
+
+static double checkCoordinate(lua_State *L, int index) {
+	return hasFractionalPoints() ? luaL_checknumber(L, index) : luaL_checkint(L, index);
+}
+
+static void pushPointValue(lua_State *L, const PointValue &point) {
 	pushValue(L, kPointType, point);
 }
 
-static ScriptPoint &checkPoint(lua_State *L, int index) {
-	return *(ScriptPoint *)checkUserData(L, index, kPointType);
+void pushPoint(lua_State *L, const Common::Point32 &point) {
+	pushPointValue(L, PointValue(point.x, point.y));
 }
 
-bool readPoint(lua_State *L, int index, ScriptPoint &point) {
+static PointValue &checkPoint(lua_State *L, int index) {
+	return *(PointValue *)checkUserData(L, index, kPointType);
+}
+
+bool readPoint(lua_State *L, int index, Common::Point32 &point) {
+	// A point's own coordinates lose their fractions on the way to the screen
+	const PointValue *value = (const PointValue *)testUserData(L, index, kPointType);
+	if (value) {
+		point.x = (int32)value->x;
+		point.y = (int32)value->y;
+		return true;
+	}
+
 	int type = lua_type(L, index);
 	if (type != LUA_TUSERDATA && type != LUA_TTABLE) {
 		return false;
@@ -356,31 +407,63 @@ bool readPoint(lua_State *L, int index, ScriptPoint &point) {
 	return hasBoth;
 }
 
+bool readPointCoordinates(lua_State *L, int index, double &x, double &y) {
+	const PointValue *value = (const PointValue *)testUserData(L, index, kPointType);
+	if (value) {
+		x = value->x;
+		y = value->y;
+		return true;
+	}
+
+	Common::Point32 point;
+	if (!readPoint(L, index, point)) {
+		return false;
+	}
+
+	x = point.x;
+	y = point.y;
+	return true;
+}
+
+bool copyPoint(lua_State *from, int index, lua_State *to) {
+	const PointValue *value = (const PointValue *)testUserData(from, index, kPointType);
+	if (value) {
+		pushPointValue(to, *value);
+		return true;
+	}
+
+	Common::Point32 point;
+	if (lua_isuserdata(from, index) && readPoint(from, index, point)) {
+		pushPoint(to, point);
+		return true;
+	}
+
+	return false;
+}
+
 // Point:New(x, y), or Point:New(place) in Nancy20
 static int pointNew(lua_State *L) {
-	ScriptPoint point;
+	PointValue point;
 	if (lua_gettop(L) == 2) {
 		double x, y;
 		checkPlaceArguments(L, 2, x, y);
-		point.x = (int32)x;
-		point.y = (int32)y;
+		point = hasFractionalPoints() ? PointValue(x, y) : PointValue((int32)x, (int32)y);
 	} else {
-		point.x = luaL_checkint(L, 2);
-		point.y = luaL_checkint(L, 3);
+		point = PointValue(checkCoordinate(L, 2), checkCoordinate(L, 3));
 	}
 
-	pushPoint(L, point);
+	pushPointValue(L, point);
 	return 1;
 }
 
 static int pointIndex(lua_State *L) {
-	const ScriptPoint &point = checkPoint(L, 1);
+	const PointValue &point = checkPoint(L, 1);
 	Common::String key = luaL_checkstring(L, 2);
 
 	if (key == "x") {
-		lua_pushinteger(L, point.x);
+		lua_pushnumber(L, point.x);
 	} else if (key == "y") {
-		lua_pushinteger(L, point.y);
+		lua_pushnumber(L, point.y);
 	} else {
 		return indexFunctions(L);
 	}
@@ -389,13 +472,13 @@ static int pointIndex(lua_State *L) {
 }
 
 static int pointNewIndex(lua_State *L) {
-	ScriptPoint &point = checkPoint(L, 1);
+	PointValue &point = checkPoint(L, 1);
 	Common::String key = luaL_checkstring(L, 2);
 
 	if (key == "x") {
-		point.x = luaL_checkint(L, 3);
+		point.x = (float)checkCoordinate(L, 3);
 	} else if (key == "y") {
-		point.y = luaL_checkint(L, 3);
+		point.y = (float)checkCoordinate(L, 3);
 	} else {
 		return luaL_error(L, "Object %s does not have field '%s'", kPointType, key.c_str());
 	}
@@ -404,52 +487,89 @@ static int pointNewIndex(lua_State *L) {
 }
 
 static int pointEquals(lua_State *L) {
-	const ScriptPoint &a = checkPoint(L, 1);
-	const ScriptPoint &b = checkPoint(L, 2);
+	const PointValue &a = checkPoint(L, 1);
+	const PointValue &b = checkPoint(L, 2);
 	lua_pushboolean(L, a.x == b.x && a.y == b.y);
 	return 1;
 }
 
 static int pointAdd(lua_State *L) {
-	const ScriptPoint &a = checkPoint(L, 1);
-	const ScriptPoint &b = checkPoint(L, 2);
-	pushPoint(L, ScriptPoint(a.x + b.x, a.y + b.y));
+	const PointValue &a = checkPoint(L, 1);
+	const PointValue &b = checkPoint(L, 2);
+	pushPointValue(L, PointValue(a.x + b.x, a.y + b.y));
 	return 1;
 }
 
 static int pointSubtract(lua_State *L) {
-	const ScriptPoint &a = checkPoint(L, 1);
-	const ScriptPoint &b = checkPoint(L, 2);
-	pushPoint(L, ScriptPoint(a.x - b.x, a.y - b.y));
+	const PointValue &a = checkPoint(L, 1);
+	const PointValue &b = checkPoint(L, 2);
+	pushPointValue(L, PointValue(a.x - b.x, a.y - b.y));
 	return 1;
 }
 
-// Either side can be a number, which multiplies both coordinates
-static ScriptPoint checkPointFactor(lua_State *L, int index) {
+// Either side can be a number, which multiplies or divides both coordinates.
+// Before Nancy26, the number is truncated first.
+static void checkPointFactor(lua_State *L, int index, float &x, float &y) {
 	if (lua_isnumber(L, index)) {
-		const int32 factor = (int32)lua_tonumber(L, index);
-		return ScriptPoint(factor, factor);
+		const double factor = lua_tonumber(L, index);
+		x = y = hasFractionalPoints() ? (float)factor : (float)(int32)factor;
+		return;
 	}
 
-	return checkPoint(L, index);
+	const PointValue &point = checkPoint(L, index);
+	x = point.x;
+	y = point.y;
 }
 
 static int pointMultiply(lua_State *L) {
-	const ScriptPoint a = checkPointFactor(L, 1);
-	const ScriptPoint b = checkPointFactor(L, 2);
-	pushPoint(L, ScriptPoint(a.x * b.x, a.y * b.y));
+	float ax, ay, bx, by;
+	checkPointFactor(L, 1, ax, ay);
+	checkPointFactor(L, 2, bx, by);
+	pushPointValue(L, PointValue(ax * bx, ay * by));
+	return 1;
+}
+
+// Nancy27
+static int pointDivide(lua_State *L) {
+	float ax, ay, bx, by;
+	checkPointFactor(L, 1, ax, ay);
+	checkPointFactor(L, 2, bx, by);
+	pushPointValue(L, PointValue(ax / bx, ay / by));
+	return 1;
+}
+
+// Halves go away from zero
+static double roundCoordinate(float value) {
+	return value > 0.0f ? floor(value + 0.5) : ceil(value - 0.5);
+}
+
+// Point:Rounded() and Point:Floored(), Nancy27
+static int pointRounded(lua_State *L) {
+	const PointValue &point = checkPoint(L, 1);
+	pushPointValue(L, PointValue(roundCoordinate(point.x), roundCoordinate(point.y)));
+	return 1;
+}
+
+static int pointFloored(lua_State *L) {
+	const PointValue &point = checkPoint(L, 1);
+	pushPointValue(L, PointValue(floor(point.x), floor(point.y)));
 	return 1;
 }
 
 static int pointNegate(lua_State *L) {
-	const ScriptPoint &point = checkPoint(L, 1);
-	pushPoint(L, ScriptPoint(-point.x, -point.y));
+	const PointValue &point = checkPoint(L, 1);
+	pushPointValue(L, PointValue(-point.x, -point.y));
 	return 1;
 }
 
 static int pointToString(lua_State *L) {
-	const ScriptPoint &point = checkPoint(L, 1);
-	lua_pushstring(L, Common::String::format("P(%d, %d)", point.x, point.y).c_str());
+	const PointValue &point = checkPoint(L, 1);
+	if (hasFractionalPoints()) {
+		lua_pushstring(L, Common::String::format("<%f, %f>", point.x, point.y).c_str());
+	} else {
+		lua_pushstring(L, Common::String::format("P(%d, %d)", (int32)point.x, (int32)point.y).c_str());
+	}
+
 	return 1;
 }
 
@@ -459,17 +579,20 @@ static const luaL_Reg kPointFunctions[] = {
 	{ "__eq", pointEquals },
 	{ "__add", pointAdd },
 	{ "__mul", pointMultiply },
+	{ "__div", pointDivide },
 	{ "__sub", pointSubtract },
 	{ "__unm", pointNegate },
 	{ "__tostring", pointToString },
 	{ "__concat", concatToStrings },
+	{ "Rounded", pointRounded },
+	{ "Floored", pointFloored },
 	{ nullptr, nullptr }
 };
 
 // Point.origin is a new point every time, since scripts can change points
 static int pointHelperIndex(lua_State *L) {
 	if (lua_type(L, 2) == LUA_TSTRING && strcmp(lua_tostring(L, 2), "origin") == 0) {
-		pushPoint(L, ScriptPoint(0, 0));
+		pushPointValue(L, PointValue(0.0, 0.0));
 		return 1;
 	}
 
@@ -602,7 +725,7 @@ void registerTypes(lua_State *L) {
 	registerGlobal(L, "Point", kPointHelperType, kPointHelperFunctions);
 
 	luaL_getmetatable(L, kPointHelperType);
-	pushPoint(L, ScriptPoint());
+	pushPoint(L, Common::Point32());
 	lua_setfield(L, -2, "origin");
 	lua_pop(L, 1);
 

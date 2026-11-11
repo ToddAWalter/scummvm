@@ -1539,6 +1539,16 @@ bool PlaySecondaryMovie::isSkippable() {
 		Common::Rect(_decoder.getWidth(), _decoder.getHeight()) == NancySceneState.getViewport().getBounds();
 }
 
+void PlaySecondaryMovie::getCutShortFlags(Common::Array<int16> &labels) const {
+	if (isRandom() || _movieType == kInteractiveMovie || _state != kRun || _isFinished) {
+		return;
+	}
+
+	for (const FlagAtFrame &frameFlag : _frameFlags) {
+		labels.push_back(frameFlag.flagDesc.label);
+	}
+}
+
 bool PlaySecondaryMovie::skip() {
 	if (!isSkippable()) {
 		return false;
@@ -1552,6 +1562,22 @@ bool PlaySecondaryMovie::skip() {
 		resolveSentinelFrames();
 	}
 
+	// The scene's records wait for times that count the whole movie in, like
+	// the scene change after the opening cinematic of Nancy18
+	if (_decoder.isVideoLoaded() && !_isFinished) {
+		int framesLeft;
+		if (_playDirection == kPlayMovieReverse) {
+			framesLeft = curFrame == -1 ? _lastFrame - _firstFrame + 1 : curFrame - _firstFrame;
+		} else {
+			framesLeft = _lastFrame - curFrame;
+		}
+
+		const int frameCount = _decoder.getFrameCount();
+		if (framesLeft > 0 && frameCount > 0) {
+			NancySceneState.addSceneTime((uint32)((uint64)_decoder.getDuration().msecs() * framesLeft / frameCount));
+		}
+	}
+
 	for (const FlagAtFrame &frameFlag : _frameFlags) {
 		bool isPending;
 		if (_playDirection == kPlayMovieReverse) {
@@ -1563,6 +1589,8 @@ bool PlaySecondaryMovie::skip() {
 		if (isPending) {
 			NancySceneState.setEventFlag(frameFlag.flagDesc);
 		}
+
+		NancySceneState.addSkippedMovieFlag(frameFlag.flagDesc.label);
 	}
 
 	g_nancy->_sound->stopSound(_sound);

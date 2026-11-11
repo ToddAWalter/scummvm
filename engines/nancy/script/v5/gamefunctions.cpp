@@ -29,10 +29,14 @@
 #include "engines/nancy/enginedata.h"
 #include "engines/nancy/graphics.h"
 #include "engines/nancy/nancy.h"
+#include "engines/nancy/sound.h"
 
 #include "engines/nancy/script/api.h"
 #include "engines/nancy/script/luabind.h"
+#include "engines/nancy/script/records.h"
+#include "engines/nancy/script/scenecontext.h"
 #include "engines/nancy/script/types.h"
+#include "engines/nancy/script/v5/brain.h"
 
 #include "engines/nancy/script/v5/gamefunctions.h"
 #include "engines/nancy/script/v5/scriptinput.h"
@@ -174,12 +178,11 @@ static int keyIndex(lua_State *L) {
 
 // Game
 
-// What the cheat tools switch on
-static bool s_isCheatMode = false;
-static bool s_isFastConvo = false;
-
-// How many times a new game began since the game was started
-static uint s_numRestarts = 0;
+static ScriptGameState &getGameState() {
+	ScriptGameState *state = (ScriptGameState *)const_cast<EngineData *>(g_nancy->getEngineData("ScriptGameState"));
+	assert(state);
+	return *state;
+}
 
 // The saved games the scripts made by themselves, the second chances, which
 // the dialog for loading leaves out. ScummVM's saves have no place for that, so
@@ -303,7 +306,7 @@ static int gameAllSaves(lua_State *L) {
 }
 
 static int gameNew(lua_State *L) {
-	++s_numRestarts;
+	++getGameState().numRestarts;
 	getSaveManager(L).requestNewGame();
 	return 0;
 }
@@ -348,13 +351,15 @@ static bool pushGameField(lua_State *L, const Common::String &key) {
 		const ScriptBootData *boot = GetEngineData(ScriptBootData);
 		lua_pushstring(L, boot ? boot->buildNumber.c_str() : "");
 	} else if (key == "fastConvo") {
-		lua_pushboolean(L, s_isFastConvo);
+		lua_pushboolean(L, getGameState().isFastConvo);
 	} else if (key == "cheatMode") {
-		lua_pushboolean(L, s_isCheatMode);
+		lua_pushboolean(L, getGameState().isCheatMode);
+	} else if (key == "diags") {
+		lua_pushboolean(L, getGameState().showsDiagnostics);
 	} else if (key == "needsSave") {
 		lua_pushboolean(L, true);
 	} else if (key == "restarts") {
-		lua_pushinteger(L, s_numRestarts);
+		lua_pushinteger(L, getGameState().numRestarts);
 	} else {
 		return false;
 	}
@@ -375,9 +380,11 @@ static int gameNewIndex(lua_State *L) {
 	const Common::String key = luaL_checkstring(L, 2);
 
 	if (key == "cheatMode") {
-		s_isCheatMode = lua_toboolean(L, 3) != 0;
+		getGameState().isCheatMode = lua_toboolean(L, 3) != 0;
 	} else if (key == "fastConvo") {
-		s_isFastConvo = lua_toboolean(L, 3) != 0;
+		getGameState().isFastConvo = lua_toboolean(L, 3) != 0;
+	} else if (key == "diags") {
+		getGameState().showsDiagnostics = lua_toboolean(L, 3) != 0;
 	} else {
 		return luaL_error(L, "Field %s is not settable on Game ", key.c_str());
 	}
@@ -523,14 +530,15 @@ static bool pushInventoryField(lua_State *L, const Common::String &key) {
 	return true;
 }
 
-// Inventory.inHand = name, or "" to put it away
+// Inventory.inHand = name, or "" to put it away. Nancy27 also puts it away
+// with nil.
 static int inventoryNewIndex(lua_State *L) {
 	const Common::String key = luaL_checkstring(L, 2);
 	if (key != "inHand") {
 		return luaL_error(L, "Inventory does not have a settable field %s", key.c_str());
 	}
 
-	const Common::String name = luaL_checkstring(L, 3);
+	const Common::String name = lua_isnil(L, 3) ? "" : luaL_checkstring(L, 3);
 	const int16 heldItem = name.empty() ? -1 : checkItem(L, 3).id;
 	if (heldItem != NancySceneState.getHeldItem()) {
 		NancySceneState.setHeldItem(heldItem);
@@ -596,6 +604,70 @@ static int soundSetGroupVolume(lua_State *L) {
 	return 0;
 }
 
+// Sound:PauseAbandoned() and Sound:UnpauseAbandoned(), Nancy27: pause and
+// resume the sounds that went on playing after their records were gone, as
+// the UI pops up over the game and goes away again
+
+static void addPlayingChannels(const SceneContext *context, Common::Array<bool> &isOwned) {
+	if (!context) {
+		return;
+	}
+
+	for (const Record *record : context->getRecords()) {
+		uint16 channel;
+		if (record->getType() == kRecordSound && ((const SoundRecord *)record)->getPlayingChannel(channel) && channel < isOwned.size()) {
+			isOwned[channel] = true;
+		}
+	}
+}
+
+static int soundPauseAbandoned(lua_State *L) {
+	Common::Array<bool> isOwned;
+	isOwned.resize(g_nancy->getStaticData().soundChannelInfo.numChannels, false);
+
+	Common::Array<State::SceneStream *> streams;
+	NancySceneState.getStreams().getDrawOrder(streams);
+	for (const State::SceneStream *stream : streams) {
+		addPlayingChannels(stream ? stream->getScriptScene() : NancySceneState.getScriptScene(), isOwned);
+	}
+
+	Common::Array<ScriptGameState::PausedChannel> &pausedChannels = getGameState().pausedAbandonedChannels;
+	for (uint16 i = 0; i < isOwned.size(); ++i) {
+		if (isOwned[i] || !g_nancy->_sound->isSoundPlaying(i)) {
+			continue;
+		}
+
+		bool isPaused = false;
+		for (const ScriptGameState::PausedChannel &paused : pausedChannels) {
+			isPaused = isPaused || paused.channel == i;
+		}
+
+		if (!isPaused) {
+			g_nancy->_sound->pauseSound(i, true);
+
+			ScriptGameState::PausedChannel paused;
+			paused.channel = i;
+			paused.serial = g_nancy->_sound->getChannelSerial(i);
+			pausedChannels.push_back(paused);
+		}
+	}
+
+	return 0;
+}
+
+// A channel that got another sound in the meantime is left alone
+static int soundUnpauseAbandoned(lua_State *L) {
+	Common::Array<ScriptGameState::PausedChannel> &pausedChannels = getGameState().pausedAbandonedChannels;
+	for (const ScriptGameState::PausedChannel &paused : pausedChannels) {
+		if (g_nancy->_sound->getChannelSerial(paused.channel) == paused.serial) {
+			g_nancy->_sound->pauseSound(paused.channel, false);
+		}
+	}
+
+	pausedChannels.clear();
+	return 0;
+}
+
 // Scene:IsStreamRunning(stream)
 static int sceneIsStreamRunning(lua_State *L) {
 	const char *streamName = luaL_checkstring(L, 2);
@@ -645,6 +717,8 @@ void registerNancy26GameAPI(lua_State *L) {
 	static const luaL_Reg kSoundFunctions[] = {
 		{ "GetGroupVolume", soundGetGroupVolume },
 		{ "SetGroupVolume", soundSetGroupVolume },
+		{ "PauseAbandoned", soundPauseAbandoned },
+		{ "UnpauseAbandoned", soundUnpauseAbandoned },
 		{ nullptr, nullptr }
 	};
 
@@ -664,6 +738,8 @@ void registerNancy26GameAPI(lua_State *L) {
 	addFunctions(L, "ND.Sound", kSoundFunctions);
 	addFunctions(L, "ND.Scene", kSceneFunctions);
 	addFunctions(L, "ND.Log", kLogFunctions);
+
+	registerBrainAPI(L);
 }
 
 } // End of namespace Script

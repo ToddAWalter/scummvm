@@ -22,6 +22,7 @@
 #include "common/textconsole.h"
 
 #include "engines/nancy/graphics.h"
+#include "engines/nancy/nancy.h"
 #include "engines/nancy/resource/xsheetfile.h"
 
 #include "engines/nancy/script/api.h"
@@ -173,7 +174,7 @@ void XSheet::parkFreeRunning() {
 
 void XSheet::setVisible(bool isVisible) {
 	for (Tree *tree : _trees) {
-		tree->graphic.setVisible(isVisible);
+		tree->graphic.setVisible(isVisible, false);
 	}
 }
 
@@ -266,6 +267,16 @@ void XsheetRecord::run(double sceneTime, double elapsedTime) {
 	_xsheet.showFrame((uint)_frame);
 
 	if (_hasEnded && !_isPaused) {
+#ifdef ENABLE_NANCY_V5
+		// Nancy26 pauses the record itself, which its scripts see and undo
+		// through localPaused, e.g. the fidgets of the conversations
+		if (g_nancy->getGameType() >= kGameTypeNancy26) {
+			setLocalPaused(true);
+			callFunction("OnPause");
+			return;
+		}
+#endif
+
 		_isPaused = true;
 		callFunction("OnPause");
 	}
@@ -304,7 +315,17 @@ void XsheetRecord::registerGraphics() {
 
 void XsheetRecord::updateGraphics() {
 	_hasShown |= hasStarted();
-	_xsheet.setVisible(isShown() && _hasShown);
+	bool isVisible = isShown() && _hasShown;
+
+#ifdef ENABLE_NANCY_V5
+	// Nancy26 draws the record before it runs as well. The conversations
+	// pause the character until Nancy is done, when she speaks first.
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		isVisible = isShown();
+	}
+#endif
+
+	_xsheet.setVisible(isVisible);
 }
 
 bool XsheetRecord::getField(const Common::String &key) {

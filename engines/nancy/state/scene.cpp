@@ -2295,6 +2295,7 @@ void Scene::load(bool fromSaveFile) {
 	}
 
 	_timers.sceneTime = 0;
+	_skippedMovieFlags.clear();
 	g_nancy->_sound->clearListenerPositionOverride();
 	g_nancy->_sound->recalculateSoundEffects();
 
@@ -2390,6 +2391,7 @@ void Scene::loadScriptedScene(bool fromSaveFile) {
 	summary->setBackground(hasBackground ? &_viewport : nullptr);
 
 	_timers.sceneTime = 0;
+	_skippedMovieFlags.clear();
 	g_nancy->_sound->clearListenerPositionOverride();
 
 	// Only numbered scenes are counted, since the others have no number to count
@@ -2474,9 +2476,9 @@ void Scene::run() {
 
 	// The records a skipped cinematic set off have started by now; its dialogue
 	// shouldn't go on without it
-	if (_hasSkippedMovie) {
+	if (_hasSkippedMovie || !_skippedMovieFlags.empty()) {
+		_actionManager.stopSkippedMovieSounds(_skippedMovieFlags, _hasSkippedMovie);
 		_hasSkippedMovie = false;
-		_actionManager.stopSpeechSounds();
 	}
 
 	if (_isLoadingSecondChance) {
@@ -2837,12 +2839,14 @@ void Scene::handleInput() {
 
 	// Check if player has pressed esc. While a dialogue line or a cinematic is
 	// playing, esc skips it instead of opening the main menu. Only the initial
-	// press counts, so holding the key down doesn't skip line after line.
+	// press counts, so holding the key down doesn't skip line after line. A
+	// press that skips is taken away, so it can't open the menu afterwards.
 	const bool escPressed = (input.input & NancyInput::kOpenMainMenu) != 0;
 	const bool escJustPressed = escPressed && !_escHeld;
 	_escHeld = escPressed;
 
 	if (escJustPressed) {
+		bool isSkipKey = true;
 		if (_activeConversation) {
 			_activeConversation->skipLine();
 		} else if (_activeMovie) {
@@ -2854,14 +2858,24 @@ void Scene::handleInput() {
 			bool hasSkipped = _scriptScene->skipMovies();
 			hasSkipped |= _streams.skipMovies();
 			if (!hasSkipped) {
-				_scriptScene->skipSpeech();
-				_streams.skipSpeech();
+				hasSkipped = _scriptScene->skipSpeech();
+				hasSkipped |= _streams.skipSpeech();
 			}
+
+			isSkipKey = hasSkipped;
 #endif
 		} else if (g_nancy->getGameType() <= kGameTypeNancy15) {
 			// Nancy16 has no main menu state
 			g_nancy->setState(NancyState::kMainMenu);
 			return;
+		} else {
+			isSkipKey = false;
+		}
+
+		if (isSkipKey) {
+			g_nancy->_input->eatMainMenuKey();
+			input.eatMainMenuKey();
+			_escHeld = false;
 		}
 	}
 
@@ -3372,6 +3386,14 @@ void Scene::clearSceneData(bool nextIsNoArt) {
 	// ambient loop). When it survives, clearActionRecords keeps the record alive,
 	// so the pointer must be kept too; otherwise it is cleared to avoid dangling.
 	bool clearActiveMovie = _activeMovie && !_activeMovie->survivesSceneChange(nextIsNoArt);
+
+	if (clearActiveMovie) {
+		Common::Array<int16> cutShortFlags = _skippedMovieFlags;
+		_activeMovie->getCutShortFlags(cutShortFlags);
+		if (!cutShortFlags.empty()) {
+			_actionManager.stopSkippedMovieSounds(cutShortFlags, false);
+		}
+	}
 
 	_actionManager.clearActionRecords(nextIsNoArt);
 

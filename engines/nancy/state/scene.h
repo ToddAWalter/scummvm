@@ -288,6 +288,10 @@ public:
 	void requestStateChange(NancyState::NancyState state) { _gameStateRequested = state; }
 	void resetStateToInit() { _state = kInit; }
 
+	// A skipped movie moves the time of the scene on by what was left of it
+	void addSceneTime(uint32 millis) { _timers.sceneTime += millis; }
+	// The sounds these flags start belong to a movie that was skipped
+	void addSkippedMovieFlag(int16 label) { _skippedMovieFlags.push_back(label); }
 	void resetAndStartTimer() { _timers.timerIsActive = true; _timers.timerTime = 0; }
 	void stopTimer() { _timers.timerIsActive = false; _timers.timerTime = 0; }
 
@@ -596,8 +600,6 @@ private:
 	// Nancy26 makes its UI of records, and hands its records all the input
 	void initNancy26UI();
 	void handleNancy26Input(NancyInput &input);
-
-	bool _isEscSkipping = false;	// the press that skipped stays away from the scripts
 #endif
 
 	uint _inventoryChangeCount = 0;
@@ -605,6 +607,9 @@ private:
 
 	// Set when esc skipped a cinematic this frame
 	bool _hasSkippedMovie = false;
+
+	// The flags the frames of the skipped cinematics set, until the scene changes
+	Common::Array<int16> _skippedMovieFlags;
 
 	bool _isLoadingSecondChance = false;
 	Common::String _loadName;

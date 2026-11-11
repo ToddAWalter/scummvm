@@ -27,6 +27,8 @@
 #include "engines/nancy/script/types.h"
 
 #include "engines/nancy/script/v5/bootobjects.h"
+#include "engines/nancy/script/v5/brain.h"
+#include "engines/nancy/script/v5/gamefunctions.h"
 
 #include "engines/nancy/ui/ndui/button.h"
 
@@ -68,13 +70,13 @@ static void readNancy26Cursor(lua_State *L, int cursorTable, ScriptBootData::Cur
 	cursor.sources[0] = cursor.sources[1] = checkRect(L, -1).toRect();
 	lua_pop(L, 1);
 
-	ScriptPoint hotspot;
+	Common::Point32 hotspot;
 	if (pushField(L, cursorTable, "activePt")) {
 		readPoint(L, -1, hotspot);
 		lua_pop(L, 1);
 	}
 
-	cursor.hotspots[0] = cursor.hotspots[1] = hotspot.toPoint();
+	cursor.hotspots[0] = cursor.hotspots[1] = Common::Point(hotspot.x, hotspot.y);
 }
 
 int createNancy26Cursors(lua_State *L, ScriptBootData &boot) {
@@ -83,13 +85,13 @@ int createNancy26Cursors(lua_State *L, ScriptBootData &boot) {
 	readField(L, 2, "leftNode", boot.leftNodeCursorName);
 	readField(L, 2, "uturnNode", boot.uturnNodeCursorName);
 
-	ScriptPoint offset;
+	Common::Point32 offset;
 	if (pushField(L, 2, "invOffset")) {
 		readPoint(L, -1, offset);
 		lua_pop(L, 1);
 	}
 
-	boot.itemCursorOffset = offset.toPoint();
+	boot.itemCursorOffset = Common::Point(offset.x, offset.y);
 
 	Common::Array<Common::String> names;
 	getSortedKeys(L, 2, names);
@@ -299,6 +301,8 @@ static void runRequiredScript(const char *name, const Script::BootTables &tables
 // is left over from the earlier games; the exe never runs it. What it set
 // is fixed in the exe instead.
 void NancyEngine::bootNancy26Data(ScriptBootData *boot, EVNT *flags, INVD *inventory, ENVS *environments, VIEW *viewport, CVTX *autotext) {
+	_engineData.setVal("ScriptGameState", new Script::ScriptGameState());
+
 	Script::BootTables flagTables;
 	flagTables.flags = flags;
 	runRequiredScript("Flags", flagTables);
@@ -322,6 +326,10 @@ void NancyEngine::bootNancy26Data(ScriptBootData *boot, EVNT *flags, INVD *inven
 	runRequiredScript("AutotextBoot", bootTables);
 	runRequiredScript("BuildNumber", bootTables);
 
+	if (getGameType() >= kGameTypeNancy27) {
+		_engineData.setVal("BrainLogic", new Script::BrainLogic());
+	}
+
 	Script::BootTables textTables;
 	textTables.texts = autotext;
 	for (const Common::String &name : boot->textFileNames) {
@@ -340,8 +348,6 @@ void NancyEngine::bootNancy26Data(ScriptBootData *boot, EVNT *flags, INVD *inven
 	boot->leftNodeHotspot = Common::Rect(0, 0, 47, height - 80);
 	boot->rightNodeHotspot = Common::Rect(width - 47, 0, width, height - 80);
 	boot->uturnNodeHotspot = Common::Rect(0, height - 80, width, height);
-
-	boot->defaultSaveName = "Tomb";
 
 	// The scripts every scene starts with
 	static const char *const kIncludeFiles[] = { "Math_SC", "Fader_SC", "string_SC", "ScriptingShortcuts_SC" };

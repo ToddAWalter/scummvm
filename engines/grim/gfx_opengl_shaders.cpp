@@ -362,17 +362,20 @@ GLuint GfxOpenGLS::nextPrimitive() {
 
 void GfxOpenGLS::setupShaders() {
 	bool isEMI = g_grim->getGameType() == GType_MONKEY4;
+	const Common::String prefix = isEMI ? "emi_" : "grim_";
 
 	static const char* commonAttributes[] = {"position", "texcoord", nullptr};
-	_backgroundProgram = OpenGL::Shader::fromFiles(isEMI ? "emi_background" : "grim_background", commonAttributes);
+	_backgroundProgram = OpenGL::Shader::fromFiles((prefix + "background").c_str(), commonAttributes);
 	_smushProgram = OpenGL::Shader::fromFiles("grim_smush", commonAttributes);
 	_textProgram = OpenGL::Shader::fromFiles("grim_text", commonAttributes);
 	_emergProgram = OpenGL::Shader::fromFiles("grim_emerg", commonAttributes);
 
 	static const char* actorAttributes[] = {"position", "texcoord", "color", "normal", nullptr};
-	_actorProgram = OpenGL::Shader::fromFiles(isEMI ? "emi_actor" : "grim_actor", actorAttributes);
-	_actorLightsProgram = OpenGL::Shader::fromFiles(isEMI ? "emi_actorlights" : "grim_actorlights", actorAttributes);
-	_spriteProgram = OpenGL::Shader::fromFiles(isEMI ? "emi_sprite" : "grim_actor", actorAttributes);
+	// Actors and sprites share one fragment shader per game.
+	const Common::String objectFragment = prefix + "object";
+	_actorProgram = OpenGL::Shader::fromFiles((prefix + "actor").c_str(), objectFragment.c_str(), actorAttributes);
+	_actorLightsProgram = OpenGL::Shader::fromFiles((prefix + "actorlights").c_str(), objectFragment.c_str(), actorAttributes);
+	_spriteProgram = OpenGL::Shader::fromFiles((prefix + "sprite").c_str(), objectFragment.c_str(), actorAttributes);
 
 	static const char* primAttributes[] = { "position", nullptr };
 	_shadowPlaneProgram = OpenGL::Shader::fromFiles("grim_shadowplane", primAttributes);
@@ -1132,6 +1135,50 @@ void GfxOpenGLS::drawModelFace(const Mesh *mesh, const MeshFace *face) {
 }
 
 void GfxOpenGLS::drawSprite(const Sprite *sprite) {
+	if (g_grim->getGameType() == GType_GRIM) {
+		// A sprite of Grim (the smoke of Manny's cigarette, sparks) is a quad that faces the camera, its bottom edge on the position of the sprite, and the
+		// texture runs flipped along x, as in the fixed pipeline.
+		// The sprite writes depth, as in the fixed pipeline: the meshes of the model are drawn after the sprites of their node (Manny's head after
+		// the smoke of his cigarette) and must not cover them. The alpha test keeps the clear texels from writing depth.
+		glDepthMask(GL_TRUE);
+		glEnable(GL_BLEND);
+		if (sprite->_flags1 & Sprite::BlendAdditive) {
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		} else {
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		if (sprite->_flags2 & Sprite::DepthTest) {
+			glEnable(GL_DEPTH_TEST);
+		} else {
+			glDisable(GL_DEPTH_TEST);
+		}
+
+		_spriteProgram->use();
+		_spriteProgram->setUniform("extraMatrix", _matrixStack.top());
+		_spriteProgram->setUniform("spritePos", sprite->_pos);
+		_spriteProgram->setUniform("spriteSize", Math::Vector2d(sprite->_width, sprite->_height));
+		_spriteProgram->setUniform("textured", GL_TRUE);
+		_spriteProgram->setUniform1f("alphaRef", 0.5f);
+
+		float sprite_quad[] = {
+		//	 X   ,  Y  , Z   , S   , T
+			+0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+			+0.5f, 1.0f, 0.0f, 0.0f, 0.0f,
+			-0.5f, 1.0f, 0.0f, 1.0f, 0.0f,
+			-0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
+		};
+
+		glBindBuffer(GL_ARRAY_BUFFER, _spriteVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_quad), sprite_quad, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _quadEBO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		return;
+	}
+
 	if (g_grim->getGameType() == GType_MONKEY4) {
 		glDepthMask(GL_TRUE);
 	} else {
@@ -1256,9 +1303,16 @@ void GfxOpenGLS::turnOffLight(int lightId) {
 		return;
 	}
 
+	// Turning off light 0 means no light is enabled at all.
+	if (lightId == 0)
+		_hasAmbientLight = false;
+
+	// Mark the slot as an ambient light with no colour. A zero position
+	// would be a directional light, and the shaders would normalize a zero
+	// vector into NaN, which makes the whole model disappear.
 	_lights[lightId]._color = Math::Vector4d(0.0f, 0.0f, 0.0f, 0.0f);
-	_lights[lightId]._position = Math::Vector4d(0.0f, 0.0f, 0.0f, 0.0f);
-	_lights[lightId]._direction = Math::Vector4d(0.0f, 0.0f, 0.0f, 0.0f);
+	_lights[lightId]._position = Math::Vector4d(0.0f, 0.0f, 0.0f, -1.0f);
+	_lights[lightId]._direction = Math::Vector4d(0.0f, 0.0f, 0.0f, -1.0f);
 }
 
 
@@ -1761,6 +1815,8 @@ void GfxOpenGLS::copyStoredToDisplay() {
 	_dimProgram->use();
 	_dimProgram->setUniform("scaleWH", Math::Vector2d(1.f, 1.f));
 	_dimProgram->setUniform("tex", 0);
+	_dimProgram->setUniform1f("colorScale", 1.f);
+	_dimProgram->setUniform1f("alpha", 1.f);
 
 	glBindTexture(GL_TEXTURE_2D, _storedDisplay);
 
@@ -1783,17 +1839,6 @@ void GfxOpenGLS::dimRegion(int xin, int yReal, int w, int h, float level) {
 	h = (int)(h * _scaleH);
 	int yin = _screenHeight - yReal - h;
 
-	GLuint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	g_system->presentBuffer();
-	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xin, yin, w, h, 0);
-
 	glBindBuffer(GL_ARRAY_BUFFER, _dimRegionVBO);
 
 	float width = w;
@@ -1814,16 +1859,19 @@ void GfxOpenGLS::dimRegion(int xin, int yReal, int w, int h, float level) {
 	_dimRegionProgram->use();
 	_dimRegionProgram->setUniform("scaleWH", Math::Vector2d(1.f / _screenWidth, 1.f / _screenHeight));
 	_dimRegionProgram->setUniform("tex", 0);
+	_dimRegionProgram->setUniform1f("colorScale", 0.f);
+	_dimRegionProgram->setUniform1f("alpha", 1.f - CLIP(level, 0.f, 1.f));
 
 	glDisable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
+	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
-
-	glDeleteTextures(1, &texture);
 }
 
 void GfxOpenGLS::irisAroundRegion(int x1, int y1, int x2, int y2) {

@@ -120,15 +120,15 @@ protected:
 	bool getField(const Common::String &key) override;
 	bool setField(const Common::String &key) override;
 
-	void onMouseMove(const ScriptPoint &point, bool inViewport) override;
-	bool getCursor(const ScriptPoint &point, bool inViewport, uint &cursorType, bool &isHot) override;
-	bool onMouseEvent(RecordEvent event, const ScriptPoint &point, bool inViewport) override;
+	void onMouseMove(const Common::Point32 &point, bool inViewport) override;
+	bool getCursor(const Common::Point32 &point, bool inViewport, uint &cursorType, bool &isHot) override;
+	bool onMouseEvent(RecordEvent event, const Common::Point32 &point, bool inViewport) override;
 
 private:
 	enum Turn { kNoTurn, kTurnLeft, kTurnRight, kTurnAround };
 
 	// The side of the node the mouse is on
-	Turn getTurnAt(const ScriptPoint &point, bool inViewport) const;
+	Turn getTurnAt(const Common::Point32 &point, bool inViewport) const;
 	bool canTurn(Turn turn) const;
 	void setFrame(uint frame);
 	void playTheme();
@@ -179,9 +179,9 @@ protected:
 	bool getField(const Common::String &key) override;
 	bool setField(const Common::String &key) override;
 
-	void onMouseMove(const ScriptPoint &point, bool inViewport) override;
-	bool getCursor(const ScriptPoint &point, bool inViewport, uint &cursorType, bool &isHot) override;
-	bool onMouseEvent(RecordEvent event, const ScriptPoint &point, bool inViewport) override;
+	void onMouseMove(const Common::Point32 &point, bool inViewport) override;
+	bool getCursor(const Common::Point32 &point, bool inViewport, uint &cursorType, bool &isHot) override;
+	bool onMouseEvent(RecordEvent event, const Common::Point32 &point, bool inViewport) override;
 
 private:
 	struct Flag {
@@ -192,7 +192,7 @@ private:
 	void readScene(int valueIndex);
 	void readCursor(int valueIndex);
 	void readRef(int valueIndex);
-	bool isOver(const ScriptPoint &point) const;
+	bool isOver(const Common::Point32 &point) const;
 	void trigger();
 
 	Common::String _sceneName;
@@ -250,7 +250,9 @@ protected:
 	bool setField(const Common::String &key) override;
 
 private:
-	// What the "Render" function draws on, for the records that have one
+	// What the "Render" function draws on, for the records that have one, and
+	// what it shows
+	Graphics::ManagedSurface _renderSurface;
 	RecordGraphic *_canvas = nullptr;
 
 	Common::String _messagingName;	// Nancy22, from SetMessagingName
@@ -368,6 +370,9 @@ public:
 	void onSkip() override;
 	bool skipSpeech() override;
 	void stopIfPlaying();
+
+	// The channel the sound of the record plays on, while it does
+	bool getPlayingChannel(uint16 &channel) const;
 
 protected:
 	void readTable(int tableIndex) override;
@@ -510,6 +515,7 @@ private:
 	bool _hasCalledOnPause = false;
 	bool _isPaused = false;
 	bool _isVisible = true;
+	bool _hasJustStarted = false;
 	double _endTime = 0.0;
 };
 

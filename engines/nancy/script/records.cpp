@@ -561,7 +561,7 @@ void SummaryRecord::setFrame(uint frame) {
 	}
 }
 
-SummaryRecord::Turn SummaryRecord::getTurnAt(const ScriptPoint &point, bool inViewport) const {
+SummaryRecord::Turn SummaryRecord::getTurnAt(const Common::Point32 &point, bool inViewport) const {
 	// Only a background with several frames can be turned around in
 	if (_numFrames <= 1 || !inViewport) {
 		return kNoTurn;
@@ -570,7 +570,7 @@ SummaryRecord::Turn SummaryRecord::getTurnAt(const ScriptPoint &point, bool inVi
 	const ScriptBootData *boot = GetEngineData(ScriptBootData);
 	assert(boot);
 
-	const Common::Point place = point.toPoint();
+	const Common::Point place(point.x, point.y);
 	if (_canRotate && boot->leftNodeHotspot.contains(place)) {
 		return canTurn(kTurnLeft) ? kTurnLeft : kNoTurn;
 	} else if (_canRotate && boot->rightNodeHotspot.contains(place)) {
@@ -592,7 +592,7 @@ bool SummaryRecord::canTurn(Turn turn) const {
 	return turn == kTurnLeft ? _frame + 1 < _numFrames : _frame > 0;
 }
 
-void SummaryRecord::onMouseMove(const ScriptPoint &point, bool inViewport) {
+void SummaryRecord::onMouseMove(const Common::Point32 &point, bool inViewport) {
 	// The view turns by itself while the mouse stays on a side, after a first wait
 	Turn turn = getTurnAt(point, inViewport);
 	if (turn == kTurnAround) {
@@ -606,7 +606,7 @@ void SummaryRecord::onMouseMove(const ScriptPoint &point, bool inViewport) {
 	_turn = turn;
 }
 
-bool SummaryRecord::getCursor(const ScriptPoint &point, bool inViewport, uint &cursorType, bool &isHot) {
+bool SummaryRecord::getCursor(const Common::Point32 &point, bool inViewport, uint &cursorType, bool &isHot) {
 	const ScriptBootData *boot = GetEngineData(ScriptBootData);
 	assert(boot);
 
@@ -634,7 +634,7 @@ bool SummaryRecord::getCursor(const ScriptPoint &point, bool inViewport, uint &c
 	return true;
 }
 
-bool SummaryRecord::onMouseEvent(RecordEvent event, const ScriptPoint &point, bool inViewport) {
+bool SummaryRecord::onMouseEvent(RecordEvent event, const Common::Point32 &point, bool inViewport) {
 	switch (event) {
 	case kEventRightDown:
 		_isTurningFast = true;
@@ -852,7 +852,7 @@ void NavLogicRecord::run(double sceneTime, double elapsedTime) {
 
 // The mouse is taken back to where the hotspot was before the transform, so a
 // turned hotspot is turned with its picture
-bool NavLogicRecord::isOver(const ScriptPoint &point) const {
+bool NavLogicRecord::isOver(const Common::Point32 &point) const {
 	double x = point.x;
 	double y = point.y;
 	getTransform().inverse().transformPoint(x, y);
@@ -882,7 +882,7 @@ bool NavLogicRecord::isOver(const ScriptPoint &point) const {
 
 // A hotspot that is held down tells its scripts when the mouse leaves it and
 // comes back, with OnUp and OnDown
-void NavLogicRecord::onMouseMove(const ScriptPoint &point, bool inViewport) {
+void NavLogicRecord::onMouseMove(const Common::Point32 &point, bool inViewport) {
 	const bool wasMouseOver = _isMouseOver;
 	_isMouseOver = inViewport && isOver(point);
 
@@ -893,7 +893,7 @@ void NavLogicRecord::onMouseMove(const ScriptPoint &point, bool inViewport) {
 	}
 }
 
-bool NavLogicRecord::getCursor(const ScriptPoint &point, bool inViewport, uint &cursorType, bool &isHot) {
+bool NavLogicRecord::getCursor(const Common::Point32 &point, bool inViewport, uint &cursorType, bool &isHot) {
 	if (!_hasCursor || !isOver(point)) {
 		return false;
 	}
@@ -903,7 +903,7 @@ bool NavLogicRecord::getCursor(const ScriptPoint &point, bool inViewport, uint &
 	return true;
 }
 
-bool NavLogicRecord::onMouseEvent(RecordEvent event, const ScriptPoint &point, bool inViewport) {
+bool NavLogicRecord::onMouseEvent(RecordEvent event, const Common::Point32 &point, bool inViewport) {
 	if (_isPressedAndReleased) {
 		const RecordEvent downEvent = _isRightClick ? kEventRightDown : kEventLeftDown;
 		const RecordEvent upEvent = _isRightClick ? kEventRightUp : kEventLeftUp;
@@ -1103,7 +1103,9 @@ void OverrideRecord::onZChanged() {
 
 // An override draws by having its "Render" function called every frame, which
 // draws through the "Draw" object. Here that goes onto a picture as large as
-// the viewport, which is started over every frame.
+// the viewport, which is started over every frame. The picture is only shown
+// again when it changed: the menus darken all the screen behind them, and
+// drawing all of it every frame made them slow.
 void OverrideRecord::updateGraphics() {
 	lua_State *L = getLua();
 
@@ -1113,7 +1115,7 @@ void OverrideRecord::updateGraphics() {
 
 	if (!hasRender || !isShown()) {
 		if (_canvas) {
-			_canvas->setVisible(false);
+			_canvas->setVisible(false, false);
 		}
 
 		return;
@@ -1128,19 +1130,27 @@ void OverrideRecord::updateGraphics() {
 		_canvas = new RecordGraphic();
 		_canvas->init();
 		_canvas->_drawSurface.create(bounds.width(), bounds.height(), g_nancy->_graphics->getTransparentPixelFormat());
+		_canvas->_drawSurface.clear(0);
 		_canvas->moveTo(bounds);
 		_canvas->setScriptZ(getZ(), getContext());
 		_canvas->registerGraphics();
+		_renderSurface.create(bounds.width(), bounds.height(), _canvas->_drawSurface.format);
 	}
 
-	_canvas->_drawSurface.clear(0);
+	_renderSurface.clear(0);
 
-	s_drawTarget = &_canvas->_drawSurface;
+	s_drawTarget = &_renderSurface;
 	callFunction("Render");
 	s_drawTarget = nullptr;
 
-	_canvas->setVisible(true);
-	_canvas->setNeedsRedraw(true);
+	Graphics::ManagedSurface &shown = _canvas->_drawSurface;
+	const uint32 size = shown.pitch * shown.h;
+	if (memcmp(shown.getPixels(), _renderSurface.getPixels(), size) != 0) {
+		memcpy(shown.getPixels(), _renderSurface.getPixels(), size);
+		_canvas->setNeedsRedraw(true);
+	}
+
+	_canvas->setVisible(true, false);
 }
 
 // this:Done()
@@ -1400,10 +1410,10 @@ void OverlayRecord::updateGraphics() {
 	}
 
 	_graphic.setClipRect(getScreenClip());
-	_graphic.setVisible(isShown() && _hasPicture);
+	_graphic.setVisible(isShown() && _hasPicture, false);
 
 	if (_hasAttachment) {
-		_attachment.setVisible(_isAttachmentDrawn);
+		_attachment.setVisible(_isAttachmentDrawn, false);
 		_isAttachmentDrawn = false;
 	}
 }
@@ -1727,7 +1737,7 @@ void AnimOverlayRecord::updateGraphics() {
 	}
 
 	_graphic.setClipRect(getScreenClip());
-	_graphic.setVisible(isShown() && _isVisible && _hasPicture);
+	_graphic.setVisible(isShown() && _isVisible && _hasPicture, false);
 }
 
 // anim:Play() and anim:Pause(), for the records that play something
@@ -2046,6 +2056,16 @@ static int soundStopIfPlaying(lua_State *L) {
 	return 0;
 }
 
+bool SoundRecord::getPlayingChannel(uint16 &channel) const {
+	if (!_isPlaying || g_nancy->_sound->getChannelSerial(_channel) != _channelSerial ||
+			!g_nancy->_sound->isSoundPlaying(_channel)) {
+		return false;
+	}
+
+	channel = _channel;
+	return true;
+}
+
 void SoundRecord::stopIfPlaying() {
 	if (_isPlaying && g_nancy->_sound->getChannelSerial(_channel) == _channelSerial) {
 		g_nancy->_sound->stopSound(_sound);
@@ -2236,7 +2256,7 @@ void TextRecord::registerGraphics() {
 }
 
 void TextRecord::updateGraphics() {
-	_graphic.setVisible(isActive());
+	_graphic.setVisible(isActive(), false);
 
 	if (_isDirty) {
 		_isDirty = false;
@@ -2428,6 +2448,7 @@ void MovieRecord::applyPosition() {
 void MovieRecord::runOnce() {
 	_player.playRange(_firstFrame, _lastFrame);
 	drawFrame();
+	_hasJustStarted = true;
 }
 
 // A movie that plays through and ends; one that loops forever never does. One
@@ -2449,6 +2470,11 @@ bool MovieRecord::isSkippable() const {
 }
 
 void MovieRecord::run(double sceneTime, double elapsedTime) {
+	// The frame that starts a movie went by before it, and can be a long one
+	// when the scene just loaded. The movie would skip ahead of its sound.
+	const double playedTime = _hasJustStarted ? 0.0 : elapsedTime;
+	_hasJustStarted = false;
+
 	// A movie that is being skipped moves on by one frame every time it runs, so
 	// the scripts that wait for one of its frames still see it. The frames on the
 	// way aren't decoded, and neither is the last one: a skipped movie ends, which
@@ -2484,7 +2510,7 @@ void MovieRecord::run(double sceneTime, double elapsedTime) {
 
 	_skipFrame = -1;
 
-	if (_player.update()) {
+	if (_player.advance(playedTime * 1000.0)) {
 		drawFrame();
 	}
 
@@ -2535,7 +2561,7 @@ void MovieRecord::updateGraphics() {
 	}
 
 	_graphic.setClipRect(getScreenClip());
-	_graphic.setVisible(isShown() && _isVisible && !isSeeThrough());
+	_graphic.setVisible(isShown() && _isVisible && !isSeeThrough(), false);
 }
 
 void MovieRecord::describeState(Common::Array<Common::String> &lines) const {

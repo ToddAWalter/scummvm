@@ -43,13 +43,13 @@ static const uint32 kDoubleClickTime = 500;	// milliseconds
 static const int kDoubleClickDistance = 4;
 
 struct InputState {
-	ScriptPoint mouse;
+	Common::Point32 mouse;
 	bool hasMouse = false;
 	Record *hovered = nullptr;
 	Record *pressed[2] = { nullptr, nullptr };
 
 	uint32 lastClickTime[2] = { 0, 0 };
-	ScriptPoint lastClickPoint[2];
+	Common::Point32 lastClickPoint[2];
 	bool isDoubleClick[2] = { false, false };
 
 	uint16 heldMoveKeys = 0;
@@ -62,7 +62,7 @@ static InputState &getState() {
 	return s_state;
 }
 
-const ScriptPoint &getScriptMousePoint() {
+const Common::Point32 &getScriptMousePoint() {
 	return getState().mouse;
 }
 
@@ -386,10 +386,10 @@ static const MoveKey kMoveKeys[] = {
 void handleNancy26Input(NancyInput &input) {
 	InputState &state = getState();
 
-	const ScriptPoint oldMouse = state.mouse;
+	const Common::Point32 oldMouse = state.mouse;
 	state.hasMouse = input.mousePos.x >= 0;
 	if (state.hasMouse) {
-		state.mouse = ScriptPoint(input.mousePos);
+		state.mouse = Common::Point32(input.mousePos);
 	}
 
 	state.isDoubleClick[0] = state.isDoubleClick[1] = false;
@@ -473,7 +473,7 @@ namespace State {
 
 // Nancy26's records take care of all the input themselves. Esc opens the menu
 // through them, unless it skips the movies that play or what the characters
-// say; that press then stays away from them until it is let go.
+// say; that press is then taken away from everything.
 void Scene::handleNancy26Input(NancyInput &input) {
 	const bool escPressed = (input.input & NancyInput::kOpenMainMenu) != 0;
 	if (escPressed && !_escHeld && _scriptScene) {
@@ -484,15 +484,13 @@ void Scene::handleNancy26Input(NancyInput &input) {
 			hasSkipped |= _streams.skipSpeech();
 		}
 
-		_isEscSkipping = hasSkipped;
-	} else if (!escPressed) {
-		_isEscSkipping = false;
+		if (hasSkipped) {
+			g_nancy->_input->eatMainMenuKey();
+			input.eatMainMenuKey();
+		}
 	}
 
-	_escHeld = escPressed;
-	if (_isEscSkipping) {
-		input.input &= ~NancyInput::kOpenMainMenu;
-	}
+	_escHeld = (input.input & NancyInput::kOpenMainMenu) != 0;
 
 	Script::handleNancy26Input(input);
 }
