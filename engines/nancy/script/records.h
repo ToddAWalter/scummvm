@@ -80,6 +80,10 @@ public:
 	// The highest z order of what the records draw
 	static const int kMaxScriptZOrder = 59000;
 
+	// Where the records can draw: the viewport, and from Nancy26 on the whole
+	// screen
+	static Common::Rect getDrawArea();
+
 protected:
 	// Nancy26 has the viewport at the top left of the screen, and lets records
 	// draw on all of it, the UI along the bottom included
@@ -289,9 +293,12 @@ private:
 	void readDest(int index);
 	void readDestTable(Common::Array<ScriptRect> &dests);
 	void applyRects();
+	bool setPicture(const Common::String &imageName);
 
 	Common::SharedPtr<Graphics::ManagedSurface> _cachedImage;	// kept while the record uses it
 	Graphics::ManagedSurface _image;	// the cached picture, or a saved one
+	Common::String _imageName;
+	Common::String _treeName;
 	ScriptRect _source;
 	ScriptRect _dest;
 	bool _hasDestTable = false;					// Nancy24: onScreen is a table of rects
@@ -499,6 +506,7 @@ private:
 	ScriptRect _source;
 	ScriptRect _dest;
 	uint32 _modColor = 0xFFFFFFFF;	// what the colors of the frames get multiplied with
+	double _frameRate = 0.0;		// Nancy28, 0 for the movie's own
 
 	// What a turned, resized or colored frame gets drawn from. It is kept while
 	// the movie stays at the frame, for the transform to move it around.

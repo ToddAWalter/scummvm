@@ -19,9 +19,12 @@
  *
  */
 
+#include "common/config-manager.h"
 #include "common/memstream.h"
 #include "common/random.h"
 #include "common/textconsole.h"
+
+#include "engines/metaengine.h"
 
 #include "image/png.h"
 
@@ -208,6 +211,16 @@ bool RecordGraphic::isViewportRelative() const {
 	return g_nancy->getGameType() < kGameTypeNancy26;
 }
 
+Common::Rect RecordGraphic::getDrawArea() {
+	if (g_nancy->getGameType() >= kGameTypeNancy26) {
+		return g_nancy->_graphics->getScreenBounds();
+	}
+
+	const VIEW *viewport = GetEngineData(VIEW);
+	assert(viewport);
+	return Common::Rect(viewport->screenPosition.width(), viewport->screenPosition.height());
+}
+
 void RecordGraphic::setScriptZ(double z, const SceneContext &context) {
 	setZOrder(getScriptZOrder(z, context.getZOffset()));
 	setViewTransform(context.getViewTransform());
@@ -280,10 +293,7 @@ static void placePicture(RecordGraphic &graphic, Graphics::ManagedSurface &image
 
 	// Nothing shows outside the viewport, so only the part inside it gets drawn.
 	// The map of Nancy25 is far larger than the viewport when zoomed in.
-	const VIEW *viewport = GetEngineData(VIEW);
-	assert(viewport);
-
-	area.clip(Common::Rect(viewport->screenPosition.width(), viewport->screenPosition.height()));
+	area.clip(RecordGraphic::getDrawArea());
 	const bool isOnScreen = !area.isEmpty();
 	if (!isOnScreen) {
 		area = Common::Rect(1, 1);
@@ -296,6 +306,9 @@ static void placePicture(RecordGraphic &graphic, Graphics::ManagedSurface &image
 	out.clear(0);
 	graphic.setTransparent(false);
 
+	// A picture with an alpha channel uses only that for transparency, like
+	// when it is shown unchanged. The color key is black from Nancy16 on, and
+	// pictures such as Nancy28's task checkboxes are drawn in black.
 	byte transR, transG, transB;
 	image.format.colorToRGB(g_nancy->_graphics->getTransColor(), transR, transG, transB);
 	const bool hasAlpha = image.format.aBits() != 0;
@@ -347,7 +360,7 @@ static void placePicture(RecordGraphic &graphic, Graphics::ManagedSurface &image
 
 			const uint32 pixel = image.getPixel(source.left + sourceX, source.top + sourceY);
 			if (isCopied) {
-				if ((pixel & colorMask) != transColor) {
+				if (hasAlpha || (pixel & colorMask) != transColor) {
 					outRow[x] = pixel;
 				}
 
@@ -356,7 +369,7 @@ static void placePicture(RecordGraphic &graphic, Graphics::ManagedSurface &image
 
 			byte alpha, red, green, blue;
 			image.format.colorToARGB(pixel, alpha, red, green, blue);
-			if (red == transR && green == transG && blue == transB) {
+			if (!hasAlpha && red == transR && green == transG && blue == transB) {
 				continue;
 			}
 
@@ -387,14 +400,12 @@ static void blendPicture(Graphics::ManagedSurface &target, const RecordGraphic &
 		for (int x = MAX<int>(0, -area.left); x < image.w && area.left + x < target.w; ++x) {
 			byte alpha, red, green, blue;
 			image.format.colorToARGB(image.getPixel(x, y), alpha, red, green, blue);
-			if (isKeyed) {
+			if (isKeyed && !hasAlpha) {
 				if (red == transR && green == transG && blue == transB) {
 					continue;
 				}
 
-				if (!hasAlpha) {
-					alpha = 0xFF;
-				}
+				alpha = 0xFF;
 			}
 
 			if (alpha == 0) {
@@ -1122,10 +1133,7 @@ void OverrideRecord::updateGraphics() {
 	}
 
 	if (!_canvas) {
-		const VIEW *viewport = GetEngineData(VIEW);
-		assert(viewport);
-
-		const Common::Rect bounds(viewport->screenPosition.width(), viewport->screenPosition.height());
+		const Common::Rect bounds = RecordGraphic::getDrawArea();
 
 		_canvas = new RecordGraphic();
 		_canvas->init();
@@ -1139,9 +1147,19 @@ void OverrideRecord::updateGraphics() {
 
 	_renderSurface.clear(0);
 
+	// From Nancy26 on, a picture the function takes shows what is below it
+	const bool isDrawnInPlace = g_nancy->getGameType() >= kGameTypeNancy26;
+	if (isDrawnInPlace) {
+		g_nancy->_graphics->beginScriptDrawing(_canvas->getZOrder());
+	}
+
 	s_drawTarget = &_renderSurface;
 	callFunction("Render");
 	s_drawTarget = nullptr;
+
+	if (isDrawnInPlace) {
+		g_nancy->_graphics->endScriptDrawing();
+	}
 
 	Graphics::ManagedSurface &shown = _canvas->_drawSurface;
 	const uint32 size = shown.pitch * shown.h;
@@ -1209,7 +1227,48 @@ bool OverrideRecord::setField(const Common::String &key) {
 // the saved game
 static const char *const kPictureTreeName = "LOADSAVE";
 
+// Nancy26: the "SaveFile" tree holds the pictures of the saved games, by their
+// names. They are the thumbnails of ScummVM's saved games, at the size the save
+// and load screens show them at.
+static const char *const kSaveFileTreeName = "SaveFile";
+static const int kSavePictureWidth = 184;
+static const int kSavePictureHeight = 124;
+
+static bool loadSavePicture(const Common::String &name, Graphics::ManagedSurface &image) {
+	const MetaEngine *metaEngine = g_nancy->getMetaEngine();
+	const Common::String target = ConfMan.getActiveDomainName();
+	const SaveStateList saves = metaEngine->listSaves(target.c_str());
+	for (const SaveStateDescriptor &save : saves) {
+		if (save.getSaveSlot() == metaEngine->getMaximumSaveSlot() || save.getSaveSlot() == g_nancy->getAutosaveSlot() ||
+				!save.getDescription().equalsIgnoreCase(name)) {
+			continue;
+		}
+
+		const SaveStateDescriptor info = metaEngine->querySaveMetaInfos(target.c_str(), save.getSaveSlot());
+		const Graphics::Surface *thumbnail = info.getThumbnail();
+		if (!thumbnail) {
+			return false;
+		}
+
+		Graphics::Surface *scaled = thumbnail->scale(kSavePictureWidth, kSavePictureHeight, true);
+		Graphics::Surface *converted = scaled->convertTo(g_nancy->_graphics->getInputPixelFormat(32));
+		GraphicsManager::copyToManaged(*converted, image);
+		converted->free();
+		delete converted;
+		scaled->free();
+		delete scaled;
+		return true;
+	}
+
+	warning("There is no saved game named %s", name.c_str());
+	return false;
+}
+
 bool loadTreeImage(const Common::String &name, const Common::String &treeName, Graphics::ManagedSurface &image) {
+	if (treeName.equalsIgnoreCase(kSaveFileTreeName)) {
+		return loadSavePicture(name, image);
+	}
+
 	if (!treeName.equalsIgnoreCase(kPictureTreeName)) {
 		return g_nancy->_resource->loadImage(Common::Path(name), image, treeName);
 	}
@@ -1242,7 +1301,9 @@ bool loadTreeImage(const Common::String &name, const Common::String &treeName, G
 // and hold on to the cached picture while they use it. Saved pictures aren't
 // cached: every record has its own.
 static bool loadCachedImage(const Common::String &name, const Common::String &treeName, Common::SharedPtr<Graphics::ManagedSurface> &cached, Graphics::ManagedSurface &image) {
-	if (treeName.equalsIgnoreCase(kPictureTreeName)) {
+	if (treeName.equalsIgnoreCase(kPictureTreeName) || treeName.equalsIgnoreCase(kSaveFileTreeName)) {
+		image.free();
+		cached.reset();
 		return loadTreeImage(name, treeName, image);
 	}
 
@@ -1271,6 +1332,9 @@ void OverlayRecord::readTable(int tableIndex) {
 	if (!loadCachedImage(imageName, treeName, _cachedImage, _image)) {
 		luaL_error(L, "Could not load overlay %s", imageName.c_str());
 	}
+
+	_imageName = imageName;
+	_treeName = treeName;
 
 	// Both default to the whole image
 	_source = ScriptRect(0, 0, _image.w, _image.h);
@@ -1536,6 +1600,10 @@ bool OverlayRecord::getField(const Common::String &key) {
 		pushRect(L, _source);
 	} else if (key == "modColor") {
 		pushColor(L, _modColor);
+	} else if (key == "ovl") {
+		lua_pushstring(L, _imageName.c_str());
+	} else if (key == "tree") {
+		lua_pushstring(L, _treeName.c_str());
 	} else {
 		return false;
 	}
@@ -1543,11 +1611,38 @@ bool OverlayRecord::getField(const Common::String &key) {
 	return true;
 }
 
+// The scripts change the picture by its name, after naming the tree it is in:
+// the save and load screens show the pictures of the saved games this way. The
+// part of it that shows stays as it was.
+bool OverlayRecord::setPicture(const Common::String &imageName) {
+	Common::SharedPtr<Graphics::ManagedSurface> cached;
+	Graphics::ManagedSurface image;
+	if (!loadCachedImage(imageName, _treeName, cached, image)) {
+		warning("Could not load overlay %s", imageName.c_str());
+		return false;
+	}
+
+	_image = Common::move(image);
+	_cachedImage = cached;
+	_imageName = imageName;
+	return true;
+}
+
 bool OverlayRecord::setField(const Common::String &key) {
 	lua_State *L = getLua();
 
+	if (key == "tree") {
+		_treeName = lua_isnil(L, 3) ? Common::String() : Common::String(luaL_checkstring(L, 3));
+		return true;
+	}
+
 	// Only a change gets the picture drawn anew
-	if (key == "onScreen") {
+	if (key == "ovl") {
+		const Common::String imageName = luaL_checkstring(L, 3);
+		if (!setPicture(imageName)) {
+			return true;
+		}
+	} else if (key == "onScreen") {
 		if (lua_istable(L, 3) || _hasDestTable) {
 			readDest(3);
 		} else {
@@ -2369,6 +2464,14 @@ void MovieRecord::readTable(int tableIndex) {
 	readField(L, tableIndex, "volume", volume);
 	_player.setVolume((byte)CLIP<int>((int)(volume * 100.0 + 0.5), 0, 100));
 
+	// Nancy28 plays the movies at 15 frames a second, or what the script asks
+	// for, whatever the frame rate of the movie
+	if (g_nancy->getGameType() >= kGameTypeNancy28) {
+		_frameRate = 15.0;
+		readField(L, tableIndex, "framerate", _frameRate);
+		_player.setFrameRate(_frameRate);
+	}
+
 	// true is forever, false once, and a number that many times
 	lua_getfield(L, tableIndex, "loop");
 	if (lua_isboolean(L, -1)) {
@@ -2628,6 +2731,8 @@ bool MovieRecord::getField(const Common::String &key) {
 		lua_pushinteger(L, _lastFrame);
 	} else if (key == "frames") {
 		lua_pushinteger(L, _player.getFrameCount());
+	} else if (key == "framerate" && _frameRate > 0.0) {
+		lua_pushnumber(L, _frameRate);
 	} else {
 		return false;
 	}
@@ -2662,6 +2767,9 @@ bool MovieRecord::setField(const Common::String &key) {
 		_player.setVolume((byte)CLIP<int>((int)(luaL_checknumber(L, 3) * 100.0 + 0.5), 0, 100));
 	} else if (key == "pauseOnLastFrame") {
 		_pausesOnLastFrame = lua_toboolean(L, 3) != 0;
+	} else if (key == "framerate" && g_nancy->getGameType() >= kGameTypeNancy28) {
+		_frameRate = MAX(luaL_checknumber(L, 3), 0.0);
+		_player.setFrameRate(_frameRate);
 	} else if (key == "paused") {
 		// Nancy24 has no Play and Pause anymore
 		_isPaused = lua_toboolean(L, 3) != 0;
