@@ -54,6 +54,9 @@
 #include "engines/nancy/script/records.h"
 #include "engines/nancy/script/scenecontext.h"
 #endif
+#ifdef ENABLE_NANCY_V5
+#include "engines/nancy/script/v5/gamefunctions.h"
+#endif
 
 namespace Common {
 DECLARE_SINGLETON(Nancy::State::Scene);
@@ -522,7 +525,7 @@ byte Scene::getPlayerTOD() const {
 	}
 }
 
-void Scene::addItemToInventory(int16 id) {
+void Scene::addItemToInventory(int16 id, bool isAddedToFront) {
 	if (id == -1) {
 		return;
 	}
@@ -564,7 +567,7 @@ void Scene::addItemToInventory(int16 id) {
 					break;
 				}
 			}
-			if (addToBack) {
+			if (addToBack && !isAddedToFront) {
 				order.push_back(id);
 			} else {
 				order.insert_at(0, id);
@@ -2472,6 +2475,12 @@ void Scene::run() {
 		// Player pressed esc, do not process further
 		return;
 	}
+
+#ifdef ENABLE_NANCY_V5
+	if (g_nancy->getGameType() >= kGameTypeNancy29) {
+		Script::updateEquippedItems();
+	}
+#endif
 
 	_streams.process();
 

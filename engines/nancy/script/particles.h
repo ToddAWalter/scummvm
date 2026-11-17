@@ -44,6 +44,7 @@ struct Particle {
 	double acceleration[3] = { 0.0, 0.0, 0.0 };
 	double life = 0.0;			// from 0 when made to 1 when gone
 	double angle = 0.0;
+	double angularSpeed = 0.0;	// Nancy32, in radians a step
 	double scale = 1.0;
 	double width = 0.0;			// of the part of the image it shows
 	double height = 0.0;
@@ -120,7 +121,7 @@ private:
 	void grow();
 	void dropOldestBatch();
 	void runStages(uint first, uint count, bool isSpawn);
-	void drawParticle(const Particle &particle, const ScriptMatrix &transform);
+	void drawParticle(const Particle &particle, const ScriptMatrix &transform, Common::Rect &drawnArea);
 
 	Graphics::ManagedSurface _image;
 	Common::Array<Particle> _particles;	// used as a ring, which grows when full
@@ -145,6 +146,14 @@ private:
 	double _fastForward = 0.0;	// seconds to run through when the record starts
 
 	RecordGraphic *_canvas = nullptr;
+
+	// The particles only move with the steps of the simulation, 30 a second,
+	// while the screen gets drawn 60 times a second. The canvas is drawn anew
+	// only when they moved or the record's transform changed, and only the
+	// part of it that was drawn on gets cleared.
+	bool _hasStepped = false;
+	ScriptMatrix _drawnTransform;
+	Common::Rect _drawnArea;
 };
 
 // The stages scripts get back from a record by name

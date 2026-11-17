@@ -58,7 +58,34 @@ ScriptMatrix::ScriptMatrix() {
 	}
 }
 
+// Nancy32 combines and undoes SRTs part by part
+static bool combinesAsSRTs(const ScriptMatrix &a, const ScriptMatrix &b) {
+	return a.isSRT && b.isSRT && g_nancy->getGameType() >= kGameTypeNancy32;
+}
+
+ScriptMatrix ScriptMatrix::makeSRT(double scaleX, double scaleY, double rotation, double x, double y) {
+	ScriptMatrix matrix;
+	matrix.scaleX = scaleX;
+	matrix.scaleY = scaleY;
+	matrix.rotation = rotation;
+
+	const double cosine = cos(rotation);
+	const double sine = sin(rotation);
+	matrix.m[0][0] = scaleX * cosine;
+	matrix.m[0][1] = scaleY * sine;
+	matrix.m[1][0] = -scaleX * sine;
+	matrix.m[1][1] = scaleY * cosine;
+	matrix.m[3][0] = x;
+	matrix.m[3][1] = y;
+	return matrix;
+}
+
 bool ScriptMatrix::operator==(const ScriptMatrix &other) const {
+	if (combinesAsSRTs(*this, other)) {
+		return scaleX == other.scaleX && scaleY == other.scaleY && rotation == other.rotation &&
+			m[3][0] == other.m[3][0] && m[3][1] == other.m[3][1];
+	}
+
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
 			if (m[row][column] != other.m[row][column]) {
@@ -71,7 +98,15 @@ bool ScriptMatrix::operator==(const ScriptMatrix &other) const {
 }
 
 ScriptMatrix ScriptMatrix::operator*(const ScriptMatrix &other) const {
+	if (combinesAsSRTs(*this, other)) {
+		double x = m[3][0];
+		double y = m[3][1];
+		other.transformPoint(x, y);
+		return makeSRT(scaleX * other.scaleX, scaleY * other.scaleY, rotation + other.rotation, x, y);
+	}
+
 	ScriptMatrix result;
+	result.isSRT = false;
 
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
@@ -563,9 +598,23 @@ ScriptMatrix &checkMatrix(lua_State *L, int index) {
 	return *(ScriptMatrix *)checkUserData(L, index, kMatrixType);
 }
 
-// Matrix:New(sixteen numbers, row by row)
+// Matrix:New(sixteen numbers, row by row). Nancy32: Matrix:New(scaleX, scaleY,
+// rotation, x, y), an SRT, or Matrix:New(matrix), a copy.
 static int matrixNew(lua_State *L) {
+	const int numArgs = lua_gettop(L) - 1;
+	if (numArgs == 5) {
+		pushMatrix(L, ScriptMatrix::makeSRT(luaL_checknumber(L, 2), luaL_checknumber(L, 3),
+			luaL_checknumber(L, 4), luaL_checknumber(L, 5), luaL_checknumber(L, 6)));
+		return 1;
+	}
+
+	if (numArgs == 1) {
+		pushMatrix(L, checkMatrix(L, 2));
+		return 1;
+	}
+
 	ScriptMatrix matrix;
+	matrix.isSRT = false;
 	for (int i = 0; i < 16; ++i) {
 		matrix.m[i / 4][i % 4] = luaL_checknumber(L, i + 2);
 	}
@@ -574,13 +623,18 @@ static int matrixNew(lua_State *L) {
 	return 1;
 }
 
-// Matrix:Translate(x, y, z)
+// Matrix:Translate(x, y, z). Nancy32 has no z.
 static int matrixTranslate(lua_State *L) {
-	ScriptMatrix matrix;
-	matrix.m[3][0] = luaL_checknumber(L, 2);
-	matrix.m[3][1] = luaL_checknumber(L, 3);
-	matrix.m[3][2] = luaL_checknumber(L, 4);
+	ScriptMatrix matrix = ScriptMatrix::makeSRT(1.0, 1.0, 0.0, luaL_checknumber(L, 2), luaL_checknumber(L, 3));
+	matrix.m[3][2] = luaL_optnumber(L, 4, 0.0);
+	matrix.isSRT = matrix.m[3][2] == 0.0;
 	pushMatrix(L, matrix);
+	return 1;
+}
+
+// Matrix:Rotate(angle), Nancy32: a turn by the angle in radians
+static int matrixRotate(lua_State *L) {
+	pushMatrix(L, ScriptMatrix::makeSRT(1.0, 1.0, luaL_checknumber(L, 2), 0.0, 0.0));
 	return 1;
 }
 
@@ -595,6 +649,7 @@ static int matrixPerspective(lua_State *L) {
 	const double yScale = 1.0 / tan(fovy / 2.0);
 
 	ScriptMatrix matrix;
+	matrix.isSRT = false;
 	matrix.m[0][0] = yScale / aspectRatio;
 	matrix.m[1][1] = yScale;
 	matrix.m[2][2] = zFar / (zFar - zNear);
@@ -605,12 +660,11 @@ static int matrixPerspective(lua_State *L) {
 	return 1;
 }
 
-// Matrix:Scale(x, y, z)
+// Matrix:Scale(x, y, z). Nancy32 has no z.
 static int matrixScale(lua_State *L) {
-	ScriptMatrix matrix;
-	matrix.m[0][0] = luaL_checknumber(L, 2);
-	matrix.m[1][1] = luaL_checknumber(L, 3);
-	matrix.m[2][2] = luaL_checknumber(L, 4);
+	ScriptMatrix matrix = ScriptMatrix::makeSRT(luaL_checknumber(L, 2), luaL_checknumber(L, 3), 0.0, 0.0, 0.0);
+	matrix.m[2][2] = luaL_optnumber(L, 4, 1.0);
+	matrix.isSRT = matrix.m[2][2] == 1.0;
 	pushMatrix(L, matrix);
 	return 1;
 }
@@ -639,6 +693,7 @@ static int matrixRotateAngle(lua_State *L) {
 	}
 
 	ScriptMatrix matrix;
+	matrix.isSRT = false;
 	matrix.m[first][first] = cosine;
 	matrix.m[first][second] = sine;
 	matrix.m[second][first] = -sine;
@@ -652,6 +707,7 @@ static int matrixRotateAngle(lua_State *L) {
 // turn, which goes in the same direction as RotateAngle
 static ScriptMatrix makeRotation(const double v[3], double outer, double diagonal, double turn) {
 	ScriptMatrix matrix;
+	matrix.isSRT = false;
 	for (int row = 0; row < 3; ++row) {
 		for (int column = 0; column < 3; ++column) {
 			matrix.m[row][column] = outer * v[row] * v[column];
@@ -738,6 +794,7 @@ static int matrixNewIndex(lua_State *L) {
 		matrix.m[row][i] = vector.v[i];
 	}
 
+	matrix.isSRT = false;
 	return 0;
 }
 
@@ -755,6 +812,7 @@ static int matrixTranspose(lua_State *L) {
 	const ScriptMatrix &matrix = checkMatrix(L, 1);
 
 	ScriptMatrix result;
+	result.isSRT = false;
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
 			result.m[row][column] = matrix.m[column][row];
@@ -766,8 +824,20 @@ static int matrixTranspose(lua_State *L) {
 }
 
 ScriptMatrix ScriptMatrix::inverse() const {
+	// Nancy32 undoes the scale and the rotation, and then the translation with them
+	if (combinesAsSRTs(*this, *this)) {
+		ScriptMatrix result = makeSRT(1.0 / scaleX, 1.0 / scaleY, -rotation, 0.0, 0.0);
+		double x = m[3][0];
+		double y = m[3][1];
+		result.transformPoint(x, y);
+		result.m[3][0] = -x;
+		result.m[3][1] = -y;
+		return result;
+	}
+
 	ScriptMatrix work = *this;
 	ScriptMatrix result;
+	result.isSRT = false;
 
 	for (int column = 0; column < 4; ++column) {
 		// The row with the largest value in this column goes on the diagonal
@@ -879,6 +949,7 @@ static const luaL_Reg kMatrixHelperFunctions[] = {
 	{ "Translate", matrixTranslate },
 	{ "Scaling", matrixScale },
 	{ "Scale", matrixScale },
+	{ "Rotate", matrixRotate },
 	{ "Perspective", matrixPerspective },
 	{ "RotationAngle", matrixRotateAngle },
 	{ "RotateAngle", matrixRotateAngle },
@@ -1228,8 +1299,14 @@ static const luaL_Reg kPathHelperFunctions[] = {
 	{ nullptr, nullptr }
 };
 
+// A number rounded half away from zero, as Nancy32 rounds the corners of a rect
+static double roundAwayFromZero(double value) {
+	return value < 0.0 ? ceil(value - 0.5) : floor(value + 0.5);
+}
+
 // rect:Transform(matrix). Nancy22 moves all four corners, and gives the
-// smallest and the largest of them as two vectors.
+// smallest and the largest of them as two vectors. Nancy32 rounds them, and
+// gives them as two points.
 static int rectTransform(lua_State *L) {
 	const ScriptRect &rect = checkRect(L, 1);
 	const ScriptMatrix &matrix = checkMatrix(L, 2);
@@ -1237,6 +1314,28 @@ static int rectTransform(lua_State *L) {
 	if (g_nancy->getGameType() < kGameTypeNancy22) {
 		pushRect(L, transformRect(rect, matrix));
 		return 1;
+	}
+
+	if (g_nancy->getGameType() >= kGameTypeNancy32) {
+		const double corners[4][2] = {
+			{ (double)rect.left, (double)rect.top }, { (double)rect.right, (double)rect.top },
+			{ (double)rect.left, (double)rect.bottom }, { (double)rect.right, (double)rect.bottom }
+		};
+
+		double minimum[2] = { 1e300, 1e300 };
+		double maximum[2] = { -1e300, -1e300 };
+		for (const double *corner : corners) {
+			double point[2] = { corner[0], corner[1] };
+			matrix.transformPoint(point[0], point[1]);
+			for (int i = 0; i < 2; ++i) {
+				minimum[i] = MIN(minimum[i], point[i]);
+				maximum[i] = MAX(maximum[i], point[i]);
+			}
+		}
+
+		pushPointCoordinates(L, roundAwayFromZero(minimum[0]), roundAwayFromZero(minimum[1]));
+		pushPointCoordinates(L, roundAwayFromZero(maximum[0]), roundAwayFromZero(maximum[1]));
+		return 2;
 	}
 
 	const double corners[4][2] = {
@@ -1265,6 +1364,30 @@ static int rectTransform(lua_State *L) {
 	return 2;
 }
 
+// point:TransformCoord(matrix) and point:TransformNormal(matrix), Nancy32: the
+// point moved by the matrix, without the offset for TransformNormal
+static int pointTransformCoord(lua_State *L) {
+	double x, y;
+	if (!readPointCoordinates(L, 1, x, y)) {
+		return luaL_typerror(L, 1, "ND.Point");
+	}
+
+	checkMatrix(L, 2).transformPoint(x, y);
+	pushPointCoordinates(L, x, y);
+	return 1;
+}
+
+static int pointTransformNormal(lua_State *L) {
+	double x, y;
+	if (!readPointCoordinates(L, 1, x, y)) {
+		return luaL_typerror(L, 1, "ND.Point");
+	}
+
+	const ScriptMatrix &matrix = checkMatrix(L, 2);
+	pushPointCoordinates(L, x * matrix.m[0][0] + y * matrix.m[1][0], x * matrix.m[0][1] + y * matrix.m[1][1]);
+	return 1;
+}
+
 void registerMathTypes(lua_State *L) {
 	registerType(L, kVectorType, kVectorFunctions);
 	registerGlobal(L, "Vector", kVectorHelperType, kVectorHelperFunctions);
@@ -1278,10 +1401,17 @@ void registerMathTypes(lua_State *L) {
 	registerType(L, kPathType, kPathFunctions);
 	registerGlobal(L, "Path", kPathHelperType, kPathHelperFunctions);
 
-	// Rectangles can be moved by a matrix as well
+	// Rectangles and points can be moved by a matrix as well
 	luaL_getmetatable(L, "ND.Rect");
 	lua_pushcfunction(L, rectTransform);
 	lua_setfield(L, -2, "Transform");
+	lua_pop(L, 1);
+
+	luaL_getmetatable(L, "ND.Point");
+	lua_pushcfunction(L, pointTransformCoord);
+	lua_setfield(L, -2, "TransformCoord");
+	lua_pushcfunction(L, pointTransformNormal);
+	lua_setfield(L, -2, "TransformNormal");
 	lua_pop(L, 1);
 }
 

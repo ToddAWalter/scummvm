@@ -936,6 +936,38 @@ static const ADGameDescription gameDescriptions[] = {
 		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
 		NANCY_GUIOPTIONS
 	},
+	{ // MD5 by bluegr
+		"nancy29", nullptr,
+		AD_ENTRY1s("ciftree.dat", "6b90e2634f4c162a21996a2e1c57bc36", 220400655),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
+	{ // MD5 by bluegr
+		"nancy30", nullptr,
+		AD_ENTRY1s("ciftree.dat", "3bb107b4d494bcee2ec61066632757af", 198488111),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
+	{ // MD5 by bluegr
+		"nancy31", nullptr,
+		AD_ENTRY1s("ciftree.dat", "7bf7132f5a54bff1392759850202bf09", 276599945),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
+	{ // MD5 by bluegr. The game has no ciftree, only loose .cif files
+		"nancy32", nullptr,
+		AD_ENTRY1s("InventoryInit_SC.cif", "387280ac49ad84d0db85440e7bd54353", 6096),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
 
 	// Do not delete
 	AD_TABLE_END_MARKER

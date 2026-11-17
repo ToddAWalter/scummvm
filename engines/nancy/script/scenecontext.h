@@ -122,7 +122,7 @@ public:
 	void onBandChanged();
 
 	// Nancy26: what the stream of the scene says about all its records
-	bool isStreamEnabled() const { return !_streamState || _streamState->isEnabled; }
+	bool isStreamEnabled() const;
 	bool isStreamVisible() const { return !_streamState || _streamState->isVisible; }
 	bool isStreamPaused() const { return _streamState && _streamState->isPaused; }
 #endif
@@ -133,6 +133,11 @@ public:
 	// The seconds the scene has been running for
 	double getTime() const { return _time; }
 	double getElapsedTime() const { return _elapsedTime; }	// of the last frame
+
+	// Nancy31: whether Lua only collects garbage once a frame, as it always
+	// does from Nancy20 on, or whenever it likes
+	bool isGCThrottled() const { return _isGCThrottled; }
+	void setGCThrottled(bool isThrottled);
 
 	// Enhancement: skips the movies that are playing. They are played through
 	// a frame at a time, without their sounds, so that everything the scripts
@@ -233,6 +238,7 @@ private:
 
 	double _time = 0.0;
 	double _elapsedTime = 0.0;
+	bool _isGCThrottled = true;
 	bool _hasRunOnce = false;
 	bool _makesUI = false;
 	bool _isSkipping = false;

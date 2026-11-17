@@ -387,6 +387,7 @@ static const KeyName kKeyNames[] = {
 	{ "CTRL", Common::KEYCODE_LCTRL },
 	{ "SHIFT", Common::KEYCODE_LSHIFT },
 	{ "BACKSPACE", Common::KEYCODE_BACKSPACE },	// Nancy20
+	{ "BACKTICK", Common::KEYCODE_BACKQUOTE },	// Nancy30
 	{ "NUMPAD0", Common::KEYCODE_KP0 },
 	{ "NUMPAD1", Common::KEYCODE_KP1 },
 	{ "NUMPAD2", Common::KEYCODE_KP2 },
@@ -448,13 +449,16 @@ static const luaL_Reg kKeyFunctions[] = {
 static const uint kDifficultyJunior = 0;
 static const uint kDifficultySenior = 2;
 
-// Game:ShowLink(key), Nancy25: opens the URL in the autotext entry for the
-// key in a web browser. Returns whether it was opened.
+// Game:ShowLink(key[, isDirect]), Nancy25: opens the URL in the autotext entry
+// for the key in a web browser. Returns whether it was opened. Nancy30 takes
+// the key as the URL itself when isDirect is set.
 static int gameShowLink(lua_State *L) {
 	const char *key = luaL_checkstring(L, 2);
 
 	Common::String url;
-	if (!findText(key, url)) {
+	if (lua_gettop(L) > 2 && lua_toboolean(L, 3)) {
+		url = key;
+	} else if (!findText(key, url)) {
 		return luaL_error(L, "Autotext '%s' not found", key);
 	}
 
@@ -1084,6 +1088,7 @@ static const char *const kSoundChannelType = "ND.SoundChannel";
 
 enum SoundChannelID {
 	kNumSoundChannels		= 30,
+	kNancy29NumSoundChannels	= 32,
 
 	// These stand for every channel of a kind
 	kChannelAll				= 0x21,
@@ -1153,8 +1158,22 @@ static const SoundChannelName kNancy27SoundChannelNames[] = {
 	{ "AllFX", kChannelAllFX }, { "AllAmbient", kChannelAllAmbient }, { "AllVoice", kChannelAllVoice }
 };
 
+// Nancy29 adds a channel for music, the medley, which AllExceptTheme leaves
+// alone as well, and a ninth one for effects
+static const SoundChannelName kNancy29SoundChannelNames[] = {
+	{ "Theme", 0 }, { "Medley", 1 }, { "UIMusic", 2 }, { "EngineMusic", 3 },
+	{ "Ambient1", 4 }, { "Ambient2", 5 }, { "Ambient3", 6 }, { "Ambient4", 7 },
+	{ "Ambient5", 8 }, { "Ambient6", 9 }, { "Ambient7", 10 }, { "Ambient8", 11 },
+	{ "FX1", 12 }, { "FX2", 13 }, { "FX3", 14 }, { "FX4", 15 }, { "FX5", 16 }, { "FX6", 17 }, { "FX7", 18 }, { "FX8", 19 }, { "FX9", 20 },
+	{ "InvFX", 21 }, { "PhoneFX", 22 }, { "PhoneFX2", 23 }, { "PhoneFX3", 24 }, { "PhoneFX4", 25 }, { "UIFX", 26 }, { "EngineFX", 27 },
+	{ "NPCVoice", 28 }, { "PlayerVoice", 29 }, { "UIVoice", 30 }, { "EngineVoice", 31 },
+	{ "All", kChannelAll }, { "AllExceptTheme", kChannelAllExceptTheme }, { "AllMusic", kChannelAllMusic },
+	{ "AllFX", kChannelAllFX }, { "AllAmbient", kChannelAllAmbient }, { "AllVoice", kChannelAllVoice }
+};
+
 // Where the channels of each kind begin, and the end of the last kind
 struct SoundChannelLayout {
+	uint16 firstAfterTheme;	// the first one AllExceptTheme stands for
 	uint16 firstMusic;
 	uint16 firstGlobal;
 	uint16 firstAmbient;
@@ -1163,10 +1182,11 @@ struct SoundChannelLayout {
 	uint16 end;
 };
 
-static const SoundChannelLayout kSoundChannelLayout = { 0, 6, 6, 14, 24, kNumSoundChannels };
-static const SoundChannelLayout kNancy22SoundChannelLayout = { 0, 3, 8, 16, 26, kNumSoundChannels };
-static const SoundChannelLayout kNancy24SoundChannelLayout = { 0, 3, 6, 14, 26, kNumSoundChannels };
-static const SoundChannelLayout kNancy27SoundChannelLayout = { 0, 3, 3, 11, 26, kNumSoundChannels };
+static const SoundChannelLayout kSoundChannelLayout = { 1, 0, 6, 6, 14, 24, kNumSoundChannels };
+static const SoundChannelLayout kNancy22SoundChannelLayout = { 1, 0, 3, 8, 16, 26, kNumSoundChannels };
+static const SoundChannelLayout kNancy24SoundChannelLayout = { 1, 0, 3, 6, 14, 26, kNumSoundChannels };
+static const SoundChannelLayout kNancy27SoundChannelLayout = { 1, 0, 3, 3, 11, 26, kNumSoundChannels };
+static const SoundChannelLayout kNancy29SoundChannelLayout = { 2, 0, 4, 4, 12, 28, kNancy29NumSoundChannels };
 
 static const SoundChannelLayout &getSoundChannelLayout() {
 	if (g_nancy->getGameType() <= kGameTypeNancy21) {
@@ -1175,9 +1195,11 @@ static const SoundChannelLayout &getSoundChannelLayout() {
 		return kNancy22SoundChannelLayout;
 	} else if (g_nancy->getGameType() <= kGameTypeNancy26) {
 		return kNancy24SoundChannelLayout;
+	} else if (g_nancy->getGameType() <= kGameTypeNancy28) {
+		return kNancy27SoundChannelLayout;
 	}
 
-	return kNancy27SoundChannelLayout;
+	return kNancy29SoundChannelLayout;
 }
 
 void pushSoundChannel(lua_State *L, uint16 channel) {
@@ -1213,7 +1235,14 @@ bool isVoicePlaying() {
 }
 
 static bool findSoundChannel(const char *name, uint16 &result) {
-	if (g_nancy->getGameType() >= kGameTypeNancy27) {
+	if (g_nancy->getGameType() >= kGameTypeNancy29) {
+		for (const SoundChannelName &channel : kNancy29SoundChannelNames) {
+			if (scumm_stricmp(channel.name, name) == 0) {
+				result = channel.channel;
+				return true;
+			}
+		}
+	} else if (g_nancy->getGameType() >= kGameTypeNancy27) {
 		for (const SoundChannelName &channel : kNancy27SoundChannelNames) {
 			if (scumm_stricmp(channel.name, name) == 0) {
 				result = channel.channel;
@@ -1272,7 +1301,7 @@ static void getChannelRange(uint16 channel, uint16 &first, uint16 &last) {
 		last = layout.end - 1;
 		break;
 	case kChannelAllExceptTheme:
-		first = 1;
+		first = layout.firstAfterTheme;
 		last = layout.end - 1;
 		break;
 	case kChannelAllMusic:
@@ -1405,6 +1434,8 @@ static int sceneIndex(lua_State *L) {
 		lua_pushinteger(L, context->getFrame());
 	} else if (key == "streamName") {
 		lua_pushstring(L, context->getStreamName().c_str());
+	} else if (key == "isGCThrottled") {
+		lua_pushboolean(L, context->isGCThrottled());
 	} else {
 		return indexFunctions(L);
 	}
@@ -1420,6 +1451,12 @@ static const char *const kSceneFunctionNames[] = {
 static int sceneNewIndex(lua_State *L) {
 	SceneContext *context = checkContext(L);
 	const char *key = luaL_checkstring(L, 2);
+
+	// Nancy31
+	if (strcmp(key, "isGCThrottled") == 0) {
+		context->setGCThrottled(lua_toboolean(L, 3) != 0);
+		return 0;
+	}
 
 	if (!lua_isfunction(L, 3)) {
 		return luaL_error(L, "Can only set functions to the Scene object");
@@ -2336,6 +2373,57 @@ static int logAssert(lua_State *L) {
 	return 0;
 }
 
+// Formats the parameters from index 2 on with string.format, and leaves the
+// text, or the error when formatting failed, on the stack
+static bool formatLogText(lua_State *L) {
+	const int top = lua_gettop(L);
+	lua_getglobal(L, "string");
+	lua_getfield(L, -1, "format");
+	lua_remove(L, -2);
+	for (int i = 2; i <= top; ++i) {
+		lua_pushvalue(L, i);
+	}
+
+	return lua_pcall(L, top - 1, 1, 0) == 0;
+}
+
+// Log:Format(format, ...), Nancy31: writes down the text string.format makes
+static int logFormat(lua_State *L) {
+	if (!formatLogText(L)) {
+		debugC(1, kDebugScene, "Script warning: Log:Format: Failed string format: %s", lua_tostring(L, -1));
+		return 0;
+	}
+
+	luaL_where(L, 1);
+	debugC(1, kDebugScene, "Script: %s%s", lua_tostring(L, -1), lua_tostring(L, -2));
+	return 0;
+}
+
+// Log:Stack(format, ...), Nancy31: writes down the formatted text with the
+// stack traceback of the script that called it
+static int logStack(lua_State *L) {
+	if (!formatLogText(L)) {
+		debugC(1, kDebugScene, "Script warning: Log:Stack: Failed string format: %s", lua_tostring(L, -1));
+		return 0;
+	}
+
+	const int textIndex = lua_gettop(L);
+	lua_getglobal(L, "debug");
+	if (lua_istable(L, -1)) {
+		lua_getfield(L, -1, "traceback");
+		lua_remove(L, -2);
+		lua_pushvalue(L, textIndex);
+		lua_pushinteger(L, 2);
+		if (lua_pcall(L, 2, 1, 0) != 0) {
+			debugC(1, kDebugScene, "Script warning: Log:Stack: Failed debug traceback: %s", lua_tostring(L, -1));
+			return 0;
+		}
+	}
+
+	debugC(1, kDebugScene, "Script: %s", lua_isstring(L, -1) ? lua_tostring(L, -1) : lua_tostring(L, textIndex));
+	return 0;
+}
+
 // Log:Watch(function) and Log:Clear() are for the debug console of the original,
 // which isn't there
 static int logWatch(lua_State *L) {
@@ -2379,6 +2467,8 @@ static const luaL_Reg kLogFunctions[] = {
 	{ "Clear", logClear },
 	{ "ShowWarning", logShowWarning },
 	{ "AddManager", logAddManager },
+	{ "Format", logFormat },
+	{ "Stack", logStack },
 	{ nullptr, nullptr }
 };
 
@@ -2469,8 +2559,21 @@ static int autotextShowCC(lua_State *L) {
 	return 1;
 }
 
+// Autotext:SafeGet(key), Nancy31: the text of a key, or a note that it is missing
+static int autotextSafeGet(lua_State *L) {
+	const char *key = luaL_checkstring(L, 2);
+	Common::String text;
+	if (!findText(key, text)) {
+		text = Common::String::format("Missing autotext: '%s'", key);
+	}
+
+	lua_pushstring(L, text.c_str());
+	return 1;
+}
+
 static const luaL_Reg kAutotextFunctions[] = {
 	{ "__index", autotextIndex },
+	{ "SafeGet", autotextSafeGet },
 	{ "ShowCC", autotextShowCC },
 	{ "RemoveCC", autotextRemoveCC },
 	{ nullptr, nullptr }

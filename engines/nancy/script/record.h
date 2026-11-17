@@ -35,6 +35,7 @@ struct NancyInput;
 
 namespace Script {
 
+class Animator;
 class BlendStages;
 class GraphNode;
 class SceneContext;
@@ -64,8 +65,9 @@ enum RecordType {
 	kRecordRadioButton	= 19,
 	kRecordCheckBox		= 20,
 	kRecordSlider		= 21,
+	kRecordOverlayCombiner	= 22,	// Nancy29
 
-	kNumRecordTypes		= 22
+	kNumRecordTypes		= 23
 };
 
 // What the player does that records get told about
@@ -253,6 +255,13 @@ public:
 	// Nancy26: the record's own transform changed, by its stages or a script
 	virtual void onLocalTransformChanged();
 
+	// Nancy29: the animator that moves, rotates, scales and fades the record,
+	// and the transform and the alpha that the record gets from it
+	Animator *getAnimator() const;
+	double getLocalAlpha() const;
+	void setAnimatedTransform(const ScriptMatrix &transform);
+	void setAnimatedAlpha(double alpha);
+
 	// Nancy26: the records the mouse can be over, which take the clicks. The
 	// point is in the coordinates of the screen. A button is 0 for the left one
 	// and 1 for the right one.
@@ -328,6 +337,9 @@ protected:
 	// What the record does when no script took its place
 	virtual void runOnce() {}
 	virtual void run(double sceneTime, double elapsedTime) {}
+
+	// Called every frame, whether the record is active or not
+	virtual void onFrame() {}
 	virtual void onActivation() {}
 	virtual void onDeactivation() {}
 	virtual void onZChanged() {}
