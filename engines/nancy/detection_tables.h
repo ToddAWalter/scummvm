@@ -45,7 +45,9 @@ static const PlainGameDescriptor nancyGames[] = {
 	{ "nancy17", "Nancy Drew: Legend of the Crystal Skull" },
 	{ "nancy18", "Nancy Drew: The Phantom of Venice" },
 	{ "nancy19", "Nancy Drew: The Haunting of Castle Malloy" },
+	{ "nancydossier1", "Nancy Drew Dossier: Lights, Camera, Curses!" },
 	{ "nancy20", "Nancy Drew: Ransom of the Seven Ships" },		// Discontinued
+	{ "nancydossier2", "Nancy Drew Dossier: Resorting to Danger!" },
 	{ "nancy21", "Nancy Drew: Warnings at Waverly Academy" },
 	{ "nancy22", "Nancy Drew: Trail of the Twister" },
 	{ "nancy1new", "Nancy Drew: Secrets Can Kill Remastered" },
@@ -849,8 +851,24 @@ static const ADGameDescription gameDescriptions[] = {
 		NANCY_GUIOPTIONS
 	},
 	{ // MD5 by bluegr
+		"nancydossier1", nullptr,
+		AD_ENTRY1s("ciftree.dat", "a5b3d086cbb73a7dbaefcff8a35461d5", 114106816),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
+	{ // MD5 by bluegr
 		"nancy20", nullptr,
 		AD_ENTRY1s("ciftree.dat", "02d56eb098f317a02ed9a675f40a4468", 91315479),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE | ADGF_DROPPLATFORM,
+		NANCY_GUIOPTIONS
+	},
+	{ // MD5 by bluegr
+		"nancydossier2", nullptr,
+		AD_ENTRY1s("ciftree.dat", "0f4131f8f21fcfd15d49211849c8f84d", 141854986),
 		Common::EN_ANY,
 		Common::kPlatformWindows,
 		ADGF_UNSTABLE | ADGF_DROPPLATFORM,

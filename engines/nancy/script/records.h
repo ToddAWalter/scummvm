@@ -73,7 +73,8 @@ public:
 
 	// Scripts order what they draw with numbers of their own. The scene also
 	// tells which stream it is in, which can zoom into what it draws.
-	void setScriptZ(double z, const SceneContext &context);
+	// Before Nancy26, records of the same z draw in the order they were made
+	void setScriptZ(double z, const SceneContext &context, uint32 recordOrder = 0);
 
 	// The z order of a script z in a stream that is the given steps in front
 	static uint16 getScriptZOrder(double z, int32 zOffset);
@@ -133,6 +134,7 @@ protected:
 	void runOnce() override;
 	void run(double sceneTime, double elapsedTime) override;
 	bool hasTransform() const override { return true; }
+	void onTransformChanged() override;
 	bool getField(const Common::String &key) override;
 	bool setField(const Common::String &key) override;
 
@@ -359,6 +361,41 @@ private:
 	bool _isAttachmentDrawn = false;
 };
 
+// Lights, Camera, Curses: a light the player shines around with the mouse, or
+// that its transform puts somewhere. The original draws its picture into the
+// stencil buffer only, and the masked records drawn after it leave out where
+// the picture isn't transparent, which shows what is behind them.
+class FlashlightRecord : public Record {
+public:
+	FlashlightRecord(SceneContext &context) : Record(context, "ND.FlashlightAR") {}
+
+	RecordType getType() const override { return kRecordFlashlight; }
+
+	void updateGraphics() override;
+	void registerGraphics() override;
+
+protected:
+	void readTable(int tableIndex) override;
+	void onZChanged() override;
+	void onMouseMove(const Common::Point32 &point, bool inViewport) override;
+	bool hasTransform() const override { return true; }
+	void onTransformChanged() override { _isPlacementStale = true; }
+	bool getField(const Common::String &key) override;
+	bool setField(const Common::String &key) override;
+
+private:
+	void applyRects();
+
+	Common::SharedPtr<Graphics::ManagedSurface> _cachedImage;	// kept while the record uses it
+	Graphics::ManagedSurface _image;
+	ScriptRect _source;
+	ScriptRect _dest;
+	bool _isOn = true;
+	bool _followsMouse = true;	// centered on the mouse, without the transform
+	bool _isPlacementStale = false;
+	RecordGraphic _graphic;
+};
+
 // Shows the parts of an image one after the other
 class AnimOverlayRecord : public Record {
 public:
@@ -437,6 +474,7 @@ protected:
 	void run(double sceneTime, double elapsedTime) override;
 	void onFrame() override;
 	bool prepareReset() override;
+	void onStreamPaused(bool isPaused) override;
 	bool getField(const Common::String &key) override;
 	bool setField(const Common::String &key) override;
 
@@ -555,6 +593,7 @@ protected:
 	void onZChanged() override;
 	bool prepareReset() override;
 	bool isPaused() const override { return _isPaused; }
+	void onStreamPaused(bool isPaused) override;
 	bool hasTransform() const override { return true; }
 	void onTransformChanged() override { applyPosition(); }
 	bool getField(const Common::String &key) override;
@@ -590,6 +629,7 @@ private:
 	bool _isPaused = false;
 	bool _isVisible = true;
 	bool _hasJustStarted = false;
+	double _singleFrameTime = 0.0;	// in seconds, how long a movie of one frame has shown it
 	double _endTime = 0.0;
 };
 

@@ -66,8 +66,9 @@ enum RecordType {
 	kRecordCheckBox		= 20,
 	kRecordSlider		= 21,
 	kRecordOverlayCombiner	= 22,	// Nancy29
+	kRecordFlashlight	= 23,	// Lights, Camera, Curses
 
-	kNumRecordTypes		= 23
+	kNumRecordTypes		= 24
 };
 
 // What the player does that records get told about
@@ -107,6 +108,9 @@ public:
 	virtual ~Record();
 
 	const char *getTypeName() const { return _typeName; }
+
+	// Counts up as records are made, for the order of what they draw
+	uint32 getCreationOrder() const { return _creationOrder; }
 
 	// Which of the types above the record is
 	virtual RecordType getType() const = 0;
@@ -158,6 +162,15 @@ public:
 
 	bool isActive() const;
 	bool isDone() const { return _isDone; }
+
+	// Lights, Camera, Curses: the stream of the record was paused. The record
+	// stays where it is and is still drawn, but doesn't run or hear the player.
+	void setStreamPaused(bool isPaused);
+	bool isStreamPaused() const { return _isStreamPaused; }
+
+	// Lights, Camera, Curses: a masked record doesn't show where a Flashlight
+	// record drawn before it lights the scene up
+	bool isMasked() const { return _isMasked; }
 	bool hasStarted() const { return _hasStarted; }
 	bool hasRunOnce() const { return _hasRunOnce; }
 	// Counted from the node the record is under, when it is under one
@@ -351,6 +364,9 @@ protected:
 	// A paused record doesn't run at all, not even once, until it goes on
 	virtual bool isPaused() const { return false; }
 
+	// What plays on by itself holds still with the stream of the record
+	virtual void onStreamPaused(bool isPaused) {}
+
 	// Whether the functions of the scripts take the place of what the record does
 	// by itself: Run, Render, and everything the player does
 	virtual bool isScripted() const { return false; }
@@ -375,6 +391,7 @@ private:
 
 	SceneContext &_context;
 	const char *_typeName;
+	uint32 _creationOrder;
 
 	double _z = 0.0;
 	ScriptMatrix _transform;
@@ -385,6 +402,8 @@ private:
 	bool _wasActive = false;
 	bool _isDone = false;
 	bool _isFinishing = false;	// while OnDone runs
+	bool _isStreamPaused = false;
+	bool _isMasked = false;
 	bool _hasEndedInSkip = false;
 	bool _hasRunOnce = false;
 

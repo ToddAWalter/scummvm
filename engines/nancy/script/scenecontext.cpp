@@ -216,7 +216,7 @@ Common::String SceneContext::findGlobalName(const Record *record) const {
 }
 
 bool SceneContext::include(const Common::String &name) {
-	if (g_nancy->getGameType() >= kGameTypeNancy21) {
+	if (g_nancy->getGameType() >= kGameTypeNancyDossier2) {
 		if (_includedNames.contains(name)) {
 			return true;
 		}
@@ -511,6 +511,8 @@ void SceneContext::runFrame(double elapsedTime) {
 	_time += elapsedTime;
 	_elapsedTime = elapsedTime;
 
+	applyStreamPause();
+
 	// The records made since the last frame join in
 	_records.push_back(_newRecords);
 	_newRecords.clear();
@@ -559,6 +561,20 @@ void SceneContext::runFrame(double elapsedTime) {
 			record->update(_time, elapsedTime);
 		}
 	}
+}
+
+// Only the records that have joined the scene are paused or go on, as in the
+// original. The ones made while the stream is paused run.
+void SceneContext::applyStreamPause() {
+	const bool isPaused = _streamPauseRequest == kRequestPause;
+	if (_streamPauseRequest != kRequestNone && isPaused != _isStreamPausedByScript) {
+		_isStreamPausedByScript = isPaused;
+		for (Record *record : _records) {
+			record->setStreamPaused(isPaused);
+		}
+	}
+
+	_streamPauseRequest = kRequestNone;
 }
 
 void SceneContext::deleteDroppedRecords() {

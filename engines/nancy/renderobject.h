@@ -65,6 +65,14 @@ public:
 	void setTransparent(bool isTransparent);
 	bool isVisible() const { return _isVisible; }
 
+	// Lights, Camera, Curses draws some things into the stencil buffer only:
+	// a stencil object shows nothing itself, but a masked object drawn after it
+	// leaves out the pixels the stencil object isn't transparent at
+	void setStencil(bool isStencil);
+	bool isStencil() const { return _isStencil; }
+	void setMasked(bool isMasked);
+	bool isMasked() const { return _isMasked; }
+
 	// Nancy26: the part of the screen the object gets drawn in; empty for all of it
 	void setClipRect(const Common::Rect &clip);
 	const Common::Rect &getClipRect() const { return _clipRect; }
@@ -104,6 +112,11 @@ public:
 
 	Common::Rect getBounds() const { return Common::Rect(_screenPosition.width(), _screenPosition.height()); }
 	uint16 getZOrder() const { return _z; }
+
+	// What decides between objects of the same z order: the records of the
+	// scripts draw in the order they were made. 0 for everything else.
+	uint32 getTieOrder() const { return _tieOrder; }
+	void setTieOrder(uint32 order) { _tieOrder = order; }
 	// Also moves the object in the draw order, so changing the z of a registered
 	// object takes effect without re-registering it
 	void setZOrder(uint16 z);
@@ -123,7 +136,10 @@ protected:
 	bool _isVisible;
 	bool _hasMoved;
 	bool _isNativeResolution = false;
+	bool _isStencil = false;
+	bool _isMasked = false;
 	uint16 _z;
+	uint32 _tieOrder = 0;
 	Common::Rect _drawnScreenPosition;
 	Common::Rect _previousScreenPosition;
 	Common::Rect _screenPosition;

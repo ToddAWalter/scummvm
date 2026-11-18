@@ -33,6 +33,7 @@
 
 #include "engines/nancy/ui/viewport.h"
 #include "engines/nancy/ui/ndui/button.h"
+#include "engines/nancy/ui/ndui/manager.h"
 
 #ifdef ENABLE_NANCY_V4
 #include "engines/nancy/script/records.h"
@@ -227,6 +228,10 @@ void SceneStream::beginScene() {
 	}
 
 	debugC(0, kDebugScene, "Stream %s: loading scene %s, frame %u", _name.c_str(), _sceneName.c_str(), _nextFrameID);
+
+	if (NancySceneState.getNDUI()) {
+		NancySceneState.getNDUI()->requestAutosave();
+	}
 }
 
 void SceneStream::loadBackground(const Common::Path &videoFile) {
@@ -528,6 +533,7 @@ void SceneStreamManager::begin(const Common::String &name, const Common::String 
 	SceneStream::Child child;
 	child.name = name;
 	child.lifetime = flags.lifetime;
+	child.restartsParent = flags.restartsParent;
 	if (_running) {
 		_running->_children.push_back(child);
 	} else {
@@ -570,6 +576,47 @@ void SceneStreamManager::endChildren(const Common::Array<SceneStream::Child> &ch
 		if (child.lifetime != StreamFlags::kIndependent) {
 			end(child.name);
 		}
+	}
+}
+
+bool SceneStreamManager::hasSceneChange() const {
+	for (const SceneStream *stream : _streams) {
+		if (stream && !stream->isEnded() && stream->hasNextScene()) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool SceneStreamManager::removeChild(Common::Array<SceneStream::Child> &children, const Common::String &name, bool &restartsParent) {
+	for (uint i = 0; i < children.size(); ++i) {
+		if (children[i].name.equalsIgnoreCase(name)) {
+			restartsParent = children[i].restartsParent;
+			children.remove_at(i);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void SceneStreamManager::restartParentOf(const Common::String &name) {
+	bool restartsParent = false;
+	Common::String parentName;
+	if (removeChild(_mainStreamChildren, name, restartsParent)) {
+		parentName = getMainStreamName();
+	} else {
+		for (SceneStream *stream : _streams) {
+			if (stream && !stream->isEnded() && removeChild(stream->_children, name, restartsParent)) {
+				parentName = stream->getName();
+				break;
+			}
+		}
+	}
+
+	if (restartsParent && !parentName.empty()) {
+		changeScene(parentName, getSceneName(parentName), (uint16)MAX(getSceneFrame(parentName), 0));
 	}
 }
 
@@ -707,6 +754,7 @@ void SceneStreamManager::process() {
 
 	for (uint i = 0; i < _streams.size(); ) {
 		if (_streams[i] && _streams[i]->isEnded()) {
+			restartParentOf(_streams[i]->getName());
 			_streams[i]->endScene();
 			returnViewedItem(_streams[i]->getName());
 			delete _streams[i];
@@ -734,10 +782,10 @@ bool SceneStreamManager::handleInput(NancyInput &input, bool beforeMainStream) {
 			continue;
 		}
 
-		// From Nancy21 on, a stream drawn in front of the main one gets the
-		// mouse before it too, like the phone
+		// From Resorting to Danger on, a stream drawn in front of the main one
+		// gets the mouse before it too, like the phone
 		bool isInFront = isBeforeMainStream;
-		if (g_nancy->getGameType() >= kGameTypeNancy21 && stream->getZOffset() > 0) {
+		if (g_nancy->getGameType() >= kGameTypeNancyDossier2 && stream->getZOffset() > 0) {
 			isInFront = true;
 		}
 

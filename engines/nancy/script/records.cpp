@@ -95,7 +95,8 @@ static const RecordKindNames kRecordKindNames[kNumRecordTypes] = {
 	{ "RadioButton", "ND.RadioButton" },
 	{ "CheckBox", "ND.CheckBox" },
 	{ "Slider", "ND.Slider" },
-	{ "OverlayCombiner", "ND.OverlayCombiner" }
+	{ "OverlayCombiner", "ND.OverlayCombiner" },
+	{ "Flashlight", "ND.FlashlightAR" }
 };
 
 const char *getRecordKindName(RecordType type) {
@@ -160,7 +161,14 @@ Record *makeRecord(RecordType type, SceneContext &context) {
 
 		return new TextRecord(context);
 	case kRecordParticle:
+		// The Dossier games have the older kind
+		if (g_nancy->getGameType() <= kGameTypeNancyDossier2) {
+			return new ParticleEmitterRecord(context);
+		}
+
 		return new ParticleRecord(context);
+	case kRecordFlashlight:
+		return new FlashlightRecord(context);
 	case kRecordPhysics:
 		return new PhysicsRecord(context);
 	case kRecordXsheet:
@@ -225,7 +233,13 @@ Common::Rect RecordGraphic::getDrawArea() {
 	return Common::Rect(viewport->screenPosition.width(), viewport->screenPosition.height());
 }
 
-void RecordGraphic::setScriptZ(double z, const SceneContext &context) {
+void RecordGraphic::setScriptZ(double z, const SceneContext &context, uint32 recordOrder) {
+	const uint32 tieOrder = g_nancy->getGameType() < kGameTypeNancy26 ? recordOrder : 0;
+	if (tieOrder != getTieOrder()) {
+		setTieOrder(tieOrder);
+		g_nancy->_graphics->reorderObject(this);
+	}
+
 	setZOrder(getScriptZOrder(z, context.getZOffset()));
 	setViewTransform(context.getViewTransform());
 }
@@ -297,8 +311,9 @@ void placePicture(RecordGraphic &graphic, Graphics::ManagedSurface &image, const
 
 	// Nothing shows outside the viewport, so only the part inside it gets drawn.
 	// The map of Nancy25 is far larger than the viewport when zoomed in.
+	// A color without any alpha shows nothing either.
 	area.clip(RecordGraphic::getDrawArea());
-	const bool isOnScreen = !area.isEmpty();
+	const bool isOnScreen = !area.isEmpty() && (modColor >> 24) != 0;
 	if (!isOnScreen) {
 		area = Common::Rect(1, 1);
 	}
@@ -343,6 +358,33 @@ void placePicture(RecordGraphic &graphic, Graphics::ManagedSurface &image, const
 	const bool isCopied = image.format == out.format && modColor == kNoModColor;
 	const uint32 colorMask = ~(uint32)(image.format.aMax() << image.format.aShift);
 	const uint32 transColor = g_nancy->_graphics->getTransColor() & colorMask;
+
+	// A picture that is only moved gets copied with its tint by a faster way,
+	// when its pixel format allows: the intro of Resorting to Danger fades many
+	// large ones at once
+	if (canDraw && isMovedOnly && !isCopied) {
+		// The part of the picture that shows in the area drawn
+		const int offsetLeft = area.left - placed.left;
+		const int offsetTop = area.top - placed.top;
+		const int left = MAX<int>(0, offsetLeft);
+		const int top = MAX<int>(0, offsetTop);
+		const int right = MIN<int>(source.width(), offsetLeft + out.w);
+		const int bottom = MIN<int>(source.height(), offsetTop + out.h);
+
+		// Done when none of it shows, or once it has been copied
+		bool isDone = left >= right || top >= bottom;
+		if (!isDone) {
+			const Common::Rect from(source.left + left, source.top + top, source.left + right, source.top + bottom);
+			const Common::Point to(left - offsetLeft, top - offsetTop);
+			isDone = GraphicsManager::copyTinted(out, to, image, from, modColor, g_nancy->_graphics->getTransColor());
+		}
+
+		if (isDone) {
+			graphic.moveTo(area);
+			graphic.setNeedsRedraw(true);
+			return;
+		}
+	}
 
 	for (int y = 0; canDraw && y < out.h; ++y) {
 		uint32 *outRow = (uint32 *)out.getBasePtr(0, y);
@@ -571,6 +613,19 @@ void SummaryRecord::setBackground(UI::Viewport *background) {
 	if (_numFrames > 1) {
 		_background->enableFrameCache();
 	}
+
+	onTransformChanged();
+}
+
+// The Dossier games scroll a background wider than the viewport by moving the
+// summary to the left, e.g. in the parallax scenes of Lights, Camera, Curses
+void SummaryRecord::onTransformChanged() {
+	if (!_background) {
+		return;
+	}
+
+	const ScriptMatrix transform = getTransform();
+	_background->setHorizontalScroll(MAX<int>(0, (int)-transform.m[3][0]));
 }
 
 void SummaryRecord::setFrame(uint frame) {
@@ -1119,7 +1174,7 @@ void OverrideRecord::registerGraphics() {
 
 void OverrideRecord::onZChanged() {
 	if (_canvas) {
-		_canvas->setScriptZ(getZ(), getContext());
+		_canvas->setScriptZ(getZ(), getContext(), getCreationOrder());
 	}
 }
 
@@ -1151,12 +1206,13 @@ void OverrideRecord::updateGraphics() {
 		_canvas->_drawSurface.create(bounds.width(), bounds.height(), g_nancy->_graphics->getTransparentPixelFormat());
 		_canvas->_drawSurface.clear(0);
 		_canvas->moveTo(bounds);
-		_canvas->setScriptZ(getZ(), getContext());
+		_canvas->setScriptZ(getZ(), getContext(), getCreationOrder());
 		_canvas->registerGraphics();
 		_renderSurface.create(bounds.width(), bounds.height(), _canvas->_drawSurface.format);
 	}
 
 	_renderSurface.clear(0);
+	_canvas->setMasked(isMasked());
 
 	// From Nancy26 on, a picture the function takes shows what is below it
 	const bool isDrawnInPlace = g_nancy->getGameType() >= kGameTypeNancy26;
@@ -1446,14 +1502,10 @@ void OverlayRecord::readDestTable(Common::Array<ScriptRect> &dests) {
 	lua_pop(L, 1);
 }
 
-// A hidden picture gets placed once it shows again. The map of Nancy25 moves
-// many hidden ones with its camera.
+// A picture gets placed when the frame is drawn, and a hidden one once it shows
+// again. The map of Nancy25 moves many hidden ones with its camera.
 void OverlayRecord::onTransformChanged() {
-	if (isActive()) {
-		applyRects();
-	} else {
-		_isPlacementStale = true;
-	}
+	_isPlacementStale = true;
 }
 
 void OverlayRecord::applyRects() {
@@ -1500,11 +1552,126 @@ void OverlayRecord::applyRects() {
 	_graphic.setNeedsRedraw(true);
 }
 
+// Flashlight
+
+void FlashlightRecord::readTable(int tableIndex) {
+	lua_State *L = getLua();
+
+	Common::String imageName;
+	if (!readField(L, tableIndex, "ovl", imageName)) {
+		luaL_error(L, "OverlayAR must be created with a ovl parameter");
+	}
+
+	if (!loadCachedImage(imageName, Common::String(), _cachedImage, _image)) {
+		luaL_error(L, "Could not load flashlight %s", imageName.c_str());
+	}
+
+	if (!pushField(L, tableIndex, "source")) {
+		luaL_error(L, "Flashlight AR requires field 'source' to be a rect");
+	}
+
+	_source = checkRect(L, -1);
+	lua_pop(L, 1);
+
+	_dest = _source;
+	if (pushField(L, tableIndex, "onScreen")) {
+		_dest = checkRect(L, -1);
+		lua_pop(L, 1);
+	}
+
+	readField(L, tableIndex, "on", _isOn);
+	readField(L, tableIndex, "followMouse", _followsMouse);
+
+	_graphic.init();
+	_graphic.setStencil(true);
+	_graphic.setVisible(false);
+	applyRects();
+	onZChanged();
+	_graphic.registerGraphics();
+}
+
+void FlashlightRecord::applyRects() {
+	_isPlacementStale = false;
+
+	Common::Rect source = _source.toRect();
+	source.clip(Common::Rect(_image.w, _image.h));
+	if (!source.isEmpty()) {
+		placePicture(_graphic, _image, source, _dest, _followsMouse ? ScriptMatrix() : getTransform(), kNoModColor);
+	}
+}
+
+void FlashlightRecord::onZChanged() {
+	_graphic.setScriptZ(getZ(), getContext(), getCreationOrder());
+}
+
+void FlashlightRecord::registerGraphics() {
+	_graphic.registerGraphics();
+}
+
+void FlashlightRecord::updateGraphics() {
+	if (_isPlacementStale) {
+		applyRects();
+	}
+
+	_graphic.setClipRect(getScreenClip());
+	_graphic.setVisible(isShown() && _isOn && !_source.isEmpty(), false);
+}
+
+// The light is centered on the mouse, while it is in the viewport
+void FlashlightRecord::onMouseMove(const Common::Point32 &point, bool inViewport) {
+	if (!inViewport || !_followsMouse) {
+		return;
+	}
+
+	const double halfWidth = _source.width() * 0.5;
+	const double halfHeight = _source.height() * 0.5;
+	const ScriptRect dest(point.x - (int32)ceil(halfWidth), point.y - (int32)ceil(halfHeight),
+		point.x + (int32)floor(halfWidth), point.y + (int32)floor(halfHeight));
+
+	if (dest != _dest) {
+		_dest = dest;
+		_isPlacementStale = true;
+	}
+}
+
+bool FlashlightRecord::getField(const Common::String &key) {
+	lua_State *L = getLua();
+
+	if (key == "onScreen") {
+		pushRect(L, _dest);
+	} else if (key == "on") {
+		lua_pushboolean(L, _isOn);
+	} else if (key == "followMouse") {
+		lua_pushboolean(L, _followsMouse);
+	} else {
+		return false;
+	}
+
+	return true;
+}
+
+bool FlashlightRecord::setField(const Common::String &key) {
+	lua_State *L = getLua();
+
+	if (key == "onScreen") {
+		_dest = checkRect(L, 3);
+	} else if (key == "on") {
+		_isOn = lua_toboolean(L, 3) != 0;
+	} else if (key == "followMouse") {
+		_followsMouse = lua_toboolean(L, 3) != 0;
+	} else {
+		return false;
+	}
+
+	_isPlacementStale = true;
+	return true;
+}
+
 void OverlayRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext());
+	_graphic.setScriptZ(getZ(), getContext(), getCreationOrder());
 #ifdef ENABLE_NANCY_V5
 	if (_hasCopyGraphic) {
-		_copyGraphic.setScriptZ(getZ(), getContext());
+		_copyGraphic.setScriptZ(getZ(), getContext(), getCreationOrder());
 	}
 #endif
 }
@@ -1519,6 +1686,11 @@ void OverlayRecord::registerGraphics() {
 }
 
 void OverlayRecord::updateGraphics() {
+	_graphic.setMasked(isMasked());
+#ifdef ENABLE_NANCY_V5
+	_copyGraphic.setMasked(isMasked());
+#endif
+
 	if (_hasDestTable && isShown()) {
 		Common::Array<ScriptRect> dests;
 		readDestTable(dests);
@@ -1698,7 +1870,7 @@ int OverlayRecord::addCopy() {
 		_hasCopyGraphic = true;
 		_copyGraphic.init();
 		_copyGraphic.setVisible(false);
-		_copyGraphic.setScriptZ(getZ(), getContext());
+		_copyGraphic.setScriptZ(getZ(), getContext(), getCreationOrder());
 		_copyGraphic.registerGraphics();
 	}
 
@@ -1928,7 +2100,9 @@ bool OverlayRecord::setField(const Common::String &key) {
 		return false;
 	}
 
-	applyRects();
+	// Drawn anew once a frame at most, and only while it shows: the intro of
+	// Resorting to Danger fades dozens of large overlays every frame
+	_isPlacementStale = true;
 	return true;
 }
 
@@ -2076,7 +2250,7 @@ bool AnimOverlayRecord::prepareReset() {
 }
 
 void AnimOverlayRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext());
+	_graphic.setScriptZ(getZ(), getContext(), getCreationOrder());
 }
 
 void AnimOverlayRecord::registerGraphics() {
@@ -2088,6 +2262,7 @@ void AnimOverlayRecord::updateGraphics() {
 		applyFrame();
 	}
 
+	_graphic.setMasked(isMasked());
 	_graphic.setClipRect(getScreenClip());
 	_graphic.setVisible(isShown() && _isVisible && _hasPicture, false);
 }
@@ -2424,8 +2599,8 @@ void SoundRecord::run(double sceneTime, double elapsedTime) {
 		_wasPreempted = true;
 	}
 
-	// From Nancy21 on, a sound that loops keeps the record going
-	const bool hasPlayedThrough = _endTime <= sceneTime && !(_isLooping && g_nancy->getGameType() >= kGameTypeNancy21);
+	// From Resorting to Danger on, a sound that loops keeps the record going
+	const bool hasPlayedThrough = _endTime <= sceneTime && !(_isLooping && g_nancy->getGameType() >= kGameTypeNancyDossier2);
 
 	if (hasPlayedThrough || _wasPreempted) {
 		// The caption goes with the sound, unless another one has replaced it
@@ -2500,6 +2675,13 @@ bool SoundRecord::setField(const Common::String &key) {
 static int soundStopIfPlaying(lua_State *L) {
 	((SoundRecord *)checkRecord(L, 1))->stopIfPlaying();
 	return 0;
+}
+
+void SoundRecord::onStreamPaused(bool isPaused) {
+	uint16 channel = 0;
+	if (isActive() && getPlayingChannel(channel)) {
+		g_nancy->_sound->pauseSound(channel, isPaused);
+	}
 }
 
 bool SoundRecord::getPlayingChannel(uint16 &channel) const {
@@ -2597,8 +2779,9 @@ void TextRecord::readTable(int tableIndex) {
 	_initialYOffset = _yOffset;
 	_initialYVelocity = _yVelocity;
 
-	int fontNumber = 0;
-	int colorNumber = 0;
+	// Without a font or a color, the text uses number 4 of each
+	int fontNumber = 4;
+	int colorNumber = 4;
 	bool isBold = false;
 	readField(L, tableIndex, "fontNum", fontNumber);
 	readField(L, tableIndex, "fontColor", colorNumber);
@@ -2714,7 +2897,7 @@ void TextRecord::run(double sceneTime, double elapsedTime) {
 }
 
 void TextRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext());
+	_graphic.setScriptZ(getZ(), getContext(), getCreationOrder());
 }
 
 void TextRecord::registerGraphics() {
@@ -2723,6 +2906,7 @@ void TextRecord::registerGraphics() {
 
 void TextRecord::updateGraphics() {
 	_graphic.setVisible(isActive(), false);
+	_graphic.setMasked(isMasked());
 
 	if (_isDirty) {
 		_isDirty = false;
@@ -2961,6 +3145,13 @@ bool MovieRecord::isSkippable() const {
 	return !_pausesOnLastFrame || (_player.isRangePlaying() && !_hasCalledOnPause);
 }
 
+// The sound of a movie that a script didn't pause holds still with its stream
+void MovieRecord::onStreamPaused(bool isPaused) {
+	if (isActive() && !_isPaused) {
+		_player.pauseVideo(isPaused);
+	}
+}
+
 void MovieRecord::run(double sceneTime, double elapsedTime) {
 	// The frame that starts a movie went by before it, and can be a long one
 	// when the scene just loaded. The movie would skip ahead of its sound.
@@ -3010,6 +3201,17 @@ void MovieRecord::run(double sceneTime, double elapsedTime) {
 		return;
 	}
 
+	// A movie of one frame shows it for as long as a frame lasts before it is
+	// played, as the original's player waits for the next frame first. The
+	// parallax scenes of the Dossier games pause their layers in the meantime,
+	// which keeps them up.
+	if (_firstFrame == _lastFrame && _singleFrameTime * 1000.0 < _player.getFrameMillis()) {
+		_singleFrameTime += playedTime;
+		return;
+	}
+
+	_singleFrameTime = 0.0;
+
 	// Another time through
 	++_numPlayed;
 	if (_numLoops == 0 || _numPlayed < _numLoops) {
@@ -3038,6 +3240,7 @@ bool MovieRecord::prepareReset() {
 	_endTime = 0.0;
 	_numPlayed = 0;
 	_skipFrame = -1;
+	_singleFrameTime = 0.0;
 	_isPaused = false;
 	_hasCalledOnPause = false;
 	_player.goToFrame(_firstFrame);
@@ -3050,7 +3253,7 @@ void MovieRecord::registerGraphics() {
 }
 
 void MovieRecord::onZChanged() {
-	_graphic.setScriptZ(getZ(), getContext());
+	_graphic.setScriptZ(getZ(), getContext(), getCreationOrder());
 }
 
 void MovieRecord::updateGraphics() {
@@ -3058,6 +3261,7 @@ void MovieRecord::updateGraphics() {
 		applyPosition();
 	}
 
+	_graphic.setMasked(isMasked());
 	_graphic.setClipRect(getScreenClip());
 	_graphic.setVisible(isShown() && _isVisible && !isSeeThrough(), false);
 }
@@ -3145,7 +3349,7 @@ bool MovieRecord::setField(const Common::String &key) {
 			_dest = dest;
 			applyPosition();
 		}
-	} else if (key == "source" && g_nancy->getGameType() >= kGameTypeNancy21) {
+	} else if (key == "source" && g_nancy->getGameType() >= kGameTypeNancyDossier2) {
 		// Earlier games only take the part of the frames when the movie is made
 		const ScriptRect source = checkRect(L, 3);
 		if (source != _source) {
