@@ -163,6 +163,9 @@ void IgorEngine::part8DeanCallsSecretary() {
 	fadeOut(768);
 	// the room is saved again as it was left, Igor included
 	uint8 *roomScreen = (uint8 *)malloc(46080);
+	if (!roomScreen) {
+		error("Unable to allocate %d bytes", 46080);
+	}
 	memcpy(roomScreen, _screenVGA, 46080);
 	part9();
 
@@ -319,7 +322,7 @@ void IgorEngine::part8ExecuteAction(int action) {
 		// With the door closed nothing happens: Igor has to open it first
 		if (_objectsState[kDeanDoorOpenStateIndex] == 0)
 			break;
-		if (_objectsState[kDeanDoorOpenStateIndex] != 0) {
+		if (_objectsState[kDeanDoorOpenStateIndex] != 0) { //-V547
 			for (int area = 10; area <= 11; ++area)
 				_roomObjectAreasTable[area].area = 4;
 			for (int area = 13; area <= 14; ++area)

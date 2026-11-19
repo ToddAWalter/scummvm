@@ -116,13 +116,11 @@ void IgorEngine::part30FloppyDrawCutsceneFrame(int frame, bool keepTextColors) {
 void IgorEngine::part30FloppyUpdateLauraDialogue(int action) {
 	switch (action) {
 	case kUpdateDialogueAnimEndOfSentence:
+	case kUpdateDialogueAnimStanding:
 		part30FloppyDrawCutsceneFrame(33, true);
 		break;
 	case kUpdateDialogueAnimMiddleOfSentence:
 		part30FloppyDrawCutsceneFrame(getRandomNumber(5) + 33, true);
-		break;
-	case kUpdateDialogueAnimStanding:
-		part30FloppyDrawCutsceneFrame(33, true);
 		break;
 	}
 }
@@ -257,9 +255,9 @@ void IgorEngine::part30FloppyLauraCutscene() {
 		_updateDialogue = &IgorEngine::part30FloppyUpdateLauraDialogue;
 		cutsceneSay(kLauraTalkX, kLauraTalkY, kLauraTalkR, kLauraTalkG, kLauraTalkB, 206, 1, 0);
 		_updateDialogue = 0;
-	}
-	if (!resuming) // when resuming igor has to be drawn before the screen fades in
+		// when resuming igor has to be drawn before the screen fades in
 		part30FloppyIgorCrossesArms();
+	}
 	part30FloppyHandleLauraDialogue();
 	if (_gameStateLoaded || _eventQuitGame || _currentPart == kInvalidPart)
 		return;
