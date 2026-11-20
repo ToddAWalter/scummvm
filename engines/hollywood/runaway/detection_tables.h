@@ -23,6 +23,42 @@
 #define HOLLYWOOD_RUNAWAY_DETECTION_TABLES_H
 
 // Included in the shared ADGameDescription array in hollywood/detection.cpp.
+	// English retail release. Hospital, museum and chapter-three shack.
+	{
+		"runaway",
+		nullptr,
+		AD_ENTRY3s("RESOURCE.000", "f23900dd41f74bfaf71578b66821e228", 110312868,
+			"RESOURCE.003", "8aa07584175fc9d28c1aff5fa5f93a5f", 7340291,
+			"RESOURCE.B02", "088b730c4be3dfb4ac7c38e1fc215ef7", 8161628),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_NOLAUNCHLOAD)
+	},
+	// English GOG release, with Bink movies.
+	{
+		"runaway",
+		"GOG",
+		AD_ENTRY3s("RESOURCE.000", "22f373594fc346cf2d739b454ca5c789", 110716101,
+			"RESOURCE.003", "8aa07584175fc9d28c1aff5fa5f93a5f", 7340291,
+			"RESOURCE.B02", "486eace90c76d8772d751a879466cc39", 8352653),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_UNSTABLE,
+		GUIO2(GUIO_NOMIDI, GUIO_NOLAUNCHLOAD)
+	},
+	// English museum demo (2000). Gameplay POC; movies are not supported.
+	{
+		"runaway",
+		"Museum demo",
+		AD_ENTRY3s("RESOURCE.D06", "f1048f161dca69a3be6ffad173c3db43", 10608050,
+			"RESOURCE.003", "a25c71fc759558e81aae49290b0cfdfc", 965642,
+			"RESOURCE.000", "f1690b1de499e0555498173ad7916415", 3662162),
+		Common::EN_ANY,
+		Common::kPlatformWindows,
+		ADGF_DEMO | ADGF_UNSTABLE | GF_RUNAWAY_MUSEUM_DEMO,
+		GUIO3(GUIO_NOMIDI, GUIO_NOLAUNCHLOAD, GUIO_NOSPEECH)
+	},
 	// Spanish chapter-three demo (July 2001 build, Micromania 80).
 	{
 		"runaway",

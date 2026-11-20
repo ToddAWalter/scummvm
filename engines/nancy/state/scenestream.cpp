@@ -240,6 +240,8 @@ void SceneStream::loadBackground(const Common::Path &videoFile) {
 	_background->setZOrder(_background->getZOrder() + _zOffset);
 #ifdef ENABLE_NANCY_V4
 	if (_scriptScene) {
+		_background->setLayer(Script::RecordGraphic::getScriptLayer(_scriptScene->getZOffset()));
+		_background->setExactZ(Script::RecordGraphic::getBackgroundExactZ());
 		_background->setZOrder(Script::RecordGraphic::getBackgroundZOrder(_scriptScene->getZOffset()));
 	}
 #endif
@@ -510,7 +512,15 @@ void SceneStreamManager::begin(const Common::String &name, const Common::String 
 		return;
 	}
 
-	int32 zOffset = flags.zOffset + (_running ? _running->getZOffset() : 0);
+	// Nancy19 to Nancy20 put a stream that doesn't take the input with the main
+	// stream, whichever stream began it
+	const GameType gameType = g_nancy->getGameType();
+	const bool isWithMainStream = gameType >= kGameTypeNancy19 && gameType < kGameTypeNancyDossier2 && !flags.capturesInput;
+	int32 zOffset = flags.zOffset;
+	if (_running && !isWithMainStream) {
+		zOffset += _running->getZOffset();
+	}
+
 	SceneStream *stream = new SceneStream(name, flags, zOffset);
 	stream->changeScene(sceneName, frameID);
 
@@ -773,10 +783,13 @@ void SceneStreamManager::process() {
 
 // Returns whether a stream kept the input to itself
 bool SceneStreamManager::handleInput(NancyInput &input, bool beforeMainStream) {
-	const Common::Array<SceneStream *> streams = _streams;
+	// The frontmost stream gets the input first, so one that takes it keeps it
+	// from the ones behind: the map of Lights, Camera, Curses from the journal
+	// that opens it. Streams at the same z go in the order they began.
+	Common::Array<SceneStream *> streams;
 	bool isBeforeMainStream = true;
 
-	for (SceneStream *stream : streams) {
+	for (SceneStream *stream : _streams) {
 		if (!stream) {
 			isBeforeMainStream = false;
 			continue;
@@ -793,6 +806,15 @@ bool SceneStreamManager::handleInput(NancyInput &input, bool beforeMainStream) {
 			continue;
 		}
 
+		uint i = 0;
+		while (i < streams.size() && streams[i]->getZOffset() >= stream->getZOffset()) {
+			++i;
+		}
+
+		streams.insert_at(i, stream);
+	}
+
+	for (SceneStream *stream : streams) {
 		_running = stream;
 		stream->handleInput(input);
 		_running = nullptr;

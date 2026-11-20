@@ -30,7 +30,9 @@ class RunawayAudio {
 public:
 	explicit RunawayAudio(Audio::Mixer *mixer) : _mixer(mixer) {}
 	~RunawayAudio();
-	void playIntroMusic();
+	void setMuseum(bool museum) { _museum = museum; }
+	void setChapter(byte chapter);
+	void playIntroMusic(uint16 cue = 2);
 	uint32 playMusic(uint16 cue, bool loop = true);
 	void setMusicVolume(byte volume);
 	uint32 playSpeech(uint16 sample, bool global = false);
@@ -41,12 +43,16 @@ public:
 	void stopMusic();
 	void stopSpeech();
 	void stopEffect();
+	void stopEffect(byte channel);
 	bool musicPlaying() const;
 	bool speechPlaying() const;
+	bool effectPlaying(byte channel = 0) const;
 
 private:
 	uint32 play(const char *archive, uint16 cue, uint tableCount, bool pairedTables,
-		byte flags, Audio::Mixer::SoundType type, Audio::SoundHandle &handle, byte volume, bool loop);
+		byte flags, Audio::Mixer::SoundType type, Audio::SoundHandle &handle, byte volume, bool loop, uint rate);
+	bool _museum = false;
+	byte _chapter = 3;
 	Audio::Mixer *_mixer;
 	Audio::SoundHandle _music, _speech, _effects[2], _footstep, _pointer;
 };

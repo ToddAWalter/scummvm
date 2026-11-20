@@ -194,9 +194,23 @@ Record *makeRecord(RecordType type, SceneContext &context) {
 static const double kBackgroundScriptZ = -5.0;
 static const int kBackgroundZ = 6;
 
-// Scripts tell apart z values as close as 0.001, and every stream is one step
-// closer than the one that began it
+// Scripts tell apart z values as close as 0.001
 static const double kStepsPerScriptZ = 1000.0;
+
+// Nancy19 to Nancy20 keep the streams in an order of their own, and draw the
+// records of each z there together, sorted by their z: the z of a stream is a
+// layer of what is drawn. Later games add it to the z of the records.
+static bool hasStreamLayers() {
+	return g_nancy->getGameType() < kGameTypeNancyDossier2;
+}
+
+int32 RecordGraphic::getScriptLayer(int32 zOffset) {
+	return hasStreamLayers() ? zOffset : 0;
+}
+
+double RecordGraphic::getBackgroundExactZ() {
+	return hasStreamLayers() ? kBackgroundScriptZ : RenderObject::kNoExactZ;
+}
 
 uint16 RecordGraphic::getScriptZOrder(double z, int32 zOffset) {
 #ifdef ENABLE_NANCY_V5
@@ -204,6 +218,10 @@ uint16 RecordGraphic::getScriptZOrder(double z, int32 zOffset) {
 		return getBandZOrder(z, zOffset);
 	}
 #endif
+
+	if (hasStreamLayers()) {
+		zOffset = 0;
+	}
 
 	const double steps = (z - kBackgroundScriptZ + zOffset) * kStepsPerScriptZ;
 	return (uint16)CLIP<int>(kBackgroundZ + (int)floor(steps + 0.5), 0, kMaxScriptZOrder);
@@ -238,6 +256,11 @@ void RecordGraphic::setScriptZ(double z, const SceneContext &context, uint32 rec
 	if (tieOrder != getTieOrder()) {
 		setTieOrder(tieOrder);
 		g_nancy->_graphics->reorderObject(this);
+	}
+
+	setLayer(getScriptLayer(context.getZOffset()));
+	if (hasStreamLayers()) {
+		setExactZ(z);
 	}
 
 	setZOrder(getScriptZOrder(z, context.getZOffset()));
@@ -520,9 +543,12 @@ void SummaryRecord::readTable(int tableIndex) {
 static const uint16 kThemeChannel = 0;
 static const uint16 kThemeVolume = 85;
 
-// Starts one of the themes of the area, unless one is playing
+// Starts one of the themes of the area. Nancy19 plays it once, unless a theme
+// is playing. Lights, Camera, Curses plays it over and over, in place of the
+// theme playing, unless that is the same.
 void SummaryRecord::playTheme() {
-	if (g_nancy->_sound->isSoundPlaying(kThemeChannel)) {
+	const bool isLooped = g_nancy->getGameType() == kGameTypeNancyDossier1;
+	if (!isLooped && g_nancy->_sound->isSoundPlaying(kThemeChannel)) {
 		return;
 	}
 
@@ -538,8 +564,13 @@ void SummaryRecord::playTheme() {
 
 		SoundDescription sound;
 		sound.name = environment.musicNames[g_nancy->_randomSource->getRandomNumber(environment.musicNames.size() - 1)];
+		if (isLooped && g_nancy->_sound->isSoundPlaying(kThemeChannel) &&
+				g_nancy->_sound->getSoundName(kThemeChannel).equalsIgnoreCase(sound.name)) {
+			return;
+		}
+
 		sound.channelID = kThemeChannel;
-		sound.numLoops = 1;
+		sound.numLoops = isLooped ? 0 : 1;
 		sound.volume = kThemeVolume;
 
 		g_nancy->_sound->loadSound(sound);
@@ -626,6 +657,14 @@ void SummaryRecord::onTransformChanged() {
 
 	const ScriptMatrix transform = getTransform();
 	_background->setHorizontalScroll(MAX<int>(0, (int)-transform.m[3][0]));
+
+	// A background taller than the viewport, like the one of Dossier1 scene
+	// 2400, scrolls down as far as the transform moves it up
+	const int verticalScroll = (int)-transform.m[3][1];
+	if (verticalScroll > 0 || _background->getCurVerticalScroll() != 0) {
+		const int maxScroll = (int)_background->getFullFrameHeight() - (int)_background->getScreenPositionRaw().height();
+		_background->setVerticalScroll(CLIP<int>(verticalScroll, 0, MAX<int>(maxScroll, 0)));
+	}
 }
 
 void SummaryRecord::setFrame(uint frame) {
@@ -1740,6 +1779,7 @@ void OverlayRecord::renderNow() {
 		_hasAttachment = true;
 		_attachment.init();
 		_attachment.setVisible(false);
+		_attachment.setLayer(RenderObject::kUILayer);
 		_attachment.setZOrder(kAttachmentZ);
 		_attachment.registerGraphics();
 	}

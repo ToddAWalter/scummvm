@@ -945,18 +945,6 @@ static int saveData(lua_State *L) {
 	return 0;
 }
 
-void saveDataString(const Common::String &name, const Common::String &text) {
-	Common::Array<byte> packed;
-	packed.push_back(kSavedString);
-	writeSavedUint32(packed, text.size());
-	for (uint i = 0; i < text.size(); ++i) {
-		packed.push_back((byte)text[i]);
-	}
-
-	ScriptSavedData *saved = (ScriptSavedData *)NancySceneState.getPuzzleData(ScriptSavedData::getTag());
-	saved->values.setVal(name, packed);
-}
-
 // Load:Data(name), which gives nil for a name nothing was saved under
 static int loadData(lua_State *L) {
 	const char *name = luaL_checkstring(L, 2);
@@ -1710,12 +1698,13 @@ static bool readStreamLifetime(const Common::String &lifetime, State::StreamFlag
 	return true;
 }
 
-// A stream that keeps the input goes in front of the frontmost stream, and any
-// other one shares the z of the stream that began it. Nancy19 to Nancy20 keep
-// the streams in an order of their own, where it goes a step in front; from
-// Resorting to Danger on, it goes 10 in front. 10 is more than the z of a
-// record spans, so it covers the scenes behind it, e.g. the journal of Lights,
-// Camera, Curses or the scrapbook of Nancy25.
+// A stream that keeps the input goes in front of the frontmost stream. Nancy19
+// to Nancy20 keep the streams in an order of their own, where it goes a step in
+// front and any other one goes with the main stream, and draw each place there
+// as a layer, e.g. the journal of Lights, Camera, Curses over the scene behind
+// it. From Resorting to Danger on, it goes 10 in front, which is more than the
+// z of a record spans there, e.g. the scrapbook of Nancy25, and any other
+// stream shares the z of the stream that began it.
 static int32 getCapturingStreamZOffset() {
 	const State::SceneStreamManager &streams = NancySceneState.getStreams();
 	return streams.getFrontZOffset() + 10 - streams.getRunningZOffset();

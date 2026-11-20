@@ -123,8 +123,10 @@ void GraphicsManager::init() {
 					  (bsum->bTrans << format.bShift);
 	}
 
+	// The screen has no color key: blitFrom would treat its pixels of that color
+	// as transparent too, and draw partly transparent pixels onto them at full
+	// strength, e.g. the lenses of Dossier1 over dark parts of a scene
 	initGraphics(_screen.w, _screen.h, &getScreenPixelFormat());
-	_screen.setTransparentColor(getTransColor());
 	_screen.clear();
 
 	// Nancy16 runs at a higher resolution than the game was made for. The
@@ -134,7 +136,6 @@ void GraphicsManager::init() {
 	if (g_nancy->getGameType() >= kGameTypeNancy16 && viewportData &&
 			(viewportData->bounds.width() != _screen.w || viewportData->bounds.height() != _screen.h)) {
 		_gameSurface.create(viewportData->bounds.width(), viewportData->bounds.height(), getScreenPixelFormat());
-		_gameSurface.setTransparentColor(getTransColor());
 		_gameSurface.clear();
 	}
 
@@ -879,78 +880,6 @@ static bool hasByteChannels(const Graphics::PixelFormat &format) {
 		(format.aBits() == 8 || format.aBits() == 0);
 }
 
-// Blends a 32 bit picture with an alpha channel onto a 32 bit target, giving
-// the same pixels as ManagedSurface::blitFrom. That one turns every pixel into
-// its components and back, which made the canvases of Nancy32's snow, as large
-// as the viewport and nearly all transparent, slow to draw; this one skips the
-// transparent pixels at once.
-static bool blitAlpha32(Graphics::ManagedSurface &target, const Graphics::ManagedSurface &src, const Common::Rect &source, const Common::Rect &dest) {
-	const Graphics::PixelFormat &srcFormat = src.format;
-	const Graphics::PixelFormat &destFormat = target.format;
-	if (!hasByteChannels(srcFormat) || srcFormat.aBits() != 8 || !hasByteChannels(destFormat) ||
-			source.width() != dest.width() || source.height() != dest.height() || src.hasTransparentColor()) {
-		return false;
-	}
-
-	Common::Rect clipped = dest.findIntersectingRect(Common::Rect(target.w, target.h));
-	if (clipped.isEmpty()) {
-		return true;
-	}
-
-	const int offsetX = source.left - dest.left;
-	const int offsetY = source.top - dest.top;
-	const bool isSameFormat = srcFormat == destFormat;
-	const bool hasDestAlpha = destFormat.aBits() == 8;
-
-	for (int y = clipped.top; y < clipped.bottom; ++y) {
-		const uint32 *srcRow = (const uint32 *)src.getBasePtr(clipped.left + offsetX, y + offsetY);
-		uint32 *destRow = (uint32 *)target.getBasePtr(clipped.left, y);
-
-		for (int x = 0; x < clipped.width(); ++x) {
-			const uint32 color = srcRow[x];
-			const uint32 alpha = (color >> srcFormat.aShift) & 0xFF;
-			if (alpha == 0) {
-				continue;
-			}
-
-			const uint32 r = (color >> srcFormat.rShift) & 0xFF;
-			const uint32 g = (color >> srcFormat.gShift) & 0xFF;
-			const uint32 b = (color >> srcFormat.bShift) & 0xFF;
-
-			if (alpha == 0xFF) {
-				destRow[x] = isSameFormat ? color : destFormat.ARGBToColor(0xFF, r, g, b);
-				continue;
-			}
-
-			const uint32 destColor = destRow[x];
-			const uint32 destAlpha = hasDestAlpha ? (destColor >> destFormat.aShift) & 0xFF : 0xFF;
-			uint32 dr = (destColor >> destFormat.rShift) & 0xFF;
-			uint32 dg = (destColor >> destFormat.gShift) & 0xFF;
-			uint32 db = (destColor >> destFormat.bShift) & 0xFF;
-			uint32 da = destAlpha;
-
-			if (destAlpha == 0xFF) {
-				// x * 257 * 257 >> 24 is about x / 255, rounded as ManagedSurface::blitFrom does
-				dr = (((dr * (255U - alpha) + r * alpha) * (257U * 257U)) >> 24) & 0xFF;
-				dg = (((dg * (255U - alpha) + g * alpha) * (257U * 257U)) >> 24) & 0xFF;
-				db = (((db * (255U - alpha) + b * alpha) * (257U * 257U)) >> 24) & 0xFF;
-			} else {
-				const double sAlpha = alpha / 255.0;
-				const double dAlpha = destAlpha / 255.0 * (1.0 - sAlpha);
-				dr = (uint32)((r * sAlpha + dr * dAlpha) / (sAlpha + dAlpha));
-				dg = (uint32)((g * sAlpha + dg * dAlpha) / (sAlpha + dAlpha));
-				db = (uint32)((b * sAlpha + db * dAlpha) / (sAlpha + dAlpha));
-				da = (uint32)(255. * (sAlpha + dAlpha));
-			}
-
-			destRow[x] = destFormat.ARGBToColor(da, dr, dg, db);
-		}
-	}
-
-	target.addDirtyRect(clipped);
-	return true;
-}
-
 // The channels of every pixel get multiplied by those of the color, through
 // tables, with no conversions of the pixel formats. A picture without alpha
 // leaves out its pixels of the color key.
@@ -1006,10 +935,7 @@ void GraphicsManager::blitObject(Graphics::ManagedSurface &target, const RenderO
 
 	if (!src.isZoomed()) {
 		const Common::Rect source = src._drawSurface.getBounds().findIntersectingRect(src.convertToLocal(screenRect));
-		if (!blitAlpha32(target, src._drawSurface, source, screenRect)) {
-			target.blitFrom(src._drawSurface, source, screenRect);
-		}
-
+		target.blitFrom(src._drawSurface, source, screenRect);
 		return;
 	}
 
@@ -1032,24 +958,44 @@ void GraphicsManager::blitObject(Graphics::ManagedSurface &target, const RenderO
 	}
 }
 
-// Whether a stencil object covers a pixel of the screen: where its picture
-// isn't transparent, as the alpha test of the original lets through. The mask
-// of the flashlight is black where it lights, so its alpha is what counts.
-static bool isStencilPixel(const RenderObject &stencil, int x, int y) {
-	const Common::Rect local = stencil.convertToLocal(Common::Rect(x, y, x + 1, y + 1));
+// Marks the pixels of a part of the screen that a stencil object covers: where
+// its picture isn't transparent, as the alpha test of the original lets through.
+// The mask of the flashlight is black where it lights, so its alpha is what
+// counts. Where a pixel is in the picture goes by its column and its row alone,
+// so they are worked out once for each column and each row.
+static void markStencilPixels(const RenderObject &stencil, const Common::Rect &screenRect, Common::Array<byte> &covered) {
 	const Graphics::ManagedSurface &surface = stencil._drawSurface;
-	if (!surface.getBounds().contains(local.left, local.top)) {
-		return false;
+
+	Common::Array<int> columns(screenRect.width());
+	for (int x = 0; x < screenRect.width(); ++x) {
+		const int sx = screenRect.left + x;
+		columns[x] = stencil.convertToLocal(Common::Rect(sx, screenRect.top, sx + 1, screenRect.top + 1)).left;
 	}
 
-	const uint32 color = surface.getPixel(local.left, local.top);
-	if (surface.format.aBits() == 0) {
-		return !surface.hasTransparentColor() || color != surface.getTransparentColor();
-	}
+	for (int y = 0; y < screenRect.height(); ++y) {
+		const int sy = screenRect.top + y;
+		const int localY = stencil.convertToLocal(Common::Rect(screenRect.left, sy, screenRect.left + 1, sy + 1)).top;
+		if (localY < 0 || localY >= surface.h) {
+			continue;
+		}
 
-	byte a, r, g, b;
-	surface.format.colorToARGB(color, a, r, g, b);
-	return a != 0;
+		byte *coveredRow = &covered[y * screenRect.width()];
+		for (int x = 0; x < screenRect.width(); ++x) {
+			const int localX = columns[x];
+			if (coveredRow[x] || localX < 0 || localX >= surface.w) {
+				continue;
+			}
+
+			const uint32 color = surface.getPixel(localX, localY);
+			if (surface.format.aBits() == 0) {
+				coveredRow[x] = !surface.hasTransparentColor() || color != surface.getTransparentColor();
+			} else {
+				byte a, r, g, b;
+				surface.format.colorToARGB(color, a, r, g, b);
+				coveredRow[x] = a != 0;
+			}
+		}
+	}
 }
 
 // Draws an object without the pixels the stencils cover, through a transparent
@@ -1062,28 +1008,25 @@ void GraphicsManager::blitMaskedObject(Graphics::ManagedSurface &target, const R
 		return;
 	}
 
+	Common::Array<byte> covered(screenRect.width() * screenRect.height(), 0);
+	for (const RenderObject *stencil : stencils) {
+		markStencilPixels(*stencil, screenRect, covered);
+	}
+
 	Graphics::ManagedSurface part(source.width(), source.height(), _transparentPixelFormat);
 	for (int y = 0; y < source.height(); ++y) {
 		for (int x = 0; x < source.width(); ++x) {
 			const uint32 color = image.getPixel(source.left + x, source.top + y);
 			byte a = 0, r = 0, g = 0, b = 0;
-			if (!image.hasTransparentColor() || color != image.getTransparentColor()) {
+			if (!covered[y * source.width() + x] && (!image.hasTransparentColor() || color != image.getTransparentColor())) {
 				image.format.colorToARGB(color, a, r, g, b);
-			}
-
-			for (uint i = 0; a != 0 && i < stencils.size(); ++i) {
-				if (isStencilPixel(*stencils[i], screenRect.left + x, screenRect.top + y)) {
-					a = 0;
-				}
 			}
 
 			part.setPixel(x, y, _transparentPixelFormat.ARGBToColor(a, r, g, b));
 		}
 	}
 
-	if (!blitAlpha32(target, part, part.getBounds(), screenRect)) {
-		target.blitFrom(part, part.getBounds(), screenRect);
-	}
+	target.blitFrom(part, part.getBounds(), screenRect);
 }
 
 Common::Rect GraphicsManager::getDrawnPosition(const RenderObject &object) const {
@@ -1109,9 +1052,17 @@ Common::Rect GraphicsManager::getDrawnPosition(const RenderObject &object) const
 }
 
 int GraphicsManager::objectComparator(const void *a, const void *b) {
-	if (((const RenderObject*)a)->getZOrder() < ((const RenderObject*)b)->getZOrder()) {
+	if (((const RenderObject*)a)->getLayer() < ((const RenderObject*)b)->getLayer()) {
+		return -1;
+	} else if (((const RenderObject*)a)->getLayer() > ((const RenderObject*)b)->getLayer()) {
+		return 1;
+	} else if (((const RenderObject*)a)->getZOrder() < ((const RenderObject*)b)->getZOrder()) {
 		return -1;
 	} else if (((const RenderObject*)a)->getZOrder() > ((const RenderObject*)b)->getZOrder()) {
+		return 1;
+	} else if (((const RenderObject*)a)->getExactZ() < ((const RenderObject*)b)->getExactZ()) {
+		return -1;
+	} else if (((const RenderObject*)a)->getExactZ() > ((const RenderObject*)b)->getExactZ()) {
 		return 1;
 	} else if (((const RenderObject*)a)->getTieOrder() < ((const RenderObject*)b)->getTieOrder()) {
 		return -1;

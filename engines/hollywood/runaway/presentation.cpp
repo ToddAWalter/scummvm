@@ -31,13 +31,15 @@ namespace Hollywood {
 static const uint kInterrogationSpeakerActor[] = {1, 2, 0};
 static const uint kInterrogationMouthBase[] = {67, 40, 20};
 
-static void dimViewport(Graphics::ManagedSurface &screen, uint brightness) {
+void dimRunawayViewport(Graphics::ManagedSurface &screen, uint brightness, uint maximum) {
+	if (brightness >= maximum)
+		return;
 	for (int y = kRunawayViewportTop; y < kRunawayViewportTop + kRunawayViewportHeight; ++y) {
 		uint16 *pixels = (uint16 *)screen.getBasePtr(0, y);
 		for (int x = 0; x < screen.w; ++x) {
 			const uint16 p = pixels[x];
-			pixels[x] = (((p >> 11) * brightness / 1000) << 11) |
-				((((p >> 5) & 63) * brightness / 1000) << 5) | ((p & 31) * brightness / 1000);
+			pixels[x] = (((p >> 11) * brightness / maximum) << 11) |
+				((((p >> 5) & 63) * brightness / maximum) << 5) | ((p & 31) * brightness / maximum);
 		}
 	}
 }
@@ -80,14 +82,14 @@ void RunawayCredits::draw(Graphics::ManagedSurface &screen) const {
 			}
 		}
 		if (elapsed > scrollTime + 4000)
-			dimViewport(screen, 1000 - MIN<uint>(1000, (elapsed - scrollTime - 4000) * 2));
+			dimRunawayViewport(screen, 1000 - MIN<uint>(1000, (elapsed - scrollTime - 4000) * 2));
 	} else {
 		screen.blitFrom(_card, Common::Point(0, kRunawayViewportTop));
 		const uint cardElapsed = elapsed - scrollTime - 4500;
 		if (cardElapsed < 500)
-			dimViewport(screen, cardElapsed * 2);
+			dimRunawayViewport(screen, cardElapsed * 2);
 		else if (cardElapsed > 60500)
-			dimViewport(screen, 1000 - MIN<uint>(1000, (cardElapsed - 60500) * 2));
+			dimRunawayViewport(screen, 1000 - MIN<uint>(1000, (cardElapsed - 60500) * 2));
 	}
 }
 
@@ -125,20 +127,17 @@ void RunawayInterrogation::start(uint32 now) {
 }
 
 void RunawayInterrogation::stop() {
-	_audio.stopSpeech();
+	_speech.stop();
 	_audio.stopEffect();
-	_lipSync.stop();
-	_subtitle.clear();
 	_row = 0;
 	_phrase = _phraseCount;
 }
 
 void RunawayInterrogation::nextPhrase() {
 	_row = 0;
-	_lipSync.stop();
-	_subtitle.clear();
+	_speech.reset();
 	if (finished()) {
-		_audio.stopSpeech();
+		_speech.stop();
 		_audio.stopEffect();
 		return;
 	}
@@ -155,14 +154,11 @@ void RunawayInterrogation::nextPhrase() {
 }
 
 void RunawayInterrogation::showSpeechRow() {
-	_subtitle = Common::U32String(_text.largeTextRecord(_row), Common::kDos850);
-	const uint32 duration = _audio.playSpeech(_sample);
-	_lipSync.start(_subtitle, _now, duration, _random);
+	_speech.start(Common::U32String(_text.largeTextRecord(_row), Common::kDos850), _sample, false, _now);
 	const uint actor = kInterrogationSpeakerActor[_speakers[_phrase]];
-	_frames[actor] = kInterrogationMouthBase[actor] + _lipSync.frame(_now);
+	_frames[actor] = kInterrogationMouthBase[actor] + _speech.frame(_now);
 	_idle[actor] = true;
 	_lastTick[actor] = _now;
-	_deadline = _now + (duration ? MAX<uint>(1000, duration + 150) : MAX<uint>(3000, _subtitle.size() * 55));
 }
 
 void RunawayInterrogation::skipSpeech() {
@@ -170,7 +166,7 @@ void RunawayInterrogation::skipSpeech() {
 		return;
 	const uint actor = kInterrogationSpeakerActor[_speakers[_phrase]];
 	_frames[actor] = kInterrogationMouthBase[actor];
-	_audio.stopSpeech();
+	_speech.stop();
 	if (_row < _lastRow) {
 		++_row;
 		++_sample;
@@ -183,7 +179,7 @@ void RunawayInterrogation::skipSpeech() {
 
 void RunawayInterrogation::update(uint32 now) {
 	_now = now;
-	if (speaking() && !_audio.speechPlaying() && (int32)(now - _deadline) >= 0)
+	if (speaking() && !_audio.speechPlaying() && _speech.finished(now))
 		skipSpeech();
 	if (finished())
 		return;
@@ -193,7 +189,7 @@ void RunawayInterrogation::update(uint32 now) {
 		if (i == speaker) {
 			// Native 0x43c5a0/0x43c700/0x43c860 share the text-driven
 			// mouth sequence. Gina's table maps virtual 70..81 to 67..78.
-			_frames[i] = kInterrogationMouthBase[i] + _lipSync.frame(now);
+			_frames[i] = kInterrogationMouthBase[i] + _speech.frame(now);
 			_idle[i] = true;
 			_lastTick[i] = now;
 			continue;
@@ -378,7 +374,7 @@ void RunawayEnding::draw(Graphics::ManagedSurface &screen) const {
 		}
 		_layers[3].draw(screen, _frames[3], 0, kRunawayViewportTop);
 		_layers[6].draw(screen, _frames[6], 0, kRunawayViewportTop);
-		dimViewport(screen, elapsed < 10000 ? 1000 : (12000 - MIN<uint>(12000, elapsed)) / 2);
+		dimRunawayViewport(screen, elapsed < 10000 ? 1000 : (12000 - MIN<uint>(12000, elapsed)) / 2);
 	} else if (_stage == kSlideshow || _stage == kCard) {
 		screen.blitFrom(_stage == kSlideshow ? _slide : _card, Common::Point(0, kRunawayViewportTop));
 		// The later demos blink different parts of their localized artwork
@@ -392,7 +388,7 @@ void RunawayEnding::draw(Graphics::ManagedSurface &screen) const {
 		}
 		const uint brightness = _fadeDuration ?
 			1000 * (_fadeDuration - MIN<uint>(_fadeDuration, _now - _fadeStarted)) / _fadeDuration : MIN<uint>(1000, elapsed * 2);
-		dimViewport(screen, brightness);
+		dimRunawayViewport(screen, brightness);
 	}
 	if (_stage == kOutside || _stage == kSlideshow)
 		screen.blitFrom(_demoLogo, Common::Point(976, 720));

@@ -20,6 +20,7 @@
  */
 
 #include "hollywood/runaway/saveload.h"
+#include "hollywood/runaway/scene_data.h"
 
 namespace Hollywood {
 
@@ -40,30 +41,368 @@ void RunawaySaveState::sync(Common::Serializer &s) {
 	s.syncBytes(pickedUp, sizeof(pickedUp));
 	s.syncBytes(examined, sizeof(examined));
 	s.syncAsByte(itemCount);
-	s.syncBytes(items, sizeof(items));
+	s.syncBytes(items, 26);
 	s.syncAsByte(selected);
 	s.syncAsByte(cloth);
 	s.syncAsByte(inventoryOpen);
 	s.syncAsByte(verb);
 	s.syncAsUint32LE(randomSeed);
 	s.syncAsUint32LE(playTime);
+	s.syncAsByte(game, 2);
+	s.syncAsUint16LE(cameraY, 2);
+	s.syncAsByte(upperFloor, 2);
+	s.syncAsByte(books, 2);
+	s.syncAsByte(recorder, 2);
+	s.syncAsByte(moneyIdentified, 2);
+	s.syncAsByte(safeOpen, 2);
+	s.syncAsByte(varnishTaken, 2);
+	s.syncAsByte(talcTaken, 2);
+	s.syncAsByte(coffeeTaken, 2);
+	s.syncAsByte(keyCount, 2);
+	s.syncAsByte(hospital.glassTaken, 3);
+	s.syncAsByte(hospital.pillsTaken, 3);
+	s.syncAsByte(hospital.sheetTaken, 3);
+	s.syncAsByte(hospital.bagTaken, 3);
+	s.syncAsByte(hospital.exitMapRead, 3);
+	s.syncAsByte(hospital.markerTaken, 4);
+	s.syncAsByte(hospital.alcohol, 4);
+	s.syncAsByte(water, 4);
+	s.syncAsByte(hospital.window, 5);
+	s.syncAsByte(hospital.chartReplaced, 5);
+	s.syncAsByte(hospital.chartMoved, 5);
+	s.syncAsByte(hospital.decoy, 5);
+	s.syncAsByte(hospital.attacked, 5);
+	s.syncAsByte(hospital.medicineRead, 5);
+	s.syncAsByte(hospital.storeroomVisited, 5);
+	s.syncAsByte(hospital.syringesSeen, 5);
+	s.syncAsByte(hospital.sprayTaken, 5);
+	s.syncAsByte(hospital.book, 5);
+	s.syncAsByte(hospital.blankChart, 5);
+	s.syncAsByte(hospital.headTaken, 5);
+	s.syncAsByte(hospital.pillowsTaken, 5);
+	s.syncAsByte(markerInk, 5);
+	s.syncAsByte(syringeFilled, 5);
+	s.syncAsByte(chartWritten, 5);
+	s.syncAsByte(headWig, 5);
+	s.syncAsByte(museum.susan, 6);
+	s.syncAsByte(museum.restoration, 6);
+	s.syncAsByte(museum.laserUpgraded, 6);
+	s.syncAsByte(museum.laserSeen, 6);
+	s.syncAsByte(museum.shelvesSeen, 6);
+	s.syncAsByte(museum.susanMet, 6);
+	s.syncAsByte(museum.labVisited, 6);
+	s.syncAsByte(museum.shelfBooksSeen, 6);
+	s.syncAsByte(museum.safeUsed, 6);
+	s.syncAsByte(museum.willyMet, 6);
+	s.syncAsByte(museum.batteryRequested, 6);
+	s.syncAsByte(museum.coffeeMachine, 6);
+	s.syncAsByte(museum.coffeeSeen, 6);
+	s.syncAsByte(museum.basketSeen, 6);
+	s.syncAsByte(museum.needsPackage, 6);
+	s.syncAsByte(museum.needsGroundCoffee, 6);
+	s.syncAsByte(museum.willyInLab, 6);
+	s.syncAsByte(museum.keypad, 6);
+	s.syncAsByte(museum.sawCode, 6);
+	s.syncAsByte(museum.phoneUsed, 6);
+	s.syncAsByte(museum.voiceLockSeen, 6);
+	s.syncAsByte(museum.chamberOpen, 6);
+	s.syncAsByte(museum.maskTaken, 6);
+	s.syncAsByte(museum.keyTaken, 6);
+	s.syncAsByte(museum.ladleTaken, 6);
+	s.syncAsByte(museum.cabinetSeen, 6);
+	s.syncAsByte(museum.scannerSeen, 6);
+	s.syncAsByte(museum.nitrogenSeen, 6);
+	s.syncAsByte(museum.microscopeSeen, 6);
+	s.syncAsByte(museum.talcSeen, 6);
+	s.syncAsByte(museum.varnishSeen, 6);
+	s.syncAsByte(museum.mayanObjectsSeen, 6);
+	s.syncAsByte(museum.coffeeBeansTaken, 6);
+	s.syncAsByte(museum.buttonSeen, 6);
+	s.syncAsByte(museum.ownVoiceTried, 6);
+	s.syncAsByte(museum.analysisDoorSeen, 6);
+	s.syncAsByte(museum.leftLabOnce, 6);
+	s.syncAsByte(museum.keySeen, 6);
+	s.syncBytes(museum.exhibitSeen, sizeof(museum.exhibitSeen), 6);
+	s.syncAsUint16LE(museum.keypadDigits, 6);
+	s.syncAsUint32LE(museum.chamberTime, 6);
+	s.syncAsByte(museumItems.businessCardExamined, 6);
+	s.syncAsByte(museumItems.restoredCrucifix, 6);
+	s.syncAsByte(museumItems.voiceRecorded, 6);
+	s.syncAsByte(museumItems.coffee, 6);
+	s.syncAsByte(museumItems.frozenBattery, 6);
+	s.syncAsByte(museumItems.rubyRemoved, 6);
+	s.syncAsByte(museumItems.recorderBattery, 6);
+	s.syncAsByte(museumItems.batteryInLadle, 6);
+	s.syncAsByte(museumItems.packageFilled, 6);
+	s.syncBytes(desert.visited, sizeof(desert.visited), 7);
+	s.syncAsByte(desert.escapedCabin, 7);
+	s.syncAsByte(desert.hatchSeen, 7);
+	s.syncAsByte(desert.bucketTaken, 7);
+	s.syncAsByte(desert.helmetTaken, 7);
+	s.syncAsByte(desert.beltTaken, 7);
+	s.syncAsByte(desert.beltSeen, 7);
+	s.syncAsByte(desert.gun, 7);
+	s.syncAsByte(desert.gunSeen, 7);
+	s.syncAsByte(desert.mariolaHelped, 7);
+	s.syncAsByte(desert.ballTaken, 7);
+	s.syncAsByte(desert.tanningOil, 7);
+	s.syncAsByte(desert.lulaHelped, 7);
+	s.syncAsByte(desert.busPosterSeen, 7);
+	s.syncAsByte(desert.lulaCalled, 7);
+	s.syncAsByte(desert.lulaRefused, 7);
+	s.syncAsByte(desert.dynamitePlaced, 7);
+	s.syncAsByte(desert.oilSeen, 7);
+	s.syncAsByte(desert.antsDistracted, 7);
+	s.syncAsByte(desert.dynamite, 7);
+	s.syncAsByte(desert.shedTried, 7);
+	s.syncAsByte(desert.trainEntered, 7);
+	s.syncAsByte(desert.barrel, 7);
+	s.syncAsByte(desert.screwSeen, 7);
+	s.syncAsByte(desert.screwTaken, 7);
+	s.syncAsByte(desert.bucket, 7);
+	s.syncAsByte(desert.trainDoorOpen, 7);
+	s.syncAsByte(desert.powderNeeded, 7);
+	s.syncAsByte(desert.barnDoor, 7);
+	s.syncAsByte(desert.footrest, 7);
+	s.syncAsByte(desert.guard, 7);
+	s.syncAsByte(desert.insideBarn, 7);
+	s.syncAsByte(desert.beerSeen, 7);
+	s.syncAsByte(desert.peanutButter, 7);
+	s.syncAsByte(desert.motorcycleSeen, 7);
+	s.syncAsByte(desert.footrestSeen, 7);
+	s.syncAsByte(desert.lulaDistractedGuard, 7);
+	s.syncAsByte(desert.guardWeaknessKnown, 7);
+	s.syncAsByte(desert.busDoor, 7);
+	s.syncAsByte(desert.lipstickShelf, 7);
+	s.syncAsByte(desert.keyTaken, 7);
+	s.syncAsByte(desert.glassesTaken, 7);
+	s.syncAsByte(desert.vacuum, 7);
+	s.syncAsByte(desert.crank, 7);
+	s.syncAsByte(desert.necklacesSeen, 7);
+	s.syncAsByte(desert.ringsSeen, 7);
+	s.syncAsByte(desert.fridgeOpened, 7);
+	s.syncAsByte(desert.ventCleaned, 7);
+	s.syncAsByte(desert.ventSeen, 7);
+	s.syncAsByte(desert.needle, 7);
+	s.syncAsByte(desert.fridgeSeen, 7);
+	s.syncAsByte(desert.carlaMet, 7);
+	s.syncAsByte(desert.carlaStory, 7);
+	s.syncAsByte(desert.planKnown, 7);
+	s.syncAsUint32LE(desert.carlaTopics, 7);
+	s.syncAsUint32LE(desert.lulaTopics, 7);
+	s.syncAsByte(desertItems.antTrickKnown, 7);
+	s.syncAsByte(desertItems.helmet, 7);
+	s.syncAsByte(desertItems.lipstick, 7);
+	s.syncAsByte(desertItems.lipsticks, 7);
+	s.syncAsByte(desertItems.belt, 7);
+	s.syncAsByte(desertItems.ball, 7);
+	s.syncAsByte(desertItems.glasses, 7);
+	s.syncAsByte(desertItems.pill, 7);
+	s.syncAsByte(desertItems.bucket, 7);
+	s.syncAsByte(desertItems.gunReady, 7);
+	s.syncAsByte(desertItems.bombReady, 7);
+	s.syncAsByte(desertItems.helicopterReady, 7);
+	s.syncAsByte(town.arrived, 8);
+	s.syncAsByte(town.streetVisited, 8);
+	s.syncAsByte(town.strapSeen, 8);
+	s.syncAsByte(town.sushiMet, 8);
+	s.syncAsByte(town.mineMapKnown, 8);
+	// Preserve the original inventory layout when reading older saves.
+	s.syncBytes(items + 26, sizeof(items) - 26, 9);
+	s.syncAsByte(town.bankVisited, 9);
+	s.syncAsByte(town.bankShelves, 9);
+	s.syncAsByte(town.bankStampTaken, 9);
+	s.syncAsByte(town.basementKnown, 9);
+	s.syncAsByte(town.bodySeen, 9);
+	s.syncAsByte(town.doctorKnown, 9);
+	s.syncAsByte(town.firewoodTaken, 9);
+	s.syncAsByte(town.cellOpen, 9);
+	s.syncAsByte(town.bagSearched, 9);
+	s.syncAsByte(town.bucketSeen, 9);
+	s.syncAsByte(town.bottleSeen, 9);
+	s.syncAsByte(town.cellRefusals, 9);
+	s.syncAsByte(town.safeSeen, 9);
+	s.syncAsByte(town.oscarTobacco, 9);
+	s.syncAsByte(town.stethoscopeTaken, 9);
+	s.syncAsByte(town.linimentTaken, 9);
+	s.syncAsByte(town.locomotiveVisited, 10);
+	s.syncAsByte(town.locomotiveKey, 10);
+	s.syncAsByte(town.waterTank, 10);
+	s.syncAsByte(town.cabVisited, 10);
+	s.syncAsByte(town.cabExited, 10);
+	s.syncAsByte(town.boiler, 10);
+	s.syncAsByte(town.steamLever, 10);
+	s.syncAsByte(town.pressureWheel, 10);
+	s.syncAsByte(town.drainSeen, 10);
+	s.syncAsByte(town.oilCanFull, 10);
+	s.syncAsByte(town.bottleContents, 10);
+	s.syncAsByte(town.craterSeen, 10);
+	s.syncAsByte(town.mineVisited, 11);
+	s.syncAsByte(town.oilCan, 11);
+	s.syncAsByte(town.rockMoved, 11);
+	s.syncAsByte(town.houseVisited, 11);
+	s.syncAsByte(town.stone, 11);
+	s.syncAsByte(town.vessel, 11);
+	s.syncAsByte(town.oscarMet, 11);
+	s.syncAsByte(town.oscarHelpRefused, 11);
+	s.syncAsByte(town.rawTobaccoRefused, 11);
+	s.syncAsByte(town.saloonEntranceVisited, 12);
+	s.syncAsByte(town.saloonDoorKnown, 12);
+	s.syncAsByte(town.saloonVisited, 12);
+	s.syncAsByte(town.flowerPotTaken, 12);
+	s.syncAsByte(town.gardeningShed, 12);
+	s.syncAsByte(town.tobaccoLeavesTaken, 12);
+	s.syncAsByte(town.artichokeSeen, 12);
+	s.syncAsByte(town.carnivorousPlantSeen, 12);
+	s.syncAsByte(town.craterVisited, 13);
+	s.syncAsByte(town.joshuaMet, 13);
+	s.syncAsByte(town.campLeft, 13);
+	s.syncAsByte(town.strapDelivered, 13);
+	s.syncAsByte(town.wrenchDelivered, 13);
+	s.syncAsByte(town.wrenchNeeded, 13);
+	s.syncAsByte(town.fuelNeeded, 13);
+	s.syncAsByte(town.machineKnown, 13);
+	s.syncAsByte(town.rotorKnown, 13);
+	s.syncAsByte(town.batteryKnown, 13);
+	s.syncAsByte(town.helmetKnown, 13);
+	s.syncAsByte(town.dimensionalDoorKnown, 13);
+	s.syncAsByte(town.strapIdea, 13);
+	s.syncAsByte(townItems.strap, 13);
+}
+
+byte RunawaySaveState::chapter() const {
+	switch (scene / 1000) {
+	case 1: case 2: return 1;
+	case 4: return 2;
+	case 5: return 3;
+	case 6: return 4;
+	case 7: return 5;
+	case 8: case 9: return 6;
+	default: return 0;
+	}
 }
 
 bool RunawaySaveState::valid() const {
-	if (scene != 5030 || x >= 1376 || y >= 600 || camera > 352 || facing >= 8 ||
+	if (game > kRunawayFullGame || !chapter() || x >= 32768 || y >= 32768 ||
+			camera >= 32768 || cameraY >= 32768 || facing >= 8 ||
 			lidOpen > 1 || unplugged > 1 || windowClean > 1 || coolerMoved > 1 ||
 			coolerInspected > 1 || peeked > 1 || ice > 2 || hatch > 3 ||
 			itemCount > sizeof(items) || selected > sizeof(items) || cloth > 2 || inventoryOpen > 1 || verb > 2)
 		return false;
+	if ((game == kRunawayCabinDemo || (game == kRunawayFullGame && scene >= 5030 && scene <= 5032)) &&
+			(scene < 5030 || scene > (game == kRunawayCabinDemo ? 5030 : 5032) || x >= 1376 || y >= 600 || camera > 352 || cameraY))
+		return false;
+	if (game == kRunawayFullGame && ((chapter() == 3 && (scene < 5030 || scene > 5032)) || chapter() == 4)) {
+		const RunawayRoom *room = findRunawayRoom(scene);
+		if (!room || x >= room->width || y >= room->height || camera > room->width - 1024 || cameraY > room->height - 600)
+			return false;
+	}
+	if (upperFloor > 1 || books > 2 || recorder > 2 || moneyIdentified > 1 || safeOpen > 1 ||
+			varnishTaken > 1 || talcTaken > 1 || coffeeTaken > 1 || keyCount > 4)
+		return false;
+	if (game == kRunawayMuseumDemo || (game == kRunawayFullGame && chapter() == 2)) {
+		const RunawayRoom *room = findRunawayRoom(scene);
+		if (!room || scene < 4000 || x >= room->width || y >= room->height || camera > room->width - 1024 ||
+				cameraY > room->height - 600)
+			return false;
+	}
+	if (hospital.glassTaken > 1 || hospital.pillsTaken > 1 || hospital.sheetTaken > 1 ||
+			hospital.bagTaken > 1 || hospital.exitMapRead > 1 || hospital.markerTaken > 1 || hospital.alcohol > 2 || water > 2)
+		return false;
+	if (hospital.window > 2 || hospital.chartReplaced > 1 || hospital.chartMoved > 1 ||
+			hospital.decoy > 1 || hospital.attacked > 1 || hospital.medicineRead > 1 ||
+			hospital.storeroomVisited > 1 || hospital.syringesSeen > 1 || hospital.sprayTaken > 1 ||
+			hospital.book > 2 || hospital.blankChart > 2 || hospital.headTaken > 1 || hospital.pillowsTaken > 1 ||
+			markerInk > 3 || syringeFilled > 1 || chartWritten > 1 || headWig > 1)
+		return false;
+	if (game == kRunawayFullGame && chapter() == 1) {
+		const RunawayRoom *room = findRunawayRoom(scene);
+		if (!room || (room->number != kHospitalBedroom && room->number != kHospitalStoreroom && room->number != kHospitalBathroom) ||
+				x >= room->width || y >= room->height || cameraY ||
+				camera < (room->number == kHospitalBedroom ? 156 : 0) || camera > room->width - 1024)
+			return false;
+	}
+	if (museum.susan > 3 || museum.restoration > 2 || museum.laserUpgraded > 1 ||
+			museum.laserSeen > 1 || museum.shelvesSeen > 1 || museum.susanMet > 1 ||
+			museum.labVisited > 1 || museum.shelfBooksSeen > 1 || museum.safeUsed > 1 ||
+			museum.willyMet > 2 || museum.batteryRequested > 1 || museum.coffeeMachine > 2 ||
+			museum.coffeeSeen > 1 || museum.basketSeen > 1 || museum.needsPackage > 1 ||
+			museum.needsGroundCoffee > 1 || museum.willyInLab > 2 || museum.keypad > 4 ||
+			museum.sawCode > 2 || museum.phoneUsed > 1 || museum.voiceLockSeen > 1 ||
+			museum.chamberOpen > 1 || museum.maskTaken > 1 || museum.keyTaken > 1 ||
+			museum.ladleTaken > 1 || museum.cabinetSeen > 1 || museum.scannerSeen > 1 ||
+			museum.nitrogenSeen > 1 || museum.microscopeSeen > 1 || museum.talcSeen > 1 ||
+			museum.varnishSeen > 1 || museum.mayanObjectsSeen > 1 || museum.coffeeBeansTaken > 1 ||
+			museum.buttonSeen > 1 || museum.ownVoiceTried > 1 || museum.analysisDoorSeen > 1 || museum.leftLabOnce > 1 || museum.keySeen > 1 ||
+			museum.exhibitSeen[0] > 1 || museum.exhibitSeen[1] > 1 || museum.exhibitSeen[2] > 1 ||
+			museum.keypadDigits > 9999 || museum.chamberTime > 30000 || museumItems.businessCardExamined > 1 ||
+			museumItems.restoredCrucifix > 1 || museumItems.voiceRecorded > 1 || museumItems.coffee > 2 ||
+			museumItems.frozenBattery > 1 || museumItems.rubyRemoved > 1 || museumItems.recorderBattery > 4 ||
+			museumItems.batteryInLadle > 1 || museumItems.packageFilled > 1)
+		return false;
+	if (desert.escapedCabin > 1 || desert.hatchSeen > 1 || desert.bucketTaken > 1 ||
+			desert.helmetTaken > 1 || desert.beltTaken > 1 || desert.beltSeen > 1 || desert.gun > 2 || desert.gunSeen > 1 ||
+			desert.mariolaHelped > 1 || desert.ballTaken > 1 || desert.tanningOil > 2 || desert.lulaHelped > 1 ||
+			desert.busPosterSeen > 1 || desert.lulaCalled > 1 || desert.lulaRefused > 1 ||
+			desert.dynamitePlaced > 1 || desert.oilSeen > 1 || desert.antsDistracted > 1 || desert.dynamite > 2 ||
+			desert.shedTried > 1 || desert.trainEntered > 1 || desert.barrel > 2 || desert.screwSeen > 1 ||
+			desert.screwTaken > 1 || desert.bucket > 3 || desert.trainDoorOpen > 1 || desert.powderNeeded > 1 ||
+			desert.barnDoor > 2 || desert.footrest > 2 || desert.guard > 2 || desert.insideBarn > 1 || desert.beerSeen > 1 ||
+			desert.peanutButter > 2 || desert.motorcycleSeen > 1 || desert.footrestSeen > 1 ||
+			desert.lulaDistractedGuard > 1 || desert.guardWeaknessKnown > 1 ||
+			desert.busDoor > 3 || desert.lipstickShelf > 3 || desert.keyTaken > 1 || desert.glassesTaken > 1 ||
+			desert.vacuum > 2 || desert.crank > 2 || desert.necklacesSeen > 1 || desert.ringsSeen > 1 ||
+			desert.fridgeOpened > 1 || desert.ventCleaned > 1 || desert.ventSeen > 1 || desert.needle > 2 || desert.fridgeSeen > 1 ||
+			desert.carlaMet > 1 || desert.carlaStory > 1 || desert.planKnown > 1 ||
+			desertItems.antTrickKnown > 1 || desertItems.helmet > 4 || desertItems.lipstick > 1 || desertItems.lipsticks > 1 ||
+			desertItems.belt > 2 || desertItems.ball > 2 || desertItems.glasses > 2 || desertItems.pill > 1 ||
+			desertItems.bucket > 2 || desertItems.gunReady > 1 || desertItems.bombReady > 1 || desertItems.helicopterReady > 1)
+		return false;
+	for (uint i = 0; i < sizeof(desert.visited); ++i) {
+		if (desert.visited[i] > 1)
+			return false;
+	}
 	if ((coolerMoved && ice != 2) || ((hatch != 0) != (coolerMoved != 0)))
 		return false;
 	for (uint i = 0; i < sizeof(pickedUp); ++i) {
 		if (pickedUp[i] > 1 || examined[i] > 1)
 			return false;
 	}
-	bool owned[27] = {};
+	bool owned[33] = {};
+	if (town.craterVisited > 1 || town.joshuaMet > 1 || town.campLeft > 1 ||
+			town.strapDelivered > 3 || town.wrenchDelivered > 2 || town.wrenchNeeded > 1 || town.fuelNeeded > 1 ||
+			town.machineKnown > 1 || town.rotorKnown > 1 || town.batteryKnown > 1 || town.helmetKnown > 1 ||
+			town.dimensionalDoorKnown > 1 || town.strapIdea > 1 || townItems.strap > 2) {
+		return false;
+	}
+	if (town.saloonEntranceVisited > 1 || town.saloonDoorKnown > 1 || town.saloonVisited > 1 ||
+			town.flowerPotTaken > 1 || town.gardeningShed > 2 || town.tobaccoLeavesTaken > 1 ||
+			town.artichokeSeen > 1 || town.carnivorousPlantSeen > 1) {
+		return false;
+	}
+	if (town.mineVisited > 1 || town.oilCan > 2 || town.rockMoved > 1 ||
+			town.houseVisited > 1 || town.stone > 2 || town.vessel > 2 ||
+			town.oscarMet > 1 || town.oscarHelpRefused > 1 || town.rawTobaccoRefused > 1) {
+		return false;
+	}
+	if (town.locomotiveVisited > 1 || town.locomotiveKey > 3 || town.waterTank > 5 ||
+			town.cabVisited > 1 || town.cabExited > 1 || town.boiler > 3 ||
+			town.steamLever > 2 || town.pressureWheel > 2 || town.drainSeen > 1 ||
+			town.oilCanFull > 1 || town.bottleContents > 2 || town.craterSeen > 1) {
+		return false;
+	}
+	if (town.arrived > 1 || town.streetVisited > 1 || town.strapSeen > 2 || town.sushiMet > 1 || town.mineMapKnown > 1) {
+		return false;
+	}
+	if (town.bankVisited > 1 || town.bankShelves > 2 || town.bankStampTaken > 1 || town.basementKnown > 1 ||
+			town.bodySeen > 1 || town.doctorKnown > 1 || town.firewoodTaken > 1 || town.cellOpen > 1 ||
+			town.bagSearched > 1 || town.bucketSeen > 1 || town.bottleSeen > 1 || town.cellRefusals > 2 ||
+			town.safeSeen > 1 || town.oscarTobacco > 2 || town.stethoscopeTaken > 1 || town.linimentTaken > 1) {
+		return false;
+	}
 	for (uint i = 0; i < itemCount; ++i) {
-		if (!items[i] || items[i] >= sizeof(owned) || owned[items[i]])
+		if (!items[i] || items[i] >= sizeof(owned) || owned[items[i]] ||
+				items[i] > (chapter() == 4 ? 32 : chapter() == 3 ? 26 : 19))
 			return false;
 		owned[items[i]] = true;
 	}
@@ -71,9 +410,14 @@ bool RunawaySaveState::valid() const {
 }
 
 bool RunawaySaveState::read(Common::SeekableReadStream &stream) {
-	if (stream.readUint32BE() != MKTAG('R', 'U', 'N', 'A') || stream.readUint16LE() != 1)
+	*this = RunawaySaveState();
+	if (stream.readUint32BE() != MKTAG('R', 'U', 'N', 'A'))
+		return false;
+	const uint16 version = stream.readUint16LE();
+	if (version < 1 || version > 13)
 		return false;
 	Common::Serializer s(&stream, nullptr);
+	s.setVersion(version);
 	sync(s);
 	return !s.err() && !stream.eos() && valid();
 }
@@ -82,8 +426,9 @@ bool RunawaySaveState::write(Common::WriteStream &stream) {
 	if (!valid())
 		return false;
 	stream.writeUint32BE(MKTAG('R', 'U', 'N', 'A'));
-	stream.writeUint16LE(1);
+	stream.writeUint16LE(13);
 	Common::Serializer s(nullptr, &stream);
+	s.setVersion(13);
 	sync(s);
 	return !s.err();
 }

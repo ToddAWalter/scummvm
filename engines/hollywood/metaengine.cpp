@@ -27,6 +27,7 @@
 
 #include "hollywood/monsters/hollywood.h"
 #include "hollywood/monsters/metaengine.h"
+#include "hollywood/runaway/detection.h"
 #include "hollywood/runaway/engine.h"
 
 namespace Hollywood {
@@ -51,9 +52,11 @@ protected:
 };
 
 Common::Error HollywoodMetaEngine::createInstance(OSystem *syst, Engine **engine, const ADGameDescription *desc) const {
-	if (!strcmp(desc->gameId, "runaway"))
-		*engine = new RunawayEngine(syst, desc->language);
-	else
+	if (!strcmp(desc->gameId, "runaway")) {
+		const RunawayGameType game = (desc->flags & GF_RUNAWAY_MUSEUM_DEMO) ? kRunawayMuseumDemo :
+			(desc->flags & ADGF_DEMO) ? kRunawayCabinDemo : kRunawayFullGame;
+		*engine = new RunawayEngine(syst, desc->language, game);
+	} else
 		*engine = new HollywoodEngine(syst, desc);
 	return Common::kNoError;
 }

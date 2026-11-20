@@ -26,7 +26,9 @@
 #include "common/language.h"
 #include "common/ptr.h"
 #include "engines/engine.h"
+#include "hollywood/runaway/audio.h"
 #include "hollywood/runaway/menu.h"
+#include "hollywood/runaway/saveload.h"
 
 namespace Common {
 class Keymap;
@@ -40,14 +42,14 @@ namespace Hollywood {
 
 class RunawayMenu;
 class RunawayInventory;
-class RunawayScene5030;
+class RunawayScene;
 class RunawayUI;
 
 // Runaway shares the archive and text formats with Hollywood Monsters, but
 // has its own RGB565 renderer, scene state and audio formats.
 class RunawayEngine : public Engine {
 public:
-	RunawayEngine(OSystem *syst, Common::Language language);
+	RunawayEngine(OSystem *syst, Common::Language language, RunawayGameType game);
 	~RunawayEngine() override;
 
 	Common::Error run() override;
@@ -64,18 +66,27 @@ public:
 	static void registerDefaultSettings();
 
 private:
-	Common::Error playIntro(RunawayMenu &menu);
+	RunawayScene *createScene(uint16 entryScene);
+	Common::Error changeScene();
+	bool sceneBusy() const;
+	Common::Error playIntro(RunawayMenu &menu, byte chapter = 0);
+	Common::Error startChapter(RunawayMenu &menu, byte chapter);
 	Common::Error playEnding(RunawayMenu &menu);
 	void pauseMenu(RunawayMenu &menu, Graphics::ManagedSurface &screen);
 	RunawayMenu::Settings readSettings() const;
 	void applySettings(const RunawayMenu::Settings &settings, bool restoreDefaults = false);
 	void present(const Graphics::ManagedSurface &screen);
 	Common::Language _language;
+	const RunawayGameType _game;
+	const bool _museum;
 	RunawayStrings _strings;
+	RunawayAudio _audio;
+	RunawaySaveState _state;
 	Common::ScopedPtr<RunawayInventory> _inventory;
-	Common::ScopedPtr<RunawayScene5030> _scene;
+	Common::ScopedPtr<RunawayScene> _scene;
 	Common::ScopedPtr<RunawayUI> _ui;
 	bool _inPresentation = false, _gameStarted = false, _loadedGame = false;
+	bool _pendingDoorClose = false;
 };
 
 } // End of namespace Hollywood

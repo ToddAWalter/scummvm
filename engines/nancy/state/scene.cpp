@@ -49,7 +49,6 @@
 #include "engines/nancy/misc/specialeffect.h"
 #include "engines/nancy/misc/viewportfader.h"
 #include "engines/nancy/ui/ndui/manager.h"
-#include "engines/nancy/ui/ndui/panel.h"
 #ifdef ENABLE_NANCY_V4
 #include "engines/nancy/script/api.h"
 #include "engines/nancy/script/records.h"
@@ -1482,11 +1481,15 @@ bool Scene::changePlayerCharacter(uint characterIndex) {
 }
 
 void Scene::showInventoryButtons() {
-	// The most recent items come first
+	// Each item shown goes first, or last in the games that put new items last,
+	// so the buttons come out in the order of the list
 	const Common::Array<int16> &order = _inventoryBox.getOrder();
-	for (int i = (int)order.size() - 1; i >= 0; --i) {
-		if (order[i] != -1 && _flags.items[order[i]] == g_nancy->_true) {
-			_ndui->showInventoryItem(order[i], true);
+	const ScriptBootData *scriptBoot = (const ScriptBootData *)g_nancy->getEngineData("ScriptBootData");
+	const bool isAddedLast = scriptBoot && !scriptBoot->isInventoryAddedToFront;
+	for (uint i = 0; i < order.size(); ++i) {
+		const int16 id = isAddedLast ? order[i] : order[order.size() - 1 - i];
+		if (id != -1 && _flags.items[id] == g_nancy->_true) {
+			_ndui->showInventoryItem(id, true);
 		}
 	}
 }
@@ -1767,8 +1770,11 @@ void Scene::synchronize(Common::Serializer &ser) {
 	if (g_nancy->getGameType() >= kGameTypeNancyDossier1) {
 		ser.syncString(_scriptSceneName);
 
-		// The scene gets loaded again below, from nextScene and this name
-		_nextScriptSceneName = _scriptSceneName;
+		// The scene gets loaded again below, from nextScene and this name. A save
+		// made as the scene changes leaves the name of the next scene alone.
+		if (ser.isLoading()) {
+			_nextScriptSceneName = _scriptSceneName;
+		}
 	}
 #endif
 
@@ -2343,6 +2349,11 @@ void Scene::load(bool fromSaveFile) {
 // Nancy19 scenes are Lua scripts. A script makes the records of its scene when
 // it is run, the first of which names the background.
 void Scene::loadScriptedScene(bool fromSaveFile) {
+	const bool isUINew = fromSaveFile || !_scriptScene;
+	if (!fromSaveFile) {
+		runSceneEndScript();
+	}
+
 	// A scene that goes by name has no number; see _nextScriptSceneName
 	const Common::String sceneName = _nextScriptSceneName.empty() ?
 		Common::String::format("s%u", _sceneState.nextScene.sceneID) : _nextScriptSceneName;
@@ -2380,6 +2391,8 @@ void Scene::loadScriptedScene(bool fromSaveFile) {
 	if (g_nancy->getGameType() >= kGameTypeNancy26) {
 		_viewport.setZOrder(Script::RecordGraphic::getBackgroundZOrder(_scriptScene->getZOffset()));
 	}
+
+	_viewport.setExactZ(Script::RecordGraphic::getBackgroundExactZ());
 
 	g_nancy->_graphics->suppressNextDraw();
 
@@ -2423,6 +2436,15 @@ void Scene::loadScriptedScene(bool fromSaveFile) {
 	if (_ndui) {
 		_ndui->onSceneChange(_sceneState.currentScene.sceneID);
 		_ndui->requestAutosave();
+
+		// Lights, Camera, Curses keeps its UI when a profile gets loaded or a new
+		// game starts, and the OnSceneEnd script of the main menu sets the score,
+		// which otherwise only shows once it changes. Here the UI is made anew.
+		if (isUINew && g_nancy->getGameType() == kGameTypeNancyDossier1) {
+			ScriptValueData *values = (ScriptValueData *)getPuzzleData(ScriptValueData::getTag());
+			const int32 score = values ? values->values.getValOrDefault("uiScore", 0) : 0;
+			_ndui->takeAction(UI::NDUI::kActionSetText, "TotalScore", Common::String::format("%d", score));
+		}
 	}
 
 	_streams.changeEnvironment(summary->getEnvironment());
@@ -2451,31 +2473,21 @@ void Scene::processMainStream() {
 }
 
 #ifdef ENABLE_NANCY_V4
-// The original does this whenever its window loses the focus, which leaving the
-// game does too. The game is being played while the lower matte shows; the
-// main menu starts it again from the scene it was in.
-void Scene::saveProfileOnQuit() {
-	const Common::String &profile = g_nancy->_profile.current;
-	if (g_nancy->getGameType() != kGameTypeNancyDossier1 || !_ndui || !_scriptScene || profile.empty()) {
+// Lights, Camera, Curses runs the OnSceneEnd script when the scene of the main
+// stream ends, and when the game is left, unless the stream is paused. It saves
+// the game of the profile, which is done at once, while the scene is still the
+// one the player was in.
+void Scene::runSceneEndScript() {
+	if (g_nancy->getGameType() != kGameTypeNancyDossier1 || !_ndui || !_scriptScene || _scriptScene->isPausedByScript()) {
 		return;
 	}
 
-	const UI::NDUI::Panel *matte = _ndui->findPanel("lowerMatte");
-	if (!matte || !matte->isVisible()) {
-		return;
-	}
+	_scriptScene->include("OnSceneEnd");
 
-	Script::saveDataString("LastSceneIn", getMainSceneName());
-
-	int slot = _ndui->findSaveSlot(profile);
-	for (int i = 1; slot == -1 && i < g_nancy->getMetaEngine()->getMaximumSaveSlot(); ++i) {
-		if (i != g_nancy->getAutosaveSlot() && !g_nancy->getMetaEngine()->querySaveMetaInfos(ConfMan.getActiveDomainName().c_str(), i).isValid()) {
-			slot = i;
-		}
-	}
-
-	if (slot != -1) {
-		g_nancy->saveGameState(slot, profile, false);
+	const UI::NDUI::Manager::Request request = _ndui->getRequest();
+	if (request.type == UI::NDUI::Manager::kRequestSave) {
+		_ndui->takeRequest();
+		g_nancy->saveGameState(request.slot, request.name, false);
 	}
 }
 #endif

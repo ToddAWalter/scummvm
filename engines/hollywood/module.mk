@@ -146,10 +146,57 @@ MODULE_OBJS = \
 	runaway/intro.o \
 	runaway/inventory.o \
 	runaway/menu.o \
+	runaway/navigation.o \
+	runaway/oscar.o \
 	runaway/presentation.o \
 	runaway/saveload.o \
+	runaway/scene.o \
+	runaway/scene_registry.o \
+	runaway/scene2010.o \
+	runaway/scene2020.o \
+	runaway/scene2060.o \
+	runaway/scene2080.o \
+	runaway/scene4010.o \
+	runaway/scene4030.o \
+	runaway/scene4050.o \
+	runaway/scene4060.o \
+	runaway/scene4070.o \
+	runaway/scene4090.o \
+	runaway/scene4100.o \
+	runaway/scene4140.o \
+	runaway/scene5010.o \
+	runaway/scene5020.o \
 	runaway/scene5030.o \
+	runaway/scene5050.o \
+	runaway/scene5060.o \
+	runaway/scene5070.o \
+	runaway/scene5080.o \
+	runaway/scene5100.o \
+	runaway/scene5110.o \
+	runaway/scene5130.o \
+	runaway/scene5140.o \
+	runaway/scene5160.o \
+	runaway/scene5170.o \
+	runaway/scene6014.o \
+	runaway/scene6080.o \
+	runaway/scene6090.o \
+	runaway/scene6130.o \
+	runaway/scene6180.o \
+	runaway/scene6190.o \
+	runaway/scene6200.o \
+	runaway/scene6210.o \
+	runaway/scene6220.o \
+	runaway/scene6240.o \
+	runaway/scene6260.o \
+	runaway/scene6263.o \
+	runaway/scene6270.o \
+	runaway/scene6290.o \
+	runaway/scene6350.o \
+	runaway/scene6370.o \
+	runaway/sequence.o \
+	runaway/speech.o \
 	runaway/strings.o \
+	runaway/town.o \
 	runaway/ui.o \
 	runaway/video.o
 

@@ -117,6 +117,20 @@ public:
 	// scripts draw in the order they were made. 0 for everything else.
 	uint32 getTieOrder() const { return _tieOrder; }
 	void setTieOrder(uint32 order) { _tieOrder = order; }
+
+	// What comes before the z order: Nancy19 to Nancy20 draw each stream in a
+	// layer of its own. The UI is in front of all of them.
+	static const int32 kUILayer = 0x7FFFFFFF;
+	int32 getLayer() const { return _layer; }
+	void setLayer(int32 layer);
+
+	// Nancy19 to Nancy20: the z of a record of the scripts, which tells apart the
+	// records the z order can't, e.g. the many farther than the background.
+	// Everything else is farther than all records of its z order.
+	static const double kNoExactZ;
+	double getExactZ() const { return _exactZ; }
+	void setExactZ(double z);
+
 	// Also moves the object in the draw order, so changing the z of a registered
 	// object takes effect without re-registering it
 	void setZOrder(uint16 z);
@@ -125,6 +139,10 @@ public:
 
 	// Needed for proper handling of objects inside the viewport
 	virtual bool isViewportRelative() const { return false; }
+
+	// Whether an object in the viewport moves with its vertical scroll. The
+	// records of the scripts are placed by their transforms instead.
+	virtual bool isMovedByViewportScroll() const { return true; }
 
 	// The zoom the object gets drawn with, if any. It belongs to whoever set it.
 	const ViewTransform *getViewTransform() const { return _viewTransform; }
@@ -140,11 +158,16 @@ protected:
 	bool _isMasked = false;
 	uint16 _z;
 	uint32 _tieOrder = 0;
+	int32 _layer = 0;
+	double _exactZ = kNoExactZ;
 	Common::Rect _drawnScreenPosition;
 	Common::Rect _previousScreenPosition;
 	Common::Rect _screenPosition;
 	Common::Rect _clipRect;
 	const ViewTransform *_viewTransform = nullptr;
+
+private:
+	Common::Rect convertPositionToScreen(const Common::Rect &position) const;
 };
 
 } // End of namespace Nancy

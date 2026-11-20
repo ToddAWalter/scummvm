@@ -24,6 +24,8 @@
 
 #include "common/array.h"
 #include "common/ustr.h"
+#include "hollywood/runaway/detection.h"
+#include "hollywood/runaway/saveload.h"
 
 namespace Hollywood {
 
@@ -40,7 +42,13 @@ public:
 		byte variation;
 		Reply(uint16 c = 1, byte v = 0) : cue(c), variation(v) {}
 	};
-	explicit RunawayInventory(const RunawayStrings &strings) : _strings(strings) {}
+	RunawayInventory(const RunawayStrings &strings, RunawayGameType game) :
+		_strings(strings), _museumDemo(game == kRunawayMuseumDemo), _chapter(game == kRunawayFullGame ? 1 : game == kRunawayMuseumDemo ? 2 : 3) {}
+	void setChapter(byte chapter) { _chapter = chapter; }
+	void startChapter(byte chapter);
+	RunawaySaveState::MuseumItems &museum() { return _museum; }
+	RunawaySaveState::DesertItems &desert() { return _desert; }
+	RunawaySaveState::TownItems &town() { return _town; }
 	bool contains(byte item) const;
 	bool add(byte item);
 	void remove(byte item);
@@ -56,13 +64,24 @@ public:
 	Reply combine(byte first, byte second);
 	byte clothState() const { return _clothState; }
 	void soilCloth() { _clothState = 2; }
+	byte water() const { return _water; }
+	void setWater(byte water) { _water = water; }
+	bool chartWritten() const { return _chartWritten; }
+	bool headWig() const { return _headWig; }
 	void captureState(RunawaySaveState &state) const;
 	void restoreState(const RunawaySaveState &state);
 
 private:
 	const RunawayStrings &_strings;
+	const bool _museumDemo;
+	byte _chapter;
+	RunawaySaveState::MuseumItems _museum;
+	RunawaySaveState::DesertItems _desert;
+	RunawaySaveState::TownItems _town;
 	Common::Array<byte> _items;
 	byte _selected = 0, _newItem = 0, _clothState = 0;
+	byte _water = 0;
+	byte _markerInk = 0, _syringeFilled = 0, _chartWritten = 0, _headWig = 0;
 };
 
 } // End of namespace Hollywood
