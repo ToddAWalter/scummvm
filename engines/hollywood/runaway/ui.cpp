@@ -405,6 +405,10 @@ Common::U32String RunawayUI::inventoryCaption() const {
 	if (selected) {
 		if (_hovered == selected)
 			return _strings.text(RunawayStrings::kPutAway) + _inventory.name(selected);
+		const Common::U32String combination = _inventory.combinationCaption(selected, _hovered);
+		if (!combination.empty()) {
+			return combination;
+		}
 		Common::U32String caption = _strings.text(RunawayStrings::kUse) + _inventory.name(selected);
 		if (_hovered)
 			caption += _strings.text(RunawayStrings::kWith) + _inventory.name(_hovered);
@@ -480,9 +484,10 @@ void RunawayUI::drawSubtitle(Graphics::ManagedSurface &screen, const Common::U32
 }
 
 void RunawayUI::draw(Graphics::ManagedSurface &screen, const Common::U32String &roomCaption,
-		const Common::U32String &committedCaption, const Common::U32String &subtitle, bool showSubtitles) {
-	if (_inventoryOpen)
+		const Common::U32String &committedCaption, const Common::U32String &subtitle, bool showSubtitles, bool hideInventory) {
+	if (_inventoryOpen && !hideInventory) {
 		drawInventory(screen);
+	}
 	const Graphics::ManagedSurface &button = _inventoryOpen ? _returnButton : _inventoryButton;
 	screen.copyRectToSurface(button, kButtonX, 0, Common::Rect(_buttonFrame * 100, 0, (_buttonFrame + 1) * 100, 74));
 	screen.copyRectToSurface(_optionsButton, 612, 0, Common::Rect(_optionsFrame * 100, 0, (_optionsFrame + 1) * 100, 74));

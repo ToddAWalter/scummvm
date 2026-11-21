@@ -19,6 +19,7 @@
  *
  */
 
+#include "common/random.h"
 #include "common/util.h"
 #include "hollywood/runaway/inventory.h"
 #include "hollywood/runaway/saveload.h"
@@ -27,27 +28,33 @@
 namespace Hollywood {
 namespace {
 
-const char *const kMuseumItemNames[] = {
-	"", "Wallet", "Car keys", "Condom", "Piece of amber", "Tape recorder", "Battery",
-	"Crucifix", "Strange Mayan object", "Colorless varnish", "Talcum powder", "Mayan mask",
-	"Ruby", "Willy's business card", "Bowl with coffee beans", "Cup of coffee",
-	"Pair of books", "Strange key", "Ladle", "Package of coffee"
+// Selected item followed by target item; the original combinations are directional.
+const byte kHospitalItemActions[19][19] = {
+	{ 0,  5,  5,  5, 20,  3,  5,  5,  5,  5,  5, 20, 17,  5,  3,  3,  3, 20,  5}, // 1: Wallet.
+	{ 5,  0, 15, 20, 20,  5,  5,  3,  5, 20,  3, 20, 17,  5,  3,  5, 20, 15,  5}, // 2: Car keys.
+	{ 5, 15,  0,  5, 20, 17,  5,  5, 15,  5, 15,  5, 17,  5,  5,  3,  5,  5,  3}, // 3: Order form.
+	{ 5,  5,  5,  0, 20,  3,  5,  3, 20, 17,  5, 20, 17, 15,  5,  3,  5, 20,  3}, // 4: Amber.
+	{ 5,  5,  5,  5,  0,  5,  5,  5,  5,  5,  5,  5, 17,  5,  5,  5,  5,  5,  5}, // 5: Gina's bag.
+	{ 3,  3,  3,  3,  5,  0,  5,  3,  5,  3,  3,  5,  5,  5,  5,  3,  3,  5,  3}, // 6: Gina's chart.
+	{ 5,  5,  5,  5,  5,  5,  0,  5,  5,  5,  5,  5, 17,  5,  5,  5,  5, 20,  5}, // 7: Sheet.
+	{ 5,  5,  5,  5,  5,  3,  5,  0, 20,  3,  5,  5, 17,  5,  3,  3,  3,  5, 17}, // 8: Pills.
+	{29, 29, 29, 29, 29, 29, 29, 29,  0, 29, 29, 15, 29, 29, 29, 29, 29, 29, 29}, // 9: Matches.
+	{ 5,  5,  5,  5,  5,  5,  5,  5,  5,  0,  5,  5,  5,  5,  5,  5, 73,  5,  5}, // 10: Wig.
+	{ 5,  5, 15,  5,  5, 75,  5,  5,  5,  5,  0, 70,  5,  5, 76, 74,  5,  5,  5}, // 11: Marker.
+	{ 5,  5,  5,  5,  5,  5,  5,  5,  5,  5, 70,  0, 72,  5, 71,  5,  5,  5,  5}, // 12: Alcohol.
+	{ 5,  3, 17,  5,  5,  3,  5,  3,  5,  5,  5,  5,  0,  5,  5,  3,  5,  5,  3}, // 13: Glass.
+	{ 3,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  0,  5,  5,  5,  5,  5}, // 14: Pillows.
+	{ 5,  5, 15,  5,  5,  5,  5,  5,  5,  5, 76, 69, 17,  5,  0,  5,  5, 15,  5}, // 15: Syringe.
+	{ 5,  5,  3,  3,  5, 17,  5,  5,  5,  5, 74,  5, 17,  5,  5,  0,  5,  5,  3}, // 16: Blank chart.
+	{ 3,  5,  5,  3,  5,  3,  5,  3,  5, 73,  5,  5, 17,  5,  5,  3,  0,  5,  3}, // 17: Head.
+	{15,  5,  5, 15,  5,  5, 15,  5, 15,  5,  5, 15, 17,  5,  5,  5,  5,  0,  5}, // 18: Spray.
+	{ 5,  3,  3,  3,  5,  5,  5,  3,  5,  3,  5,  5, 17,  5,  5,  5,  5,  5,  0}, // 19: Medical reference book.
 };
 
-const char *const kHospitalItemNames[] = {
-	"", "Wallet", "Car keys", "Order form", "Piece of amber", "Gina's bag", "Gina's medical chart",
-	"Sheet", "Package of pills", "Matchbox", "Wig", "Marker pen", "Bottle of alcohol", "Glass",
-	"Pillows", "Syringe", "Blank medical chart", "Head", "Flammable spray can", "Vademecum"
-};
-
-const char *const kTownItemNames[] = {
-	"", "Wallet", "Car keys", "Receipt", "Piece of amber", "Crucifix", "Doctor's bag",
-	"Stethoscope", "Liniment", "Key", "Wrench", "Strap", "Container of concentrated gasoline",
-	"Telepathic helmet", "Firewood", "Blowtorch", "Watering can", "Map of the mine", "Miner's light",
-	"Rope", "Ancient stapler", "Flower pot", "Pruning shears", "Oil can", "One-liter bottle",
-	"Empty 30 c.c. measuring tube", "Empty 50 c.c. measuring tube", "Tobacco leaves", "Chewing tobacco",
-	"Stone", "Sanding block", "Vessel", "Bank stamp"
-};
+const uint kMuseumItemCount = 19;
+const uint kTownItemCount = 32;
+const uint kHopiItemCount = 16;
+const uint kFinaleItemCount = 21;
 
 const byte kItemCursors[] = {
 	0, 41, 43, 45, 47, 49, 51, 55, 57, 59, 61, 63, 65, 67, 69,
@@ -74,6 +81,8 @@ void RunawayInventory::captureState(RunawaySaveState &state) const {
 	state.museumItems = _museum;
 	state.desertItems = _desert;
 	state.townItems = _town;
+	state.hopiItems = _hopi;
+	state.finaleItems = _finale;
 }
 
 void RunawayInventory::restoreState(const RunawaySaveState &state) {
@@ -92,6 +101,8 @@ void RunawayInventory::restoreState(const RunawaySaveState &state) {
 	_museum = state.museumItems;
 	_desert = state.desertItems;
 	_town = state.townItems;
+	_hopi = state.hopiItems;
+	_finale = state.finaleItems;
 	_newItem = 0;
 }
 
@@ -99,6 +110,9 @@ void RunawayInventory::startChapter(byte chapter) {
 	_chapter = chapter;
 	_items.clear();
 	_selected = _newItem = 0;
+	if (chapter == 1) {
+		_water = _markerInk = _syringeFilled = _chartWritten = _headWig = 0;
+	}
 	if (chapter == 3) {
 		_desert = RunawaySaveState::DesertItems();
 		_clothState = 0;
@@ -115,6 +129,19 @@ void RunawayInventory::startChapter(byte chapter) {
 			add(i);
 		}
 	}
+	if (chapter == 5) {
+		_hopi = RunawaySaveState::HopiItems();
+		for (uint i = 1; i <= 7; ++i) {
+			add(i);
+		}
+	}
+	if (chapter == 6) {
+		_finale = RunawaySaveState::FinaleItems();
+		const byte initial[] = {1, 2, 3, 5, 6, 7, 8, 9};
+		for (uint i = 0; i < ARRAYSIZE(initial); ++i) {
+			add(initial[i]);
+		}
+	}
 	_newItem = 0;
 }
 
@@ -127,7 +154,8 @@ bool RunawayInventory::contains(byte item) const {
 }
 
 bool RunawayInventory::add(byte item) {
-	const uint maxItem = _chapter == 4 ? ARRAYSIZE(kTownItemNames) - 1 : _chapter == 3 ? kItemCount : 19;
+	const uint maxItem = _chapter == 6 ? kFinaleItemCount : _chapter == 5 ? kHopiItemCount :
+		_chapter == 4 ? kTownItemCount : _chapter == 3 ? kItemCount : 19;
 	if (!item || item > maxItem || contains(item))
 		return false;
 	_items.push_back(item);
@@ -149,54 +177,121 @@ void RunawayInventory::remove(byte item) {
 }
 
 Common::U32String RunawayInventory::name(byte item) const {
-	if (_chapter == 4 && item == 11 && _town.strap == 2) {
-		return Common::U32String("Strap with joined ends");
+	if (_chapter == 6) {
+		if (item == 19 && _finale.scalpel == 1) {
+			return _strings.text(RunawayStrings::kHotScalpel);
+		}
+		if (item == 20 && _finale.podsOpened) {
+			return _strings.text(RunawayStrings::kOpenPods);
+		}
+		return _strings.itemName(_chapter, item);
 	}
-	if (_chapter == 4)
-		return item < ARRAYSIZE(kTownItemNames) ? Common::U32String(kTownItemNames[item]) : Common::U32String();
+	if (_chapter == 5) {
+		if (item == 15 && _hopi.toolHandle) {
+			return _strings.text(RunawayStrings::kMakeshiftMiningTool);
+		}
+		return _strings.itemName(_chapter, item);
+	}
+	if (_chapter == 4) {
+		if (item == 11 && _town.strap == 2) {
+			return _strings.text(RunawayStrings::kMendedStrap);
+		}
+		if (item == 24 && _town.bottleContents) {
+			return _strings.text(_town.bottleContents == 1 ? RunawayStrings::kBottleWithWater : RunawayStrings::kBottleWithGasoline);
+		}
+		if ((item == 25 && _town.tube30) || (item == 26 && _town.tube50)) {
+			return Common::U32String::format(_strings.text(RunawayStrings::kFilledMeasuringTube),
+				item == 25 ? 30U : 50U, 10U * (item == 25 ? _town.tube30 : _town.tube50));
+		}
+		if (item == 29 && _town.sculpture) {
+			return _strings.text(_town.sculpture == 1 ? RunawayStrings::kPolishedStone : RunawayStrings::kStoneOfLight);
+		}
+		if (item == 31 && _town.mortar) {
+			return _strings.text(RunawayStrings::kMakeshiftMortar);
+		}
+		return _strings.itemName(_chapter, item);
+	}
 	if (_chapter == 1) {
-		if (item == 11 && _markerInk == 1)
-			return Common::U32String("Dry marker pen");
-		if (item == 15 && _syringeFilled)
-			return Common::U32String("Syringe with alcohol");
-		if (item == 16 && _chartWritten)
-			return Common::U32String("Fake medical chart");
-		if (item == 17 && _headWig)
-			return Common::U32String("Head with wig");
+		if (item == 11 && _markerInk == 1) {
+			return _strings.text(RunawayStrings::kDryMarkerPen);
+		}
+		if (item == 15 && _syringeFilled) {
+			return _strings.text(RunawayStrings::kSyringeWithAlcohol);
+		}
+		if (item == 16 && _chartWritten) {
+			return _strings.text(RunawayStrings::kFakeMedicalChart);
+		}
+		if (item == 17 && _headWig) {
+			return _strings.text(RunawayStrings::kHeadWithWig);
+		}
+		if (item == 13 && _water == 1) {
+			return _strings.text(RunawayStrings::kGlassWithWater);
+		}
+		return _strings.itemName(_chapter, item);
 	}
-	if (_chapter == 1 && item == 13 && _water == 1)
-		return Common::U32String("Glass with water");
 	if (_chapter == 2) {
-		if (item == 6 && _museum.frozenBattery)
-			return Common::U32String("Frozen battery");
-		if (item == 11 && _museum.rubyRemoved)
-			return Common::U32String("Mayan mask without ruby");
-		if (item == 14 && _museum.coffee)
-			return Common::U32String(_museum.coffee == 1 ? "Bowl with ground coffee" : "Empty bowl");
-		if (item == 18 && _museum.batteryInLadle)
-			return Common::U32String("Ladle with battery");
+		if (item == 3 && _museumDemo) {
+			return _strings.text(RunawayStrings::kMuseumDemoCondom);
+		}
+		if (item == 6 && _museum.frozenBattery) {
+			return _strings.text(RunawayStrings::kFrozenBattery);
+		}
+		if (item == 8 && _museum.rubyRemoved) {
+			return _strings.text(RunawayStrings::kMayanPryingTool);
+		}
+		if (item == 14 && _museum.coffee) {
+			return _strings.text(_museum.coffee == 1 ? RunawayStrings::kGroundCoffeeBowl : RunawayStrings::kEmptyBowl);
+		}
+		if (item == 18 && _museum.batteryInLadle) {
+			return _strings.text(RunawayStrings::kLadleWithBattery);
+		}
+		return _strings.itemName(_chapter, item);
 	}
-	if (_chapter == 2)
-		return item < ARRAYSIZE(kMuseumItemNames) ? Common::U32String(kMuseumItemNames[item]) : Common::U32String();
-	if (_chapter == 1)
-		return item < ARRAYSIZE(kHospitalItemNames) ? Common::U32String(kHospitalItemNames[item]) : Common::U32String();
-	if (item == 1 && _clothState)
+	if (item == 1 && _clothState) {
 		return _strings.text(_clothState == 1 ? RunawayStrings::kWetCloth : RunawayStrings::kDirtyCloth);
-	if ((item == 10 && _desert.lipstick) || (item == 11 && _desert.lipsticks))
-		return Common::U32String(item == 10 ? "Lipstick filled with gunpowder" : "Lipsticks filled with gunpowder");
-	if (item == 25 && _desert.bucket == 1)
-		return Common::U32String("Bucket of gunpowder");
-	return _strings.itemName(item);
+	}
+	if ((item == 10 && _desert.lipstick) || (item == 11 && _desert.lipsticks)) {
+		return _strings.text(item == 10 ? RunawayStrings::kMakeshiftBullet : RunawayStrings::kPileOfMakeshiftBullets);
+	}
+	return _strings.itemName(_chapter, item);
 }
 
 uint RunawayInventory::icon(byte item) const {
-	if (_chapter == 4 && _town.strap == 2) {
-		if (item == 11) {
+	if (_chapter == 6) {
+		if (item == 19 && _finale.scalpel == 1) {
+			return 22;
+		}
+		if (item == 20 && _finale.podsOpened) {
+			return 23;
+		}
+		return item;
+	}
+	if (_chapter == 5) {
+		return item == 15 && _hopi.toolHandle ? 17 : item;
+	}
+	if (_chapter == 4) {
+		if (item == 11 && _town.strap == 2) {
 			return 33;
 		}
-		if (item == 20) {
+		if (item == 20 && _town.strap == 2) {
 			return 47;
 		}
+		if (item == 24 && _town.bottleContents) {
+			return 33 + _town.bottleContents;
+		}
+		if (item == 25 && _town.tube30) {
+			return 35 + _town.tube30;
+		}
+		if (item == 26 && _town.tube50) {
+			return 38 + _town.tube50;
+		}
+		if (item == 29 && _town.sculpture) {
+			return 43 + _town.sculpture;
+		}
+		if (item == 31 && _town.mortar) {
+			return 46;
+		}
+		return item;
 	}
 	if (_chapter == 2) {
 		if (item == 7 && _museum.restoredCrucifix)
@@ -247,16 +342,15 @@ uint RunawayInventory::icon(byte item) const {
 }
 
 uint RunawayInventory::cursor(byte item) const {
-	if (_chapter == 4 && _town.strap == 2) {
-		if (item == 11) {
-			return 105;
-		}
-		if (item == 20) {
-			return 133;
-		}
+	if (_chapter == 6) {
+		return item && item <= kFinaleItemCount ? 39 + icon(item) * 2 : 0;
 	}
-	if (_chapter == 4)
-		return item && item < ARRAYSIZE(kTownItemNames) ? 39 + item * 2 : 0;
+	if (_chapter == 5) {
+		return item && item <= kHopiItemCount ? 39 + icon(item) * 2 : 0;
+	}
+	if (_chapter == 4) {
+		return item && item <= kTownItemCount ? 39 + icon(item) * 2 : 0;
+	}
 	if (_chapter == 1) {
 		if (item == 15 && _syringeFilled)
 			return 77;
@@ -267,8 +361,9 @@ uint RunawayInventory::cursor(byte item) const {
 	}
 	if (_chapter == 1 && item == 13 && _water == 1)
 		return 85;
-	if (_chapter == 2)
-		return item && item < ARRAYSIZE(kMuseumItemNames) ? (_museumDemo ? 11 + item * 2 : 39 + icon(item) * 2) : 0;
+	if (_chapter == 2) {
+		return item && item <= kMuseumItemCount ? (_museumDemo ? 11 + item * 2 : 39 + icon(item) * 2) : 0;
+	}
 	if (_chapter == 1)
 		return item && item <= 19 ? (item == 16 ? 81 : 39 + item * 2 - (item > 16 ? 2 : 0)) : 0;
 	if (item == 1 && _clothState)
@@ -293,6 +388,20 @@ uint RunawayInventory::cursor(byte item) const {
 }
 
 RunawayInventory::Reply RunawayInventory::examine(byte item) const {
+	if (_chapter == 6) {
+		if (item == 19) {
+			return Reply(310, _finale.scalpel ? _finale.scalpel + 1 : _finale.heatNeeded);
+		}
+		if (item == 20) {
+			return Reply(311, _finale.podsOpened);
+		}
+		static const uint16 cues[] = {1, 50, 51, 74, 200, 300, 301, 253, 303, 256, 304, 1, 305, 306, 307, 308, 309, 1, 1, 310, 311, 312};
+		return Reply(item < ARRAYSIZE(cues) ? cues[item] : 1);
+	}
+	if (_chapter == 5) {
+		static const uint16 cues[] = {1, 50, 51, 74, 200, 250, 251, 252, 253, 254, 255, 256, 251, 257, 258, 259, 260};
+		return Reply(item < ARRAYSIZE(cues) ? cues[item] : 1, item == 12 ? 1 : item == 15 ? _hopi.toolHandle : 0);
+	}
 	if (_chapter == 4) {
 		const uint16 cues[] = {1, 50, 51, 74, 53, 200};
 		if (item < ARRAYSIZE(cues)) {
@@ -303,22 +412,42 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 		case 8: // Liniment.
 		case 9: // Cell key.
 			return Reply(194 + item);
+		case 10: // Wrench.
+			return Reply(223);
+		case 12: // Concentrated gasoline.
+		case 13: // Telepathic helmet.
+		case 15: // Blowtorch.
+			return Reply(193 + item);
+		case 17: // Map of the mine.
+		case 18: // Miner's light.
+		case 19: // Rope.
+			return Reply(192 + item);
+		case 24: // Empty, water-filled, or fuel-filled bottle.
+			return _town.bottleContents ? Reply(215, _town.bottleContents - 1) : Reply(19, 1);
+		case 25: // The 30 cc measuring tube.
+			return Reply(216, _town.tube30 == 3 ? 5 : _town.tube30);
+		case 26: // The 50 cc measuring tube.
+			return Reply(216, _town.tube50 == 5 ? 6 : _town.tube50);
+		case 28: // Homemade chewing tobacco.
+			return Reply(218);
+		case 30: // Sanding block.
+			return Reply(220);
 		case 11: // Wagon strap.
 			return Reply(204, _town.strap);
 		case 14: // Firewood.
 			return Reply(207);
 		case 20: // Ancient stapler.
-			return Reply(212);
+			return Reply(212, _town.strap == 2);
 		case 22: // Pruning shears.
 			return Reply(213);
 		case 23: // Oil can.
-			return Reply(214);
+			return Reply(214, _town.oilCanFull);
 		case 27: // Tobacco leaves.
 			return Reply(217);
 		case 29: // Stone with a hole.
-			return Reply(219);
+			return Reply(219, _town.sculpture * 2);
 		case 31: // Clay vessel.
-			return Reply(221);
+			return Reply(221, _town.mortar);
 		case 32: // Bank stamp.
 			return Reply(222);
 		default:
@@ -338,8 +467,9 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 	if (_chapter == 1 && item == 13)
 		return Reply(62, _water == 1 ? 1 : 0);
 	if (_chapter == 2) {
-		if (!item || item >= ARRAYSIZE(kMuseumItemNames))
+		if (!item || item > kMuseumItemCount) {
 			return Reply();
+		}
 		byte variation = 0;
 		switch (item) {
 		case 5:
@@ -403,101 +533,171 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 	return Reply(item && item <= kItemCount ? kExamineCues[item] : 1, variation);
 }
 
+Common::U32String RunawayInventory::combinationCaption(byte item, byte target) const {
+	if (!_fullGame || !item || !target || item == target) {
+		return Common::U32String();
+	}
+	return RunawayStrings::formatActionCaption(_strings.combinationCaption(_chapter, item, target), name(item), name(target));
+}
+
+RunawayInventory::Reply RunawayInventory::randomReply(Common::RandomSource &random) {
+	// Native 0x410000 selects weighted refusals for unsuitable combinations.
+	const uint roll = random.getRandomNumber(34);
+	if (roll < 10) {
+		return Reply(14, random.getRandomNumber(2));
+	}
+	if (roll < 20) {
+		return Reply(1, 2);
+	}
+	if (roll < 25) {
+		return Reply(2);
+	}
+	if (roll < 28) {
+		Reply reply(20);
+		reply.nextVariation = 1 + random.getRandomNumber(2);
+		return reply;
+	}
+	if (roll < 30) {
+		return Reply(1, random.getRandomNumber(2));
+	}
+	return Reply(roll < 32 ? 25 : roll < 34 ? 26 : 4);
+}
+
+RunawayInventory::Reply RunawayInventory::combineHospitalItems(byte first, byte second) {
+	assert(first && first <= ARRAYSIZE(kHospitalItemActions) && second && second <= ARRAYSIZE(kHospitalItemActions[0]));
+	const byte action = kHospitalItemActions[first - 1][second - 1];
+	switch (action) {
+	case 69: { // Fill the syringe from the alcohol bottle.
+		const byte previous = _syringeFilled;
+		_syringeFilled = 1;
+		return Reply(69, previous);
+	}
+	case 70: // Try to pour alcohol into the marker.
+		return Reply(70);
+	case 71: // Pouring alcohol onto the syringe does not fill it.
+		return Reply(70, 1);
+	case 72: // Try to pour alcohol into the glass.
+		return Reply(70, 2);
+	case 73: // Put the wig on the model head.
+		_headWig = 1;
+		remove(10);
+		return Reply(71);
+	case 74: // Write on the blank medical chart.
+		if (_markerInk < 2) {
+			const byte previous = _markerInk;
+			_markerInk = 1;
+			return Reply(72, previous);
+		}
+		if (_chartWritten) {
+			return Reply(72, 3);
+		}
+		_chartWritten = 1;
+		_markerInk = 3;
+		return Reply(72, 2);
+	case 75: // Try to write on Gina's medical chart.
+		return Reply(72, 4);
+	case 76: // Restore the marker using the filled syringe.
+		if (!_syringeFilled) {
+			return Reply(73);
+		}
+		if (_markerInk >= 2) {
+			return Reply(73, 2);
+		}
+		_markerInk = 2;
+		_syringeFilled = 0;
+		return Reply(73, 1);
+	default:
+		return Reply::fromAction(action);
+	}
+}
+
+RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte second) {
+	// Varnish, talcum powder and coffee have replies only when selected.
+	if (first == 9 || (!_fullGame && second == 9)) {
+		return Reply(118);
+	}
+	if (first == 10 || (!_fullGame && second == 10)) {
+		return Reply(119);
+	}
+	if (first == 15 || (!_fullGame && second == 15)) {
+		return Reply(122);
+	}
+	if ((first == 12 && second == 11) || (!_fullGame && first == 11 && second == 12)) {
+		return Reply(120);
+	}
+	if (first > second) {
+		SWAP(first, second);
+	}
+	if (first == 5 && second == 6) {
+		if (!_museum.frozenBattery) {
+			return Reply(115);
+		}
+		_museum.recorderBattery = 3;
+		remove(6);
+		return Reply(115, 1);
+	}
+	if (first == 6 && second == 18) {
+		if (_museum.frozenBattery) {
+			return Reply(116, 2);
+		}
+		_museum.batteryInLadle = 1;
+		remove(6);
+		return Reply(116);
+	}
+	if (first == 8 && second == 11) {
+		if (_museum.rubyRemoved) {
+			return Reply(117, 2);
+		}
+		_museum.rubyRemoved = 1;
+		add(12);
+		return Reply(117);
+	}
+	if (first == 14 && second == 19) {
+		if (_museum.coffee != 1) {
+			return Reply(_museum.coffee ? 1 : 121);
+		}
+		_museum.coffee = 2;
+		_museum.packageFilled = 1;
+		return Reply(121, 1);
+	}
+	return _fullGame ? Reply::fromAction(1) : Reply();
+}
+
 RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 	if (!contains(first) || !contains(second) || first == second)
 		return Reply();
-	if (first > second)
-		SWAP(first, second);
-	if (_chapter == 4 && first == 11 && second == 20) { // Staple the strap's ends together.
-		if (_town.strap != 1) {
-			return Reply(227, _town.strap == 2 ? 3 : 0);
-		}
-		_town.strap = 2;
-		_selected = 0;
-		_newItem = 11;
-		return Reply(227, 1);
-	}
 	if (_chapter == 1) {
-		if (first == 10 && second == 17) {
-			_headWig = 1;
-			remove(10);
-			return Reply(71);
-		}
-		if (first == 11 && second == 16) {
-			if (_markerInk < 2) {
-				const byte previous = _markerInk;
-				_markerInk = 1;
-				return Reply(72, previous);
-			}
-			if (_chartWritten)
-				return Reply(72, 3);
-			_chartWritten = 1;
-			_markerInk = 3;
-			return Reply(72, 2);
-		}
-		if (first == 12 && second == 15) {
-			const byte previous = _syringeFilled;
-			_syringeFilled = 1;
-			return Reply(69, previous);
-		}
-		if (first == 11 && second == 15) {
-			if (!_syringeFilled)
-				return Reply(73);
-			if (_markerInk >= 2)
-				return Reply(73, 2);
-			_markerInk = 2;
-			_syringeFilled = 0;
-			return Reply(73, 1);
-		}
-		if (first == 11 && second == 12)
-			return Reply(70);
-		if (first == 12 && second == 13)
-			return Reply(70, 2);
-		if (first == 13 && second == 15)
-			return Reply(70, 1);
-		if (first == 6 && second == 11)
-			return Reply(72, 4);
-		return Reply();
+		return combineHospitalItems(first, second);
 	}
 	if (_chapter == 2) {
-		if (first == 5 && second == 6) {
-			if (!_museum.frozenBattery)
-				return Reply(115);
-			_museum.recorderBattery = 3;
-			remove(6);
-			return Reply(115, 1);
+		return combineMuseumItems(first, second);
+	}
+	if (_chapter == 4) {
+		return combineTownItems(first, second);
+	}
+	if (first > second)
+		SWAP(first, second);
+	if (_chapter == 5) {
+		return combineHopiItems(first, second);
+	}
+	if (_chapter == 6) {
+		if (first == 19 && second == 20) {
+			if (_finale.podsOpened) {
+				return Reply(313, 6);
+			}
+			if (_finale.scalpel) {
+				_finale.scalpel = 2;
+				_finale.podsOpened = 1;
+				add(10);
+				return Reply(313, 4);
+			}
+			const byte variation = _finale.heatNeeded ? 2 : 0;
+			_finale.heatNeeded = 1;
+			return Reply(313, variation);
 		}
-		if (first == 6 && second == 18) {
-			if (_museum.frozenBattery)
-				return Reply(116, 2);
-			_museum.batteryInLadle = 1;
-			remove(6);
-			return Reply(116);
-		}
-		if (first == 8 && second == 11) {
-			if (_museum.rubyRemoved)
-				return Reply(117, 2);
-			_museum.rubyRemoved = 1;
-			add(12);
-			return Reply(117);
-		}
-		if (first == 11 && second == 12)
-			return Reply(120);
-		if (first == 14 && second == 19) {
-			if (_museum.coffee != 1)
-				return Reply(_museum.coffee ? 1 : 121);
-			_museum.coffee = 2;
-			_museum.packageFilled = 1;
-			return Reply(121, 1);
-		}
-		if (first == 9 || second == 9)
-			return Reply(118);
-		if (first == 10 || second == 10)
-			return Reply(119);
-		if (first == 15 || second == 15)
-			return Reply(122);
 		return Reply();
 	}
+
 	if (_chapter != 3)
 		return Reply();
 	// Chapter 3's item-pair table (retail 0x46d400).
@@ -578,7 +778,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 		return Reply(191);
 	if (first == 18 && second == 25)
 		return Reply(_desert.antTrickKnown ? (_desert.bucket == 1 ? 192 : 180) : 14);
-	return Reply();
+	return _fullGame ? Reply::fromAction(1) : Reply();
 }
 
 } // End of namespace Hollywood

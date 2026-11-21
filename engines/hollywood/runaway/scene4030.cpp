@@ -20,24 +20,24 @@
  */
 
 #include "common/util.h"
-#include "hollywood/runaway/scene.h"
-#include "hollywood/runaway/scene_data.h"
+#include "hollywood/runaway/scene4030.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Door", 1165, 594, 2, {322, 301}, {0, 0}},
-	{"Pair of books", 355, 595, 1, {302, 303}, {0, 1}},
-	{"Crack", 355, 595, 1, {304, 305}, {1, 0}},
-	{"Money", 550, 647, 7, {306, 307}, {1, 0}},
-	{"Papers", 550, 647, 7, {308, 319}, {1, 0}},
-	{"Device", 550, 647, 7, {309, 310}, {1, 1}},
-	{"Shelves", 815, 508, 1, {311, 312}, {0, 0}},
-	{"Secret safe", 550, 647, 7, {313, 314}, {0, 0}},
-	{"Shelves", 104, 536, 7, {315, 316}, {0, 0}},
-	{"Window", 369, 499, 7, {317, 318}, {1, 0}},
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{1165, 594, 2, {322, 301}, {0, 0}}, // 1: Door.
+	{355, 595, 1, {302, 303}, {0, 1}}, // 2: Pair of books.
+	{355, 595, 1, {304, 305}, {1, 0}}, // 3: Crack.
+	{550, 647, 7, {306, 307}, {1, 0}}, // 4: Money.
+	{550, 647, 7, {308, 319}, {1, 0}}, // 5: Papers.
+	{550, 647, 7, {309, 310}, {1, 1}}, // 6: Device.
+	{815, 508, 1, {311, 312}, {0, 0}}, // 7: Shelves.
+	{550, 647, 7, {313, 314}, {0, 0}}, // 8: Secret safe.
+	{104, 536, 7, {315, 316}, {0, 0}}, // 9: Shelves.
+	{369, 499, 7, {317, 318}, {1, 0}}, // 10: Window.
 };
 
 const RunawayResponse kResponses[] = {
@@ -59,7 +59,7 @@ const RunawayResponse kResponses[] = {
 
 const RunawayItemAction kItemActions[] = {
 	{kMuseumOffice, 17, 3, 321}, // Open or close the safe with the strange key.
-	{kMuseumOffice, 0, 3, 320}, // Use an item with the crack.
+	{kMuseumOffice, 0, 3, 320, false}, // Use an item with the crack.
 };
 
 const RunawayExit kExits[] = {
@@ -76,33 +76,64 @@ const RunawayRoom kRunawayScene4030 = {
 	kExits, ARRAYSIZE(kExits)
 };
 
-void RunawayRoomScene::updateMaps4030() {
+namespace Runaway {
+
+Scene4030::Scene4030(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
+	RunawayRoomScene(audio, inventory, strings, game) {}
+
+bool Scene4030::loadCustomResources() {
+	return loadForeground(0, 4) && loadForeground(1, 5) && loadForeground(2, 6) &&
+		loadForeground(3, 7) && loadForeground(4, 12);
+}
+
+bool Scene4030::applyCustomBackgroundPatches() {
+	if (_books == kTaken && !applyPatch(8)) {
+		return false;
+	}
+	if (!_safeAnimation.load(_archive, _recorder == kTaken ? 15 : 14, 13)) {
+		return false;
+	}
+	_safeAnimation.draw(_background, _safeOpen ? 12 : 0, 0, 0);
+	return true;
+}
+
+void Scene4030::applyCustomHotspotState() {
 	for (uint i = 0; i < 256; ++i) {
 		byte &id = _maps[256 + i];
-		if (_books != kTaken && (id == 2 || id == 3))
+		if (_books != kTaken && (id == 2 || id == 3)) {
 			id = 2;
-		else if (_books == kTaken && id == 2)
+		} else if (_books == kTaken && id == 2) {
 			id = 0;
-		if (!_safeOpen && (id == 4 || id == 5 || id == 6 || id == 8))
+		}
+		if (!_safeOpen && (id == 4 || id == 5 || id == 6 || id == 8)) {
 			id = 0;
-		else if (_safeOpen && id == 8)
+		} else if (_safeOpen && id == 8) {
 			id = 0;
-		if (_recorder == kTaken && id == 6)
+		}
+		if (_recorder == kTaken && id == 6) {
 			id = 4;
+		}
 	}
 }
 
-Common::U32String RunawayRoomScene::hotspotName4030(byte id) const {
-	if (id == 2 && _books != kUnexamined)
-		return _inventory.name(16);
-	if (id == 5)
-		return _moneyIdentified ? Common::U32String("Money") : Common::U32String("Papers");
-	if (id == 6)
-		return _recorder != kUnexamined ? _inventory.name(5) : Common::U32String("Device");
-	return Common::U32String(hotspot(id)->name);
+void Scene4030::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) {
+	const byte zone = walkZone();
+	if (zone == 3) {
+		drawForeground(viewport, 0);
+	}
+	if (zone == 4 && _books == kUnexamined) {
+		drawForeground(viewport, 1);
+	}
+	if (zone == 5) {
+		drawForeground(viewport, 2);
+	}
+	drawForeground(viewport, 3);
+	if (zone == 4 && _books != kUnexamined) {
+		drawForeground(viewport, 4);
+	}
 }
 
-RunawayRoomScene::ActionResult RunawayRoomScene::execute4030(uint16 action) {
+RunawayRoomScene::ActionResult Scene4030::dispatchCustomSceneAction(uint16 action) {
 	if (action == 301 && _safeOpen) {
 		say(21);
 		return kHandled;
@@ -113,8 +144,9 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4030(uint16 action) {
 		_books = MAX(_books, kIdentified);
 		return kHandled;
 	case 303: // Take the books, revealing the crack.
-		if (_books == kUnexamined)
+		if (_books == kUnexamined) {
 			say(1);
+		}
 		_books = kTaken;
 		_inventory.add(16);
 		say(2);
@@ -133,8 +165,9 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4030(uint16 action) {
 		_recorder = MAX(_recorder, kIdentified);
 		return kHandled;
 	case 310: // Take the tape recorder.
-		if (_recorder == kUnexamined)
+		if (_recorder == kUnexamined) {
 			say(9);
+		}
 		_recorder = kTaken;
 		_inventory.add(5);
 		say(10);
@@ -156,8 +189,9 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4030(uint16 action) {
 				const uint frame = MIN<uint>(12, i > 27 ? i - 27 : 0);
 				safe[i] = _safeOpen ? 12 - frame : frame;
 			}
-			if (!_safeOpen && !_museum.safeUsed)
+			if (!_safeOpen && !_museum.safeUsed) {
 				say(20);
+			}
 			beginRoomAnimation(321, 16, 26, brian, ARRAYSIZE(brian));
 			setRoomAnimationOverlay(_recorder == kTaken ? 15 : 14, 13, safe, ARRAYSIZE(safe));
 			_inventory.select(0);
@@ -176,36 +210,45 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4030(uint16 action) {
 	return kUnhandled;
 }
 
-float RunawayRoomScene::actorHeight4030() const {
+void Scene4030::finishCustomAnimation(uint16 action) {
+	if (action == 321) {
+		_safeOpen = !_safeOpen;
+		if (_safeOpen && !_museum.safeUsed) {
+			_museum.safeUsed = 1;
+			say(20, 1);
+		}
+		refreshMuseum();
+	}
+}
+
+void Scene4030::handleAnimationFrameHook() {
+	if (_roomAction == 321) {
+		if (_actionStep == 21) {
+			_audio.playEffect(36);
+		}
+		if (_actionStep == 27) {
+			_audio.playEffect(_safeOpen ? 39 : 38, 77);
+		}
+	}
+}
+
+float Scene4030::actorHeight() const {
 	const int x = _position.x, y = _position.y;
 	return x < 459 ? y * 0.369863f + 208.301376f : y * 0.516304f + 110.625f;
 }
 
-bool RunawayRoomScene::loadScene4030() {
-	return loadForeground(0, 4) && loadForeground(1, 5) && loadForeground(2, 6) &&
-		loadForeground(3, 7) && loadForeground(4, 12);
+Common::U32String Scene4030::hotspotName(byte id) const {
+	if (id == 2 && _books != kUnexamined) {
+		return _strings.text(RunawayStrings::kAnthropologyBooks);
+	}
+	if (id == 5 && _moneyIdentified) {
+		return _strings.text(RunawayStrings::kDocuments);
+	}
+	if (id == 6 && _recorder != kUnexamined) {
+		return _inventory.name(5);
+	}
+	return RunawayRoomScene::hotspotName(id);
 }
 
-bool RunawayRoomScene::applyBackground4030() {
-	if (_books == kTaken && !applyPatch(8))
-		return false;
-	if (!_safe.load(_archive, _recorder == kTaken ? 15 : 14, 13))
-		return false;
-	_safe.draw(_background, _safeOpen ? 12 : 0, 0, 0);
-	return true;
-}
-
-void RunawayRoomScene::drawForeground4030(Graphics::ManagedSurface &viewport) {
-	const byte zone = walkZone();
-	if (zone == 3)
-		drawForeground(viewport, 0);
-	if (zone == 4 && _books == kUnexamined)
-		drawForeground(viewport, 1);
-	if (zone == 5)
-		drawForeground(viewport, 2);
-	drawForeground(viewport, 3);
-	if (zone == 4 && _books != kUnexamined)
-		drawForeground(viewport, 4);
-}
-
+} // End of namespace Runaway
 } // End of namespace Hollywood

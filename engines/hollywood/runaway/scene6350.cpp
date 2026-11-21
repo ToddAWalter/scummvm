@@ -23,18 +23,19 @@
 #include "common/textconsole.h"
 #include "common/util.h"
 #include "hollywood/runaway/scene6350.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Entrance to the mine", 0, 0, 0, {1, 301}, {0, 0}},
-	{"Unknown place", 0, 0, 0, {1, 302}, {0, 0}},
-	{"Unknown place", 0, 0, 0, {1, 303}, {0, 0}},
-	{"Unknown place", 0, 0, 0, {1, 304}, {0, 0}},
-	{"Unknown place", 0, 0, 0, {1, 305}, {0, 0}},
-	{"Locomotive", 0, 0, 0, {1, 306}, {0, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{0, 0, 0, {1, 301}, {0, 0}}, // 1: Entrance to the mine.
+	{0, 0, 0, {1, 302}, {0, 0}}, // 2: Unknown place.
+	{0, 0, 0, {1, 303}, {0, 0}}, // 3: Unknown place.
+	{0, 0, 0, {1, 304}, {0, 0}}, // 4: Unknown place.
+	{0, 0, 0, {1, 305}, {0, 0}}, // 5: Unknown place.
+	{0, 0, 0, {1, 306}, {0, 0}} // 6: Locomotive.
 };
 
 } // End of anonymous namespace
@@ -100,10 +101,13 @@ bool Scene6350::shouldUpdateActor() const {
 
 Common::U32String Scene6350::hotspotName(byte id) const {
 	if (id == 2 && _town.arrived) {
-		return Common::U32String("Douglasville");
+		return _strings.hotspotName(_room, 7);
 	}
 	if (id == 3 && _town.houseVisited) {
-		return Common::U32String("Mama Dorita's house");
+		return _strings.hotspotName(_room, 8);
+	}
+	if (id == 4 && (_town.craterSeen || _town.craterVisited)) {
+		return _strings.hotspotName(_room, 9);
 	}
 	return RunawayRoomScene::hotspotName(id);
 }
@@ -126,6 +130,7 @@ RunawayRoomScene::ActionResult Scene6350::dispatchCustomSceneAction(uint16 actio
 		leaveTownRoom(6130);
 		break;
 	case 304: // Go to the crater.
+		_town.craterSeen = 1;
 		leaveTownRoom(6270);
 		break;
 	case 306: // Go to the locomotive.

@@ -234,8 +234,8 @@ void RunawaySaveState::sync(Common::Serializer &s) {
 	s.syncAsByte(town.steamLever, 10);
 	s.syncAsByte(town.pressureWheel, 10);
 	s.syncAsByte(town.drainSeen, 10);
-	s.syncAsByte(town.oilCanFull, 10);
-	s.syncAsByte(town.bottleContents, 10);
+	s.syncAsByte(townItems.oilCanFull, 10);
+	s.syncAsByte(townItems.bottleContents, 10);
 	s.syncAsByte(town.craterSeen, 10);
 	s.syncAsByte(town.mineVisited, 11);
 	s.syncAsByte(town.oilCan, 11);
@@ -268,6 +268,118 @@ void RunawaySaveState::sync(Common::Serializer &s) {
 	s.syncAsByte(town.dimensionalDoorKnown, 13);
 	s.syncAsByte(town.strapIdea, 13);
 	s.syncAsByte(townItems.strap, 13);
+	s.syncAsByte(town.sandingBlock, 14);
+	s.syncAsByte(town.wrenchThrown, 14);
+	s.syncAsByte(town.wrenchFound, 14);
+	s.syncAsByte(town.wrenchInTroughSeen, 14);
+	s.syncAsByte(town.kevinAway, 14);
+	s.syncAsByte(town.craterFloorVisited, 14);
+	s.syncAsByte(town.joshuaGone, 14);
+	s.syncAsByte(town.helmetTaken, 14);
+	s.syncAsByte(town.kevinMet, 14);
+	s.syncAsByte(town.catapult, 14);
+	s.syncAsByte(town.statueLowered, 14);
+	s.syncAsByte(town.blowtorchTaken, 14);
+	s.syncAsByte(town.sculptureTraded, 14);
+	s.syncAsByte(town.craneKnown, 14);
+	s.syncAsByte(town.craneTried, 14);
+	s.syncAsByte(town.wrenchPermission, 14);
+	s.syncAsByte(town.fuelTradeKnown, 14);
+	s.syncAsByte(town.waterPermission, 14);
+	s.syncAsByte(town.waterRequested, 14);
+	s.syncAsByte(town.hopiDiscussed, 14);
+	s.syncAsByte(town.roughSculptureRefused, 14);
+	s.syncAsByte(town.polishedSculptureRefused, 14);
+	s.syncAsByte(town.oscarStrengthKnown, 14);
+	s.syncAsByte(town.basementVisited, 14);
+	s.syncAsByte(town.bankImpactSeen, 14);
+	s.syncAsByte(town.safeOpened, 14);
+	s.syncAsByte(town.stethoscopeTried, 14);
+	s.syncAsByte(town.safeDialVisited, 14);
+	s.syncAsByte(town.safeDial, 14);
+	s.syncAsByte(town.safeProgress, 14);
+	s.syncAsByte(town.machinePowered, 14);
+	s.syncAsByte(town.melodyTried, 14);
+	s.syncAsByte(town.campingGearTaken, 14);
+	s.syncAsByte(townItems.sculpture, 14);
+	s.syncAsByte(townItems.tube30, 14);
+	s.syncAsByte(townItems.tube50, 14);
+	s.syncAsByte(townItems.mortar, 14);
+	s.syncAsByte(townItems.mortarIdea, 14);
+	s.syncAsByte(hopi.cliffVisited, 15);
+	s.syncAsByte(hopi.skeletonSeen, 15);
+	s.syncAsByte(hopi.nail, 15);
+	s.syncAsByte(hopi.timber, 15);
+	s.syncAsByte(hopi.femurTaken, 15);
+	s.syncAsByte(hopi.rockTried, 15);
+	s.syncAsByte(hopi.ginaFound, 15);
+	s.syncAsByte(hopi.villageLevel, 15);
+	s.syncAsByte(hopi.rope, 15);
+	s.syncAsByte(hopi.legSplinted, 15);
+	s.syncAsByte(hopi.cryptVisited, 15);
+	s.syncAsByte(hopiItems.toolHandle, 15);
+	s.syncAsByte(hopi.canyonVisited, 16);
+	s.syncAsByte(hopi.cryptEntranceVisited, 16);
+	s.syncAsByte(hopi.keyholeBlockedKnown, 16);
+	s.syncAsByte(hopi.bushSeen, 16);
+	s.syncAsByte(hopi.cryptDoor, 16);
+	s.syncAsByte(hopi.statueVisited, 17);
+	s.syncAsByte(hopi.tomahawk, 17);
+	s.syncAsByte(hopi.leftCrossSeen, 17);
+	s.syncAsByte(hopi.rightCrossSeen, 17);
+	s.syncAsByte(finale.doritaMet, 18);
+	s.syncAsByte(finale.mediumDiscussed, 18);
+	s.syncAsByte(finale.mediumTests, 18);
+	s.syncAsByte(finale.seanceComplete, 18);
+	s.syncAsByte(finale.oscarAway, 18);
+	s.syncAsByte(finale.gangsters, 18);
+	s.syncAsByte(finale.trailerFound, 18);
+	s.syncAsByte(finale.moneyFound, 18);
+	s.syncAsByte(finale.nunsHabit, 18);
+	s.syncAsByte(finale.recordingPlan, 18);
+	s.syncAsByte(finale.recordings, 18);
+	s.syncAsByte(finale.ginaUpdates, 18);
+	s.syncAsByte(finale.ginaVisitPending, 18);
+	s.syncAsByte(finale.gangstersMet, 19);
+	s.syncAsByte(finale.gangsterBag, 19);
+	s.syncAsByte(finale.scalpelNeeded, 20);
+	s.syncAsByte(finale.streetVisited, 20);
+	s.syncAsByte(finale.sheriffThanked, 20);
+	s.syncAsByte(finale.sushiVisited, 20);
+	s.syncAsByte(finale.bankResearch, 20);
+	s.syncAsByte(finale.voicePlanPending, 20);
+	s.syncAsByte(finale.voiceEditing, 20);
+	s.syncAsByte(finale.departure, 20);
+	s.syncAsByte(finale.rutgerMet, 21);
+	s.syncAsByte(finale.rutgerTranceDiscussed, 21);
+	s.syncAsByte(finale.rutgerBrewDiscussed, 21);
+	s.syncAsByte(finale.rutgerPlantHint, 21);
+	s.syncAsByte(finale.rutgerBrew, 21);
+	s.syncAsByte(finale.saloonVisited, 22);
+	s.syncAsByte(finale.locomotiveBadge, 22);
+	s.syncAsByte(finale.saturnMet, 23);
+	s.syncAsByte(finale.craterVisited, 23);
+	s.syncAsByte(finale.hotelVisited, 24);
+	s.syncAsByte(finale.rifle, 24);
+	s.syncAsByte(finale.pokerTaken, 24);
+	s.syncAsByte(finale.bellRings, 24);
+	s.syncAsByte(finale.sushiTruthTold, 24);
+	s.syncAsByte(finale.hackerKnown, 24);
+	s.syncAsByte(finale.trailerDiscussed, 24);
+	s.syncAsByte(finale.gangstersDiscussed, 24);
+	s.syncAsByte(finale.bagDelivered, 24);
+	s.syncAsByte(finale.movieFanKnown, 24);
+	s.syncAsByte(finaleItems.scalpel, 24);
+	s.syncAsByte(finaleItems.heatNeeded, 24);
+	s.syncAsByte(finaleItems.podsOpened, 24);
+	s.syncAsByte(finale.trailerVisited, 25);
+	s.syncAsByte(finale.trailerDoor, 25);
+	s.syncAsByte(finale.trailerDoorTried, 25);
+	s.syncAsByte(finale.bankBrochureTaken, 25);
+	s.syncAsByte(finale.trailerWarnings, 25);
+	s.syncAsByte(finale.trailerInteriorVisited, 25);
+	s.syncAsByte(finale.ginaVisited, 26);
+	s.syncAsByte(finale.ginaMediumDiscussed, 26);
 }
 
 byte RunawaySaveState::chapter() const {
@@ -292,7 +404,7 @@ bool RunawaySaveState::valid() const {
 	if ((game == kRunawayCabinDemo || (game == kRunawayFullGame && scene >= 5030 && scene <= 5032)) &&
 			(scene < 5030 || scene > (game == kRunawayCabinDemo ? 5030 : 5032) || x >= 1376 || y >= 600 || camera > 352 || cameraY))
 		return false;
-	if (game == kRunawayFullGame && ((chapter() == 3 && (scene < 5030 || scene > 5032)) || chapter() == 4)) {
+	if (game == kRunawayFullGame && ((chapter() == 3 && (scene < 5030 || scene > 5032)) || chapter() >= 4)) {
 		const RunawayRoom *room = findRunawayRoom(scene);
 		if (!room || x >= room->width || y >= room->height || camera > room->width - 1024 || cameraY > room->height - 600)
 			return false;
@@ -369,6 +481,18 @@ bool RunawaySaveState::valid() const {
 			return false;
 	}
 	bool owned[33] = {};
+	if (town.sandingBlock > 2 || town.wrenchThrown > 2 || town.wrenchFound > 2 || town.wrenchInTroughSeen > 1 ||
+			town.kevinAway > 1 || town.craterFloorVisited > 1 || town.joshuaGone > 1 || town.helmetTaken > 1 ||
+			town.kevinMet > 1 || town.catapult > 3 || town.statueLowered > 1 || town.blowtorchTaken > 1 ||
+			town.sculptureTraded > 1 || town.craneKnown > 1 || town.craneTried > 1 || town.wrenchPermission > 2 ||
+			town.fuelTradeKnown > 1 || town.waterPermission > 1 || town.waterRequested > 1 || town.hopiDiscussed > 1 ||
+			town.roughSculptureRefused > 1 || town.polishedSculptureRefused > 1 || town.oscarStrengthKnown > 1 || town.basementVisited > 1 ||
+			town.bankImpactSeen > 1 || town.safeOpened > 1 || town.stethoscopeTried > 1 || town.safeDialVisited > 1 ||
+			town.safeDial > 99 || town.safeProgress > 3 || town.machinePowered > 1 || town.melodyTried > 1 ||
+			town.campingGearTaken > 1 || townItems.sculpture > 2 || townItems.tube30 > 3 || townItems.tube50 > 5 ||
+			townItems.mortar > 1 || townItems.mortarIdea > 1) {
+		return false;
+	}
 	if (town.craterVisited > 1 || town.joshuaMet > 1 || town.campLeft > 1 ||
 			town.strapDelivered > 3 || town.wrenchDelivered > 2 || town.wrenchNeeded > 1 || town.fuelNeeded > 1 ||
 			town.machineKnown > 1 || town.rotorKnown > 1 || town.batteryKnown > 1 || town.helmetKnown > 1 ||
@@ -388,21 +512,61 @@ bool RunawaySaveState::valid() const {
 	if (town.locomotiveVisited > 1 || town.locomotiveKey > 3 || town.waterTank > 5 ||
 			town.cabVisited > 1 || town.cabExited > 1 || town.boiler > 3 ||
 			town.steamLever > 2 || town.pressureWheel > 2 || town.drainSeen > 1 ||
-			town.oilCanFull > 1 || town.bottleContents > 2 || town.craterSeen > 1) {
+			townItems.oilCanFull > 1 || townItems.bottleContents > 2 || town.craterSeen > 1) {
 		return false;
 	}
 	if (town.arrived > 1 || town.streetVisited > 1 || town.strapSeen > 2 || town.sushiMet > 1 || town.mineMapKnown > 1) {
 		return false;
 	}
-	if (town.bankVisited > 1 || town.bankShelves > 2 || town.bankStampTaken > 1 || town.basementKnown > 1 ||
+	if (town.bankVisited > 2 || town.bankShelves > 2 || town.bankStampTaken > 1 || town.basementKnown > 1 ||
 			town.bodySeen > 1 || town.doctorKnown > 1 || town.firewoodTaken > 1 || town.cellOpen > 1 ||
 			town.bagSearched > 1 || town.bucketSeen > 1 || town.bottleSeen > 1 || town.cellRefusals > 2 ||
 			town.safeSeen > 1 || town.oscarTobacco > 2 || town.stethoscopeTaken > 1 || town.linimentTaken > 1) {
 		return false;
 	}
+	if (hopi.cliffVisited > 1 || hopi.skeletonSeen > 1 || hopi.nail > 2 || hopi.timber > 3 ||
+			hopi.femurTaken > 1 || hopi.rockTried > 1 || hopi.ginaFound > 1 || hopi.villageLevel > 4 ||
+			hopi.rope > 2 || hopi.legSplinted > 1 || hopi.cryptVisited > 1 || hopiItems.toolHandle > 1) {
+		return false;
+	}
+	if (hopi.canyonVisited > 1 || hopi.cryptEntranceVisited > 1 || hopi.keyholeBlockedKnown > 1 ||
+			hopi.bushSeen > 1 || hopi.cryptDoor > 3) {
+		return false;
+	}
+	if (hopi.statueVisited > 1 || hopi.tomahawk > 2 || hopi.leftCrossSeen > 1 || hopi.rightCrossSeen > 1) {
+		return false;
+	}
+	if (finale.doritaMet > 1 || finale.mediumDiscussed > 1 || finale.mediumTests > 3 || finale.seanceComplete > 1 ||
+			finale.oscarAway > 1 || finale.gangsters > 2 || finale.trailerFound > 2 || finale.moneyFound > 3 ||
+			finale.nunsHabit > 2 || finale.recordingPlan > 1 || finale.recordings > 3 || finale.ginaUpdates > 7 ||
+			finale.ginaVisitPending > 1 || finale.gangstersMet > 1 || finale.gangsterBag > 3) {
+		return false;
+	}
+	if (finale.scalpelNeeded > 1 || finale.streetVisited > 1 || finale.sheriffThanked > 1 || finale.sushiVisited > 1 ||
+			finale.bankResearch > 3 || finale.voicePlanPending > 1 || finale.voiceEditing > 2 || finale.departure > 2) {
+		return false;
+	}
+	if (finale.rutgerMet > 1 || finale.rutgerTranceDiscussed > 1 || finale.rutgerBrewDiscussed > 1 ||
+			finale.rutgerPlantHint > 1 || finale.rutgerBrew > 3 || finale.saloonVisited > 1 ||
+			finale.locomotiveBadge > 3 || finale.saturnMet > 1 || finale.craterVisited > 1) {
+		return false;
+	}
+	if (finale.hotelVisited > 1 || finale.rifle > 2 || finale.pokerTaken > 1 || finale.bellRings > 4 ||
+			finale.sushiTruthTold > 1 || finale.hackerKnown > 1 || finale.trailerDiscussed > 1 ||
+			finale.gangstersDiscussed > 1 || finale.bagDelivered > 2 || finale.movieFanKnown > 1 ||
+			finaleItems.scalpel > 2 || finaleItems.heatNeeded > 1 || finaleItems.podsOpened > 1) {
+		return false;
+	}
+	if (finale.trailerVisited > 1 || finale.trailerDoor > 1 || finale.trailerDoorTried > 1 ||
+			finale.bankBrochureTaken > 1 || finale.trailerWarnings > 2 || finale.trailerInteriorVisited > 1) {
+		return false;
+	}
+	if (finale.ginaVisited > 1 || finale.ginaMediumDiscussed > 1) {
+		return false;
+	}
 	for (uint i = 0; i < itemCount; ++i) {
 		if (!items[i] || items[i] >= sizeof(owned) || owned[items[i]] ||
-				items[i] > (chapter() == 4 ? 32 : chapter() == 3 ? 26 : 19))
+				items[i] > (chapter() == 6 ? 21 : chapter() == 5 ? 16 : chapter() == 4 ? 32 : chapter() == 3 ? 26 : 19))
 			return false;
 		owned[items[i]] = true;
 	}
@@ -414,7 +578,7 @@ bool RunawaySaveState::read(Common::SeekableReadStream &stream) {
 	if (stream.readUint32BE() != MKTAG('R', 'U', 'N', 'A'))
 		return false;
 	const uint16 version = stream.readUint16LE();
-	if (version < 1 || version > 13)
+	if (version < 1 || version > 26)
 		return false;
 	Common::Serializer s(&stream, nullptr);
 	s.setVersion(version);
@@ -426,9 +590,9 @@ bool RunawaySaveState::write(Common::WriteStream &stream) {
 	if (!valid())
 		return false;
 	stream.writeUint32BE(MKTAG('R', 'U', 'N', 'A'));
-	stream.writeUint16LE(13);
+	stream.writeUint16LE(26);
 	Common::Serializer s(nullptr, &stream);
-	s.setVersion(13);
+	s.setVersion(26);
 	sync(s);
 	return !s.err();
 }

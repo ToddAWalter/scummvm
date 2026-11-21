@@ -26,14 +26,14 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Town", 1379, 491, 0, {301, 302}, {0, 3}},
-	{"Cell", 285, 501, 0, {303, 304}, {1, 0}},
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Firewood", 536, 504, 0, {306, 307}, {0, 1}},
-	{"Desk", 1020, 483, 0, {308, 309}, {0, 0}},
-	{"Gun cabinet", 1020, 483, 0, {310, 311}, {0, 0}},
-	{"Bulletin board", 857, 490, 0, {312, 313}, {0, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{1379, 491, 0, {301, 302}, {0, 3}}, // 1: Town.
+	{285, 501, 0, {303, 304}, {1, 0}}, // 2: Cell.
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{536, 504, 0, {306, 307}, {0, 1}}, // 4: Firewood.
+	{1020, 483, 0, {308, 309}, {0, 0}}, // 5: Desk.
+	{1020, 483, 0, {310, 311}, {0, 0}}, // 6: Gun cabinet.
+	{857, 490, 0, {312, 313}, {0, 0}} // 7: Bulletin board.
 };
 
 const RunawayResponse kResponses[] = {
@@ -149,7 +149,7 @@ RunawayRoomScene::ActionResult Scene6200::dispatchCustomSceneAction(uint16 actio
 		say(5);
 		deferTownAction(407);
 		break;
-	case 407:
+	case 407: // Collect the firewood.
 		_town.firewoodTaken = 1;
 		_inventory.add(14);
 		say(5, 1);
@@ -169,7 +169,7 @@ RunawayRoomScene::ActionResult Scene6200::dispatchCustomSceneAction(uint16 actio
 			_inventory.select(0);
 		}
 		break;
-	case 1314:
+	case 1314: // Finish unlocking the cell and remove the key from inventory.
 		_town.cellOpen = 1;
 		_inventory.remove(9);
 		say(12, 1);

@@ -38,6 +38,8 @@ const Graphics::PixelFormat kPictureFormat(4, 8, 8, 8, 0, 16, 8, 0, 0);
 } // End of anonymous namespace
 
 bool RunawayOpening::load(byte chapter) {
+	_failed = false;
+	_chapterVariation = _narrationCue = 0;
 	_chapterOnly = chapter != 0;
 	_chapter = chapter ? chapter : 1;
 	ChunkArchive archive;
@@ -84,6 +86,22 @@ bool RunawayOpening::load(byte chapter) {
 			return false;
 	}
 	return _portraits.load('B', 8);
+}
+
+bool RunawayOpening::loadEndingNarration(byte cue) {
+	if (cue < 7 || cue > 9 || !load(6)) {
+		return false;
+	}
+	_narrationCue = cue;
+	_chapterTitle.clear();
+	return true;
+}
+
+uint RunawayOpening::narrationVariations() const {
+	if (_narrationCue) {
+		return _narrationCue == 8 ? 4 : 2;
+	}
+	return _chapter == 2 ? 2 : _chapter == 3 ? 5 : _chapter == 4 || _chapter == 5 ? 4 : _chapter == 6 ? 3 : 1;
 }
 
 void RunawayOpening::start(uint32 now) {
@@ -220,22 +238,51 @@ void RunawayOpening::enter(Step step, uint32 now) {
 			_chapter == 3 && _chapterVariation == 2 ? 50 : 20;
 		_headBank = _chapter == 2 && _chapterVariation ? 4 : _chapter == 3 && !_chapterVariation ? 5 :
 			_chapter == 3 && _chapterVariation == 2 ? 2 : 1;
-		if (_chapter == 4) {
+		if (_narrationCue) {
+			_bodyFrame = _chapterVariation == 0 ? (_narrationCue == 7 ? 177 : 160) : _chapterVariation == 2 ? 110 : 20;
+			_headBank = _chapterVariation == 0 ? (_narrationCue == 7 ? 5 : 4) : _chapterVariation == 2 ? 3 : 1;
+		} else if (_chapter == 4) {
 			const byte poses[] = {109, 20, 177, 20};
 			const byte heads[] = {3, 1, 5, 1};
 			_bodyFrame = poses[_chapterVariation];
 			_headBank = heads[_chapterVariation];
+		} else if (_chapter == 5) {
+			_bodyFrame = _chapterVariation ? 20 : 50;
+			_headBank = _chapterVariation ? 1 : 2;
+		} else if (_chapter == 6) {
+			_bodyFrame = _chapterVariation == 1 ? 177 : 20;
+			_headBank = _chapterVariation == 1 ? 5 : 1;
 		}
-		speak(_chapter, _chapterVariation);
+		speak(_narrationCue ? _narrationCue : _chapter, _chapterVariation);
 		break;
 	case kChapterGesture:
 		_headBank = 0;
-		if (_chapter == 4) {
+		if (_narrationCue) {
+			if (_chapterVariation == 1) {
+				_firstFrame = _narrationCue == 7 ? 177 : 160;
+				_lastFrame = _narrationCue == 7 ? 161 : 128;
+			} else {
+				_firstFrame = _chapterVariation == 2 ? 76 : 111;
+				_lastFrame = _chapterVariation == 2 ? 110 : 127;
+			}
+		} else if (_chapter == 4) {
 			_firstFrame = _chapterVariation == 1 ? 110 : _chapterVariation == 2 ? 161 : 177;
 			_lastFrame = _chapterVariation == 1 ? 127 : _chapterVariation == 2 ? 177 : 161;
 		} else if (_chapter == 2) {
 			_firstFrame = 128;
 			_lastFrame = 160;
+		} else if (_chapter == 6) {
+			_firstFrame = _chapterVariation == 1 ? 161 : 177;
+			_lastFrame = _chapterVariation == 1 ? 177 : 161;
+		} else if (_chapter == 5) {
+			if (_chapterVariation == 1) {
+				_firstFrame = 51;
+				_lastFrame = 75;
+			} else {
+				_headBank = 1;
+				_firstFrame = _chapterVariation == 2 ? 7 : 17;
+				_lastFrame = _chapterVariation == 2 ? 10 : 20;
+			}
 		} else if (_chapterVariation == 1) {
 			_firstFrame = 177;
 			_lastFrame = 161;
@@ -259,7 +306,7 @@ void RunawayOpening::enter(Step step, uint32 now) {
 
 void RunawayOpening::advance() {
 	if (_step == kChapter) {
-		const uint variations = _chapter == 2 ? 2 : _chapter == 3 ? 5 : _chapter == 4 ? 4 : 1;
+		const uint variations = narrationVariations();
 		if (++_chapterVariation < variations)
 			enter(_chapterVariation < 4 ? kChapterGesture : kChapter, _now);
 		else
@@ -345,7 +392,10 @@ void RunawayOpening::update(uint32 now) {
 	case kChapterGesture: {
 		const uint distance = ABS((int)_lastFrame - (int)_firstFrame);
 		const uint offset = MIN(distance, elapsed / 80);
-		_bodyFrame = _lastFrame >= _firstFrame ? _firstFrame + offset : _firstFrame - offset;
+		_frame = _lastFrame >= _firstFrame ? _firstFrame + offset : _firstFrame - offset;
+		if (!_headBank) {
+			_bodyFrame = _frame;
+		}
 		if (elapsed >= (distance + 1) * 80)
 			advance();
 		break;
@@ -473,12 +523,20 @@ void RunawayOpening::skip(uint32 now) {
 void RunawayOpening::drawNarrator(Graphics::ManagedSurface &screen) {
 	screen.blitFrom(_narratorBackground, Common::Point(0, kRunawayViewportTop));
 	_narrator[0].draw(screen, _bodyFrame, 0, kRunawayViewportTop);
-	if (_headBank)
-		_narrator[_headBank].draw(screen, _speech.frame(_now) % 6, 0, kRunawayViewportTop);
+	if (_headBank) {
+		uint frame = _speech.frame(_now) % 6;
+		if (_chapter == 5 && _step == kChapter && _chapterVariation == 2) {
+			frame += 10;
+		} else if (_chapter == 5 && _step == kChapterGesture && _chapterVariation >= 2) {
+			frame = _frame == 20 ? 0 : _frame;
+		}
+		_narrator[_headBank].draw(screen, frame, 0, kRunawayViewportTop);
+	}
 	if (_step == kMontage)
 		_video.draw(screen, Common::Rect(256, 232, 656, 466));
-	if (_step == kChapter || _step == kChapterGesture)
+	if (!_chapterTitle.empty() && (_step == kChapter || _step == kChapterGesture)) {
 		applyRunawayPatch(_chapterTitle, screen, kRunawayViewportTop);
+	}
 }
 
 void RunawayOpening::drawCity(Graphics::ManagedSurface &screen) {
@@ -558,12 +616,13 @@ void RunawayOpening::draw(Graphics::ManagedSurface &screen) {
 	else if (_step < kFinished)
 		drawFilm(screen);
 	const uint elapsed = _now - _started;
-	if ((_step == kSitDown || _step == kCity || (_step == kChapter && !_chapterVariation)) && elapsed < 500)
+	if ((_step == kSitDown || _step == kCity || (_step == kChapter && !_chapterVariation)) && elapsed < 500) {
 		dimRunawayViewport(screen, elapsed * 2);
-	else if ((_step == kLastNarration || (_step == kChapter && _chapterVariation + 1 == (_chapter == 2 ? 2 : _chapter == 3 ? 5 : _chapter == 4 ? 4 : 1))) && _events)
+	} else if ((_step == kLastNarration || (_step == kChapter && _chapterVariation + 1 == narrationVariations())) && _events) {
 		dimRunawayViewport(screen, MIN<uint>(500, _deadline - _now) * 2);
-	else if (_step == kCityExit && elapsed > 3280)
+	} else if (_step == kCityExit && elapsed > 3280) {
 		dimRunawayViewport(screen, (3780 - MIN<uint>(3780, elapsed)) * 2);
+	}
 }
 
 } // End of namespace Hollywood

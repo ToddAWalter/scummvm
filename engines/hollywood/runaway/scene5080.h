@@ -19,28 +19,39 @@
  *
  */
 
-#ifndef HOLLYWOOD_RUNAWAY_SCENE6014_H
-#define HOLLYWOOD_RUNAWAY_SCENE6014_H
+#ifndef HOLLYWOOD_RUNAWAY_SCENE5080_H
+#define HOLLYWOOD_RUNAWAY_SCENE5080_H
 
 #include "hollywood/runaway/scene.h"
 
 namespace Hollywood {
 namespace Runaway {
 
-class Scene6014 : public RunawayRoomScene {
+class Scene5080 : public RunawayRoomScene {
 public:
-	Scene6014(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game);
+	Scene5080(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game);
 
 private:
-	uint sceneResourceNumber() const override;
-	uint sceneTextNumber() const override;
-	bool loadWalkMap() override;
-	void runCustomEntrySequence() override;
-	bool drawCustomComposite(Graphics::ManagedSurface &viewport) override;
+	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
+	bool loadCustomResources() override;
+	bool applyCustomBackgroundPatches() override;
+	void applyCustomHotspotState() override;
+	float actorHeight() const override;
 	ActionResult dispatchCustomSceneAction(uint16 action) override;
+	void runCustomEntrySequence() override;
+	Common::U32String hotspotName(byte id) const override;
+	void advanceCustomGameplayLoop(uint32 delta) override;
+	void drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) override;
+	void drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) override;
+	void handleAnimationFrameHook() override;
+
+	RunawayAnimation _ambientAnimations[6];
+	RunawayAnimation _idleAnimation, _antsAnimation;
+	byte _antsFrame = 0;
+	uint32 _antsTick = 0;
 };
 
 } // End of namespace Runaway
 } // End of namespace Hollywood
 
-#endif // HOLLYWOOD_RUNAWAY_SCENE6014_H
+#endif // HOLLYWOOD_RUNAWAY_SCENE5080_H

@@ -40,7 +40,6 @@ enum RunawayRoomId {
 };
 
 struct RunawayHotspot {
-	const char *name;
 	int16 x, y;
 	byte facing;
 	uint16 action[2]; // Look, use; IDs from the original room's action table.
@@ -104,7 +103,7 @@ extern const RunawayRoom kRunawayScene5130;
 extern const RunawayRoom kRunawayScene5140;
 extern const RunawayRoom kRunawayScene5160;
 extern const RunawayRoom kRunawayScene5170;
-extern const RunawayRoom kRunawayScene6014;
+extern const RunawayRoom kRunawayScene6030;
 extern const RunawayRoom kRunawayScene6080;
 extern const RunawayRoom kRunawayScene6090;
 extern const RunawayRoom kRunawayScene6130;
@@ -113,13 +112,47 @@ extern const RunawayRoom kRunawayScene6190;
 extern const RunawayRoom kRunawayScene6200;
 extern const RunawayRoom kRunawayScene6210;
 extern const RunawayRoom kRunawayScene6220;
+extern const RunawayRoom kRunawayScene6226;
 extern const RunawayRoom kRunawayScene6240;
+extern const RunawayRoom kRunawayScene6250;
 extern const RunawayRoom kRunawayScene6260;
 extern const RunawayRoom kRunawayScene6263;
 extern const RunawayRoom kRunawayScene6270;
+extern const RunawayRoom kRunawayScene6280;
 extern const RunawayRoom kRunawayScene6290;
+extern const RunawayRoom kRunawayScene6300;
 extern const RunawayRoom kRunawayScene6350;
 extern const RunawayRoom kRunawayScene6370;
+extern const RunawayRoom kRunawayScene6390;
+extern const RunawayRoom kRunawayScene7010;
+extern const RunawayRoom kRunawayScene7020;
+extern const RunawayRoom kRunawayScene7030;
+extern const RunawayRoom kRunawayScene7040;
+extern const RunawayRoom kRunawayScene7050;
+extern const RunawayRoom kRunawayScene8090;
+extern const RunawayRoom kRunawayScene8100;
+extern const RunawayRoom kRunawayScene8130;
+extern const RunawayRoom kRunawayScene8180;
+extern const RunawayRoom kRunawayScene8190;
+extern const RunawayRoom kRunawayScene8200;
+extern const RunawayRoom kRunawayScene8210;
+extern const RunawayRoom kRunawayScene8220;
+extern const RunawayRoom kRunawayScene8226;
+extern const RunawayRoom kRunawayScene8230;
+extern const RunawayRoom kRunawayScene8240;
+extern const RunawayRoom kRunawayScene8260;
+extern const RunawayRoom kRunawayScene8263;
+extern const RunawayRoom kRunawayScene8290;
+extern const RunawayRoom kRunawayScene8300;
+extern const RunawayRoom kRunawayScene8350;
+extern const RunawayRoom kRunawayScene8370;
+extern const RunawayRoom kRunawayScene8380;
+extern const RunawayRoom kRunawayScene8400;
+extern const RunawayRoom kRunawayScene8410;
+extern const RunawayRoom kRunawayScene8420;
+extern const RunawayRoom kRunawayScene9010;
+extern const RunawayRoom kRunawayScene9020;
+extern const RunawayRoom kRunawayScene9030;
 
 const RunawayRoom *findRunawayRoom(uint16 number);
 

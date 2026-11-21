@@ -21,21 +21,22 @@
 
 #include "common/util.h"
 #include "hollywood/runaway/scene6220.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Path", 188, 599, 5, {301, 302}, {0, 3}},
-	{"Saloon", 778, 512, 3, {303, 304}, {0, 1}},
-	{"Hotel", 125, 441, 7, {305, 306}, {0, 1}},
-	{"Sheriff's office", 388, 284, 7, {307, 308}, {0, 1}},
-	{"Liquor store", 574, 242, 7, {309, 310}, {0, 1}},
-	{"Bank", 647, 198, 0, {311, 312}, {0, 3}},
-	{"Locomotive", 722, 192, 0, {313, 314}, {0, 1}},
-	{"Wagon", 293, 350, 7, {315, 316}, {1, 0}},
-	{"North side of town", 722, 192, 0, {318, 319}, {0, 3}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{188, 599, 5, {301, 302}, {0, 3}}, // 1: Path.
+	{778, 512, 3, {303, 304}, {0, 1}}, // 2: Saloon.
+	{125, 441, 7, {305, 306}, {0, 1}}, // 3: Hotel.
+	{388, 284, 7, {307, 308}, {0, 1}}, // 4: Sheriff's office.
+	{574, 242, 7, {309, 310}, {0, 1}}, // 5: Liquor store.
+	{647, 198, 0, {311, 312}, {0, 3}}, // 6: Bank.
+	{722, 192, 0, {313, 314}, {0, 1}}, // 7: Locomotive.
+	{293, 350, 7, {315, 316}, {1, 0}}, // 8: Wagon.
+	{722, 192, 0, {318, 319}, {0, 3}} // 9: North side of town.
 };
 
 const RunawayResponse kResponses[] = {
@@ -165,7 +166,7 @@ void Scene6220::setupActorDepth(RunawayActor::RenderParams &params) const {
 
 Common::U32String Scene6220::hotspotName(byte id) const {
 	if (id == 8 && _town.strapSeen == 1) {
-		return Common::U32String("Strap");
+		return _strings.itemName(4, 11);
 	}
 	return RunawayRoomScene::hotspotName(id);
 }
@@ -220,7 +221,7 @@ RunawayRoomScene::ActionResult Scene6220::dispatchCustomSceneAction(uint16 actio
 		say(11);
 		deferTownAction(417);
 		break;
-	case 417: {
+	case 417: { // Cut the wagon strap with the pruning shears.
 		static const byte frames[] = {
 			0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 			20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
@@ -228,7 +229,7 @@ RunawayRoomScene::ActionResult Scene6220::dispatchCustomSceneAction(uint16 actio
 		beginRoomAnimation(417, 10, 22, frames, ARRAYSIZE(frames));
 		break;
 	}
-	case 1417:
+	case 1417: // Collect the cut strap.
 		_town.strapSeen = 2;
 		_inventory.select(0);
 		_inventory.add(11);

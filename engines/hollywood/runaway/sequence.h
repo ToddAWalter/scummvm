@@ -40,13 +40,16 @@ public:
 		kOpen,        // Movie number; optional file suffix (defaults to .001).
 		kPlay,        // First/last frame, Playback mode.
 		kStill,       // Frame; second argument selects the separate GOG stills movie.
+		kImage,       // A 1024x600 image from RESOURCE.000.
 		kTalk,        // Cue, variation, portrait chunk + 1 (0 = movie still), offscreen speaker.
-		kSpeech,      // Cue, first/last variation; continues alongside the movie.
-		kWaitSpeech,
+		kSpeech,      // Cue, first/last variation, global cue; continues alongside the movie.
+		kWaitSpeech,  // Optional portrait and offscreen speaker, as in kTalk.
+		kWaitInput,
 		kMusic,       // Cue, volume, loop.
+		kMusicVolume, // Change volume without restarting the current music.
 		kEffect,      // Cue, volume, channel, loop.
 		kWaitEffect,  // Maximum wait in milliseconds (channel 0).
-		kStopEffects,
+		kStopEffects, // Optional channel + 1; zero stops all effects.
 		kDelay,       // Milliseconds.
 		kEnd
 	};
@@ -59,7 +62,7 @@ public:
 		byte c, d;
 	};
 	explicit RunawaySequence(RunawayAudio &audio) : _audio(audio), _random("runawaySequence"), _speech(audio, _random) {}
-	void start(const Command *commands, const SceneTextStore &text, uint32 now, char chapter = 'B');
+	void start(const Command *commands, const SceneTextStore &text, uint32 now, char chapter = 'B', bool keepEffects = false);
 	void setBackground(const Graphics::ManagedSurface &background, const Common::Rect &destination);
 	void update(uint32 now);
 	void skip();
@@ -70,7 +73,7 @@ public:
 
 private:
 	void advance();
-	void speak(uint cue, uint variation, uint lastVariation = 0);
+	void speak(uint cue, uint variation, uint lastVariation = 0, bool global = false);
 	void nextLine();
 
 	RunawayAudio &_audio;
@@ -91,9 +94,12 @@ private:
 	uint32 _repeatAt = 0;
 	bool _entered = false, _showPortrait = false, _silentPortrait = false;
 	bool _skipFilm = false;
+	bool _keepEffects = false;
+	int _listenerX = 512;
 	struct Line {
 		Common::U32String text;
 		uint16 sample;
+		bool global;
 	};
 	Common::Array<Line> _lines;
 	uint _line = 0;

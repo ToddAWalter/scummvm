@@ -27,13 +27,20 @@
 
 namespace Hollywood {
 
-void RunawaySequence::start(const Command *commands, const SceneTextStore &text, uint32 now, char chapter) {
+void RunawaySequence::start(const Command *commands, const SceneTextStore &text, uint32 now, char chapter, bool keepEffects) {
+	if (!active()) {
+		_listenerX = _audio.listenerPosition();
+	}
 	_background.free();
 	_destination = Common::Rect(0, kRunawayViewportTop, kRunawayScreenWidth, kRunawayViewportTop + kRunawayViewportHeight);
 	_chapter = chapter;
 	_text = &text;
 	_speech.stop();
-	_audio.stopEffect();
+	_keepEffects = keepEffects;
+	if (!_keepEffects) {
+		_audio.stopEffect();
+	}
+	_audio.setListenerPosition(kRunawayScreenWidth / 2);
 	_lines.clear();
 	_line = 0;
 	_commands = commands;
@@ -55,15 +62,21 @@ void RunawaySequence::advance() {
 	_started = _now;
 }
 
-void RunawaySequence::speak(uint cue, uint variation, uint lastVariation) {
+void RunawaySequence::speak(uint cue, uint variation, uint lastVariation, bool global) {
 	for (uint v = variation; v <= MAX(variation, lastVariation); ++v) {
-		const SceneSpeechCue speech = _text->stageCue(cue, v);
+		SceneSpeechCue speech;
+		if (global) {
+			_text->getStaticSpeechCue(cue, v, speech.textRecordId, speech.continuationCount, speech.voiceSampleId);
+		} else {
+			speech = _text->stageCue(cue, v);
+		}
 		if (!speech.valid() || speech.textRecordId == 0xffff)
 			continue;
 		for (uint i = 0; i < MAX<uint>(1, speech.continuationCount); ++i) {
 			Line line;
 			line.text = Common::U32String(_text->largeTextRecord(speech.textRecordId + i), Common::kDos850);
 			line.sample = speech.voiceSampleId ? speech.voiceSampleId + i : 0;
+			line.global = global;
 			if (!line.text.empty())
 				_lines.push_back(line);
 		}
@@ -80,7 +93,7 @@ void RunawaySequence::nextLine() {
 		return;
 	}
 	const Line &line = _lines[_line++];
-	_speech.start(line.text, line.sample, false, _now, 0);
+	_speech.start(line.text, line.sample, line.global, _now, 0);
 }
 
 void RunawaySequence::update(uint32 now) {
@@ -90,7 +103,7 @@ void RunawaySequence::update(uint32 now) {
 	while (active()) {
 		const Command &command = _commands[_index];
 		// Preserve the final music cue and normal cleanup when skipping a film.
-		if (_skipFilm && command.operation != kMusic && command.operation != kEnd) {
+		if (_skipFilm && command.operation != kMusic && command.operation != kMusicVolume && command.operation != kEnd) {
 			advance();
 			continue;
 		}
@@ -123,15 +136,34 @@ void RunawaySequence::update(uint32 now) {
 					error("Cannot load Runaway film still %u", command.a);
 				break;
 			case kTalk:
-				_showPortrait = command.c != 0;
-				_silentPortrait = command.d != 0;
-				_portrait = (command.c - 1) / 2;
-				if (_showPortrait && !_portraits.load(_chapter, _movie))
-					error("Cannot load Runaway film portrait %u", command.c - 1);
-				speak(command.a, command.b);
+			case kWaitSpeech:
+				if (command.operation == kTalk || command.c) {
+					_showPortrait = command.c != 0;
+					_silentPortrait = command.d != 0;
+					_portrait = (command.c - 1) / 2;
+					if (_showPortrait && !_portraits.load(_chapter, _movie)) {
+						error("Cannot load Runaway film portrait %u", command.c - 1);
+					}
+				}
+				if (command.operation == kTalk) {
+					speak(command.a, command.b);
+				}
 				break;
+			case kImage: {
+				Graphics::ManagedSurface image;
+				if (!loadRunawaySurface(command.a, kRunawayScreenWidth, kRunawayViewportHeight, image)) {
+					error("Cannot load Runaway image %u", command.a);
+				}
+				_video.close();
+				_stills.close();
+				_useStill = _showPortrait = false;
+				_background.create(kRunawayScreenWidth, kRunawayScreenHeight, image.format);
+				_background.clear();
+				_background.blitFrom(image, Common::Point(0, kRunawayViewportTop));
+				break;
+			}
 			case kSpeech:
-				speak(command.a, command.b, command.c);
+				speak(command.a, command.b, command.c, command.d != 0);
 				break;
 			case kMusic:
 				_audio.playMusic(command.a, command.c != 0);
@@ -140,8 +172,15 @@ void RunawaySequence::update(uint32 now) {
 			case kEffect:
 				_audio.playEffect(command.a, command.b, command.c, command.d != 0);
 				break;
+			case kMusicVolume:
+				_audio.setMusicVolume(command.a);
+				break;
 			case kStopEffects:
-				_audio.stopEffect();
+				if (command.a) {
+					_audio.stopEffect(command.a - 1);
+				} else {
+					_audio.stopEffect();
+				}
 				break;
 			default:
 				break;
@@ -178,6 +217,8 @@ void RunawaySequence::update(uint32 now) {
 			if (!subtitle().empty())
 				return;
 			break;
+		case kWaitInput:
+			return;
 		case kDelay:
 			if (now - _started < command.a)
 				return;
@@ -190,9 +231,12 @@ void RunawaySequence::update(uint32 now) {
 			_video.close();
 			_stills.close();
 			_speech.stop();
-			_audio.stopEffect();
+			if (!_keepEffects) {
+				_audio.stopEffect();
+			}
 			_lines.clear();
 			_commands = nullptr;
+			_audio.setListenerPosition(_listenerX);
 			return;
 		default:
 			break;
@@ -213,7 +257,7 @@ void RunawaySequence::skip() {
 		// Bink movies may have only one keyframe; seeking to the end decodes
 		// the entire movie synchronously, blocking input while it catches up.
 		_skipFilm = true;
-	} else if (command.operation == kDelay || command.operation == kWaitEffect) {
+	} else if (command.operation == kDelay || command.operation == kWaitEffect || command.operation == kWaitInput) {
 		advance();
 	}
 }

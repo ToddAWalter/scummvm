@@ -21,19 +21,20 @@
 
 #include "common/util.h"
 #include "hollywood/runaway/scene6090.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Oil well area", 910, 599, 3, {301, 302}, {0, 3}},
-	{"Entrance to the house", 686, 510, 0, {303, 304}, {0, 0}},
-	{"Sign", 846, 509, 0, {305, 306}, {0, 0}},
-	{"Big dude", 676, 510, 7, {307, 308}, {0, 1}},
-	{"Ladder", 244, 416, 7, {309, 310}, {0, 0}},
-	{"Vessel", 180, 446, 0, {312, 313}, {0, 1}},
-	{"Path", 50, 599, 5, {315, 316}, {0, 3}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{910, 599, 3, {301, 302}, {0, 3}}, // 1: Oil well area.
+	{686, 510, 0, {303, 304}, {0, 0}}, // 2: Entrance to the house.
+	{846, 509, 0, {305, 306}, {0, 0}}, // 3: Sign.
+	{676, 510, 7, {307, 308}, {0, 1}}, // 4: Big dude.
+	{244, 416, 7, {309, 310}, {0, 0}}, // 5: Ladder.
+	{180, 446, 0, {312, 313}, {0, 1}}, // 6: Vessel.
+	{50, 599, 5, {315, 316}, {0, 3}} // 7: Path.
 };
 
 const RunawayResponse kResponses[] = {
@@ -112,7 +113,7 @@ float Scene6090::actorHeight() const {
 
 Common::U32String Scene6090::hotspotName(byte id) const {
 	if (id == 4 && _town.oscarTobacco) {
-		return Common::U32String("Oscar");
+		return _strings.hotspotName(_room, 8);
 	}
 	return RunawayRoomScene::hotspotName(id);
 }
@@ -173,7 +174,7 @@ RunawayRoomScene::ActionResult Scene6090::dispatchCustomSceneAction(uint16 actio
 		setRoomAnimationOverlay(8, 24, brian, ARRAYSIZE(brian));
 		break;
 	}
-	case 1411:
+	case 1411: // Complete the tobacco exchange with Oscar.
 		_inventory.remove(28);
 		_inventory.select(0);
 		_town.oscarTobacco = 2;
@@ -182,7 +183,7 @@ RunawayRoomScene::ActionResult Scene6090::dispatchCustomSceneAction(uint16 actio
 		say(9, 5, false, 1);
 		deferTownAction(412);
 		break;
-	case 412:
+	case 412: // Step back after giving Oscar the tobacco.
 		_oscar.setTalking(false);
 		walkTo(Common::Point(718, 543), 4);
 		say(9, 6);
@@ -202,7 +203,7 @@ RunawayRoomScene::ActionResult Scene6090::dispatchCustomSceneAction(uint16 actio
 		}
 		deferTownAction(413);
 		break;
-	case 413:
+	case 413: // Collect the clay vessel.
 		_town.vessel = 2;
 		_inventory.add(31);
 		say(11, 1);
@@ -286,7 +287,7 @@ void Scene6090::startOscarConversation() {
 	};
 	memcpy(_dialogue[0], topics, sizeof(topics));
 	_dialogue[0][1].enabled = _town.oscarTobacco < 2;
-	_dialogue[0][3].enabled = _town.oscarTobacco && !_town.rockMoved;
+	_dialogue[0][3].enabled = _town.oscarStrengthKnown && !_town.rockMoved;
 	_dialogue[10][0] = {1, 0, 2, 6, (byte)(_town.oscarHelpRefused ? 7 : 6), 3, 255};
 	if (_town.oscarTobacco == 2) {
 		_dialogue[10][0].transition = 0;

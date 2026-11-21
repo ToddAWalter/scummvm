@@ -35,17 +35,18 @@
 #include "hollywood/scene_text_store.h"
 
 namespace Hollywood {
+namespace Runaway {
 
 // The demos and retail chapter three share the shack, its room resources, actor,
 // interactions and audio; RunawayEngine owns the backend and event loop.
-class RunawayScene5030 : public RunawayScene {
+class Scene5030 : public RunawayScene {
 public:
 	enum {
 		kScreenWidth = kRunawayScreenWidth, kScreenHeight = kRunawayScreenHeight,
 		kRoomWidth = 1376, kRoomHeight = kRunawayViewportHeight, kRoomTop = kRunawayViewportTop
 	};
 
-	RunawayScene5030(Audio::Mixer *mixer, RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings,
+	Scene5030(Audio::Mixer *mixer, RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings,
 			RunawayGameType game = kRunawayCabinDemo) :
 		_audio(audio), _inventory(inventory), _strings(strings), _game(game), _interrogation(mixer), _random("runawayShack"), _actor(),
 		_speech(audio, _random, game == kRunawayFullGame ? RunawaySpeech::kRecordedLipSync : RunawaySpeech::kTextLipSync),
@@ -57,6 +58,7 @@ public:
 	void update(uint32 now, int scrollDirection, bool inventoryOpen) override;
 	void draw() override;
 	void setCameraX(int x) override;
+	int cameraX() const override { return _cameraX; }
 	int roomWidth() const override { return kRoomWidth; }
 	Graphics::ManagedSurface &screen() override { return _screen; }
 	byte hotspotAt(Common::Point mouse) const override;
@@ -156,9 +158,11 @@ private:
 	uint _step = 0;
 	uint16 _speechRow = 0, _speechEnd = 0;
 	uint16 _speechSample = 0;
+	RunawayInventory::Reply _nextInventoryReply = RunawayInventory::Reply(0);
 	Common::U32String _committedCaption;
 };
 
+} // End of namespace Runaway
 } // End of namespace Hollywood
 
 #endif // HOLLYWOOD_RUNAWAY_SCENE5030_H

@@ -20,23 +20,23 @@
  */
 
 #include "common/util.h"
-#include "hollywood/runaway/scene.h"
-#include "hollywood/runaway/scene_data.h"
+#include "hollywood/runaway/scene4090.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Exhibition hall", 1100, 204, 1, {302, 301}, {0, 3}},
-	{"Statue", 826, 442, 3, {303, 304}, {1, 0}},
-	{"Statue", 572, 420, 1, {305, 306}, {1, 0}},
-	{"Mayan objects", 572, 420, 1, {307, 308}, {1, 1}},
-	{"Mayan arch", 316, 382, 7, {309, 310}, {0, 0}},
-	{"Mayan arch", 532, 238, 0, {311, 312}, {0, 0}},
-	{"Mayan object", 280, 491, 7, {313, 314}, {1, 0}},
-	{"Mayan object", 302, 426, 7, {315, 316}, {1, 0}},
-	{"Mayan object", 316, 382, 7, {317, 318}, {1, 0}},
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{1100, 204, 1, {302, 301}, {0, 3}}, // 1: Exhibition hall.
+	{826, 442, 3, {303, 304}, {1, 0}}, // 2: Statue.
+	{572, 420, 1, {305, 306}, {1, 0}}, // 3: Statue.
+	{572, 420, 1, {307, 308}, {1, 1}}, // 4: Mayan objects.
+	{316, 382, 7, {309, 310}, {0, 0}}, // 5: Mayan arch.
+	{532, 238, 0, {311, 312}, {0, 0}}, // 6: Mayan arch.
+	{280, 491, 7, {313, 314}, {1, 0}}, // 7: Mayan object.
+	{302, 426, 7, {315, 316}, {1, 0}}, // 8: Mayan object.
+	{316, 382, 7, {317, 318}, {1, 0}}, // 9: Mayan object.
 };
 
 const RunawayResponse kResponses[] = {
@@ -72,13 +72,19 @@ const RunawayRoom kRunawayScene4090 = {
 	kExits, ARRAYSIZE(kExits)
 };
 
-bool RunawayRoomScene::applyBackground4090() {
+namespace Runaway {
+
+Scene4090::Scene4090(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
+	RunawayRoomScene(audio, inventory, strings, game) {}
+
+bool Scene4090::applyCustomBackgroundPatches() {
 	return !museumChapter() || !_museum.coffeeBeansTaken || applyPatch(4);
 }
 
-RunawayRoomScene::ActionResult RunawayRoomScene::execute4090(uint16 action) {
-	if (!museumChapter())
+RunawayRoomScene::ActionResult Scene4090::dispatchCustomSceneAction(uint16 action) {
+	if (!museumChapter()) {
 		return kUnhandled;
+	}
 	switch (action) {
 	case 307: // Look at the Mayan offerings.
 	case 308: // Take the bowl of coffee beans.
@@ -92,8 +98,9 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4090(uint16 action) {
 			return kBackgroundChanged;
 		} else {
 			say(action == 307 ? 5 : 6, action == 307 ? _museum.mayanObjectsSeen : 0);
-			if (action == 307)
+			if (action == 307) {
 				_museum.mayanObjectsSeen = 1;
+			}
 		}
 		return kHandled;
 	case 313: // Look at the first Mayan object.
@@ -109,14 +116,28 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4090(uint16 action) {
 	}
 }
 
-float RunawayRoomScene::actorHeight4090() const {
+float Scene4090::actorHeight() const {
 	const int y = _position.y;
 	return MIN(y, 390) * 0.2f + 122;
 }
 
-void RunawayRoomScene::setupDepth4090(RunawayActor::RenderParams &params) const {
+Common::U32String Scene4090::hotspotName(byte id) const {
+	if (id == 4 && _museum.mayanObjectsSeen) {
+		return _strings.text(RunawayStrings::kMayanBowlsAndJars);
+	}
+	if (id >= 7 && id <= 9 && _museum.exhibitSeen[id - 7]) {
+		static const RunawayStrings::TextId kIdentifiedNames[] = {
+			RunawayStrings::kExhibitBucket, RunawayStrings::kTeapot, RunawayStrings::kExhibitBowl
+		};
+		return _strings.text(kIdentifiedNames[id - 7]);
+	}
+	return RunawayRoomScene::hotspotName(id);
+}
+
+void Scene4090::setupActorDepth(RunawayActor::RenderParams &params) const {
 	params.depthY[1] = 599;
 	params.depthY[2] = 374;
 }
 
+} // End of namespace Runaway
 } // End of namespace Hollywood

@@ -5,6 +5,7 @@ MODULE_OBJS = \
 	metaengine.o \
 	resource.o \
 	scene_text_store.o \
+	sound.o \
 	text_translation.o \
 	monsters/console.o \
 	monsters/font.o \
@@ -140,15 +141,23 @@ MODULE_OBJS = \
 	monsters/scenes/playable/playable_scene_actions.o \
 	runaway/animation.o \
 	runaway/audio.o \
+	runaway/desert.o \
+	runaway/dialogue.o \
 	runaway/engine.o \
+	runaway/finale.o \
 	runaway/font.o \
 	runaway/graphics.o \
 	runaway/intro.o \
+	runaway/hospital.o \
+	runaway/hopi.o \
 	runaway/inventory.o \
+	runaway/inventory_town.o \
 	runaway/menu.o \
+	runaway/museum.o \
 	runaway/navigation.o \
 	runaway/oscar.o \
 	runaway/presentation.o \
+	runaway/saloon.o \
 	runaway/saveload.o \
 	runaway/scene.o \
 	runaway/scene_registry.o \
@@ -156,7 +165,6 @@ MODULE_OBJS = \
 	runaway/scene2020.o \
 	runaway/scene2060.o \
 	runaway/scene2080.o \
-	runaway/scene4010.o \
 	runaway/scene4030.o \
 	runaway/scene4050.o \
 	runaway/scene4060.o \
@@ -177,7 +185,7 @@ MODULE_OBJS = \
 	runaway/scene5140.o \
 	runaway/scene5160.o \
 	runaway/scene5170.o \
-	runaway/scene6014.o \
+	runaway/scene6030.o \
 	runaway/scene6080.o \
 	runaway/scene6090.o \
 	runaway/scene6130.o \
@@ -186,13 +194,47 @@ MODULE_OBJS = \
 	runaway/scene6200.o \
 	runaway/scene6210.o \
 	runaway/scene6220.o \
+	runaway/scene6226.o \
 	runaway/scene6240.o \
+	runaway/scene6250.o \
 	runaway/scene6260.o \
 	runaway/scene6263.o \
 	runaway/scene6270.o \
+	runaway/scene6280.o \
 	runaway/scene6290.o \
+	runaway/scene6300.o \
 	runaway/scene6350.o \
 	runaway/scene6370.o \
+	runaway/scene6390.o \
+	runaway/scene7010.o \
+	runaway/scene7020.o \
+	runaway/scene7030.o \
+	runaway/scene7040.o \
+	runaway/scene7050.o \
+	runaway/scene8090.o \
+	runaway/scene8100.o \
+	runaway/scene8130.o \
+	runaway/scene8180.o \
+	runaway/scene8190.o \
+	runaway/scene8200.o \
+	runaway/scene8210.o \
+	runaway/scene8220.o \
+	runaway/scene8226.o \
+	runaway/scene8230.o \
+	runaway/scene8240.o \
+	runaway/scene8260.o \
+	runaway/scene8263.o \
+	runaway/scene8290.o \
+	runaway/scene8300.o \
+	runaway/scene8350.o \
+	runaway/scene8370.o \
+	runaway/scene8380.o \
+	runaway/scene8400.o \
+	runaway/scene8410.o \
+	runaway/scene8420.o \
+	runaway/scene9010.o \
+	runaway/scene9020.o \
+	runaway/scene9030.o \
 	runaway/sequence.o \
 	runaway/speech.o \
 	runaway/strings.o \

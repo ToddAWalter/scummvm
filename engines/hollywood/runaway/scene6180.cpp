@@ -26,19 +26,17 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Street", 202, 526, 7, {301, 302}, {0, 3}},
-	{"Inside the saloon", 780, 527, 1, {303, 304}, {0, 0}},
-	{"Trough", 405, 427, 7, {305, 306}, {0, 0}},
-	{"Floor board", 780, 527, 1, {307, 308}, {0, 0}},
-	{"Window", 643, 457, 1, {309, 310}, {0, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{202, 526, 7, {301, 302}, {0, 3}}, // 1: Street.
+	{780, 527, 1, {303, 304}, {0, 0}}, // 2: Inside the saloon.
+	{405, 427, 7, {305, 306}, {0, 0}}, // 3: Trough.
+	{780, 527, 1, {307, 308}, {0, 0}}, // 4: Floor board.
+	{643, 457, 1, {309, 310}, {0, 0}} // 5: Window.
 };
 
 const RunawayResponse kResponses[] = {
 	{6180, 301, 1, 0},  // Look out into the deserted street.
 	{6180, 303, 2, 0},  // Look inside the saloon.
-	{6180, 305, 4, 0},  // Examine the muddy trough.
-	{6180, 306, 5, 0},  // Try to overturn the trough.
 	{6180, 307, 6, 0},  // Examine the doors' pressure plate.
 	{6180, 309, 8, 0},  // Read the broken window.
 	{6180, 310, 9, 0},  // Refuse to break more glass.
@@ -67,8 +65,11 @@ Scene6180::Scene6180(RunawayAudio &audio, RunawayInventory &inventory, const Run
 	RunawayRoomScene(audio, inventory, strings, game) {}
 
 bool Scene6180::loadCustomResources() {
-	return _doorAnimation.load(_archive, 8, 71) && loadForeground(0, 4) && loadForeground(1, 5) &&
-		_archive.readVariableChunk(6, _doorPatches[0]) && _archive.readVariableChunk(7, _doorPatches[1]);
+	return _doors.load(_archive) && loadForeground(0, 4) && loadForeground(1, 5);
+}
+
+bool Scene6180::applyCustomBackgroundPatches() {
+	return !_town.wrenchFound || applyPatch(_town.wrenchFound == 1 ? 10 : 11);
 }
 
 void Scene6180::applyCustomHotspotState() {
@@ -83,16 +84,23 @@ void Scene6180::applyCustomHotspotState() {
 }
 
 void Scene6180::prepareCustomGameplayLoop() {
-	_saloonDoorTick = _now;
-	_saloonDoorFrame = _position.x > 726 ? 7 : 0;
+	_doors.resume(_now, _position.x > 726);
 }
 
 void Scene6180::runCustomEntrySequence() {
 	if (_entryScene == 6181) {
 		_position = Common::Point(1023, 519);
 		_walkPath.reset(_position);
-		_saloonDoorFrame = 7;
-		walkTo(Common::Point(586, 534), 5, false, true);
+		_doors.resume(_now, true);
+		if (_town.wrenchFound == 1) {
+			walkTo(Common::Point(434, 433), 7, false, true);
+			deferTownAction(410);
+		} else if (_town.wrenchThrown == 1 && !_town.wrenchInTroughSeen) {
+			walkTo(Common::Point(586, 534), 7, false, true);
+			deferTownAction(412);
+		} else {
+			walkTo(Common::Point(586, 534), 5, false, true);
+		}
 	} else {
 		_facing = 3;
 		if (!_town.saloonEntranceVisited) {
@@ -106,30 +114,11 @@ void Scene6180::advanceCustomGameplayLoop(uint32 delta) {
 	if (_roomAction == 401 && !_actionFrames.empty()) {
 		_actionFrames[0] = 24 + speechFrame();
 	}
-	// Stepping across the floor board opens the doors; stepping off releases them.
-	const bool pressed = _position.x > 726;
-	if (pressed && _saloonDoorFrame > 7) {
-		_saloonDoorFrame = 0;
-	}
-	if ((pressed && _saloonDoorFrame == 7) || (!pressed && !_saloonDoorFrame)) {
-		_saloonDoorTick = _now;
-		return;
-	}
-	if (_now - _saloonDoorTick < 80) {
-		return;
-	}
-	_saloonDoorTick = _now;
-	_saloonDoorFrame = (_saloonDoorFrame + 1) % 71;
-	if (_saloonDoorFrame == 1) {
-		_audio.playEffect(13);
-	} else if (_saloonDoorFrame == 9) {
-		_audio.playEffect(14);
-	}
+	_doors.update(_now, _position.x > 726, _audio, 13);
 }
 
 void Scene6180::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
-	applyRunawayPatch(_doorPatches[_position.x > 726], viewport);
-	_doorAnimation.draw(viewport, _saloonDoorFrame, 0, 0);
+	_doors.draw(viewport, _position.x > 726);
 }
 
 void Scene6180::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) {
@@ -171,6 +160,12 @@ RunawayRoomScene::ActionResult Scene6180::dispatchCustomSceneAction(uint16 actio
 			deferTownAction(403);
 		}
 		break;
+	case 305: // Examine the trough before or after the wrench lands in it.
+		say(4, _town.wrenchThrown);
+		break;
+	case 306: // The muddy trough is too heavy to overturn.
+		say(5, _town.wrenchThrown);
+		break;
 	case 308: // Step on the board, or point out that Brian is already on it.
 		if (_position == Common::Point(780, 527)) {
 			say(7);
@@ -181,22 +176,42 @@ RunawayRoomScene::ActionResult Scene6180::dispatchCustomSceneAction(uint16 actio
 	case 400: // Notice the doors opening without being pushed.
 		beginRoomAnimationRange(400, 9, 42, 0, 24);
 		break;
-	case 1400:
+	case 1400: // Comment on the automatic saloon doors.
 		say(3);
 		holdRoomAnimation(401, 9, 42, 24);
 		break;
-	case 1401: {
+	case 1401: { // Finish Brian's reaction to the automatic doors.
 		static const byte frames[] = {24, 36, 37, 38, 39, 40};
 		beginRoomAnimation(402, 9, 42, frames, ARRAYSIZE(frames));
 		break;
 	}
-	case 1402:
+	case 1402: // Reveal the pressure plate and walk through the doors.
 		_town.saloonDoorKnown = 1;
 		walkTo(Common::Point(1023, 519), 1, false, true);
 		deferTownAction(403);
 		return kBackgroundChanged;
-	case 403:
+	case 403: // Enter the saloon after crossing the porch.
 		leaveTownRoom(6240);
+		break;
+	case 410: // Notice the wrench knocked out of the trough by the flower pot.
+		say(0, 3);
+		deferTownAction(411);
+		break;
+	case 411: // Pick up the number-ten wrench for Joshua.
+		_facing = 4;
+		_town.wrenchFound = 2;
+		_inventory.add(10);
+		say(0, 4);
+		return kBackgroundChanged;
+	case 412: // Find the wrench buried in the muddy trough.
+		say(0, 1);
+		walkTo(Common::Point(405, 427), 7, false, true);
+		deferTownAction(413);
+		break;
+	case 413: // Brian needs something to dislodge the wrench.
+		_facing = 4;
+		_town.wrenchInTroughSeen = 1;
+		say(0, 2);
 		break;
 	default:
 		return kUnhandled;

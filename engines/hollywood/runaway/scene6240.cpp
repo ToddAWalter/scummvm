@@ -21,20 +21,21 @@
 
 #include "common/util.h"
 #include "hollywood/runaway/scene6240.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Door", 0, 453, 5, {301, 302}, {0, 3}},
-	{"Stairs", 782, 408, 7, {303, 304}, {0, 1}},
-	{"Flower pot", 504, 452, 1, {305, 306}, {1, 1}},
-	{"Watering can", 1286, 435, 0, {307, 308}, {0, 0}},
-	{"Small room", 742, 332, 5, {309, 310}, {0, 0}},
-	{"Door knob", 610, 467, 1, {311, 312}, {0, 0}},
-	{"Plant", 1393, 427, 0, {313, 314}, {0, 0}},
-	{"Bonsai tree", 955, 396, 1, {315, 316}, {0, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{0, 453, 5, {301, 302}, {0, 3}}, // 1: Door.
+	{782, 408, 7, {303, 304}, {0, 1}}, // 2: Stairs.
+	{504, 452, 1, {305, 306}, {1, 1}}, // 3: Flower pot.
+	{1286, 435, 0, {307, 308}, {0, 0}}, // 4: Watering can.
+	{742, 332, 5, {309, 310}, {0, 0}}, // 5: Small room.
+	{610, 467, 1, {311, 312}, {0, 0}}, // 6: Door knob.
+	{1393, 427, 0, {313, 314}, {0, 0}}, // 7: Plant.
+	{955, 396, 1, {315, 316}, {0, 0}} // 8: Bonsai tree.
 };
 
 const RunawayResponse kResponses[] = {
@@ -135,10 +136,10 @@ void Scene6240::setupActorDepth(RunawayActor::RenderParams &params) const {
 
 Common::U32String Scene6240::hotspotName(byte id) const {
 	if (id == 5 && _town.gardeningShed) {
-		return Common::U32String("Gardening shed");
+		return _strings.hotspotName(_room, 10);
 	}
 	if (id == 7 && _town.carnivorousPlantSeen) {
-		return Common::U32String("Meat-eating plant");
+		return _strings.hotspotName(_room, 9);
 	}
 	return RunawayRoomScene::hotspotName(id);
 }
@@ -160,14 +161,14 @@ RunawayRoomScene::ActionResult Scene6240::dispatchCustomSceneAction(uint16 actio
 	case 304: // Climb the stairs to Kevin's room.
 		beginRoomAnimation(304, 5, 19);
 		break;
-	case 1304:
+	case 1304: // Enter Kevin's room after climbing the stairs.
 		leaveTownRoom(6300);
 		break;
 	case 306: // Take the flower pot.
 		say(4);
 		deferTownAction(406);
 		break;
-	case 406:
+	case 406: // Collect the flower pot.
 		_town.flowerPotTaken = 1;
 		_inventory.add(21);
 		say(4, 1);
@@ -183,19 +184,19 @@ RunawayRoomScene::ActionResult Scene6240::dispatchCustomSceneAction(uint16 actio
 		walkTo(Common::Point(742, 332), 5, false, true);
 		deferTownAction(action == 309 ? 409 : 410);
 		break;
-	case 409:
+	case 409: // Identify the gardening shed after approaching it.
 		say(7, 1);
 		deferTownAction(419);
 		break;
-	case 419:
+	case 419: // Step back after inspecting the shed.
 		walkTo(Common::Point(855, 347), 3, false, true);
 		deferTownAction(429);
 		break;
-	case 429:
+	case 429: // Finish identifying the gardening shed.
 		say(7, 2);
 		_town.gardeningShed = 1;
 		break;
-	case 410:
+	case 410: // Identify the shed before searching it.
 		if (!_town.gardeningShed) {
 			say(7, 1);
 			say(7, 2);
@@ -216,7 +217,7 @@ RunawayRoomScene::ActionResult Scene6240::dispatchCustomSceneAction(uint16 actio
 			deferTownAction(423);
 		}
 		break;
-	case 421:
+	case 421: // Collect the pruning shears.
 		_town.gardeningShed = 2;
 		_inventory.add(22);
 		say(8, 1);
@@ -227,7 +228,7 @@ RunawayRoomScene::ActionResult Scene6240::dispatchCustomSceneAction(uint16 actio
 			deferTownAction(423);
 		}
 		break;
-	case 422:
+	case 422: // Collect the tobacco leaves.
 		_town.tobaccoLeavesTaken = 1;
 		_inventory.add(27);
 		say(8, 3);

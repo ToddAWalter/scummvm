@@ -20,8 +20,8 @@
  */
 
 #include "common/util.h"
-#include "hollywood/runaway/scene.h"
-#include "hollywood/runaway/scene_data.h"
+#include "hollywood/runaway/scene4050.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
@@ -45,21 +45,21 @@ const byte kGrindCoffee[] = {
 };
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Door", 227, 503, 7, {301, 339}, {0, 1}},
-	{"Shelves", 311, 493, 7, {302, 303}, {0, 0}},
-	{"Susan", 382, 529, 1, {304, 305}, {0, 1}},
-	{"Electric lathe", 395, 529, 1, {306, 307}, {0, 0}},
-	{"Microscope", 460, 543, 1, {308, 309}, {0, 0}},
-	{"Water dispenser", 637, 570, 1, {310, 311}, {0, 0}},
-	{"Wastepaper basket", 703, 575, 1, {312, 313}, {1, 0}},
-	{"Tank", 844, 505, 1, {314, 315}, {0, 0}},
-	{"Machine", 884, 580, 1, {316, 317}, {0, 0}},
-	{"Laser", 992, 556, 1, {318, 319}, {1, 0}},
-	{"Shelves", 1327, 521, 1, {320, 321}, {0, 0}},
-	{"Briefcase", 1277, 514, 7, {322, 323}, {1, 1}},
-	{"Skeleton", 1211, 510, 7, {324, 325}, {0, 0}},
-	{"Strange brush", 824, 531, 7, {337, 338}, {1, 1}},
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{227, 503, 7, {301, 339}, {0, 1}}, // 1: Door.
+	{311, 493, 7, {302, 303}, {0, 0}}, // 2: Shelves.
+	{382, 529, 1, {304, 305}, {0, 1}}, // 3: Susan.
+	{395, 529, 1, {306, 307}, {0, 0}}, // 4: Electric lathe.
+	{460, 543, 1, {308, 309}, {0, 0}}, // 5: Microscope.
+	{637, 570, 1, {310, 311}, {0, 0}}, // 6: Water dispenser.
+	{703, 575, 1, {312, 313}, {1, 0}}, // 7: Wastepaper basket.
+	{844, 505, 1, {314, 315}, {0, 0}}, // 8: Tank.
+	{884, 580, 1, {316, 317}, {0, 0}}, // 9: Machine.
+	{992, 556, 1, {318, 319}, {1, 0}}, // 10: Laser.
+	{1327, 521, 1, {320, 321}, {0, 0}}, // 11: Shelves.
+	{1277, 514, 7, {322, 323}, {1, 1}}, // 12: Briefcase.
+	{1211, 510, 7, {324, 325}, {0, 0}}, // 13: Skeleton.
+	{824, 531, 7, {337, 338}, {1, 1}}, // 14: Strange brush.
 };
 
 const RunawayResponse kResponses[] = {
@@ -86,21 +86,21 @@ const RunawayResponse kResponses[] = {
 
 const RunawayItemAction kItemActions[] = {
 	{kMuseumLaboratory, 7, 2, 326}, // Leave the crucifix on the restoration shelves.
-	{kMuseumLaboratory, 0, 2, 15}, // Use an item with shelves.
+	{kMuseumLaboratory, 0, 2, 15, false}, // Use an item with the shelves.
 	{kMuseumLaboratory, 5, 3, 328}, // Record Susan's voice.
 	{kMuseumLaboratory, 7, 3, 327}, // Give the crucifix to Susan.
 	{kMuseumLaboratory, 8, 3, 329, false}, // Show the Mayan object to Susan.
 	{kMuseumLaboratory, 11, 3, 330, false}, // Show the Mayan mask to Susan.
 	{kMuseumLaboratory, 12, 3, 330, false}, // Show the ruby to Susan.
 	{kMuseumLaboratory, 15, 3, 331}, // Give the coffee to Susan.
-	{kMuseumLaboratory, 0, 3, 30}, // Use an item with susan.
+	{kMuseumLaboratory, 0, 3, 30, false}, // Use an item with Susan.
 	{kMuseumLaboratory, 14, 4, 333}, // Grind the coffee beans with the lathe.
-	{kMuseumLaboratory, 0, 4, 332}, // Use an item with the electric lathe.
-	{kMuseumLaboratory, 0, 5, 334}, // Use an item with the microscope.
-	{kMuseumLaboratory, 0, 7, 19}, // Use an item with wastepaper basket.
+	{kMuseumLaboratory, 0, 4, 332, false}, // Use an item with the electric lathe.
+	{kMuseumLaboratory, 0, 5, 334, false}, // Use an item with the microscope.
+	{kMuseumLaboratory, 0, 7, 19, false}, // Use an item with the wastepaper basket.
 	{kMuseumLaboratory, 12, 10, 336}, // Fit the ruby to the laser.
-	{kMuseumLaboratory, 0, 10, 335}, // Use an item with the laser.
-	{kMuseumLaboratory, 0, 11, 15}, // Use an item with shelves.
+	{kMuseumLaboratory, 0, 10, 335, false}, // Use an item with the laser.
+	{kMuseumLaboratory, 0, 11, 15, false}, // Use an item with the shelves.
 };
 
 const RunawayExit kExits[] = {
@@ -117,32 +117,137 @@ const RunawayRoom kRunawayScene4050 = {
 	kExits, ARRAYSIZE(kExits)
 };
 
-void RunawayRoomScene::updateMaps4050() {
+namespace Runaway {
+
+Scene4050::Scene4050(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
+	RunawayRoomScene(audio, inventory, strings, game) {}
+
+const char *Scene4050::actionCaptionVariant(byte id, bool look, byte item) const {
+	if (item == 14 && id == 4) {
+		return _inventory.museum().coffee < 2 ? "coffee" : "empty";
+	}
+	return nullptr;
+}
+
+bool Scene4050::loadCustomResources() {
+	return _susanAnimation.load(_archive, 8, 75) && _laserAnimation.load(_archive, 22, 1) &&
+		loadForeground(0, 4) && loadForeground(1, 5) && loadForeground(2, 6) && loadForeground(3, 7);
+}
+
+bool Scene4050::applyCustomBackgroundPatches() {
+	if (_talcTaken && !applyPatch(11)) {
+		return false;
+	}
+	if (!museumChapter()) {
+		return true;
+	}
+	if (_museum.restoration && !applyPatch(_museum.restoration == 1 ? 9 : 10)) {
+		return false;
+	}
+	if (!_susanAnimation.load(_archive, _museum.susan == 1 ? 15 : _museum.susan == 3 ? 16 : 8,
+			_museum.susan == 1 ? 170 : _museum.susan == 3 ? 2 : 75)) {
+		return false;
+	}
+	_susanFrame = _museum.susan == 1 ? 79 : _museum.susan == 3 ? 1 : 0;
+	return true;
+}
+
+void Scene4050::applyCustomHotspotState() {
 	for (uint i = 0; i < 256; ++i) {
 		byte &id = _maps[256 + i];
-		if (_talcTaken && id == 14)
+		if (_talcTaken && id == 14) {
 			id = 0;
+		}
 		if (museumChapter() && _museum.susan == 1) {
-			if (id == 15 || id == 16 || id == 17)
+			if (id == 15 || id == 16 || id == 17) {
 				id = 3;
-			else if (id == 3 || id == 18 || id == 19)
+			} else if (id == 3 || id == 18 || id == 19) {
 				id = 0;
+			}
 		} else {
-			if (id == 15 || (id == 4 && (!museumChapter() || !_museum.susan)) || (id == 19 && (!museumChapter() || !_museum.susan)))
+			if (id == 15 || (id == 4 && (!museumChapter() || !_museum.susan)) || (id == 19 && (!museumChapter() || !_museum.susan))) {
 				id = 0;
-			else if (id == 16)
+			} else if (id == 16) {
 				id = 13;
-			else if (id == 17)
+			} else if (id == 17) {
 				id = 10;
-			else if (id == 18 || id == 19)
+			} else if (id == 18 || id == 19) {
 				id = 3;
-			else if (id == 3 && museumChapter() && _museum.susan >= 2)
+			} else if (id == 3 && museumChapter() && _museum.susan >= 2) {
 				id = 0;
+			}
 		}
 	}
 }
 
-RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
+void Scene4050::prepareCustomGameplayLoop() {
+	_nextLaser = _now + 25000 + _random.getRandomNumber(5000);
+}
+
+void Scene4050::runCustomEntrySequence() {
+	if (_museum.susan == 2) {
+		_museum.susan = 3;
+		_inventory.museum().restoredCrucifix = 1;
+		say(32);
+		say(32, 1);
+		deferMuseumAction(405);
+		refreshMuseum();
+	} else if (!_museum.susanMet) {
+		_museum.susanMet = 1;
+		for (uint i = 0; i < 3; ++i) {
+			say(80, i);
+			say(90, i, false, 1);
+		}
+	}
+}
+
+void Scene4050::resumeAmbientAudio(bool entering) {
+	if (entering || !_audio.musicPlaying()) {
+		_audio.playMusic(13, false);
+	}
+}
+
+void Scene4050::advanceCustomGameplayLoop(uint32 delta) {
+	if (speaker()) {
+		_susanFrame = (_museum.susan == 1 ? 52 : 45) + speechFrame();
+	} else if (_museum.susan == 3) {
+		_susanFrame = 1;
+	} else if (_museum.susan == 1) {
+		_susanFrame = 79;
+	} else {
+		_susanFrame = (_now / 80) % 26;
+	}
+	if (!_museum.susan && !busy() && !_inventoryOpen && _position.x < 530 && (int32)(_now - _nextLaser) >= 0) {
+		beginRoomAnimation(450, 23, 95, nullptr, 0, false);
+		_nextLaser = _now + 25000 + _random.getRandomNumber(5000);
+	}
+}
+
+void Scene4050::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
+	const bool movingSusan = museumChapter() && drawingRoomAnimation() &&
+		(_roomAction == 450 || _roomAction == 451 || _roomAction == 452 || _roomAction == 331 || _roomAction == 454);
+	if (!movingSusan) {
+		_susanAnimation.draw(viewport, museumChapter() ? _susanFrame : 0, _camera.x, -_camera.y);
+	}
+	_laserAnimation.draw(viewport, 0, _camera.x, -_camera.y);
+}
+
+void Scene4050::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) {
+	if (_position.x > 1200) {
+		drawForeground(viewport, 0);
+	}
+	if (_position.x > 789 && _position.x < 846 && _position.y < 541) {
+		drawForeground(viewport, 1);
+	}
+	if (_position.x < 430) {
+		drawForeground(viewport, 2);
+	}
+	if (_position.y < 501) {
+		drawForeground(viewport, 3);
+	}
+}
+
+RunawayRoomScene::ActionResult Scene4050::dispatchCustomSceneAction(uint16 action) {
 	if (museumChapter()) {
 		switch (action) {
 		case 302: // Look at the restoration shelves.
@@ -156,13 +261,13 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 			say(4, _museum.susan == 3 ? 2 : _museum.susan == 1 ? 1 : _museum.restoration && _museum.leftLabOnce ? 3 : 0);
 			return kHandled;
 		case 305: // Talk to Susan.
-			if (_museum.susan == 3)
+			if (_museum.susan == 3) {
 				say(5);
-			else if (_museum.susan == 1) {
+			} else if (_museum.susan == 1) {
 				say(5, 1 + _random.getRandomNumber(3));
 				say(5, 5 + _random.getRandomNumber(2), false, 1);
 			} else {
-				startConversation(1);
+				startSusanConversation();
 			}
 			return kHandled;
 		case 312: // Look in the wastepaper basket.
@@ -189,29 +294,31 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 			if (_inventory.museum().restoredCrucifix) {
 				say(22, 2);
 			} else {
-				if (!_museum.shelvesSeen)
+				if (!_museum.shelvesSeen) {
 					say(2);
+				}
 				_museum.shelvesSeen = 1;
 				say(22);
 				beginRoomAnimation(326, 17, 43);
 			}
 			return kHandled;
 		case 327: // Give the crucifix to Susan.
-			if (_museum.susan == 3)
+			if (_museum.susan == 3) {
 				say(5);
-			else
+			} else {
 				say(_inventory.museum().restoredCrucifix ? 22 : 23, _inventory.museum().restoredCrucifix ? 2 : 0);
+			}
 			return kHandled;
 		case 328: // Record Susan's voice.
-			if (!_museum.voiceLockSeen)
+			if (!_museum.voiceLockSeen) {
 				say(1, 0, true);
-			else if (_museum.susan == 3)
+			} else if (_museum.susan == 3) {
 				say(5);
-			else if (_inventory.contains(6) || _inventory.museum().batteryInLadle)
+			} else if (_inventory.contains(6) || _inventory.museum().batteryInLadle) {
 				say(24, 3);
-			else if (_inventory.museum().voiceRecorded)
+			} else if (_inventory.museum().voiceRecorded) {
 				say(24, 2);
-			else {
+			} else {
 				beginRoomAnimation(328, 21, 56, kRecordSusan, 27);
 			}
 			return kHandled;
@@ -220,9 +327,9 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 			say(_museum.susan == 3 ? 5 : 25);
 			return kHandled;
 		case 331: // Give the coffee to Susan.
-			if (_museum.susan != 1)
+			if (_museum.susan != 1) {
 				say(1, 0, true);
-			else {
+			} else {
 				say(26);
 				byte brian[25], susan[25];
 				for (uint i = 0; i < ARRAYSIZE(brian); ++i) {
@@ -233,20 +340,28 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 				setRoomAnimationOverlay(15, 170, susan, ARRAYSIZE(susan));
 			}
 			return kHandled;
+		case 332: // Use an item with the electric lathe.
+			// Only solid objects get this reply in the full game; the demo uses it for every item.
+			if (_pendingItem == 7 || _pendingItem == 8 || _pendingItem == 11 || _pendingItem == 12 || _pendingItem == 17) {
+				say(27);
+			} else {
+				say(14, _random.getRandomNumber(2), true);
+			}
+			return kHandled;
 		case 333: // Grind the coffee beans with the lathe.
-			if (_inventory.museum().coffee == 2)
+			if (_inventory.museum().coffee == 2) {
 				say(1, 2, true);
-			else if (_inventory.museum().coffee || !_museum.needsGroundCoffee)
+			} else if (_inventory.museum().coffee || !_museum.needsGroundCoffee) {
 				say(1, 0, true);
-			else {
+			} else {
 				say(28);
 				beginRoomAnimation(333, 18, 35, kGrindCoffee, ARRAYSIZE(kGrindCoffee));
 			}
 			return kHandled;
 		case 336: // Fit the ruby to the laser.
-			if (!_museum.laserSeen)
+			if (!_museum.laserSeen) {
 				say(1, 0, true);
-			else {
+			} else {
 				say(30);
 				beginRoomAnimation(336, 19, 13);
 			}
@@ -270,8 +385,9 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 			say(19, 2);
 			return kHandled;
 		}
-		if (museumChapter() && !_museum.varnishSeen)
+		if (museumChapter() && !_museum.varnishSeen) {
 			say(18);
+		}
 		_museum.varnishSeen = 1;
 		_varnishTaken = true;
 		_inventory.add(9);
@@ -279,13 +395,15 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 		say(19, 1);
 		return kHandled;
 	case 338: // Take the talcum powder.
-		if (!museumChapter() || !_museum.talcSeen)
+		if (!museumChapter() || !_museum.talcSeen) {
 			say(31);
+		}
 		_museum.talcSeen = 1;
 		_talcTaken = true;
 		_inventory.add(10);
-		if (museumChapter())
+		if (museumChapter()) {
 			say(18, _random.getRandomNumber(2), true);
+		}
 		return kBackgroundChanged;
 	default:
 		break;
@@ -293,7 +411,7 @@ RunawayRoomScene::ActionResult RunawayRoomScene::execute4050(uint16 action) {
 	return kUnhandled;
 }
 
-void RunawayRoomScene::finish4050(uint16 action) {
+void Scene4050::finishCustomAnimation(uint16 action) {
 	switch (action) {
 	case 326: // Leave the crucifix and collect the Mayan object.
 		_inventory.remove(7);
@@ -364,52 +482,101 @@ void RunawayRoomScene::finish4050(uint16 action) {
 	refreshMuseum();
 }
 
-float RunawayRoomScene::actorHeight4050() const {
+void Scene4050::handleAnimationFrameHook() {
+	if ((_roomAction == 328 || _roomAction == 428) && (_actionStep == 4 || _actionStep == 2)) {
+		_audio.playEffect(37, 204);
+	}
+}
+
+void Scene4050::finishCustomFilm() {
+	switch (_museumFilm) {
+	case kDrillingFilm:
+		_museum.laserSeen = 1;
+		beginRoomAnimation(451, 24, 101, nullptr, 0, false);
+		break;
+	case kRubyFilm:
+		beginRoomAnimationRange(456, 19, 13, 4, 0);
+		break;
+	case kLaserFilm:
+		_museum.susan = 1;
+		_museum.laserUpgraded = 1;
+		say(30, 2);
+		say(33, 1, false, 1);
+		refreshMuseum();
+		break;
+	case kMobstersFilm:
+		_museum.susan = 2;
+		_museum.restoration = 2;
+		leaveMuseumRoom(4061, Common::Point(873, 311), 3, true);
+		break;
+	default:
+		break;
+	}
+}
+
+float Scene4050::actorHeight() const {
 	const int x = _position.x, y = _position.y;
 	const byte zone = walkZone();
-	if (zone == 4)
+	if (zone == 4) {
 		return y * 1.3125f - 341.0625f;
-	if (zone == 3)
+	}
+	if (zone == 3) {
 		return x * 0.089147285f + 291.697662f + y - 578;
-	if (zone == 5)
+	}
+	if (zone == 5) {
 		return 291.697662f + 992 * 0.089147285f - (583 - y) * 0.5882353f - 1;
-	if (x < 396)
+	}
+	if (x < 396) {
 		return 327;
-	if (x < 913)
+	}
+	if (x < 913) {
 		return x * 0.089147285f + 291.697662f;
-	if (x < 1174)
+	}
+	if (x < 1174) {
 		return x * 0.09578544f + 285.643677f;
+	}
 	return MIN(y, 587) * 0.8181818f - 82.272728f;
 }
 
-bool RunawayRoomScene::loadScene4050() {
-	return _ambient.load(_archive, 8, 75) && _overlay.load(_archive, 22, 1) &&
-		loadForeground(0, 4) && loadForeground(1, 5) && loadForeground(2, 6) && loadForeground(3, 7);
+Common::U32String Scene4050::hotspotName(byte id) const {
+	if (id == 10 && _museum.laserUpgraded) {
+		return _strings.text(RunawayStrings::kAlteredLaser);
+	}
+	if (id == 12 && _museum.varnishSeen) {
+		return _strings.text(RunawayStrings::kVarnishBriefcase);
+	}
+	if (id == 14 && _museum.talcSeen) {
+		return _strings.itemName(2, 10);
+	}
+	return RunawayRoomScene::hotspotName(id);
 }
 
-bool RunawayRoomScene::applyBackground4050() {
-	if (_talcTaken && !applyPatch(11))
-		return false;
-	if (!museumChapter())
-		return true;
-	if (_museum.restoration && !applyPatch(_museum.restoration == 1 ? 9 : 10))
-		return false;
-	if (!_ambient.load(_archive, _museum.susan == 1 ? 15 : _museum.susan == 3 ? 16 : 8,
-			_museum.susan == 1 ? 170 : _museum.susan == 3 ? 2 : 75))
-		return false;
-	_ambientFrame = _museum.susan == 1 ? 79 : _museum.susan == 3 ? 1 : 0;
-	return true;
+Common::Point Scene4050::customizeSceneActionPosition(byte id, byte item, Common::Point position) const {
+	if (museumChapter() && id == 3 && _museum.susan == 1) {
+		return Common::Point(912, 584);
+	}
+	return position;
 }
 
-void RunawayRoomScene::drawForeground4050(Graphics::ManagedSurface &viewport) {
-	if (_position.x > 1200)
-		drawForeground(viewport, 0);
-	if (_position.x > 789 && _position.x < 846 && _position.y < 541)
-		drawForeground(viewport, 1);
-	if (_position.x < 430)
-		drawForeground(viewport, 2);
-	if (_position.y < 501)
-		drawForeground(viewport, 3);
+byte Scene4050::customizeSceneActionFacing(byte id, byte facing) const {
+	return museumChapter() && id == 3 && _museum.susan == 1 ? 1 : facing;
 }
 
+void Scene4050::startSusanConversation() {
+	startConversation(1);
+	static const DialogueChoice susan[][8] = {
+		{{1,0,3,3,3,1,255}, {1,0,1,4,4,1,255}, {1,1,1,5,5,1,255}, {1,0,3,6,6,1,255}, {1,0,0,7,7,1,0}},
+		{{1,0,3,8,8,2,0}, {1,0,3,9,9,2,0}, {1,0,3,10,10,2,0}},
+		{{1,1,3,11,11,2,0}, {1,1,3,12,12,2,0}, {1,1,3,13,13,2,0}},
+		{{1,0,2,14,14,1,255}}
+	};
+	memcpy(_dialogue[0], susan[0], sizeof(susan[0]));
+	memcpy(_dialogue[10], susan[1], sizeof(susan[1]));
+	memcpy(_dialogue[11], susan[2], sizeof(susan[2]));
+	memcpy(_dialogue[20], susan[3], sizeof(susan[3]));
+	say(80, 15);
+	say(90, 15, false, 1);
+}
+
+} // End of namespace Runaway
 } // End of namespace Hollywood

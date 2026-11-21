@@ -21,19 +21,20 @@
 
 #include "common/util.h"
 #include "hollywood/runaway/scene6080.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Path", 0, 550, 0, {301, 302}, {0, 3}},
-	{"Recipient", 95, 358, 7, {305, 306}, {0, 1}},
-	{"Hole that Gina fell into", 483, 318, 0, {303, 304}, {1, 1}},
-	{"Stone", 656, 347, 1, {307, 308}, {0, 0}},
-	{"Entrance to the mine", 656, 347, 1, {309, 310}, {0, 1}},
-	{"Mining car", 0, 0, 0, {311, 312}, {0, 0}},
-	{"Chest", 0, 0, 4, {313, 314}, {0, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{0, 550, 0, {301, 302}, {0, 3}}, // 1: Path.
+	{95, 358, 7, {305, 306}, {0, 1}}, // 2: Recipient.
+	{483, 318, 0, {303, 304}, {1, 1}}, // 3: Hole that Gina fell into.
+	{656, 347, 1, {307, 308}, {0, 0}}, // 4: Stone.
+	{656, 347, 1, {309, 310}, {0, 1}}, // 5: Entrance to the mine.
+	{0, 0, 0, {311, 312}, {0, 0}}, // 6: Mining car.
+	{0, 0, 4, {313, 314}, {0, 0}} // 7: Chest.
 };
 
 const RunawayResponse kResponses[] = {
@@ -139,7 +140,7 @@ float Scene6080::actorHeight() const {
 
 Common::U32String Scene6080::hotspotName(byte id) const {
 	if (id == 2 && _town.oilCan) {
-		return Common::U32String("Oil can");
+		return _strings.hotspotName(_room, 8);
 	}
 	return RunawayRoomScene::hotspotName(id);
 }
@@ -160,7 +161,7 @@ RunawayRoomScene::ActionResult Scene6080::dispatchCustomSceneAction(uint16 actio
 		break;
 	case 303: // Look down the shaft.
 	case 304: // Try to descend its broken ladder.
-		leaveTownRoom(action == 303 ? 6014 : 6015);
+		leaveTownRoom(action == 303 ? 6030 : 6031);
 		break;
 	case 305: // Identify the oil can.
 		say(4, _town.oilCan != 0);
@@ -174,7 +175,7 @@ RunawayRoomScene::ActionResult Scene6080::dispatchCustomSceneAction(uint16 actio
 		}
 		deferTownAction(406);
 		break;
-	case 406:
+	case 406: // Collect the oil can.
 		_town.oilCan = 2;
 		_inventory.add(23);
 		say(5);
@@ -196,14 +197,25 @@ RunawayRoomScene::ActionResult Scene6080::dispatchCustomSceneAction(uint16 actio
 		} else if (!_inventory.contains(18) || !_inventory.contains(19)) {
 			say(9, 2);
 		} else {
-			leaveTownRoom(7000);
+			say(9, 3);
+			beginRoomAnimationRange(410, 8, 90, 0, 32);
 		}
+		break;
+	case 1410: // Brian calls to Gina before entering the mine.
+		say(9, 4);
+		holdRoomAnimation(411, 8, 90, 32);
+		break;
+	case 1411: // Brian walks into the mine with the map and climbing equipment.
+		beginRoomAnimationRange(412, 8, 90, 44, 89);
+		break;
+	case 1412: // The search in Douglasville is complete; the next chapter starts in the mine.
+		_chapterComplete = true;
 		break;
 	case 400: // First visit: approach the blocked entrance.
 		walkTo(Common::Point(656, 347), 1);
 		deferTownAction(401);
 		break;
-	case 401:
+	case 401: // Comment on the blocked mine entrance on the first visit.
 		say(6, 2);
 		_town.mineVisited = 1;
 		break;
@@ -220,18 +232,24 @@ RunawayRoomScene::ActionResult Scene6080::dispatchCustomSceneAction(uint16 actio
 		_facing = 5;
 		beginRoomAnimation(404, 10, 128, nullptr, 0, false, 60);
 		break;
-	case 1404:
+	case 1404: // Step away from the entrance after Oscar leaves.
 		_mineOscarPresent = false;
 		walkTo(Common::Point(734, 402), 5, true);
 		deferTownAction(405);
 		break;
-	case 405:
+	case 405: // Finish Brian's reaction to Oscar moving the rock.
 		say(20, 8);
 		break;
 	default:
 		return kUnhandled;
 	}
 	return kHandled;
+}
+
+void Scene6080::advanceCustomGameplayLoop(uint32 delta) {
+	if (_roomAction == 411 && !_actionFrames.empty()) {
+		_actionFrames[0] = 32 + speechFrame();
+	}
 }
 
 void Scene6080::handleAnimationFrameHook() {
@@ -242,6 +260,11 @@ void Scene6080::handleAnimationFrameHook() {
 		}
 		if (frame == 18 || frame == 26 || frame == 33 || frame == 44 || frame == 53 ||
 				frame == 62 || frame == 82 || frame == 93 || frame == 111 || frame == 118 || frame == 125) {
+			_audio.playFootstep(2, _random.getRandomBit(), 77);
+		}
+	} else if (_roomAction == 412) {
+		if (_actionStep == 8 || _actionStep == 15 || _actionStep == 23 ||
+				_actionStep == 30 || _actionStep == 37 || _actionStep == 44) {
 			_audio.playFootstep(2, _random.getRandomBit(), 77);
 		}
 	} else if (_roomAction == 404) {

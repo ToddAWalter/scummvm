@@ -21,19 +21,20 @@
 
 #include "common/util.h"
 #include "hollywood/runaway/scene6263.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Window", 252, 492, 0, {301, 302}, {0, 1}},
-	{"Boiler", 223, 483, 1, {303, 304}, {0, 0}},
-	{"Lever", 287, 505, 1, {305, 306}, {0, 1}},
-	{"Wheel", 287, 505, 1, {307, 308}, {0, 1}},
-	{"Gauges", 287, 505, 1, {311, 312}, {0, 0}},
-	{"Lever", 0, 0, 0, {314, 315}, {0, 0}},
-	{"Lever", 0, 0, 1, {316, 317}, {0, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{252, 492, 0, {301, 302}, {0, 1}}, // 1: Window.
+	{223, 483, 1, {303, 304}, {0, 0}}, // 2: Boiler.
+	{287, 505, 1, {305, 306}, {0, 1}}, // 3: Lever.
+	{287, 505, 1, {307, 308}, {0, 1}}, // 4: Wheel.
+	{287, 505, 1, {311, 312}, {0, 0}}, // 5: Gauges.
+	{0, 0, 0, {314, 315}, {0, 0}}, // 6: Lever.
+	{0, 0, 1, {316, 317}, {0, 0}} // 7: Lever.
 };
 
 const RunawayResponse kResponses[] = {
@@ -113,26 +114,31 @@ void Scene6263::prepareCustomGameplayLoop() {
 		return;
 	}
 	if (_entryScene == 6264) {
-		beginRoomAnimation(401, 26, 64, kSteamLeverFrames + 40, ARRAYSIZE(kSteamLeverFrames) - 40, true, 60);
+		animateSteamLever(401, true);
 	} else {
 		beginRoomAnimation(400, 24, 24, nullptr, 0, true, 60);
 	}
 }
 
 void Scene6263::advanceCustomGameplayLoop(uint32 delta) {
-	if (_town.boiler < 2 || _now - _boilerTick < 80) {
-		return;
-	}
-	_boilerTick = _now;
-	_boilerFrame = _boilerFrame < 40 ? _boilerFrame + 1 : 41 + _random.getRandomNumber(59);
-	for (uint i = 0; i < 4; i += 3) {
-		const int step = _random.getRandomBit() ? 1 : -1;
-		_locomotiveGaugeFrames[i] = CLIP<int>(_locomotiveGaugeFrames[i] + step, 0, 30);
+	if (_town.boiler >= 2 && advanceBoiler()) {
+		for (uint i = 0; i < 4; i += 3) {
+			const int step = _random.getRandomBit() ? 1 : -1;
+			_locomotiveGaugeFrames[i] = CLIP<int>(_locomotiveGaugeFrames[i] + step, 0, 30);
+		}
 	}
 }
 
+bool Scene6263::advanceBoiler() {
+	if (_now - _boilerTick < 80) {
+		return false;
+	}
+	_boilerTick = _now;
+	_boilerFrame = _boilerFrame < 40 ? _boilerFrame + 1 : 41 + _random.getRandomNumber(59);
+	return true;
+}
+
 void Scene6263::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
-	_boilerAnimation.draw(viewport, _boilerFrame, 0, 0);
 	_locomotiveGaugeFrames[1] = _town.boiler == 3 ? 30 : _town.boiler == 2 ? 15 : 0;
 	_locomotiveGaugeFrames[2] = _town.waterTank * 6;
 	if (drawingRoomAnimation()) {
@@ -142,12 +148,23 @@ void Scene6263::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport
 			_locomotiveGaugeFrames[1] = CLIP<int>((int)_actionStep - 23 + 15, 15, 30);
 		}
 	}
+	drawBoiler(viewport, !drawingRoomAnimation() || (_roomAction != 306 && _roomAction != 308 && _roomAction != 401));
+}
+
+void Scene6263::drawBoiler(Graphics::ManagedSurface &viewport, bool drawLever) {
+	_boilerAnimation.draw(viewport, _boilerFrame, 0, 0);
 	for (uint i = 0; i < ARRAYSIZE(_locomotiveGauges); ++i) {
 		_locomotiveGauges[i].draw(viewport, _locomotiveGaugeFrames[i], 0, 0);
 	}
-	if (!drawingRoomAnimation() || (_roomAction != 306 && _roomAction != 308 && _roomAction != 401)) {
+	if (drawLever) {
 		_leverAnimation.draw(viewport, 0, 0, 0);
 	}
+}
+
+void Scene6263::animateSteamLever(uint16 action, bool returning, bool blast) {
+	const uint first = returning ? 40 : 0;
+	const uint count = blast ? 41 : ARRAYSIZE(kSteamLeverFrames) - first;
+	beginRoomAnimation(action, 26, 64, kSteamLeverFrames + first, count, true, 60);
 }
 
 float Scene6263::actorHeight() const {
@@ -160,10 +177,10 @@ void Scene6263::setupActorDepth(RunawayActor::RenderParams &params) const {
 
 Common::U32String Scene6263::hotspotName(byte id) const {
 	if (id == 3 && _town.steamLever) {
-		return Common::U32String("Steam outlet lever");
+		return _strings.text(RunawayStrings::kSteamOutletLever);
 	}
 	if (id == 4 && _town.pressureWheel) {
-		return Common::U32String("Pressure wheel");
+		return _strings.text(RunawayStrings::kPressureWheel);
 	}
 	return RunawayRoomScene::hotspotName(id);
 }
@@ -176,7 +193,7 @@ RunawayRoomScene::ActionResult Scene6263::dispatchCustomSceneAction(uint16 actio
 		}
 		beginRoomAnimation(302, 25, 29, nullptr, 0, true, 60);
 		break;
-	case 1302:
+	case 1302: // Switch to the exterior view to finish climbing out of the cab.
 		_town.cabExited = 1;
 		leaveTownRoom(6261);
 		break;
@@ -196,10 +213,9 @@ RunawayRoomScene::ActionResult Scene6263::dispatchCustomSceneAction(uint16 actio
 		if (!_town.steamLever) {
 			dispatchCustomSceneAction(305);
 		}
-		beginRoomAnimation(306, 26, 64, kSteamLeverFrames,
-			_town.boiler == 3 && !_town.locomotiveKey ? 41 : ARRAYSIZE(kSteamLeverFrames), true, 60);
+		animateSteamLever(306, false, _town.boiler == 3 && !_town.locomotiveKey);
 		break;
-	case 1306:
+	case 1306: // Show the steam burst outside, or explain why it did not dislodge the key.
 		if (_town.boiler == 3 && !_town.locomotiveKey) {
 			leaveTownRoom(6262);
 		} else {
@@ -223,7 +239,7 @@ RunawayRoomScene::ActionResult Scene6263::dispatchCustomSceneAction(uint16 actio
 			say(28, _town.boiler == 3 ? 3 : 0);
 		}
 		break;
-	case 1308:
+	case 1308: // Finish increasing the boiler pressure.
 		_town.pressureWheel = 2;
 		_town.boiler = 3;
 		say(28, 2);
@@ -234,7 +250,7 @@ RunawayRoomScene::ActionResult Scene6263::dispatchCustomSceneAction(uint16 actio
 		_actionFrames.insert_at(0, 0);
 		_inventory.select(0);
 		break;
-	case 1309:
+	case 1309: // Finish loading the firewood into the boiler.
 		_town.boiler = 1;
 		_inventory.remove(14);
 		break;
@@ -258,7 +274,7 @@ RunawayRoomScene::ActionResult Scene6263::dispatchCustomSceneAction(uint16 actio
 			_inventory.select(0);
 		}
 		break;
-	case 1313:
+	case 1313: // Comment after lighting the boiler.
 		say(33, 4);
 		break;
 	case 315: // Refuse to drive the derailed locomotive.

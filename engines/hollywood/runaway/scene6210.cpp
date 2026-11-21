@@ -26,15 +26,15 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{"", 0, 0, 0, {0, 0}, {0, 0}},
-	{"Door", 430, 540, 4, {301, 302}, {0, 3}},
-	{"Door", 430, 540, 4, {301, 302}, {0, 3}},
-	{"Doctor's bag", 294, 513, 0, {303, 304}, {1, 1}},
-	{"Dead body", 449, 504, 0, {305, 306}, {0, 0}},
-	{"Bucket", 757, 508, 1, {307, 308}, {1, 0}},
-	{"Plate", 660, 507, 0, {309, 310}, {0, 0}},
-	{"Pitcher", 449, 504, 0, {311, 312}, {0, 0}},
-	{"Bottle", 341, 502, 0, {313, 314}, {1, 0}}
+	{0, 0, 0, {0, 0}, {0, 0}},
+	{430, 540, 4, {301, 302}, {0, 3}}, // 1: Door.
+	{430, 540, 4, {301, 302}, {0, 3}}, // 2: Door.
+	{294, 513, 0, {303, 304}, {1, 1}}, // 3: Doctor's bag.
+	{449, 504, 0, {305, 306}, {0, 0}}, // 4: Dead body.
+	{757, 508, 1, {307, 308}, {1, 0}}, // 5: Bucket.
+	{660, 507, 0, {309, 310}, {0, 0}}, // 6: Plate.
+	{449, 504, 0, {311, 312}, {0, 0}}, // 7: Pitcher.
+	{341, 502, 0, {313, 314}, {1, 0}} // 8: Bottle.
 };
 
 const RunawayResponse kResponses[] = {
@@ -130,7 +130,7 @@ RunawayRoomScene::ActionResult Scene6210::dispatchCustomSceneAction(uint16 actio
 	case 1412: // Close the bag after an unsuccessful search.
 		beginRoomAnimationRange(413, 4, 28, 16, 27);
 		break;
-	case 1413:
+	case 1413: // Finish closing the doctor's bag.
 		break;
 	case 307: // Discover what the bucket was used for.
 		_facing = 4;
@@ -150,7 +150,7 @@ RunawayRoomScene::ActionResult Scene6210::dispatchCustomSceneAction(uint16 actio
 			dispatchCustomSceneAction(310);
 		}
 		break;
-	case 408:
+	case 408: // Inspect the bucket before refusing to take it.
 		dispatchCustomSceneAction(307);
 		deferTownAction(310);
 		break;

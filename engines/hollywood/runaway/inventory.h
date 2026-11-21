@@ -27,6 +27,10 @@
 #include "hollywood/runaway/detection.h"
 #include "hollywood/runaway/saveload.h"
 
+namespace Common {
+class RandomSource;
+}
+
 namespace Hollywood {
 
 class RunawayStrings;
@@ -40,15 +44,24 @@ public:
 	struct Reply {
 		uint16 cue;
 		byte variation;
+		byte nextVariation = 0xff;
+		uint16 action = 0;
 		Reply(uint16 c = 1, byte v = 0) : cue(c), variation(v) {}
+		static Reply fromAction(uint16 action) {
+			Reply reply;
+			reply.action = action;
+			return reply;
+		}
 	};
 	RunawayInventory(const RunawayStrings &strings, RunawayGameType game) :
-		_strings(strings), _museumDemo(game == kRunawayMuseumDemo), _chapter(game == kRunawayFullGame ? 1 : game == kRunawayMuseumDemo ? 2 : 3) {}
+		_strings(strings), _museumDemo(game == kRunawayMuseumDemo), _fullGame(game == kRunawayFullGame), _chapter(game == kRunawayFullGame ? 1 : game == kRunawayMuseumDemo ? 2 : 3) {}
 	void setChapter(byte chapter) { _chapter = chapter; }
 	void startChapter(byte chapter);
 	RunawaySaveState::MuseumItems &museum() { return _museum; }
 	RunawaySaveState::DesertItems &desert() { return _desert; }
 	RunawaySaveState::TownItems &town() { return _town; }
+	RunawaySaveState::HopiItems &hopi() { return _hopi; }
+	RunawaySaveState::FinaleItems &finale() { return _finale; }
 	bool contains(byte item) const;
 	bool add(byte item);
 	void remove(byte item);
@@ -58,6 +71,8 @@ public:
 	void select(byte item) { _selected = contains(item) ? item : 0; }
 	byte takeNewItem() { const byte item = _newItem; _newItem = 0; return item; }
 	Common::U32String name(byte item) const;
+	Common::U32String combinationCaption(byte item, byte target) const;
+	static Reply randomReply(Common::RandomSource &random);
 	uint icon(byte item) const;
 	uint cursor(byte item) const;
 	Reply examine(byte item) const;
@@ -72,12 +87,19 @@ public:
 	void restoreState(const RunawaySaveState &state);
 
 private:
+	Reply combineHospitalItems(byte first, byte second);
+	Reply combineMuseumItems(byte first, byte second);
+	Reply combineTownItems(byte first, byte second);
+	Reply combineHopiItems(byte first, byte second);
 	const RunawayStrings &_strings;
 	const bool _museumDemo;
+	const bool _fullGame;
 	byte _chapter;
 	RunawaySaveState::MuseumItems _museum;
 	RunawaySaveState::DesertItems _desert;
 	RunawaySaveState::TownItems _town;
+	RunawaySaveState::HopiItems _hopi;
+	RunawaySaveState::FinaleItems _finale;
 	Common::Array<byte> _items;
 	byte _selected = 0, _newItem = 0, _clothState = 0;
 	byte _water = 0;
