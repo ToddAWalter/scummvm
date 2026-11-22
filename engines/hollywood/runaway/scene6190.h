@@ -32,13 +32,15 @@ public:
 	Scene6190(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game);
 
 private:
+	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
 	bool usesAlternateActor() const override;
 	bool applyCustomBackgroundPatches() override;
 	void applyCustomHotspotState() override;
 	void runCustomEntrySequence() override;
+	void handleAnimationFrameHook() override;
 	float actorHeight() const override;
 	Common::U32String hotspotName(byte id) const override;
-	bool shouldApproachHotspot(byte id, bool use, byte item, bool approach) const override;
+	int8 customizeSceneActionApproach(byte id, bool use, byte item, int8 approach) const override;
 	void setupActorDepth(RunawayActor::RenderParams &params) const override;
 	ActionResult dispatchCustomSceneAction(uint16 action) override;
 };

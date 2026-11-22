@@ -27,16 +27,16 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{188, 599, 5, {301, 302}, {0, 3}}, // 1: Path.
-	{778, 512, 3, {303, 304}, {0, 1}}, // 2: Saloon.
-	{125, 441, 7, {305, 306}, {0, 1}}, // 3: Hotel.
-	{388, 284, 7, {307, 308}, {0, 1}}, // 4: Sheriff's office.
-	{574, 242, 7, {309, 310}, {0, 1}}, // 5: Liquor store.
-	{647, 198, 0, {311, 312}, {0, 3}}, // 6: Bank.
-	{722, 192, 0, {313, 314}, {0, 1}}, // 7: Locomotive.
-	{293, 350, 7, {315, 316}, {1, 0}}, // 8: Wagon.
-	{722, 192, 0, {318, 319}, {0, 3}} // 9: North side of town.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{188, 599, 5, {301, 302}, {0, 3}, {188, 599}, 7}, // 1: Path.
+	{778, 512, 3, {303, 304}, {0, 1}, {778, 512}, 6}, // 2: Saloon.
+	{125, 441, 7, {305, 306}, {0, 1}, {79, 399}, 4}, // 3: Hotel.
+	{388, 284, 7, {307, 308}, {0, 1}, {388, 284}, 4}, // 4: Sheriff's office.
+	{574, 242, 7, {309, 310}, {0, 1}, {526, 216}, 4}, // 5: Liquor store.
+	{647, 198, 0, {311, 312}, {0, 3}, {646, 195}, 4}, // 6: Bank.
+	{722, 192, 0, {313, 314}, {0, 1}, {722, 192}, 5}, // 7: Locomotive.
+	{293, 350, 7, {315, 316}, {1, 0}, {285, 340}}, // 8: Wagon.
+	{722, 192, 0, {318, 319}, {0, 3}, {722, 192}, 5} // 9: North side of town.
 };
 
 const RunawayResponse kResponses[] = {
@@ -68,6 +68,13 @@ namespace Runaway {
 
 Scene6220::Scene6220(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
 	RunawayRoomScene(audio, inventory, strings, game) {}
+
+const char *Scene6220::actionCaptionVariant(byte id, bool look, byte item) const {
+	if (id == 8 && _town.strapSeen == 1 && (!item || item == 22)) {
+		return "strap";
+	}
+	return nullptr;
+}
 
 bool Scene6220::loadCustomResources() {
 	return _sushiAnimation.load(_archive, 7, 170) && _brianAnimation.load(_archive, 8, 45) && _shotAnimation.load(_archive, 9, 60);
@@ -164,14 +171,7 @@ void Scene6220::setupActorDepth(RunawayActor::RenderParams &params) const {
 	params.depthY[9] = 599;
 }
 
-Common::U32String Scene6220::hotspotName(byte id) const {
-	if (id == 8 && _town.strapSeen == 1) {
-		return _strings.itemName(4, 11);
-	}
-	return RunawayRoomScene::hotspotName(id);
-}
-
-bool Scene6220::shouldApproachHotspot(byte id, bool use, byte item, bool approach) const {
+int8 Scene6220::customizeSceneActionApproach(byte id, bool use, byte item, int8 approach) const {
 	if (id == 8) {
 		if (item && _town.strapSeen != 1) {
 			return false;

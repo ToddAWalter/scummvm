@@ -33,8 +33,9 @@
 #include "engines/util.h"
 #include "engines/metaengine.h"
 #include "graphics/cursorman.h"
-#include "gui/debugger.h"
 
+#include "hollywood/hotspots.h"
+#include "hollywood/runaway/console.h"
 #include "hollywood/runaway/engine.h"
 #include "hollywood/runaway/intro.h"
 #include "hollywood/runaway/menu.h"
@@ -48,21 +49,6 @@
 #include "hollywood/runaway/ui.h"
 
 namespace Hollywood {
-namespace {
-
-enum RunawayAction {
-	kScrollLeft,
-	kScrollRight,
-	kScrollStart,
-	kScrollEnd,
-	kCancelAction,
-	kSkip,
-	kToggleInventory,
-	kCycleAction,
-	kPauseMenu
-};
-
-} // End of anonymous namespace
 
 RunawayEngine::RunawayEngine(OSystem *syst, Common::Language language, RunawayGameType game) :
 	Engine(syst), _language(language), _game(game), _museum(game == kRunawayMuseumDemo), _strings(language), _audio(_mixer) {
@@ -111,13 +97,39 @@ void RunawayEngine::applySettings(const RunawayMenu::Settings &settings, bool re
 
 void RunawayEngine::present(const Graphics::ManagedSurface &screen) {
 	_system->copyRectToScreen(screen.getPixels(), screen.pitch, 0, 0, screen.w, screen.h);
+	drawHotspots();
 	_system->updateScreen();
+}
+
+void RunawayEngine::getHotspotPositions(Common::Array<Graphics::HotspotInfo> &hotspots) {
+	if (_gameStarted && !_inPresentation && _scene && _ui && !sceneBusy() && !_scene->speaking() &&
+			!_ui->busy() && !_ui->inventoryOpen()) {
+		_scene->getHotspotPositions(hotspots, Common::Rect(0, kRunawayViewportTop,
+			kRunawayScreenWidth, kRunawayViewportTop + kRunawayViewportHeight));
+	}
+}
+
+Graphics::HotspotRenderer *RunawayEngine::createHotspotRenderer() {
+	return createHollywoodHotspotRenderer();
 }
 
 void RunawayEngine::updateSoundListener() {
 	// Full-screen films have their own coordinates; room sounds use the
 	// same horizontal camera position as the original DirectSound listener.
 	_audio.setListenerPosition((_scene->playingVideo() ? 0 : _scene->cameraX()) + kRunawayScreenWidth / 2);
+}
+
+Common::Point RunawayEngine::updateUI(uint32 now) {
+	const bool presentation = _scene->playingVideo();
+	const Common::Point mouse = _presentationMouse.update(presentation);
+	if (!presentation) {
+		const byte hotspot = _scene->hotspotAt(mouse);
+		_ui->setDialogueChoices(_scene->dialogueChoices());
+		_ui->update(now, mouse, hotspot, sceneBusy(), _scene->speaking(),
+			_scene->inventoryPresentation(), _scene->speechFrame(), _scene->hasVerbControls(),
+			_scene->actionCursor(hotspot), _scene->preferLook(hotspot));
+	}
+	return mouse;
 }
 
 bool RunawayEngine::canSaveGameStateCurrently(Common::U32String *) {
@@ -221,8 +233,9 @@ Common::Error RunawayEngine::changeScene() {
 	_scene->resume();
 	updateSoundListener();
 	_pendingDoorClose = transition.door;
-	if (transition.door)
-		_audio.playEffect(3);
+	if (transition.door) {
+		_audio.playEffect(_museum ? 3 : 58);
+	}
 	return Common::kNoError;
 }
 
@@ -276,21 +289,14 @@ Common::Error RunawayEngine::playIntro(RunawayMenu &menu, byte chapter, RunawayI
 		_inPresentation = false;
 		return Common::Error(Common::kReadingFailed, "Cannot load the Runaway opening resources");
 	}
-	const bool cursorWasVisible = CursorMan.showMouse(false);
+	_presentationMouse.update(true);
 	intro.start(getTotalPlayTime());
 	intro.draw();
 	while (!shouldQuit() && !intro.finished() && !_loadedGame) {
-		bool skip = false, openMenu = false;
+		bool openMenu = false;
 		Common::Event event;
 		while (!openMenu && _eventMan->pollEvent(event)) {
-			if (event.type == Common::EVENT_LBUTTONDOWN || event.type == Common::EVENT_RBUTTONDOWN) {
-				skip = true;
-			} else if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START) {
-				if (event.customType == kSkip || event.customType == kCancelAction)
-					skip = true;
-				else if (event.customType == kPauseMenu)
-					openMenu = true;
-			}
+			openMenu = intro.handlePresentationEvent(event);
 		}
 		if (shouldQuit() || _loadedGame)
 			break;
@@ -299,17 +305,17 @@ Common::Error RunawayEngine::playIntro(RunawayMenu &menu, byte chapter, RunawayI
 			continue;
 		}
 		const uint32 now = getTotalPlayTime();
+		intro.processPresentationInput(now);
 		intro.update(now);
-		if (skip)
-			intro.skip(now);
 		intro.draw();
+		_presentationMouse.update(true);
 		if (!ConfMan.hasKey("subtitles") || ConfMan.getBool("subtitles") || ConfMan.getBool("speech_mute"))
 			_ui->drawSubtitle(intro.screen(), intro.subtitle());
 		const Graphics::ManagedSurface &screen = intro.screen();
 		present(screen);
 		_system->delayMillis(10);
 	}
-	CursorMan.showMouse(cursorWasVisible);
+	_presentationMouse.update(false);
 	_inPresentation = false;
 	if (intro.failed())
 		return Common::Error(Common::kReadingFailed, "Cannot play the Runaway opening sequence");
@@ -405,7 +411,7 @@ Common::Error RunawayEngine::run() {
 	initGraphics(kRunawayScreenWidth, kRunawayScreenHeight, &format);
 	if (_system->getScreenFormat() != format)
 		return Common::kUnsupportedColorMode;
-	setDebugger(new GUI::Debugger());
+	setDebugger(new RunawayConsole(this));
 	syncSoundSettings();
 	RunawayMenu menu(_mixer, _strings);
 	if (!menu.load(_game))
@@ -455,18 +461,23 @@ Common::Error RunawayEngine::run() {
 		// Museum doors close once the opening sound finishes, across the room change.
 		if (_pendingDoorClose && !_audio.effectPlaying()) {
 			_pendingDoorClose = false;
-			_audio.playEffect(4);
+			_audio.playEffect(_museum ? 4 : 59);
 		}
-		Common::Point mouse = _eventMan->getMousePos();
-		_ui->setDialogueChoices(_scene->dialogueChoices());
-		_ui->update(now, mouse, _scene->hotspotAt(mouse), sceneBusy(), _scene->speaking(), _scene->inventoryPresentation(), _scene->speechFrame());
+		updateUI(now);
+		if (_scene->playingVideo()) {
+			leftPressed = rightPressed = false;
+		}
 		bool openMenu = false;
 		Common::Event event;
 		while (!openMenu && _eventMan->pollEvent(event)) {
 			if (_loadedGame)
 				break;
+			if (_scene->playingVideo()) {
+				openMenu = _scene->handlePresentationEvent(event);
+				continue;
+			}
 			if (event.type == Common::EVENT_LBUTTONDOWN || event.type == Common::EVENT_RBUTTONDOWN) {
-				_ui->update(now, event.mouse, _scene->hotspotAt(event.mouse), sceneBusy(), _scene->speaking(), _scene->inventoryPresentation(), _scene->speechFrame());
+				updateUI(now);
 				const RunawayUI::Command command = _ui->click(event.type == Common::EVENT_RBUTTONDOWN);
 				switch (command.type) {
 				case RunawayUI::Command::kOpenMenu:
@@ -488,14 +499,10 @@ Common::Error RunawayEngine::run() {
 					_scene->skipSpeech();
 					break;
 				default:
-					if (_scene->playingVideo())
-						_scene->skipVideo();
 					break;
 				}
 			} else if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START || event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_END) {
-				mouse = _eventMan->getMousePos();
-				_ui->setDialogueChoices(_scene->dialogueChoices());
-				_ui->update(now, mouse, _scene->hotspotAt(mouse), sceneBusy(), _scene->speaking(), _scene->inventoryPresentation(), _scene->speechFrame());
+				updateUI(now);
 				const bool pressed = event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START;
 				switch (event.customType) {
 				case kPauseMenu:
@@ -517,9 +524,7 @@ Common::Error RunawayEngine::run() {
 					break;
 				case kCancelAction:
 					if (pressed) {
-						if (_scene->playingVideo())
-							_scene->skipVideo();
-						else if (_scene->speaking())
+						if (_scene->speaking())
 							_scene->skipSpeech();
 						else if (!_ui->cancel())
 							openMenu = true;
@@ -535,10 +540,7 @@ Common::Error RunawayEngine::run() {
 					break;
 				case kSkip:
 					if (pressed) {
-						if (_scene->playingVideo())
-							_scene->skipVideo();
-						else
-							_scene->skipSpeech();
+						_scene->skipSpeech();
 					}
 					break;
 				}
@@ -559,8 +561,11 @@ Common::Error RunawayEngine::run() {
 			// The input which closed the menu must not reach a room action.
 			continue;
 		}
+		if (_scene->playingVideo()) {
+			_scene->processPresentationInput(now);
+		}
 		int direction = (int)rightPressed - (int)leftPressed;
-		mouse = _eventMan->getMousePos();
+		Common::Point mouse = _presentationMouse.update(_scene->playingVideo());
 		if (!direction && mouse.y >= kRunawayViewportTop && mouse.y < kRunawayViewportTop + kRunawayViewportHeight) {
 			if (mouse.x < 24)
 				direction = -1;
@@ -599,13 +604,23 @@ Common::Error RunawayEngine::run() {
 			leftPressed = rightPressed = false;
 			continue;
 		}
-		_ui->setDialogueChoices(_scene->dialogueChoices());
-		_ui->update(now, mouse, _scene->hotspotAt(mouse), sceneBusy(), _scene->speaking(), _scene->inventoryPresentation(), _scene->speechFrame());
+		mouse = updateUI(now);
+		if (isPaused()) {
+			// Movie preparation freezes the clock and audio, but still accepts input.
+			_system->delayMillis(1);
+			continue;
+		}
 		_scene->draw();
 		Graphics::ManagedSurface &screen = _scene->screen();
 		const bool subtitles = _museum || !ConfMan.hasKey("subtitles") || ConfMan.getBool("subtitles") || ConfMan.getBool("speech_mute");
-		_ui->draw(screen, _scene->actionCaption(_scene->hotspotAt(mouse), _ui->verb(), _inventory->selected()),
-			_scene->committedCaption(), _scene->subtitle(), subtitles, _scene->playingVideo());
+		if (_scene->playingVideo()) {
+			if (subtitles) {
+				_ui->drawSubtitle(screen, _scene->subtitle());
+			}
+		} else {
+			_ui->draw(screen, _scene->actionCaption(_scene->hotspotAt(mouse), _ui->verb(), _inventory->selected()),
+				_scene->committedCaption(), _scene->subtitle(), subtitles);
+		}
 		present(screen);
 		_system->delayMillis(16);
 	}
@@ -619,21 +634,14 @@ Common::Error RunawayEngine::playEnding(RunawayMenu &menu) {
 	if (!ending.load())
 		return Common::Error(Common::kReadingFailed, "Cannot load the Runaway demo ending");
 	Graphics::ManagedSurface screen(kRunawayScreenWidth, kRunawayScreenHeight, _system->getScreenFormat());
-	const bool cursorWasVisible = CursorMan.showMouse(false);
+	_presentationMouse.update(true);
 	ending.start(getTotalPlayTime());
 	ending.draw(screen);
 	while (!shouldQuit() && !ending.finished() && !_loadedGame) {
-		bool skip = false, openMenu = false;
+		bool openMenu = false;
 		Common::Event event;
 		while (!openMenu && _eventMan->pollEvent(event)) {
-			if (event.type == Common::EVENT_LBUTTONDOWN || event.type == Common::EVENT_RBUTTONDOWN)
-				skip = true;
-			else if (event.type == Common::EVENT_CUSTOM_ENGINE_ACTION_START) {
-				if (event.customType == kSkip || event.customType == kCancelAction)
-					skip = true;
-				else if (event.customType == kPauseMenu)
-					openMenu = true;
-			}
+			openMenu = ending.handlePresentationEvent(event);
 		}
 		if (shouldQuit() || _loadedGame)
 			break;
@@ -642,14 +650,14 @@ Common::Error RunawayEngine::playEnding(RunawayMenu &menu) {
 			continue;
 		}
 		const uint32 now = getTotalPlayTime();
+		ending.processPresentationInput(now);
 		ending.update(now);
-		if (skip)
-			ending.skip(now);
 		ending.draw(screen);
+		_presentationMouse.update(true);
 		present(screen);
 		_system->delayMillis(16);
 	}
-	CursorMan.showMouse(cursorWasVisible);
+	_presentationMouse.update(false);
 	_inPresentation = false;
 	return Common::kNoError;
 }
@@ -671,6 +679,9 @@ int RunawayEngine::pauseMenu(RunawayMenu &menu, Graphics::ManagedSurface &screen
 	bool finished = false, changed = false;
 	int chapter = -1;
 	while (!shouldQuit() && !finished) {
+		if (chapters) {
+			menu.setChapterCount(MAX<byte>(1, unlockedChapter()));
+		}
 		menu.tick(_system->getMillis());
 		Common::Event event;
 		while (!finished && _eventMan->pollEvent(event)) {
@@ -820,7 +831,7 @@ Common::Array<Common::Keymap *> RunawayEngine::initKeymaps() {
 	action->addDefaultInputMapping("JOY_START");
 	keymap->addAction(action);
 
-	action = new Action("CANCEL_ACTION", _("Cancel action / Menu"));
+	action = new Action("CANCEL_ACTION", _("Skip cutscene / Cancel action / Menu"));
 	action->setCustomEngineActionEvent(kCancelAction);
 	action->addDefaultInputMapping("ESCAPE");
 	keymap->addAction(action);
@@ -836,7 +847,7 @@ Common::Array<Common::Keymap *> RunawayEngine::initKeymaps() {
 	action->addDefaultInputMapping("TAB");
 	keymap->addAction(action);
 
-	action = new Action(kStandardActionSkip, _("Skip intro / Skip line"));
+	action = new Action(kStandardActionSkip, _("Skip line"));
 	action->setCustomEngineActionEvent(kSkip);
 	action->addDefaultInputMapping("SPACE");
 	action->addDefaultInputMapping("RETURN");

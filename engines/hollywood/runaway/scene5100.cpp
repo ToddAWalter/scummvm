@@ -52,25 +52,25 @@ const byte kStudFrames[] = {
 const byte kCanThrows[][2] = {{0, 19}, {21, 40}, {42, 71}, {72, 88}};
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{1279, 267, 0, {301, 302}, {0, 1}}, // 1: Path.
-	{1259, 354, 7, {303, 304}, {1, 0}}, // 2: Barn Doors.
-	{0, 0, 0, {305, 306}, {1, 1}}, // 3: Bottle.
-	{1279, 267, 4, {1, 302}, {0, 1}}, // 4: Window.
-	{164, 581, 0, {307, 308}, {1, 0}}, // 5: Motorcycle.
-	{0, 0, 7, {309, 310}, {1, 1}}, // 6: Stud.
-	{0, 0, 4, {311, 312}, {0, 0}}, // 7: Remains Of Rocking Chair.
-	{0, 0, 7, {313, 314}, {0, 1}}, // 8: Piece Of Metal.
-	{0, 0, 1, {315, 316}, {1, 0}}, // 9: Barrel.
-	{0, 0, 4, {317, 318}, {0, 0}}, // 10: Barrel.
-	{0, 0, 7, {319, 320}, {0, 0}}, // 11: Helicopter.
-	{253, 418, 4, {321, 322}, {0, 0}}, // 12: Can.
-	{0, 0, 1, {323, 324}, {1, 0}}, // 13: Bucket.
-	{253, 418, 4, {1, 325}, {0, 0}}, // 14: Outside.
-	{1053, 403, 3, {1, 329}, {0, 1}}, // 15: Stud.
-	{0, 0, 0, {0, 0}, {0, 0}}, // 16: Beer Can.
-	{0, 0, 0, {0, 0}, {0, 0}}, // 17: Peanut Butter.
-	{0, 0, 0, {0, 0}, {0, 0}}, // 18: Foot Rest.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{1279, 267, 0, {301, 302}, {0, 1}, {1449, 255}, 4}, // 1: Path.
+	{1259, 354, 7, {303, 304}, {1, 0}, {1101, 298}}, // 2: Barn Doors.
+	{0, 0, 0, {305, 306}, {1, 1}, {274, 484}}, // 3: Bottle.
+	{1279, 267, 4, {1, 302}, {0, 1}, {0, 0}}, // 4: Window.
+	{164, 581, 0, {307, 308}, {1, 0}, {164, 570}}, // 5: Motorcycle.
+	{0, 0, 7, {309, 310}, {1, 1}, {490, 493}, 3, true}, // 6: Stud.
+	{0, 0, 4, {311, 312}, {0, 0}, {1329, 514}}, // 7: Remains Of Rocking Chair.
+	{0, 0, 7, {313, 314}, {0, 1}, {29, 503}}, // 8: Piece Of Metal.
+	{0, 0, 1, {315, 316}, {1, 0}, {335, 525}}, // 9: Barrel.
+	{0, 0, 4, {317, 318}, {0, 0}, {993, 558}}, // 10: Barrel.
+	{0, 0, 7, {319, 320}, {0, 0}, {1101, 298}}, // 11: Helicopter.
+	{253, 418, 4, {321, 322}, {0, 0}, {245, 491}}, // 12: Can.
+	{0, 0, 1, {323, 324}, {1, 0}, {786, 403}}, // 13: Bucket.
+	{253, 418, 4, {1, 325}, {0, 0}, {253, 600}}, // 14: Outside.
+	{1053, 403, 3, {1, 329}, {0, 1}, {490, 493}}, // 15: Stud.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}}, // 16: Beer Can.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}}, // 17: Peanut Butter.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}}, // 18: Foot Rest.
 };
 
 const RunawayResponse kResponses[] = {
@@ -132,6 +132,11 @@ bool Scene5100::loadCustomResources() {
 
 float Scene5100::actorHeight() const {
 	return _position.y * 0.668016195f + 87.591095f;
+}
+
+int Scene5100::sceneViewportYOffset() const {
+	// The walk area extends 100 pixels below the painted hangar exterior.
+	return 0;
 }
 
 void Scene5100::setupActorDepth(RunawayActor::RenderParams &params) const {
@@ -488,10 +493,12 @@ RunawayRoomScene::ActionResult Scene5100::dispatchCustomSceneAction(uint16 actio
 		break;
 	}
 	case 1450: // Stud follows Lula away from his beer.
+		_audio.playFootstep(2, _random.getRandomBit(), 255, 100);
 		_desert.guard = 1;
 		beginRoomAnimation(460, 17, 52, nullptr, 0, false);
 		return kBackgroundChanged;
 	case 1460: // Lula demonstrates her shooting on the first visit.
+		_audio.playFootstep(2, _random.getRandomBit(), 255, 100);
 		if (_desert.lulaDistractedGuard) {
 			deferDesertAction(490);
 		} else {
@@ -514,7 +521,15 @@ RunawayRoomScene::ActionResult Scene5100::dispatchCustomSceneAction(uint16 actio
 		_hangarThrowing = true;
 		say(14);
 		break;
-	case 329: // Try to walk past Stud.
+	case 329: { // Step out and back when trying to walk past Stud.
+		byte frames[30];
+		for (uint i = 0; i < ARRAYSIZE(frames); ++i) {
+			frames[i] = i <= 18 ? i : i - 1;
+		}
+		beginRoomAnimation(action, 10, 29, frames, ARRAYSIZE(frames));
+		break;
+	}
+	case 1329: // Decide against trying to pass Stud.
 		say(1, _random.getRandomBit());
 		break;
 	default:
@@ -620,15 +635,24 @@ void Scene5100::startHangarTaunt() {
 }
 
 void Scene5100::handleAnimationFrameHook() {
+	static const AnimationFootstep lulaSteps[] = {
+		{26, 800}, {35, 700}, {44, 600}, {53, 500}, {62, 400}, {71, 300}
+	};
+	static const AnimationFootstep studSteps[] = {
+		{19, 512}, {30, 500}, {37, 400}, {44, 300}, {51, 200}
+	};
 	if (_roomAction == 328 && _actionStep == 21) {
 		_audio.playEffect(39, 204);
 	}
-	if (_roomAction == 450 && (_actionStep == 7 || _actionStep == 16 || _actionStep == 25 ||
-			_actionStep == 34 || _actionStep == 43 || _actionStep == 52)) {
-		_audio.playFootstep(1, _random.getRandomBit());
+	if (_roomAction == 450) {
+		playAnimationFootsteps(_actionFrames[_actionStep], 2, lulaSteps, ARRAYSIZE(lulaSteps));
+	} else if (_roomAction == 460) {
+		playAnimationFootsteps(_actionStep, 2, studSteps, ARRAYSIZE(studSteps));
 	}
-	if (_roomAction == 460 && (_actionStep == 19 || _actionStep == 30 || _actionStep == 37 || _actionStep == 44 || _actionStep == 51)) {
-		_audio.playFootstep(1, _random.getRandomBit());
+	if ((_roomAction == 329 || _roomAction == 458 || _roomAction == 498) &&
+			(_actionFrames[_actionStep] == 10 || _actionFrames[_actionStep] == 28)) {
+		const byte volume = CLIP<int>((int)(actorHeight() * 255 / 455), 0, 255);
+		_audio.playFootstep(2, _random.getRandomBit(), volume, _position.x);
 	}
 	if (_roomAction == 470 || _roomAction == 480 || _roomAction == 558) {
 		const byte frame = _actionFrames[_actionStep];

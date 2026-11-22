@@ -38,6 +38,7 @@ public:
 	bool busy() const override;
 
 private:
+	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
 	bool loadCustomResources() override;
 	bool applyCustomBackgroundPatches() override;
 	void applyCustomHotspotState() override;
@@ -52,6 +53,7 @@ private:
 	void findWalkPath(Common::Point target) override;
 	float actorHeight() const override;
 	Common::U32String hotspotName(byte id) const override;
+	int8 customizeSceneActionApproach(byte id, bool use, byte item, int8 approach) const override;
 
 	void startJoshuaConversation(bool introduction);
 	void startKeyboard();

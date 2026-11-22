@@ -24,19 +24,21 @@
 
 #include "hollywood/runaway/audio.h"
 #include "hollywood/runaway/graphics.h"
+#include "hollywood/runaway/presentation.h"
 #include "hollywood/runaway/scene2010.h"
 
 namespace Hollywood {
 
 // Animated Pendulo logo, then the demo story card or retail opening.
 // The engine supplies its pause-aware clock and handles input/presentation.
-class RunawayIntro {
+class RunawayIntro : public RunawayPresentation {
 public:
 	enum Mode { kCompleteIntro, kLogoOnly, kOpeningOnly };
 	explicit RunawayIntro(Audio::Mixer *mixer) : _audio(mixer), _opening(_audio) {}
 	bool load(bool fullGame = false, byte chapter = 0, Mode mode = kCompleteIntro);
 	void start(uint32 now);
 	void skip(uint32 now);
+	void skipSpeech(uint32 now);
 	void update(uint32 now);
 	void draw();
 	bool finished() const { return _phase == kFinished; }
@@ -45,6 +47,9 @@ public:
 	Graphics::ManagedSurface &screen() { return _screen; }
 
 private:
+	void skipPresentation(uint32 now) override { skip(now); }
+	void skipPresentationSpeech(uint32 now) override { skipSpeech(now); }
+
 	enum Phase { kLogo, kLogoAudio, kStoryFadeIn, kStory, kStoryFadeOut, kOpening, kFinished };
 	void startStory(uint32 now);
 

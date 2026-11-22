@@ -27,16 +27,16 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{1100, 204, 1, {302, 301}, {0, 3}}, // 1: Exhibition hall.
-	{826, 442, 3, {303, 304}, {1, 0}}, // 2: Statue.
-	{572, 420, 1, {305, 306}, {1, 0}}, // 3: Statue.
-	{572, 420, 1, {307, 308}, {1, 1}}, // 4: Mayan objects.
-	{316, 382, 7, {309, 310}, {0, 0}}, // 5: Mayan arch.
-	{532, 238, 0, {311, 312}, {0, 0}}, // 6: Mayan arch.
-	{280, 491, 7, {313, 314}, {1, 0}}, // 7: Mayan object.
-	{302, 426, 7, {315, 316}, {1, 0}}, // 8: Mayan object.
-	{316, 382, 7, {317, 318}, {1, 0}}, // 9: Mayan object.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{1100, 204, 1, {302, 301}, {0, 3}, {1023, 251}, 5}, // 1: Exhibition hall.
+	{826, 442, 3, {303, 304}, {1, 0}, {838, 513}}, // 2: Statue.
+	{572, 420, 1, {305, 306}, {1, 0}, {657, 380}}, // 3: Statue.
+	{572, 420, 1, {307, 308}, {1, 1}, {657, 380}}, // 4: Mayan objects.
+	{316, 382, 7, {309, 310}, {0, 0}, {232, 353}}, // 5: Mayan arch.
+	{532, 238, 0, {311, 312}, {0, 0}, {510, 208}}, // 6: Mayan arch.
+	{280, 491, 7, {313, 314}, {1, 0}, {197, 415}}, // 7: Mayan object.
+	{302, 426, 7, {315, 316}, {1, 0}, {232, 353}}, // 8: Mayan object.
+	{316, 382, 7, {317, 318}, {1, 0}, {255, 313}}, // 9: Mayan object.
 };
 
 const RunawayResponse kResponses[] = {
@@ -77,8 +77,20 @@ namespace Runaway {
 Scene4090::Scene4090(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
 	RunawayRoomScene(audio, inventory, strings, game) {}
 
+void Scene4090::setCameraX(int x) {
+	// The extra 100 columns are for the exit path, beyond the fixed view.
+	_camera.x = 0;
+}
+
 bool Scene4090::applyCustomBackgroundPatches() {
 	return !museumChapter() || !_museum.coffeeBeansTaken || applyPatch(4);
+}
+
+void Scene4090::runCustomEntrySequence() {
+	if (!_museum.exhibitionVisited) {
+		_museum.exhibitionVisited = 1;
+		say(0);
+	}
 }
 
 RunawayRoomScene::ActionResult Scene4090::dispatchCustomSceneAction(uint16 action) {

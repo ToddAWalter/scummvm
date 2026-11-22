@@ -22,6 +22,7 @@
 #include "common/textconsole.h"
 #include "common/util.h"
 #include "hollywood/runaway/scene4140.h"
+#include "hollywood/runaway/strings.h"
 
 namespace Hollywood {
 
@@ -43,6 +44,9 @@ void Scene4140::click(Common::Point mouse, RunawayVerb verb, byte item) {
 		return;
 	}
 	const byte id = hotspotAt(mouse);
+	if (id == 16) { // The keypad casing is not an exit or a button.
+		return;
+	}
 	_pressedKey = id;
 	_keyUntil = _now + 180;
 	_keyResult = 0;
@@ -81,7 +85,11 @@ void Scene4140::click(Common::Point mouse, RunawayVerb verb, byte item) {
 }
 
 Common::U32String Scene4140::actionCaption(byte id, RunawayVerb verb, byte item) const {
-	return Common::U32String();
+	return _strings.sceneActionCaption(_room, id, 0, false);
+}
+
+Common::U32String Scene4140::hotspotName(byte id) const {
+	return actionCaption(id, kVerbUse, 0);
 }
 
 void Scene4140::update(uint32 now, int scrollDirection, bool inventoryOpen) {
@@ -149,7 +157,7 @@ bool Scene4140::shouldUpdateActor() const {
 }
 
 bool Scene4140::isValidHotspot(byte id) const {
-	return id <= 12;
+	return id <= 12 || id == 16;
 }
 
 } // End of namespace Runaway

@@ -26,17 +26,17 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{556, 310, 0, {301, 302}, {0, 1}}, // 1: Front Of The Bus.
-	{629, 403, 1, {303, 304}, {0, 0}}, // 2: Refrigerator.
-	{578, 466, 5, {305, 306}, {0, 1}}, // 3: Carla.
-	{488, 415, 5, {307, 308}, {0, 0}}, // 4: Glass.
-	{536, 417, 0, {309, 310}, {1, 0}}, // 5: Grating.
-	{229, 475, 7, {311, 312}, {0, 0}}, // 6: Boots.
-	{629, 403, 1, {315, 316}, {0, 0}}, // 7: Bull.
-	{229, 475, 7, {317, 318}, {0, 0}}, // 8: Painting.
-	{229, 475, 7, {313, 314}, {1, 1}}, // 9: Needle And Thread.
-	{556, 310, 0, {301, 302}, {0, 1}}, // 10: Front Of The Bus.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{556, 310, 0, {301, 302}, {0, 1}, {566, 252}, 5}, // 1: Front Of The Bus.
+	{629, 403, 1, {303, 304}, {0, 0}, {755, 340}}, // 2: Refrigerator.
+	{578, 466, 5, {305, 306}, {0, 1}, {320, 559}, 3}, // 3: Carla.
+	{488, 415, 5, {307, 308}, {0, 0}, {443, 527}}, // 4: Glass.
+	{536, 417, 0, {309, 310}, {1, 0}, {536, 388}}, // 5: Grating.
+	{229, 475, 7, {311, 312}, {0, 0}, {171, 422}}, // 6: Boots.
+	{629, 403, 1, {315, 316}, {0, 0}, {755, 340}}, // 7: Bull.
+	{229, 475, 7, {317, 318}, {0, 0}, {171, 422}}, // 8: Painting.
+	{229, 475, 7, {313, 314}, {1, 1}, {171, 422}}, // 9: Needle And Thread.
+	{556, 310, 0, {301, 302}, {0, 1}, {566, 252}, 4}, // 10: Front Of The Bus.
 };
 
 const RunawayResponse kResponses[] = {
@@ -81,7 +81,8 @@ bool Scene5160::loadCustomResources() {
 	return _ambientAnimations[0].load(_archive, 4, 16) &&
 		_ambientAnimations[1].load(_archive, 5, 24) &&
 		_ambientAnimations[2].load(_archive, 6, 24) &&
-		_ambientAnimations[3].load(_archive, 7, 93);
+		_ambientAnimations[3].load(_archive, 7, 93) &&
+		_refrigeratorAnimation.load(_archive, 12, 1);
 }
 
 bool Scene5160::applyCustomBackgroundPatches() {
@@ -164,17 +165,17 @@ RunawayRoomScene::ActionResult Scene5160::dispatchCustomSceneAction(uint16 actio
 		} else {
 			say(17, 4);
 		}
-		deferDesertAction(419);
+		holdRoomAnimation(419, 15, 73, 54);
 		break;
-	case 419: { // Close the refrigerator.
+	case 1419: { // Close the refrigerator after Brian finishes speaking.
 		static const byte frames[] = {
 			54, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72,
 			26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
 		};
-		beginRoomAnimation(action, 15, 73, frames, ARRAYSIZE(frames));
+		beginRoomAnimation(420, 15, 73, frames, ARRAYSIZE(frames));
 		break;
 	}
-	case 1419: // Finish searching the refrigerator.
+	case 1420: // Finish searching the refrigerator.
 		if (!_desert.fridgeOpened) {
 			_desert.fridgeOpened = 1;
 			say(17, 3);
@@ -238,13 +239,22 @@ void Scene5160::handleCustomDialogueChoice(byte effect) {
 }
 
 void Scene5160::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
-	for (uint i = 0; i < ARRAYSIZE(_ambientAnimations); ++i) {
-		const RunawayAnimation &animation = _ambientAnimations[i];
-		if (!animation.frameCount()) {
-			continue;
+	if (!drawingRoomAnimation() || (_roomAction != 319 && _roomAction != 419 && _roomAction != 420)) {
+		_refrigeratorAnimation.draw(viewport, 0, _camera.x, -_camera.y);
+	}
+	drawAmbientAnimations(viewport, _ambientAnimations, 3);
+}
+
+void Scene5160::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) {
+	_ambientAnimations[3].draw(viewport, _carla.frame(speaker() ? speechFrame() : 0), _camera.x, -_camera.y);
+}
+
+void Scene5160::advanceCustomGameplayLoop(uint32 delta) {
+	_carla.update(_now, _conversation == 4 || speaker(), _random);
+	for (uint i = 0; i < 256; ++i) {
+		if (_originalMaps[256 + i] == 4) {
+			_maps[256 + i] = _carla.holdsGlass() ? 0 : 4;
 		}
-		const uint frame = i == 3 ? 92 : (_now / 80) % animation.frameCount();
-		animation.draw(viewport, frame, _camera.x, -_camera.y);
 	}
 }
 

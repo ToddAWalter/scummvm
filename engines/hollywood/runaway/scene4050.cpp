@@ -19,6 +19,7 @@
  *
  */
 
+#include "common/config-manager.h"
 #include "common/util.h"
 #include "hollywood/runaway/scene4050.h"
 #include "hollywood/runaway/strings.h"
@@ -45,21 +46,21 @@ const byte kGrindCoffee[] = {
 };
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{227, 503, 7, {301, 339}, {0, 1}}, // 1: Door.
-	{311, 493, 7, {302, 303}, {0, 0}}, // 2: Shelves.
-	{382, 529, 1, {304, 305}, {0, 1}}, // 3: Susan.
-	{395, 529, 1, {306, 307}, {0, 0}}, // 4: Electric lathe.
-	{460, 543, 1, {308, 309}, {0, 0}}, // 5: Microscope.
-	{637, 570, 1, {310, 311}, {0, 0}}, // 6: Water dispenser.
-	{703, 575, 1, {312, 313}, {1, 0}}, // 7: Wastepaper basket.
-	{844, 505, 1, {314, 315}, {0, 0}}, // 8: Tank.
-	{884, 580, 1, {316, 317}, {0, 0}}, // 9: Machine.
-	{992, 556, 1, {318, 319}, {1, 0}}, // 10: Laser.
-	{1327, 521, 1, {320, 321}, {0, 0}}, // 11: Shelves.
-	{1277, 514, 7, {322, 323}, {1, 1}}, // 12: Briefcase.
-	{1211, 510, 7, {324, 325}, {0, 0}}, // 13: Skeleton.
-	{824, 531, 7, {337, 338}, {1, 1}}, // 14: Strange brush.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{227, 503, 7, {301, 339}, {0, 1}, {192, 484}, 4}, // 1: Door.
+	{311, 493, 7, {302, 303}, {0, 0}, {291, 470}}, // 2: Shelves.
+	{382, 529, 1, {304, 305}, {0, 1}, {490, 508}, 3}, // 3: Susan.
+	{395, 529, 1, {306, 307}, {0, 0}, {406, 493}}, // 4: Electric lathe.
+	{460, 543, 1, {308, 309}, {0, 0}, {527, 501}}, // 5: Microscope.
+	{637, 570, 1, {310, 311}, {0, 0}, {692, 530}}, // 6: Water dispenser.
+	{703, 575, 1, {312, 313}, {1, 0}, {747, 534}}, // 7: Wastepaper basket.
+	{844, 505, 1, {314, 315}, {0, 0}, {862, 481}}, // 8: Tank.
+	{884, 580, 1, {316, 317}, {0, 0}, {919, 531}}, // 9: Machine.
+	{992, 556, 1, {318, 319}, {1, 0}, {1020, 519}}, // 10: Laser.
+	{1327, 521, 1, {320, 321}, {0, 0}, {1376, 495}}, // 11: Shelves.
+	{1277, 514, 7, {322, 323}, {1, 1}, {1245, 489}}, // 12: Briefcase.
+	{1211, 510, 7, {324, 325}, {0, 0}, {1100, 443}}, // 13: Skeleton.
+	{824, 531, 7, {337, 338}, {1, 1}, {794, 503}}, // 14: Strange brush.
 };
 
 const RunawayResponse kResponses[] = {
@@ -120,7 +121,7 @@ const RunawayRoom kRunawayScene4050 = {
 namespace Runaway {
 
 Scene4050::Scene4050(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game), _susanSpeech(audio, _random, RunawaySpeech::kRecordedLipSync) {}
 
 const char *Scene4050::actionCaptionVariant(byte id, bool look, byte item) const {
 	if (item == 14 && id == 4) {
@@ -130,7 +131,8 @@ const char *Scene4050::actionCaptionVariant(byte id, bool look, byte item) const
 }
 
 bool Scene4050::loadCustomResources() {
-	return _susanAnimation.load(_archive, 8, 75) && _laserAnimation.load(_archive, 22, 1) &&
+	return _susanAnimation.load(_archive, 8, 75) && _susanLegsAnimation.load(_archive, 22, 1) &&
+		(!museumChapter() || _susanBenchPatch.load(_archive, 12, 2)) &&
 		loadForeground(0, 4) && loadForeground(1, 5) && loadForeground(2, 6) && loadForeground(3, 7);
 }
 
@@ -144,11 +146,18 @@ bool Scene4050::applyCustomBackgroundPatches() {
 	if (_museum.restoration && !applyPatch(_museum.restoration == 1 ? 9 : 10)) {
 		return false;
 	}
+	const int benchFrame = _museum.susan ? 0 : _susanBenchFrame;
+	if (benchFrame >= 0) {
+		_susanBenchPatch.draw(_background, benchFrame, 0, 0);
+	}
 	if (!_susanAnimation.load(_archive, _museum.susan == 1 ? 15 : _museum.susan == 3 ? 16 : 8,
 			_museum.susan == 1 ? 170 : _museum.susan == 3 ? 2 : 75)) {
 		return false;
 	}
-	_susanFrame = _museum.susan == 1 ? 79 : _museum.susan == 3 ? 1 : 0;
+	_susanFrame = _museum.susan == 3 ? 1 : 0;
+	_susanTalking = false;
+	_susanWorkCycles = 0;
+	_susanTick = _now;
 	return true;
 }
 
@@ -181,7 +190,7 @@ void Scene4050::applyCustomHotspotState() {
 }
 
 void Scene4050::prepareCustomGameplayLoop() {
-	_nextLaser = _now + 25000 + _random.getRandomNumber(5000);
+	_nextLaser = _now + (15 + _random.getRandomNumber(5)) * 1000;
 }
 
 void Scene4050::runCustomEntrySequence() {
@@ -198,6 +207,7 @@ void Scene4050::runCustomEntrySequence() {
 			say(80, i);
 			say(90, i, false, 1);
 		}
+		startSusanConversation(true);
 	}
 }
 
@@ -208,19 +218,88 @@ void Scene4050::resumeAmbientAudio(bool entering) {
 }
 
 void Scene4050::advanceCustomGameplayLoop(uint32 delta) {
-	if (speaker()) {
-		_susanFrame = (_museum.susan == 1 ? 52 : 45) + speechFrame();
-	} else if (_museum.susan == 3) {
+	if (_susanSpeech.finished(_now) || busy() || _inventoryOpen || _museum.susan != 1) {
+		stopAmbientSpeech();
+	}
+	const bool complaining = !_susanSpeech.subtitle().empty();
+	if (_museum.susan >= 2) {
 		_susanFrame = 1;
-	} else if (_museum.susan == 1) {
-		_susanFrame = 79;
+	} else if (speaker() || complaining) {
+		_susanFrame = (_museum.susan == 1 ? 52 : 45) + (complaining ? _susanSpeech.frame(_now) : speechFrame());
+		_susanTalking = true;
+		_susanTick = _now;
+	} else if (_susanTalking) {
+		_susanTalking = false;
+		_susanFrame = _museum.susan == 1 ? 79 : 72;
+		_susanTick = _now;
+	} else if (_now - _susanTick >= 80) {
+		_susanTick = _now;
+		advanceSusanIdle();
+	}
+	if (!_museum.susan && (int32)(_now - _nextLaser) >= 0) {
+		if (!busy() && !_walkPath.active() && !_inventoryOpen && _position.x < 530) {
+			beginRoomAnimation(450, 23, 95, nullptr, 0, false);
+		}
+		// A missed attempt is retried later, not as soon as Brian becomes idle.
+		_nextLaser = _now + (25 + _random.getRandomNumber(5)) * 1000;
+	}
+}
+
+void Scene4050::advanceSusanIdle() {
+	if (_museum.susan == 1) {
+		const bool idle = !busy() && !_walkPath.active() && !_inventoryOpen;
+		if (_susanFrame == 33 || _susanFrame == 83 || _susanFrame == 101) {
+			if (idle && _camera.x > 22 && !_random.getRandomNumber(7)) {
+				_susanFrame = 34;
+			} else {
+				_susanFrame = _susanFrame == 101 || _random.getRandomBit() ? 0 : 84;
+			}
+		} else if (_susanFrame == 51) {
+			_susanFrame = 79;
+			if (idle) {
+				const SceneSpeechCue cue = _text.stageCue(33, _random.getRandomNumber(3));
+				if (cue.valid()) {
+					_susanSpeech.start(Common::U32String(_text.largeTextRecord(cue.textRecordId), Common::kDos850), cue.voiceSampleId, false, _now);
+					_susanFrame = 52;
+					_susanTalking = true;
+				}
+			}
+		} else {
+			++_susanFrame;
+		}
+		return;
+	}
+
+	// Working, resting and returning to the mask are separate frame ranges.
+	if (_susanFrame == 14 || _susanFrame == 39) {
+		if (++_susanWorkCycles >= 10 + _random.getRandomNumber(4)) {
+			_susanWorkCycles = 0;
+			_susanFrame = 15;
+		} else {
+			_susanFrame = _random.getRandomBit() ? 29 : 0;
+		}
+	} else if (_susanFrame == 23) {
+		if (!_random.getRandomNumber(9)) {
+			++_susanFrame;
+		}
+	} else if (_susanFrame == 27 || _susanFrame == 74) {
+		_susanFrame = _random.getRandomBit() ? 29 : 0;
 	} else {
-		_susanFrame = (_now / 80) % 26;
+		++_susanFrame;
 	}
-	if (!_museum.susan && !busy() && !_inventoryOpen && _position.x < 530 && (int32)(_now - _nextLaser) >= 0) {
-		beginRoomAnimation(450, 23, 95, nullptr, 0, false);
-		_nextLaser = _now + 25000 + _random.getRandomNumber(5000);
+}
+
+void Scene4050::stopAmbientSpeech() {
+	if (!_susanSpeech.subtitle().empty()) {
+		_susanSpeech.stop();
 	}
+}
+
+const Common::U32String &Scene4050::subtitle() const {
+	if (!_sequence.active() && !speaking() && !_susanSpeech.subtitle().empty()) {
+		return _susanSpeech.subtitle();
+	}
+	return RunawayRoomScene::subtitle();
 }
 
 void Scene4050::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
@@ -228,8 +307,11 @@ void Scene4050::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport
 		(_roomAction == 450 || _roomAction == 451 || _roomAction == 452 || _roomAction == 331 || _roomAction == 454);
 	if (!movingSusan) {
 		_susanAnimation.draw(viewport, museumChapter() ? _susanFrame : 0, _camera.x, -_camera.y);
+		// Only the seated working poses omit Susan's legs from their frames.
+		if (!museumChapter() || !_museum.susan) {
+			_susanLegsAnimation.draw(viewport, 0, _camera.x, -_camera.y);
+		}
 	}
-	_laserAnimation.draw(viewport, 0, _camera.x, -_camera.y);
 }
 
 void Scene4050::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) {
@@ -244,6 +326,9 @@ void Scene4050::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport
 	}
 	if (_position.y < 501) {
 		drawForeground(viewport, 3);
+		if (museumChapter() && _museum.susan >= 2) {
+			_susanAnimation.draw(viewport, _susanFrame, _camera.x, -_camera.y);
+		}
 	}
 }
 
@@ -267,7 +352,7 @@ RunawayRoomScene::ActionResult Scene4050::dispatchCustomSceneAction(uint16 actio
 				say(5, 1 + _random.getRandomNumber(3));
 				say(5, 5 + _random.getRandomNumber(2), false, 1);
 			} else {
-				startSusanConversation();
+				startSusanConversation(false);
 			}
 			return kHandled;
 		case 312: // Look in the wastepaper basket.
@@ -371,8 +456,8 @@ RunawayRoomScene::ActionResult Scene4050::dispatchCustomSceneAction(uint16 actio
 			_museum.talcSeen = 1;
 			return kHandled;
 		case 339: // Leave the laboratory.
-			_museum.leftLabOnce = 1;
-			leaveMuseumRoom(4061, Common::Point(873, 311), 3, true);
+			// Alternate actor bank for the northwest-facing door handle gesture.
+			beginActorAnimation(339, 70, 11, 6);
 			return kHandled;
 		default:
 			break;
@@ -413,6 +498,10 @@ RunawayRoomScene::ActionResult Scene4050::dispatchCustomSceneAction(uint16 actio
 
 void Scene4050::finishCustomAnimation(uint16 action) {
 	switch (action) {
+	case 339: // Return to the hall after opening the door.
+		_museum.leftLabOnce = 1;
+		leaveMuseumRoom(4061, Common::Point(873, 311), 3, true);
+		break;
 	case 326: // Leave the crucifix and collect the Mayan object.
 		_inventory.remove(7);
 		_inventory.add(8);
@@ -444,6 +533,9 @@ void Scene4050::finishCustomAnimation(uint16 action) {
 	case 454: // Finish the exchange with Susan.
 		say(26, 1);
 		say(26, 2, false, 1);
+		if (ConfMan.getBool("restored_content")) {
+			say(26, 3);
+		}
 		deferMuseumAction(453);
 		break;
 	case 333: // Collect the ground coffee.
@@ -452,6 +544,9 @@ void Scene4050::finishCustomAnimation(uint16 action) {
 		break;
 	case 336: // Show the ruby installation film.
 		startMuseumFilm(kRubyFilm);
+		return;
+	case 400: // Susan demonstrates the laser after the introductory conversation.
+		beginRoomAnimation(450, 23, 95, nullptr, 0, false);
 		return;
 	case 405: // Collect the restored crucifix.
 		_inventory.add(7);
@@ -468,7 +563,7 @@ void Scene4050::finishCustomAnimation(uint16 action) {
 		startMuseumFilm(kDrillingFilm);
 		return;
 	case 451: // Resume the laboratory after drilling.
-		_nextLaser = _now + 25000 + _random.getRandomNumber(5000);
+		_nextLaser = _now + (15 + _random.getRandomNumber(5)) * 1000;
 		break;
 	case 452: // Show the upgraded laser film.
 		startMuseumFilm(kLaserFilm);
@@ -483,8 +578,33 @@ void Scene4050::finishCustomAnimation(uint16 action) {
 }
 
 void Scene4050::handleAnimationFrameHook() {
+	// Susan's footsteps are timed to the outward and return animation cels.
+	static const AnimationFootstep toLaser[] = {
+		{18, 520}, {25, 550}, {29, 580}, {33, 610}, {35, 640}, {38, 670}, {42, 700},
+		{45, 730}, {47, 760}, {51, 790}, {54, 820}, {56, 850}, {59, 880}, {62, 910},
+		{65, 940}, {68, 970}, {72, 1000}, {75, 1030}, {77, 1060}
+	};
+	static const AnimationFootstep fromLaser[] = {
+		{13, 1060}, {19, 1035}, {25, 1010}, {30, 985}, {33, 960}, {36, 935}, {39, 910},
+		{42, 885}, {45, 860}, {48, 835}, {51, 810}, {54, 785}, {57, 760}, {60, 735},
+		{63, 710}, {66, 685}, {67, 660}, {69, 635}, {72, 610}, {75, 585}, {78, 560},
+		{81, 535}, {84, 510}
+	};
+	if (_roomAction == 450 || _roomAction == 452) {
+		playAnimationFootsteps(_actionStep, 1, toLaser, ARRAYSIZE(toLaser));
+	} else if (_roomAction == 451) {
+		playAnimationFootsteps(_actionStep, 1, fromLaser, ARRAYSIZE(fromLaser));
+	}
 	if ((_roomAction == 328 || _roomAction == 428) && (_actionStep == 4 || _actionStep == 2)) {
 		_audio.playEffect(37, 204);
+	}
+	// The original updates the bench as Susan leaves and returns.
+	if ((_roomAction == 450 || _roomAction == 452) && _actionStep == 8) {
+		_susanBenchFrame = 0;
+		_susanBenchPatch.draw(_background, _susanBenchFrame, 0, 0);
+	} else if (_roomAction == 451 && _actionStep == 90) {
+		_susanBenchFrame = 1;
+		_susanBenchPatch.draw(_background, _susanBenchFrame, 0, 0);
 	}
 }
 
@@ -562,7 +682,14 @@ byte Scene4050::customizeSceneActionFacing(byte id, byte facing) const {
 	return museumChapter() && id == 3 && _museum.susan == 1 ? 1 : facing;
 }
 
-void Scene4050::startSusanConversation() {
+Common::Point Scene4050::sceneActionLookPosition(byte id) const {
+	if (museumChapter() && id == 3) {
+		return _museum.susan == 1 ? Common::Point(1063, 563) : Common::Point(490, 481);
+	}
+	return RunawayRoomScene::sceneActionLookPosition(id);
+}
+
+void Scene4050::startSusanConversation(bool introduction) {
 	startConversation(1);
 	static const DialogueChoice susan[][8] = {
 		{{1,0,3,3,3,1,255}, {1,0,1,4,4,1,255}, {1,1,1,5,5,1,255}, {1,0,3,6,6,1,255}, {1,0,0,7,7,1,0}},
@@ -574,8 +701,18 @@ void Scene4050::startSusanConversation() {
 	memcpy(_dialogue[10], susan[1], sizeof(susan[1]));
 	memcpy(_dialogue[11], susan[2], sizeof(susan[2]));
 	memcpy(_dialogue[20], susan[3], sizeof(susan[3]));
-	say(80, 15);
-	say(90, 15, false, 1);
+	if (ConfMan.getBool("restored_content")) {
+		// Follow Susan's first mention of the laser, then return to her work topic.
+		_dialogue[11][0].node = 0;
+		_dialogue[11][0].transition = 1;
+		_dialogue[20][0].node = 1;
+	}
+	if (introduction) {
+		_afterConversation = 400;
+	} else {
+		say(80, 15);
+		say(90, 15, false, 1);
+	}
 }
 
 } // End of namespace Runaway

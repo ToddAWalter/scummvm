@@ -81,6 +81,7 @@ public:
 	void setOptions(bool antialias, bool fastScrolling) override { _antialias = antialias; _fastScrolling = fastScrolling; }
 
 private:
+	Common::U32String hotspotName(byte id) const override;
 	enum Action {
 		kNone, kIntroVideo, kIntro, kIntroLookAround, kIntroInventory,
 		kIntroListen, kIntroWalkToDoor, kIntroExamineDoor,
@@ -91,13 +92,13 @@ private:
 		kTryMoveCooler, kMoveCooler, kRevealHatch, kFinishMoving, kHatchFound,
 		kDrainCooler, kFinishDraining, kPryHatch, kOpenHatch, kEscape,
 		kPeekDoor, kPeekConversation, kReturnFromPeek,
-		kHeatHelmet, kPrepareStirringHelmet, kStirHelmet
+		kHeatHelmet, kPrepareStirringHelmet, kStirHelmet, kEnterHatch
 	};
 	enum IceState { kFrozen, kMelted, kDrained };
 	enum HatchState { kHidden, kLocked, kUnlocked, kOpen };
 	bool loadRoomGraphics();
 	void walkTo(Common::Point target);
-	void arrive();
+	void arrive(bool faceHotspot = true);
 	void say(uint16 row);
 	void sayCue(uint16 cue, byte variation);
 	void pickUp(byte hotspot, byte item, uint patch);
@@ -131,6 +132,7 @@ private:
 	RunawayInterrogation _interrogation;
 	Common::RandomSource _random;
 	bool _peeked = false;
+	bool _entering = false;
 	bool _antialias = true, _fastScrolling = true;
 	RunawayActor _actor;
 	RunawaySpeech _speech;

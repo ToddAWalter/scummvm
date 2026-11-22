@@ -36,6 +36,7 @@ private:
 	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
 	bool loadCustomResources() override;
 	float actorHeight() const override;
+	int sceneViewportYOffset() const override;
 	void setupActorDepth(RunawayActor::RenderParams &params) const override;
 	ActionResult dispatchCustomSceneAction(uint16 action) override;
 	void runCustomEntrySequence() override;
@@ -51,6 +52,8 @@ private:
 	const RunawayHotspot *hotspot(byte id) const override;
 	void drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) override;
 	void drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) override;
+	// Stud's scripted gestures and flying cans are in front of Brian.
+	bool roomAnimationInForeground() const override { return true; }
 	void stopAmbientSpeech() override;
 
 	RunawayAnimation _beerAnimation, _footrestAnimation, _canAnimation;

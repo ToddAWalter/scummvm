@@ -26,16 +26,16 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{327, 441, 7, {301, 302}, {0, 1}}, // 1: Outside Of Train Car.
-	{574, 434, 1, {303, 304}, {1, 0}}, // 2: Barrels.
-	{801, 441, 3, {305, 306}, {0, 0}}, // 3: Chain.
-	{517, 374, 0, {307, 308}, {0, 0}}, // 4: Contraptions.
-	{510, 377, 0, {309, 310}, {1, 1}}, // 5: Barrel.
-	{365, 485, 5, {311, 312}, {1, 1}}, // 6: Bucket.
-	{801, 441, 3, {313, 314}, {0, 0}}, // 7: Clock.
-	{510, 377, 0, {320, 321}, {0, 1}}, // 8: Bucket.
-	{0, 0, 0, {0, 0}, {0, 0}}, // 9: Barrel Of Gunpowder.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{327, 441, 7, {301, 302}, {0, 1}, {247, 373}, 4}, // 1: Outside Of Train Car.
+	{574, 434, 1, {303, 304}, {1, 0}, {618, 400}}, // 2: Barrels.
+	{801, 441, 3, {305, 306}, {0, 0}, {835, 467}}, // 3: Chain.
+	{517, 374, 0, {307, 308}, {0, 0}, {517, 353}}, // 4: Contraptions.
+	{510, 377, 0, {309, 310}, {1, 1}, {517, 353}}, // 5: Barrel.
+	{365, 485, 5, {311, 312}, {1, 1}, {347, 500}}, // 6: Bucket.
+	{801, 441, 3, {313, 314}, {0, 0}, {937, 558}}, // 7: Clock.
+	{510, 377, 0, {320, 321}, {0, 1}, {517, 353}}, // 8: Bucket.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}}, // 9: Barrel Of Gunpowder.
 };
 
 const RunawayResponse kResponses[] = {
@@ -107,6 +107,9 @@ void Scene5110::setupActorDepth(RunawayActor::RenderParams &params) const {
 RunawayRoomScene::ActionResult Scene5110::dispatchCustomSceneAction(uint16 action) {
 	RunawaySaveState::DesertItems &items = _inventory.desert();
 	switch (action) {
+	case 1400: // Finish climbing into the train car.
+		visitDesertRoom(7, 1);
+		break;
 	case 302: // Leave the train car.
 		leaveDesertRoom(5081);
 		break;
@@ -221,7 +224,14 @@ RunawayRoomScene::ActionResult Scene5110::dispatchCustomSceneAction(uint16 actio
 }
 
 void Scene5110::runCustomEntrySequence() {
-	visitDesertRoom(7, 1);
+	_facing = 3;
+	beginRoomAnimation(400, 7, 12);
+}
+
+void Scene5110::handleAnimationFrameHook() {
+	if (_roomAction == 400 && _actionStep == 9) {
+		_audio.playFootstep(3, _random.getRandomBit(), 230, 327);
+	}
 }
 
 Common::U32String Scene5110::hotspotName(byte id) const {

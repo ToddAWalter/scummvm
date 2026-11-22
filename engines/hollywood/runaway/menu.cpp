@@ -21,6 +21,7 @@
 
 #include "common/util.h"
 #include "graphics/cursorman.h"
+#include "gui/saveload.h"
 #include "hollywood/runaway/menu.h"
 #include "hollywood/resource.h"
 
@@ -114,6 +115,14 @@ void RunawayMenu::open(const Graphics::ManagedSurface &screen, const Settings &s
 	CursorMan.pushCursor(_cursor.getPixels(), 60, 60, 30, 30, key, &kMenuFormat);
 	_cursorPushed = true;
 	CursorMan.showMouse(true);
+}
+
+void RunawayMenu::setChapterCount(byte chapters) {
+	chapters = MIN<byte>(chapters, 6);
+	if (_chapterCount != chapters) {
+		_chapterCount = chapters;
+		_selectedChapter = _chapterCount ? chapterAt(_mouse) : -1;
+	}
 }
 
 void RunawayMenu::captureThumbnail(const Graphics::ManagedSurface &screen) {
@@ -386,8 +395,6 @@ RunawayMenu::Command RunawayMenu::click(bool right) {
 	case kPrevious: return adjust(1);
 	case kNext: return adjust(-1);
 	case kAcceptName:
-		if (_name.empty())
-			_name = _strings.text(RunawayStrings::kNewSave);
 		return kSaveGame;
 	case kYes: return accept();
 	case kNo: return cancel();
@@ -472,8 +479,6 @@ RunawayMenu::Command RunawayMenu::key(const Common::KeyState &keyState) {
 			return kNone;
 		}
 		if (keyState.keycode == Common::KEYCODE_RETURN || keyState.keycode == Common::KEYCODE_KP_ENTER) {
-			if (_name.empty())
-				_name = _strings.text(RunawayStrings::kNewSave);
 			return kSaveGame;
 		}
 		if (keyState.flags & (Common::KBD_CTRL | Common::KBD_ALT | Common::KBD_META))
@@ -540,6 +545,16 @@ RunawayMenu::Command RunawayMenu::key(const Common::KeyState &keyState) {
 		}
 	}
 	return key(keyState.ascii);
+}
+
+Common::String RunawayMenu::saveDescription() const {
+	Common::String description = _name.encode();
+	description.trim();
+	if (description.empty()) {
+		GUI::SaveLoadChooser chooser(true);
+		return chooser.createDefaultSaveDescription(_selectedSlot);
+	}
+	return description;
 }
 
 void RunawayMenu::operationDone(bool success) {

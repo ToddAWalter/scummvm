@@ -36,6 +36,7 @@ protected:
 	void drawWorkshopForeground(Graphics::ManagedSurface &viewport);
 
 private:
+	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
 	bool loadCustomResources() override;
 	bool applyCustomBackgroundPatches() override;
 	void applyCustomHotspotState() override;
@@ -46,6 +47,7 @@ private:
 	bool drawCustomComposite(Graphics::ManagedSurface &viewport) override;
 	void drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) override;
 	void drawCustomForegroundComposite(Graphics::ManagedSurface &viewport) override;
+	bool roomAnimationInForeground() const override;
 	ActionResult dispatchCustomSceneAction(uint16 action) override;
 	void handleCustomDialogueChoice(byte effect) override;
 	void handleAnimationFrameHook() override;
@@ -55,6 +57,8 @@ private:
 	void findWalkPath(Common::Point target) override;
 	bool adjustCustomWalkTargetToFloorMask(Common::Point &target) const override;
 	Common::U32String hotspotName(byte id) const override;
+	Common::Point sceneActionLookPosition(byte id) const override;
+	int8 customizeSceneActionApproach(byte id, bool use, byte item, int8 approach) const override;
 
 	void startKevinConversation(bool introduction);
 	void updateKevinTopics();

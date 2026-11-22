@@ -28,15 +28,15 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{0, 453, 5, {301, 302}, {0, 3}}, // 1: Door.
-	{782, 408, 7, {303, 304}, {0, 1}}, // 2: Stairs.
-	{395, 402, 7, {305, 306}, {0, 3}}, // 3: Rutger.
-	{1286, 435, 0, {307, 308}, {0, 0}}, // 4: Watering can.
-	{742, 332, 5, {309, 310}, {0, 0}}, // 5: Gardening shed.
-	{610, 467, 1, {311, 312}, {0, 0}}, // 6: Door knob.
-	{1393, 427, 0, {313, 314}, {0, 0}}, // 7: Plant.
-	{955, 396, 1, {315, 316}, {0, 0}} // 8: Bonsai tree.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{0, 453, 5, {301, 302}, {0, 3}, {0, 453}, 7}, // 1: Door.
+	{782, 408, 7, {303, 304}, {0, 1}, {625, 391}, 4}, // 2: Stairs.
+	{395, 402, 7, {305, 306}, {0, 3}, {346, 260}, 3}, // 3: Rutger.
+	{1286, 435, 0, {307, 308}, {0, 0}, {1286, 405}}, // 4: Watering can.
+	{742, 332, 5, {309, 310}, {0, 0}, {821, 340}}, // 5: Gardening shed.
+	{610, 467, 1, {311, 312}, {0, 0}, {669, 431}}, // 6: Door knob.
+	{1393, 427, 0, {313, 314}, {0, 0}, {1393, 386}}, // 7: Plant.
+	{955, 396, 1, {315, 316}, {0, 0}, {1009, 366}} // 8: Bonsai tree.
 };
 
 const RunawayResponse kResponses[] = {
@@ -396,9 +396,8 @@ RunawayRoomScene::ActionResult Scene8240::dispatchCustomSceneAction(uint16 actio
 }
 
 void Scene8240::handleAnimationFrameHook() {
-	if (_roomAction == 304 && (_actionStep == 11 || _actionStep == 18)) {
-		_audio.playFootstep(3, _random.getRandomBit());
-	} else if (_roomAction == 414 && _actionStep == 37) {
+	Scene6240::handleAnimationFrameHook();
+	if (_roomAction == 414 && _actionStep == 37) {
 		_audio.playEffect(42, 230, 1);
 	}
 }

@@ -27,19 +27,19 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{-100, 484, 7, {302, 301}, {0, 1}}, // 1: Path.
-	{103, 518, 1, {303, 304}, {1, 0}}, // 2: Wooden Box.
-	{301, 478, 7, {305, 307}, {0, 1}}, // 3: Shed.
-	{301, 478, 7, {306, 307}, {0, 1}}, // 4: Door.
-	{301, 478, 7, {308, 309}, {0, 1}}, // 5: Explosives.
-	{620, 357, 7, {310, 311}, {0, 0}}, // 6: Water Tank.
-	{987, 378, 1, {312, 313}, {0, 1}}, // 7: Train Car.
-	{987, 378, 1, {312, 313}, {1, 1}}, // 8: Train Car Interior.
-	{67, 512, 0, {316, 317}, {0, 0}}, // 9: Ant-Hill.
-	{255, 546, 7, {318, 319}, {1, 0}}, // 10: Sign.
-	{620, 357, 7, {320, 321}, {0, 0}}, // 11: Ladder.
-	{0, 0, 0, {0, 0}, {0, 0}}, // 12: Sawdust.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{-100, 484, 7, {302, 301}, {0, 3}, {0, 504}, 4}, // 1: Path.
+	{103, 518, 1, {303, 304}, {1, 0}, {156, 494}}, // 2: Wooden Box.
+	{301, 478, 7, {305, 307}, {0, 1}, {243, 446}}, // 3: Shed.
+	{301, 478, 7, {306, 307}, {0, 1}, {243, 446}}, // 4: Door.
+	{301, 478, 7, {308, 309}, {0, 1}, {243, 446}}, // 5: Explosives.
+	{620, 357, 7, {310, 311}, {0, 0}, {557, 320}}, // 6: Water Tank.
+	{987, 378, 1, {312, 313}, {0, 1}, {1027, 350}}, // 7: Train Car.
+	{987, 378, 1, {312, 313}, {1, 1}, {1027, 350}, 5}, // 8: Train Car Interior.
+	{67, 512, 0, {316, 317}, {0, 0}, {66, 389}}, // 9: Ant-Hill.
+	{255, 546, 7, {318, 319}, {1, 0}, {212, 495}}, // 10: Sign.
+	{620, 357, 7, {320, 321}, {0, 0}, {610, 339}}, // 11: Ladder.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}}, // 12: Sawdust.
 };
 
 const RunawayResponse kResponses[] = {
@@ -163,6 +163,10 @@ RunawayRoomScene::ActionResult Scene5080::dispatchCustomSceneAction(uint16 actio
 	case 1313: // Finish entering the train car.
 		leaveDesertRoom(5110);
 		break;
+	case 1400: // Finish climbing out of the train car.
+		walkTo(Common::Point(1000, 451), 5, true);
+		visitDesertRoom(5, 1);
+		break;
 	case 316: // Look at the anthill.
 		say(13, _desert.antsDistracted ? 2 : 0);
 		break;
@@ -253,7 +257,10 @@ void Scene5080::runCustomEntrySequence() {
 	if (_entryScene == 5081) {
 		_position = Common::Point(987, 379);
 		_walkPath.reset(_position);
-		walkTo(Common::Point(1000, 451), 5, true);
+		_facing = 5;
+		updateCamera();
+		beginRoomAnimationRange(400, 24, 20, 9, 19);
+		return;
 	}
 	visitDesertRoom(5, 1);
 }
@@ -297,6 +304,11 @@ void Scene5080::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport
 }
 
 void Scene5080::handleAnimationFrameHook() {
+	if (_roomAction == 313 && _actionFrames[_actionStep] == 21) {
+		_audio.playFootstep(4, _random.getRandomBit(), 255, _position.x);
+	} else if (_roomAction == 400 && _actionFrames[_actionStep] == 15) {
+		_audio.playFootstep(2, _random.getRandomBit(), 230, 1000);
+	}
 	if (_roomAction == 326 && _actionStep == 23) {
 		_audio.playEffect(72);
 	}

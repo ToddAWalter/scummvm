@@ -22,12 +22,14 @@
 #ifndef HOLLYWOOD_RUNAWAY_SCENE_H
 #define HOLLYWOOD_RUNAWAY_SCENE_H
 
+#include "hollywood/hotspots.h"
 #include "hollywood/resource.h"
 #include "hollywood/runaway/animation.h"
 #include "hollywood/runaway/audio.h"
 #include "hollywood/runaway/graphics.h"
 #include "hollywood/runaway/inventory.h"
 #include "hollywood/runaway/navigation.h"
+#include "hollywood/runaway/presentation.h"
 #include "hollywood/runaway/saveload.h"
 #include "hollywood/runaway/scene_data.h"
 #include "hollywood/runaway/sequence.h"
@@ -36,7 +38,7 @@
 
 namespace Hollywood {
 
-class RunawayScene {
+class RunawayScene : public RunawayPresentation, public HotspotSource {
 public:
 	struct Transition {
 		uint16 scene = 0; // Preserve entry substates, e.g. 2020..2023, until dispatch.
@@ -56,7 +58,11 @@ public:
 	virtual int cameraX() const { return 0; }
 	virtual int roomWidth() const = 0;
 	virtual Graphics::ManagedSurface &screen() = 0;
-	virtual byte hotspotAt(Common::Point mouse) const = 0;
+	byte hotspotAt(Common::Point mouse) const override = 0;
+	virtual bool hasVerbControls() const { return true; }
+	// Cursor tile 3 is talk, 4..7 are exit arrows; zero keeps the usual verbs.
+	virtual byte actionCursor(byte hotspot) const { return 0; }
+	virtual bool preferLook(byte hotspot) const { return false; }
 	virtual Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const = 0;
 	virtual const Common::U32String &committedCaption() const = 0;
 	virtual const Common::U32String &subtitle() const = 0;
@@ -78,6 +84,10 @@ public:
 	virtual void setOptions(bool antialias, bool fastScrolling) = 0;
 
 protected:
+	Common::U32String hotspotName(byte id) const override { return Common::U32String(); }
+	void skipPresentation(uint32 now) override final { skipVideo(); }
+	void skipPresentationSpeech(uint32 now) override final { skipSpeech(); }
+
 	Common::Array<Common::U32String> _noChoices;
 	uint16 _entryScene = 0;
 	Transition _transition;
@@ -101,6 +111,8 @@ public:
 	int roomWidth() const override { return _background.w; }
 	Graphics::ManagedSurface &screen() override { return _screen; }
 	byte hotspotAt(Common::Point mouse) const override;
+	byte actionCursor(byte id) const override;
+	bool preferLook(byte id) const override;
 	Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const override;
 	const Common::U32String &committedCaption() const override { return _caption; }
 	const Common::U32String &subtitle() const override;
@@ -123,6 +135,13 @@ public:
 protected:
 	enum ObjectState { kUnexamined, kIdentified, kTaken };
 	enum ActionResult { kUnhandled, kHandled, kBackgroundChanged };
+	struct AnimationFootstep {
+		constexpr AnimationFootstep(byte frameNumber, int16 position, byte loudness = 255) :
+			frame(frameNumber), x(position), volume(loudness) {}
+		byte frame;
+		int16 x;
+		byte volume;
+	};
 
 	virtual bool loadCustomResources() { return true; }
 	virtual bool loadBackground();
@@ -155,9 +174,10 @@ protected:
 	virtual void setupActorDepth(RunawayActor::RenderParams &params) const {}
 	virtual bool drawCustomComposite(Graphics::ManagedSurface &viewport) { return false; }
 	virtual bool shouldDrawActor() const { return true; }
+	virtual bool roomAnimationInForeground() const { return false; }
 	virtual bool shouldUpdateActor() const { return true; }
 	virtual bool shouldPlayGameplayClickPath() const { return true; }
-	virtual bool shouldApproachHotspot(byte id, bool use, byte item, bool approach) const { return approach; }
+	virtual int8 customizeSceneActionApproach(byte id, bool use, byte item, int8 approach) const { return approach; }
 	// Accept the adjusted target without the shared floor-mask adjustment.
 	virtual bool adjustCustomWalkTargetToFloorMask(Common::Point &target) const { return false; }
 	// Return true when a scene sequence owns this frame's action updates.
@@ -172,6 +192,7 @@ protected:
 	bool enterRoom(uint16 room, Common::Point position, byte facing);
 	bool loadForeground(uint layer, uint chunk, bool pixels = false);
 	void drawForeground(Graphics::ManagedSurface &viewport, uint layer);
+	void drawRoomAnimation(Graphics::ManagedSurface &viewport);
 	void drawAmbientAnimations(Graphics::ManagedSurface &viewport, const RunawayAnimation *animations, uint count);
 	bool rebuildBackground();
 	bool applyPatch(uint chunk);
@@ -186,20 +207,24 @@ protected:
 	void changeFloor(bool upper, Common::Point position);
 	void updateCamera();
 	void beginRoomAnimation(uint16 action, uint chunk, uint frames, const byte *order = nullptr, uint count = 0, bool hideActor = true, uint frameDuration = 80);
+	void beginActorAnimation(uint16 action, uint bank, uint frames, uint count = 0, uint frameDuration = 60);
+	void beginAnimation(uint16 action, uint frames, const byte *order, uint count, bool hideActor, uint frameDuration);
 	void beginRoomAnimationRange(uint16 action, uint chunk, uint frames, uint first, uint last, bool hideActor = true, uint frameDuration = 80);
 	void holdRoomAnimation(uint16 action, uint chunk, uint frames, uint frame, bool hideActor = true);
 	void loopRoomAnimationDuringSpeech(uint16 action, uint chunk, uint frames, uint first, uint last, bool hideActor = true);
 	void setRoomAnimationOverlay(uint chunk, uint frames, const byte *order, uint count);
-	bool drawingRoomAnimation() const { return _roomAction && !_actionFrames.empty() && (_actionHoldSpeech || !speaking()) && !_walkPath.active(); }
+	bool drawingRoomAnimation() const { return !_actionUsesActor && _roomAction && !_actionFrames.empty() && (_actionHoldSpeech || !speaking()) && !_walkPath.active(); }
 	void updateRoomAnimation();
+	void playAnimationFootsteps(uint frame, byte surface, const AnimationFootstep *steps, uint count);
 	virtual float actorHeight() const { return 455; }
 	virtual float actorWalkSpeed() const { return 0.18f * actorHeight() / 455; }
 	virtual const RunawayHotspot *hotspot(byte id) const;
-	virtual Common::U32String hotspotName(byte id) const;
+	Common::U32String hotspotName(byte id) const override;
 	virtual const char *actionCaptionVariant(byte id, bool look, byte item) const { return nullptr; }
 	virtual bool isValidHotspot(byte id) const { return hotspot(id) != nullptr; }
 	virtual Common::Point customizeSceneActionPosition(byte id, byte item, Common::Point position) const { return position; }
 	virtual byte customizeSceneActionFacing(byte id, byte facing) const { return facing; }
+	virtual Common::Point sceneActionLookPosition(byte id) const { return hotspot(id)->lookPosition; }
 
 	byte walkZone() const { return _originalMaps[_mask[_position.y * _background.w + _position.x]]; }
 
@@ -284,6 +309,7 @@ protected:
 	Common::U32String _caption;
 	Common::Point _position, _camera;
 	uint _lineIndex = 0;
+	const RunawayRoom *_roomData = nullptr;
 	uint16 _room = 0, _pendingAction = 0;
 	byte _facing = 3, _pendingHotspot = 0, _pendingItem = 0;
 	byte _arrivalFacing = 0xff;
@@ -320,6 +346,7 @@ protected:
 	bool _entering = false;
 	uint16 _roomAction = 0;
 	bool _actionHidesActor = true;
+	bool _actionUsesActor = false;
 	bool _actionHoldSpeech = false;
 	bool _actionLoopSpeech = false;
 	byte _actionStage = 0;

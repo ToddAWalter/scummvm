@@ -153,11 +153,15 @@ bool RunawayInventory::contains(byte item) const {
 	return false;
 }
 
-bool RunawayInventory::add(byte item) {
-	const uint maxItem = _chapter == 6 ? kFinaleItemCount : _chapter == 5 ? kHopiItemCount :
+uint RunawayInventory::maxItemId() const {
+	return _chapter == 6 ? kFinaleItemCount : _chapter == 5 ? kHopiItemCount :
 		_chapter == 4 ? kTownItemCount : _chapter == 3 ? kItemCount : 19;
-	if (!item || item > maxItem || contains(item))
+}
+
+bool RunawayInventory::add(byte item) {
+	if (!item || item > maxItemId() || contains(item)) {
 		return false;
+	}
 	_items.push_back(item);
 	_newItem = item;
 	return true;
@@ -470,6 +474,9 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 		if (!item || item > kMuseumItemCount) {
 			return Reply();
 		}
+		if (_fullGame && item == 3) {
+			return Reply(74);
+		}
 		byte variation = 0;
 		switch (item) {
 		case 5:
@@ -695,7 +702,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			_finale.heatNeeded = 1;
 			return Reply(313, variation);
 		}
-		return Reply();
+		return Reply::fromAction(1);
 	}
 
 	if (_chapter != 3)

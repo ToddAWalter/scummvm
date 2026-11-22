@@ -26,7 +26,7 @@
 namespace Hollywood {
 
 const RunawayRoom kRunawayScene4070 = {
-	kMuseumWilly, 1024, 600, nullptr, 0, {{100, 100, 100}}, Common::Point(548, 580),
+	kMuseumWilly, 1024, 600, nullptr, 0, {{100, 100, 100}, {70, 70, 70}}, Common::Point(548, 580),
 	nullptr, 0, nullptr, 0, nullptr, 0
 };
 
@@ -70,6 +70,16 @@ void Scene4070::updateActor(uint elapsed, int scrollDirection, bool inventoryOpe
 void Scene4070::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
 	if (!drawingRoomAnimation() || (_actionHidesActor && _secondaryFrames.empty())) {
 		_willyAnimation.draw(viewport, _willyPose + (speaker() ? speechFrame() : 0), 0, 0);
+	}
+}
+
+void Scene4070::handleAnimationFrameHook() {
+	static const AnimationFootstep steps[] = {
+		{10, 512}, {14, 512}, {38, 512}, {44, 412}, {51, 312},
+		{56, 212}, {62, 112}, {68, 12}
+	};
+	if (_roomAction == 458) {
+		playAnimationFootsteps(_actionFrames[_actionStep], 1, steps, ARRAYSIZE(steps));
 	}
 }
 
@@ -137,7 +147,11 @@ void Scene4070::finishCustomAnimation(uint16 action) {
 		deferMuseumAction(448);
 		break;
 	case 448: // Willy leaves the close-up.
-		beginRoomAnimation(409, 6, 72, nullptr, 0, false);
+		beginRoomAnimation(458, 6, 72, nullptr, 0, false);
+		break;
+	case 458: // Comment after Willy leaves to fetch stock or refill the coffee machine.
+		holdRoomAnimation(409, 6, 72, 71, false);
+		say(_museum.willyInLab == 1 ? 38 : 36, _museum.willyInLab == 1 ? 0 : 2);
 		break;
 	case 409: // Return to the exhibition hall.
 		_upperFloor = false;

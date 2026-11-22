@@ -26,12 +26,12 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{0, 599, 5, {301, 302}, {0, 3}}, // 1: Path.
-	{402, 374, 1, {303, 304}, {0, 3}}, // 2: House.
-	{491, 495, 3, {305, 306}, {0, 0}}, // 3: Well.
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{0, 0, 0, {309, 310}, {0, 0}} // 5: Skull.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{0, 599, 5, {301, 302}, {0, 3}, {-100, 599}, 7}, // 1: Path.
+	{402, 374, 1, {303, 304}, {0, 3}, {637, 237}, 5}, // 2: House.
+	{491, 495, 3, {305, 306}, {0, 0}, {715, 540}}, // 3: Well.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{0, 0, 0, {309, 310}, {0, 0}, {323, 544}} // 5: Skull.
 };
 
 const RunawayResponse kResponses[] = {
@@ -119,7 +119,7 @@ bool Scene8130::updateCustomSequence() {
 		++_departureFrame;
 		for (uint i = 0; i < ARRAYSIZE(footsteps); ++i) {
 			if (_departureFrame == footsteps[i]) {
-				_audio.playFootstep(2, _random.getRandomBit(), (65 + i * 5) * 255 / 100);
+				_audio.playFootstep(2, _random.getRandomBit(), (65 + i * 5) * 255 / 100, 400 - i * 50);
 				break;
 			}
 		}

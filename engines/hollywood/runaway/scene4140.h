@@ -32,11 +32,13 @@ public:
 	Scene4140(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game);
 
 	void click(Common::Point mouse, RunawayVerb verb, byte item) override;
+	bool hasVerbControls() const override { return false; }
 	Common::U32String actionCaption(byte id, RunawayVerb verb, byte item) const override;
 	void update(uint32 now, int scrollDirection, bool inventoryOpen) override;
 	bool canSave() const override;
 
 private:
+	Common::U32String hotspotName(byte id) const override;
 	bool loadCustomResources() override;
 	void runCustomEntrySequence() override;
 	bool drawCustomComposite(Graphics::ManagedSurface &viewport) override;

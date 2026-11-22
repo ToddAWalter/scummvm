@@ -26,12 +26,12 @@ namespace Hollywood {
 namespace {
 
 const RunawayHotspot kHotspots[] = {
-	{0, 0, 0, {0, 0}, {0, 0}},
-	{202, 526, 7, {301, 302}, {0, 3}}, // 1: Street.
-	{780, 527, 1, {303, 304}, {0, 0}}, // 2: Inside the saloon.
-	{405, 427, 7, {305, 306}, {0, 0}}, // 3: Trough.
-	{780, 527, 1, {307, 308}, {0, 0}}, // 4: Floor board.
-	{643, 457, 1, {309, 310}, {0, 0}} // 5: Window.
+	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
+	{202, 526, 7, {301, 302}, {0, 3}, {189, 517}, 4}, // 1: Street.
+	{780, 527, 1, {303, 304}, {0, -1}, {1023, 519}, 5}, // 2: Inside the saloon.
+	{405, 427, 7, {305, 306}, {0, 0}, {375, 402}}, // 3: Trough.
+	{780, 527, 1, {307, 308}, {0, -1}, {1023, 519}}, // 4: Floor board.
+	{643, 457, 1, {309, 310}, {0, 0}, {729, 434}} // 5: Window.
 };
 
 const RunawayResponse kResponses[] = {
@@ -63,6 +63,13 @@ namespace Runaway {
 
 Scene6180::Scene6180(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
 	RunawayRoomScene(audio, inventory, strings, game) {}
+
+const char *Scene6180::actionCaptionVariant(byte id, bool look, byte item) const {
+	if (!look && !item && id == 3 && _town.wrenchThrown) {
+		return _town.wrenchThrown == 1 ? "wrench" : "pot";
+	}
+	return nullptr;
+}
 
 bool Scene6180::loadCustomResources() {
 	return _doors.load(_archive) && loadForeground(0, 4) && loadForeground(1, 5);
@@ -163,7 +170,7 @@ RunawayRoomScene::ActionResult Scene6180::dispatchCustomSceneAction(uint16 actio
 	case 305: // Examine the trough before or after the wrench lands in it.
 		say(4, _town.wrenchThrown);
 		break;
-	case 306: // The muddy trough is too heavy to overturn.
+	case 306: // Try to overturn the trough, retrieve the buried wrench, or take the flower pot.
 		say(5, _town.wrenchThrown);
 		break;
 	case 308: // Step on the board, or point out that Brian is already on it.
