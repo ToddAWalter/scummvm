@@ -67,7 +67,9 @@ const RunawayRoom kRunawayScene6220 = {
 namespace Runaway {
 
 Scene6220::Scene6220(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 30; // Sushi.
+}
 
 const char *Scene6220::actionCaptionVariant(byte id, bool look, byte item) const {
 	if (id == 8 && _town.strapSeen == 1 && (!item || item == 22)) {
@@ -91,7 +93,9 @@ void Scene6220::applyCustomHotspotState() {
 
 void Scene6220::resumeAmbientAudio(bool entering) {
 	if (entering && _entryScene == 6223) {
-		_audio.playMusic(12 + _random.getRandomNumber(4));
+		_audio.playMusic(12 + _random.getRandomNumber(4), false);
+	} else if (entering && _entryScene == 6220 && _town.streetVisited && !_random.getRandomNumber(5)) {
+		_audio.playMusic(20, false);
 	} else {
 		RunawayRoomScene::resumeAmbientAudio(entering);
 	}

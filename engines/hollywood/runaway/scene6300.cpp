@@ -81,7 +81,9 @@ const RunawayRoom kRunawayScene6300 = {
 namespace Runaway {
 
 Scene6300::Scene6300(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 31; // Saturn.
+}
 
 const char *Scene6300::actionCaptionVariant(byte id, bool look, byte item) const {
 	if (!look && !item) {
@@ -168,9 +170,11 @@ void Scene6300::prepareCustomGameplayLoop() {
 
 void Scene6300::resumeAmbientAudio(bool entering) {
 	if (!_town.kevinAway) {
-		_audio.playMusic(24);
-	} else if (!_audio.musicPlaying()) {
-		_audio.playMusic(12 + _random.getRandomNumber(4), false);
+		if (_audio.musicCue() != 24 || !_audio.musicPlaying()) {
+			_audio.playMusic(24);
+		}
+	} else {
+		RunawayRoomScene::resumeAmbientAudio(entering);
 	}
 }
 
@@ -684,6 +688,9 @@ RunawayRoomScene::ActionResult Scene6300::dispatchCustomSceneAction(uint16 actio
 			say(28, 12);
 			say(90, 7, false, 1);
 			_town.oscarStrengthKnown = 1;
+			if (!_town.oscarTobacco) {
+				_town.oscarTobacco = 1;
+			}
 		}
 		animateKevin(446, 32, 121, 0, 120);
 		break;
@@ -847,6 +854,9 @@ void Scene6300::handleCustomDialogueChoice(byte effect) {
 		break;
 	case 11: // Learn how Oscar helps Saturn move heavy stones.
 		_town.oscarStrengthKnown = 1;
+		if (!_town.oscarTobacco) {
+			_town.oscarTobacco = 1;
+		}
 		break;
 	default:
 		break;

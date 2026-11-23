@@ -65,7 +65,9 @@ bool Scene6250::loadCustomResources() {
 }
 
 void Scene6250::resumeAmbientAudio(bool entering) {
-	_audio.playMusic(21);
+	if (_audio.musicCue() != 21 || !_audio.musicPlaying()) {
+		_audio.playMusic(21);
+	}
 }
 
 void Scene6250::runCustomEntrySequence() {
@@ -151,6 +153,7 @@ RunawayRoomScene::ActionResult Scene6250::dispatchCustomSceneAction(uint16 actio
 		leaveTownRoom(6391);
 		break;
 	case 1400: // Brian reaches the bank basement for the first time.
+		_town.safeSeen = 1;
 		if (!_town.basementVisited) {
 			_town.basementVisited = 1;
 			say(0);

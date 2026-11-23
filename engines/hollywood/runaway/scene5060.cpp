@@ -92,7 +92,11 @@ const RunawayRoom kRunawayScene5060 = {
 namespace Runaway {
 
 Scene5060::Scene5060(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 25; // Mariola.
+	_speechColors[2] = 28; // Lula.
+	_speechColors[3] = 24; // Carla.
+}
 
 bool Scene5060::loadCustomResources() {
 	return _ambientAnimations[0].load(_archive, 15, 543) &&
@@ -146,6 +150,7 @@ RunawayRoomScene::ActionResult Scene5060::dispatchCustomSceneAction(uint16 actio
 		deferDesertAction(491);
 		break;
 	case 491: // Move to the rescue briefing.
+		_audio.stopMusic();
 		leaveDesertRoom(5130);
 		break;
 	case 302: // Go to the desert overview.
@@ -427,9 +432,10 @@ Common::U32String Scene5060::hotspotName(byte id) const {
 }
 
 void Scene5060::resumeAmbientAudio(bool entering) {
-	if (!_audio.musicPlaying()) {
+	if (entering || !_audio.musicPlaying()) {
 		_audio.playMusic(21);
 	}
+	_audio.setMusicVolume(255);
 }
 
 bool Scene5060::lulaDancing() const {
@@ -496,6 +502,10 @@ void Scene5060::handleAnimationFrameHook() {
 		_audio.playFootstep(frame == 14 ? 4 : 2, _random.getRandomBit(), 179, 679);
 	} else if (_roomAction == 404 || _roomAction == 419) {
 		playLulaFootstep(frame);
+	}
+	if ((_roomAction == 404 || _roomAction == 419 || _roomAction == 414) && frame == 109) {
+		_audio.playEffectAt(11, Common::Point(158, 200));
+		_audio.pauseMusic(_roomAction != 414);
 	}
 	if (_roomAction == 481) {
 		if (_actionStep == 3 || _actionStep == 12 || _actionStep == 17 || _actionStep == 25 || _actionStep == 29) {

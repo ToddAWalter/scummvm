@@ -19,7 +19,6 @@
  *
  */
 
-#include "common/config-manager.h"
 #include "common/util.h"
 #include "hollywood/runaway/scene4050.h"
 #include "hollywood/runaway/strings.h"
@@ -121,7 +120,9 @@ const RunawayRoom kRunawayScene4050 = {
 namespace Runaway {
 
 Scene4050::Scene4050(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game), _susanSpeech(audio, _random, RunawaySpeech::kRecordedLipSync) {}
+	RunawayRoomScene(audio, inventory, strings, game), _susanSpeech(audio, _random, RunawaySpeech::kRecordedLipSync) {
+	_speechColors[1] = 17; // Susan.
+}
 
 const char *Scene4050::actionCaptionVariant(byte id, bool look, byte item) const {
 	if (item == 14 && id == 4) {
@@ -215,6 +216,7 @@ void Scene4050::resumeAmbientAudio(bool entering) {
 	if (entering || !_audio.musicPlaying()) {
 		_audio.playMusic(13, false);
 	}
+	updateSusanToolSound();
 }
 
 void Scene4050::advanceCustomGameplayLoop(uint32 delta) {
@@ -243,6 +245,20 @@ void Scene4050::advanceCustomGameplayLoop(uint32 delta) {
 		// A missed attempt is retried later, not as soon as Brian becomes idle.
 		_nextLaser = _now + (25 + _random.getRandomNumber(5)) * 1000;
 	}
+	updateSusanToolSound();
+}
+
+void Scene4050::updateSusanToolSound() {
+	const bool working = !_museum.susan && !_conversation && !speaker() &&
+		_roomAction != 450 && _roomAction != 451 && _roomAction != 452 && _roomAction != 333 &&
+		(_susanFrame < 15 || (_susanFrame >= 29 && _susanFrame <= 39));
+	if (working) {
+		if (!_audio.effectPlaying(1)) {
+			_audio.playEffectAt(14, Common::Point(474, 200), 77, 1, true);
+		}
+	} else {
+		_audio.stopEffect(1);
+	}
 }
 
 void Scene4050::advanceSusanIdle() {
@@ -259,7 +275,7 @@ void Scene4050::advanceSusanIdle() {
 			if (idle) {
 				const SceneSpeechCue cue = _text.stageCue(33, _random.getRandomNumber(3));
 				if (cue.valid()) {
-					_susanSpeech.start(Common::U32String(_text.largeTextRecord(cue.textRecordId), Common::kDos850), cue.voiceSampleId, false, _now);
+					_susanSpeech.start(Common::U32String(_text.largeTextRecord(cue.textRecordId), Common::kDos850), cue.voiceSampleId, false, _now, _speechColors[1]);
 					_susanFrame = 52;
 					_susanTalking = true;
 				}
@@ -300,6 +316,13 @@ const Common::U32String &Scene4050::subtitle() const {
 		return _susanSpeech.subtitle();
 	}
 	return RunawayRoomScene::subtitle();
+}
+
+byte Scene4050::subtitleColor() const {
+	if (!_sequence.active() && !speaking() && !_susanSpeech.subtitle().empty()) {
+		return _susanSpeech.subtitleColor();
+	}
+	return RunawayRoomScene::subtitleColor();
 }
 
 void Scene4050::drawCustomBackgroundComposite(Graphics::ManagedSurface &viewport) {
@@ -533,7 +556,7 @@ void Scene4050::finishCustomAnimation(uint16 action) {
 	case 454: // Finish the exchange with Susan.
 		say(26, 1);
 		say(26, 2, false, 1);
-		if (ConfMan.getBool("restored_content")) {
+		if (_restoredContent) {
 			say(26, 3);
 		}
 		deferMuseumAction(453);
@@ -550,9 +573,8 @@ void Scene4050::finishCustomAnimation(uint16 action) {
 		return;
 	case 405: // Collect the restored crucifix.
 		_inventory.add(7);
-		say(32, 2);
-		say(32, 3);
-		break;
+		startMuseumFilm(kCrucifixFilm);
+		return;
 	case 456: // Finish installing the ruby and approach Susan.
 		_inventory.remove(12);
 		say(30, 1);
@@ -598,6 +620,15 @@ void Scene4050::handleAnimationFrameHook() {
 	if ((_roomAction == 328 || _roomAction == 428) && (_actionStep == 4 || _actionStep == 2)) {
 		_audio.playEffect(37, 204);
 	}
+	if (_roomAction == 333) {
+		if (_actionStep == 15) {
+			_audio.playEffectAt(44, Common::Point(474, 200), 179);
+		} else if (_actionStep == 21) {
+			_audio.playEffectAt(14, Common::Point(474, 200), 128, 0, true);
+		} else if (_actionStep == 127) {
+			_audio.stopEffect(0);
+		}
+	}
 	// The original updates the bench as Susan leaves and returns.
 	if ((_roomAction == 450 || _roomAction == 452) && _actionStep == 8) {
 		_susanBenchFrame = 0;
@@ -610,6 +641,9 @@ void Scene4050::handleAnimationFrameHook() {
 
 void Scene4050::finishCustomFilm() {
 	switch (_museumFilm) {
+	case kCrucifixFilm:
+		say(32, 3);
+		break;
 	case kDrillingFilm:
 		_museum.laserSeen = 1;
 		beginRoomAnimation(451, 24, 101, nullptr, 0, false);
@@ -701,8 +735,8 @@ void Scene4050::startSusanConversation(bool introduction) {
 	memcpy(_dialogue[10], susan[1], sizeof(susan[1]));
 	memcpy(_dialogue[11], susan[2], sizeof(susan[2]));
 	memcpy(_dialogue[20], susan[3], sizeof(susan[3]));
-	if (ConfMan.getBool("restored_content")) {
-		// Follow Susan's first mention of the laser, then return to her work topic.
+	if (_restoredContent) {
+		// The automatic follow-up node returns to her work topic after the laser explanation.
 		_dialogue[11][0].node = 0;
 		_dialogue[11][0].transition = 1;
 		_dialogue[20][0].node = 1;

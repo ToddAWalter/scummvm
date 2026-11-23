@@ -31,6 +31,7 @@ class Scene4050 : public RunawayRoomScene {
 public:
 	Scene4050(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game);
 	const Common::U32String &subtitle() const override;
+	byte subtitleColor() const override;
 
 private:
 	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
@@ -56,6 +57,7 @@ private:
 
 	void startSusanConversation(bool introduction);
 	void advanceSusanIdle();
+	void updateSusanToolSound();
 
 	RunawayAnimation _susanAnimation, _susanLegsAnimation, _susanBenchPatch;
 	RunawaySpeech _susanSpeech;

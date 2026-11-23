@@ -97,7 +97,11 @@ const RunawayRoom kRunawayScene8380 = {
 namespace Runaway {
 
 Scene8380::Scene8380(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 30; // Sushi.
+	_speechColors[2] = 36; // Sandretti.
+	_speechColors[3] = 14; // Recorded Gina.
+}
 
 bool Scene8380::loadCustomResources() {
 	static const uint frames[] = {48, 48, 6, 4, 11, 48, 11, 11, 11, 4, 4, 4, 6, 6, 6, 6};
@@ -285,6 +289,9 @@ void Scene8380::advanceSushi() {
 }
 
 void Scene8380::advanceCustomGameplayLoop(uint32 delta) {
+	if (!_audio.musicPlaying()) {
+		resumeAmbientAudio(false);
+	}
 	while (_now - _sushiTick >= 80) {
 		_sushiTick += 80;
 		advanceSushi();
@@ -373,6 +380,10 @@ void Scene8380::deliverItem(uint16 action) {
 }
 
 void Scene8380::receiveRecordings() {
+	if (_finale.recordings >= 3) {
+		_audio.playMusic(38, false);
+		_audio.setMusicVolume(255);
+	}
 	exchange(83, 0, 0);
 	if (_finale.recordings < 3) {
 		exchange(83, 1, 1);

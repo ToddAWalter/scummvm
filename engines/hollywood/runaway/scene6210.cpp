@@ -66,7 +66,7 @@ const char *Scene6210::actionCaptionVariant(byte id, bool look, byte item) const
 
 void Scene6210::resumeAmbientAudio(bool entering) {
 	if (!_audio.musicPlaying()) {
-		_audio.playMusic(18);
+		_audio.playMusic(18, false);
 		_audio.setMusicVolume(191);
 	} else if (entering) {
 		_audio.setMusicVolume(191);
@@ -75,6 +75,10 @@ void Scene6210::resumeAmbientAudio(bool entering) {
 
 void Scene6210::runCustomEntrySequence() {
 	_facing = 0;
+	if (_restoredContent && !_town.cellVisited) {
+		say(0);
+	}
+	_town.cellVisited = 1;
 	_town.cellOpen = _town.bodySeen = 1;
 	_town.cellRefusals = 0;
 }

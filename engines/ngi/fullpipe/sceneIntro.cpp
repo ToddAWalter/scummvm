@@ -39,7 +39,7 @@ int sceneIntro_updateCursor() {
 void sceneIntro_initScene(Scene *sc) {
 	g_nmi->_gameLoader->loadScene(SC_INTRO2);
 
-	g_vars->sceneIntro_aniin1man = sc->getStaticANIObject1ById(ANI_IN1MAN, -1);
+	g_vars->sceneIntro_aniin1man = sc->findAniObjectById(ANI_IN1MAN, -1);
 	g_vars->sceneIntro_needSleep = true;
 	g_vars->sceneIntro_needGetup = false;
 	g_vars->sceneIntro_playing = true;
@@ -52,17 +52,17 @@ void sceneIntro_initScene(Scene *sc) {
 }
 
 void sceneHandlerIntro_part1() {
-	g_nmi->_currentScene = g_nmi->accessScene(SC_INTRO1);
-	chainQueue(QU_INTR_FINISH, 0);
+	g_nmi->_currentScene = g_nmi->findScene(SC_INTRO1);
+	runQueue(QU_INTR_FINISH, 0);
 }
 
 void sceneHandlerIntro_part2() {
-	g_nmi->_currentScene = g_nmi->accessScene(SC_INTRO2);
-	chainQueue(QU_IN2_DO, 0);
+	g_nmi->_currentScene = g_nmi->findScene(SC_INTRO2);
+	runQueue(QU_IN2_DO, 0);
 }
 
-int sceneHandlerIntro(ExCommand *ex) {
-	if (ex->_messageKind != 17)
+int sceneHandlerIntro(Command *ex) {
+	if (ex->_cmd != 17)
 		return 0;
 
 	switch (ex->_messageNum) {
@@ -93,12 +93,12 @@ int sceneHandlerIntro(ExCommand *ex) {
 
 	if (g_vars->sceneIntro_needSleep) {
 		if (!g_vars->sceneIntro_aniin1man->_movement && g_vars->sceneIntro_aniin1man->_statics->_staticsId == ST_IN1MAN_SLEEP)
-			g_vars->sceneIntro_aniin1man->startAnim(MV_IN1MAN_SLEEP, 0, -1);
+			g_vars->sceneIntro_aniin1man->startMovement(MV_IN1MAN_SLEEP, 0, -1);
 	} else if (g_vars->sceneIntro_needGetup && !g_vars->sceneIntro_aniin1man->_movement &&
 				g_vars->sceneIntro_aniin1man->_statics->_staticsId == ST_IN1MAN_SLEEP) {
 		g_vars->sceneIntro_needGetup = 0;
 
-		chainQueue(QU_INTR_GETUPMAN, 0);
+		runQueue(QU_INTR_GETUPMAN, 0);
 	}
 
 	g_nmi->startSceneTrack();

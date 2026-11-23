@@ -28,21 +28,21 @@
 
 namespace NGI {
 
-BehaviorManager::BehaviorManager() {
+BehaviorController::BehaviorController() {
 	_scene = nullptr;
 	_isActive = true;
 }
 
-BehaviorManager::~BehaviorManager() {
+BehaviorController::~BehaviorController() {
 	clear();
 }
 
-void BehaviorManager::clear() {
+void BehaviorController::clear() {
 	_behaviors.clear();
 }
 
-void BehaviorManager::initBehavior(Scene *sc, GameVar *var) {
-	debugC(2, kDebugBehavior, "BehaviorManager::initBehavior(%d, %s)", sc->_sceneId, transCyrillic(var->_varName));
+void BehaviorController::initBehavior(Scene *sc, GameVar *var) {
+	debugC(2, kDebugBehavior, "BehaviorController::initBehavior(%d, %s)", sc->_sceneId, transCyrillic(var->_varName));
 
 	clear();
 	_scene = sc;
@@ -51,22 +51,22 @@ void BehaviorManager::initBehavior(Scene *sc, GameVar *var) {
 	if (!behvar)
 		return;
 
-	debugC(3, kDebugBehavior, "BehaviorManager::initBehavior. have Variable");
+	debugC(3, kDebugBehavior, "BehaviorController::initBehavior. have Variable");
 
 	for (GameVar *subvar = behvar->_subVars; subvar; subvar = subvar->_nextVarObj) {
-		debugC(3, kDebugBehavior, "BehaviorManager::initBehavior. subVar %s", transCyrillic(subvar->_varName));
+		debugC(3, kDebugBehavior, "BehaviorController::initBehavior. subVar %s", transCyrillic(subvar->_varName));
 		if (subvar->_varName == "AMBIENT") {
-			_behaviors.push_back(BehaviorInfo());
+			_behaviors.push_back(BehaviorAni());
 			_behaviors.back().initAmbientBehavior(subvar, sc);
 		} else {
-			StaticANIObject *ani = sc->getStaticANIObject1ByName(subvar->_varName, -1);
+			AniObject *ani = sc->getStaticANIObject1ByName(subvar->_varName, -1);
 			if (ani) {
-				for (uint i = 0; i < sc->_staticANIObjectList1.size(); i++) {
-					if (sc->_staticANIObjectList1[i]->_id == ani->_id) {
-						_behaviors.push_back(BehaviorInfo());
-						BehaviorInfo &behinfo = _behaviors.back();
+				for (uint i = 0; i < sc->_aniObjects.size(); i++) {
+					if (sc->_aniObjects[i]->_id == ani->_id) {
+						_behaviors.push_back(BehaviorAni());
+						BehaviorAni &behinfo = _behaviors.back();
 						behinfo.initObjectBehavior(subvar, sc, ani);
-						behinfo._ani = sc->_staticANIObjectList1[i];
+						behinfo._ani = sc->_aniObjects[i];
 					}
 				}
 			}
@@ -74,13 +74,13 @@ void BehaviorManager::initBehavior(Scene *sc, GameVar *var) {
 	}
 }
 
-void BehaviorManager::updateBehaviors() {
+void BehaviorController::update() {
 	if (!_isActive)
 		return;
 
-	debugC(6, kDebugBehavior, "BehaviorManager::updateBehaviors()");
+	debugC(6, kDebugBehavior, "BehaviorController::update()");
 	for (uint i = 0; i < _behaviors.size(); i++) {
-		BehaviorInfo &beh = _behaviors[i];
+		BehaviorAni &beh = _behaviors[i];
 
 		if (!beh._ani) {
 			beh._counter++;
@@ -118,21 +118,21 @@ void BehaviorManager::updateBehaviors() {
 	}
 }
 
-void BehaviorManager::updateBehavior(BehaviorInfo &behaviorInfo, BehaviorAnim &entry) {
-	debugC(7, kDebugBehavior, "BehaviorManager::updateBehavior() moves: %d", entry._behaviorMoves.size());
+void BehaviorController::updateBehavior(BehaviorAni &behaviorInfo, BehaviorAnim &entry) {
+	debugC(7, kDebugBehavior, "BehaviorController::updateBehavior() moves: %d", entry._behaviorMoves.size());
 	for (uint i = 0; i < entry._behaviorMoves.size(); i++) {
 		BehaviorMove &bhi = entry._behaviorMoves[i];
 		if (!(bhi._flags & 1)) {
 			if (bhi._flags & 2) {
 				MessageQueue *mq = new MessageQueue(bhi._messageQueue, 0, 1);
 
-				mq->sendNextCommand();
+				mq->next();
 
 				bhi._flags &= 0xFFFFFFFD;
 			} else if (behaviorInfo._counter >= bhi._delay && bhi._percent && g_nmi->_rnd.getRandomNumber(32767) <= entry._behaviorMoves[i]._percent) {
 				MessageQueue *mq = new MessageQueue(bhi._messageQueue, 0, 1);
 
-				mq->sendNextCommand();
+				mq->next();
 
 				behaviorInfo._counter = 0;
 			}
@@ -140,8 +140,8 @@ void BehaviorManager::updateBehavior(BehaviorInfo &behaviorInfo, BehaviorAnim &e
 	}
 }
 
-void BehaviorManager::updateStaticAniBehavior(StaticANIObject &ani, int delay, const BehaviorAnim &beh) {
-	debugC(6, kDebugBehavior, "BehaviorManager::updateStaticAniBehavior(%s)", transCyrillic(ani._objectName));
+void BehaviorController::updateStaticAniBehavior(AniObject &ani, int delay, const BehaviorAnim &beh) {
+	debugC(6, kDebugBehavior, "BehaviorController::updateStaticAniBehavior(%s)", transCyrillic(ani._title));
 
 	MessageQueue *mq = nullptr;
 
@@ -171,15 +171,15 @@ void BehaviorManager::updateStaticAniBehavior(StaticANIObject &ani, int delay, c
 	}
 
 	if (mq) {
-		mq->setParamInt(-1, ani._odelay);
-		if (!mq->chain(&ani)) {
+		mq->setObjectCopy(-1, ani._copyId);
+		if (!mq->run(&ani)) {
 			g_nmi->_globalMessageQueueList->deleteQueueById(mq->_id);
 		}
 	}
 }
 
-bool BehaviorManager::setBehaviorEnabled(StaticANIObject *obj, int aniId, int quId, int flag) {
-	BehaviorMove *entry = getBehaviorMoveByMessageQueueDataId(obj, aniId, quId);
+bool BehaviorController::enableAni(AniObject *obj, int aniId, int quId, int flag) {
+	BehaviorMove *entry = getAniQueue(obj, aniId, quId);
 
 	if (entry) {
 		if (flag)
@@ -192,9 +192,9 @@ bool BehaviorManager::setBehaviorEnabled(StaticANIObject *obj, int aniId, int qu
 	return true;
 }
 
-void BehaviorManager::setFlagByStaticAniObject(StaticANIObject *ani, int flag) {
+void BehaviorController::enableAllQueuesForAni(AniObject *ani, int flag) {
 	for (uint i = 0; i < _behaviors.size(); i++) {
-		BehaviorInfo &beh = _behaviors[i];
+		BehaviorAni &beh = _behaviors[i];
 
 		if (ani == beh._ani) {
 			if (flag)
@@ -205,13 +205,13 @@ void BehaviorManager::setFlagByStaticAniObject(StaticANIObject *ani, int flag) {
 	}
 }
 
-BehaviorMove *BehaviorManager::getBehaviorMoveByMessageQueueDataId(StaticANIObject *ani, int id1, int id2) {
+BehaviorMove *BehaviorController::getAniQueue(AniObject *ani, int id1, int id2) {
 	for (uint i = 0; i < _behaviors.size(); i++) {
 		if (_behaviors[i]._ani == ani) {
 			for (uint j = 0; j < _behaviors[i]._behaviorAnims.size(); j++) {
 				if (_behaviors[i]._behaviorAnims[j]._staticsId == id1) {
 					for (uint k = 0; k < _behaviors[i]._behaviorAnims[j]._behaviorMoves.size(); k++) {
-						if (_behaviors[i]._behaviorAnims[j]._behaviorMoves[k]._messageQueue->_dataId == id2)
+						if (_behaviors[i]._behaviorAnims[j]._behaviorMoves[k]._messageQueue->_queueId == id2)
 							return &_behaviors[i]._behaviorAnims[j]._behaviorMoves[k];
 					}
 				}
@@ -222,7 +222,7 @@ BehaviorMove *BehaviorManager::getBehaviorMoveByMessageQueueDataId(StaticANIObje
 	return nullptr;
 }
 
-void BehaviorInfo::clear() {
+void BehaviorAni::clear() {
 	_ani = nullptr;
 	_staticsId = 0;
 	_counter = 0;
@@ -233,8 +233,8 @@ void BehaviorInfo::clear() {
 	_behaviorAnims.clear();
 }
 
-void BehaviorInfo::initAmbientBehavior(GameVar *var, Scene *sc) {
-	debugC(4, kDebugBehavior, "BehaviorInfo::initAmbientBehavior(%s)", transCyrillic(var->_varName));
+void BehaviorAni::initAmbientBehavior(GameVar *var, Scene *sc) {
+	debugC(4, kDebugBehavior, "BehaviorAni::initAmbientBehavior(%s)", transCyrillic(var->_varName));
 
 	clear();
 	_animsCount = 1;
@@ -255,9 +255,9 @@ void BehaviorInfo::initAmbientBehavior(GameVar *var, Scene *sc) {
 	}
 }
 
-void BehaviorInfo::initObjectBehavior(GameVar *var, Scene *sc, StaticANIObject *ani) {
+void BehaviorAni::initObjectBehavior(GameVar *var, Scene *sc, AniObject *ani) {
 	Common::String s((char *)transCyrillic(var->_varName));
-	debugC(4, kDebugBehavior, "BehaviorInfo::initObjectBehavior(%s, %d, %s)", s.c_str(), sc->_sceneId, transCyrillic(ani->_objectName));
+	debugC(4, kDebugBehavior, "BehaviorAni::initObjectBehavior(%s, %d, %s)", s.c_str(), sc->_sceneId, transCyrillic(ani->_title));
 
 	clear();
 
@@ -272,7 +272,7 @@ void BehaviorInfo::initObjectBehavior(GameVar *var, Scene *sc, StaticANIObject *
 		if (v1 == var)
 			return;
 
-		sc = g_nmi->accessScene(ani->_sceneId);
+		sc = g_nmi->findScene(ani->_sceneId);
 		clear();
 		var = v1;
 		_animsCount = var->getSubVarsCount();
@@ -294,7 +294,7 @@ BehaviorAnim::BehaviorAnim() {
 	_flags = 0;
 }
 
-BehaviorAnim::BehaviorAnim(GameVar *var, Scene *sc, StaticANIObject *ani, int *minDelay) {
+BehaviorAnim::BehaviorAnim(GameVar *var, Scene *sc, AniObject *ani, int *minDelay) {
 	_staticsId = 0;
 
 	*minDelay = 0xffffffff;

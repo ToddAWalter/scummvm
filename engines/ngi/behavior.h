@@ -39,11 +39,11 @@ struct BehaviorAnim {
 	Common::Array<BehaviorMove> _behaviorMoves;
 
 	BehaviorAnim();
-	BehaviorAnim(GameVar *var, Scene *sc, StaticANIObject *ani, int *minDelay);
+	BehaviorAnim(GameVar *var, Scene *sc, AniObject *ani, int *minDelay);
 };
 
-struct BehaviorInfo {
-	StaticANIObject *_ani;
+struct BehaviorAni {
+	AniObject *_ani;
 	int _staticsId;
 	int _counter;
 	int _counterMax;
@@ -52,35 +52,35 @@ struct BehaviorInfo {
 	int _animsCount;
 	Common::Array<BehaviorAnim> _behaviorAnims;
 
-	BehaviorInfo() { clear(); }
+	BehaviorAni() { clear(); }
 
 	void clear();
 	void initAmbientBehavior(GameVar *var, Scene *sc);
-	void initObjectBehavior(GameVar *var, Scene *sc, StaticANIObject *ani);
+	void initObjectBehavior(GameVar *var, Scene *sc, AniObject *ani);
 };
 
-class BehaviorManager : public CObject {
-	Common::Array<BehaviorInfo> _behaviors;
+class BehaviorController : public CObject {
+	Common::Array<BehaviorAni> _behaviors;
 	Scene *_scene;
 	bool _isActive;
 
   public:
-	BehaviorManager();
-	~BehaviorManager() override;
+	BehaviorController();
+	~BehaviorController() override;
 
 	void clear();
 
 	void initBehavior(Scene *scene, GameVar *var);
 
-	void updateBehaviors();
-	void updateBehavior(BehaviorInfo &behaviorInfo, BehaviorAnim &entry);
-	void updateStaticAniBehavior(StaticANIObject &ani, int delay, const BehaviorAnim &beh);
+	void update();
+	void updateBehavior(BehaviorAni &behaviorInfo, BehaviorAnim &entry);
+	void updateStaticAniBehavior(AniObject &ani, int delay, const BehaviorAnim &beh);
 
-	bool setBehaviorEnabled(StaticANIObject *obj, int aniId, int quId, int flag);
+	bool enableAni(AniObject *obj, int aniId, int quId, int flag);
 
-	void setFlagByStaticAniObject(StaticANIObject *ani, int flag);
+	void enableAllQueuesForAni(AniObject *ani, int flag);
 
-	BehaviorMove *getBehaviorMoveByMessageQueueDataId(StaticANIObject *ani, int id1, int id2);
+	BehaviorMove *getAniQueue(AniObject *ani, int id1, int id2);
 };
 
 } // End of namespace NGI

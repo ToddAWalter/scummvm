@@ -24,6 +24,10 @@
 
 #include "hollywood/sound.h"
 
+namespace Common {
+class RandomSource;
+}
+
 namespace Hollywood {
 
 class RunawayAudio {
@@ -34,8 +38,12 @@ public:
 	void setChapter(byte chapter);
 	void playIntroMusic(uint16 cue = 2);
 	uint32 playMusic(uint16 cue, bool loop = true);
+	void updateBackgroundMusic(uint32 now, Common::RandomSource &random, byte firstCue, byte cueCount, byte volume = 96, int repeatDelay = -1);
+	uint16 musicCue() const { return _musicCue; }
+	bool musicLooping() const { return _musicLooping && musicPlaying(); }
 	void playMusicEffect(uint16 cue, byte volume = Audio::Mixer::kMaxChannelVolume, byte channel = 0, bool loop = false);
 	void setMusicVolume(byte volume);
+	void setEffectVolume(byte channel, byte volume);
 	void setListenerPosition(int x);
 	int listenerPosition() const { return _listenerX; }
 	uint32 playSpeech(uint16 sample, bool global = false);
@@ -46,9 +54,11 @@ public:
 	void playPointer();
 	void playMenuMusic();
 	void stopMusic();
+	void pauseMusic(bool paused);
 	void stopSpeech();
 	void stopEffect();
 	void stopEffect(byte channel);
+	void pauseEffect(byte channel, bool paused);
 	bool musicPlaying() const;
 	bool speechPlaying() const;
 	bool effectPlaying(byte channel = 0) const;
@@ -62,6 +72,9 @@ private:
 	byte _chapter = 3;
 	Audio::Mixer *_mixer;
 	SoundChannel _music, _speech, _effects[3], _footsteps[14], _pointer;
+	uint16 _musicCue = 0;
+	bool _musicLooping = false;
+	uint32 _nextMusic = 0;
 	int _listenerX = 512;
 };
 

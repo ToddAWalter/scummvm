@@ -94,6 +94,13 @@ bool Scene5170::loadCustomResources() {
 		_ambientAnimations[3].load(_archive, 11, 3);
 }
 
+void Scene5170::resumeAmbientAudio(bool entering) {
+	if (_audio.musicCue() != 16 || !_audio.musicPlaying()) {
+		_audio.playMusic(16, false);
+	}
+	_audio.setMusicVolume(179);
+}
+
 bool Scene5170::applyCustomBackgroundPatches() {
 	_doorFrame = doorClosed() ? 0 : 24;
 	return (_desert.vacuum != 2 || applyPatch(7)) && (!_desert.glassesTaken || applyPatch(8)) &&
@@ -211,7 +218,7 @@ RunawayRoomScene::ActionResult Scene5170::dispatchCustomSceneAction(uint16 actio
 		}
 		return kBackgroundChanged;
 	case 307: // Look at the door mechanism.
-		say(6, _desert.crank != 0);
+		say(6, _desert.crank);
 		if (!_desert.crank) {
 			_desert.crank = 1;
 		}

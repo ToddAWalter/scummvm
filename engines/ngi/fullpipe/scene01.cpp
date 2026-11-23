@@ -42,20 +42,20 @@ void scene01_fixEntrance() {
 }
 
 void scene01_initScene(Scene *sc, int entrance) {
-	g_vars->scene01_picSc01Osk = sc->getPictureObjectById(PIC_SC1_OSK, 0);
+	g_vars->scene01_picSc01Osk = sc->findPictureObjectById(PIC_SC1_OSK, 0);
 	g_vars->scene01_picSc01Osk->_flags &= 0xFFFB;
 
-	g_vars->scene01_picSc01Osk2 = sc->getPictureObjectById(PIC_SC1_OSK2, 0);
+	g_vars->scene01_picSc01Osk2 = sc->findPictureObjectById(PIC_SC1_OSK2, 0);
 	g_vars->scene01_picSc01Osk2->_flags &= 0xFFFB;
 
-	if (g_nmi->getObjectState(sO_EggCracker) == g_nmi->getObjectEnumState(sO_EggCracker, sO_DidNotCrackEgg)) {
-		PictureObject *pic = sc->getPictureObjectById(PIC_SC1_KUCHKA, 0);
+	if (g_nmi->getStateId(sO_EggCracker) == g_nmi->getStateValue(sO_EggCracker, sO_DidNotCrackEgg)) {
+		PictureObject *pic = sc->findPictureObjectById(PIC_SC1_KUCHKA, 0);
 		if (pic)
 			pic->_flags &= 0xFFFB;
 	}
 
 	if (entrance != TrubaLeft) {
-		StaticANIObject *bootAnim = sc->getStaticANIObject1ById(ANI_BOOT_1, -1);
+		AniObject *bootAnim = sc->findAniObjectById(ANI_BOOT_1, -1);
 		if (bootAnim)
 			bootAnim->_flags &= ~0x04;
 	}
@@ -63,15 +63,15 @@ void scene01_initScene(Scene *sc, int entrance) {
 	g_nmi->lift_setButton(sO_Level2, ST_LBN_2N);
 }
 
-int sceneHandler01(ExCommand *cmd) {
+int sceneHandler01(Command *cmd) {
 	int res = 0;
 
-	if (cmd->_messageKind != 17)
+	if (cmd->_cmd != 17)
 		return 0;
 
 	if (cmd->_messageNum > MSG_SC1_SHOWOSK) {
 		if (cmd->_messageNum == MSG_SC1_UTRUBACLICK)
-			handleObjectInteraction(g_nmi->_aniMan, g_nmi->_currentScene->getPictureObjectById(PIC_SC1_LADDER, 0), 0);
+			handleObjectInteraction(g_nmi->_aniMan, g_nmi->_currentScene->findPictureObjectById(PIC_SC1_LADDER, 0), 0);
 
 		return 0;
 	}
@@ -79,8 +79,8 @@ int sceneHandler01(ExCommand *cmd) {
 	if (cmd->_messageNum == MSG_SC1_SHOWOSK) {
 		g_vars->scene01_picSc01Osk->_flags |= 4;
 
-		g_vars->scene01_picSc01Osk->_priority = 20;
-		g_vars->scene01_picSc01Osk2->_priority = 21;
+		g_vars->scene01_picSc01Osk->_z = 20;
+		g_vars->scene01_picSc01Osk2->_z = 21;
 
 		return 0;
 	}
@@ -88,8 +88,8 @@ int sceneHandler01(ExCommand *cmd) {
 	if (cmd->_messageNum != 0x21) {
 		if (cmd->_messageNum == MSG_SC1_SHOWOSK2) {
 			g_vars->scene01_picSc01Osk2->_flags |= 4;
-			g_vars->scene01_picSc01Osk2->_priority = 20;
-			g_vars->scene01_picSc01Osk->_priority = 21;
+			g_vars->scene01_picSc01Osk2->_z = 20;
+			g_vars->scene01_picSc01Osk->_z = 21;
 
 			return 0;
 		}
@@ -98,16 +98,16 @@ int sceneHandler01(ExCommand *cmd) {
 	}
 
 	if (g_nmi->_aniMan2) {
-		if (g_nmi->_aniMan2->_ox < g_nmi->_sceneRect.left + 200) {
-			g_nmi->_currentScene->_x = g_nmi->_aniMan2->_ox - g_nmi->_sceneRect.left - 300;
+		if (g_nmi->_aniMan2->_x < g_nmi->_sceneRect.left + 200) {
+			g_nmi->_currentScene->_x = g_nmi->_aniMan2->_x - g_nmi->_sceneRect.left - 300;
 		}
 
-		if (g_nmi->_aniMan2->_ox > g_nmi->_sceneRect.right - 200)
-			g_nmi->_currentScene->_x = g_nmi->_aniMan2->_ox - g_nmi->_sceneRect.right + 300;
+		if (g_nmi->_aniMan2->_x > g_nmi->_sceneRect.right - 200)
+			g_nmi->_currentScene->_x = g_nmi->_aniMan2->_x - g_nmi->_sceneRect.right + 300;
 
 		res = 1;
 	}
-	g_nmi->_behaviorManager->updateBehaviors();
+	g_nmi->_behaviorManager->update();
 
 	g_nmi->startSceneTrack();
 

@@ -391,7 +391,7 @@ uint RunawayInventory::cursor(byte item) const {
 	return item <= kItemCount ? kItemCursors[item] : 0;
 }
 
-RunawayInventory::Reply RunawayInventory::examine(byte item) const {
+RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveState &state) const {
 	if (_chapter == 6) {
 		if (item == 19) {
 			return Reply(310, _finale.scalpel ? _finale.scalpel + 1 : _finale.heatNeeded);
@@ -422,6 +422,8 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 		case 13: // Telepathic helmet.
 		case 15: // Blowtorch.
 			return Reply(193 + item);
+		case 16: // Reuse the saloon's description of the watering can.
+			return Reply::fromStage(624, 5);
 		case 17: // Map of the mine.
 		case 18: // Miner's light.
 		case 19: // Rope.
@@ -442,12 +444,14 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 			return Reply(207);
 		case 20: // Ancient stapler.
 			return Reply(212, _town.strap == 2);
+		case 21: // Flower pot.
+			return Reply(244);
 		case 22: // Pruning shears.
 			return Reply(213);
 		case 23: // Oil can.
 			return Reply(214, _town.oilCanFull);
 		case 27: // Tobacco leaves.
-			return Reply(217);
+			return Reply(217, state.town.rawTobaccoRefused);
 		case 29: // Stone with a hole.
 			return Reply(219, _town.sculpture * 2);
 		case 31: // Clay vessel.
@@ -532,12 +536,33 @@ RunawayInventory::Reply RunawayInventory::examine(byte item) const {
 		variation = _desert.glasses;
 		break;
 	case 25:
-		variation = _desert.bucket == 1;
+		variation = _desert.bucket;
+		break;
+	case 26:
+		variation = state.desert.fridgeOpened;
 		break;
 	default:
 		break;
 	}
 	return Reply(item && item <= kItemCount ? kExamineCues[item] : 1, variation);
+}
+
+RunawayInventory::Reply RunawayInventory::nextReply(const Reply &reply) const {
+	if (reply.variation < reply.lastVariation) {
+		return Reply(reply.cue, reply.variation + 1, reply.lastVariation);
+	}
+	if (reply.nextVariation != 0xff) {
+		return Reply(reply.cue, reply.nextVariation);
+	}
+	if (_chapter == 3 && reply.cue == 174) {
+		const byte completed[] = {0, _desert.bombReady, _desert.gunReady, _desert.helicopterReady};
+		for (uint i = reply.variation + 1; i < ARRAYSIZE(completed); ++i) {
+			if (completed[i]) {
+				return Reply(174, i);
+			}
+		}
+	}
+	return Reply(0);
 }
 
 Common::U32String RunawayInventory::combinationCaption(byte item, byte target) const {
@@ -656,7 +681,9 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 			return Reply(117, 2);
 		}
 		_museum.rubyRemoved = 1;
-		add(12);
+		if (!_fullGame) {
+			add(12);
+		}
 		return Reply(117);
 	}
 	if (first == 14 && second == 19) {
@@ -718,7 +745,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 		remove(7);
 		remove(8);
 		add(17);
-		return Reply(183, 1);
+		return Reply(183, 0, 1);
 	}
 	if (first == 4 && second == 6) {
 		if (!_desert.antTrickKnown)
@@ -734,7 +761,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			return Reply(190);
 		_desert.helmet = 2;
 		remove(18);
-		return Reply(190, 1);
+		return Reply(190, 1, 2);
 	}
 	if ((first == 10 || first == 11) && second == 25) {
 		if (_desert.bucket != 1)
@@ -743,33 +770,34 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			if (_desert.lipstick)
 				return Reply(184, 2);
 			_desert.lipstick = 1;
-			return Reply(184);
+			return Reply(184, 0, 1);
 		}
 		if (_desert.lipsticks)
 			return Reply(1, 2);
 		_desert.lipsticks = 1;
 		_desert.bucket = 2;
+		const bool hadLipstick = contains(10);
 		remove(10);
-		return Reply(185);
+		return Reply(185, 0, hadLipstick ? 2 : 1);
 	}
 	if ((first == 10 || first == 11) && second == 14) {
 		if (!(first == 10 ? _desert.lipstick : _desert.lipsticks))
 			return Reply(first == 10 ? 186 : 187);
 		_desert.belt = first == 10 ? 1 : 2;
 		remove(first);
-		return Reply(first == 10 ? 186 : 187, 1);
+		return Reply(first == 10 ? 186 : 187, 1, 2);
 	}
 	if (first == 15 && second == 16) {
 		if (_desert.ball)
 			return Reply(188, 2);
 		_desert.ball = 1;
-		return Reply(188);
+		return Reply(188, 0, 1);
 	}
 	if (first == 15 && second == 24) {
 		if (_desert.ball != 1)
 			return Reply(189, _desert.ball ? 3 : 0);
 		_desert.ball = 2;
-		return Reply(189, 1);
+		return Reply(189, 1, 2);
 	}
 	if (first == 4 && second == 18)
 		return Reply(_desert.antTrickKnown ? 177 : 14);

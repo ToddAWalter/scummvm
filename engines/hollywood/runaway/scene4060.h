@@ -35,7 +35,9 @@ public:
 private:
 	const char *actionCaptionVariant(byte id, bool look, byte item) const override;
 	bool loadCustomResources() override;
+	bool applyCustomBackgroundPatches() override;
 	void applyCustomHotspotState() override;
+	void resumeAmbientAudio(bool entering) override;
 	void runCustomEntrySequence() override;
 	void advanceCustomGameplayLoop(uint32 delta) override;
 	void updateActor(uint elapsed, int scrollDirection, bool inventoryOpen) override;
@@ -49,9 +51,13 @@ private:
 	void setupActorDepth(RunawayActor::RenderParams &params) const override;
 	bool usesAlternateActor() const override;
 	int sceneViewportYOffset() const override;
+	byte actorWalkZone() const;
 
 	RunawayAnimation _willyAnimation;
 	byte _willyFrame = 0;
+	bool _willyWalking = false;
+	uint32 _willyWalkStarted = 0;
+	byte _lastWalkZone = 0;
 	int _entranceCameraX = 0;
 };
 

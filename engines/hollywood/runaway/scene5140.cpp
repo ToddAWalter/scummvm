@@ -111,7 +111,11 @@ const RunawayRoom kRunawayScene5140 = {
 namespace Runaway {
 
 Scene5140::Scene5140(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[4] = 24; // Carla.
+	_speechColors[5] = 28; // Lula.
+	_speechColors[6] = 25; // Mariola.
+}
 
 bool Scene5140::loadCustomResources() {
 	return _brianAnimation.load(_archive, 1, 130) &&
@@ -175,7 +179,7 @@ void Scene5140::updateIntroduction() {
 			// Brian pauses to think, then announces that he has a plan.
 			typedef RunawaySequence S;
 			static const S::Command film[] = {
-				{S::kOpen, 6}, {S::kPlay, 0, 0}, {S::kEffect, 20, 255},
+				{S::kOpen, 6}, {S::kPlay, 0, 0}, {S::kMusic, 20, 255},
 				{S::kPlay, 1, 186}, {S::kTalk, 1, 31, 1}, {S::kEnd}
 			};
 			intro.phase = BusIntroduction::kFilm;

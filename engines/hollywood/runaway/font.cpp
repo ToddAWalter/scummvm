@@ -52,7 +52,26 @@ const byte kGlyphMap[256] = {
 
 } // End of anonymous namespace
 
-bool RunawayFont::load(bool menuFont, bool museum) {
+uint16 RunawayFont::getColor(byte index) {
+	// Original font palette, shared by captions, dialogue choices and speech.
+	static const byte colors[][3] = {
+		{255, 255, 255}, {0, 0, 0}, {255, 223, 206}, {189, 166, 148},
+		{140, 125, 107}, {255, 255, 255}, {148, 174, 206}, {99, 117, 140},
+		{66, 65, 66}, {189, 166, 148}, {255, 223, 206}, {255, 255, 255},
+		{0, 0, 0}, {158, 167, 0}, {255, 124, 165}, {189, 166, 148},
+		{255, 223, 206}, {202, 78, 167}, {107, 189, 200}, {83, 216, 63},
+		{57, 186, 240}, {216, 213, 63}, {168, 128, 210}, {63, 47, 47},
+		{242, 36, 103}, {255, 146, 70}, {147, 188, 242}, {186, 219, 149},
+		{193, 242, 36}, {228, 151, 255}, {43, 237, 247}, {81, 162, 255},
+		{165, 223, 193}, {255, 224, 74}, {134, 229, 255}, {82, 236, 27},
+		{228, 54, 54}, {189, 149, 49}, {252, 106, 46}
+	};
+	assert(index < ARRAYSIZE(colors));
+	const Graphics::PixelFormat format(2, 5, 6, 5, 0, 11, 5, 0, 0);
+	return format.RGBToColor(colors[index][0], colors[index][1], colors[index][2]);
+}
+
+bool RunawayFont::load(bool menuFont, bool museum, Common::Language language) {
 	Common::Array<byte> metrics;
 	if (museum) {
 		if (!readRunawayFile(Common::Path("TEMP_LET.SVG"), _pixels) ||
@@ -94,12 +113,14 @@ bool RunawayFont::load(bool menuFont, bool museum) {
 				_glyphMap[i] = _missingGlyph;
 		}
 	}
-	// The French table at 0x46f1e0 adds circumflex vowels and moves the
-	// missing-character box to 155. Glyphs 153/154 are the CP1252 ligatures.
-	if (_glyphs.size() == 156) {
+	// French circumflex vowels and ligatures occupy the same slots in the
+	// demo (0x46f1e0) and DVD (0x5a6210). The DVD shares its 181-glyph count
+	// with other languages, so its mapping cannot be selected by size alone.
+	_frenchGlyphs = _glyphs.size() == 156 || (_glyphs.size() == 181 && language == Common::FR_FRA);
+	if (_frenchGlyphs) {
 		for (uint i = 0; i < ARRAYSIZE(_glyphMap); ++i) {
 			if (_glyphMap[i] == 149)
-				_glyphMap[i] = 155;
+				_glyphMap[i] = _missingGlyph;
 		}
 		_glyphMap[0x83] = 148;
 		_glyphMap[0x88] = 149;
@@ -155,8 +176,8 @@ uint RunawayFont::glyphIndex(uint32 chr) const {
 	case 0x201e: return 92;
 	case '\'': return 90;
 	case '"': return 81;
-	case 0x0152: return _glyphs.size() == 156 ? 153 : _missingGlyph;
-	case 0x0153: return _glyphs.size() == 156 ? 154 : _missingGlyph;
+	case 0x0152: return _frenchGlyphs ? 153 : _missingGlyph;
+	case 0x0153: return _frenchGlyphs ? 154 : _missingGlyph;
 	}
 	if (chr < 128)
 		return _glyphMap[chr];

@@ -33,7 +33,9 @@ const RunawayRoom kRunawayScene6370 = {
 namespace Runaway {
 
 Scene6370::Scene6370(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 30; // Sushi.
+}
 
 bool Scene6370::usesAlternateActor() const {
 	return false;
@@ -105,7 +107,7 @@ RunawayRoomScene::ActionResult Scene6370::dispatchCustomSceneAction(uint16 actio
 		break;
 	case 403: // Finish the conversation and return to the street.
 		_town.sushiMet = 1;
-		_audio.playMusic(20);
+		_audio.playMusic(20, false);
 		_sushiPose = 79;
 		_sushiTick = _now;
 		walkTo(Common::Point(1443, 648), 1, true);
@@ -126,10 +128,12 @@ void Scene6370::handleAnimationFrameHook() {
 void Scene6370::handleCustomDialogueChoice(byte effect) {
 	if (effect == 2) { // Ask Sushi to repeat Douglasville's history.
 		say(90, 6, false, 1);
-		say(80, 7);
-		say(90, 7, false, 1);
-		say(80, 8);
-		say(90, 8, false, 1);
+		if (!_restoredContent) {
+			say(80, 7);
+			say(90, 7, false, 1);
+			say(80, 8);
+			say(90, 8, false, 1);
+		}
 	} else if (effect == 3) { // Learn where a map of the mine might be kept.
 		_town.mineMapKnown = 1;
 	} else if (effect == 4) { // Learn that the bank's safe is in its basement.
@@ -171,10 +175,20 @@ void Scene6370::startSushiConversation(bool introduction) {
 	memcpy(_dialogue[11], topics[2], sizeof(topics[2]));
 	memcpy(_dialogue[12], topics[3], sizeof(topics[3]));
 	memcpy(_dialogue[13], topics[4], sizeof(topics[4]));
+	if (_restoredContent) {
+		// Let Brian interrupt either part of the recap using the unused exchange.
+		_dialogue[0][2].transition = 1;
+		_dialogue[0][2].node = 4;
+		_dialogue[14][0] = {1, 0, 2, 16, 16, 0, 0};
+		_dialogue[14][1] = {1, 0, 1, 7, 7, 0, 0};
+		_dialogue[20][0] = {1, 0, 4, 16, 16, 0, 0};
+		_dialogue[20][1] = {1, 0, 4, 8, 8, 0, 0};
+	}
 	_dialogue[0][0].enabled = !_town.sushiMet;
 	_dialogue[0][1].enabled = _town.sushiMet;
-	_dialogue[0][4].enabled = _town.mineMapKnown && _town.bankVisited;
+	_dialogue[0][4].enabled = _town.mineMapKnown && _town.bankVisited && !_town.safeOpened;
 	_dialogue[0][5].enabled = _town.bodySeen;
+	_dialogue[10][1].enabled = !_town.safeOpened;
 	_dialogue[12][0].enabled = !_town.safeSeen;
 	_dialogue[12][1].enabled = _town.safeSeen;
 }

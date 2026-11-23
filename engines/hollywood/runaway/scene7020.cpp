@@ -62,8 +62,7 @@ const RunawayResponse kResponses[] = {
 	{7020, 323, 11, 0}, // Examine the kiva's ladder.
 	{7020, 324, 12, 0}, // Refuse to climb down the unsafe ladder.
 	{7020, 325, 13, 0}, // Look along the canyon.
-	{7020, 328, 15, 0}, // Reject the unsplit timber as a splint.
-	{7020, 330, 17, 0}  // Reject unsuitable material for the splint.
+	{7020, 328, 15, 0}  // Reject the unsplit timber as a splint.
 };
 
 const RunawayItemAction kItemActions[] = {
@@ -74,16 +73,17 @@ const RunawayItemAction kItemActions[] = {
 	{7020, 9, 1, 31, false}, {7020, 10, 1, 328, false},
 	{7020, 11, 1, 15, false}, {7020, 11, 4, 327, false},
 	{7020, 12, 1, 331, false}, {7020, 13, 1, 329, false},
-	{7020, 14, 1, 31, false}, {7020, 15, 1, 15, false},
+	{7020, 14, 1, 31, false}, {7020, 15, 1, 330, false},
 	{7020, 16, 1, 31, false}
 };
 
 typedef RunawaySequence S;
 const S::Command kGinaStory[] = {
 	{S::kOpen, 2}, {S::kMusic, 17, 255, 1}, {S::kEffect, 30, 255},
-	{S::kSpeech, 0, 5, 5}, {S::kPlay, 0, 240}, {S::kWaitSpeech},
-	{S::kSpeech, 0, 6, 6}, {S::kPlay, 241, 693}, {S::kWaitSpeech},
-	{S::kSpeech, 0, 7, 7}, {S::kPlay, 694, 870}, {S::kWaitSpeech},
+	{S::kSpeech, 0, 5, 5, 0, 14}, {S::kPlay, 0, 240},
+	{S::kPauseEffect, 0, 1}, {S::kWaitSpeech}, {S::kPauseEffect, 0, 0},
+	{S::kSpeech, 0, 6, 6, 0, 14}, {S::kPlay, 241, 693}, {S::kWaitSpeech},
+	{S::kSpeech, 0, 7, 7, 0, 14}, {S::kPlay, 694, 870}, {S::kWaitSpeech},
 	{S::kMusic, 11, 255}, {S::kEnd}
 };
 
@@ -108,7 +108,9 @@ const RunawayRoom kRunawayScene7020 = {
 namespace Runaway {
 
 Scene7020::Scene7020(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 14; // Gina.
+}
 
 bool Scene7020::loadCustomResources() {
 	return _ginaArrival.load(_archive, 4, 1) && _gina.load(_archive, 7, 151) && _rope.load(_archive, 8, 32);
@@ -182,7 +184,13 @@ void Scene7020::runCustomEntrySequence() {
 	} else if (_entryScene == 7022) { // Return from the unexplored end of the canyon.
 		_hopi.ginaFound = 1;
 		enterLevel(0, Common::Point(0, 785), 3);
-		walkTo(Common::Point(434, 661), 3);
+		walkTo(Common::Point(434, 661), 3, true);
+		if (_hopi.cryptVisited && !_hopi.cryptReturnVisited) {
+			_hopi.cryptReturnVisited = 1;
+			if (_restoredContent) {
+				deferAction(413);
+			}
+		}
 	} else if (!_hopi.ginaFound) {
 		_arrivalStage = 1;
 		_camera = Common::Point(600, 0);
@@ -541,6 +549,13 @@ RunawayRoomScene::ActionResult Scene7020::dispatchCustomSceneAction(uint16 actio
 			deferAction(431);
 		}
 		break;
+	case 330: // The completed tool still has item ID 15; 17 is its name/icon variant.
+		if (_inventory.hopi().toolHandle) {
+			say(17);
+		} else {
+			executeItemAction(15);
+		}
+		break;
 	case 331: // Rope also needs the two wooden splints.
 		if (_inventory.contains(13)) {
 			execute(329);
@@ -585,6 +600,9 @@ RunawayRoomScene::ActionResult Scene7020::dispatchCustomSceneAction(uint16 actio
 		break;
 	case 412: // Consider how to make a splint.
 		say(0, 17);
+		break;
+	case 413: // Let Gina rest before telling her about the crypt.
+		say(0, 18);
 		break;
 	case 427: { // Cut the rope, animating its falling end separately.
 		Common::Array<byte> brian, rope;

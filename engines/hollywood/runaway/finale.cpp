@@ -29,9 +29,8 @@ void RunawayRoomScene::resumeFinaleOutdoorAudio(bool entering, uint16 windCue, b
 	if (!_audio.effectPlaying(2)) {
 		_audio.playEffect(windCue, windVolume, 2, true);
 	}
-	if (entering || !_audio.musicPlaying()) {
-		_musicCue = 12 + _random.getRandomNumber(4);
-		_audio.playMusic(_musicCue, false);
+	if (entering || !_audio.musicPlaying() || _audio.musicLooping()) {
+		_audio.playMusic(12 + _random.getRandomNumber(4), false);
 	}
 }
 
@@ -52,22 +51,14 @@ void RunawayRoomScene::updateFinaleOutdoorAudio(byte wildlifeVolume) {
 
 bool RunawayRoomScene::sayFinaleInventory(const RunawayInventory::Reply &reply) {
 	typedef RunawaySequence S;
-	static const S::Command map[] = {
-		{S::kImage, 146}, {S::kSpeech, 301, 0, 0, 1}, {S::kWaitInput}, {S::kEnd}
-	};
-	if (reply.cue == 301 || reply.cue == 303) {
-		if (reply.cue == 301) {
-			_sequence.start(map, _text, _now, 'H');
-		} else {
-			_filmCommands.clear();
-			_filmCommands.push_back({S::kImage, 147});
-			const byte variation = _finale.moneyFound >= 3;
-			_filmCommands.push_back({S::kSpeech, 303, variation, variation, 1});
-			_filmCommands.push_back(S::Command(S::kWaitInput));
-			_filmCommands.push_back(S::Command(S::kEnd));
-			_sequence.start(_filmCommands.data(), _text, _now, 'H');
-		}
+	if (reply.cue == 301 || reply.cue == 303 || reply.cue == 307) {
+		// The mine map, bottle and bank brochure each have an enlarged view.
+		const uint16 image = reply.cue == 301 ? 146 : reply.cue == 303 ? 147 : 158;
+		const byte variation = reply.cue == 303 && _finale.moneyFound >= 3;
+		_filmCommands = {{S::kImage, image}, {S::kSpeech, reply.cue, variation, variation, 1},
+			{S::kWaitInput}, {S::kEnd}};
 		_inventorySequence = true;
+		_sequence.start(_filmCommands.data(), _text, _now, 'H');
 		return true;
 	}
 	if (reply.cue == 200 || reply.cue == 256) {
@@ -101,21 +92,10 @@ void RunawayRoomScene::resumeFinaleJailAudio(bool entering) {
 		_audio.playMusic(18, false);
 	}
 	_audio.setMusicVolume(191);
-	_nextMusic = 0;
 }
 
 void RunawayRoomScene::updateFinaleJailAudio() {
-	if (!_audio.musicPlaying()) {
-		if (!_nextMusic) {
-			static const uint delays[] = {0, 60000, 30000, 15000};
-			_nextMusic = _now + delays[_random.getRandomNumber(ARRAYSIZE(delays) - 1)];
-		}
-		if ((int32)(_now - _nextMusic) >= 0) {
-			_audio.playMusic(18, false);
-			_audio.setMusicVolume(191);
-			_nextMusic = 0;
-		}
-	}
+	_audio.updateBackgroundMusic(_now, _random, 18, 1, 191);
 }
 
 } // End of namespace Hollywood

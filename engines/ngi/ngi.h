@@ -74,16 +74,16 @@ enum NGIActions {
 struct NGIGameDescription;
 
 
-class BehaviorManager;
+class BehaviorController;
 class BaseModalObject;
 class GameLoader;
 class GameVar;
-class InputController;
-class Inventory2;
-struct CursorInfo;
-struct EntranceInfo;
-class ExCommand;
-class Floaters;
+class CursorController;
+class Inventory;
+struct Cursor;
+struct Entrance;
+class Command;
+class FlyPack;
 class GameProject;
 class GameObject;
 class GlobalMessageQueueList;
@@ -95,7 +95,7 @@ class PictureObject;
 struct PreloadItem;
 class Scene;
 class SoundList;
-class StaticANIObject;
+class AniObject;
 class Vars;
 typedef Common::Array<int16> MovTable;
 typedef Common::Array<Common::Point> PointList;
@@ -117,11 +117,11 @@ struct Palette {
 
 typedef Common::HashMap<uint16, Common::String> GameObjHMap;
 
-int global_messageHandler1(ExCommand *cmd);
-int global_messageHandler2(ExCommand *cmd);
-int global_messageHandler3(ExCommand *cmd);
-int global_messageHandler4(ExCommand *cmd);
-void global_messageHandler_handleSound(ExCommand *cmd);
+int global_messageHandler1(Command *cmd);
+int global_messageHandler2(Command *cmd);
+int global_messageHandler3(Command *cmd);
+int global_messageHandler4(Command *cmd);
+void global_messageHandler_handleSound(Command *cmd);
 
 
 class NGIEngine : public ::Engine {
@@ -164,7 +164,7 @@ public:
 	Common::String gameIdToStr(uint16 id);
 
 	GameVar *getGameLoaderGameVar();
-	InputController *getGameLoaderInputController();
+	CursorController *getGameLoaderInputController();
 
 	int _gameProjectVersion;
 	int _pictureScale;
@@ -184,12 +184,12 @@ public:
 	Scene *_loaderScene;
 	Scene *_scene2;
 	Scene *_scene3;
-	StaticANIObject *_aniMan;
-	StaticANIObject *_aniMan2;
+	AniObject *_aniMan;
+	AniObject *_aniMan2;
 	Palette _defaultPalette;
 	const Palette *_globalPalette;
 
-	InputController *_inputController;
+	CursorController *_inputController;
 	bool _inputDisabled;
 
 	int _currentCheat;
@@ -238,18 +238,18 @@ public:
 	int _msgObjectId2;
 	int _msgId;
 
-	Common::List<ExCommand *> _exCommandList;
+	Common::List<Command *> _exCommandList;
 	bool _isProcessingMessages;
 
 	int _mouseVirtX;
 	int _mouseVirtY;
 	Common::Point _mouseScreenPos;
 
-	Common::ScopedPtr<BehaviorManager> _behaviorManager;
+	Common::ScopedPtr<BehaviorController> _behaviorManager;
 
 	Common::ScopedPtr<MovTable> _movTable;
 
-	Common::ScopedPtr<Floaters> _floaters;
+	Common::ScopedPtr<FlyPack> _floaters;
 	Common::ScopedPtr<AniHandler> _aniHandler;
 
 	Common::Array<Common::Point> _arcadeKeys;
@@ -271,7 +271,7 @@ public:
 	bool _normalSpeed;
 
 	void enableSaves() { _isSaveAllowed = true; }
-	void disableSaves(ExCommand *ex);
+	void disableSaves(Command *ex);
 	bool isSaveAllowed();
 
 	void initObjectStates();
@@ -280,12 +280,12 @@ public:
 	void loadAllScenes();
 
 	void initCursors();
-	void addCursor(CursorInfo *cursorInfo, Scene *inv, int pictureId, int hotspotX, int hotspotY, int itemPictureOffsX, int itemPictureOffsY);
+	void addCursor(Cursor *cursorInfo, Scene *inv, int pictureId, int ofsX, int ofsY, int itemPictureOffsX, int itemPictureOffsY);
 
 	int32 _mapTable[200];
 
 	Scene *_inventoryScene;
-	Inventory2 *_inventory;
+	Inventory *_inventory;
 	int _currSelectedInventoryItemId;
 
 	int32 _updateTicks;
@@ -310,13 +310,13 @@ public:
 	void setCursor(int id);
 	void updateCursorCommon();
 
-	int getObjectState(const Common::String &objname);
-	void setObjectState(const Common::String &name, int state);
-	int getObjectEnumState(const Common::String &name, const char *state);
+	int getStateId(const Common::String &objname);
+	void setState(const Common::String &name, int state);
+	int getStateValue(const Common::String &name, const char *state);
 
 	void sceneAutoScrolling();
-	bool sceneSwitcher(const EntranceInfo &entrance);
-	Scene *accessScene(int sceneId);
+	bool doSetScene(const Entrance &entrance);
+	Scene *findScene(int sceneId);
 	void setSceneMusicParameters(GameVar *var);
 	int convertScene(int scene);
 	int getSceneEntrance(int scene);
@@ -336,17 +336,17 @@ public:
 	int _arcadeOverlayMidY;
 
 	void initArcadeKeys(const char *varname);
-	void processArcade(ExCommand *ex);
+	void processArcade(Command *ex);
 	void winArcade();
 	void setArcadeOverlay(int picId);
 	int drawArcadeOverlay(int adjust);
 
 	void getAllInventory();
 
-	StaticANIObject *_lastLiftButton;
+	AniObject *_lastLiftButton;
 	MessageQueue *_liftEnterMQ;
 	MessageQueue *_liftExitMQ;
-	StaticANIObject *_lift;
+	AniObject *_lift;
 	int _liftX;
 	int _liftY;
 
@@ -356,14 +356,14 @@ public:
 	void lift_setButton(const char *name, int state);
 	void lift_init(Scene *sc, int qu1, int qu2);
 	void lift_setButtonStatics(Scene *sc, int buttonId);
-	void lift_exitSeq(ExCommand *ex);
+	void lift_exitSeq(Command *ex);
 	void lift_closedoorSeq();
 	void lift_clickButton();
 	void lift_walkAndGo();
 	void lift_goAnimation();
-	void lift_animateButton(StaticANIObject *button);
+	void lift_animateButton(AniObject *button);
 	void lift_startExitQueue();
-	void lift_hoverButton(ExCommand *ex);
+	void lift_hoverButton(Command *ex);
 	bool lift_checkButton(const char *varname);
 	void lift_openLift();
 

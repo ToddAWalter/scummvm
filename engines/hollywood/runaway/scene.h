@@ -66,6 +66,7 @@ public:
 	virtual Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const = 0;
 	virtual const Common::U32String &committedCaption() const = 0;
 	virtual const Common::U32String &subtitle() const = 0;
+	virtual byte subtitleColor() const { return 11; }
 	virtual bool busy() const = 0;
 	virtual bool speaking() const = 0;
 	virtual byte speechFrame() const { return 0; }
@@ -82,6 +83,7 @@ public:
 	// Prepare a replacement scene without changing shared inventory or audio.
 	virtual bool restoreState(const RunawaySaveState &state, uint32 now, bool entering = false) { return false; }
 	virtual void setOptions(bool antialias, bool fastScrolling) = 0;
+	void setRestoredContent(bool enabled) { _restoredContent = enabled; }
 
 protected:
 	Common::U32String hotspotName(byte id) const override { return Common::U32String(); }
@@ -91,6 +93,7 @@ protected:
 	Common::Array<Common::U32String> _noChoices;
 	uint16 _entryScene = 0;
 	Transition _transition;
+	bool _restoredContent = false;
 };
 
 class RunawayStrings;
@@ -116,6 +119,7 @@ public:
 	Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const override;
 	const Common::U32String &committedCaption() const override { return _caption; }
 	const Common::U32String &subtitle() const override;
+	byte subtitleColor() const override { return _sequence.active() ? _sequence.subtitleColor() : _speech.subtitleColor(); }
 	bool busy() const override { return _sequence.active() || _pendingHotspot != 0 || _transition.scene || _hospitalExit.scene || _arrivalFacing != 0xff || _roomAction || _conversation || speaking(); }
 	bool speaking() const override { return _sequence.active() ? !_sequence.subtitle().empty() : !_speech.subtitle().empty(); }
 	byte speechFrame() const override { return _sequence.active() ? _sequence.speechFrame() : _speech.frame(_now); }
@@ -192,7 +196,7 @@ protected:
 	bool enterRoom(uint16 room, Common::Point position, byte facing);
 	bool loadForeground(uint layer, uint chunk, bool pixels = false);
 	void drawForeground(Graphics::ManagedSurface &viewport, uint layer);
-	void drawRoomAnimation(Graphics::ManagedSurface &viewport);
+	virtual void drawRoomAnimation(Graphics::ManagedSurface &viewport);
 	void drawAmbientAnimations(Graphics::ManagedSurface &viewport, const RunawayAnimation *animations, uint count);
 	bool rebuildBackground();
 	bool applyPatch(uint chunk);
@@ -202,7 +206,8 @@ protected:
 	void execute(uint16 action);
 	void executeItemAction(uint16 action);
 	void useItem(byte item, byte hotspot);
-	void say(uint16 cue, byte variation = 0, bool global = false, byte speaker = 0);
+	void say(uint16 cue, byte variation = 0, bool global = false, byte speaker = 0, byte color = 0);
+	void say(const SceneTextStore &text, const SceneSpeechCue &speech, bool global, byte speaker = 0, byte color = 0);
 	void showLine();
 	void changeFloor(bool upper, Common::Point position);
 	void updateCamera();
@@ -240,11 +245,12 @@ protected:
 	void resumeMuseum();
 	void updateMuseum(uint elapsed);
 	bool sayMuseumInventory(const RunawayInventory::Reply &reply);
+	bool updateMuseumInventory();
 	void deferMuseumAction(uint16 action);
 	void refreshMuseum();
 	void leaveMuseumRoom(uint16 scene, Common::Point position, byte facing = 3, bool door = false);
 	enum MuseumFilm { kArrivalFilm, kCliveFilm, kDrillingFilm, kLaserFilm, kRubyFilm,
-		kMobstersFilm, kPhoneFilm, kScannerFilm, kBetrayalFilm, kMuseumExitFilm };
+		kCrucifixFilm, kMobstersFilm, kPhoneFilm, kScannerFilm, kBetrayalFilm, kMuseumExitFilm };
 	void startMuseumFilm(MuseumFilm film);
 	void startConversation(byte character);
 	void updateConversation();
@@ -275,6 +281,7 @@ protected:
 	void updateFinaleOutdoorAudio(byte wildlifeVolume = 0);
 	void resumeFinaleJailAudio(bool entering);
 	void updateFinaleJailAudio();
+	void updateAmbientMusic();
 	void updateOutdoorMusic(byte cueCount = 3);
 	void updateGameplay(uint32 delta);
 	void findGameplayWalkPath(Common::Point target);
@@ -303,9 +310,11 @@ protected:
 		Common::U32String text;
 		uint16 sample;
 		bool global;
-		byte speaker;
+		byte speaker, color;
 	};
 	Common::Array<SpeechLine> _lines;
+	// Local animation speaker IDs map to the original font palette.
+	byte _speechColors[7] = {11, 11, 11, 11, 11, 11, 11};
 	Common::U32String _caption;
 	Common::Point _position, _camera;
 	uint _lineIndex = 0;
@@ -339,8 +348,6 @@ protected:
 	byte _conversation = 0, _dialogueDepth = 0, _dialogueNode = 0, _dialogueIntro = 0;
 	bool _dialogueEnding = false;
 	uint16 _afterConversation = 0;
-	byte _musicCue = 11;
-	uint32 _nextMusic = 0;
 	uint32 _finaleAmbientTick = 0;
 	byte _finaleLastAmbient = 0;
 	bool _entering = false;

@@ -133,16 +133,62 @@ void RunawayRoomScene::resume() {
 }
 
 void RunawayRoomScene::resumeAmbientAudio(bool entering) {
+	// Close-ups and conversations retain the surrounding scene's music.
+	const bool keepMusic = _room == 4140 || _room == 5130 || _room == 5140 || _room == 6270 || _room == 6390;
+	if (keepMusic) {
+		return;
+	}
+	if (!_audio.musicPlaying() || (entering && _audio.musicLooping())) {
+		const uint16 cue = museumChapter() ? 13 : desertChapter() ? 12 :
+			townChapter() ? 12 + _random.getRandomNumber(4) : 11;
+		_audio.playMusic(cue, _game != kRunawayFullGame);
+	}
+}
+
+void RunawayRoomScene::updateAmbientMusic() {
 	if (museumChapter()) {
-		if (entering || !_audio.musicPlaying()) {
-			_audio.playMusic(12, false);
+		if (_room == 4100) {
+			if (!_audio.musicPlaying()) {
+				_audio.playMusic(11);
+			}
+		} else if (_room != 4090 && _room != 4140) {
+			_audio.updateBackgroundMusic(_now, _random, 14, 3);
 		}
 	} else if (desertChapter()) {
-		if (!_audio.musicPlaying()) {
-			_audio.playMusic(12);
+		if (_room == 5160 || _room == 5170) {
+			if (!_audio.musicPlaying()) {
+				_audio.playMusic(16);
+				_audio.setMusicVolume(_room == 5170 ? 179 : 255);
+			}
+		} else if (_room != 5060 && _room != 5130 && _room != 5140) {
+			_audio.updateBackgroundMusic(_now, _random, 13, 2);
 		}
-	} else if (!_audio.musicPlaying()) {
-		_audio.playMusic(11, !hospitalChapter());
+	} else if (townChapter()) {
+		switch (_room) {
+		case 6200:
+		case 6210:
+			_audio.updateBackgroundMusic(_now, _random, 18, 1, 191);
+			break;
+		case 6250:
+			_audio.updateBackgroundMusic(_now, _random, 22, 1);
+			break;
+		case 6290:
+			_audio.updateBackgroundMusic(_now, _random, _town.joshuaGone ? 12 : 19, _town.joshuaGone ? 5 : 1);
+			break;
+		case 6300:
+			if (_town.kevinAway) {
+				updateOutdoorMusic(5);
+			}
+			break;
+		case 6270:
+		case 6280:
+		case 6370:
+		case 6390:
+			break;
+		default:
+			updateOutdoorMusic(5);
+			break;
+		}
 	}
 }
 
@@ -415,26 +461,32 @@ void RunawayRoomScene::click(Common::Point mouse, RunawayVerb verb, byte item) {
 
 void RunawayRoomScene::showLine() {
 	const SpeechLine &line = _lines[_lineIndex];
-	_speech.start(line.text, line.sample, line.global, _now);
+	_speech.start(line.text, line.sample, line.global, _now, line.color);
 	if (_game == kRunawayFullGame)
 		_idleHead.reset(_now);
 }
 
-void RunawayRoomScene::say(uint16 cue, byte variation, bool global, byte speaker) {
-	stopAmbientSpeech();
+void RunawayRoomScene::say(uint16 cue, byte variation, bool global, byte speaker, byte color) {
 	SceneSpeechCue speech;
 	if (global)
 		_text.getStaticSpeechCue(cue, variation, speech.textRecordId, speech.continuationCount, speech.voiceSampleId);
 	else
 		speech = _text.stageCue(cue, variation);
+	say(_text, speech, global, speaker, color);
+}
+
+void RunawayRoomScene::say(const SceneTextStore &text, const SceneSpeechCue &speech, bool global, byte speaker, byte color) {
+	assert(speaker < ARRAYSIZE(_speechColors));
+	stopAmbientSpeech();
 	if (!speech.valid())
 		return;
 	for (uint i = 0; i < MAX<uint>(1, speech.continuationCount); ++i) {
 		SpeechLine line;
-		line.text = Common::U32String(_text.largeTextRecord(speech.textRecordId + i), Common::kDos850);
+		line.text = Common::U32String(text.largeTextRecord(speech.textRecordId + i), Common::kDos850);
 		line.sample = _game == kRunawayFullGame && speech.voiceSampleId ? speech.voiceSampleId + i : 0;
 		line.global = global;
 		line.speaker = speaker;
+		line.color = color ? color : _speechColors[speaker];
 		if (!line.text.empty())
 			_lines.push_back(line);
 	}
@@ -450,6 +502,13 @@ void RunawayRoomScene::sayInventory(const RunawayInventory::Reply &reply) {
 		executeItemAction(reply.action);
 		return;
 	}
+	if (reply.stage) {
+		SceneTextStore text;
+		if (text.loadStage("RESOURCE.003", "Runaway inventory", reply.stage)) {
+			say(text, text.stageCue(reply.cue, reply.variation), false);
+		}
+		return;
+	}
 	if (townChapter() && sayTownInventory(reply)) {
 		return;
 	}
@@ -462,7 +521,9 @@ void RunawayRoomScene::sayInventory(const RunawayInventory::Reply &reply) {
 	if (_game == kRunawayFullGame && !desertChapter() && !townChapter() && !hopiChapter() && !finaleChapter() &&
 			(museumChapter() ? sayMuseumInventory(reply) : sayHospitalInventory(reply)))
 		return;
-	say(reply.cue, reply.variation, true);
+	for (RunawayInventory::Reply line = reply; line.cue; line = _inventory.nextReply(line)) {
+		say(line.cue, line.variation, true);
+	}
 }
 
 void RunawayRoomScene::skipSpeech() {
@@ -617,6 +678,7 @@ void RunawayRoomScene::update(uint32 now, int scrollDirection, bool inventoryOpe
 	}
 	if (speaking() && _speech.finished(now))
 		skipSpeech();
+	updateAmbientMusic();
 	if (townChapter() || hopiChapter() || finaleChapter()) {
 		updateGameplay(elapsed);
 		if (_sequence.active() || _transition.scene)
@@ -676,23 +738,7 @@ void RunawayRoomScene::findGameplayWalkPath(Common::Point target) {
 }
 
 void RunawayRoomScene::updateOutdoorMusic(byte cueCount) {
-	if (_audio.musicPlaying()) {
-		_nextMusic = 0;
-		return;
-	}
-	if (!_nextMusic) {
-		static const uint16 pauses[] = {0, 240, 120, 60};
-		_nextMusic = _now + pauses[_random.getRandomNumber(3)] * 250;
-	}
-	if ((int32)(_now - _nextMusic) >= 0) {
-		byte cue;
-		do {
-			cue = 12 + _random.getRandomNumber(cueCount - 1);
-		} while (cue == _musicCue);
-		_musicCue = cue;
-		_audio.playMusic(cue, false);
-		_nextMusic = 0;
-	}
+	_audio.updateBackgroundMusic(_now, _random, 12, cueCount);
 }
 
 void RunawayRoomScene::deferAction(uint16 action) {
@@ -719,7 +765,8 @@ void RunawayRoomScene::updateActor(uint elapsed, int scrollDirection, bool inven
 		_walkPath.advance(elapsed * actorWalkSpeed(), _position, _facing);
 		_walkElapsed += elapsed;
 		if (_game == kRunawayFullGame && (!_lastFootstep || _walkElapsed - _lastFootstep >= 360)) {
-			const byte surface = _maps[1280 + _mask[_position.y * _background.w + _position.x]];
+			const bool inside = _position.x >= 0 && _position.x < _background.w && _position.y >= 0 && _position.y < _background.h;
+			const byte surface = inside ? _maps[1280 + _mask[_position.y * _background.w + _position.x]] : 0;
 			const byte volume = CLIP<int>((int)(actorHeight() * 255 / 455), 0, 255);
 			if (surface >= 1 && surface <= 7) {
 				_audio.playFootstep(surface, _random.getRandomBit(), volume, _position.x);

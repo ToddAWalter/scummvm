@@ -75,7 +75,9 @@ const RunawayRoom kRunawayScene5160 = {
 namespace Runaway {
 
 Scene5160::Scene5160(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	RunawayRoomScene(audio, inventory, strings, game) {}
+	RunawayRoomScene(audio, inventory, strings, game) {
+	_speechColors[1] = 24; // Carla.
+}
 
 bool Scene5160::loadCustomResources() {
 	return _ambientAnimations[0].load(_archive, 4, 16) &&
@@ -83,6 +85,13 @@ bool Scene5160::loadCustomResources() {
 		_ambientAnimations[2].load(_archive, 6, 24) &&
 		_ambientAnimations[3].load(_archive, 7, 93) &&
 		_refrigeratorAnimation.load(_archive, 12, 1);
+}
+
+void Scene5160::resumeAmbientAudio(bool entering) {
+	if (_audio.musicCue() != 16 || !_audio.musicPlaying()) {
+		_audio.playMusic(16);
+	}
+	_audio.setMusicVolume(255);
 }
 
 bool Scene5160::applyCustomBackgroundPatches() {
@@ -122,7 +131,7 @@ RunawayRoomScene::ActionResult Scene5160::dispatchCustomSceneAction(uint16 actio
 		say(3, _inventory.contains(26));
 		break;
 	case 305: // Look at Carla.
-		say(4, _random.getRandomNumber(_desert.carlaStory ? 3 : 2));
+		say(4, _random.getRandomNumber(_desert.carlaDrank ? 2 : 1));
 		break;
 	case 306: // Talk to Carla.
 		startCarlaConversation();
@@ -251,6 +260,9 @@ void Scene5160::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport
 
 void Scene5160::advanceCustomGameplayLoop(uint32 delta) {
 	_carla.update(_now, _conversation == 4 || speaker(), _random);
+	if (_carla.hasDrunk()) {
+		_desert.carlaDrank = 1;
+	}
 	for (uint i = 0; i < 256; ++i) {
 		if (_originalMaps[256 + i] == 4) {
 			_maps[256 + i] = _carla.holdsGlass() ? 0 : 4;

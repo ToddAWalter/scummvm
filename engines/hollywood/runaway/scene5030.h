@@ -65,6 +65,7 @@ public:
 	Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const override;
 	const Common::U32String &committedCaption() const override { return _committedCaption; }
 	const Common::U32String &subtitle() const override { return _action == kPeekConversation ? _interrogation.subtitle() : _speech.subtitle(); }
+	byte subtitleColor() const override { return _action == kPeekConversation ? _interrogation.subtitleColor() : _speech.subtitleColor(); }
 	bool busy() const override { return _action != kNone || _transition.scene; }
 	bool speaking() const override { return _action == kPeekConversation ? _interrogation.speaking() : _speechRow != 0; }
 	byte speechFrame() const override { return _speech.frame(_now); }
@@ -97,7 +98,7 @@ private:
 	enum IceState { kFrozen, kMelted, kDrained };
 	enum HatchState { kHidden, kLocked, kUnlocked, kOpen };
 	bool loadRoomGraphics();
-	void walkTo(Common::Point target);
+	void walkTo(Common::Point target, bool scripted = false);
 	void arrive(bool faceHotspot = true);
 	void say(uint16 row);
 	void sayCue(uint16 cue, byte variation);
@@ -106,7 +107,7 @@ private:
 	void examine(byte hotspot);
 	void collect(byte hotspot);
 	void waitForSpeech(uint16 cue, byte variation, Action next);
-	void walkForAction(Common::Point target, byte facing, Action next);
+	void walkForAction(Common::Point target, byte facing, Action next, bool scripted = false);
 	void setPosition(Common::Point position, byte facing);
 	void updateAction();
 	void showSpeechRow();
