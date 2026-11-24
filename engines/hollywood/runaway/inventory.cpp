@@ -158,12 +158,14 @@ uint RunawayInventory::maxItemId() const {
 		_chapter == 4 ? kTownItemCount : _chapter == 3 ? kItemCount : 19;
 }
 
-bool RunawayInventory::add(byte item) {
+bool RunawayInventory::add(byte item, bool animate) {
 	if (!item || item > maxItemId() || contains(item)) {
 		return false;
 	}
 	_items.push_back(item);
-	_newItem = item;
+	if (animate) {
+		_newItem = item;
+	}
 	return true;
 }
 
@@ -262,6 +264,9 @@ Common::U32String RunawayInventory::name(byte item) const {
 
 uint RunawayInventory::icon(byte item) const {
 	if (_chapter == 6) {
+		if (item == 7 && contains(20)) {
+			return 24;
+		}
 		if (item == 19 && _finale.scalpel == 1) {
 			return 22;
 		}
@@ -366,7 +371,7 @@ uint RunawayInventory::cursor(byte item) const {
 	if (_chapter == 1 && item == 13 && _water == 1)
 		return 85;
 	if (_chapter == 2) {
-		return item && item <= kMuseumItemCount ? (_museumDemo ? 11 + item * 2 : 39 + icon(item) * 2) : 0;
+		return item && item <= kMuseumItemCount ? (_museumDemo ? 11 : 39) + icon(item) * 2 : 0;
 	}
 	if (_chapter == 1)
 		return item && item <= 19 ? (item == 16 ? 81 : 39 + item * 2 - (item > 16 ? 2 : 0)) : 0;
@@ -393,6 +398,9 @@ uint RunawayInventory::cursor(byte item) const {
 
 RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveState &state) const {
 	if (_chapter == 6) {
+		if (item == 11) {
+			return Reply::fromStage(637, 14);
+		}
 		if (item == 19) {
 			return Reply(310, _finale.scalpel ? _finale.scalpel + 1 : _finale.heatNeeded);
 		}
@@ -429,7 +437,7 @@ RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveSt
 		case 19: // Rope.
 			return Reply(192 + item);
 		case 24: // Empty, water-filled, or fuel-filled bottle.
-			return _town.bottleContents ? Reply(215, _town.bottleContents - 1) : Reply(19, 1);
+			return _town.bottleContents ? Reply(215, _town.bottleContents - 1) : Reply(214);
 		case 25: // The 30 cc measuring tube.
 			return Reply(216, _town.tube30 == 3 ? 5 : _town.tube30);
 		case 26: // The 50 cc measuring tube.
@@ -547,6 +555,10 @@ RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveSt
 	return Reply(item && item <= kItemCount ? kExamineCues[item] : 1, variation);
 }
 
+RunawayInventory::Reply RunawayInventory::use(byte item) const {
+	return Reply(isPlan(item) ? 193 : 1);
+}
+
 RunawayInventory::Reply RunawayInventory::nextReply(const Reply &reply) const {
 	if (reply.variation < reply.lastVariation) {
 		return Reply(reply.cue, reply.variation + 1, reply.lastVariation);
@@ -566,15 +578,16 @@ RunawayInventory::Reply RunawayInventory::nextReply(const Reply &reply) const {
 }
 
 Common::U32String RunawayInventory::combinationCaption(byte item, byte target) const {
-	if (!_fullGame || !item || !target || item == target) {
+	if ((!_fullGame && !_museumDemo) || !item || !target || item == target) {
 		return Common::U32String();
 	}
 	return RunawayStrings::formatActionCaption(_strings.combinationCaption(_chapter, item, target), name(item), name(target));
 }
 
-RunawayInventory::Reply RunawayInventory::randomReply(Common::RandomSource &random) {
+RunawayInventory::Reply RunawayInventory::randomReply(Common::RandomSource &random, bool museumDemo) {
 	// Native 0x410000 selects weighted refusals for unsuitable combinations.
-	const uint roll = random.getRandomNumber(34);
+	// The museum demo has no text for cues 25 and 26.
+	const uint roll = random.getRandomNumber(museumDemo ? 30 : 34);
 	if (roll < 10) {
 		return Reply(14, random.getRandomNumber(2));
 	}
@@ -592,7 +605,7 @@ RunawayInventory::Reply RunawayInventory::randomReply(Common::RandomSource &rand
 	if (roll < 30) {
 		return Reply(1, random.getRandomNumber(2));
 	}
-	return Reply(roll < 32 ? 25 : roll < 34 ? 26 : 4);
+	return Reply(museumDemo ? 4 : roll < 32 ? 25 : roll < 34 ? 26 : 4);
 }
 
 RunawayInventory::Reply RunawayInventory::combineHospitalItems(byte first, byte second) {
@@ -645,16 +658,16 @@ RunawayInventory::Reply RunawayInventory::combineHospitalItems(byte first, byte 
 
 RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte second) {
 	// Varnish, talcum powder and coffee have replies only when selected.
-	if (first == 9 || (!_fullGame && second == 9)) {
+	if (first == 9) {
 		return Reply(118);
 	}
-	if (first == 10 || (!_fullGame && second == 10)) {
+	if (first == 10) {
 		return Reply(119);
 	}
-	if (first == 15 || (!_fullGame && second == 15)) {
+	if (first == 15) {
 		return Reply(122);
 	}
-	if ((first == 12 && second == 11) || (!_fullGame && first == 11 && second == 12)) {
+	if (first == 12 && second == 11) {
 		return Reply(120);
 	}
 	if (first > second) {
@@ -681,9 +694,6 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 			return Reply(117, 2);
 		}
 		_museum.rubyRemoved = 1;
-		if (!_fullGame) {
-			add(12);
-		}
 		return Reply(117);
 	}
 	if (first == 14 && second == 19) {
@@ -694,7 +704,7 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 		_museum.packageFilled = 1;
 		return Reply(121, 1);
 	}
-	return _fullGame ? Reply::fromAction(1) : Reply();
+	return Reply::fromAction(1);
 }
 
 RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {

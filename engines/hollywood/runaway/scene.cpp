@@ -58,8 +58,10 @@ const RunawayResponse kGlobalResponses[] = {
 } // End of anonymous namespace
 
 RunawayRoomScene::RunawayRoomScene(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
-	_audio(audio), _sequence(audio), _inventory(inventory), _strings(strings), _game(game), _random("runaway"),
-	_speech(audio, _random, game == kRunawayFullGame ? RunawaySpeech::kRecordedLipSync : RunawaySpeech::kNoLipSync) {}
+	_audio(audio), _sequence(audio, game == kRunawayMuseumDemo ? RunawaySpeech::kRandomLipSync : RunawaySpeech::kRecordedLipSync),
+	_inventory(inventory), _strings(strings), _game(game), _random("runaway"),
+	_speech(audio, _random, game == kRunawayFullGame ? RunawaySpeech::kRecordedLipSync :
+		game == kRunawayMuseumDemo ? RunawaySpeech::kRandomLipSync : RunawaySpeech::kNoLipSync) {}
 
 const Common::U32String &RunawayRoomScene::subtitle() const {
 	if (_sequence.active())
@@ -350,6 +352,11 @@ bool RunawayRoomScene::preferLook(byte id) const {
 	return target && target->preferLook;
 }
 
+bool RunawayRoomScene::isWalkHotspot(byte id) const {
+	const RunawayHotspot *target = hotspot(id);
+	return target && target->walkOnly;
+}
+
 byte RunawayRoomScene::hotspotAt(Common::Point mouse) const {
 	if (mouse.x < 0 || mouse.x >= kRunawayScreenWidth || mouse.y < kRunawayViewportTop ||
 			mouse.y >= kRunawayViewportTop + kRunawayViewportHeight)
@@ -370,8 +377,8 @@ Common::U32String RunawayRoomScene::hotspotName(byte id) const {
 
 Common::U32String RunawayRoomScene::actionCaption(byte id, RunawayVerb verb, byte item) const {
 	const Common::U32String name = hotspotName(id);
-	if (_game == kRunawayFullGame && id) {
-		const bool look = verb == kVerbLook;
+	if (_game == kRunawayFullGame || _game == kRunawayMuseumDemo) {
+		const bool look = verb == kVerbLook && !isWalkHotspot(id);
 		const Common::U32String pattern = _strings.sceneActionCaption(_room, id, item, look, actionCaptionVariant(id, look, item));
 		if (!pattern.empty()) {
 			return RunawayStrings::formatActionCaption(pattern, _inventory.name(item), name);
@@ -400,6 +407,10 @@ void RunawayRoomScene::walkTo(Common::Point target, byte facing, bool scripted, 
 }
 
 void RunawayRoomScene::findWalkPath(Common::Point target) {
+	if (!_walkRoutes.empty()) {
+		findGameplayWalkPath(target);
+		return;
+	}
 	_walkPath.findPath(RunawayWalkMap(_background.w, _background.h, _mask, _maps), target);
 }
 
@@ -428,12 +439,12 @@ void RunawayRoomScene::click(Common::Point mouse, RunawayVerb verb, byte item) {
 	const RunawayHotspot *spot = hotspot(id);
 	_pendingItem = item;
 	if (spot) {
-		const uint index = verb == kVerbLook && !item ? 0 : 1;
+		const uint index = verb == kVerbLook && !item && !spot->walkOnly ? 0 : 1;
 		_pendingHotspot = id;
 		_pendingAction = spot->action[index];
 		int8 approach = spot->approach[index];
 		if (item) {
-			approach = _game != kRunawayFullGame;
+			approach = _game == kRunawayCabinDemo;
 			const RunawayRoom *room = findRunawayRoom(_room);
 			for (uint i = 0; i < room->itemActionCount; ++i) {
 				const RunawayItemAction &action = room->itemActions[i];
@@ -472,7 +483,10 @@ void RunawayRoomScene::say(uint16 cue, byte variation, bool global, byte speaker
 		_text.getStaticSpeechCue(cue, variation, speech.textRecordId, speech.continuationCount, speech.voiceSampleId);
 	else
 		speech = _text.stageCue(cue, variation);
+	const uint firstLine = _lines.size();
 	say(_text, speech, global, speaker, color);
+	if (_game == kRunawayMuseumDemo && global)
+		setMuseumInventorySpeechPoses(cue, variation, firstLine);
 }
 
 void RunawayRoomScene::say(const SceneTextStore &text, const SceneSpeechCue &speech, bool global, byte speaker, byte color) {
@@ -518,8 +532,9 @@ void RunawayRoomScene::sayInventory(const RunawayInventory::Reply &reply) {
 	if (finaleChapter() && sayFinaleInventory(reply)) {
 		return;
 	}
-	if (_game == kRunawayFullGame && !desertChapter() && !townChapter() && !hopiChapter() && !finaleChapter() &&
-			(museumChapter() ? sayMuseumInventory(reply) : sayHospitalInventory(reply)))
+	if (museumChapter() && sayMuseumInventory(reply))
+		return;
+	if (_game == kRunawayFullGame && _room / 1000 == 2 && sayHospitalInventory(reply))
 		return;
 	for (RunawayInventory::Reply line = reply; line.cue; line = _inventory.nextReply(line)) {
 		say(line.cue, line.variation, true);
@@ -554,21 +569,25 @@ void RunawayRoomScene::useItem(byte item, byte id) {
 	}
 	if (_game == kRunawayFullGame) {
 		executeItemAction(defaultItemAction(item, id));
+	} else if (_game == kRunawayMuseumDemo) {
+		executeItemAction(1);
 	} else {
 		say(1, 0, true);
 	}
 }
 
 void RunawayRoomScene::executeItemAction(uint16 action) {
+	if ((_game == kRunawayFullGame && (action == 1 || action == 5)) ||
+			(_game == kRunawayMuseumDemo && action == 1)) {
+		const RunawayInventory::Reply reply = RunawayInventory::randomReply(_random, _game == kRunawayMuseumDemo);
+		say(reply.cue, reply.variation, true);
+		if (reply.nextVariation != 0xff)
+			say(reply.cue, reply.nextVariation, true);
+		return;
+	}
+	if (_game == kRunawayMuseumDemo && !action)
+		return;
 	if (_game == kRunawayFullGame) {
-		if (action == 1 || action == 5) {
-			const RunawayInventory::Reply reply = RunawayInventory::randomReply(_random);
-			say(reply.cue, reply.variation, true);
-			if (reply.nextVariation != 0xff) {
-				say(reply.cue, reply.nextVariation, true);
-			}
-			return;
-		}
 		switch (action) {
 		case 2: // A variation of "That won't work."
 			say(1, _random.getRandomNumber(2), true);
@@ -734,7 +753,8 @@ void RunawayRoomScene::findGameplayWalkPath(Common::Point target) {
 			}
 		}
 	}
-	_walkPath.findPath(RunawayWalkMap(_background.w, _background.h, _mask, _originalMaps), target);
+	_walkPath.findPath(RunawayWalkMap(_background.w, _background.h, _mask, _originalMaps,
+		_walkRoutes.empty() ? nullptr : &_walkRoutes), target);
 }
 
 void RunawayRoomScene::updateOutdoorMusic(byte cueCount) {
@@ -785,6 +805,8 @@ void RunawayRoomScene::updateActor(uint elapsed, int scrollDirection, bool inven
 		if (!walking) {
 			headFrame = speaking() && !speaker() ? speechFrame() : idle ? _idleHead.frame() : -1;
 		}
+	} else if (_game == kRunawayMuseumDemo && !walking && speaking() && !speaker()) {
+		headFrame = speechFrame();
 	}
 	if (_actionUsesActor && _roomAction && !_actionFrames.empty() && !walking && !speaking()) {
 		_actor.setActionFrame(_actionFrames[_actionStep]);

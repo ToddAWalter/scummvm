@@ -84,7 +84,7 @@
 		ADGF_UNSTABLE,
 		GUIO2(GUIO_NOMIDI, GAMEOPTION_RESTORED_CONTENT)
 	},
-	// English museum demo (2000). Gameplay POC; movies are not supported.
+	// English museum demo (2000), with TM2A movies and text-only dialogue.
 	{
 		"runaway",
 		"Museum demo",
@@ -94,7 +94,7 @@
 		Common::EN_ANY,
 		Common::kPlatformWindows,
 		ADGF_DEMO | ADGF_UNSTABLE | GF_RUNAWAY_MUSEUM_DEMO,
-		GUIO2(GUIO_NOMIDI, GUIO_NOSPEECH)
+		GUIO3(GUIO_NOMIDI, GUIO_NOSPEECH, GAMEOPTION_RESTORED_CONTENT)
 	},
 	// Spanish chapter-three demo (July 2001 build, Micromania 80).
 	{
