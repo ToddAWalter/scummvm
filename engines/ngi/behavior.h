@@ -22,14 +22,25 @@
 #ifndef NGI_BEHAVIOR_H
 #define NGI_BEHAVIOR_H
 
+#include "ngi/utils.h"
+
 namespace NGI {
 
-struct BehaviorMove {
-	MessageQueue *_messageQueue;
-	int _delay;
-	uint32 _percent;
-	int _flags;
+class AniObject;
+class GameVar;
+class MessageQueue;
+class Scene;
 
+struct BehaviorMove {
+	MessageQueue *_messageQueue = nullptr;
+	int _delay = 0;
+	uint32 _percent = 0;
+	int _flags = 0;
+	int16 _movementId = 0;
+	int16 _queueId = 0;
+	bool _mirror = false;
+
+	BehaviorMove() = default;
 	BehaviorMove(GameVar *subvar, Scene *sc, int *delay);
 };
 
@@ -51,18 +62,39 @@ struct BehaviorAni {
 	int _subIndex;
 	int _animsCount;
 	Common::Array<BehaviorAnim> _behaviorAnims;
+	int16 _objectId = 0;
+	int16 _sourceSceneId = 0;
+	uint32 _elapsed = 0;
+	const BehaviorMove *_activeMove = nullptr;
 
 	BehaviorAni() { clear(); }
 
 	void clear();
+	BehaviorMove &addMove(int16 staticsId);
+	bool updateIdle(uint32 elapsed);
 	void initAmbientBehavior(GameVar *var, Scene *sc);
 	void initObjectBehavior(GameVar *var, Scene *sc, AniObject *ani);
 };
 
+// A scene can schedule the same shared sound with different delays and chances.
+struct BehaviorSound {
+	uint16 _soundId;
+	uint32 _delay;
+	uint32 _percent;
+	uint32 _elapsed;
+	bool _loop;
+	bool _enabled;
+
+	bool update(uint32 elapsed);
+};
+
 class BehaviorController : public CObject {
 	Common::Array<BehaviorAni> _behaviors;
+	Common::Array<BehaviorSound> _sounds;
+	Common::Array<BehaviorSound> _music;
 	Scene *_scene;
 	bool _isActive;
+	void updateSounds(uint32 elapsed);
 
   public:
 	BehaviorController();
@@ -73,6 +105,11 @@ class BehaviorController : public CObject {
 	void initBehavior(Scene *scene, GameVar *var);
 
 	void update();
+	void addSound(const BehaviorSound &sound, bool music);
+	void enableAllMusic();
+	BehaviorAni &addAni(int16 objectId, int16 sceneId, int flags);
+	void onShow(Scene &scene);
+	bool update(uint32 elapsed);
 	void updateBehavior(BehaviorAni &behaviorInfo, BehaviorAnim &entry);
 	void updateStaticAniBehavior(AniObject &ani, int delay, const BehaviorAnim &beh);
 

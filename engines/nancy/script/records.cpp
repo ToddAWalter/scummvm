@@ -1217,6 +1217,46 @@ void OverrideRecord::onZChanged() {
 	}
 }
 
+// The smallest rect around the pixels that differ between two pictures of the
+// same size and 32 bit format. Empty when they are the same.
+static Common::Rect findChangedArea(const Graphics::ManagedSurface &a, const Graphics::ManagedSurface &b) {
+	const uint rowSize = a.w * 4;
+
+	int top = 0;
+	while (top < a.h && memcmp(a.getBasePtr(0, top), b.getBasePtr(0, top), rowSize) == 0) {
+		++top;
+	}
+
+	if (top == a.h) {
+		return Common::Rect();
+	}
+
+	int bottom = a.h;
+	while (memcmp(a.getBasePtr(0, bottom - 1), b.getBasePtr(0, bottom - 1), rowSize) == 0) {
+		--bottom;
+	}
+
+	int left = a.w;
+	int right = 0;
+	for (int y = top; y < bottom; ++y) {
+		const uint32 *rowA = (const uint32 *)a.getBasePtr(0, y);
+		const uint32 *rowB = (const uint32 *)b.getBasePtr(0, y);
+		for (int x = 0; x < left; ++x) {
+			if (rowA[x] != rowB[x]) {
+				left = x;
+			}
+		}
+
+		for (int x = a.w - 1; x >= right; --x) {
+			if (rowA[x] != rowB[x]) {
+				right = x + 1;
+			}
+		}
+	}
+
+	return Common::Rect(left, top, right, bottom);
+}
+
 // An override draws by having its "Render" function called every frame, which
 // draws through the "Draw" object. Here that goes onto a picture as large as
 // the viewport, which is started over every frame. The picture is only shown
@@ -1268,9 +1308,10 @@ void OverrideRecord::updateGraphics() {
 	}
 
 	Graphics::ManagedSurface &shown = _canvas->_drawSurface;
-	const uint32 size = shown.pitch * shown.h;
-	if (memcmp(shown.getPixels(), _renderSurface.getPixels(), size) != 0) {
-		memcpy(shown.getPixels(), _renderSurface.getPixels(), size);
+	const Common::Rect changed = findChangedArea(shown, _renderSurface);
+	if (!changed.isEmpty()) {
+		memcpy(shown.getPixels(), _renderSurface.getPixels(), shown.pitch * shown.h);
+		_canvas->addChangedArea(changed);
 		_canvas->setNeedsRedraw(true);
 	}
 
@@ -2097,6 +2138,19 @@ bool OverlayRecord::setPicture(const Common::String &imageName) {
 	return true;
 }
 
+// Scripts can move a picture by less than a pixel per frame, like the pieces of
+// the Dossier1 DataMine puzzle. A plain picture only looks different once it
+// reaches another whole pixel. From Nancy26 on, records can also have an alpha.
+bool OverlayRecord::staysOnSamePixels(const ScriptRect &dest) {
+	if (g_nancy->getGameType() >= kGameTypeNancy26 || _modColor != kNoModColor) {
+		return false;
+	}
+
+	const ScriptMatrix transform = getTransform();
+	return transform.isTranslation() &&
+		getTransformedDest(dest, transform, 0, 0) == getTransformedDest(_dest, transform, 0, 0);
+}
+
 bool OverlayRecord::setField(const Common::String &key) {
 	lua_State *L = getLua();
 
@@ -2120,7 +2174,11 @@ bool OverlayRecord::setField(const Common::String &key) {
 				return true;
 			}
 
+			const bool isOnSamePixels = staysOnSamePixels(dest);
 			_dest = dest;
+			if (isOnSamePixels) {
+				return true;
+			}
 		}
 	} else if (key == "source") {
 		const ScriptRect source = checkRect(L, 3);
@@ -2812,6 +2870,9 @@ void TextRecord::readTable(int tableIndex) {
 
 	readField(L, tableIndex, "yOffset", _yOffset);
 	readField(L, tableIndex, "yVelocity", _yVelocity);
+	// Scripts use the opposite sign for yOffset and yVelocity
+	_yOffset = -_yOffset;
+	_yVelocity = -_yVelocity;
 	readField(L, tableIndex, "useAutotext", _usesAutotext);
 	readField(L, tableIndex, "revealAll", _revealsAll);
 
@@ -2872,6 +2933,7 @@ void TextRecord::applyDest() {
 	if (_graphic._drawSurface.w != width || _graphic._drawSurface.h != height) {
 		_graphic._drawSurface.create(width, height, g_nancy->_graphics->getTransparentPixelFormat());
 		_isDirty = true;
+		_isScrollingTextDirty = true;
 	}
 
 	_graphic.moveTo(getTransformedDest(_dest, getTransform(), width, height));
@@ -2887,6 +2949,7 @@ void TextRecord::setText(const Common::String &text) {
 	_numRevealed = 0;
 	_shownText = _revealsAll ? _text : Common::String();
 	_isDirty = true;
+	_isScrollingTextDirty = true;
 }
 
 bool TextRecord::revealNext() {
@@ -2913,12 +2976,14 @@ bool TextRecord::revealNext() {
 	_shownText += _text.substr(_numRevealed, end - _numRevealed);
 	_numRevealed = end;
 	_isDirty = true;
+	_isScrollingTextDirty = true;
 	return true;
 }
 
 void TextRecord::run(double sceneTime, double elapsedTime) {
 	if (_element.blend(UI::NDUI::kStateNormal, (float)elapsedTime, kTextBlendRate)) {
 		_isDirty = true;
+		_isScrollingTextDirty = true;
 	}
 
 	if (_yVelocity == 0.0) {
@@ -2930,7 +2995,7 @@ void TextRecord::run(double sceneTime, double elapsedTime) {
 
 	// A text that moves is done once it has left its place
 	const Common::Rect dest = _dest.toRect();
-	const int textHeight = _element.measureTextHeight(_shownText, dest.width());
+	const int textHeight = _isScrollingTextDirty ? _element.getDrawnTextHeight(_shownText, dest.width()) : _scrollingText.h;
 	if ((_yOffset > textHeight && _yVelocity > 0.0) || (_yOffset < -dest.height() && _yVelocity < 0.0)) {
 		finish();
 	}
@@ -2951,13 +3016,47 @@ void TextRecord::updateGraphics() {
 	if (_isDirty) {
 		_isDirty = false;
 
-		Common::Rect area(_graphic._drawSurface.w, _graphic._drawSurface.h);
-		area.translate(0, -(int)_yOffset);
-
 		_graphic._drawSurface.clear(0);
-		_element.drawText(_graphic._drawSurface, _shownText, area, false);
+		if (!drawScrollingText()) {
+			Common::Rect area(_graphic._drawSurface.w, _graphic._drawSurface.h);
+			area.translate(0, -(int)_yOffset);
+			_element.drawText(_graphic._drawSurface, _shownText, area, false);
+		}
+
 		_graphic.setNeedsRedraw(true);
 	}
+}
+
+// Returns false for a text that fits in the record, which gets drawn as usual
+bool TextRecord::drawScrollingText() {
+	if (_yVelocity == 0.0) {
+		return false;
+	}
+
+	const int width = _graphic._drawSurface.w;
+	const int height = _graphic._drawSurface.h;
+	if (_isScrollingTextDirty) {
+		_isScrollingTextDirty = false;
+
+		const int textHeight = MAX<int>(_element.getDrawnTextHeight(_shownText, width), 1);
+		_scrollingText.create(width, textHeight, _graphic._drawSurface.format);
+		_scrollingText.clear(0);
+		if (textHeight > height) {
+			_element.drawText(_scrollingText, _shownText, Common::Rect(width, textHeight), false);
+		}
+	}
+
+	if (_scrollingText.h <= height) {
+		return false;
+	}
+
+	const int scroll = (int)_yOffset;
+	const Common::Rect source(0, MAX<int>(scroll, 0), width, MIN<int>(scroll + height, _scrollingText.h));
+	if (source.top < source.bottom) {
+		_graphic._drawSurface.copyRectToSurface(_scrollingText.rawSurface(), 0, source.top - scroll, source);
+	}
+
+	return true;
 }
 
 bool TextRecord::prepareReset() {
@@ -2985,9 +3084,9 @@ bool TextRecord::getField(const Common::String &key) {
 	if (key == "onScreen") {
 		pushRect(L, _dest);
 	} else if (key == "yOffset") {
-		lua_pushnumber(L, _yOffset);
+		lua_pushnumber(L, -_yOffset);
 	} else if (key == "yVelocity") {
-		lua_pushnumber(L, _yVelocity);
+		lua_pushnumber(L, -_yVelocity);
 	} else if (key == "RevealNext") {
 		lua_pushcfunction(L, textRevealNext);
 	} else {
@@ -3006,10 +3105,10 @@ bool TextRecord::setField(const Common::String &key) {
 	} else if (key == "text") {
 		setText(luaL_checkstring(L, 3));
 	} else if (key == "yOffset") {
-		_yOffset = luaL_checknumber(L, 3);
+		_yOffset = -luaL_checknumber(L, 3);
 		_isDirty = true;
 	} else if (key == "yVelocity") {
-		_yVelocity = luaL_checknumber(L, 3);
+		_yVelocity = -luaL_checknumber(L, 3);
 	} else {
 		return false;
 	}
@@ -3355,7 +3454,13 @@ bool MovieRecord::getField(const Common::String &key) {
 	} else if (key == "Pause") {
 		lua_pushcfunction(L, moviePause);
 	} else if (key == "paused") {
-		lua_pushboolean(L, _isPaused || !_player.isRangePlaying());
+		// Up to Nancy20, a movie that hasn't started yet isn't paused: Dossier1
+		// scene 3010 shows its pillars until a light movie stops on its last frame
+		if (g_nancy->getGameType() < kGameTypeNancyDossier2) {
+			lua_pushboolean(L, _isPaused || _hasCalledOnPause);
+		} else {
+			lua_pushboolean(L, _isPaused || !_player.isRangePlaying());
+		}
 	} else if (key == "pauseOnLastFrame") {
 		lua_pushboolean(L, _pausesOnLastFrame);
 	} else if (key == "visible") {

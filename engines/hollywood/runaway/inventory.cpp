@@ -54,7 +54,7 @@ const byte kHospitalItemActions[19][19] = {
 const uint kMuseumItemCount = 19;
 const uint kTownItemCount = 32;
 const uint kHopiItemCount = 16;
-const uint kFinaleItemCount = 21;
+const uint kFinaleItemCount = 22;
 
 const byte kItemCursors[] = {
 	0, 41, 43, 45, 47, 49, 51, 55, 57, 59, 61, 63, 65, 67, 69,
@@ -190,6 +190,9 @@ Common::U32String RunawayInventory::name(byte item) const {
 		if (item == 20 && _finale.podsOpened) {
 			return _strings.text(RunawayStrings::kOpenPods);
 		}
+		if (item == 22) { // Restored tobacco leaves.
+			return _strings.itemName(4, 27);
+		}
 		return _strings.itemName(_chapter, item);
 	}
 	if (_chapter == 5) {
@@ -272,6 +275,9 @@ uint RunawayInventory::icon(byte item) const {
 		}
 		if (item == 20 && _finale.podsOpened) {
 			return 23;
+		}
+		if (item == 22) {
+			return 25;
 		}
 		return item;
 	}
@@ -406,6 +412,9 @@ RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveSt
 		}
 		if (item == 20) {
 			return Reply(311, _finale.podsOpened);
+		}
+		if (item == 22) {
+			return Reply(217, state.town.rawTobaccoRefused);
 		}
 		static const uint16 cues[] = {1, 50, 51, 74, 200, 300, 301, 253, 303, 256, 304, 1, 305, 306, 307, 308, 309, 1, 1, 310, 311, 312};
 		return Reply(item < ARRAYSIZE(cues) ? cues[item] : 1);
@@ -578,7 +587,7 @@ RunawayInventory::Reply RunawayInventory::nextReply(const Reply &reply) const {
 }
 
 Common::U32String RunawayInventory::combinationCaption(byte item, byte target) const {
-	if ((!_fullGame && !_museumDemo) || !item || !target || item == target) {
+	if (!item || !target || item == target) {
 		return Common::U32String();
 	}
 	return RunawayStrings::formatActionCaption(_strings.combinationCaption(_chapter, item, target), name(item), name(target));
@@ -823,7 +832,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 		return Reply(191);
 	if (first == 18 && second == 25)
 		return Reply(_desert.antTrickKnown ? (_desert.bucket == 1 ? 192 : 180) : 14);
-	return _fullGame ? Reply::fromAction(1) : Reply();
+	return Reply::fromAction(1);
 }
 
 } // End of namespace Hollywood

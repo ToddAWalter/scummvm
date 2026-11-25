@@ -63,6 +63,8 @@ public:
 	// Cursor tile 3 is talk, 4..7 are exit arrows; zero keeps the usual verbs.
 	virtual byte actionCursor(byte hotspot) const { return 0; }
 	virtual bool preferLook(byte hotspot) const { return false; }
+	// Exit arrows alternate with look or use; walk means the arrow cannot be toggled.
+	virtual RunawayVerb alternateVerb(byte hotspot) const { return kVerbLook; }
 	virtual bool isWalkHotspot(byte hotspot) const { return false; }
 	virtual Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const = 0;
 	virtual const Common::U32String &committedCaption() const = 0;
@@ -213,6 +215,7 @@ protected:
 	void arrive();
 	void execute(uint16 action);
 	void executeItemAction(uint16 action);
+	const RunawayItemAction *restoredItemAction(byte item, byte hotspot) const;
 	void useItem(byte item, byte hotspot);
 	void say(uint16 cue, byte variation = 0, bool global = false, byte speaker = 0, byte color = 0);
 	void say(const SceneTextStore &text, const SceneSpeechCue &speech, bool global, byte speaker = 0, byte color = 0);
@@ -268,7 +271,7 @@ protected:
 	void finishConversation();
 	byte speaker() const { return speaking() && _lineIndex < _lines.size() ? _lines[_lineIndex].speaker : 0; }
 
-	bool desertChapter() const { return _game == kRunawayFullGame && _room / 1000 == 5; }
+	bool desertChapter() const { return _game != kRunawayMuseumDemo && _room / 1000 == 5; }
 	void startDesert();
 	void resumeDesert();
 	void updateDesert(uint elapsed);
@@ -308,6 +311,7 @@ protected:
 	Common::RandomSource _random;
 	RunawaySpeech _speech;
 	RunawayIdleHead _idleHead;
+	RunawayIdleBody _idleBody;
 	ChunkArchive _archive;
 	SceneTextStore _text;
 	RunawayActor _actor;

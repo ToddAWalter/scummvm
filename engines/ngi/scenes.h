@@ -34,10 +34,29 @@ class AniObject;
 struct Swinger;
 struct WalkingBearder;
 
+class Fader {
+public:
+	void start(uint32 fadeIn, uint32 hold, uint32 fadeOut);
+	void update(uint32 elapsed);
+	void fadeOut();
+	bool active() const { return _stage != kDone; }
+	byte brightness() const { return _brightness; }
+
+private:
+	enum Stage { kFadeIn, kHold, kFadeOut, kDone };
+	Stage _stage = kDone;
+	uint32 _durations[3] = {};
+	uint32 _elapsed = 0;
+	byte _brightness = 255;
+};
+
 int defaultUpdateCursor();
+void sceneChapter_show(const char *chapterId);
 
 int sceneIntro_updateCursor();
 void sceneIntro_initScene(Scene *sc);
+void sceneIntro_initMan(Scene &scene);
+bool sceneIntro_updateAndroid(uint32 elapsed, byte &brightness);
 int sceneHandlerIntro(Command *cmd);
 
 int sceneIntroDemo_updateCursor();
@@ -46,6 +65,7 @@ int sceneHandlerIntroDemo(Command *cmd);
 
 void scene01_fixEntrance();
 void scene01_initScene(Scene *sc, int entrance);
+void scene01_initObjects(Scene *sc, int entrance, bool eggUncracked);
 int sceneHandler01(Command *cmd);
 
 void scene02_initScene(Scene *sc);
@@ -223,6 +243,7 @@ public:
 
 	AniObject *sceneIntro_aniin1man;
 	bool sceneIntro_needSleep;
+	Fader sceneIntro_fader;
 	bool sceneIntro_needGetup;
 	bool sceneIntro_skipIntro;
 	bool sceneIntro_playing;

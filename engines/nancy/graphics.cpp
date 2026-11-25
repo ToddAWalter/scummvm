@@ -164,6 +164,8 @@ void GraphicsManager::draw(bool updateScreen) {
 
 		if (current.needsRedraw()) {
 			const Common::Rect &drawnPosition = current.getDrawnScreenPosition();
+			Common::Rect changed = current.getChangedArea();
+			changed.translate(current.getScreenPosition().left, current.getScreenPosition().top);
 			if (current.isVisible()) {
 				if (!drawnPosition.isEmpty() && drawnPosition != current.getScreenPosition()) {
 					// Object moved to a new location on screen, update the previous one
@@ -171,14 +173,15 @@ void GraphicsManager::draw(bool updateScreen) {
 				}
 
 				// Redraw the current location
-				addDirtyRect(current, current.getScreenPosition());
+				addDirtyRect(current, changed.isEmpty() ? current.getScreenPosition() : changed);
 			} else if (!drawnPosition.isEmpty()) {
 				// Object just turned invisible, redraw the last location. An object
 				// that stays invisible has nothing to clean up, however often it changes.
-				addDirtyRect(current, drawnPosition);
+				addDirtyRect(current, changed.isEmpty() ? drawnPosition : changed);
 			}
 		}
 
+		current.clearChangedArea();
 		current.setDrawnScreenPosition(current.isVisible() ? current.getScreenPosition() : Common::Rect());
 		current.setNeedsRedraw(false);
 		current.setHasMoved(false);
@@ -245,21 +248,24 @@ bool GraphicsManager::isInLayer(const RenderObject &object, Layer layer) const {
 void GraphicsManager::filterDirtyRects(Common::List<Common::Rect> &rects) {
 	// Rects that overlap are merged into one. An area that gets drawn twice would
 	// have the objects with an alpha channel blended onto it twice.
-	bool hasMerged;
-	do {
-		hasMerged = false;
+	// A rect is done once it overlaps no other. One that grows later on checks
+	// all the rects again, including the ones that were done.
+	for (auto outer = rects.begin(); outer != rects.end(); ++outer) {
+		bool hasGrown;
+		do {
+			hasGrown = false;
 
-		for (auto outer = rects.begin(); outer != rects.end() && !hasMerged; ++outer) {
-			for (auto inner = rects.begin(); inner != rects.end(); ++inner) {
+			for (auto inner = rects.begin(); inner != rects.end();) {
 				if (inner != outer && outer->intersects(*inner)) {
 					outer->extend(*inner);
-					rects.erase(inner);
-					hasMerged = true;
-					break;
+					inner = rects.erase(inner);
+					hasGrown = true;
+				} else {
+					++inner;
 				}
 			}
-		}
-	} while (hasMerged);
+		} while (hasGrown);
+	}
 }
 
 // Perform the actual drawing. This checks for cases where something would be fully obscured,

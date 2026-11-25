@@ -63,6 +63,10 @@ namespace Runaway {
 Scene6190::Scene6190(RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings, RunawayGameType game) :
 	RunawayRoomScene(audio, inventory, strings, game) {}
 
+byte Scene6190::actionCursor(byte id) const {
+	return id == 2 ? (_town.catapult == 3 ? 7 : 0) : RunawayRoomScene::actionCursor(id);
+}
+
 const char *Scene6190::actionCaptionVariant(byte id, bool look, byte item) const {
 	return !look && !item && id == 2 && _town.catapult == 3 ? "basement" : nullptr;
 }
@@ -72,7 +76,9 @@ bool Scene6190::usesAlternateActor() const {
 }
 
 bool Scene6190::applyCustomBackgroundPatches() {
-	return (!_town.catapult || applyPatch(_town.catapult == 3 ? 5 : 4)) &&
+	return loadRunawayWalkMap(_archive, _background.w, _background.h, _mask, _originalMaps,
+		_walkRoutes, _town.catapult ? 10 : 1, _town.catapult ? 12 : 3) &&
+		(!_town.catapult || applyPatch(_town.catapult == 3 ? 5 : 4)) &&
 		(!_town.bankStampTaken || applyPatch(8)) &&
 		(_town.bankShelves != 2 || applyPatch(9));
 }

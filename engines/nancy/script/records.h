@@ -323,6 +323,7 @@ private:
 	void readDest(int index);
 	void readDestTable(Common::Array<ScriptRect> &dests);
 	void applyRects();
+	bool staysOnSamePixels(const ScriptRect &dest);
 	bool setPicture(const Common::String &imageName);
 
 #ifdef ENABLE_NANCY_V5
@@ -554,12 +555,20 @@ protected:
 private:
 	void setText(const Common::String &text);
 	void applyDest();
+	bool drawScrollingText();
 
 	UI::NDUI::Element _element;
 	RecordGraphic _graphic;
 	bool _isDirty = true;
 
+	// A text taller than the record, like the credits, is drawn once and then
+	// only the part that shows gets copied
+	Graphics::ManagedSurface _scrollingText;
+	bool _isScrollingTextDirty = true;
+
 	ScriptRect _dest;
+	// How far the text is scrolled up. Scripts use the opposite sign: a
+	// positive offset moves the text down.
 	double _yOffset = 0.0;
 	double _yVelocity = 0.0;	// per second
 

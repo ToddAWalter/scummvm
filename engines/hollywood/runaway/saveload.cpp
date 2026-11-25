@@ -20,6 +20,7 @@
  */
 
 #include "hollywood/runaway/saveload.h"
+#include "hollywood/runaway/inventory.h"
 #include "hollywood/runaway/scene_data.h"
 
 namespace Hollywood {
@@ -406,12 +407,14 @@ bool RunawaySaveState::valid() const {
 			camera >= 32768 || cameraY >= 32768 || facing >= 8 ||
 			lidOpen > 1 || unplugged > 1 || windowClean > 1 || coolerMoved > 1 ||
 			coolerInspected > 1 || peeked > 1 || ice > 2 || hatch > 3 ||
-			itemCount > sizeof(items) || selected > sizeof(items) || cloth > 2 || inventoryOpen > 1 || verb > 2)
+			itemCount > sizeof(items) || selected > sizeof(items) || cloth > 2 || inventoryOpen > 1 ||
+			(verb > kVerbUse && verb != kVerbExit))
 		return false;
-	if ((game == kRunawayCabinDemo || (game == kRunawayFullGame && scene >= 5030 && scene <= 5032)) &&
-			(scene < 5030 || scene > (game == kRunawayCabinDemo ? 5030 : 5032) || x >= 1376 || y >= 600 || camera > 352 || cameraY))
+	if (game == kRunawayCabinDemo && scene != 5030 && scene != 5021 && scene != 5140)
 		return false;
-	if (game == kRunawayFullGame && ((chapter() == 3 && (scene < 5030 || scene > 5032)) || chapter() >= 4)) {
+	if (scene >= 5030 && scene <= 5032 && (x >= 1376 || y >= 600 || camera > 352 || cameraY))
+		return false;
+	if (game != kRunawayMuseumDemo && ((chapter() == 3 && (scene < 5030 || scene > 5032)) || chapter() >= 4)) {
 		const RunawayRoom *room = findRunawayRoom(scene);
 		if (!room || x >= room->width || y >= room->height || camera > room->width - 1024 || cameraY > room->height - 600)
 			return false;
@@ -575,7 +578,7 @@ bool RunawaySaveState::valid() const {
 	}
 	for (uint i = 0; i < itemCount; ++i) {
 		if (!items[i] || items[i] >= sizeof(owned) || owned[items[i]] ||
-				items[i] > (chapter() == 6 ? 21 : chapter() == 5 ? 16 : chapter() == 4 ? 32 : chapter() == 3 ? 26 : 19))
+				items[i] > (chapter() == 6 ? 22 : chapter() == 5 ? 16 : chapter() == 4 ? 32 : chapter() == 3 ? 26 : 19))
 			return false;
 		owned[items[i]] = true;
 	}

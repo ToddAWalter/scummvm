@@ -89,6 +89,9 @@ public:
 	void unload();
 
 	bool load(MfcArchive &file) override;
+	void loadPNG(const Common::Path &path, const Dims &sizeHint);
+	void blitTo(Graphics::ManagedSurface &target, const Common::Point &position, bool mirror = false) const;
+	void blitTo(Graphics::ManagedSurface &target, const Common::Rect &source, const Common::Point &position) const;
 	void setAOIDs();
 	virtual void init();
 	void getDibInfo();

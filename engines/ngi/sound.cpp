@@ -50,7 +50,8 @@ bool SoundList::load(MfcArchive &file, const Common::Path &fname) {
 	}
 
 	for (uint i = 0; i < count; i++) {
-		_soundItems[i].load(file, _libHandle.get());
+		_soundItems[i].reset(new Sound());
+		_soundItems[i]->load(file, _libHandle.get());
 	}
 
 	return true;
@@ -69,8 +70,8 @@ bool SoundList::loadFile(const Common::Path &fname, const Common::Path &libname)
 
 Sound *SoundList::getSound(int id) {
 	for (uint i = 0; i < _soundItems.size(); ++i) {
-		if (_soundItems[i].getId() == id)
-			return &_soundItems[i];
+		if (_soundItems[i]->getId() == id)
+			return _soundItems[i].get();
 	}
 	return nullptr;
 }
@@ -80,6 +81,23 @@ Sound::Sound() :
 	_soundData(nullptr),
 	_handle(new Audio::SoundHandle()),
 	_objectId(0) {}
+
+Sound::Sound(int id, const Common::Path &path, int flags) : Sound() {
+	_id = id;
+	_flags = flags;
+	_memfilename = path;
+}
+
+void SoundList::addSound(int id, const Common::Path &path, int flags) {
+	_soundItems.emplace_back(new Sound(id, path, flags));
+}
+
+void SoundList::stopByCreator(int objectId) {
+	for (const auto &sound : _soundItems) {
+		if (sound->_objectId == objectId)
+			sound->stop();
+	}
+}
 
 Sound::~Sound() {
 	unload();
@@ -192,19 +210,47 @@ void Sound::attenuate(int vol, int pan) {
 	g_nmi->_mixer->setChannelBalance(*_handle, CLIP(pan / 78, -127, 127)); // -10000..10000
 }
 
-void Sound::play(int loop) {
+void Sound::play(int loop, int creator) {
 	Audio::SoundHandle *handle = getHandle();
 
-	if (g_nmi->_mixer->isSoundHandleActive(*handle)) { // We need to restart the music
+	Audio::RewindableAudioStream *stream = nullptr;
+	const bool android = g_nmi->getPlatform() == Common::kPlatformAndroid;
+	if (android) {
+#ifdef USE_VORBIS
+		Common::SeekableReadStream *data = SearchMan.createReadStreamForMember(_memfilename);
+		if (data)
+			stream = Audio::makeVorbisStream(data, DisposeAfterUse::YES);
+#endif
+	} else {
+		byte *soundData = loadData();
+		Common::MemoryReadStream *data = new Common::MemoryReadStream(soundData, getDataSize());
+		stream = Audio::makeWAVStream(data, DisposeAfterUse::YES);
+	}
+	if (!stream) {
+		warning("Could not play sound %d (%s)", _id, _memfilename.toString().c_str());
+		return;
+	}
+	Audio::AudioStream *audioStream = new Audio::LoopingAudioStream(stream, (loop == 1) ? 0 : 1);
+
+	if (android) {
+		// The last creator stops all instances of a non-looping phase sound.
+		_objectId = loop ? 0 : creator;
+		for (uint i = _overlappingHandles.size(); i > 0; --i) {
+			if (!g_nmi->_mixer->isSoundHandleActive(_overlappingHandles[i - 1]))
+				_overlappingHandles.remove_at(i - 1);
+		}
+		if (g_nmi->_mixer->isSoundHandleActive(*handle))
+			_overlappingHandles.push_back(*handle);
+	} else {
 		g_nmi->_mixer->stopHandle(*handle);
 	}
+	const Audio::Mixer::SoundType type = android && _flags == kMusic ? Audio::Mixer::kMusicSoundType : Audio::Mixer::kSFXSoundType;
+	g_nmi->_mixer->playStream(type, handle, audioStream);
+	debugC(3, kDebugEvents, "Playing sound %d (%s), loop %d", _id, _memfilename.toString().c_str(), loop);
+}
 
-	byte *soundData = loadData();
-	Common::MemoryReadStream *dataStream = new Common::MemoryReadStream(soundData, getDataSize());
-	Audio::RewindableAudioStream *wav = Audio::makeWAVStream(dataStream, DisposeAfterUse::YES);
-	Audio::AudioStream *audioStream = new Audio::LoopingAudioStream(wav, (loop == 1) ? 0 : 1);
-
-	g_nmi->_mixer->playStream(Audio::Mixer::kSFXSoundType, handle, audioStream);
+bool Sound::isPlaying() const {
+	return g_nmi->_mixer->isSoundHandleActive(*_handle);
 }
 
 void Sound::unload() {
@@ -217,8 +263,17 @@ int Sound::getVolume() {
 	return g_nmi->_mixer->getChannelVolume(*_handle) * 39;  // 0..10000
 }
 
+void Sound::pause(bool paused) {
+	g_nmi->_mixer->pauseHandle(*_handle, paused);
+	for (const Audio::SoundHandle &handle : _overlappingHandles)
+		g_nmi->_mixer->pauseHandle(handle, paused);
+}
+
 void Sound::stop() {
 	g_nmi->_mixer->stopHandle(*_handle);
+	for (const Audio::SoundHandle &handle : _overlappingHandles)
+		g_nmi->_mixer->stopHandle(handle);
+	_overlappingHandles.clear();
 }
 
 void NGIEngine::setSceneMusicParameters(GameVar *gvar) {
@@ -361,10 +416,12 @@ void NGIEngine::playOggSound(const Common::Path &trackName, Audio::SoundHandle &
 #endif
 }
 
-void NGIEngine::stopAllSounds() {
+void NGIEngine::stopAllSounds(int flags) {
 	for (int i = 0; i < _currSoundListCount; i++)
 		for (int j = 0; j < _currSoundList1[i]->getCount(); j++) {
-			_currSoundList1[i]->getSoundByIndex(j).stop();
+			Sound &sound = _currSoundList1[i]->getSoundByIndex(j);
+			if (flags == -1 || sound.getFlags() == flags)
+				sound.stop();
 		}
 }
 
@@ -376,22 +433,23 @@ void NGIEngine::toggleMute() {
 	}
 }
 
-void NGIEngine::playSound(int id, int flag) {
-	Sound *sound = nullptr;
-
+Sound *NGIEngine::findSound(int id) const {
 	for (int i = 0; i < _currSoundListCount; i++) {
-		sound = _currSoundList1[i]->getSound(id);
-
+		Sound *sound = _currSoundList1[i]->getSound(id);
 		if (sound)
-			break;
+			return sound;
 	}
+	return nullptr;
+}
 
+void NGIEngine::playSound(int id, int flag, int creator) {
+	Sound *sound = findSound(id);
 	if (!sound) {
 		warning("playSound: Can't find sound with ID %d", id);
 		return;
 	}
 
-	sound->play(flag);
+	sound->play(flag, creator);
 }
 
 void NGIEngine::playTrack(GameVar *sceneVar, const char *name, bool delayed) {
@@ -457,16 +515,15 @@ void global_messageHandler_handleSound(Command *cmd) {
 	if (!g_nmi->_soundEnabled)
 		return;
 
-	Sound *snd = nullptr;
-
-	for (int i = 0; i < g_nmi->_currSoundListCount; i++)
-		if ((snd = g_nmi->_currSoundList1[i]->getSound(cmd->_messageNum)) != nullptr)
-			break;
-
+	Sound *snd = g_nmi->findSound(cmd->_messageNum);
 	if (!snd)
 		return;
 
 	if (cmd->_z & 1) {
+		if (g_nmi->getPlatform() == Common::kPlatformAndroid) {
+			snd->play(cmd->_param);
+			return;
+		}
 		if (!g_nmi->_flgSoundList && (cmd->_z & 4))
 			snd->unload();
 

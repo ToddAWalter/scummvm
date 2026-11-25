@@ -523,7 +523,17 @@ int global_messageHandler4(Command *cmd) {
 
 	switch (cmd->_cmd) {
 	case 18: {
-		MessageQueue *mq = new MessageQueue(g_nmi->_currentScene->findMessageQueue(cmd->_messageNum), cmd->_parId, 0);
+		MessageQueue *source = g_nmi->_currentScene ? g_nmi->_currentScene->findMessageQueue(cmd->_messageNum) : nullptr;
+		if (!source) {
+			warning("Could not find message queue %d", cmd->_messageNum);
+			if (!(cmd->_excFlags & 1))
+				updateGlobalMessageQueue(cmd->_parId, 0);
+			break;
+		}
+		int parent = cmd->_parId;
+		if (g_nmi->getPlatform() == Common::kPlatformAndroid && !cmd->_wait)
+			parent = 0;
+		MessageQueue *mq = new MessageQueue(source, parent, 0);
 
 		if (cmd->_excFlags & 1)
 			mq->_flag1 = 1;
@@ -556,10 +566,7 @@ int global_messageHandler4(Command *cmd) {
 		if (flags <= 0)
 			flags = -1;
 
-		if (cmd->_excFlags & 1)
-			ani->startMovement(cmd->_messageNum, 0, flags);
-		else
-			ani->startMovement(cmd->_messageNum, cmd->_parId, flags);
+		ani->startMovement(cmd->_messageNum, (cmd->_excFlags & 1) ? 0 : cmd->_parId, flags, cmd->_mirror);
 
 		break;
 	}
@@ -679,7 +686,13 @@ int global_messageHandler4(Command *cmd) {
 		if (cmd->_z >= 0)
 			ani->_z = cmd->_z;
 
-		ani->show1(cmd->_x, cmd->_y, cmd->_messageNum, cmd->_parId);
+		if (g_nmi->getPlatform() == Common::kPlatformAndroid) {
+			const bool mirror = cmd->_auxParam < 0 ? (ani->_flags & 8) != 0 : cmd->_auxParam != 0;
+			ani->show1(cmd->_x == -1 ? ani->_x : cmd->_x, cmd->_y == -1 ? ani->_y : cmd->_y, cmd->_messageNum, 0);
+			ani->_flags = (ani->_flags & ~8) | (mirror ? 8 : 0);
+		} else {
+			ani->show1(cmd->_x, cmd->_y, cmd->_messageNum, cmd->_parId);
+		}
 		break;
 
 	case 10:
@@ -734,6 +747,12 @@ int global_messageHandler4(Command *cmd) {
 
 	case 35:
 		global_messageHandler_handleSound(cmd);
+		break;
+
+	case 63:
+		if (g_nmi->getPlatform() != Common::kPlatformAndroid)
+			return 0;
+		warning("Android command %s not implemented", cmd->_messageName.c_str());
 		break;
 
 	case 11:

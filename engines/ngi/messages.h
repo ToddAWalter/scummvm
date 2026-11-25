@@ -31,7 +31,8 @@
 namespace NGI {
 
 enum QueueFlags {
-	kInGlobalQueue = 2
+	kInGlobalQueue = 2,
+	kBehaviorQueue = 8
 };
 
 class Message : public CObject {
@@ -58,6 +59,9 @@ class Message : public CObject {
 
 class Command : public Message {
  public:
+	enum { kCmdPause = 64 }; // Timed pause in XML queues.
+	Common::String _messageName;
+	bool _mirror = false;
 	int _messageNum;
 	int _field_3C;
 	int _excFlags;
@@ -120,6 +124,7 @@ class MessageQueue : public CObject {
 
   private:
 	Common::List<Command *> _commands;
+	Common::ScopedPtr<Command> _pauseCommand;
 
  public:
 	MessageQueue();
@@ -148,6 +153,7 @@ class MessageQueue : public CObject {
 	bool run(AniObject *ani);
 	void update();
 	void next();
+	bool updatePause(uint32 elapsed);
 	void finish();
 
 	void messageQueueCallback1(int par);

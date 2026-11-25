@@ -721,7 +721,7 @@ Common::Point AniObject::getSomeXY() const {
 	error("No someXY found");
 }
 
-void AniObject::update(int counterdiff) {
+bool AniObject::update(int counterdiff) {
 	int mqid;
 
 	debugC(6, kDebugAnimation, "AniObject::update() (%s) [%d] [%d, %d] fl: %x", transCyrillic(_title), _id, _x, _y, _flags);
@@ -729,14 +729,14 @@ void AniObject::update(int counterdiff) {
 	if (_flags & 2) {
 		_messageNum--;
 		if (_messageNum)
-			return;
+			return false;
 
 		mqid = _messageQueueId;
 		_messageQueueId = 0;
 		_flags ^= 2;
 
 		updateGlobalMessageQueue(mqid, _id);
-		return;
+		return true;
 	}
 
 	Command *ex, *newex;
@@ -744,8 +744,15 @@ void AniObject::update(int counterdiff) {
 	if (_movement) {
 		_movement->_counter += counterdiff;
 
-		if (_movement->_counter < _movement->_loopDelay)
-			return;
+		const bool android = g_nmi->getPlatform() == Common::kPlatformAndroid;
+		if (android) {
+			const Phase &phase = *_movement->_curPhase;
+			const int delay = _movement->_loopDelay * (1 + phase._delayRelative) + phase._delayMs;
+			if (_movement->_counter <= delay)
+				return false;
+		} else if (_movement->_counter < _movement->_loopDelay) {
+			return false;
+		}
 
 		_movement->_counter = 0;
 
@@ -753,11 +760,11 @@ void AniObject::update(int counterdiff) {
 			if (_counter) {
 				_counter--;
 
-				return;
+				return false;
 			}
 
 			Phase *dyn = _movement->_curPhase;
-			if (dyn->_delay == dyn->_countdown) {
+			if (!android && dyn->_delay == dyn->_countdown) {
 
 				ex = dyn->getCommand();
 				if (ex && ex->_cmd != 35) {
@@ -770,7 +777,7 @@ void AniObject::update(int counterdiff) {
 					newex->sendMessage();
 
 					if (!_movement)
-						return;
+						return true;
 				}
 			}
 
@@ -781,16 +788,19 @@ void AniObject::update(int counterdiff) {
 				newex->sendMessage();
 
 				if (!_movement)
-					return;
+					return true;
 			}
 
-			if (!_movement->setNext(_callback1, _callback2)) {
+			// Android ends the movement as soon as the next statics takes over.
+			if (!_movement->setNext(_callback1, _callback2, android && (_flags & 8)) || (android && _movement->_curPhase == _movement->_nextStatic)) {
 				stopMovement();
 			} else {
 				setPos(_movement->_x, _movement->_y);
 				_counter = _initialCounter;
 
-				if (dyn->_delay == dyn->_countdown) {
+				if (android) {
+					_movement->_curPhase->enter(_id);
+				} else if (dyn->_delay == dyn->_countdown) {
 					ex = dyn->getCommand();
 					if (ex) {
 						if (ex->_cmd == 35) {
@@ -802,7 +812,7 @@ void AniObject::update(int counterdiff) {
 				}
 			}
 			if (!_movement)
-				return;
+				return true;
 
 			const Common::Point point = _stepArray.getCurrPoint();
 			setPos(point.x + _x, point.y + _y);
@@ -820,19 +830,20 @@ void AniObject::update(int counterdiff) {
 			_movement->setPos(_x + point.x + _movement->_prevStepX - pointS.x,
 							  _y + point.y + _movement->_prevStepY - pointS.y);
 		}
-	} else {
-		if (_statics) {
-			if (_messageQueueId) {
-				if (_statics->_countdown) {
-					_statics->_countdown--;
-					return;
-				}
-				mqid = _messageQueueId;
-				_messageQueueId = 0;
-				updateGlobalMessageQueue(mqid, _id);
-			}
-		}
+		return true;
 	}
+
+	if (_statics && _messageQueueId) {
+		if (_statics->_countdown) {
+			_statics->_countdown--;
+			return false;
+		}
+		mqid = _messageQueueId;
+		_messageQueueId = 0;
+		updateGlobalMessageQueue(mqid, _id);
+		return true;
+	}
+	return false;
 }
 
 void AniObject::updateStepPos() {
@@ -935,12 +946,19 @@ L8:
 		}
 L11:
 		_statics = _movement->_nextStatic;
+		if (_movement->_mirrorNext)
+			_flags ^= 8;
 L12:
 		point = _statics->getSomeXY();
 
 		_statics->_x = _x - point.x;
 		_statics->_y = _y - point.y;
 		oid = _movement->_id;
+		if (g_nmi->getPlatform() == Common::kPlatformAndroid) {
+			_movement->unload();
+			for (int i = 0; i < g_nmi->_currSoundListCount; ++i)
+				g_nmi->_currSoundList1[i]->stopByCreator(_id);
+		}
 		_movement = nullptr;
 
 		Command *ex = new Command(_id, 17, 24, 0, 0, 0, 1, 0, 0, 0);
@@ -1220,7 +1238,7 @@ bool AniObject::startAnimEx(int movid, int parId, int flag1, int flag2) {
 	return res;
 }
 
-bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseIdx) {
+bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseIdx, bool mirror) {
 	if (_flags & 0x80)
 		return false;
 
@@ -1231,16 +1249,10 @@ bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseId
 		return false;
 	}
 
-	Movement *mov = nullptr;
-
-	for (uint i = 0; i < _movements.size(); i++) {
-		if (_movements[i]->_id == movementId) {
-			mov = _movements[i];
-			break;
-		}
-	}
-
-	if (!mov) {
+	const bool android = g_nmi->getPlatform() == Common::kPlatformAndroid;
+	Movement *mov = getMovement(movementId);
+	// An XML movement without any PHASE elements contains only its end pose.
+	if (!mov || (android && !mov->getPhase(1))) {
 		updateGlobalMessageQueue(messageQueueId, _id);
 		return false;
 	}
@@ -1256,6 +1268,18 @@ bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseId
 	int newy = _y;
 	Common::Point point;
 
+	if (android && !_movement) {
+		// SetStatic reflects a change of facing about the old texture's center.
+		const bool prevMirror = mirror != mov->_mirrorPrev;
+		if (_statics && prevMirror != ((_flags & 8) != 0)) {
+			const int shift = _statics->getDimensions().x - 2 * _statics->_someX;
+			newx += prevMirror ? shift : -shift;
+		}
+		_statics = mov->_prevStatic;
+	}
+	if (mirror)
+		newx = -newx;
+
 	if (_movement) {
 		point = _movement->getCurrDynamicPhaseXY();
 
@@ -1264,6 +1288,8 @@ bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseId
 
 	} else if (_statics) {
 		point = _statics->getSomeXY();
+		if (mov->_mirrorPrev)
+			point.x = _statics->getDimensions().x - point.x;
 
 		newx -= point.x;
 		newy -= point.y;
@@ -1287,7 +1313,7 @@ bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseId
 			_stepArray.gotoNextPoint();
 
 			Command *ex = _movement->_curPhase->getCommand();
-			if (ex) {
+			if (ex && !android) {
 				if (ex->_cmd == 35) {
 					Command *newex = ex->createClone();
 					newex->_excFlags |= 2;
@@ -1298,9 +1324,10 @@ bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseId
 	}
 
 	point = _movement->getCurrDynamicPhaseXY();
-	setPos(point.x + newx, point.y + newy);
+	newx += point.x;
+	setPos(mirror ? -newx : newx, point.y + newy);
 
-	if (_movement->_nextStatic->_staticsId & 0x4000)
+	if (mirror || (!android && (_movement->_nextStatic->_staticsId & 0x4000)))
 		_flags |= 8;
 	else
 		_flags &= 0xFFF7;
@@ -1322,6 +1349,9 @@ bool AniObject::startMovement(int movementId, int messageQueueId, int dynPhaseId
 	newex->_excFlags = 2;
 
 	newex->postMessage();
+
+	if (android)
+		mov->_curPhase->enter(_id);
 
 	return true;
 }
@@ -1438,7 +1468,7 @@ Movement::~Movement() {
 		}
 
 		// FIXME: At this point, the last entry in _phases is invalid
-		for (uint i = 0; i < _phases.size() - 1; i++) {
+		for (uint i = 0; i + 1 < _phases.size(); i++) {
 			Phase *phase = _phases[i];
 			if (phase != _prevStatic && phase != _nextStatic)
 				delete phase;
@@ -1449,6 +1479,8 @@ Movement::~Movement() {
 }
 
 Movement::Movement(Movement *src, AniObject *ani) {
+	_mirrorPrev = src->_mirrorPrev;
+	_mirrorNext = src->_mirrorNext;
 	_lastFrameSpecialFlag = 0;
 	_flipFlag = src->_flipFlag;
 	_updateFlag1 = src->_updateFlag1;
@@ -1483,6 +1515,8 @@ Movement::Movement(Movement *src, AniObject *ani) {
 }
 
 Movement::Movement(Movement *src, int *oldIdxs, int newSize, AniObject *ani) : GameObject(src) {
+	_mirrorPrev = src->_mirrorPrev;
+	_mirrorNext = src->_mirrorNext;
 	_lastFrameSpecialFlag = 0;
 	_updateFlag1 = 1;
 	_prevStatic = nullptr;
@@ -1661,6 +1695,8 @@ bool Movement::load(MfcArchive &file, AniObject *ani) {
 }
 
 Common::Point Movement::getCurrDynamicPhaseXY() const {
+	if (_mirrorNext && _curPhase == _nextStatic)
+		return Common::Point(_curPhase->getDimensions().x - _curPhase->_someX, _curPhase->_someY);
 	return Common::Point(_curPhase->_someX, _curPhase->_someY);
 }
 
@@ -1843,6 +1879,12 @@ void Movement::load() {
 }
 
 void Movement::unload() {
+	if (g_nmi->getPlatform() == Common::kPlatformAndroid) {
+		// XML movements borrow their last phase from the actor's statics.
+		for (uint i = 0; i + 1 < _phases.size(); ++i)
+			_phases[i]->unload();
+		return;
+	}
 	if (!_currMovement)
 		for (uint i = 0; i < _phases.size(); i++)
 			_phases[i]->unload();
@@ -1871,7 +1913,7 @@ void Movement::removeFirstPhase() {
 	_updateFlag1 = 0;
 }
 
-bool Movement::setNext(void (*callback1)(int, Common::Point *point, int, int), void (*callback2)(int *)) {
+bool Movement::setNext(void (*callback1)(int, Common::Point *point, int, int), void (*callback2)(int *), bool mirror) {
 	debugC(8, kDebugAnimation, "Movement::setNext()");
 
 	if (!callback2) {
@@ -1891,6 +1933,7 @@ bool Movement::setNext(void (*callback1)(int, Common::Point *point, int, int), v
 		return true;
 	}
 
+	const int oldX = _x;
 	Common::Point point = getCurrDynamicPhaseXY();
 	_x -= point.x;
 	_y -= point.y;
@@ -1985,6 +2028,8 @@ bool Movement::setNext(void (*callback1)(int, Common::Point *point, int, int), v
 	_x += point.x;
 	_y += point.y;
 
+	if (mirror)
+		_x = oldX - (_x - oldX);
 	_curPhase->_countdown = _curPhase->_delay;
 
 	return result;
@@ -2130,6 +2175,10 @@ Phase::Phase(Phase *src, bool reverse) {
 		_command.reset();
 
 	_delay = src->_delay;
+	_delayMs = src->_delayMs;
+	_delayRelative = src->_delayRelative;
+	_soundId = src->_soundId;
+	_loopSound = src->_loopSound;
 	_field_6A = src->_field_6A;
 	_flags = src->_flags;
 
@@ -2144,6 +2193,24 @@ Common::String Phase::toXML() {
 	return Common::String::format("f7c=%d left=%d top=%d right=%d bottom=%d sX=%d sY=%d dynFlags=%d %s",
 			_field_7C, _rect.left, _rect.top, _rect.right, _rect.bottom, _someX, _someY, _flags,
 			StaticPhase::toXML().c_str());
+}
+
+void Phase::setPNG(const Common::Path &path, const Dims &size) {
+	_memfilename = path;
+	_width = size.x;
+	_height = size.y;
+}
+
+void Phase::enter(int objectId) {
+	if (!_bitmap && !_memfilename.empty())
+		loadPNG(_memfilename, getDimensions());
+	if (_soundId && g_nmi->_soundEnabled)
+		g_nmi->playSound(_soundId, _loopSound, objectId);
+	if (_command) {
+		Command *cmd = _command->createClone();
+		cmd->_excFlags |= 2;
+		cmd->sendMessage();
+	}
 }
 
 bool Phase::load(MfcArchive &file) {

@@ -28,8 +28,11 @@
 #include "ngi/interaction.h"
 #include "ngi/gameloader.h"
 
+#include "common/file.h"
 #include "common/memstream.h"
 #include "graphics/managed_surface.h"
+
+#include "image/png.h"
 
 namespace NGI {
 
@@ -416,6 +419,42 @@ Texture::~Texture() {
 	freePicture();
 }
 
+void Texture::loadPNG(const Common::Path &path, const Dims &sizeHint) {
+	freePicture();
+	_width = sizeHint.x;
+	_height = sizeHint.y;
+	Common::File file;
+	Image::PNGDecoder png;
+	if (!file.open(path) || !png.loadStream(file)) {
+		warning("Could not load scene texture %s (%d x %d)", path.toString().c_str(), _width, _height);
+		return;
+	}
+
+	const Graphics::Surface &source = *png.getSurface();
+	_width = source.w;
+	_height = source.h;
+	_bitmap.reset(new Bitmap());
+	_bitmap->_width = _width;
+	_bitmap->_height = _height;
+	_bitmap->_surface = new Graphics::ManagedSurface();
+	_bitmap->_surface->copyFrom(source);
+	const Graphics::Palette &palette = png.getPalette();
+	if (!palette.empty())
+		_bitmap->_surface->setPalette(palette.data(), 0, palette.size());
+	if (png.hasTransparentColor())
+		_bitmap->_surface->setTransparentColor(png.getTransparentColor());
+	debugC(2, kDebugLoading, "Loaded scene texture %s (%d x %d)", path.toString().c_str(), _width, _height);
+}
+
+void Texture::blitTo(Graphics::ManagedSurface &target, const Common::Point &position, bool mirror) const {
+	if (!_bitmap || !_bitmap->_surface)
+		return;
+	if (mirror)
+		target.simpleBlitFrom(*_bitmap->_surface, position, Graphics::FLIP_H, true);
+	else
+		target.blitFrom(*_bitmap->_surface, position);
+}
+
 void Texture::freePicture() {
 	debugC(5, kDebugMemory, "Texture::freePicture(): file: %s", _memfilename.toString().c_str());
 
@@ -492,6 +531,11 @@ void Texture::setAOIDs() {
 		_memoryObject2->_rows[i] = ptr;
 		ptr += pitch;
 	}
+}
+
+void Texture::blitTo(Graphics::ManagedSurface &target, const Common::Rect &source, const Common::Point &position) const {
+	if (_bitmap && _bitmap->_surface)
+		target.blitFrom(*_bitmap->_surface, source, position);
 }
 
 void Texture::init() {

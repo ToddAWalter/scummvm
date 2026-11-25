@@ -34,7 +34,7 @@ const RunawayHotspot kHotspots[] = {
 	{301, 478, 7, {306, 307}, {0, 1}, {243, 446}}, // 4: Door.
 	{301, 478, 7, {308, 309}, {0, 1}, {243, 446}}, // 5: Explosives.
 	{620, 357, 7, {310, 311}, {0, 0}, {557, 320}}, // 6: Water Tank.
-	{987, 378, 1, {312, 313}, {0, 1}, {1027, 350}}, // 7: Train Car.
+	{987, 378, 1, {312, 313}, {0, 1}, {1027, 350}, 5, true}, // 7: Train Car.
 	{987, 378, 1, {312, 313}, {1, 1}, {1027, 350}, 5}, // 8: Train Car Interior.
 	{67, 512, 0, {316, 317}, {0, 0}, {66, 389}}, // 9: Ant-Hill.
 	{255, 546, 7, {318, 319}, {1, 0}, {212, 495}}, // 10: Sign.
@@ -88,8 +88,7 @@ const char *Scene5080::actionCaptionVariant(byte id, bool look, byte item) const
 
 bool Scene5080::loadCustomResources() {
 	Graphics::ManagedSurface scratch(1, 1, _screen.format);
-	if (!_archive.readVariableChunk(3, _walkRoutes) ||
-		!_archive.readVariableChunk(6, _parallax) || !applyRunawayPatch(_parallax, scratch) ||
+	if (!_archive.readVariableChunk(6, _parallax) || !applyRunawayPatch(_parallax, scratch) ||
 		!_archive.readVariableChunk(21, _shedRoof) || !applyRunawayPatch(_shedRoof, scratch) ||
 		!_ambientAnimations[0].load(_archive, 18, 769) ||
 		!_ambientAnimations[1].load(_archive, 17, 672) ||
@@ -110,7 +109,8 @@ bool Scene5080::loadCustomResources() {
 }
 
 bool Scene5080::applyCustomBackgroundPatches() {
-	return loadRunawayMask(_archive, _background.w, _background.h, _mask, _originalMaps, _desert.antsDistracted ? 4 : 1) &&
+	return loadRunawayWalkMap(_archive, _background.w, _background.h, _mask, _originalMaps,
+		_walkRoutes, _desert.antsDistracted ? 4 : 1, 3) &&
 		(!_desert.antsDistracted || applyPatch(_desert.dynamite == 1 ? 7 : 8));
 }
 

@@ -240,6 +240,12 @@ Common::String NGIEngine::getSaveStateName(int slot) const {
 }
 
 Common::Error NGIEngine::run() {
+	_globalMessageQueueList.reset(new GlobalMessageQueueList);
+	_aniHandler.reset(new AniHandler);
+
+	if (getPlatform() == Common::kPlatformAndroid)
+		return runAndroid();
+
 	// Initialize backend
 	initGraphics(800, 600, nullptr);
 
@@ -249,7 +255,6 @@ Common::Error NGIEngine::run() {
 
 	_backgroundSurface.create(800, 600, format);
 
-	_globalMessageQueueList.reset(new GlobalMessageQueueList);
 	_behaviorManager.reset(new BehaviorController);
 
 	_sceneRect.left = 0;
@@ -258,7 +263,6 @@ Common::Error NGIEngine::run() {
 	_sceneRect.bottom = 599;
 
 	_floaters.reset(new FlyPack);
-	_aniHandler.reset(new AniHandler);
 	_globalPalette = &_defaultPalette;
 
 	_isSaveAllowed = false;

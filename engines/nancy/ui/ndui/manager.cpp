@@ -22,6 +22,7 @@
 #include "common/debug.h"
 #include "common/events.h"
 #include "common/memstream.h"
+#include "common/system.h"
 
 #include "engines/nancy/nancy.h"
 #include "engines/nancy/resource/resource.h"
@@ -128,7 +129,7 @@ void Manager::setHoveredTooltip(const Control *control, Tooltip *tooltip) {
 }
 
 void Manager::updateTooltip(const Common::Point &mousePos) {
-	const uint32 now = g_nancy->getTotalPlayTime();
+	const uint32 now = g_system->getMillis();
 
 	if (_hoveredControl != _tooltipControl) {
 		// Another control starts over
@@ -163,19 +164,20 @@ void Manager::updateTooltip(const Common::Point &mousePos) {
 	_tooltipWindow.setVisible(show);
 }
 
-void Manager::takeAction(const Action &action) {
+bool Manager::takeAction(const Action &action) {
 	if (action.target.hasPrefixIgnoreCase("Engine_")) {
 		takeEngineAction(action);
-		return;
+		return true;
 	}
 
 	for (Panel *panel : _panels) {
 		if (panel->takeAction(action)) {
-			return;
+			return true;
 		}
 	}
 
 	debugC(1, kDebugEngine, "Unhandled NDUI action %d on \"%s\" from \"%s\"", action.type, action.target.c_str(), action.sender.c_str());
+	return false;
 }
 
 void Manager::takeAction(int32 type, const Common::String &target, double value) {

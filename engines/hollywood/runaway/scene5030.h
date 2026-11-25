@@ -49,7 +49,7 @@ public:
 	Scene5030(Audio::Mixer *mixer, RunawayAudio &audio, RunawayInventory &inventory, const RunawayStrings &strings,
 			RunawayGameType game = kRunawayCabinDemo) :
 		_audio(audio), _inventory(inventory), _strings(strings), _game(game), _interrogation(mixer), _random("runawayShack"), _actor(),
-		_speech(audio, _random, game == kRunawayFullGame ? RunawaySpeech::kRecordedLipSync : RunawaySpeech::kTextLipSync),
+		_speech(audio, _random, RunawaySpeech::kRecordedLipSync),
 		_walkPath(Common::Point(623, 447)) {}
 	bool load(uint16 entryScene) override;
 	void start(uint32 now) override;
@@ -62,6 +62,8 @@ public:
 	int roomWidth() const override { return kRoomWidth; }
 	Graphics::ManagedSurface &screen() override { return _screen; }
 	byte hotspotAt(Common::Point mouse) const override;
+	byte actionCursor(byte id) const override;
+	RunawayVerb alternateVerb(byte id) const override;
 	Common::U32String actionCaption(byte hotspot, RunawayVerb verb, byte item) const override;
 	const Common::U32String &committedCaption() const override { return _committedCaption; }
 	const Common::U32String &subtitle() const override { return _action == kPeekConversation ? _interrogation.subtitle() : _speech.subtitle(); }
@@ -123,7 +125,7 @@ private:
 	ChunkArchive _archive;
 	SceneTextStore _text;
 	Graphics::ManagedSurface _background, _screen;
-	Common::Array<byte> _mask, _maps, _unplugPatch, _openLidPatch, _closedLidPatch;
+	Common::Array<byte> _mask, _maps, _walkRoutes, _unplugPatch, _openLidPatch, _closedLidPatch;
 	Common::Array<byte> _pickupPatches[5];
 	Common::Array<uint16> _voiceSamples, _cueEnds;
 	RunawayAudio &_audio;
@@ -138,6 +140,7 @@ private:
 	RunawayActor _actor;
 	RunawaySpeech _speech;
 	RunawayIdleHead _idleHead;
+	RunawayIdleBody _idleBody;
 	RunawayAnimation _intro, _lidActor, _lid, _unplug, _climb, _actionAnimation, _water, _hatch;
 	RunawayVideo _video;
 	Common::Point _position = Common::Point(623, 447);

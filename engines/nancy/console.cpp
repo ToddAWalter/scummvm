@@ -19,6 +19,7 @@
  *
  */
 
+#include "common/algorithm.h"
 #include "common/system.h"
 #include "common/events.h"
 #include "common/config-manager.h"
@@ -42,6 +43,8 @@
 #include "engines/nancy/state/scene.h"
 
 #include "engines/nancy/action/actionrecord.h"
+
+#include "engines/nancy/ui/ndui/manager.h"
 
 #ifdef ENABLE_NANCY_V4
 #include "engines/nancy/script/record.h"
@@ -71,6 +74,9 @@ NancyConsole::NancyConsole() : GUI::Debugger() {
 	registerCmd("script_export", WRAP_METHOD(NancyConsole, Cmd_scriptExport));
 	registerCmd("list_managers", WRAP_METHOD(NancyConsole, Cmd_listManagers));
 	registerCmd("cheat_mode", WRAP_METHOD(NancyConsole, Cmd_cheatMode));
+	registerCmd("list_vars", WRAP_METHOD(NancyConsole, Cmd_listVars));
+	registerCmd("get_var", WRAP_METHOD(NancyConsole, Cmd_getVar));
+	registerCmd("set_var", WRAP_METHOD(NancyConsole, Cmd_setVar));
 #endif
 	registerCmd("actionrecord_export", WRAP_METHOD(NancyConsole, Cmd_actionRecordExport));
 	registerCmd("scan_ar_type", WRAP_METHOD(NancyConsole, Cmd_scanForActionRecordType));
@@ -89,6 +95,7 @@ NancyConsole::NancyConsole() : GUI::Debugger() {
 	registerCmd("set_difficulty", WRAP_METHOD(NancyConsole, Cmd_setDifficulty));
 	registerCmd("sound_info", WRAP_METHOD(NancyConsole, Cmd_soundInfo));
 	registerCmd("debug_hotspots", WRAP_METHOD(NancyConsole, Cmd_showHotspots));
+	registerCmd("ui_control", WRAP_METHOD(NancyConsole, Cmd_uiControl));
 }
 
 NancyConsole::~NancyConsole() {}
@@ -802,6 +809,96 @@ bool NancyConsole::Cmd_listRecords(int argc, const char **argv) {
 		debugPrintf("\n");
 	}
 
+	return true;
+}
+
+// The whole numbers that the scripts of Nancy19 and later keep in VarTable; null
+// outside of a scene and in the older games
+static ScriptValueData *getScriptValues() {
+	if (g_nancy->getGameType() < kGameTypeNancy19 || g_nancy->getState() != NancyState::kScene) {
+		return nullptr;
+	}
+
+	return (ScriptValueData *)NancySceneState.getPuzzleData(ScriptValueData::getTag());
+}
+
+bool NancyConsole::Cmd_listVars(int argc, const char **argv) {
+	if (argc != 1) {
+		debugPrintf("Lists the variables of the scripts of Nancy19 and later, with their values.\n");
+		debugPrintf("Nancy1New and later name all of theirs. The older games only have the\n");
+		debugPrintf("ones their scripts have set so far.\n");
+		debugPrintf("Usage: %s\n", argv[0]);
+		return true;
+	}
+
+	const ScriptValueData *values = getScriptValues();
+	if (!values) {
+		debugPrintf("Script variables are only available in a scene of Nancy19 and later\n");
+		return true;
+	}
+
+	Common::Array<Common::String> names;
+	if (g_nancy->getGameType() >= kGameTypeNancy1New) {
+		const ScriptBootData *boot = GetEngineData(ScriptBootData);
+		for (const auto &name : boot->valueNames) {
+			names.push_back(name._key);
+		}
+	} else {
+		for (const auto &value : values->values) {
+			names.push_back(value._key);
+		}
+	}
+
+	Common::sort(names.begin(), names.end());
+	for (const Common::String &name : names) {
+		debugPrintf("%s = %d\n", name.c_str(), values->values.getValOrDefault(name, 0));
+	}
+
+	return true;
+}
+
+bool NancyConsole::Cmd_getVar(int argc, const char **argv) {
+	if (argc != 2) {
+		debugPrintf("Prints a variable of the scripts of Nancy19 and later.\n");
+		debugPrintf("Usage: %s <name>\n", argv[0]);
+		return true;
+	}
+
+	const ScriptValueData *values = getScriptValues();
+	if (!values) {
+		debugPrintf("Script variables are only available in a scene of Nancy19 and later\n");
+		return true;
+	}
+
+	debugPrintf("%s = %d\n", argv[1], values->values.getValOrDefault(argv[1], 0));
+	return true;
+}
+
+bool NancyConsole::Cmd_setVar(int argc, const char **argv) {
+	if (argc != 3) {
+		debugPrintf("Sets a variable of the scripts of Nancy19 and later.\n");
+		debugPrintf("Usage: %s <name> <value>\n", argv[0]);
+		debugPrintf("For example, %s totalScore 500000 sets the score of the Dossier games.\n", argv[0]);
+		return true;
+	}
+
+	ScriptValueData *values = getScriptValues();
+	if (!values) {
+		debugPrintf("Script variables are only available in a scene of Nancy19 and later\n");
+		return true;
+	}
+
+	// Nancy1New and later name all their variables in their boot scripts
+	if (g_nancy->getGameType() >= kGameTypeNancy1New) {
+		const ScriptBootData *boot = GetEngineData(ScriptBootData);
+		if (!boot->valueNames.contains(argv[1])) {
+			debugPrintf("This game has no variable named %s\n", argv[1]);
+			return true;
+		}
+	}
+
+	values->values.setVal(argv[1], atoi(argv[2]));
+	debugPrintf("%s = %d\n", argv[1], values->values.getVal(argv[1]));
 	return true;
 }
 
@@ -1543,6 +1640,46 @@ bool NancyConsole::Cmd_setInventory(int argc, const char **argv) {
 			debugPrintf("Invalid value %s\n", argv[i + 1]);
 			continue;
 		}
+	}
+
+	return cmdExit(0, nullptr);
+}
+
+// Saved games keep which UI controls are shown, so this can repair a saved game
+// made while a control was stuck
+bool NancyConsole::Cmd_uiControl(int argc, const char **argv) {
+	if (argc != 3) {
+		debugPrintf("Shows, hides, enables or disables a control of the UI (Nancy16 and later).\n");
+		debugPrintf("Save the game afterwards to keep the change.\n");
+		debugPrintf("Usage: %s <name> show|hide|enable|disable\n", argv[0]);
+		debugPrintf("For example, %s ShowPaperDoll show brings back the outfit button of Nancy18.\n", argv[0]);
+		return true;
+	}
+
+	if (g_nancy->getState() != NancyState::kScene || !NancySceneState.getNDUI()) {
+		debugPrintf("The UI is only available in a scene of Nancy16 and later\n");
+		return true;
+	}
+
+	const Common::String command = argv[2];
+	UI::NDUI::Action action;
+	action.target = argv[1];
+	if (command.equalsIgnoreCase("show")) {
+		action.type = UI::NDUI::kActionShow;
+	} else if (command.equalsIgnoreCase("hide")) {
+		action.type = UI::NDUI::kActionHide;
+	} else if (command.equalsIgnoreCase("enable")) {
+		action.type = UI::NDUI::kActionEnable;
+	} else if (command.equalsIgnoreCase("disable")) {
+		action.type = UI::NDUI::kActionDisable;
+	} else {
+		debugPrintf("Invalid action %s\n", argv[2]);
+		return true;
+	}
+
+	if (!NancySceneState.getNDUI()->takeAction(action)) {
+		debugPrintf("The UI has no control named %s\n", argv[1]);
+		return true;
 	}
 
 	return cmdExit(0, nullptr);

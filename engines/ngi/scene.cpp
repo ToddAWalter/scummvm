@@ -22,9 +22,11 @@
 #include "ngi/ngi.h"
 
 #include "ngi/objects.h"
+#include "ngi/behavior.h"
 #include "ngi/ngiarchive.h"
 #include "ngi/statics.h"
 #include "ngi/messages.h"
+#include "ngi/motion.h"
 #include "ngi/gameloader.h"
 
 #include "ngi/constants.h"
@@ -35,23 +37,22 @@
 namespace NGI {
 
 Scene *NGIEngine::findScene(int sceneId) {
-	SceneTag *t = nullptr;
+	return _gameProject->findScene(sceneId);
+}
 
-	for (SceneTagList::iterator s = _gameProject->_sceneTagList->begin(); s != _gameProject->_sceneTagList->end(); ++s) {
-		if (s->_sceneId == sceneId) {
-			t = &(*s);
-			break;
+Scene *GameProject::findScene(int sceneId) {
+	for (SceneTag &tag : *_sceneTagList) {
+		if (tag._sceneId != sceneId)
+			continue;
+		if (!tag._scene) {
+			if (g_nmi->getPlatform() == Common::kPlatformAndroid)
+				tag.loadSceneXML(*this);
+			else
+				tag.loadScene();
 		}
+		return tag._scene;
 	}
-
-	if (!t)
-		return nullptr;
-
-	if (!t->_scene) {
-		t->loadScene();
-	}
-
-	return t->_scene;
+	return nullptr;
 }
 
 bool SceneTagList::load(MfcArchive &file) {
@@ -275,11 +276,11 @@ AniObject *Scene::getAniMan() {
 }
 
 AniObject *Scene::findAniObjectById(int obj, int a3) {
-	for (uint i = 0; i < _aniObjects.size(); i++) {
-		if (_aniObjects[i]->_id == obj && (a3 == -1 || _aniObjects[i]->_copyId == a3))
-			return _aniObjects[i];
+	const auto &objects = _roamingObjects.empty() ? _aniObjects : _renderableAnis;
+	for (AniObject *ani : objects) {
+		if (ani->_id == obj && (a3 == -1 || ani->_copyId == a3))
+			return ani;
 	}
-
 	return nullptr;
 }
 
@@ -336,7 +337,7 @@ void Scene::stopAllSounds() {
 }
 
 PictureObject *Scene::findPictureObjectById(int objId, int flags) {
-	for (uint i = 1; i < _pictureObjects.size(); i++) {
+	for (uint i = g_nmi->getPlatform() == Common::kPlatformAndroid ? 0 : 1; i < _pictureObjects.size(); i++) {
 		if (_pictureObjects[i]->_id == objId && _pictureObjects[i]->_copyId == flags)
 			return _pictureObjects[i];
 	}
@@ -369,7 +370,7 @@ MessageQueue *Scene::findMessageQueue(int messageId) {
 		if (_messageQueues[i]->_queueId == messageId)
 			return _messageQueues[i];
 
-	return nullptr;
+	return _commonQueueScene ? _commonQueueScene->findMessageQueue(messageId) : nullptr;
 }
 
 MessageQueue *Scene::getMessageQueueByName(const Common::String &name) {
@@ -649,11 +650,13 @@ int Scene::getPictureObjectIdAtPos(int x, int y) {
 	return res;
 }
 
-void Scene::update(int counterdiff) {
+bool Scene::update(int counterdiff) {
 	debugC(6, kDebugDrawing, "Scene::update(%d)", counterdiff);
 
+	bool changed = false;
 	for (uint i = 0; i < _renderableAnis.size(); i++)
-		_renderableAnis[i]->update(counterdiff);
+		changed |= _renderableAnis[i]->update(counterdiff);
+	return changed;
 }
 
 void Scene::drawContent(int minPri, int maxPri, bool drawBg) {

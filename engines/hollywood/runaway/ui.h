@@ -47,13 +47,13 @@ public:
 	bool loadChapter(byte chapter);
 	void update(uint32 now, Common::Point mouse, byte roomHotspot, bool blocked, bool speaking,
 		bool inventoryPresentation = false, byte speechFrame = 0, bool roomHasVerbs = true,
-		byte actionCursor = 0, bool preferLook = false, bool walkHotspot = false);
+		byte actionCursor = 0, bool preferLook = false, bool walkHotspot = false, RunawayVerb alternateVerb = kVerbLook);
 	void setDialogueChoices(const Common::Array<Common::U32String> &choices);
 	Command click(bool right);
 	void toggleInventory();
 	bool cancel();
 	bool inventoryOpen() const { return _inventoryOpen; }
-	bool busy() const { return _pickupItem != 0; }
+	bool busy() const { return _pickupItem != 0 || _idleStarted != 0; }
 	RunawayVerb verb() const { return _verb; }
 	byte hovered() const { return _hovered; }
 	void captureState(RunawaySaveState &state) const;
@@ -73,9 +73,11 @@ private:
 	bool inViewport() const;
 	void setInventoryOpen(bool open);
 	void setVerb(RunawayVerb verb, byte actionCursor = 0);
+	RunawayVerb defaultVerb() const;
 	void updateCursor();
 	Common::U32String inventoryCaption() const;
 	void drawInventory(Graphics::ManagedSurface &screen);
+	void updatePortrait(uint32 now);
 
 	RunawayAudio _audio;
 	RunawayInventory &_inventory;
@@ -90,6 +92,7 @@ private:
 	Common::Array<Common::Array<Common::U32String> > _choices;
 	Common::Array<Common::Rect> _choiceRects;
 	RunawayVerb _verb = kVerbWalk;
+	RunawayVerb _alternateVerb = kVerbLook;
 	byte _cursorType = 0, _previousCursor = 0, _actionCursor = 0;
 	bool _preferLook = false;
 	bool _walkHotspot = false;
@@ -106,6 +109,7 @@ private:
 	uint32 _mouthTick = 0;
 	uint32 _blinkUntil = 0, _idleStarted = 0, _lastInteraction = 0, _pickupStarted = 0;
 	uint _mouth = 0;
+	uint _idleStep = 0;
 	int _cursorKey = -1;
 };
 

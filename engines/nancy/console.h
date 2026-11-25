@@ -61,6 +61,9 @@ private:
 	bool Cmd_scriptExport(int argc, const char **argv);
 	bool Cmd_listManagers(int argc, const char **argv);
 	bool Cmd_cheatMode(int argc, const char **argv);
+	bool Cmd_listVars(int argc, const char **argv);
+	bool Cmd_getVar(int argc, const char **argv);
+	bool Cmd_setVar(int argc, const char **argv);
 #endif
 	bool Cmd_actionRecordExport(int argc, const char **argv);
 	bool Cmd_scanForActionRecordType(int argc, const char **argv);
@@ -79,6 +82,7 @@ private:
 	bool Cmd_setDifficulty(int argc, const char **argv);
 	bool Cmd_soundInfo(int argc, const char **argv);
 	bool Cmd_showHotspots(int argc, const char **argv);
+	bool Cmd_uiControl(int argc, const char **argv);
 
 	void printInventoryItem(uint itemID);
 

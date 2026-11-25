@@ -39,6 +39,8 @@ bool loadRunawaySurface(uint chunk, int width, int height, Graphics::ManagedSurf
 bool loadRunawaySurface(const Common::Path &path, int width, int height, Graphics::ManagedSurface &surface);
 bool loadRunawaySurface(ChunkArchive &archive, uint chunk, int width, int height, Graphics::ManagedSurface &surface);
 bool loadRunawayMask(ChunkArchive &archive, int width, int height, Common::Array<byte> &mask, Common::Array<byte> &maps, uint chunk = 1);
+bool loadRunawayWalkMap(ChunkArchive &archive, int width, int height, Common::Array<byte> &mask, Common::Array<byte> &maps,
+	Common::Array<byte> &routes, uint maskChunk = 1, uint routeChunk = 3);
 byte findRunawayLight(Common::Point position, int width, const Common::Array<byte> &mask, const Common::Array<byte> &maps);
 bool applyRunawayPatch(const Common::Array<byte> &patch, Graphics::ManagedSurface &surface, int yOffset = 0, int xOffset = 0);
 
@@ -87,6 +89,8 @@ public:
 	bool setFrame(uint facing, uint frame, int headFrame = -1);
 	bool loadAction(uint chunk, uint frames);
 	bool setActionFrame(uint frame);
+	bool loadIdle(byte facing, byte action);
+	bool setIdleFrame(uint frame);
 	static float perspectiveHeight(Common::Point position);
 	void draw(Graphics::ManagedSurface &surface, Common::Point position, int cameraX,
 		int roomTop, const Common::Array<byte> &mask, const Common::Array<byte> &maps,
@@ -102,8 +106,12 @@ private:
 	bool _museum = false;
 	bool decodeBodyFrame(const Common::Array<byte> &bank, const byte *descriptor, uint end);
 	bool decodeFrame(const Common::Array<byte> &bank, const byte *descriptor, uint end, bool head);
+	bool loadActionBank(uint chunk, uint frames, Common::Array<byte> &descriptors, Common::Array<byte> &bank);
+	bool setBankFrame(uint frame, const Common::Array<byte> &descriptors, const Common::Array<byte> &bank);
 	Common::Array<byte> _descriptors, _headDescriptors;
 	Common::Array<byte> _actionDescriptors, _actionBank;
+	Common::Array<byte> _idleDescriptors, _idleBank;
+	int _idleChunk = -1;
 	Common::Array<byte> _banks[kFacings];
 	Common::Array<byte> _headBanks[kHeadFacings];
 	Common::Array<byte> _pixels, _opacity, _shadow;

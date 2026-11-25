@@ -48,7 +48,7 @@ class StepArray : public CObject {
 
 class StaticPhase : public Texture {
  public:
-	int16 _delay;
+	int16 _delay;     // Extra animation ticks in binary projects.
 	int16 _countdown;
 	int16 _messageNum;
 	int16 _field_6A;
@@ -68,6 +68,11 @@ class Phase : public StaticPhase {
  public:
 	int _someX;
 	int _someY;
+	// XML phases can add both milliseconds and multiples of the movement's loop delay.
+	int _delayMs = 0;
+	int _delayRelative = 0;
+	uint16 _soundId = 0;
+	bool _loopSound = false;
 	Common::Rect _rect;
 	int16 _field_7C;
 	int16 _field_7E;
@@ -76,6 +81,8 @@ class Phase : public StaticPhase {
   public:
 	Phase();
 	Phase(Phase *src, bool reverse);
+	void setPNG(const Common::Path &path, const Dims &size);
+	void enter(int objectId);
 
 	bool load(MfcArchive &file) override;
 
@@ -112,6 +119,8 @@ class Movement : public GameObject {
 	int _updateFlag1;
 	Statics *_prevStatic;
 	Statics *_nextStatic;
+	bool _mirrorPrev = false;
+	bool _mirrorNext = false;
 	int _prevStepX;
 	int _prevStepY;
 	int _nextStepX;
@@ -158,7 +167,7 @@ class Movement : public GameObject {
 	int countPhasesWithFlag(int maxidx, int flag);
 
 	void removeFirstPhase();
-	bool setNext(void (*_callback1)(int, Common::Point *point, int, int), void (*callback2)(int *));
+	bool setNext(void (*_callback1)(int, Common::Point *point, int, int), void (*callback2)(int *), bool mirror = false);
 	bool gotoPrevFrame();
 	void gotoFirstFrame();
 	void setLast();
@@ -232,7 +241,7 @@ public:
 	void setTargetFrame(int val) { _targetFrame = val; }
 	void adjustSomeXY();
 
-	bool startMovement(int movementId, int messageQueueId, int dynPhaseIdx);
+	bool startMovement(int movementId, int messageQueueId, int dynPhaseIdx, bool mirror = false);
 	bool startAnimEx(int movid, int parId, int flag1, int flag2);
 	void startSliding(int movementId, int messageQueueId, int x, int y, const PointList &points, int someDynamicPhaseIndex);
 
@@ -240,7 +249,7 @@ public:
 	void show1(int x, int y, int movementId, int mqId);
 	void show2(int x, int y, int movementId, int mqId);
 	void playIdle();
-	void update(int counterdiff);
+	bool update(int counterdiff);
 
 	Statics *addReverseStatics(Statics *ani);
 	void render();

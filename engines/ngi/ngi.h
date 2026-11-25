@@ -94,6 +94,7 @@ class NGIArchive;
 class PictureObject;
 struct PreloadItem;
 class Scene;
+class Sound;
 class SoundList;
 class AniObject;
 class Vars;
@@ -128,6 +129,8 @@ class NGIEngine : public ::Engine {
 protected:
 
 	Common::Error run() override;
+	Common::Error runAndroid();
+	Common::Error enterAndroidScene1();
 
 public:
 	NGIEngine(OSystem *syst, const NGIGameDescription *gameDesc);
@@ -144,6 +147,8 @@ public:
 	uint32 getFeatures() const;
 	bool isDemo();
 	Common::Language getLanguage() const;
+	const char *getAndroidResourceLocale() const;
+	Common::Platform getPlatform() const;
 	const char *getGameId() const;
 	int getGameGID() const;
 
@@ -212,9 +217,10 @@ public:
 	Common::Path _sceneTracksCurrentTrack;
 	bool _sceneTrackIsPlaying;
 
-	void stopAllSounds();
+	void stopAllSounds(int flags = -1);
 	void toggleMute();
-	void playSound(int id, int flag);
+	Sound *findSound(int id) const;
+	void playSound(int id, int flag, int creator = 0);
 	void playTrack(GameVar *sceneVar, const char *name, bool delayed);
 	int getSceneTrack();
 	void updateTrackDelay();
@@ -385,7 +391,7 @@ public:
 	Common::Error saveGameState(int slot, const Common::String &description, bool isAutosave = false) override;
 	Common::String getSaveStateName(int slot) const override;
 
-	bool canLoadGameStateCurrently(Common::U32String *msg = nullptr) override { return true; }
+	bool canLoadGameStateCurrently(Common::U32String *msg = nullptr) override { return getPlatform() != Common::kPlatformAndroid; }
 	bool canSaveGameStateCurrently(Common::U32String *msg = nullptr) override { return _isSaveAllowed; }
 	bool hasFeature(EngineFeature f) const override;
 
