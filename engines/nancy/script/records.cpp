@@ -194,7 +194,8 @@ Record *makeRecord(RecordType type, SceneContext &context) {
 static const double kBackgroundScriptZ = -5.0;
 static const int kBackgroundZ = 6;
 
-// Scripts tell apart z values as close as 0.001
+// The steps of the z order. Records closer together than this are told apart
+// by their exact z.
 static const double kStepsPerScriptZ = 1000.0;
 
 // Nancy19 to Nancy20 keep the streams in an order of their own, and draw the
@@ -259,8 +260,13 @@ void RecordGraphic::setScriptZ(double z, const SceneContext &context, uint32 rec
 	}
 
 	setLayer(getScriptLayer(context.getZOffset()));
+	// The games sort the records by their z as a double. Dossier2 scene 3500 puts
+	// the fish at 1e-10, under the floor at 1e-5. Nancy26 gives each record a z
+	// order of its own from that sort, by its rank, so it doesn't need this.
 	if (hasStreamLayers()) {
 		setExactZ(z);
+	} else if (g_nancy->getGameType() < kGameTypeNancy26) {
+		setExactZ(z + context.getZOffset());
 	}
 
 	setZOrder(getScriptZOrder(z, context.getZOffset()));
@@ -2482,7 +2488,7 @@ void SoundRecord::readTable(int tableIndex) {
 	}
 
 	if (pushField(L, tableIndex, "sounds")) {
-		readStringList(L, -1, _names);
+		readNames(L, -1);
 		lua_pop(L, 1);
 	}
 
@@ -2491,6 +2497,18 @@ void SoundRecord::readTable(int tableIndex) {
 	}
 
 	pickVariation();
+}
+
+// Up to Nancy25, the names are kept in capitals, and given back that way. The
+// phone game of Dossier2 compares them with names in capitals.
+void SoundRecord::readNames(lua_State *L, int index) {
+	_names.clear();
+	readStringList(L, index, _names);
+	if (g_nancy->getGameType() < kGameTypeNancy26) {
+		for (Common::String &name : _names) {
+			name.toUppercase();
+		}
+	}
 }
 
 SoundRecord::SoundRecord(SceneContext &context) : Record(context, "ND.SoundAR") {
@@ -2756,8 +2774,7 @@ bool SoundRecord::setField(const Common::String &key) {
 	} else if (key == "loop") {
 		_isLooping = lua_toboolean(L, 3) != 0;
 	} else if (key == "sounds") {
-		_names.clear();
-		readStringList(L, 3, _names);
+		readNames(L, 3);
 		if (_names.empty()) {
 			luaL_error(L, "sounds must have one or more fields in its table");
 		}

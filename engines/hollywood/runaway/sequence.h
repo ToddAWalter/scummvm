@@ -46,13 +46,15 @@ public:
 		kSpeech,      // Cue, first/last variation, global cue; continues alongside the movie.
 		kWaitSpeech,  // Optional portrait and offscreen speaker, as in kTalk.
 		kWaitInput,
-		kMusic,       // Cue, volume, loop.
+		kMusic,       // Cue, volume percent, loop, full-volume title/ending song.
 		kMusicVolume, // Change volume without restarting the current music.
-		kEffect,      // Cue, volume, channel, loop.
+		kFadeMusic,   // Fade out over milliseconds, starting at the supplied volume.
+		kEffect,      // Cue, volume percent, channel, loop.
+		kMusicEffect, // As kEffect, using the stereo music archive.
 		kPauseEffect, // Channel, paused.
 		kWaitEffect,  // Maximum wait in milliseconds (channel 0); second argument blanks the screen.
 		kStopEffects, // Optional channel + 1; zero stops all effects.
-		kDelay,       // Milliseconds.
+		kDelay,       // Milliseconds; second argument blanks the screen.
 		kEnd
 	};
 	enum Playback { kOnce, kLoopDuringSpeech, kIdleDuringSpeech, kUntilSpeechEnds, kPortraitDuringSpeech };
