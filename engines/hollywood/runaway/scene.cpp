@@ -850,7 +850,7 @@ void RunawayRoomScene::updateActor(uint elapsed, int scrollDirection, bool inven
 			return;
 	}
 	if (_walkPath.active() && !speaking()) {
-		_walkPath.advance(elapsed * actorWalkSpeed(), _position, _facing);
+		_walkPath.advance(elapsed, actorWalkScale(), _position, _facing, _game == kRunawayMuseumDemo);
 		_walkElapsed += elapsed;
 		if (_game != kRunawayMuseumDemo && (!_lastFootstep || _walkElapsed - _lastFootstep >= 360)) {
 			const bool inside = _position.x >= 0 && _position.x < _background.w && _position.y >= 0 && _position.y < _background.h;
@@ -865,7 +865,8 @@ void RunawayRoomScene::updateActor(uint elapsed, int scrollDirection, bool inven
 			arrive();
 		}
 	}
-	const bool walking = _walkPath.active();
+	// Dialogue can pause a queued walk, including one scheduled on arrival.
+	const bool walking = _walkPath.active() && !speaking();
 	const bool idle = !walking && !busy() && shouldDrawActor();
 	_idleHead.update(_now, idle && !_idleBody.active(), _random, _game == kRunawayMuseumDemo);
 	const bool bodyIdle = _idleBody.update(_now, idle && _game != kRunawayMuseumDemo,
@@ -874,7 +875,7 @@ void RunawayRoomScene::updateActor(uint elapsed, int scrollDirection, bool inven
 	if (_actionUsesActor && _roomAction && !_actionFrames.empty() && !walking && !speaking()) {
 		_actor.setActionFrame(_actionFrames[_actionStep]);
 	} else if (!bodyIdle) {
-		_actor.setFrame(_facing, walking ? 1 + (_walkElapsed / 60) % 12 : 0, headFrame);
+		_actor.setFrame(_facing, walking ? 1 + (_walkElapsed / RunawayWalkPath::kFrameDuration) % 12 : 0, headFrame);
 	}
 	if (scrollDirection) {
 		setCameraX(_camera.x + scrollDirection * MAX<int>(1, elapsed / (_fastScrolling ? 2 : 4)));

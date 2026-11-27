@@ -299,7 +299,7 @@ Common::Error RunawayEngine::playIntro(RunawayMenu &menu, byte chapter, RunawayI
 	_inPresentation = true;
 	_loadedGame = false;
 	RunawayIntro intro(_mixer);
-	if (!intro.load(_game == kRunawayFullGame, chapter, mode, _game == kRunawayCabinDemo && _language == Common::FR_FRA)) {
+	if (!intro.load(_game == kRunawayFullGame, chapter, mode, _language)) {
 		_inPresentation = false;
 		return Common::Error(Common::kReadingFailed, "Cannot load the Runaway opening resources");
 	}
@@ -685,7 +685,7 @@ int RunawayEngine::pauseMenu(RunawayMenu &menu, Graphics::ManagedSurface &screen
 	// music is owned separately and stopped before gameplay resumes.
 	PauseToken pauseToken = pauseEngine();
 	RunawayMenu::Settings settings = readSettings();
-	menu.open(screen, settings, canSaveGameStateCurrently(), canLoadGameStateCurrently(), chapters);
+	menu.open(screen, settings, canSaveGameStateCurrently(), canLoadGameStateCurrently(), chapters, _ui && _ui->inventoryOpen());
 	menu.update(_eventMan->getMousePos());
 	// Never draw options into the scene: its image is also the save thumbnail.
 	Graphics::ManagedSurface menuScreen(screen.w, screen.h, screen.format);
@@ -726,6 +726,7 @@ int RunawayEngine::pauseMenu(RunawayMenu &menu, Graphics::ManagedSurface &screen
 				case kScrollRight: command = menu.key(Common::KeyState(Common::KEYCODE_RIGHT)); break;
 				case kScrollStart: command = menu.key(Common::KeyState(Common::KEYCODE_HOME)); break;
 				case kScrollEnd: command = menu.key(Common::KeyState(Common::KEYCODE_END)); break;
+				case kToggleInventory: command = menu.key(Common::KeyState(Common::KEYCODE_i, 'i')); break;
 				default: break;
 				}
 			} else if (event.type == Common::EVENT_KEYDOWN) {
@@ -773,7 +774,10 @@ int RunawayEngine::pauseMenu(RunawayMenu &menu, Graphics::ManagedSurface &screen
 				finished = true;
 			} else if (command == RunawayMenu::kSaveSettings) {
 				ConfMan.flushToDisk();
-				menu.showMessage(_strings.text(RunawayStrings::kSettingsSaved));
+				menu.showMessage(_strings.menuText(RunawayStrings::kSettingsSaved, _game == kRunawayFullGame));
+			} else if (command == RunawayMenu::kInventory) {
+				_ui->toggleInventory();
+				finished = true;
 			} else if (command == RunawayMenu::kResume || command == RunawayMenu::kQuit) {
 				if (command == RunawayMenu::kQuit)
 					quitGame();
