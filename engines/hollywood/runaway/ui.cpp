@@ -240,7 +240,7 @@ void RunawayUI::toggleInventory() {
 }
 
 bool RunawayUI::cancel() {
-	if (busy() || _inventoryPresentation || _inventoryFrame != 0xff)
+	if (busy() || _inventory.handling() || _inventoryPresentation || _inventoryFrame != 0xff)
 		return true;
 	if (_inventory.selected()) {
 		_inventory.select(0);
@@ -303,7 +303,7 @@ void RunawayUI::update(uint32 now, Common::Point mouse, byte roomHotspot, bool b
 		_returnAfterPickup = false;
 		setInventoryOpen(false);
 	}
-	if (_inventoryOpen && !busy() && !_speaking && _inventory.selected()) {
+	if (_inventoryOpen && !busy() && !_inventory.handling() && !_speaking && _inventory.selected()) {
 		if (inViewport())
 			_enteredInventory = true;
 		else if (_enteredInventory)
@@ -446,7 +446,7 @@ RunawayUI::Command RunawayUI::click(bool right) {
 			_inventory.select(0);
 		} else if (command.item) {
 			command.type = Command::kCombine;
-			_inventory.select(0);
+			// The combination handler decides whether to put the selected item back.
 		} else if (_verb == kVerbLook) {
 			command.type = Command::kExamineItem;
 		} else if (_inventory.isPlan(_hovered)) {
@@ -567,7 +567,7 @@ void RunawayUI::drawInventory(Graphics::ManagedSurface &screen) {
 		_idlePortrait.draw(screen, _museum ? kMuseumIdleFrames[_idleStep] : _idleStep, 0, kRunawayViewportTop);
 	} else {
 		const bool blinking = (int32)(_blinkUntil - _now) > 0;
-		uint frame = _speaking ? _mouth : blinking ? 6 : 0;
+		uint frame = _speaking ? _inventorySpeechPose * 12 + _mouth : blinking ? 6 : 0;
 		if (_museum) {
 			frame = _speaking ? 3 + _inventorySpeechPose * 5 + _mouth : 3;
 			if (!_speaking && blinking) {

@@ -28,7 +28,7 @@ namespace {
 
 const RunawayHotspot kHotspots[] = {
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{0, 550, 0, {301, 302}, {0, 3}, {-100, 550}, 7}, // 1: Path.
+	{0, 550, 0, {301, 302}, {0, 3}, {-100, 550}, 7, false, false, true}, // 1: Path.
 	{95, 358, 7, {305, 306}, {0, 1}, {76, 335}}, // 2: Recipient.
 	{483, 318, 0, {303, 304}, {1, 1}, {483, 299}}, // 3: Hole that Gina fell into.
 	{656, 347, 1, {307, 308}, {0, 0}, {732, 337}}, // 4: Stone.
@@ -106,6 +106,7 @@ void Scene6080::runCustomEntrySequence() {
 		_position = Common::Point(844, 362);
 		_walkPath.reset(_position);
 		_facing = 7;
+		updateCamera();
 		_mineOscarPresent = true;
 		_audio.playMusic(39, false);
 		_audio.setMusicVolume(100);

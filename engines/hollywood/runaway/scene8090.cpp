@@ -29,14 +29,14 @@ namespace {
 
 const RunawayHotspot kHotspots[] = {
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{910, 599, 3, {301, 302}, {0, 3}, {1023, 599}, 6}, // 1: Oil well area.
-	{696, 510, 0, {303, 304}, {0, 0}, {668, 390}, 4}, // 2: Entrance to the house.
+	{910, 599, 3, {301, 302}, {0, 3}, {1023, 599}, 6, false, false, true}, // 1: Oil well area.
+	{696, 510, 0, {303, 304}, {0, 0}, {668, 390}, 4, false, false, true}, // 2: Entrance to the house.
 	{846, 509, 0, {305, 306}, {0, 0}, {837, 455}}, // 3: Sign.
 	{676, 510, 7, {307, 308}, {0, 1}, {517, 463}, 3}, // 4: Oscar.
 	{244, 416, 7, {309, 310}, {0, 0}, {216, 394}}, // 5: Ladder.
-	{696, 510, 0, {312, 313}, {0, 1}, {668, 390}, 5}, // 6: Entrance to the house.
+	{696, 510, 0, {312, 313}, {0, 1}, {668, 390}, 5, false, false, true}, // 6: Entrance to the house.
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{50, 599, 5, {326, 327}, {0, 3}, {0, 599}, 7} // 8: Path.
+	{50, 599, 5, {326, 327}, {0, 3}, {0, 599}, 7, false, false, true} // 8: Path.
 };
 
 const RunawayResponse kResponses[] = {
@@ -355,16 +355,17 @@ RunawayRoomScene::ActionResult Scene8090::dispatchCustomSceneAction(uint16 actio
 		_oscar.startIdle();
 		break;
 	case 401: // Oscar opens the curtain for Brian.
+		// The animation supplies the moving curtain over the cleared doorway.
+		_curtainOpen = true;
 		_animatesOscar = true;
 		_audio.stopEffect(1);
 		beginRoomAnimationRange(401, 11, 33, 0, 32, false);
-		break;
+		return kBackgroundChanged;
 	case 1401: // Keep the curtain open while Brian goes inside.
-		_curtainOpen = true;
 		setOscarPose(11, 33, 32);
 		_animatesOscar = false;
 		deferAction(402);
-		return kBackgroundChanged;
+		break;
 	case 402: // Brian steps through the doorway.
 		beginRoomAnimationRange(402, 8, 15, 0, 14);
 		break;
@@ -505,6 +506,14 @@ void Scene8090::enterHouse(bool visitGina) {
 	}
 	if (_houseDestination && !findRunawayRoom(_houseDestination)) {
 		leaveRoom(_houseDestination);
+		return;
+	}
+	if (_skippingExit) {
+		if (_houseDestination) {
+			leaveRoom(_houseDestination);
+		} else {
+			returnFromHouse();
+		}
 		return;
 	}
 	walkTo(Common::Point(696, 510), 0);

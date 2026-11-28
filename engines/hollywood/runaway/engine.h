@@ -88,7 +88,7 @@ private:
 	Common::Error changeScene();
 	bool sceneBusy() const;
 	Common::Error playIntro(RunawayMenu &menu, byte chapter = 0, RunawayIntro::Mode mode = RunawayIntro::kCompleteIntro);
-	Common::Error startChapter(RunawayMenu &menu, byte chapter);
+	Common::Error startChapter(RunawayMenu &menu, byte chapter, bool continuing = false);
 	Common::Error selectChapter(RunawayMenu &menu);
 	byte unlockedChapter() const;
 	void unlockChapter(byte chapter);
@@ -112,6 +112,7 @@ private:
 	RunawayPresentation::MouseState _presentationMouse;
 	bool _inPresentation = false, _gameStarted = false, _loadedGame = false;
 	bool _pendingDoorClose = false;
+	bool _pendingExitClick = false;
 };
 
 } // End of namespace Hollywood

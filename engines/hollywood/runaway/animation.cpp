@@ -104,34 +104,34 @@ void RunawayLipSync::start(const Common::U32String &text, uint32 now, uint32 dur
 	if (sample && duration && loadRecording(sample)) {
 		// Retail 0x413650 advances recorded mouth shapes every five 10 ms ticks.
 		_frameDuration = 50;
-		return;
-	}
-	_frames.resize(text.size());
-	if (_frames.empty())
-		return;
-	// The native timer advances in 10 ms ticks, rounding up at a fractional
-	// tick of 0.3. Without a voice sample it uses 80 ms per character.
-	_frameDuration = duration ? MAX<uint>(1, (duration / _frames.size() + 7) / 10) * 10 : 80;
-	if (randomMouth) {
-		// Museum demo 0x42a950 picks a different mouth each tick and blinks for one tick.
-		byte previous = 0;
-		for (uint i = 0; i < _frames.size(); ++i) {
-			const bool blink = previous < 6 && !random.getRandomNumber(14);
-			byte mouth;
-			do {
-				mouth = random.getRandomNumber(5);
-			} while (mouth == previous % 6);
-			_frames[i] = previous = mouth + (blink ? 6 : 0);
+	} else {
+		_frames.resize(text.size());
+		if (_frames.empty())
+			return;
+		// The native timer advances in 10 ms ticks, rounding up at a fractional
+		// tick of 0.3. Without a voice sample it uses 80 ms per character.
+		_frameDuration = duration ? MAX<uint>(1, (duration / _frames.size() + 7) / 10) * 10 : 80;
+		if (randomMouth) {
+			// Museum demo 0x42a950 picks a different mouth each tick and blinks for one tick.
+			byte previous = 0;
+			for (uint i = 0; i < _frames.size(); ++i) {
+				const bool blink = previous < 6 && !random.getRandomNumber(14);
+				byte mouth;
+				do {
+					mouth = random.getRandomNumber(5);
+				} while (mouth == previous % 6);
+				_frames[i] = previous = mouth + (blink ? 6 : 0);
+			}
+			return;
 		}
-		return;
+		for (uint i = 0; i < _frames.size(); ++i) {
+			const uint32 c = speechLetter(text[i]);
+			const uint32 next = i + 1 < text.size() ? speechLetter(text[i + 1]) : 0;
+			_frames[i] = speechMouth(c, next, i ? _frames[i - 1] : 0);
+		}
 	}
-	for (uint i = 0; i < _frames.size(); ++i) {
-		const uint32 c = speechLetter(text[i]);
-		const uint32 next = i + 1 < text.size() ? speechLetter(text[i + 1]) : 0;
-		_frames[i] = speechMouth(c, next, i ? _frames[i - 1] : 0);
-	}
-	// Native 0x412680 occasionally selects the closed-eye set (6..11) for
-	// four consecutive characters, then returns to the open-eye set (0..5).
+	// Retail 0x416d00/0x416d90 overlay four-frame blinks on both recorded
+	// and text-derived mouth shapes.
 	bool blink = false;
 	for (uint i = 0; i < _frames.size(); i += 4) {
 		blink = !blink && random.getRandomNumber(4) == 0;
@@ -194,6 +194,66 @@ void RunawayIdleHead::update(uint32 now, bool enabled, Common::RandomSource &ran
 				_blink = true;
 				_frame = frames[_step] + (_step == 6 ? 6 : 1);
 			}
+		}
+	}
+}
+
+void RunawayHeadMovement::start(Direction direction, uint16 hold, uint32 now) {
+	_direction = direction;
+	_hold = hold;
+	_tick = _blinkTick = now;
+	_step = 6;
+	_frame = 0;
+	_blink = false;
+	_phase = kTurning;
+}
+
+void RunawayHeadMovement::returnToCenter(uint32 now) {
+	if (!active())
+		return;
+	_phase = kReturning;
+	_tick = now;
+	if (_blink)
+		--_frame;
+	_blink = false;
+}
+
+void RunawayHeadMovement::pause(uint32 elapsed) {
+	_tick += elapsed;
+	_blinkTick += elapsed;
+}
+
+void RunawayHeadMovement::update(uint32 now, Common::RandomSource &random) {
+	// Retail 0x436d40/0x436e30 use the same 60 ms turn clock as idle heads,
+	// but explicitly hold a direction before returning to the center.
+	static const byte horizontal[] = {24, 23, 22, 21, 20, 19, 0, 12, 13, 14, 15, 16, 17};
+	static const byte vertical[] = {38, 37, 36, 35, 34, 33, 0, 26, 27, 28, 29, 30, 31};
+	const byte *frames = _direction >= kUp ? vertical : horizontal;
+	while (active()) {
+		if (_phase == kHolding) {
+			// The native wait ends when the quarter-second counter exceeds hold.
+			const uint32 duration = (_hold + 1) * 250;
+			if (_hold != kHold && now - _tick >= duration) {
+				returnToCenter(_tick + duration);
+				continue;
+			}
+			while (now - _blinkTick >= 150) {
+				_blinkTick += 150;
+				_blink = !_blink && random.getRandomNumber(14) == 0;
+			}
+			_frame = frames[_step] + (_blink ? 1 : 0);
+			return;
+		}
+		if (now - _tick < 60)
+			return;
+		_tick += 60;
+		const byte target = _phase == kReturning ? 6 : (_direction == kLeft || _direction == kUp) ? 0 : 12;
+		if (_step != target)
+			_step += _step < target ? 1 : -1;
+		_frame = frames[_step];
+		if (_step == target) {
+			_phase = _phase == kReturning ? kInactive : kHolding;
+			_blinkTick = _tick;
 		}
 	}
 }

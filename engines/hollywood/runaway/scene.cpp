@@ -262,6 +262,7 @@ bool RunawayRoomScene::restoreState(const RunawaySaveState &state, uint32 now, b
 	updateMaps();
 	_position = Common::Point(state.x, state.y);
 	_walkPath.reset(_position);
+	_cameraFollow.reset();
 	_facing = state.facing;
 	_keyCount = entering ? 0 : state.keyCount;
 	_now = _lastUpdate = now;
@@ -298,7 +299,6 @@ bool RunawayRoomScene::enterRoom(uint16 number, Common::Point position, byte fac
 	_facing = facing;
 	_idleHead.reset(_now);
 	_idleBody.reset(_now);
-	_walkElapsed = 0;
 	_pendingHotspot = _pendingItem = 0;
 	_pendingAction = 0;
 	_lines.clear();
@@ -425,7 +425,16 @@ void RunawayRoomScene::walkTo(Common::Point target, byte facing, bool scripted, 
 		findWalkPath(target);
 	}
 	_arrivalFacing = facing;
-	_walkElapsed = _lastFootstep = 0;
+	Common::Array<float> scales;
+	const Common::Point position = _position;
+	scales.push_back(actorWalkScale());
+	// Sample each waypoint with the room's perspective calculation.
+	for (uint i = 0; i < _walkPath.points().size(); ++i) {
+		_position = _walkPath.points()[i];
+		scales.push_back(actorWalkScale());
+	}
+	_position = position;
+	_walkPath.start(_facing, facing, scales, _game == kRunawayMuseumDemo);
 	if (!_walkPath.active())
 		arrive();
 }
@@ -435,10 +444,7 @@ void RunawayRoomScene::findWalkPath(Common::Point target) {
 }
 
 void RunawayRoomScene::arrive() {
-	if (_arrivalFacing != 0xff) {
-		_facing = _arrivalFacing;
-		_arrivalFacing = 0xff;
-	}
+	_arrivalFacing = 0xff;
 	const byte id = _pendingHotspot;
 	_pendingHotspot = 0;
 	if (id) {
@@ -447,6 +453,66 @@ void RunawayRoomScene::arrive() {
 		else
 			execute(_pendingAction);
 	}
+	if (!speaking())
+		_caption.clear();
+}
+
+bool RunawayRoomScene::canSkipExit(byte id) const {
+	const RunawayHotspot *spot = hotspot(id);
+	if (_game != kRunawayFullGame || !spot || !spot->skipExit)
+		return false;
+	// These exits acquire the native double-click flag as their puzzles progress.
+	switch (_room) {
+	case 2020:
+		return id != 8 || _hospital.window;
+	case 4030:
+		return !_safeOpen;
+	case 4060:
+		return id != 7 || !_inventory.museum().restoredCrucifix;
+	case 5020:
+		return id != 6 || _desert.hatchSeen;
+	case 5080:
+		return id == 1 || _desert.trainEntered;
+	case 6180:
+		return id != 2 || _town.saloonDoorKnown;
+	case 6190:
+		return id != 2 || _town.basementVisited;
+	case 6200:
+		return id != 2 || _town.cellOpen;
+	case 6260:
+		return id != 2 || _town.cabVisited;
+	case 6263:
+		return _town.cabExited;
+	case 8090:
+		if (id == 2)
+			return _finale.oscarAway && (!_finale.recordingPlan || !_finale.recordings || _finale.recordings == 2);
+		return id != 6 || _finale.oscarAway;
+	case 8200:
+		return id != 2 || !_finale.oscarAway;
+	default:
+		return true;
+	}
+}
+
+void RunawayRoomScene::waitForExitClick(uint32 now) {
+	_idleHead.pause(now - _lastUpdate);
+	_idleBody.pause(now - _lastUpdate);
+	_now = _lastUpdate = now;
+}
+
+void RunawayRoomScene::skipExit(byte id) {
+	if (busy() || !canSkipExit(id))
+		return;
+	_walkPath.clear();
+	_arrivalFacing = 0xff;
+	_pendingHotspot = _pendingItem = 0;
+	_idleHead.reset(_now);
+	_idleBody.reset(_now);
+	_actor.setFrame(_facing, 0);
+	_caption = actionCaption(id, kVerbExit, 0);
+	_skippingExit = true;
+	execute(hotspot(id)->action[1]);
+	_skippingExit = false;
 	if (!speaking())
 		_caption.clear();
 }
@@ -484,9 +550,16 @@ void RunawayRoomScene::click(Common::Point mouse, RunawayVerb verb, byte item) {
 			const byte facing = approach > 1 ? 0xff : customizeSceneActionFacing(id, spot->facing);
 			walkTo(customizeSceneActionPosition(id, item, position), facing);
 		} else {
-			_arrivalFacing = approach < 0 ? 0xff : runawayFacingTo(_position, sceneActionLookPosition(id));
-			_walkPath.clear();
-			arrive();
+			const byte facing = approach < 0 ? 0xff : runawayFacingTo(_position, sceneActionLookPosition(id));
+			if (shouldUpdateActor() && shouldDrawActor()) {
+				walkTo(_position, facing, true);
+			} else {
+				// Close-ups and overviews have no walking actor.
+				_walkPath.clear();
+				if (facing != 0xff)
+					_facing = facing;
+				arrive();
+			}
 		}
 	} else {
 		if (shouldPlayGameplayClickPath())
@@ -511,6 +584,10 @@ void RunawayRoomScene::say(uint16 cue, byte variation, bool global, byte speaker
 	say(_text, speech, global, speaker, color);
 	if (_game == kRunawayMuseumDemo && global)
 		setMuseumInventorySpeechPoses(cue, variation, firstLine);
+	else if (global) {
+		for (uint i = firstLine; i < _lines.size(); ++i)
+			_lines[i].inventoryPose = RunawayInventory::speechPose(cue, variation);
+	}
 }
 
 void RunawayRoomScene::say(const SceneTextStore &text, const SceneSpeechCue &speech, bool global, byte speaker, byte color) {
@@ -664,7 +741,128 @@ void RunawayRoomScene::executeItemAction(uint16 action) {
 	execute(action);
 }
 
-void RunawayRoomScene::execute(uint16 action) {
+void RunawayRoomScene::beginHeadMovement(uint16 nextAction, RunawayHeadMovement::Direction direction, uint16 hold) {
+	if (_game != kRunawayFullGame) {
+		if (nextAction)
+			execute(nextAction, true);
+		return;
+	}
+	_idleHead.reset(_now);
+	_idleBody.reset(_now);
+	_headMovement.start(direction, hold, _now);
+	_afterHeadMovement = nextAction;
+	_actor.setFrame(_facing, 0, _headMovement.frame());
+}
+
+void RunawayRoomScene::returnHeadToCenter(uint16 nextAction) {
+	_headMovement.returnToCenter(_now);
+	_afterHeadMovement = nextAction;
+}
+
+bool RunawayRoomScene::beginActionHeadMovement(uint16 action) {
+	if (_game != kRunawayFullGame)
+		return false;
+	// Descriptions that call the retail 0x436d40 helper unconditionally.
+	static const struct {
+		uint16 room, action;
+	} down[] = {
+		{2020, 304}, {2020, 306}, {2020, 315}, {2020, 317}, // Glass, pills, charts.
+		{2060, 306}, // Syringes.
+		{4030, 302}, {4030, 306}, {4030, 308}, {4030, 309}, // Books and safe contents.
+		{4050, 312}, {4050, 322}, {4050, 337}, // Wastebasket, briefcase, brush.
+		{4060, 328}, {4100, 313}, // Plaque and strange key.
+		{5060, 309}, {5080, 303}, // Trunk and wooden box.
+		{5100, 315}, {5100, 323}, {5110, 303}, {5110, 311}, // Barrels, bucket, compartment, screw.
+		{5110, 419}, // Peanuts behind the compartment door.
+		{5160, 309}, {5160, 313}, {5170, 313}, // Grating, needle and thread, under the bed.
+		{6180, 413}, {6260, 309}, {6270, 401}, // Buried wrench, locomotive key, crater.
+		{7010, 309}, {7010, 318}, {7010, 320}, // Cliff edge, beam, mining tool.
+		{8100, 427}, // Opening to the séance room.
+		{8260, 309}, {8370, 321}, {8400, 308}, {8410, 305} // Badge, register, papers, trunk.
+	};
+	for (uint i = 0; i < ARRAYSIZE(down); ++i) {
+		if (_room == down[i].room && action == down[i].action) {
+			beginHeadMovement(action, RunawayHeadMovement::kDown);
+			return true;
+		}
+	}
+	RunawayHeadMovement::Direction direction = RunawayHeadMovement::kDown;
+	uint16 hold = 2;
+	bool move = false;
+	switch (_room) {
+	case 4030:
+		move = action == 304;
+		hold = RunawayHeadMovement::kHold;
+		break;
+	case 4060:
+		move = action == 313 && _museum.basketSeen && !_coffeeTaken;
+		break;
+	case 5050:
+		move = action == 401;
+		direction = RunawayHeadMovement::kRight;
+		break;
+	case 5070:
+		move = (action == 315 || action == 316) && !_desert.oilSeen;
+		break;
+	case 5100:
+		move = action == 500 || action == 578;
+		direction = RunawayHeadMovement::kRight;
+		break;
+	case 5110:
+		move = action == 312 && !_desert.screwTaken && !_desert.screwSeen;
+		break;
+	case 5160:
+		move = action == 314 && !_desert.needle;
+		break;
+	case 5170:
+		move = action == 314 && !_desert.vacuum;
+		break;
+	case 6130:
+		move = (action == 307 || action == 308) && !_town.stone;
+		break;
+	case 6210:
+	case 8210:
+		move = ((action == 307 || action == 408) && !_town.bucketSeen) || (action == 313 && !_town.bottleSeen);
+		break;
+	case 6260:
+		move = action == 310 && _town.locomotiveKey == 1;
+		break;
+	case 6280:
+		move = action == 301;
+		direction = RunawayHeadMovement::kUp;
+		break;
+	case 6300:
+	case 8300:
+		move = (action == 307 && !_town.craneKnown) ||
+			(_room == 6300 && (action == 309 || action == 310) && !_town.statueLowered);
+		direction = RunawayHeadMovement::kUp;
+		break;
+	case 7010:
+		move = action == 321 && _hopi.timber == 1;
+		break;
+	case 7050:
+		if (action == 301 || action == 401) {
+			move = true;
+			direction = RunawayHeadMovement::kUp;
+			hold = RunawayHeadMovement::kHold;
+		} else {
+			move = (action == 303 || action == 304) && _hopi.tomahawk == kUnexamined;
+		}
+		break;
+	case 8260:
+		move = action == 310 && _finale.locomotiveBadge == 1;
+		break;
+	default:
+		break;
+	}
+	if (move)
+		beginHeadMovement(action, direction, hold);
+	return move;
+}
+
+void RunawayRoomScene::execute(uint16 action, bool headMoved) {
+	if (!headMoved && beginActionHeadMovement(action))
+		return;
 	const ActionResult result = dispatchCustomSceneAction(action);
 	if (result == kBackgroundChanged) {
 		if (!rebuildBackground())
@@ -725,12 +923,19 @@ void RunawayRoomScene::setCameraX(int x) {
 }
 
 void RunawayRoomScene::updateCamera() {
+	_cameraFollow.reset();
 	setCameraX(_position.x - kRunawayScreenWidth / 2);
 	_camera.y = sceneViewportYOffset();
 }
 
+void RunawayRoomScene::followCamera(Common::Point camera) {
+	setCameraX(camera.x);
+	setCameraY(camera.y);
+}
+
 int RunawayRoomScene::sceneViewportYOffset() const {
-	return CLIP<int>(_position.y - 400, 0, _background.h - kRunawayViewportHeight);
+	return CLIP<int>(_position.y - (int)actorHeight() / 2 - kRunawayViewportHeight / 2,
+		0, _background.h - kRunawayViewportHeight);
 }
 
 void RunawayRoomScene::update(uint32 now, int scrollDirection, bool inventoryOpen) {
@@ -738,6 +943,7 @@ void RunawayRoomScene::update(uint32 now, int scrollDirection, bool inventoryOpe
 	if (inventoryOpen || _inventoryOpen) {
 		_idleHead.pause(now - _lastUpdate);
 		_idleBody.pause(now - _lastUpdate);
+		_headMovement.pause(now - _lastUpdate);
 	}
 	_inventoryOpen = inventoryOpen;
 	const uint elapsed = MIN<uint>(100, now - _lastUpdate);
@@ -759,6 +965,28 @@ void RunawayRoomScene::update(uint32 now, int scrollDirection, bool inventoryOpe
 	if (speaking() && _speech.finished(now))
 		skipSpeech();
 	updateAmbientMusic();
+	if (_inventory.handling()) {
+		const RunawayInventory::Reply line = _inventory.updateHandling(now, _audio, speaking());
+		if (line.closeup || line.stage) {
+			sayInventory(line);
+		} else if (line.cue) {
+			say(line.cue, line.variation, true);
+			if (line.cue == 68 && line.variation == 3)
+				_hospital.medicineRead = 1;
+		}
+		return;
+	}
+	_headMovement.update(now, _random);
+	if (_headMovement.blocking()) {
+		advanceCustomGameplayLoop(elapsed);
+		updateActor(elapsed, scrollDirection, inventoryOpen);
+		return;
+	}
+	if (_afterHeadMovement) {
+		const uint16 action = _afterHeadMovement;
+		_afterHeadMovement = 0;
+		execute(action, true);
+	}
 	if (townChapter() || hopiChapter() || finaleChapter()) {
 		updateGameplay(elapsed);
 		if (_sequence.active() || _transition.scene)
@@ -843,45 +1071,57 @@ void RunawayRoomScene::updateActor(uint elapsed, int scrollDirection, bool inven
 		_idleBody.reset(_now);
 		return;
 	}
-	if (_idleBody.active() && _walkPath.active() && !speaking()) {
+	if (_idleBody.active() && _walkPath.active() && !speaking() && !_headMovement.active()) {
 		_idleBody.interact(_now);
 		_idleHead.reset(_now);
 		if (_idleBody.update(_now, true, false, _facing, _actor, _random))
 			return;
 	}
-	if (_walkPath.active() && !speaking()) {
-		_walkPath.advance(elapsed, actorWalkScale(), _position, _facing, _game == kRunawayMuseumDemo);
-		_walkElapsed += elapsed;
-		if (_game != kRunawayMuseumDemo && (!_lastFootstep || _walkElapsed - _lastFootstep >= 360)) {
+	uint cameraElapsed = elapsed;
+	if (_walkPath.active() && !speaking() && !_headMovement.active()) {
+		_cameraFollow.reset();
+		uint footsteps = 0;
+		while (cameraElapsed && _walkPath.active()) {
+			const uint step = MIN(cameraElapsed, _walkPath.timeToNextFrame());
+			const Common::Point previous = _position;
+			footsteps += _walkPath.advance(step, _position, _facing);
+			cameraElapsed -= step;
+			if (!scrollDirection && _position != previous && shouldFollowCamera())
+				followCamera(RunawayCamera::followWalk(_camera, previous, _position, (int)actorHeight(), _fastScrolling));
+		}
+		if (_game != kRunawayMuseumDemo && footsteps) {
 			const bool inside = _position.x >= 0 && _position.x < _background.w && _position.y >= 0 && _position.y < _background.h;
 			const byte surface = inside ? _maps[1280 + _mask[_position.y * _background.w + _position.x]] : 0;
 			const byte volume = CLIP<int>((int)(actorHeight() * 100 / 455), 0, 100);
 			if (surface >= 1 && surface <= 7) {
-				_audio.playFootstep(surface, _random.getRandomBit(), volume, _position.x);
+				for (uint i = 0; i < footsteps; ++i)
+					_audio.playFootstep(surface, _random.getRandomBit(), volume, _position.x);
 			}
-			_lastFootstep = _walkElapsed;
 		}
 		if (!_walkPath.active()) {
 			arrive();
 		}
 	}
 	// Dialogue can pause a queued walk, including one scheduled on arrival.
-	const bool walking = _walkPath.active() && !speaking();
+	const bool walking = _walkPath.active() && !speaking() && !_headMovement.active();
 	const bool idle = !walking && !busy() && shouldDrawActor();
 	_idleHead.update(_now, idle && !_idleBody.active(), _random, _game == kRunawayMuseumDemo);
 	const bool bodyIdle = _idleBody.update(_now, idle && _game != kRunawayMuseumDemo,
 		_idleHead.centered(), _facing, _actor, _random);
-	const int headFrame = walking ? -1 : speaking() && !speaker() ? speechFrame() : idle ? _idleHead.frame() : -1;
-	if (_actionUsesActor && _roomAction && !_actionFrames.empty() && !walking && !speaking()) {
+	const int headFrame = _headMovement.active() ? _headMovement.frame() : walking ? -1 :
+		speaking() && !speaker() ? speechFrame() : idle ? _idleHead.frame() : -1;
+	if (!_headMovement.active() && _actionUsesActor && _roomAction && !_actionFrames.empty() && !walking && !speaking()) {
 		_actor.setActionFrame(_actionFrames[_actionStep]);
 	} else if (!bodyIdle) {
-		_actor.setFrame(_facing, walking ? 1 + (_walkElapsed / RunawayWalkPath::kFrameDuration) % 12 : 0, headFrame);
+		_actor.setFrame(_facing, walking ? _walkPath.frame() : 0, headFrame);
 	}
 	if (scrollDirection) {
+		_cameraFollow.reset();
 		setCameraX(_camera.x + scrollDirection * MAX<int>(1, elapsed / (_fastScrolling ? 2 : 4)));
-	} else if (walking) {
-		setCameraX(_camera.x + CLIP<int>(_position.x - kRunawayScreenWidth / 2 - _camera.x,
-			-MIN<int>(_fastScrolling ? 8 : 4, elapsed), MIN<int>(_fastScrolling ? 8 : 4, elapsed)));
+	} else if (!_fastScrolling && !walking && shouldFollowCamera()) {
+		followCamera(_cameraFollow.followIdle(_camera, _position, (int)actorHeight(), cameraElapsed));
+	} else {
+		_cameraFollow.reset();
 	}
 }
 

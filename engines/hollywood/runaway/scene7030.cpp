@@ -27,8 +27,8 @@ namespace {
 
 const RunawayHotspot kHotspots[] = {
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{0, 0, 0, {301, 302}, {0, 0}, {0, 0}, 4}, // 1: Hopi village.
-	{0, 0, 0, {303, 304}, {0, 0}, {0, 0}, 6} // 2: Hopi sanctuary.
+	{0, 0, 0, {301, 302}, {0, 0}, {0, 0}, 4, false, false, true}, // 1: Hopi village.
+	{0, 0, 0, {303, 304}, {0, 0}, {0, 0}, 6, false, false, true} // 2: Hopi sanctuary.
 };
 
 const Common::Point kVillageTrail[] = {
@@ -124,6 +124,11 @@ void Scene7030::updateActor(uint elapsed, int scrollDirection, bool inventoryOpe
 	_panElapsed %= 16;
 	setCameraX(camera.x + (_crossing == 1 ? -steps : steps));
 	_camera.y = MIN<int>(300, camera.y + (_crossing == 1 ? steps : 0));
+}
+
+void Scene7030::setCameraY(int y) {
+	if (!_crossing)
+		_camera.y = CLIP(y, 0, 300);
 }
 
 void Scene7030::advanceRoute() {

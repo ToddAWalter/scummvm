@@ -29,10 +29,10 @@ namespace {
 
 const RunawayHotspot kHotspots[] = {
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{1397, 456, 1, {301, 302}, {0, 3}, {1397, 456}, 6}, // 1: Stairs.
-	{40, 436, 7, {303, 304}, {0, 1}, {40, 436}, 4}, // 2: Door.
-	{389, 381, 7, {303, 305}, {0, 1}, {389, 381}, 4}, // 3: Door.
-	{644, 342, 7, {303, 306}, {0, 1}, {644, 342}, 4}, // 4: Door.
+	{1397, 456, 1, {301, 302}, {0, 3}, {1397, 456}, 6, false, false, true}, // 1: Stairs.
+	{40, 436, 7, {303, 304}, {0, 1}, {40, 436}, 4, false, false, true}, // 2: Door.
+	{389, 381, 7, {303, 305}, {0, 1}, {389, 381}, 4, false, false, true}, // 3: Door.
+	{644, 342, 7, {303, 306}, {0, 1}, {644, 342}, 4, false, false, true}, // 4: Door.
 	{741, 518, 7, {307, 308}, {0, 0}, {726, 495}}, // 5: Crane controls.
 	{0, 0, 0, {309, 310}, {0, 0}, {778, 599}}, // 6: Statue.
 	{862, 438, 7, {311, 312}, {0, 0}, {930, 417}}, // 7: Apparatus.
@@ -284,7 +284,9 @@ void Scene6300::drawCustomForegroundComposite(Graphics::ManagedSurface &viewport
 		_torchAnimation.draw(viewport, _town.kevinAway && !_town.blowtorchTaken ? 0 : 1, _camera.x, 0);
 		drawKevin(viewport);
 	}
-	if (!_town.statueLowered && !((_roomAction == 448 || _roomAction == 409) && drawingRoomAnimation())) {
+	if (_lookingAtStatue) {
+		_actionAnimation.draw(viewport, 84, _camera.x, 0);
+	} else if (!_town.statueLowered && !((_roomAction == 448 || _roomAction == 409) && drawingRoomAnimation())) {
 		_statueAnimation.draw(viewport, 0, _camera.x, 0);
 	}
 	if (_roomAction == 422 && drawingRoomAnimation() && _actionStep >= 53) {
@@ -551,7 +553,12 @@ RunawayRoomScene::ActionResult Scene6300::dispatchCustomSceneAction(uint16 actio
 		setRoomAnimationOverlay(25, 16, hand, ARRAYSIZE(hand));
 		break;
 	}
-	case 1448: { // Lower the statue onto the catapult.
+	case 1448: // Check the statue's position above the catapult.
+		_lookingAtStatue = true;
+		beginHeadMovement(460, RunawayHeadMovement::kRight, 1);
+		break;
+	case 460: { // Lower the statue onto the catapult.
+		_lookingAtStatue = false;
 		say(4, 9);
 		_audio.playEffect(43);
 		beginRoomAnimation(409, 21, 90);

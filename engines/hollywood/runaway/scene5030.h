@@ -55,6 +55,9 @@ public:
 	void start(uint32 now) override;
 	void resume() override;
 	void click(Common::Point mouse, RunawayVerb verb, byte item) override;
+	bool canSkipExit(byte hotspot) const override;
+	void skipExit(byte hotspot) override;
+	void waitForExitClick(uint32 now) override;
 	void update(uint32 now, int scrollDirection, bool inventoryOpen) override;
 	void draw() override;
 	void setCameraX(int x) override;
@@ -68,9 +71,11 @@ public:
 	const Common::U32String &committedCaption() const override { return _committedCaption; }
 	const Common::U32String &subtitle() const override { return _action == kPeekConversation ? _interrogation.subtitle() : _speech.subtitle(); }
 	byte subtitleColor() const override { return _action == kPeekConversation ? _interrogation.subtitleColor() : _speech.subtitleColor(); }
-	bool busy() const override { return _action != kNone || _transition.scene; }
+	bool busy() const override { return _inventory.handling() || _action != kNone || _transition.scene; }
 	bool speaking() const override { return _action == kPeekConversation ? _interrogation.speaking() : _speechRow != 0; }
 	byte speechFrame() const override { return _speech.frame(_now); }
+	byte inventorySpeechPose() const override { return _inventorySpeechPose; }
+	byte inventoryFrame() const override { return _inventory.handlingFrame(); }
 	void skipSpeech() override;
 	bool playingVideo() const override { return _action == kIntroVideo || _action == kCleanWindowVideo; }
 	bool inventoryPresentation() const override { return _action == kIntroInventory; }
@@ -87,26 +92,28 @@ private:
 	Common::U32String hotspotName(byte id) const override;
 	enum Action {
 		kNone, kIntroVideo, kIntro, kIntroLookAround, kIntroInventory,
-		kIntroListen, kIntroWalkToDoor, kIntroExamineDoor,
+		kIntroListen, kIntroLookLeft, kIntroLookRight, kIntroWalkToDoor, kIntroExamineDoor,
 		kOpenLid, kCloseLid, kUnplug,
 		kCleanWindowSpeech, kCleanWindowClimb, kCleanWindowVideo,
-		kWaitSpeech, kWalkingAction, kPickup, kShirt,
-		kMeltIce, kMeltWait, kInspectIce, kFinishMelting,
+		kWaitSpeech, kWalkingAction, kHeadMovement, kExamine, kInspectCooler, kPickup, kShirt,
+		kMeltIce, kMeltWait, kInspectIce, kFinishMelting, kDescribeMeltedIce,
 		kTryMoveCooler, kMoveCooler, kRevealHatch, kFinishMoving, kHatchFound,
-		kDrainCooler, kFinishDraining, kPryHatch, kOpenHatch, kEscape,
+		kDrainCooler, kFinishDraining, kDescribeDrainedCooler, kPryHatch, kOpenHatch, kEscape,
 		kPeekDoor, kPeekConversation, kReturnFromPeek,
-		kHeatHelmet, kPrepareStirringHelmet, kStirHelmet, kEnterHatch
+		kHeatHelmet, kPrepareStirringHelmet, kLookAtHelmet, kStirHelmet, kEnterHatch
 	};
 	enum IceState { kFrozen, kMelted, kDrained };
 	enum HatchState { kHidden, kLocked, kUnlocked, kOpen };
 	bool loadRoomGraphics();
 	void walkTo(Common::Point target, bool scripted = false);
-	void arrive(bool faceHotspot = true);
+	void startWalk(byte facing);
+	void arrive();
 	void say(uint16 row);
 	void sayCue(uint16 cue, byte variation);
 	void pickUp(byte hotspot, byte item, uint patch);
 	void useItem(byte item, byte hotspot);
-	void examine(byte hotspot);
+	void examine(byte hotspot, bool headMoved = false);
+	void beginHeadMovement(Action next, RunawayHeadMovement::Direction direction = RunawayHeadMovement::kDown, uint16 hold = 2);
 	void collect(byte hotspot);
 	void waitForSpeech(uint16 cue, byte variation, Action next);
 	void walkForAction(Common::Point target, byte facing, Action next, bool scripted = false);
@@ -140,30 +147,35 @@ private:
 	RunawayActor _actor;
 	RunawaySpeech _speech;
 	RunawayIdleHead _idleHead;
+	RunawayHeadMovement _headMovement;
 	RunawayIdleBody _idleBody;
 	RunawayAnimation _intro, _lidActor, _lid, _unplug, _climb, _actionAnimation, _water, _hatch;
 	RunawayVideo _video;
 	Common::Point _position = Common::Point(623, 447);
 	RunawayWalkPath _walkPath;
+	RunawayCamera _cameraFollow;
 	byte _facing = 3, _pendingHotspot = 0;
 	byte _pendingItem = 0;
 	RunawayVerb _pendingVerb = kVerbWalk;
 	Action _action = kNone;
 	Action _afterSpeech = kNone, _afterWalk = kNone;
+	Action _afterHeadMovement = kNone;
+	byte _headHotspot = 0;
 	byte _actionFacing = 0, _pickupHotspot = 0;
 	bool _lidOpen = false, _unplugged = false;
 	bool _windowClean = false;
 	bool _coolerMoved = false, _coolerInspected = false, _escaped = false;
+	bool _hatchExitKnown = false;
 	IceState _ice = kFrozen;
 	HatchState _hatchState = kHidden;
 	bool _pickedUp[20] = {};
 	bool _examined[20] = {};
 	bool _globalSpeech = false;
 	uint32 _now = 0, _lastUpdate = 0, _actionStarted = 0;
-	uint32 _walkElapsed = 0, _lastFootstep = 0;
 	uint _step = 0;
 	uint16 _speechRow = 0, _speechEnd = 0;
 	uint16 _speechSample = 0;
+	byte _inventorySpeechPose = 0;
 	RunawayInventory::Reply _nextInventoryReply = RunawayInventory::Reply(0);
 	Common::U32String _committedCaption;
 };

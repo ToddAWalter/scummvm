@@ -87,6 +87,7 @@ void RunawayInventory::captureState(RunawaySaveState &state) const {
 
 void RunawayInventory::restoreState(const RunawaySaveState &state) {
 	assert(state.valid());
+	clearHandling();
 	_chapter = state.chapter();
 	_items.clear();
 	for (uint i = 0; i < state.itemCount; ++i)
@@ -107,6 +108,7 @@ void RunawayInventory::restoreState(const RunawaySaveState &state) {
 }
 
 void RunawayInventory::startChapter(byte chapter) {
+	clearHandling();
 	_chapter = chapter;
 	_items.clear();
 	_selected = _newItem = 0;
@@ -402,7 +404,7 @@ uint RunawayInventory::cursor(byte item) const {
 	return item <= kItemCount ? kItemCursors[item] : 0;
 }
 
-RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveState &state) const {
+RunawayInventory::Reply RunawayInventory::examinationReply(byte item, const RunawaySaveState &state) const {
 	if (_chapter == 6) {
 		if (item == 11) {
 			return Reply::fromStage(637, 14);
@@ -488,6 +490,8 @@ RunawayInventory::Reply RunawayInventory::examine(byte item, const RunawaySaveSt
 			return Reply(65, _chartWritten);
 		if (item == 17)
 			return Reply(66, _headWig);
+		if (item == 19)
+			return Reply(68, !state.hospital.attacked ? 0 : contains(8) ? 2 : 1);
 	}
 	if (_chapter == 1 && item == 13)
 		return Reply(62, _water == 1 ? 1 : 0);
@@ -593,6 +597,15 @@ Common::U32String RunawayInventory::combinationCaption(byte item, byte target) c
 	return RunawayStrings::formatActionCaption(_strings.combinationCaption(_chapter, item, target), name(item), name(target));
 }
 
+byte RunawayInventory::speechPose(uint16 cue, byte variation) {
+	// Retail 0x417af0, 0x417bd0 and 0x41da80 select twelve-frame portrait blocks.
+	if (cue == 17)
+		return 1;
+	if ((cue == 20 && variation == 0) || (cue == 256 && variation == 1))
+		return 2;
+	return 0;
+}
+
 RunawayInventory::Reply RunawayInventory::randomReply(Common::RandomSource &random, bool museumDemo) {
 	// Native 0x410000 selects weighted refusals for unsuitable combinations.
 	// The museum demo has no text for cues 25 and 26.
@@ -635,6 +648,7 @@ RunawayInventory::Reply RunawayInventory::combineHospitalItems(byte first, byte 
 	case 73: // Put the wig on the model head.
 		_headWig = 1;
 		remove(10);
+		_selected = 0;
 		return Reply(71);
 	case 74: // Write on the blank medical chart.
 		if (_markerInk < 2) {
@@ -688,6 +702,7 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 		}
 		_museum.recorderBattery = 3;
 		remove(6);
+		_selected = 0;
 		return Reply(115, 1);
 	}
 	if (first == 6 && second == 18) {
@@ -696,6 +711,7 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 		}
 		_museum.batteryInLadle = 1;
 		remove(6);
+		_selected = 0;
 		return Reply(116);
 	}
 	if (first == 8 && second == 11) {
@@ -703,6 +719,9 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 			return Reply(117, 2);
 		}
 		_museum.rubyRemoved = 1;
+		if (!_museumDemo)
+			add(12, false);
+		_selected = 0;
 		return Reply(117);
 	}
 	if (first == 14 && second == 19) {
@@ -711,12 +730,13 @@ RunawayInventory::Reply RunawayInventory::combineMuseumItems(byte first, byte se
 		}
 		_museum.coffee = 2;
 		_museum.packageFilled = 1;
+		_selected = 0;
 		return Reply(121, 1);
 	}
 	return Reply::fromAction(1);
 }
 
-RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
+RunawayInventory::Reply RunawayInventory::applyCombination(byte first, byte second, const RunawaySaveState::Town &townState) {
 	if (!contains(first) || !contains(second) || first == second)
 		return Reply();
 	if (_chapter == 1) {
@@ -726,7 +746,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 		return combineMuseumItems(first, second);
 	}
 	if (_chapter == 4) {
-		return combineTownItems(first, second);
+		return combineTownItems(first, second, townState);
 	}
 	if (first > second)
 		SWAP(first, second);
@@ -742,6 +762,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 				_finale.scalpel = 2;
 				_finale.podsOpened = 1;
 				add(10);
+				_selected = 0;
 				return Reply(313, 4);
 			}
 			const byte variation = _finale.heatNeeded ? 2 : 0;
@@ -756,8 +777,10 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 	// Chapter 3's item-pair table (retail 0x46d400).
 	if (first == 1 && second == 3) {
 		const byte previous = _clothState;
-		if (!previous)
+		if (!previous) {
 			_clothState = 1;
+			_selected = 0;
+		}
 		return Reply(156, previous);
 	}
 	if (first == 7 && second == 8) {
@@ -771,6 +794,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			return Reply(14);
 		_desert.helmet = 1;
 		remove(4);
+		_selected = 0;
 		return Reply(178);
 	}
 	if (first == 6 && second == 18) {
@@ -780,6 +804,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			return Reply(190);
 		_desert.helmet = 2;
 		remove(18);
+		_selected = 0;
 		return Reply(190, 1, 2);
 	}
 	if ((first == 10 || first == 11) && second == 25) {
@@ -789,6 +814,7 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			if (_desert.lipstick)
 				return Reply(184, 2);
 			_desert.lipstick = 1;
+			_selected = 0;
 			return Reply(184, 0, 1);
 		}
 		if (_desert.lipsticks)
@@ -796,7 +822,8 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 		_desert.lipsticks = 1;
 		_desert.bucket = 2;
 		const bool hadLipstick = contains(10);
-		remove(10);
+		// The single lipstick is put away in a second handling sequence.
+		_selected = 0;
 		return Reply(185, 0, hadLipstick ? 2 : 1);
 	}
 	if ((first == 10 || first == 11) && second == 14) {
@@ -804,18 +831,21 @@ RunawayInventory::Reply RunawayInventory::combine(byte first, byte second) {
 			return Reply(first == 10 ? 186 : 187);
 		_desert.belt = first == 10 ? 1 : 2;
 		remove(first);
+		_selected = 0;
 		return Reply(first == 10 ? 186 : 187, 1, 2);
 	}
 	if (first == 15 && second == 16) {
 		if (_desert.ball)
 			return Reply(188, 2);
 		_desert.ball = 1;
+		_selected = 0;
 		return Reply(188, 0, 1);
 	}
 	if (first == 15 && second == 24) {
 		if (_desert.ball != 1)
 			return Reply(189, _desert.ball ? 3 : 0);
 		_desert.ball = 2;
+		_selected = 0;
 		return Reply(189, 1, 2);
 	}
 	if (first == 4 && second == 18)

@@ -53,7 +53,7 @@ const byte kCanThrows[][2] = {{0, 19}, {21, 40}, {42, 71}, {72, 88}};
 
 const RunawayHotspot kHotspots[] = {
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{1279, 267, 0, {301, 302}, {0, 1}, {1449, 255}, 4}, // 1: Path.
+	{1279, 267, 0, {301, 302}, {0, 1}, {1449, 255}, 4, false, false, true}, // 1: Path.
 	{1259, 354, 7, {303, 304}, {1, 0}, {1101, 298}}, // 2: Barn Doors.
 	{0, 0, 0, {305, 306}, {1, 1}, {274, 484}}, // 3: Bottle.
 	{1279, 267, 4, {1, 302}, {0, 1}, {0, 0}, 4, true}, // 4: Window.
@@ -391,6 +391,9 @@ RunawayRoomScene::ActionResult Scene5100::dispatchCustomSceneAction(uint16 actio
 	case 1328: // Finish spiking Stud's beer.
 		_inventory.remove(9);
 		say(9, 2);
+		deferDesertAction(578);
+		break;
+	case 578: // Glance at Stud before retreating.
 		say(9, 3);
 		deferDesertAction(428);
 		break;
@@ -680,12 +683,7 @@ void Scene5100::applyCustomHotspotState() {
 
 void Scene5100::walkHangar(Common::Point target, byte facing) {
 	// Scripted entrances cross the floor that is blocked while the guard watches.
-	_walkPath.findPath(RunawayWalkMap(_background.w, _background.h, _mask, _originalMaps, &_walkRoutes), target);
-	_arrivalFacing = facing;
-	_walkElapsed = _lastFootstep = 0;
-	if (!_walkPath.active()) {
-		arrive();
-	}
+	walkTo(target, facing, false, true);
 }
 
 uint Scene5100::studFrame() const {
@@ -868,7 +866,7 @@ void Scene5100::advanceCustomGameplayLoop(uint32 delta) {
 			_maps[256 + i] = canHotspot;
 		}
 	}
-	if (_desert.guard != 1 || _hangarIntroduction || _roomAction || _hospitalExit.scene || speaking() || _inventoryOpen) {
+	if (_desert.guard != 1 || _hangarIntroduction || _roomAction || _hospitalExit.scene || speaking() || _inventoryOpen || _headMovement.active()) {
 		return;
 	}
 	if (!_hangarSpeech.subtitle().empty()) {

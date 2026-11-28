@@ -27,8 +27,8 @@ namespace {
 
 const RunawayHotspot kHotspots[] = {
 	{0, 0, 0, {0, 0}, {0, 0}, {0, 0}},
-	{202, 526, 7, {301, 302}, {0, 3}, {189, 517}, 4}, // 1: Street.
-	{780, 527, 1, {303, 304}, {0, -1}, {1023, 519}, 5}, // 2: Inside the saloon.
+	{202, 526, 7, {301, 302}, {0, 3}, {189, 517}, 4, false, false, true}, // 1: Street.
+	{780, 527, 1, {303, 304}, {0, -1}, {1023, 519}, 5, false, false, true}, // 2: Inside the saloon.
 	{405, 427, 7, {305, 306}, {0, 0}, {375, 402}}, // 3: Trough.
 	{780, 527, 1, {307, 308}, {0, -1}, {1023, 519}}, // 4: Floor board.
 	{643, 457, 1, {309, 310}, {0, 0}, {729, 434}} // 5: Window.
@@ -104,7 +104,7 @@ void Scene6180::runCustomEntrySequence() {
 			deferTownAction(410);
 		} else if (_town.wrenchThrown == 1 && !_town.wrenchInTroughSeen) {
 			walkTo(Common::Point(586, 534), 7, false, true);
-			deferTownAction(412);
+			deferTownAction(414);
 		} else {
 			walkTo(Common::Point(586, 534), 5, false, true);
 		}
@@ -162,6 +162,8 @@ RunawayRoomScene::ActionResult Scene6180::dispatchCustomSceneAction(uint16 actio
 		if (!_town.saloonDoorKnown) {
 			walkTo(Common::Point(780, 527), 1, false, true);
 			deferTownAction(400);
+		} else if (_skippingExit) {
+			leaveTownRoom(6240);
 		} else {
 			walkTo(Common::Point(1023, 519), 1, false, true);
 			deferTownAction(403);
@@ -210,6 +212,12 @@ RunawayRoomScene::ActionResult Scene6180::dispatchCustomSceneAction(uint16 actio
 		_inventory.add(10);
 		say(0, 4);
 		return kBackgroundChanged;
+	case 414: // Look both ways for the wrench thrown out of the saloon.
+		beginHeadMovement(415, RunawayHeadMovement::kLeft, 1);
+		break;
+	case 415:
+		beginHeadMovement(412, RunawayHeadMovement::kRight, 1);
+		break;
 	case 412: // Find the wrench buried in the muddy trough.
 		say(0, 1);
 		walkTo(Common::Point(405, 427), 7, false, true);

@@ -427,8 +427,9 @@ protected:
 	void updateAmbientSoundCue(const AmbientAudioProfile &profile);
 	void updateAmbientMusicCue(const AmbientAudioProfile &profile);
 
-	// Speech animation
-	void advanceSecondaryActorSpeechAnimation(uint32 delta);
+	// Actor speech and idle animation
+	bool shouldAnimateSecondaryActorIdle() const;
+	void advanceSecondaryActorFacialAnimation(uint32 delta);
 	void advanceSecondaryActorSpeechFrame();
 	void advancePrimaryLeftSpeechFrame();
 	void advancePrimaryDialogueSpeechFrame(uint32 delta);
@@ -674,7 +675,8 @@ protected:
 	void drawVerbPanel(Graphics::Surface &surface, const GameplayPanelState &panelState);
 	void drawInventoryPanel(Graphics::Surface &surface, const GameplayPanelState &panelState);
 	void presentFrame(const SceneHoverCaption *hoverCaption = nullptr,
-		const GameplayPanelState *panelState = nullptr, const DialogueMenuState *dialogueMenuState = nullptr);
+		const GameplayPanelState *panelState = nullptr, const DialogueMenuState *dialogueMenuState = nullptr,
+		bool applyCaptionPalette = true);
 
 	// Event pumping
 	// Returns true for quit, scene restart, or accepted skip input.
@@ -799,6 +801,9 @@ protected:
 	bool _playerDirectedActorPathActive;
 	bool _playerDirectedActorPathFootstepPlayed;
 	uint16 _pendingGameplayActionHandlerId;
+	bool _gameplayActionExecuting;
+	Common::String _actionCaptionText;
+	byte _captionPalette[6];
 	int _activeActorWorldX;
 	int _activeActorWorldY;
 	byte _activeActorFacing;

@@ -27,6 +27,7 @@ RunawayInventory::Reply RunawayInventory::combineHopiItems(byte first, byte seco
 	if (first == 10 && second == 11) {
 		remove(10);
 		add(13);
+		_selected = 0;
 		return Reply(261);
 	}
 	if (first == 11 && second == 13) {
@@ -72,12 +73,6 @@ bool RunawayRoomScene::sayHopiInventory(const RunawayInventory::Reply &reply) {
 	case 256: // Examine both ends of the tomahawk.
 		say(256, 0, true);
 		say(256, 1, true);
-		return true;
-	case 261: // Split the timber with the tomahawk.
-	case 263: // Fit the femur into the mining tool.
-		say(reply.cue, 0, true);
-		_audio.playEffect(reply.cue == 261 ? 20 : 14);
-		say(reply.cue, 1, true);
 		return true;
 	default:
 		return false;
